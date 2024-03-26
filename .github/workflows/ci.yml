@@ -33,13 +33,19 @@ jobs:
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@v3
 
-      - name: Build with Gradle
-        uses: spring-io/spring-gradle-build-action@v2
-        env:
-          CI: 'true'
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.jdk.version }}
           distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build
+        env:
+          CI: 'true'
+        run: ./gradlew --no-daemon --no-parallel --continue build
 
       - name: Test Reports
         uses: mikepenz/action-junit-report@v4

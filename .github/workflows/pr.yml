@@ -16,13 +16,21 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2.1.2
 
-      - name: Build with Gradle
-        uses: spring-io/spring-gradle-build-action@v2
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: true
+
+      - name: Build
         env:
           CI: 'true'
-        with:
-          java-version: '21'
-          distribution: 'temurin'
+        run: ./gradlew build
 
       - name: Test Reports
         uses: mikepenz/action-junit-report@v4
