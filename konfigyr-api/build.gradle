@@ -1,3 +1,5 @@
+apply plugin: 'java-library'
+
 dependencies {
     /* Spring Boot starter */
     implementation 'org.springframework.boot:spring-boot-starter'

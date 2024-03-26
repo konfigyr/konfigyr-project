@@ -1,3 +1,5 @@
 rootProject.name = 'konfigyr-project'
 include 'konfigyr-api'
+include 'konfigyr-server'
+include 'konfigyr-test'
 

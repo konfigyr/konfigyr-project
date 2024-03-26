@@ -27,6 +27,7 @@ subprojects {
         checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.41'
 
         testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testImplementation 'org.testcontainers:junit-jupiter'
     }
 
