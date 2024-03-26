@@ -30,9 +30,6 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2.1.2
 
-      - name: Generate and submit dependency graph
-        uses: gradle/actions/dependency-submission@v3
-
       - name: Set up JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v4
         with:
@@ -41,6 +38,9 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v3
 
       - name: Build
         env:
