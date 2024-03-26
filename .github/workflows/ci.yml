@@ -39,13 +39,10 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Generate and submit dependency graph
-        uses: gradle/actions/dependency-submission@v3
-
       - name: Build
         env:
           CI: 'true'
-        run: ./gradlew --no-daemon --no-parallel --continue build
+        run: ./gradlew build
 
       - name: Test Reports
         uses: mikepenz/action-junit-report@v4

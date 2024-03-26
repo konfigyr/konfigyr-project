@@ -1,0 +1,17 @@
+name: Dependency Submission
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    name: Dependency Submission
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v3

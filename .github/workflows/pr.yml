@@ -30,7 +30,7 @@ jobs:
       - name: Build
         env:
           CI: 'true'
-        run: ./gradlew build
+        run: ./gradlew --no-daemon --no-parallel --continue build
 
       - name: Test Reports
         uses: mikepenz/action-junit-report@v4
