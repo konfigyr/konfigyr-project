@@ -1,0 +1,3 @@
+rootProject.name = 'konfigyr-project'
+include 'konfigyr-api'
+

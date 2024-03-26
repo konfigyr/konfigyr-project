@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os:
+          - id: ubuntu-latest
+            name: Linux
+          - id: windows-latest
+            name: Windows
+        jdk:
+          - version: 21
+          - version: 22
+      fail-fast: false
+    name: 'CI | ${{ matrix.os.name}} | Java ${{ matrix.jdk.version}}'
+    runs-on: ${{ matrix.os.id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build with Gradle
+        uses: spring-io/spring-gradle-build-action@v2
+        env:
+          CI: 'true'
+        with:
+          java-version: ${{ matrix.jdk.version }}
+          distribution: 'temurin'
+
+      - name: Test Reports
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure()
+        with:
+          report_paths: '**/build/test-results/test/TEST-*.xml'
