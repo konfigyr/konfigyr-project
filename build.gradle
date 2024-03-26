@@ -26,9 +26,7 @@ subprojects {
 
         checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.41'
 
-        testImplementation 'org.springframework.boot:spring-boot-testcontainers'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
-        testImplementation 'org.testcontainers:junit-jupiter'
     }
 
     dependencyManagement {
@@ -45,6 +43,10 @@ subprojects {
             dependency('com.konfigyr:konfigyr-mail-thymeleaf:1.0.0-RC1')
             dependency('com.konfigyr:konfigyr-crypto-tink:1.0.0-RC2')
             dependency('com.konfigyr:konfigyr-crypto-jdbc:1.0.0-RC2')
+
+            /* Fix Dependabot alerts */
+            dependency('org.apache.commons:commons-compress:1.26.0') // used by testcontainers
+            dependency('com.google.guava:guava:33.1.0-jre') // used by checkstyle
         }
     }
 

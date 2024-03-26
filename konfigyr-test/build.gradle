@@ -4,6 +4,9 @@ dependencies {
     /* Spring Moduliths */
     api 'org.springframework.modulith:spring-modulith-starter-core'
     api 'org.springframework.modulith:spring-modulith-starter-test'
+
+    api 'org.springframework.boot:spring-boot-testcontainers'
+    api 'org.testcontainers:junit-jupiter'
 }
 
 /* Disable any Javadoc task, this library should not be published */
