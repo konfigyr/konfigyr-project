@@ -19,7 +19,6 @@ jobs:
             name: Windows
         jdk:
           - version: 21
-          - version: 22
       fail-fast: false
     name: 'CI | ${{ matrix.os.name}} | Java ${{ matrix.jdk.version}}'
     runs-on: ${{ matrix.os.id }}
