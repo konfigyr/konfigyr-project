@@ -7,21 +7,21 @@ import org.springframework.modulith.docs.Documenter;
 
 class KonfigyrServerModulesTest {
 
-    private final ApplicationModules modules = ApplicationModules.of(KonfigyrApplication.class);
+	private final ApplicationModules modules = ApplicationModules.of(KonfigyrApplication.class);
 
-    @Test
-    @DisplayName("verify konfigyr-server modules")
-    void verifyApplicationModules() {
-        modules.verify().forEach(System.out::println);
-    }
+	@Test
+	@DisplayName("verify konfigyr-server modules")
+	void verifyApplicationModules() {
+		modules.verify().forEach(System.out::println);
+	}
 
-    @Test
-    @DisplayName("generate konfigyr-server module documentation")
-    void document() {
-        new Documenter(modules)
-                .writeModuleCanvases()
-                .writeModulesAsPlantUml()
-                .writeIndividualModulesAsPlantUml();
-    }
+	@Test
+	@DisplayName("generate konfigyr-server module documentation")
+	void document() {
+		new Documenter(modules)
+				.writeModuleCanvases()
+				.writeModulesAsPlantUml()
+				.writeIndividualModulesAsPlantUml();
+	}
 
 }

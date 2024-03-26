@@ -12,8 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class KonfigyrApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(KonfigyrApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(KonfigyrApplication.class, args);
+	}
 
 }

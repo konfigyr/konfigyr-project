@@ -18,25 +18,25 @@ import java.util.stream.Stream;
  **/
 class KonfigyrApplicationModuleDetectionStrategy implements ApplicationModuleDetectionStrategy {
 
-    private static final DescribedPredicate<JavaPackage> IGNORED_PACKAGES = DescribedPredicate.or(
-            ignorePackage("com.konfigyr.crypto"),
-            ignorePackage("com.konfigyr.data"),
-            ignorePackage("com.konfigyr.io")
-    );
+	private static final DescribedPredicate<JavaPackage> IGNORED_PACKAGES = DescribedPredicate.or(
+			ignorePackage("com.konfigyr.crypto"),
+			ignorePackage("com.konfigyr.data"),
+			ignorePackage("com.konfigyr.io")
+	);
 
-    private final ApplicationModuleDetectionStrategy delegate = ApplicationModuleDetectionStrategy.directSubPackage();
+	private final ApplicationModuleDetectionStrategy delegate = ApplicationModuleDetectionStrategy.directSubPackage();
 
-    @NonNull
-    @Override
-    public Stream<JavaPackage> getModuleBasePackages(@NonNull JavaPackage basePackage) {
-        return delegate.getModuleBasePackages(basePackage).filter(Predicate.not(IGNORED_PACKAGES));
-    }
+	@NonNull
+	@Override
+	public Stream<JavaPackage> getModuleBasePackages(@NonNull JavaPackage basePackage) {
+		return delegate.getModuleBasePackages(basePackage).filter(Predicate.not(IGNORED_PACKAGES));
+	}
 
-    private static DescribedPredicate<JavaPackage> ignorePackage(String name) {
-        return DescribedPredicate.describe(
-                "Ignoring '" + name + "' package",
-                type -> type.getName().startsWith(name)
-        );
-    }
+	private static DescribedPredicate<JavaPackage> ignorePackage(String name) {
+		return DescribedPredicate.describe(
+				"Ignoring '" + name + "' package",
+				type -> type.getName().startsWith(name)
+		);
+	}
 
 }
