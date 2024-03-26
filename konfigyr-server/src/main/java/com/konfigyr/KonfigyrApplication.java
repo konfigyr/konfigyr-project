@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Konfigyr Spring server application main class.
  *
- * @author : vladimir.spasic@ebf.com
+ * @author : Vladimir Spasic
  * @since : 26.03.24, Tue
  **/
 @SpringBootApplication

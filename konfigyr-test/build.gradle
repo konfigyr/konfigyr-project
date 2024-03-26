@@ -5,3 +5,8 @@ dependencies {
     api 'org.springframework.modulith:spring-modulith-starter-core'
     api 'org.springframework.modulith:spring-modulith-starter-test'
 }
+
+/* Disable any Javadoc task, this library should not be published */
+tasks.withType(Javadoc).configureEach {
+    enabled = false
+}
