@@ -1,0 +1,19 @@
+apply plugin: 'java-library'
+
+dependencies {
+    /* Liquibase - migrations runtime  */
+    implementation 'org.liquibase:liquibase-core'
+
+    /* JOOQ metadata generator  */
+    implementation 'org.jooq:jooq-meta'
+    implementation 'org.jooq:jooq-codegen'
+
+    /* Postgresql driver */
+    implementation 'org.postgresql:postgresql'
+
+    /* Postgresql container - target for migrations */
+    implementation 'org.testcontainers:postgresql'
+
+    testImplementation 'ch.qos.logback:logback-classic'
+    testImplementation(project(':konfigyr-test'))
+}
