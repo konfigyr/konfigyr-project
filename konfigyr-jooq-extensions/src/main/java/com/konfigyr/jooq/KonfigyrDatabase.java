@@ -30,8 +30,8 @@ import java.sql.SQLException;
  * schema is updated, the JOOQ {@link org.jooq.codegen.Generator} would be executed.
  *
  * @author : Vladimir Spasic
- * @see <a href="https://github.com/etiennestuder/gradle-jooq-plugin">Gradle JOOQ plugin</a>
  * @since : 26.03.24, Tue
+ * @see <a href="https://github.com/etiennestuder/gradle-jooq-plugin">Gradle JOOQ plugin</a>
  **/
 public class KonfigyrDatabase extends PostgresDatabase {
 

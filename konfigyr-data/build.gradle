@@ -34,7 +34,7 @@ jooq {
                     database {
                         name = "com.konfigyr.jooq.KonfigyrDatabase"
                         inputSchema = "public"
-                        excludes = 'databasechangelog.*'
+                        excludes = 'databasechangelog.*|keysets'
                     }
                     generate {
                         pojos = false

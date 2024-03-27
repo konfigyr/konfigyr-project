@@ -1,0 +1,14 @@
+apply plugin: 'java-library'
+
+dependencies {
+    api project(':konfigyr-api')
+
+    /* Konfigyr Cryptography that uses Google Tink algorithms and JDBC as a repository */
+    api 'com.konfigyr:konfigyr-crypto-api'
+    implementation 'com.konfigyr:konfigyr-crypto-tink'
+    implementation 'com.konfigyr:konfigyr-crypto-jdbc'
+
+    testImplementation project(':konfigyr-test')
+    testImplementation project(':konfigyr-data')
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation'
+}
