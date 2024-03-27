@@ -15,8 +15,6 @@ jobs:
         os:
           - id: ubuntu-latest
             name: Linux
-          - id: windows-latest
-            name: Windows
         jdk:
           - version: 21
       fail-fast: false
