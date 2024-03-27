@@ -1,0 +1,18 @@
+spring:
+  cache:
+    cache-names: crypto-keysets
+    caffeine:
+      spec: expireAfterWrite=15m
+
+  liquibase:
+    change-log: classpath:migrations/changelog.xml
+
+konfigyr:
+  crypto:
+    master-key: c7miwShcEQkZUcNQGqliVA==
+    jdbc:
+      initialize-schema: never
+
+logging:
+  level:
+    com.konfigyr: DEBUG

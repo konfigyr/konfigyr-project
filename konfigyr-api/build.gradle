@@ -2,20 +2,20 @@ apply plugin: 'java-library'
 
 dependencies {
     /* Spring Boot starter */
-    implementation 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework.boot:spring-boot-starter'
 
     /* Spring Cache and Caffeine implementation */
-    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    api 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
 
     /* Tracing and observability */
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    api 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-observation'
 
     /* Spring Moduliths */
-    implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    api 'org.springframework.modulith:spring-modulith-starter-core'
 
     /* Spring Common libraries */
-    implementation 'org.springframework.retry:spring-retry'
-    implementation 'org.springframework.data:spring-data-commons'
+    api 'org.springframework.retry:spring-retry'
+    api 'org.springframework.data:spring-data-commons'
 }
