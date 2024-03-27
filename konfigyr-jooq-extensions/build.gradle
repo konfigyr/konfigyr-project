@@ -4,16 +4,18 @@ dependencies {
     /* Liquibase - migrations runtime  */
     implementation 'org.liquibase:liquibase-core'
 
-    /* JOOQ metadata generator  */
-    implementation 'org.jooq:jooq-meta'
-    implementation 'org.jooq:jooq-codegen'
-
     /* Postgresql driver */
     implementation 'org.postgresql:postgresql'
 
     /* Postgresql container - target for migrations */
     implementation 'org.testcontainers:postgresql'
 
+    /* JOOQ metadata generator runtime dependencies */
+    compileOnly 'org.jooq:jooq-meta'
+    compileOnly 'org.jooq:jooq-codegen'
+
+    testImplementation project(':konfigyr-test')
+    testImplementation 'org.jooq:jooq-meta'
+    testImplementation 'org.jooq:jooq-codegen'
     testImplementation 'ch.qos.logback:logback-classic'
-    testImplementation(project(':konfigyr-test'))
 }
