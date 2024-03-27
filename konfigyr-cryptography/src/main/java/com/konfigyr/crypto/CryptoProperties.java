@@ -23,21 +23,21 @@ public class CryptoProperties {
 	public static final String PROVIDER_NAME = "konfigyr-registry";
 
 	/**
-	 * Identifier of the {@link KeyEncryptionKey} used by the Konfigyr application to
-	 * wrap and unwrap {@link Keyset data encryption keys}.
+	 * Identifier of the {@link KeyEncryptionKey Key Encryption Key (KEK)} used by the Konfigyr
+	 * application to wrap {@link Keyset Data Encryption Keys (DEK)} and unwrap the
+	 * {@link EncryptedKeyset encrypted Data Encryption Keys (eDEK)}.
 	 */
 	public static final String KEK_ID = "master";
 
 	/**
-	 * The {@link KeyEncryptionKey} value that is used to wrap and unwrap the {@link Keyset data encryption keys}.
+	 * Base 64 encoded value of the Key Encryption Key (KEK) used by the Konfigyr application
+	 * to wrap Data Encryption Keys (DEK) and unwrap encrypted Data Encryption Keys (eDEK).
 	 */
 	@NotEmpty
 	private String masterKey;
 
 	/**
-	 * Enables the {@link KeysetCache} backed by the {@link org.springframework.cache.CacheManager}.
-	 * <p>
-	 * Defaults to {@literal true}.
+	 * Enables the Keyset cache backed by Spring cache manager. Defaults to {@literal true}.
 	 *
 	 * @see SpringKeysetCache
 	 */
