@@ -1,9 +1,9 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
-    implementation(project(':konfigyr-api'))
+    implementation project(':konfigyr-api')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    testImplementation(project(':konfigyr-test'))
+    testImplementation project(':konfigyr-test')
 }

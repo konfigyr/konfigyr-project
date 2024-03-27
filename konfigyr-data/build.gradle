@@ -1,0 +1,66 @@
+plugins {
+    id 'nu.studer.jooq' version '9.0'
+}
+
+apply plugin: 'java-library'
+
+/* Force Spring to Use the same jOOQ version as the one defined in the plugin */
+ext['jooq.version'] = jooq.version.get()
+
+dependencies {
+    /* jOOQ Spring Support */
+    api 'org.springframework.boot:spring-boot-starter-jooq'
+
+    /* Liquibase - migrations runtime  */
+    implementation 'org.liquibase:liquibase-core'
+
+    /* Postgresql driver */
+    implementation 'org.postgresql:postgresql'
+
+    /* jOOQ extensions dependency for the gradle task */
+    jooqGenerator project(':konfigyr-jooq-extensions')
+    jooqGenerator 'ch.qos.logback:logback-classic'
+
+    testImplementation project(':konfigyr-test')
+}
+
+jooq {
+    configurations {
+        main {
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.INFO
+                generator {
+                    name = 'org.jooq.codegen.JavaGenerator'
+                    database {
+                        name = "com.konfigyr.jooq.KonfigyrDatabase"
+                        inputSchema = "public"
+                        excludes = 'databasechangelog.*'
+                    }
+                    generate {
+                        pojos = false
+                        records = false
+                        interfaces = false
+                        javaTimeTypes = true
+                        javadoc = true
+                    }
+                    target {
+                        packageName = "com.konfigyr.data"
+                    }
+                    strategy {
+                        name = "org.jooq.codegen.DefaultGeneratorStrategy"
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.named('generateJooq').configure {
+    inputs.files(fileTree('src/main/resources/migrations'))
+            .withPropertyName('migrations')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    allInputsDeclared = true
+
+    outputs.cacheIf { true }
+}
