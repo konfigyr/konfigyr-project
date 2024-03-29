@@ -3,6 +3,7 @@ apply plugin: 'java-library'
 dependencies {
     /* Spring Boot starter */
     api 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework.boot:spring-boot-starter-json'
 
     /* Spring Cache and Caffeine implementation */
     api 'org.springframework.boot:spring-boot-starter-cache'
@@ -18,4 +19,7 @@ dependencies {
     /* Spring Common libraries */
     api 'org.springframework.retry:spring-retry'
     api 'org.springframework.data:spring-data-commons'
+
+    /* TSID */
+    implementation 'io.hypersistence:hypersistence-tsid:2.1.1'
 }
