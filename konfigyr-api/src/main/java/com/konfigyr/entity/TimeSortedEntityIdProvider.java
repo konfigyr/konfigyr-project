@@ -28,11 +28,10 @@ import java.util.function.Supplier;
  *         the millisecond changes.
  *     </li>
  *     <li>
- *         To generate the generate the time component f the {@link TSID}, a UTC system time {@link Clock}
- *         is used and is based on an epoch that starts from the following date: <code>2024-01-01</code>.
+ *         To generate the time component of the {@link TSID}, a UTC system time {@link Clock} is used
+ *         and is based on an epoch that starts from the following date: <code>2024-01-01</code>.
  *     </li>
  * </ul>
- * <p>
  * This class is considered as a default implementation of the {@link EntityIdProvider} SPI. If there is no
  * specific implementation of the provider that is configured to be loaded by the {@link java.util.ServiceLoader},
  * this one would be used.
