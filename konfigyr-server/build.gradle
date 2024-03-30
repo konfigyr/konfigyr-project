@@ -2,6 +2,7 @@ apply plugin: 'org.springframework.boot'
 
 dependencies {
     implementation project(':konfigyr-api')
+    implementation project(':konfigyr-namespace')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
 

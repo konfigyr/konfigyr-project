@@ -1,0 +1,8 @@
+apply plugin: 'java-library'
+
+dependencies {
+    implementation project(':konfigyr-api')
+    implementation project(':konfigyr-data')
+
+    testImplementation project(':konfigyr-test')
+}

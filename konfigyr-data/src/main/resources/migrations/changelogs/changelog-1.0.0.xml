@@ -3,7 +3,7 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
+    
     <changeSet author="vspasic" id="1.0.0-create-keysets-table">
         <preConditions onFail="MARK_RAN">
             <not>
@@ -11,24 +11,78 @@
             </not>
         </preConditions>
 
+        <comment>Table that stores encrypted data encryption keysets</comment>
+
         <createTable tableName="KEYSETS">
             <column name="KEYSET_NAME" type="VARCHAR(64)">
                 <constraints nullable="false" primaryKey="true"/>
             </column>
+
             <column name="KEYSET_ALGORITHM" type="VARCHAR(64)">
                 <constraints nullable="false"/>
             </column>
+
             <column name="KEYSET_PROVIDER" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
+
             <column name="KEYSET_KEK" type="VARCHAR(128)">
                 <constraints nullable="false"/>
             </column>
+
             <column name="KEYSET_DATA" type="BINARY">
                 <constraints nullable="false"/>
             </column>
+
             <column name="ROTATION_INTERVAL" type="BIGINT"/>
+
             <column name="NEXT_ROTATION_TIME" type="BIGINT"/>
         </createTable>
+    </changeSet>
+
+    <changeSet author="vspasic" id="1.0.0-create-user-accounts-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="accounts"/>
+            </not>
+        </preConditions>
+
+        <comment>Initial user accounts table migration</comment>
+
+        <createTable tableName="accounts" remarks="Konfigyr user account.">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="status" type="varchar(32)" defaultValue="INITIAL">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="first_name" type="varchar(255)"/>
+
+            <column name="last_name" type="varchar(255)"/>
+
+            <column name="avatar" type="varchar(255)" />
+
+            <column name="last_login_at" type="timestamptz" />
+
+            <column name="created_at" type="timestamptz" defaultValue="NOW()">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="updated_at" type="timestamptz" defaultValue="NOW()">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="accounts"
+                columnNames="email"
+                constraintName="unique_account_email"
+        />
     </changeSet>
 </databaseChangeLog>

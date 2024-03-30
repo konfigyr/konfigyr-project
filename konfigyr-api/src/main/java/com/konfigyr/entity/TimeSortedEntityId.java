@@ -29,7 +29,7 @@ final class TimeSortedEntityId implements EntityId {
 	}
 
 	@Override
-	public long id() {
+	public long get() {
 		return id;
 	}
 
@@ -41,7 +41,7 @@ final class TimeSortedEntityId implements EntityId {
 
 	@Override
 	public int compareTo(@NonNull EntityId entityId) {
-		return Long.compare(id(), entityId.id());
+		return Long.compare(get(), entityId.get());
 	}
 
 	@Override

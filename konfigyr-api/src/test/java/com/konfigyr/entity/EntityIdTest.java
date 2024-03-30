@@ -26,7 +26,7 @@ class EntityIdTest {
 	void shouldParseLongEntityValue() {
 		assertThat(EntityId.from(31854375469809910L))
 				.isNotNull()
-				.returns(31854375469809910L, EntityId::id)
+				.returns(31854375469809910L, EntityId::get)
 				.returns("00W9BCAZ6Q07P", EntityId::serialize);
 	}
 
@@ -35,7 +35,7 @@ class EntityIdTest {
 	void shouldParseSerializedEntityValue() {
 		assertThat(EntityId.from("00W9BCAZYQ01Q"))
 				.isNotNull()
-				.returns(31854375494975543L, EntityId::id)
+				.returns(31854375494975543L, EntityId::get)
 				.returns("00W9BCAZYQ01Q", EntityId::serialize);
 	}
 

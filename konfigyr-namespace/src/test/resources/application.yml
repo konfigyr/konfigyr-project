@@ -1,0 +1,7 @@
+spring:
+  liquibase:
+    change-log: classpath:test-changelog.xml
+
+logging:
+  level:
+    com.konfigyr: DEBUG

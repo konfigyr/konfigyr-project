@@ -82,7 +82,7 @@ public interface EntityId extends Comparable<EntityId>, Serializable {
 	 *
 	 * @return the internal value
 	 */
-	long id();
+	long get();
 
 	/**
 	 * Returns the serialized external value of the {@link EntityId}.
