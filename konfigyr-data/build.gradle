@@ -4,9 +4,6 @@ plugins {
 
 apply plugin: 'java-library'
 
-/* Force Spring to Use the same jOOQ version as the one defined in the plugin */
-ext['jooq.version'] = jooq.version.get()
-
 dependencies {
     /* jOOQ Spring Support */
     api 'org.springframework.boot:spring-boot-starter-jooq'
@@ -25,6 +22,9 @@ dependencies {
 }
 
 jooq {
+    /* Force jOOQ plugin to use the same Spring version */
+    version = dependencyManagement.importedProperties['jooq.version']
+
     configurations {
         main {
             generationTool {
