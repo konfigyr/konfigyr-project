@@ -1,0 +1,170 @@
+
+/**
+ * Checkboxes, Radios and Switches
+ */
+
+// Labels
+// Not working in Firefox, which doesn't support the `:has()` pseudo-class
+label {
+  &:has([type="checkbox"], [type="radio"]) {
+    width: fit-content;
+    cursor: pointer;
+  }
+}
+
+[type="checkbox"],
+[type="radio"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 1.25em;
+  height: 1.25em;
+  margin-top: -0.125em;
+  margin-inline-end: 0.5em;
+  border-width: var(--konfigyr-border-width);
+  vertical-align: middle;
+  cursor: pointer;
+
+  &::-ms-check {
+    display: none; // unstyle IE checkboxes
+  }
+
+  &:checked,
+  &:checked:active,
+  &:checked:focus {
+    --konfigyr-background-color: var(--konfigyr-primary-background);
+    --konfigyr-border-color: var(--konfigyr-primary-border);
+    background-image: var(--konfigyr-icon-checkbox);
+    background-position: center;
+    background-size: 0.75em auto;
+    background-repeat: no-repeat;
+  }
+
+  & ~ label {
+    display: inline-block;
+    margin-bottom: 0;
+    cursor: pointer;
+
+    &:not(:last-of-type) {
+      margin-inline-end: 1em;
+    }
+  }
+}
+
+// Checkboxes
+[type="checkbox"] {
+  &:indeterminate {
+    --konfigyr-background-color: var(--konfigyr-primary-background);
+    --konfigyr-border-color: var(--konfigyr-primary-border);
+    background-image: var(--konfigyr-icon-minus);
+    background-position: center;
+    background-size: 0.75em auto;
+    background-repeat: no-repeat;
+  }
+}
+
+// Radios
+[type="radio"] {
+  border-radius: 50%;
+
+  &:checked,
+  &:checked:active,
+  &:checked:focus {
+    --konfigyr-background-color: var(--konfigyr-primary-inverse);
+    border-width: 0.35em;
+    background-image: none;
+  }
+}
+
+// Switchs
+[type="checkbox"][role="switch"] {
+  --konfigyr-background-color: var(--konfigyr-switch-background-color);
+  --konfigyr-color: var(--konfigyr-switch-color);
+
+  // Config
+  $switch-height: 1.25em;
+  $switch-width: 2.25em;
+  $switch-transition: 0.1s ease-in-out;
+
+  // Styles
+  width: $switch-width;
+  height: $switch-height;
+  border: var(--konfigyr-border-width) solid var(--konfigyr-border-color);
+  border-radius: $switch-height;
+  background-color: var(--konfigyr-background-color);
+  line-height: $switch-height;
+
+  &:not([aria-invalid]) {
+    --konfigyr-border-color: var(--konfigyr-switch-background-color);
+  }
+
+  &:before {
+    display: block;
+    aspect-ratio: 1;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--konfigyr-color);
+    box-shadow: var(--konfigyr-switch-thumb-box-shadow);
+    transition: margin $switch-transition;
+    content: "";
+  }
+
+  &:focus {
+    --konfigyr-background-color: var(--konfigyr-switch-background-color);
+    --konfigyr-border-color: var(--konfigyr-switch-background-color);
+  }
+
+  &:checked {
+    --konfigyr-background-color: var(--konfigyr-switch-checked-background-color);
+    --konfigyr-border-color: var(--konfigyr-switch-checked-background-color);
+    background-image: none;
+
+    &::before {
+      margin-inline-start: calc(#{$switch-width} - #{$switch-height});
+    }
+  }
+
+  &[disabled] {
+    --konfigyr-background-color: var(--konfigyr-border-color);
+  }
+}
+
+// Aria-invalid
+[type="checkbox"],
+[type="checkbox"][role="switch"] {
+  &[aria-invalid="false"] {
+    &:checked,
+    &:checked:active,
+    &:checked:focus {
+      --konfigyr-background-color: var(--konfigyr-form-element-valid-border-color);
+    }
+  }
+  &:checked,
+  &:checked:active,
+  &:checked:focus {
+    &[aria-invalid="true"] {
+      --konfigyr-background-color: var(
+        --konfigyr-form-element-invalid-border-color
+      );
+    }
+  }
+}
+
+[type="checkbox"],
+[type="radio"],
+[type="checkbox"][role="switch"] {
+  &[aria-invalid="false"] {
+    &:checked,
+    &:checked:active,
+    &:checked:focus {
+      --konfigyr-border-color: var(--konfigyr-form-element-valid-border-color);
+    }
+  }
+  &:checked,
+  &:checked:active,
+  &:checked:focus {
+    &[aria-invalid="true"] {
+      --konfigyr-border-color: var(--konfigyr-form-element-invalid-border-color);
+    }
+  }
+}

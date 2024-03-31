@@ -2,10 +2,25 @@ spring:
   liquibase:
     change-log: migrations/changelog.xml
 
+  messages:
+    basename: messages/konfigyr
+
   cache:
     cache-names: crypto-keysets
     caffeine:
       spec: expireAfterWrite=1h
+
+  mvc:
+    static-path-pattern: /assets/**
+
+  web:
+    resources:
+      static-locations:
+        - classpath:/dist/
+        - classpath:/static/
+      cache:
+        cachecontrol:
+          max-age: 30d
 
   security:
     oauth2:

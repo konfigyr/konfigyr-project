@@ -1,0 +1,167 @@
+/**
+ * Button
+ */
+
+// Reboot based on :
+// - normalize.css v8.0.1 | MIT License | github.com/necolas/normalize.css
+// - sanitize.css v13.0.0 | CC0 1.0 Universal | github.com/csstools/sanitize.css
+// ––––––––––––––––––––
+
+// 1. Change the font styles in all browsers
+// 2. Remove the margin on controls in Safari
+// 3. Show the overflow in Edge
+button {
+  margin: 0; // 2
+  overflow: visible; // 3
+  font-family: inherit; // 1
+  text-transform: none; // 1
+}
+
+// Correct the inability to style buttons in iOS and Safari
+button,
+[type="submit"],
+[type="reset"],
+[type="button"] {
+  -webkit-appearance: button;
+}
+
+button,
+[type="submit"],
+[type="reset"],
+[type="button"],
+[type="file"]::file-selector-button,
+[role="button"] {
+  --konfigyr-background-color: var(--konfigyr-primary-background);
+  --konfigyr-border-color: var(--konfigyr-primary-border);
+  --konfigyr-color: var(--konfigyr-primary-inverse);
+  --konfigyr-box-shadow: var(--konfigyr-button-box-shadow);
+  padding: var(--konfigyr-form-element-spacing-vertical)
+  var(--konfigyr-form-element-spacing-horizontal);
+  border: var(--konfigyr-border-width) solid var(--konfigyr-border-color);
+  border-radius: var(--konfigyr-border-radius);
+  outline: none;
+  background-color: var(--konfigyr-background-color);
+  box-shadow: var(--konfigyr-box-shadow);
+  color: var(--konfigyr-color);
+  font-weight: var(--konfigyr-font-weight);
+  font-size: 1rem;
+  line-height: var(--konfigyr-line-height);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+          background-color var(--konfigyr-transition),
+          border-color var(--konfigyr-transition),
+          color var(--konfigyr-transition),
+          box-shadow var(--konfigyr-transition);
+
+  &:is([aria-current]:not([aria-current="false"])),
+  &:is(:hover, :active, :focus) {
+    --konfigyr-background-color: var(--konfigyr-primary-hover-background);
+    --konfigyr-border-color: var(--konfigyr-primary-hover-border);
+    --konfigyr-box-shadow: var(--konfigyr-button-hover-box-shadow);
+    --konfigyr-color: var(--konfigyr-primary-inverse);
+  }
+
+  &:focus,
+  &:is([aria-current]:not([aria-current="false"])):focus {
+    --konfigyr-box-shadow:
+            var(--konfigyr-button-hover-box-shadow),
+            0 0 0 var(--konfigyr-outline-width) var(--konfigyr-primary-focus);
+  }
+}
+
+[type="submit"],
+[type="reset"],
+[type="button"] {
+  margin-bottom: var(--konfigyr-spacing);
+}
+
+// Secondary
+:is(button, [type="submit"], [type="button"], [role="button"]).secondary,
+[type="reset"],
+[type="file"]::file-selector-button {
+  --konfigyr-background-color: var(--konfigyr-secondary-background);
+  --konfigyr-border-color: var(--konfigyr-secondary-border);
+  --konfigyr-color: var(--konfigyr-secondary-inverse);
+  cursor: pointer;
+
+  &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+    --konfigyr-background-color: var(--konfigyr-secondary-hover-background);
+    --konfigyr-border-color: var(--konfigyr-secondary-hover-border);
+    --konfigyr-color: var(--konfigyr-secondary-inverse);
+  }
+
+  &:focus,
+  &:is([aria-current]:not([aria-current="false"])):focus {
+    --konfigyr-box-shadow:
+            var(--konfigyr-button-hover-box-shadow),
+            0 0 0 var(--konfigyr-outline-width) var(--konfigyr-secondary-focus);
+  }
+}
+
+// Contrast
+:is(button, [type="submit"], [type="button"], [role="button"]).contrast {
+  --konfigyr-background-color: var(--konfigyr-contrast-background);
+  --konfigyr-border-color: var(--konfigyr-contrast-border);
+  --konfigyr-color: var(--konfigyr-contrast-inverse);
+
+  &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+    --konfigyr-background-color: var(--konfigyr-contrast-hover-background);
+    --konfigyr-border-color: var(--konfigyr-contrast-hover-border);
+    --konfigyr-color: var(--konfigyr-contrast-inverse);
+  }
+
+  &:focus,
+  &:is([aria-current]:not([aria-current="false"])):focus {
+    --konfigyr-box-shadow:
+            var(--konfigyr-button-hover-box-shadow),
+            0 0 0 var(--konfigyr-outline-width) var(--konfigyr-contrast-focus);
+  }
+}
+
+// Outline (primary)
+:is(button, [type="submit"], [type="button"], [role="button"]).outline,
+[type="reset"].outline {
+  --konfigyr-background-color: transparent;
+  --konfigyr-color: var(--konfigyr-primary);
+  --konfigyr-border-color: var(--konfigyr-primary);
+
+  &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+    --konfigyr-background-color: transparent;
+    --konfigyr-color: var(--konfigyr-primary-hover);
+    --konfigyr-border-color: var(--konfigyr-primary-hover);
+  }
+}
+
+// Outline (secondary)
+:is(button, [type="submit"], [type="button"], [role="button"]).outline.secondary,
+[type="reset"].outline {
+  --konfigyr-color: var(--konfigyr-secondary);
+  --konfigyr-border-color: var(--konfigyr-secondary);
+
+  &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+    --konfigyr-color: var(--konfigyr-secondary-hover);
+    --konfigyr-border-color: var(--konfigyr-secondary-hover);
+  }
+}
+
+// Outline (contrast)
+:is(button, [type="submit"], [type="button"], [role="button"]).outline.contrast {
+  --konfigyr-color: var(--konfigyr-contrast);
+  --konfigyr-border-color: var(--konfigyr-contrast);
+
+  &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+    --konfigyr-color: var(--konfigyr-contrast-hover);
+    --konfigyr-border-color: var(--konfigyr-contrast-hover);
+  }
+}
+
+// Button [disabled]
+:where(button, [type="submit"], [type="reset"], [type="button"], [role="button"])[disabled],
+:where(fieldset[disabled]):is(button, [type="submit"], [type="button"], [type="reset"], [role="button"]) {
+  opacity: 0.5;
+  pointer-events: none;
+}

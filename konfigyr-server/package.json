@@ -1,0 +1,28 @@
+{
+  "name": "konfigyr-project",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Konfigyr web application",
+  "repository": "",
+  "type": "module",
+  "license": "MIT",
+  "author": "",
+  "scripts": {
+    "build": "rollup --config rollup.config.js",
+    "watch": "rollup --config rollup.config.js --watch"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "24.0.1",
+    "@rollup/plugin-node-resolve": "15.0.1",
+    "@rollup/plugin-replace": "^5.0.2",
+    "@rollup/plugin-terser": "0.4.0",
+    "bootstrap": "5.3.0",
+    "feather-icons": "^4.29.0",
+    "rollup": "3.18.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-sass": "1.12.18"
+  },
+  "engines": {
+    "node": "14.* || 16.* || >= 18"
+  }
+}
