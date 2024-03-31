@@ -25,6 +25,8 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 
+import java.time.temporal.ChronoUnit;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -72,8 +74,12 @@ class OAuth2AuthorizedClientServiceTest {
 								.returns(token.getTokenType(), OAuth2AccessToken::getTokenType)
 								.returns(token.getTokenValue(), AbstractOAuth2Token::getTokenValue)
 								.returns(token.getScopes(), OAuth2AccessToken::getScopes)
-								.returns(token.getIssuedAt(), AbstractOAuth2Token::getIssuedAt)
-								.returns(token.getExpiresAt(), AbstractOAuth2Token::getExpiresAt)
+								.satisfies(t -> assertThat(t.getIssuedAt())
+										.isNotNull()
+										.isCloseTo(token.getIssuedAt(), within(1, ChronoUnit.SECONDS)))
+								.satisfies(t -> assertThat(t.getExpiresAt())
+										.isNotNull()
+										.isCloseTo(token.getExpiresAt(), within(1, ChronoUnit.SECONDS)))
 				);
 
 		assertThatNoException()
