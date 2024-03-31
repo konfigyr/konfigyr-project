@@ -7,6 +7,7 @@ plugins {
 subprojects {
     apply plugin: 'idea'
     apply plugin: 'java'
+    apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
     apply plugin: 'io.freefair.lombok'
     apply plugin: 'io.spring.dependency-management'
@@ -60,4 +61,12 @@ subprojects {
         useJUnitPlatform()
     }
 
+    jacocoTestReport {
+        reports {
+            xml.required = true
+            html.required = false
+        }
+    }
+
+    check.dependsOn jacocoTestReport
 }
