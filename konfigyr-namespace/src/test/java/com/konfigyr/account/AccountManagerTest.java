@@ -16,9 +16,9 @@ import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @TestProfile
 @ImportTestcontainers(TestContainers.class)
@@ -46,7 +46,7 @@ class AccountManagerTest {
 				.returns(null, Account::avatar)
 				.satisfies(it -> assertThat(it.lastLoginAt())
 						.isNotNull()
-						.isEqualToIgnoringMinutes(OffsetDateTime.now())
+						.isCloseTo(OffsetDateTime.now(), byLessThan(10, ChronoUnit.MINUTES))
 				)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
 				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
