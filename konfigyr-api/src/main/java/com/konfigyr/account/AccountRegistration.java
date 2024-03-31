@@ -86,6 +86,10 @@ public record AccountRegistration(
 			final StringBuilder builder = new StringBuilder();
 			while (tokenizer.hasMoreTokens()) {
 				builder.append(tokenizer.nextToken());
+
+				if (tokenizer.hasMoreTokens()) {
+					builder.append(" ");
+				}
 			}
 
 			if (!builder.isEmpty()) {
@@ -136,7 +140,7 @@ public record AccountRegistration(
 		 * @throws IllegalArgumentException when required is missing or invalid
 		 */
 		public AccountRegistration build() {
-			Assert.hasText(email, "Account email address can not be null");
+			Assert.hasText(email, "Account email address can not be blank");
 
 			return new AccountRegistration(email, firstName, lastName, avatar);
 		}

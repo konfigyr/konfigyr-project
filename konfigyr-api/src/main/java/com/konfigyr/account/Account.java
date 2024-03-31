@@ -220,7 +220,7 @@ public record Account(
 		 * @return account builder
 		 */
 		public Builder updatedAt(Instant updatedAt) {
-			return createdAt(OffsetDateTime.ofInstant(updatedAt, ZoneOffset.UTC));
+			return updatedAt(OffsetDateTime.ofInstant(updatedAt, ZoneOffset.UTC));
 		}
 
 		/**
@@ -262,7 +262,7 @@ public record Account(
 		public Account build() {
 			Assert.notNull(id, "Account entity identifier can not be null");
 			Assert.notNull(status, "Account status can not be null");
-			Assert.hasText(email, "Account email address can not be null");
+			Assert.hasText(email, "Account email address can not be blank");
 
 			return new Account(id, status, email, firstName, lastName, generateDisplayName(),
 					avatar, lastLoginAt, createdAt, updatedAt);

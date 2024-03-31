@@ -9,7 +9,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.util.StringUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -70,10 +69,7 @@ public class OAuth2UserAccount implements OAuth2User, Serializable {
 	 */
 	@NonNull
 	public String getDisplayName() {
-		if (StringUtils.hasText(account.displayName())) {
-			return account.displayName();
-		}
-		return account.email();
+		return account.displayName();
 	}
 
 	/**

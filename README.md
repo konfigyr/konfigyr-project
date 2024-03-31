@@ -1,1 +1,1 @@
-# konfigyr-project
+# konfigyr-project ![example workflow](https://github.com/konfigyr/konfigyr-project/actions/workflows/ci.yml/badge.svg) [![codecov](https://codecov.io/gh/konfigyr/konfigyr-project/graph/badge.svg?token=81ATZF33YH)](https://codecov.io/gh/konfigyr/konfigyr-project)
