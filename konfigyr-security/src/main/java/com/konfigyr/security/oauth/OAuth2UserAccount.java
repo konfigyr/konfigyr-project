@@ -70,10 +70,7 @@ public class OAuth2UserAccount implements OAuth2User, Serializable {
 	 */
 	@NonNull
 	public String getDisplayName() {
-		if (StringUtils.hasText(account.displayName())) {
-			return account.displayName();
-		}
-		return account.email();
+		return account.displayName();
 	}
 
 	/**
