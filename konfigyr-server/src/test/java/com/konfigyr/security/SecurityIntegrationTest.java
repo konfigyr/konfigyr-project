@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
@@ -27,9 +28,20 @@ class SecurityIntegrationTest {
 	private MockMvc mvc;
 
 	@Test
+	@DisplayName("should render index page when not authenticated")
+	void shoulRenderIndexPage() throws Exception {
+		mvc.perform(get("/"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+				.andExpect(content().string(
+						containsStringIgnoringCase("<a href=\"/login\">")
+				));
+	}
+
+	@Test
 	@DisplayName("should redirect to login page when not authenticated")
 	void shouldRedirectToLogin() throws Exception {
-		mvc.perform(get("/"))
+		mvc.perform(get("/search"))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("http://localhost/login"));
 	}
@@ -39,6 +51,7 @@ class SecurityIntegrationTest {
 	void shouldRenderProviders() throws Exception {
 		mvc.perform(get("/login"))
 				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
 				.andExpect(content().string(
 						containsStringIgnoringCase("<a href=\"/oauth2/authorization/github\">")
 				));
