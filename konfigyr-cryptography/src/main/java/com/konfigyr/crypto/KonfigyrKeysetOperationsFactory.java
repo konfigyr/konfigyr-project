@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * from the {@link KeysetStore} or create one if missing using the supplied {@link KeysetDefinition}
  * and the {@link KeyEncryptionKey master key encryption key} that is configured for this application.
  *
- * @author : Vladimir Spasic
- * @since : 27.03.24, Wed
+ * @author Vladimir Spasic
+ * @since 1.0.0
  **/
 @Slf4j
 @RequiredArgsConstructor

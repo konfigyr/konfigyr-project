@@ -29,14 +29,14 @@ import java.sql.SQLException;
  * {@link Liquibase} changesets against it. Once the migrations are executed and the database
  * schema is updated, the JOOQ {@link org.jooq.codegen.Generator} would be executed.
  *
- * @author : Vladimir Spasic
- * @since : 26.03.24, Tue
+ * @author Vladimir Spasic
+ * @since 1.0.0
  * @see <a href="https://github.com/etiennestuder/gradle-jooq-plugin">Gradle JOOQ plugin</a>
  **/
 public class KonfigyrDatabase extends PostgresDatabase {
 
 	private static final String CHANGELOG = "src/main/resources/migrations";
-	private static final String POSTGRESQL_IMAGE = "postgres:15.3";
+	private static final String POSTGRESQL_IMAGE = "postgres:16.2";
 
 	private final JooqLogger logger = JooqLogger.getLogger(KonfigyrDatabase.class);
 	private final File changelogs;
@@ -74,7 +74,7 @@ public class KonfigyrDatabase extends PostgresDatabase {
 		logger.info("Staring PostgreSQL container...");
 
 		container = new PostgreSQLContainer<>(POSTGRESQL_IMAGE)
-				.withDatabaseName("konfigyr-registry");
+				.withDatabaseName("konfigyr");
 
 		container.start();
 	}

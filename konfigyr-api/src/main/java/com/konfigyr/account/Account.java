@@ -10,6 +10,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.StringJoiner;
 
 /**
@@ -177,7 +178,7 @@ public record Account(
 		 * @return account builder
 		 */
 		public Builder lastLoginAt(Instant lastLoginAt) {
-			return lastLoginAt(OffsetDateTime.from(lastLoginAt));
+			return lastLoginAt(OffsetDateTime.ofInstant(lastLoginAt, ZoneOffset.UTC));
 		}
 
 		/**
@@ -198,7 +199,7 @@ public record Account(
 		 * @return account builder
 		 */
 		public Builder createdAt(Instant createdAt) {
-			return createdAt(OffsetDateTime.from(createdAt));
+			return createdAt(OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC));
 		}
 
 		/**
@@ -219,7 +220,7 @@ public record Account(
 		 * @return account builder
 		 */
 		public Builder updatedAt(Instant updatedAt) {
-			return createdAt(OffsetDateTime.from(updatedAt));
+			return createdAt(OffsetDateTime.ofInstant(updatedAt, ZoneOffset.UTC));
 		}
 
 		/**

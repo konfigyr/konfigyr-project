@@ -8,7 +8,7 @@ import java.lang.annotation.*;
 /**
  * Used to annotate tests to apply a <code>test</code> Spring profile as the active one.
  *
- * @author : Vladimir Spasic
+ * @author Vladimir Spasic
  * @since 1.0.0
  **/
 @Target(ElementType.TYPE)

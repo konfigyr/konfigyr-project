@@ -13,8 +13,8 @@ import java.util.stream.Stream;
  * Konfigyr 3rd party libraries and generated Java packages when Spring Moduliths creates
  * the modules.
  *
- * @author : Vladimir Spasic
- * @since : 26.03.24, Tue
+ * @author Vladimir Spasic
+ * @since 1.0.0
  **/
 class KonfigyrApplicationModuleDetectionStrategy implements ApplicationModuleDetectionStrategy {
 

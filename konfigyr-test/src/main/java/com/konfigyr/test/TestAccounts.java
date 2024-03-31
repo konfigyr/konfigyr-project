@@ -10,8 +10,8 @@ import java.time.temporal.ChronoUnit;
 /**
  * Utility class that contains test {@link Account} stubs.
  *
- * @author : Vladimir Spasic
- * @since : 30.10.23, Mon
+ * @author Vladimir Spasic
+ * @since 1.0.0
  **/
 public interface TestAccounts {
 

@@ -8,7 +8,7 @@ import org.testcontainers.junit.jupiter.Container;
  * Utility class that is used to register {@link org.testcontainers.containers.Container test containers}
  * in the Spring text context.
  *
- * @author : Vladimir Spasic
+ * @author Vladimir Spasic
  * @since 1.0.0
  * @see Container
  * @see ServiceConnection
@@ -23,6 +23,6 @@ public interface TestContainers {
 	 */
 	@Container
 	@ServiceConnection
-	PostgreSQLContainer<?> postresql = new PostgreSQLContainer<>("postgres:16.0");
+	PostgreSQLContainer<?> postresql = new PostgreSQLContainer<>("postgres:16.2");
 
 }

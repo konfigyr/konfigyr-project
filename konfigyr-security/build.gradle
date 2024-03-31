@@ -1,0 +1,13 @@
+apply plugin: 'java-library'
+
+dependencies {
+    implementation project(':konfigyr-api')
+    implementation project(':konfigyr-data')
+    implementation project(':konfigyr-cryptography')
+
+    api 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    testImplementation project(':konfigyr-test')
+    testImplementation project(':konfigyr-namespace')
+    testImplementation 'org.springframework.boot:spring-boot-starter-web'
+}

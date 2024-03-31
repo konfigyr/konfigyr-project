@@ -9,8 +9,8 @@ import org.springframework.validation.annotation.Validated;
  * Spring configuration properties used to create the primary {@link KeyEncryptionKeyProvider}
  * for the Konfigyr application.
  *
- * @author : Vladimir Spasic
- * @since : 23.10.23, Mon
+ * @author Vladimir Spasic
+ * @since 1.0.
  **/
 @Data
 @Validated
