@@ -12,8 +12,8 @@ import java.util.function.Supplier;
  * It is advised to use {@link KeysetOperationsFactory} to create new instances of this type
  * as the factory would make sure that the supplied {@link Keyset} is present in the {@link KeysetStore}.
  *
- * @author : Vladimir Spasic
- * @since : 27.03.24, Wed
+ * @author Vladimir Spasic
+ * @since 1.0.0
  * @see Keyset
  * @see KeysetOperationsFactory
  **/

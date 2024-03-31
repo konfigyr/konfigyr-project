@@ -1,0 +1,31 @@
+spring:
+  liquibase:
+    change-log: migrations/changelog.xml
+
+  cache:
+    cache-names: crypto-keysets
+    caffeine:
+      spec: expireAfterWrite=1h
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-name: Github
+            scope: repo:status,user
+            provider: github
+
+        provider:
+          github:
+            user-name-attribute: email
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        name: "konfigyr.sid"
+        max-age: 1d
+        same-site: strict
+        secure: true

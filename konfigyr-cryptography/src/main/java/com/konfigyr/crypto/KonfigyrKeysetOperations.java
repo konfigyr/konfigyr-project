@@ -11,8 +11,8 @@ import java.util.function.Supplier;
  * Simple implementation of the {@link KeysetOperations} that would retrieve the {@link Keyset} from the
  * given {@link Supplier} to delegate cryptographic operations.
  *
- * @author : Vladimir Spasic
- * @since : 27.03.24, Wed
+ * @author Vladimir Spasic
+ * @since 1.0.0
  **/
 @RequiredArgsConstructor
 final class KonfigyrKeysetOperations implements KeysetOperations {

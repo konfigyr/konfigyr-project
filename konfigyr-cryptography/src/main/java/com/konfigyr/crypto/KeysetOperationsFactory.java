@@ -6,8 +6,8 @@ import org.springframework.lang.NonNull;
  * Factory interface that is used to create, or resolve any existing, {@link KeysetOperations} for
  * a given {@link KeysetDefinition}.
  *
- * @author : Vladimir Spasic
- * @since : 27.03.24, Wed
+ * @author Vladimir Spasic
+ * @since 1.0.0
  **/
 @FunctionalInterface
 public interface KeysetOperationsFactory {

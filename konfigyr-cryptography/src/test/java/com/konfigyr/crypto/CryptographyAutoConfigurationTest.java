@@ -20,7 +20,8 @@ class CryptographyAutoConfigurationTest {
 
 	final Configurations configurations = AutoConfigurations.of(
 			CryptoAutoConfiguration.class,
-			CryptographyAutoConfiguration.class
+			CryptographyAutoConfiguration.class,
+			KeysetOperationsAutoConfiguration.class
 	);
 
 	ApplicationContextRunner runner;
@@ -32,8 +33,7 @@ class CryptographyAutoConfigurationTest {
 	void setup() {
 		runner = new ApplicationContextRunner()
 				.withConfiguration(configurations)
-				.withBean(KeysetFactory.class, () -> keysetFactory)
-				.withBean(CacheManager.class, NoOpCacheManager::new);
+				.withBean(KeysetFactory.class, () -> keysetFactory);
 	}
 
 	@Test
@@ -75,9 +75,24 @@ class CryptographyAutoConfigurationTest {
 	}
 
 	@Test
+	void shouldCreateContextWithoutCacheManager() {
+		runner.withPropertyValues(
+				"konfigyr.crypto.cache=true",
+				"konfigyr.crypto.master-key=c7miwShcEQkZUcNQGqliVA=="
+		).run(ctx -> assertThat(ctx)
+				.hasNotFailed()
+				.hasBean("konfigyrKeysetOperationsFactory")
+				.hasBean("konfigyrKekProvider")
+				.doesNotHaveBean("registryKeysetCache")
+		);
+	}
+
+	@Test
 	void shouldCreateContextWithKeysetCache() {
 		runner.withPropertyValues(
 				"konfigyr.crypto.master-key=c7miwShcEQkZUcNQGqliVA=="
+		).withBean(
+				CacheManager.class, NoOpCacheManager::new
 		).run(ctx -> assertThat(ctx)
 				.hasNotFailed()
 				.hasBean("konfigyrKeysetOperationsFactory")

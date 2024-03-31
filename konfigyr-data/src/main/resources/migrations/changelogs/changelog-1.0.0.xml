@@ -85,4 +85,57 @@
                 constraintName="unique_account_email"
         />
     </changeSet>
+
+    <changeSet author="vspasic" id="1.0.0-create-account-access-tokens-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="account_access_tokens" />
+            </not>
+        </preConditions>
+
+        <comment>Initial user account access tokens table migration</comment>
+
+        <createTable tableName="account_access_tokens" remarks="Stores the OAuth2 Access Tokens for user accounts.">
+            <column name="client_registration_id" type="varchar(100)">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="account_id" type="bigint">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="access_token_value" type="bytea">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="access_token_scopes" type="text">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="access_token_issued_at" type="timestamptz">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="access_token_expiry_date" type="timestamptz">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="refresh_token_value" type="bytea">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="refresh_token_issued_at" type="timestamptz">
+                <constraints nullable="true" />
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="account_access_tokens"
+                baseColumnNames="account_id"
+                constraintName="fk_access_token_owner"
+                onDelete="CASCADE"
+                referencedTableName="accounts"
+                referencedColumnNames="id"
+        />
+    </changeSet>
 </databaseChangeLog>
