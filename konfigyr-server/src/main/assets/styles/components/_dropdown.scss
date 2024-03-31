@@ -1,0 +1,264 @@
+/**
+ * Dropdown (details.dropdown)
+ */
+
+// Container
+// ––––––––––––––––––––
+details.dropdown {
+  position: relative;
+  border-bottom: none;
+
+  // Marker
+  // ––––––––––––––––––––
+  summary,
+  > button,
+  > a {
+    &::after {
+      display: block;
+      width: 1rem;
+      height: calc(1rem * var(--konfigyr-line-height, 1.5));
+      margin-inline-start: 0.25rem;
+      float: right;
+      // TODO: find out why we need this magic number (0.2 rem)
+      // for the marker to be aligned with the regular select
+      transform: rotate(0deg) translateX(0.2rem);
+      background-image: var(--konfigyr-icon-chevron);
+      background-position: right center;
+      background-size: 1rem auto;
+      background-repeat: no-repeat;
+      content: "";
+    }
+  }
+}
+
+// Container type accordion
+// inside a nav
+// ––––––––––––––––––––
+nav details.dropdown {
+  // Override height
+  margin-bottom: 0;
+}
+
+// Bouton as a select
+// inside container type accordion
+// ––––––––––––––––––––
+details.dropdown summary:not([role]) {
+  height: calc(
+          1rem *
+          var(--konfigyr-line-height) +
+          var(--konfigyr-form-element-spacing-vertical) *
+          2 +
+          var(--konfigyr-border-width) *
+          2
+  );
+  padding: var(--konfigyr-form-element-spacing-vertical)
+  var(--konfigyr-form-element-spacing-horizontal);
+  border: var(--konfigyr-border-width)
+  solid
+  var(--konfigyr-form-element-border-color);
+  border-radius: var(--konfigyr-border-radius);
+  background-color: var(--konfigyr-form-element-background-color);
+  color: var(--konfigyr-form-element-placeholder-color);
+  line-height: inherit;
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+          background-color var(--konfigyr-transition),
+          border-color var(--konfigyr-transition),
+          color var(--konfigyr-transition),
+          box-shadow var(--konfigyr-transition);
+
+  &:active,
+  &:focus {
+    border-color: var(--konfigyr-form-element-active-border-color);
+    background-color: var(--konfigyr-form-element-active-background-color);
+  }
+
+  &:focus {
+    box-shadow: 0
+    0
+    0
+    var(--konfigyr-outline-width)
+    var(--konfigyr-form-element-focus-color);
+  }
+
+  // Reset focus visible from accordion component
+  &:focus-visible {
+    outline: none;
+  }
+
+  // Aria-invalid
+  &[aria-invalid="false"] {
+    --konfigyr-form-element-border-color: var(
+                    --konfigyr-form-element-valid-border-color
+    );
+    --konfigyr-form-element-active-border-color: var(
+                    --konfigyr-form-element-valid-focus-color
+    );
+    --konfigyr-form-element-focus-color: var(
+                    --konfigyr-form-element-valid-focus-color
+    );
+  }
+
+  &[aria-invalid="true"] {
+    --konfigyr-form-element-border-color: var(
+                    --konfigyr-form-element-invalid-border-color
+    );
+    --konfigyr-form-element-active-border-color: var(
+                    --konfigyr-form-element-invalid-focus-color
+    );
+    --konfigyr-form-element-focus-color: var(
+                    --konfigyr-form-element-invalid-focus-color
+    );
+  }
+}
+
+// Dropdown inside a nav
+// ––––––––––––––––––––
+nav details.dropdown {
+  display: inline;
+  margin: calc(var(--konfigyr-nav-element-spacing-vertical) * -1) 0;
+
+  summary {
+    &::after {
+      transform: rotate(0deg) translateX(0rem);
+    }
+
+    &:not([role]) {
+      // Override height
+      height: calc(
+              (1rem * var(--konfigyr-line-height)) +
+              (var(--konfigyr-nav-link-spacing-vertical) * 2)
+      );
+      padding: calc(
+              var(--konfigyr-nav-link-spacing-vertical) -
+              (var(--konfigyr-border-width) * 2)
+      )
+      var(--konfigyr-nav-link-spacing-horizontal);
+
+      &:focus-visible {
+        box-shadow: 0
+        0
+        0
+        var(--konfigyr-outline-width)
+        var(--konfigyr-primary-focus);
+      }
+    }
+  }
+}
+
+// Submenu
+// ––––––––––––––––––––
+details.dropdown summary + ul {
+  display: flex;
+  z-index: 99;
+  position: absolute;
+  left: 0;
+  flex-direction: column;
+  width: 100%;
+  min-width: fit-content;
+  margin: 0;
+  margin-top: var(--konfigyr-outline-width);
+  padding: 0;
+  border: var(--konfigyr-border-width) solid var(--konfigyr-dropdown-border-color);
+  border-radius: var(--konfigyr-border-radius);
+  background-color: var(--konfigyr-dropdown-background-color);
+  box-shadow: var(--konfigyr-dropdown-box-shadow);
+  transition: opacity var(--konfigyr-transition), transform 0s ease-in-out 1s;
+  color: var(--konfigyr-dropdown-color);
+  white-space: nowrap;
+  opacity: 0;
+
+  &[dir="rtl"] {
+    right: 0;
+    left: auto;
+  }
+
+  li {
+    width: 100%;
+    margin-bottom: 0;
+    padding: calc(var(--konfigyr-form-element-spacing-vertical) * 0.5)
+    var(--konfigyr-form-element-spacing-horizontal);
+    list-style: none;
+
+    &:first-of-type {
+      margin-top: calc(var(--konfigyr-form-element-spacing-vertical) * 0.5);
+    }
+
+    &:last-of-type {
+      margin-bottom: calc(var(--konfigyr-form-element-spacing-vertical) * 0.5);
+    }
+
+    a {
+      display: block;
+      margin: calc(var(--konfigyr-form-element-spacing-vertical) * -0.5)
+      calc(var(--konfigyr-form-element-spacing-horizontal) * -1);
+      padding: calc(var(--konfigyr-form-element-spacing-vertical) * 0.5)
+      var(--konfigyr-form-element-spacing-horizontal);
+      overflow: hidden;
+      border-radius: 0;
+      color: var(--konfigyr-dropdown-color);
+      text-decoration: none;
+      text-overflow: ellipsis;
+
+      &:hover,
+      &:focus,
+      &:active,
+      &:focus-visible,
+      &[aria-current]:not([aria-current="false"]) {
+        background-color: var(--konfigyr-dropdown-hover-background-color);
+      }
+    }
+
+    label {
+      width: 100%;
+    }
+
+    // Not working in Firefox, which doesn't support the `:has()` pseudo-class
+    &:has(label):hover {
+      background-color: var(--konfigyr-dropdown-hover-background-color);
+    }
+  }
+}
+
+// Button opened
+// inside container type accordion
+// ––––––––––––––––––––
+details.dropdown[open] summary {
+  margin-bottom: 0;
+}
+
+// Menu opened
+// ––––––––––––––––––––
+// 1. Inside container type accordion
+details.dropdown[open] summary {
+  + ul {
+    transform: scaleY(1);
+    opacity: 1;
+    transition: opacity var(--konfigyr-transition), transform 0s ease-in-out 0s;
+  }
+}
+
+// Close for dropdown
+// inside container type accordion
+// ––––––––––––––––––––
+details.dropdown[open] summary {
+  &::before {
+    display: block;
+    z-index: 1;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    inset: 0;
+    background: none;
+    content: "";
+    cursor: default;
+  }
+}
+
+// Label
+// ––––––––––––––––––––
+label > details.dropdown {
+  margin-top: calc(var(--konfigyr-spacing) * 0.25);
+}

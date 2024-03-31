@@ -1,0 +1,58 @@
+/**
+ * Link
+ */
+:where(a:not([role="button"])),
+[role="link"] {
+  --konfigyr-color: var(--konfigyr-primary);
+  --konfigyr-background-color: transparent;
+  --konfigyr-underline: var(--konfigyr-primary-underline);
+
+  outline: none;
+  background-color: var(--konfigyr-background-color); // 1
+  color: var(--konfigyr-color);
+  text-decoration: var(--konfigyr-text-decoration);
+  text-decoration-color: var(--konfigyr-underline);
+  text-underline-offset: 0.125em;
+
+  transition:
+          background-color var(--konfigyr-transition),
+          color var(--konfigyr-transition),
+          text-decoration var(--konfigyr-transition),
+          box-shadow var(--konfigyr-transition);
+
+  &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+    --konfigyr-color: var(--konfigyr-primary-hover);
+    --konfigyr-underline: var(--konfigyr-primary-hover-underline);
+    --konfigyr-text-decoration: underline;
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 var(--konfigyr-outline-width) var(--konfigyr-primary-focus);
+  }
+
+  // Secondary
+  &.secondary {
+    --konfigyr-color: var(--konfigyr-secondary);
+    --konfigyr-underline: var(--konfigyr-secondary-underline);
+
+    &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+      --konfigyr-color: var(--konfigyr-secondary-hover);
+      --konfigyr-underline: var(--konfigyr-secondary-hover-underline);
+    }
+  }
+
+  // Contrast
+  &.contrast {
+    --konfigyr-color: var(--konfigyr-contrast);
+    --konfigyr-underline: var(--konfigyr-contrast-underline);
+
+    &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+      --konfigyr-color: var(--konfigyr-contrast-hover);
+      --konfigyr-underline: var(--konfigyr-contrast-hover-underline);
+    }
+  }
+}
+
+a[role="button"] {
+  display: inline-block;
+}

@@ -1,0 +1,77 @@
+/**
+ * Icon (svg.icon)
+ */
+.icon {
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+$icon-sizes: (
+        'xs': (
+                width: 0.5rem,
+                height: 0.5rem
+        ),
+        'sm': (
+                width: 0.75rem,
+                height: 0.75rem
+        ),
+        'lg': (
+                width: 1.25rem,
+                height: 1.25rem
+        ),
+        '2x': (
+                width: 2rem,
+                height: 2rem
+        ),
+        '3x': (
+                width: 2.5rem,
+                height: 2.5rem
+        ),
+        '4x': (
+                width: 3rem,
+                height: 3rem
+        ),
+        '5x': (
+                width: 4rem,
+                height: 4rem
+        )
+);
+
+@mixin generate-icon-variant($size, $width, $height) {
+  #{'.icon.icon-' + $size} {
+    width: $width;
+    height: $height
+  }
+}
+
+// Loop over each size to generate size variant
+@each $size, $values in $icon-sizes {
+  @include generate-icon-variant($size, map-get($values, width), map-get($values, width));
+}
+
+// Support when icon is part of the button or a link element
+a,
+button,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+[role="button"] {
+  & > i,
+  & > svg,
+  & > .icon {
+    &, & + * {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    & + * {
+      margin-left: calc(var(--konfigyr-spacing) * 0.25);
+    }
+  }
+}

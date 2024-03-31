@@ -1,3 +1,7 @@
+plugins {
+    id 'com.github.node-gradle.node' version '7.0.2'
+}
+
 apply plugin: 'org.springframework.boot'
 
 dependencies {
@@ -8,5 +12,35 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    /* Spring Boot Thymeleaf */
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+    implementation 'com.github.zhanhb:thymeleaf-layout-dialect:3.2.0'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
     testImplementation project(':konfigyr-test')
 }
+
+node {
+    npmCommand = '/usr/local/bin/npm'
+
+    /* use the CI NPM command when executing Github actions */
+    npmInstallCommand = System.getenv('CI') ? 'ci' : 'install'
+}
+
+tasks.register('rollup', NpmTask) {
+    dependsOn npmInstall
+
+    args = ['run', 'build']
+
+    /* define inputs for the task in order to run only when the inputs change */
+    inputs.files('package.json', 'package-lock.json', 'rollup.config.js')
+    inputs.dir('src/main/assets')
+    inputs.dir(fileTree("node_modules").exclude(".cache"))
+
+    /* mark the dist as the output directory */
+    outputs.dir(project.layout.buildDirectory.dir('resources/dist'))
+}
+
+processResources.dependsOn('rollup')

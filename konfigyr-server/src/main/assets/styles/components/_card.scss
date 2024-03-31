@@ -1,0 +1,41 @@
+/**
+ * Card (<article>)
+ */
+
+article {
+  margin-bottom: var(--konfigyr-block-spacing-vertical);
+  padding: var(--konfigyr-block-spacing-vertical)
+    var(--konfigyr-block-spacing-horizontal);
+  border-radius: var(--konfigyr-border-radius);
+  background: var(--konfigyr-card-background-color);
+  box-shadow: var(--konfigyr-card-box-shadow);
+
+  > header,
+  > footer {
+    margin-right: calc(var(--konfigyr-block-spacing-horizontal) * -1);
+    margin-left: calc(var(--konfigyr-block-spacing-horizontal) * -1);
+    padding: calc(var(--konfigyr-block-spacing-vertical) * 0.66)
+      var(--konfigyr-block-spacing-horizontal);
+    background-color: var(--konfigyr-card-sectioning-background-color);
+  }
+
+  > header {
+    margin-top: calc(var(--konfigyr-block-spacing-vertical) * -1);
+    margin-bottom: var(--konfigyr-block-spacing-vertical);
+    border-bottom: var(--konfigyr-border-width)
+      solid
+      var(--konfigyr-card-border-color);
+    border-top-right-radius: var(--konfigyr-border-radius);
+    border-top-left-radius: var(--konfigyr-border-radius);
+  }
+
+  > footer {
+    margin-top: var(--konfigyr-block-spacing-vertical);
+    margin-bottom: calc(var(--konfigyr-block-spacing-vertical) * -1);
+    border-top: var(--konfigyr-border-width)
+      solid
+      var(--konfigyr-card-border-color);
+    border-bottom-right-radius: var(--konfigyr-border-radius);
+    border-bottom-left-radius: var(--konfigyr-border-radius);
+  }
+}

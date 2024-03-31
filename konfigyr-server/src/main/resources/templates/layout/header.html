@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+    <nav th:fragment="header" class="container-fluid">
+        <ol class="breadcrumb">
+            <li>
+                <a th:href="@{/}" th:title="#{konfigyr.title}" th:attr="aria-current=${active == 'index' ? 'page' : null}">
+                    <strong>K</strong>
+                </a>
+            </li>
+        </ol>
+
+        <ul>
+            <li th:unless="${#authentication}">
+                <a th:href="@{/login}" th:attr="aria-current=${active == 'login' ? 'page' : null}">
+                    <svg th:replace="~{fragments/icon :: icon (name='user')}"></svg>
+                    <span th:text="#{header.labels.login}">Login</span>
+                </a>
+            </li>
+            <li th:if="${#authentication}">
+                <details class="dropdown" role="list">
+                    <summary aria-haspopup="listbox" role="link">
+                        <img th:replace="~{fragments/avatar :: avatar (
+                        avatar=${#authentication.principal.avatar},
+                        title=${#authentication.principal.displayName},
+                        alt=${#authentication.principal.displayName}
+                        )}">
+
+                        <small sec:authentication="principal.displayName">
+                            John Doe
+                        </small>
+                    </summary>
+                    <ul role="listbox">
+                        <li>
+                            <a th:href="@{/account}">
+                                <svg th:replace="~{fragments/icon :: icon (name='user')}"></svg>
+                                <span class="ms-2" th:text="#{header.labels.your-profile}">Your profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr />
+                        </li>
+                        <li>
+                            <form th:action="@{/logout}" method="POST" class="m-0">
+                                <button type="submit" th:text="#{header.labels.logout}">
+                                    Sign out
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </details>
+            </li>
+        </ul>
+    </nav>
+</body>
+</html>

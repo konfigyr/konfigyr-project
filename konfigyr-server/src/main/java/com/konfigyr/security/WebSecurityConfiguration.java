@@ -31,6 +31,8 @@ public class WebSecurityConfiguration {
 								SecurityRequestMatchers.OAUTH_LOGIN
 						)
 						.permitAll()
+						.requestMatchers("/")
+						.permitAll()
 						.anyRequest()
 						.authenticated()
 				)

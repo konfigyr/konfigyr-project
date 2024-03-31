@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE" th:text="#{konfigyr.title}">
+        Konfigyr
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+    <link th:href="@{/assets/konfigyr.css}" rel="stylesheet" />
+</head>
+<body class="body-gradient">
+    <th:block th:replace="~{fragments/svg-symbols :: symbols}">
+        SVG Symbols
+    </th:block>
+
+    <header id="header" layout:fragment="header">
+
+    </header>
+
+    <main layout:fragment="main">
+
+    </main>
+
+    <footer id="footer"  layout:fragment="footer" class="text-center">
+        <p>Made with ❤️ in Berlin.</p>
+    </footer>
+
+    <script type="text/javascript" th:src="@{/assets/konfigyr.js}"></script>
+</body>
+</html>

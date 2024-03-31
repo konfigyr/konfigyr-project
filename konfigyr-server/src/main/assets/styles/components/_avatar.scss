@@ -1,0 +1,15 @@
+/**
+ * Avatar (.avatar)
+ */
+.avatar {
+  position: relative;
+  display: inline-block;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 100%;
+  overflow: hidden;
+  border: 1px solid var(--muted-border-color);
+  line-height: 0;
+  vertical-align: top;
+  box-sizing: border-box;
+}
