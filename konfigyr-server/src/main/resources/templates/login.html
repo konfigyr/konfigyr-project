@@ -32,8 +32,9 @@
                 <a th:each="option : ${options}"
                    th:href="${option.url}"
                    th:classappend="${option.id}"
+                   konfigyr:test-selector="login-button"
                    role="button"
-                   class="login-button d-block my-2"
+                   class="d-block my-2"
                 >
                     <svg th:replace="~{fragments/icon :: icon (name=${option.id})}"></svg>
                     <span th:text="${option.name}">Login option name</span>

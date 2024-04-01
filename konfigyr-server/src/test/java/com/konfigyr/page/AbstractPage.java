@@ -1,17 +1,12 @@
 package com.konfigyr.page;
 
-import lombok.Getter;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.LoadableComponent;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 import java.net.URI;
-import java.net.URL;
-import java.util.List;
 
 /**
  * Abstract HTML Unit Page Object that should be used as a base class when creating specific

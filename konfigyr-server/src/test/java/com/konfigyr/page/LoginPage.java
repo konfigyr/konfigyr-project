@@ -27,7 +27,7 @@ public class LoginPage extends AbstractPage<LoginPage> {
 		super(driver);
 	}
 
-	@FindBy(css = ".login-button")
+	@FindBy(css = "[data-test-selector=\"login-button\"]")
 	private List<WebElement> loginButtons;
 
 	@Override
