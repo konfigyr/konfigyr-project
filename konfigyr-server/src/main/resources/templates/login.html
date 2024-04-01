@@ -19,7 +19,7 @@
         </article>
 
         <div class="hero text-center">
-            <h1 class="hero-title" th:text="#{konfigyr.title}">
+            <h1 class="hero-title" th:text="#{konfigyr.hero}">
                 Konfigyr
             </h1>
             <p class="hero-text" th:text="#{login.lead}">
@@ -33,7 +33,7 @@
                    th:href="${option.url}"
                    th:classappend="${option.id}"
                    role="button"
-                   class="d-block my-2"
+                   class="login-button d-block my-2"
                 >
                     <svg th:replace="~{fragments/icon :: icon (name=${option.id})}"></svg>
                     <span th:text="${option.name}">Login option name</span>

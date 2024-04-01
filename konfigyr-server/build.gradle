@@ -20,6 +20,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     testImplementation project(':konfigyr-test')
+    testImplementation 'org.seleniumhq.selenium:htmlunit-driver'
 }
 
 node {
@@ -40,7 +41,7 @@ tasks.register('rollup', NpmTask) {
     inputs.dir(fileTree("node_modules").exclude(".cache"))
 
     /* mark the dist as the output directory */
-    outputs.dir(project.layout.buildDirectory.dir('resources/dist'))
+    outputs.dir(project.layout.buildDirectory.dir('resources/main/dist'))
 }
 
 tasks.register('npmTest', NpmTask) {
