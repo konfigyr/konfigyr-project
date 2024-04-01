@@ -8,7 +8,7 @@ import path from 'path';
 
 const project = path.resolve('src/main/resources');
 const assets = path.resolve('src/main/assets')
-const dist = path.resolve('build/resources/dist');
+const dist = path.resolve('build/resources/main/dist');
 
 export default {
     input: path.resolve(assets, 'scripts/main.js'),

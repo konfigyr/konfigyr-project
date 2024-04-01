@@ -37,7 +37,9 @@ public class WebSecurityConfiguration {
 						.authenticated()
 				)
 				.cors(Customizer.withDefaults())
-				.oauth2Login(Customizer.withDefaults())
+				.oauth2Login(oauth -> oauth
+						.loginPage(SecurityRequestMatchers.LOGIN_PAGE)
+				)
 				.logout(Customizer.withDefaults())
 				.httpBasic(AbstractHttpConfigurer::disable)
 				.formLogin(AbstractHttpConfigurer::disable)

@@ -30,19 +30,19 @@
 
 // Display utilities
 .d-block {
-  display: block;
+  display: block !important;
 }
 
 .d-flex {
-  display: flex;
+  display: flex !important;
 }
 
 .d-inline {
-  display: inline-block;
+  display: inline-block !important;
 }
 
 .d-none {
-  display: none;
+  display: none !important;
 }
 
 $spacers: (

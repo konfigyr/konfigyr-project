@@ -1,0 +1,49 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:konfigyr="https://konfigyr.com"
+      layout:decorate="~{layout/layout}"
+      lang="en">
+<head>
+    <title th:text="#{login.title}">Login</title>
+</head>
+<body>
+<header layout:fragment="header">
+    <nav th:replace="~{layout/header :: header (active='login')}">
+    </nav>
+</header>
+<main layout:fragment="main" class="d-flex align-items-center justify-content-center">
+    <div class="container">
+        <article th:if="${logout}" class="text-center">
+            <p th:text="#{login.logged-out}"></p>
+        </article>
+
+        <div class="hero text-center">
+            <h1 class="hero-title" th:text="#{konfigyr.hero}">
+                Konfigyr
+            </h1>
+            <p class="hero-text" th:text="#{login.lead}">
+                Configuration made easy.
+            </p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-xl-4 py-4">
+                <a th:each="option : ${options}"
+                   th:href="${option.url}"
+                   th:classappend="${option.id}"
+                   konfigyr:test-selector="oauth-login-button"
+                   role="button"
+                   class="d-block my-2"
+                >
+                    <svg th:replace="~{fragments/icon :: icon (name=${option.id})}"></svg>
+                    <span th:text="${option.name}">Login option name</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>
