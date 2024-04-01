@@ -1,39 +1,32 @@
 package com.konfigyr.thymeleaf;
 
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
-import org.thymeleaf.dialect.AbstractDialect;
-import org.thymeleaf.dialect.IProcessorDialect;
+import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.processor.IProcessor;
+import org.thymeleaf.standard.StandardDialect;
 
 import java.util.Set;
 
 /**
- * Konfigyr Thymelaf {@link IProcessorDialect} implementation.
+ * Konfigyr Thymelaf {@link AbstractProcessorDialect} implementation.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-@Component
-public class KonfigyrDialect extends AbstractDialect implements IProcessorDialect {
+class KonfigyrDialect extends AbstractProcessorDialect {
 
-	private static final String NAME = "konfigyr";
+	static final String DIALECT_NAME = "KonfigyrDialect";
+
+	/**
+	 * The Konfigyr dialect prefix, used like this: <code>konfigyr:*</code>.
+	 */
+	static final String DIALECT_PREFIX = "konfigyr";
 
 	private final Environment environment;
 
-	protected KonfigyrDialect(Environment environment) {
-		super(NAME);
+	KonfigyrDialect(Environment environment) {
+		super(DIALECT_NAME, DIALECT_PREFIX, StandardDialect.PROCESSOR_PRECEDENCE);
 		this.environment = environment;
-	}
-
-	@Override
-	public String getPrefix() {
-		return NAME;
-	}
-
-	@Override
-	public int getDialectProcessorPrecedence() {
-		return 1000;
 	}
 
 	@Override

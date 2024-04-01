@@ -2,6 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:konfigyr="https://konfigyr.com"
       layout:decorate="~{layout/layout}"
       lang="en">
 <head>
@@ -32,7 +33,7 @@
                 <a th:each="option : ${options}"
                    th:href="${option.url}"
                    th:classappend="${option.id}"
-                   konfigyr:test-selector="login-button"
+                   konfigyr:test-selector="oauth-login-button"
                    role="button"
                    class="d-block my-2"
                 >
