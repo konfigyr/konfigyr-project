@@ -8,4 +8,4 @@ export const assert = (state, message) => {
     if (process.env.NODE_ENV !== 'production' && state === false) {
         throw new Error(`Assertion error: ${message}`);
     }
-}
+};
