@@ -39,4 +39,4 @@ jobs:
           report_paths: '**/build/test-results/test/TEST-*.xml'
 
       - name: Test coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
