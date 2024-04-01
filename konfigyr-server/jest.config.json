@@ -1,0 +1,5 @@
+{
+  "collectCoverage": true,
+  "coverageReporters": ["text", "cobertura"],
+  "reporters": ["github-actions", "summary"]
+}
