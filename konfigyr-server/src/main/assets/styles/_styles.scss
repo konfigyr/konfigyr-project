@@ -38,16 +38,32 @@
   // Spacings for typography elements
   --konfigyr-typography-spacing-vertical: #{$spacer};
 
-  // Spacings for blocks, like section, article
+  // Spacings for blocks, like section
   --konfigyr-block-spacing-vertical: var(--konfigyr-spacing);
   --konfigyr-block-spacing-horizontal: var(--konfigyr-spacing);
 
-  // Spacings for form elements and button
-  --konfigyr-form-element-spacing-vertical: calc(var(--konfigyr-spacing) / 2);
-  --konfigyr-form-element-spacing-horizontal: calc(var(--konfigyr-spacing) * 1.25);
+  // Spacings for articles or cards
+  --konfigyr-card-spacing-vertical: var(--konfigyr-spacing);
+  --konfigyr-card-spacing-horizontal: var(--konfigyr-spacing);
 
-  // Font weight for form labels & fieldsets legend
+  // Configuration for buttons
+  --konfigyr-button-spacing-vertical: calc(var(--konfigyr-spacing) * 0.5);
+  --konfigyr-button-spacing-horizontal: calc(var(--konfigyr-spacing) * 2);
+
+  // Configuration for form elements
+  --konfigyr-form-element-font-size: 0.9rem;
+  --konfigyr-form-element-line-height: var(--konfigyr-line-height);
   --konfigyr-form-label-font-weight: var(--konfigyr-font-weight);
+  --konfigyr-form-element-spacing-vertical: calc(var(--konfigyr-spacing) * 0.5);
+  --konfigyr-form-element-spacing-horizontal: calc(var(--konfigyr-spacing) * 0.75);
+
+  // Configuration for radio-box
+  --konfigyr-radio-box-label-font-weight: 600;
+  --konfigyr-radio-box-background-color: var(--konfigyr-background-color);
+  --konfigyr-radio-box-border-radius: var(--konfigyr-border-radius);
+  --konfigyr-radio-box-box-shadow: 0 0 1px rgba(0, 0, 0, 0.24), 0 0 3px rgba(0, 0, 0, 0.08);
+  --konfigyr-radio-box-spacing-vertical: var(--konfigyr-form-element-spacing-vertical);
+  --konfigyr-radio-box-spacing-horizontal: var(--konfigyr-form-element-spacing-horizontal);
 
   // Group (role="group")
   --konfigyr-group-box-shadow: 0 0 0 rgba(0, 0, 0, 0);
@@ -129,6 +145,10 @@ header, main, footer, section {
 
 // Card (<article>)
 article {
+  --konfigyr-card-background-color: var(--konfigyr-background-color);
+  --konfigyr-card-border-radius: var(--konfigyr-border-radius);
+  --konfigyr-card-box-shadow: 0 0 1px rgba(0, 0, 0, 0.24), 0 0 3px rgba(0, 0, 0, 0.08);
+
   @each $key, $values in $breakpoints {
     @if $values {
       @media (min-width: map.get($values, "breakpoint")) {
@@ -145,8 +165,8 @@ article {
           $multiplier: 1.75;
         }
 
-        --konfigyr-block-spacing-vertical: #{calc($spacer * $multiplier)};
-        --konfigyr-block-spacing-horizontal: #{calc($spacer * $multiplier)};
+        --konfigyr-card-spacing-vertical: #{calc($spacer * $multiplier)};
+        --konfigyr-card-spacing-horizontal: #{calc($spacer * $multiplier)};
       }
     }
   }
@@ -180,31 +200,31 @@ h6 {
 }
 
 h1 {
-  --konfigyr-font-size: 2.5rem;
+  --konfigyr-font-size: 2rem;
   --konfigyr-line-height: 1.125;
   --konfigyr-typography-spacing-top: 3rem;
 }
 
 h2 {
-  --konfigyr-font-size: 2rem;
+  --konfigyr-font-size: 1.75rem;
   --konfigyr-line-height: 1.15;
   --konfigyr-typography-spacing-top: 2.625rem;
 }
 
 h3 {
-  --konfigyr-font-size: 1.75rem;
+  --konfigyr-font-size: 1.5rem;
   --konfigyr-line-height: 1.175;
   --konfigyr-typography-spacing-top: 2.25rem;
 }
 
 h4 {
-  --konfigyr-font-size: 1.5rem;
+  --konfigyr-font-size: 1.25rem;
   --konfigyr-line-height: 1.2;
   --konfigyr-typography-spacing-top: 1.874rem;
 }
 
 h5 {
-  --konfigyr-font-size: 1.25rem;
+  --konfigyr-font-size: 1.15rem;
   --konfigyr-line-height: 1.225;
   --konfigyr-typography-spacing-top: 1.6875rem;
 }

@@ -138,7 +138,6 @@ fieldset legend {
 
 // Blocks, 100%
 input:not([type="checkbox"], [type="radio"]),
-button[type="submit"],
 select,
 textarea {
   width: 100%;
@@ -159,6 +158,8 @@ select,
 textarea {
   --konfigyr-background-color: var(--konfigyr-form-element-background-color);
   --konfigyr-border-color: var(--konfigyr-form-element-border-color);
+  --konfigyr-line-height: var(--konfigyr-form-element-line-height);
+  --konfigyr-font-size: var(--konfigyr-form-element-font-size);
   --konfigyr-color: var(--konfigyr-form-element-color);
   --konfigyr-box-shadow: none;
 
@@ -168,6 +169,7 @@ textarea {
   background-color: var(--konfigyr-background-color);
   box-shadow: var(--konfigyr-box-shadow);
   color: var(--konfigyr-color);
+  font-size: var(--konfigyr-font-size);
   font-weight: var(--konfigyr-font-weight);
 
   transition:
@@ -387,18 +389,21 @@ textarea {
 }
 
 :where(input, select, textarea, fieldset, .grid) {
-  + small {
+  + .help-text,
+  + .validation-error {
     display: block;
     width: 100%;
     margin-top: calc(var(--konfigyr-spacing) * -0.75);
     margin-bottom: var(--konfigyr-spacing);
     color: var(--konfigyr-muted-color);
   }
+
   &[aria-invalid="false"] {
     + small {
       color: var(--konfigyr-ins-color);
     }
   }
+
   &[aria-invalid="true"] {
     + small {
       color: var(--konfigyr-del-color);
