@@ -6,7 +6,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.env.MockEnvironment;
 import org.thymeleaf.spring6.dialect.SpringStandardDialect;
 import org.thymeleaf.testing.templateengine.engine.TestExecutor;
-import org.thymeleaf.testing.templateengine.spring6.context.web.SpringMVCWebProcessingContextBuilder;
 
 import java.util.List;
 
