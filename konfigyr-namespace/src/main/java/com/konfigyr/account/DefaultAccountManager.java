@@ -69,7 +69,7 @@ class DefaultAccountManager implements AccountManager {
 					.set(ACCOUNTS.CREATED_AT, OffsetDateTime.now())
 					.set(ACCOUNTS.CREATED_AT, OffsetDateTime.now())
 					.returning(ACCOUNTS.fields())
-					.fetchOne(mapper());
+					.fetchOne(DefaultAccountManager::map);
 		} catch (DuplicateKeyException e) {
 			throw new AccountExistsException(registration, e);
 		} catch (Exception e) {
@@ -92,7 +92,7 @@ class DefaultAccountManager implements AccountManager {
 			.select(ACCOUNTS.fields())
 			.from(ACCOUNTS)
 			.where(condition)
-			.fetchOptional(mapper());
+			.fetchOptional(DefaultAccountManager::map);
 	}
 
 	@NonNull
@@ -103,8 +103,9 @@ class DefaultAccountManager implements AccountManager {
 				.orElseGet(Collections::emptyMap);
 	}
 
-	private static RecordMapper<Record, Account> mapper() {
-		return record -> Account.builder()
+	@NonNull
+	private static Account map(@NonNull Record record) {
+		return Account.builder()
 				.id(record.get(ACCOUNTS.ID))
 				.status(record.get(ACCOUNTS.STATUS))
 				.email(record.get(ACCOUNTS.EMAIL))

@@ -138,4 +138,63 @@
                 referencedColumnNames="id"
         />
     </changeSet>
+
+    <changeSet author="vspasic" id="1.0.0-create-namespaces-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="namespaces" />
+            </not>
+        </preConditions>
+
+        <comment>Initial namespaces table migration</comment>
+
+        <createTable tableName="namespaces" remarks="Namespace under which artifacts and vaults would be managed.">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="owner" type="bigint">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="slug" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="type" type="varchar(20)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="description" type="text">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="created_at" type="timestamptz" defaultValue="NOW()">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="updated_at" type="timestamptz" defaultValue="NOW()">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="namespaces"
+                columnNames="slug"
+                constraintName="unique_namespace"
+        />
+
+        <addForeignKeyConstraint
+                baseTableName="namespaces"
+                baseColumnNames="owner"
+                constraintName="fk_namespace_owner"
+                referencedTableName="accounts"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
 </databaseChangeLog>
