@@ -41,8 +41,22 @@ public final class Forms {
 	 * @return form control support for the field
 	 */
 	public FormControl control(@NonNull String name, @Nullable String helpText) {
+		return control(name, helpText, StringUtils.randomAlphanumeric(8));
+	}
+
+	/**
+	 * Generates the {@link FormControl} object for the given field name.
+	 * <p>
+	 * If the help text is present, it would also generate the {@link HelpText} object.
+	 *
+	 * @param name name of the field or control to be generated, can't be {@literal null}
+	 * @param helpText help text for the form control, can be [@literal null}
+	 * @param suffix suffix added to the field name to generate the input field identifier
+	 * @return form control support for the field
+	 */
+	public FormControl control(@NonNull String name, @Nullable String helpText, @NonNull String suffix) {
 		final IThymeleafBindStatus status = FieldUtils.getBindStatus(context, "*{" + name + "}");
-		final String id = FieldUtils.idFromName(name) + '-' + StringUtils.randomAlphanumeric(8);
+		final String id = FieldUtils.idFromName(name) + '-' + suffix;
 
 		return FormControl.create(id, name, helpText, status);
 	}

@@ -21,6 +21,7 @@ dependencies {
 
     testImplementation project(':konfigyr-test')
     testImplementation 'org.seleniumhq.selenium:htmlunit-driver'
+    testImplementation 'org.thymeleaf:thymeleaf-testing-spring6:3.1.0.M2'
 }
 
 node {

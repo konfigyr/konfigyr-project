@@ -1,0 +1,7 @@
+%TEMPLATE_MODE HTML5
+# ------------ separator comment -----------
+%INPUT
+<p konfigyr:test-selector="test-selector-value">Value</p>
+# ------------------------------------------
+%OUTPUT
+<p data-test-selector="test-selector-value">Value</p>

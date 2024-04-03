@@ -1,0 +1,36 @@
+%TEMPLATE_MODE HTML5
+# ------------ separator comment -----------
+%CONTEXT
+model = new com.konfigyr.thymeleaf.TestTemplateModel('Testing', 'test@acme.com', 12, true)
+error = #{ 'binding' : 'model', 'field' : 'age', 'message' : 'You are a minor'}
+
+bindingErrors = { error }
+# ------------------------------------------
+%INPUT
+<form th:object="${model}">
+    <th:block th:with="control=${#forms.control('age', 'You need to be at least 18', 'suffix')}">
+        <input
+            type="number"
+            th:id="${control.id}"
+            th:name="${control.name}"
+            th:value="${control.value}"
+            th:attr="aria-invalid=${control.aria.invalid}, aria-describedby=${control.aria.describedBy}"
+        >
+        <small th:id="${control.help.id}" th:text="${control.help.value}">Help text</small>
+        <small th:id="${control.errors.id}" th:text="${control.errors.value}">Error text</small>
+    </th:block>
+</form>
+# ------------------------------------------
+%OUTPUT
+<form>
+        <input
+            type="number"
+            id="age-suffix"
+            name="age"
+            value="12"
+            aria-invalid="true"
+            aria-describedby="age-suffix-help age-suffix-errors"
+        >
+        <small id="age-suffix-help">You need to be at least 18</small>
+        <small id="age-suffix-errors">You are a minor</small>
+</form>
