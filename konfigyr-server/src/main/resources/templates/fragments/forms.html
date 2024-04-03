@@ -1,0 +1,80 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+    <th:block th:fragment="input-group">
+        <th:block th:with="control=${#forms.control(name)}">
+            <label th:for="${control.id}"
+                   th:text="${label}"
+                   th:unless="${#strings.isEmpty(label)}"
+            >
+                Input label
+            </label>
+
+            <th:block th:switch="${type}">
+                <textarea
+                        th:case="textarea"
+                        th:id="${control.id}"
+                        th:name="${control.name}"
+                        th:text="${control.value}"
+                        th:attr="
+                            aria-invalid=${control.aria.invalid},
+                            aria-describedby=${control.aria.describedBy},
+                            rows=${rows == null ? 6 : rows}
+                        "
+                ></textarea>
+                <input
+                        th:case="*"
+                        th:id="${control.id}"
+                        th:name="${control.name}"
+                        th:value="${control.value}"
+                        th:type="${#strings.isEmpty(type) ? 'text' : type}"
+                        th:attr="
+                            aria-invalid=${control.aria.invalid},
+                            aria-describedby=${control.aria.describedBy}
+                        "
+                />
+            </th:block>
+
+            <div th:id="${control.errors.id}" th:if="${control.aria.invalid}" class="validation-error" >
+                <svg th:replace="~{fragments/icon :: icon (name='alert-triangle', size='icon-sm')}"></svg>
+                <span th:text="${control.errors.value}">Validation error, and another one, then another...</span>
+            </div>
+
+            <th:block th:insert="~{fragments/forms :: help-text (id=${control.help.id}, text=${control.help.value})}" />
+        </th:block>
+    </th:block>
+
+    <th:block th:fragment="radio-box ()">
+        <div class="radio-box">
+            <label>
+                <input
+                        type="radio"
+                        th:name="${name}"
+                        th:value="${option}"
+                        th:checked="${#strings.equals(option, value)}"
+                />
+                <strong th:text="${label}">Radio box label</strong>
+            </label>
+            <small th:unless="${#strings.isEmpty(help)}" th:text="${help}">
+                I am working on some personal projects of mine
+            </small>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="errors (name)">
+        <div th:id="${id}" class="validation-error" th:if="${#fields.hasErrors(name)}">
+            <svg th:replace="~{fragments/icon :: icon (name='alert-triangle', size='icon-sm')}"></svg>
+
+            <div th:text="${#strings.listJoin(#fields.errors(name), ', ')}">
+                Validation error, and another one, then another...
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="help-text (text)">
+        <small th:id="${id}" class="help-text" th:unless="${#strings.isEmpty(text)}" th:text="${text}">
+            Help text
+        </small>
+    </th:block>
+</body>

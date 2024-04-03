@@ -35,8 +35,8 @@ button,
   --konfigyr-border-color: var(--konfigyr-primary-border);
   --konfigyr-color: var(--konfigyr-primary-inverse);
   --konfigyr-box-shadow: var(--konfigyr-button-box-shadow);
-  padding: var(--konfigyr-form-element-spacing-vertical)
-  var(--konfigyr-form-element-spacing-horizontal);
+
+  padding: var(--konfigyr-button-spacing-vertical) var(--konfigyr-button-spacing-horizontal);
   border: var(--konfigyr-border-width) solid var(--konfigyr-border-color);
   border-radius: var(--konfigyr-border-radius);
   outline: none;

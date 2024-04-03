@@ -2,6 +2,8 @@ package com.konfigyr.thymeleaf;
 
 import org.springframework.core.env.Environment;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
+import org.thymeleaf.dialect.IExpressionObjectDialect;
+import org.thymeleaf.expression.IExpressionObjectFactory;
 import org.thymeleaf.processor.IProcessor;
 import org.thymeleaf.standard.StandardDialect;
 
@@ -13,7 +15,7 @@ import java.util.Set;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-class KonfigyrDialect extends AbstractProcessorDialect {
+class KonfigyrDialect extends AbstractProcessorDialect implements IExpressionObjectDialect {
 
 	static final String DIALECT_NAME = "KonfigyrDialect";
 
@@ -27,6 +29,11 @@ class KonfigyrDialect extends AbstractProcessorDialect {
 	KonfigyrDialect(Environment environment) {
 		super(DIALECT_NAME, DIALECT_PREFIX, StandardDialect.PROCESSOR_PRECEDENCE);
 		this.environment = environment;
+	}
+
+	@Override
+	public IExpressionObjectFactory getExpressionObjectFactory() {
+		return KonfigyrExpressionObjectFactory.getInstance();
 	}
 
 	@Override

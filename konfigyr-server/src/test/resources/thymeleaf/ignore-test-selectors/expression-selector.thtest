@@ -1,0 +1,10 @@
+%TEMPLATE_MODE HTML5
+# ------------ separator comment -----------
+%CONTEXT
+selector = 'test-selector-value'
+# ------------------------------------------
+%INPUT
+<p konfigyr:test-selector="${selector}">Value</p>
+# ------------------------------------------
+%OUTPUT
+<p>Value</p>

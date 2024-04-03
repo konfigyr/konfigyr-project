@@ -1,0 +1,26 @@
+
+/**
+ * Radio selection box that wraps the radio button with title and description
+ */
+.radio-box {
+  padding: var(--konfigyr-radio-box-spacing-vertical)
+  var(--konfigyr-radio-box-spacing-horizontal);
+  border-radius: var(--konfigyr-radio-box-border-radius);
+  background: var(--konfigyr-radio-box-background-color);
+  box-shadow: var(--konfigyr-radio-box-box-shadow);
+  transition: box-shadow var(--konfigyr-transition);
+
+  label {
+    font-weight: var(--konfigyr-radio-box-label-font-weight);
+  }
+
+  + .radio-box {
+    margin-top: var(--konfigyr-spacing);
+  }
+
+  @supports selector(:has(*)) {
+    &:has([type="radio"]:checked) {
+      --konfigyr-radio-box-box-shadow: var(--konfigyr-group-box-shadow-focus-with-button);
+    }
+  }
+}

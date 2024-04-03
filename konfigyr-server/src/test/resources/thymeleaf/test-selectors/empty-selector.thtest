@@ -1,0 +1,12 @@
+%TEMPLATE_MODE HTML5
+# ------------ separator comment -----------
+%CONTEXT
+values = #{ 'null': null, 'empty': '', 'blank': '   ' }
+# ------------------------------------------
+%INPUT
+<p th:each="entry : ${values}" th:text="${entry.key}" konfigyr:test-selector="${entry.value}">Value</p>
+# ------------------------------------------
+%OUTPUT
+<p>null</p>
+<p>empty</p>
+<p>blank</p>

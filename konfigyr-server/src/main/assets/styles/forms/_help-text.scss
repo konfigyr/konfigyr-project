@@ -1,0 +1,8 @@
+.help-text {
+  --konfigyr-font-size: 0.75em;
+
+  display: block;
+  width: 100%;
+  font-size: var(--konfigyr-font-size);
+  color: var(--konfigyr-muted-color);
+}

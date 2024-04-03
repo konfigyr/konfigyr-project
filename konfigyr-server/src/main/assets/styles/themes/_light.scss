@@ -70,7 +70,7 @@
 
   // Inserted (<ins>) & Deleted (<del>)
   --konfigyr-ins-color: #{mix($jade-450, $zinc-750)};
-  --konfigyr-del-color: #{mix($red-500, $zinc-750)};
+  --konfigyr-del-color: #{$red-550};
 
   // Blockquote
   --konfigyr-blockquote-border-color: var(--konfigyr-muted-border-color);
