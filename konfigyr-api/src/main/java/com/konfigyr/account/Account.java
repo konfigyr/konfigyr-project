@@ -122,6 +122,7 @@ public record Account(
 		 *
 		 * @param status account status
 		 * @return account builder
+		 * @throws IllegalArgumentException when status is invalid
 		 */
 		public Builder status(String status) {
 			return status(AccountStatus.valueOf(status));

@@ -2,14 +2,11 @@ package com.konfigyr.account;
 
 import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.test.TestContainers;
-import com.konfigyr.test.TestProfile;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.modulith.test.PublishedEvents;
 import org.springframework.modulith.test.PublishedEventsExtension;
@@ -20,8 +17,6 @@ import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.*;
 
-@TestProfile
-@ImportTestcontainers(TestContainers.class)
 @SpringBootTest(classes = NamespaceTestConfiguration.class)
 @ExtendWith(PublishedEventsExtension.class)
 class AccountManagerTest {

@@ -6,7 +6,7 @@ import org.springframework.lang.NonNull;
 import java.util.Optional;
 
 /**
- * Interface that defines a contract to be used when dealing woth {@link Account accounts}.
+ * Interface that defines a contract to be used when dealing with {@link Account accounts}.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
