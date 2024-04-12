@@ -46,6 +46,16 @@ public class AccountRememberMeServices extends AbstractRememberMeServices {
 	static final String DIGEST_ALGORITHM = "SHA-256";
 	static final int TOKEN_VALIDITY = (int) Duration.ofDays(14).toSeconds();
 
+	/**
+	 * Creates a new instance of the {@link AccountRememberMeServices} that uses the {@link PrincipalService}
+	 * as the actual {@link org.springframework.security.core.userdetails.UserDetailsService} implementation.
+	 * <p>
+	 * The {@link org.springframework.security.web.authentication.RememberMeServices} would create instances
+	 * of the {@link org.springframework.security.authentication.RememberMeAuthenticationToken} with the
+	 * {@link com.konfigyr.security.AccountPrincipal} as the principal.
+	 *
+	 * @param service account principal service used to load users, can't be {@literal null}
+	 */
 	public AccountRememberMeServices(PrincipalService service) {
 		super(KEY, service::lookup);
 

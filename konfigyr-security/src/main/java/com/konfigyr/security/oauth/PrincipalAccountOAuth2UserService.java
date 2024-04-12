@@ -35,6 +35,16 @@ public class PrincipalAccountOAuth2UserService implements OAuth2UserService<OAut
 	private final PrincipalService principalService;
 	private final OAuth2UserService<OAuth2UserRequest, ? extends OAuth2User> delegate;
 
+	/**
+	 * Creates the {@link PrincipalAccountOAuth2UserService} instance using the {@link PrincipalService}
+	 * to retrieve or register new {@link com.konfigyr.account.Account accounts} for resolved {@link OAuth2User}.
+	 * <p>
+	 * The {@link RestTemplateBuilder} would be used to configure the delegating {@link OAuth2UserService} that
+	 * would attempt to fetch and resolved the {@link OAuth2User} attributes.
+	 *
+	 * @param principalService principal service to resolve accounts, can't be {@literal null}
+	 * @param restTemplateBuilder rest template builder to create {@link OAuth2UserService} delegate, can't be {@literal null}
+	 */
 	public PrincipalAccountOAuth2UserService(PrincipalService principalService, RestTemplateBuilder restTemplateBuilder) {
 		this(principalService, createDefaultDelegate(restTemplateBuilder));
 	}

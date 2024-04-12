@@ -30,6 +30,13 @@ public class AccountPrincipalService implements PrincipalService {
 	private final AccountManager manager;
 	private final UserCache cache;
 
+	/**
+	 * Creates a new instance of the {@link AccountPrincipalService} with {@link NullUserCache} as
+	 * the {@link UserCache} implementation. This would not cache {@link AccountPrincipal principals}
+	 * that were retrieved by the {@link AccountManager}.
+	 *
+	 * @param manager account manager used to lookup accounts, can't be {@literal null}
+	 */
 	public AccountPrincipalService(AccountManager manager) {
 		this(manager, new NullUserCache());
 	}
