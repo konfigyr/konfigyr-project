@@ -3,6 +3,7 @@ package com.konfigyr.security.oauth;
 import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.security.AccountPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Converter;
@@ -100,27 +101,30 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 				registration.getRegistrationId(), account);
 
 		final Instant refreshTokenIssuedAt = refreshToken != null ? refreshToken.getIssuedAt() : null;
+		final Instant refreshTokenExpiresAt = refreshToken != null ? refreshToken.getExpiresAt() : null;
 		final String accessTokenScopes = StringUtils.collectionToDelimitedString(accessToken.getScopes(), ",");
 		final byte[] accessTokenValue = encrypt(accessToken);
 		final byte[] refreshTokenValue = encrypt(refreshToken);
 
 		context.insertInto(ACCOUNT_ACCESS_TOKENS)
-			.set(ACCOUNT_ACCESS_TOKENS.CLIENT_REGISTRATION_ID, registration.getRegistrationId())
-			.set(ACCOUNT_ACCESS_TOKENS.ACCOUNT_ID, account.get())
-			.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE, accessTokenValue)
-			.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_SCOPES, accessTokenScopes)
-			.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(accessToken.getIssuedAt()))
-			.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_EXPIRY_DATE, INSTANT_CONVERTER.to(accessToken.getExpiresAt()))
-			.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE, refreshTokenValue)
-			.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(refreshTokenIssuedAt))
-			.onDuplicateKeyUpdate()
-			.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE, accessTokenValue)
-			.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_SCOPES, accessTokenScopes)
-			.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(accessToken.getIssuedAt()))
-			.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_EXPIRY_DATE, INSTANT_CONVERTER.to(accessToken.getExpiresAt()))
-			.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE, refreshTokenValue)
-			.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(refreshTokenIssuedAt))
-			.execute();
+				.set(ACCOUNT_ACCESS_TOKENS.CLIENT_REGISTRATION_ID, registration.getRegistrationId())
+				.set(ACCOUNT_ACCESS_TOKENS.ACCOUNT_ID, account.get())
+				.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE, accessTokenValue)
+				.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_SCOPES, accessTokenScopes)
+				.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(accessToken.getIssuedAt()))
+				.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_EXPIRES_AT, INSTANT_CONVERTER.to(accessToken.getExpiresAt()))
+				.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE, refreshTokenValue)
+				.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(refreshTokenIssuedAt))
+				.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_EXPIRES_AT, INSTANT_CONVERTER.to(refreshTokenExpiresAt))
+				.onDuplicateKeyUpdate()
+				.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE, accessTokenValue)
+				.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_SCOPES, accessTokenScopes)
+				.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(accessToken.getIssuedAt()))
+				.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(accessToken.getExpiresAt()))
+				.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE, refreshTokenValue)
+				.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_ISSUED_AT, INSTANT_CONVERTER.to(refreshTokenIssuedAt))
+				.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_EXPIRES_AT, INSTANT_CONVERTER.to(refreshTokenExpiresAt))
+				.execute();
 	}
 
 	@Override
@@ -150,7 +154,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 				OAuth2AccessToken.TokenType.BEARER,
 				decrypt(record.get(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE)),
 				record.get(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_ISSUED_AT, INSTANT_CONVERTER),
-				record.get(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_EXPIRY_DATE, INSTANT_CONVERTER),
+				record.get(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_EXPIRES_AT, INSTANT_CONVERTER),
 				StringUtils.commaDelimitedListToSet(record.get(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_SCOPES))
 		);
 
@@ -161,7 +165,8 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 
 		final OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(
 				decrypt(record.get(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE)),
-				record.get(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_ISSUED_AT, INSTANT_CONVERTER)
+				record.get(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_ISSUED_AT, INSTANT_CONVERTER),
+				record.get(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_EXPIRES_AT, INSTANT_CONVERTER)
 		);
 
 		return new OAuth2AuthorizedClient(registration, account.serialize(), accessToken, refreshToken);
@@ -187,7 +192,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 	}
 
 	private static EntityId lookupUserIdentifierForAuthentication(Authentication authentication) {
-		if (authentication.getPrincipal() instanceof OAuth2UserAccount account) {
+		if (authentication.getPrincipal() instanceof AccountPrincipal account) {
 			return account.getId();
 		}
 

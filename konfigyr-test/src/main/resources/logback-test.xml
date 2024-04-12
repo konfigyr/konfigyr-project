@@ -1,0 +1,20 @@
+<configuration>
+    <!-- Import Spring's default Logback configuration -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- Define the Console Appender log message pattern  -->
+    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{HH:mm:ss.SSS}){faint} %clr([%-20thread]) %clr(%-5level) [%mdc] %clr(%-40.40logger{39}){cyan} %clr(:){faint} %marker %m%n"/>
+
+    <!-- Import Spring's Console Logback appender configurations -->
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!-- Use the shutdown hook so that we can close gracefully and finish the log drain -->
+    <shutdownHook class="ch.qos.logback.core.hook.DefaultShutdownHook"/>
+
+    <logger name="com.konfigyr" level="DEBUG" />
+
+    <!-- Define the root logger appender to use console and logtail appender -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

@@ -2,6 +2,7 @@ package com.konfigyr.security.oauth;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.security.SecurityTestConfiguration;
+import com.konfigyr.security.AccountPrincipal;
 import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
@@ -20,10 +21,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.core.AbstractOAuth2Token;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.*;
 
 import java.time.temporal.ChronoUnit;
 
@@ -46,14 +44,71 @@ class OAuth2AuthorizedClientServiceTest {
 	@Test
 	@DisplayName("should create, retrieve and remove OAuth2 authorized clients for accounts")
 	void shouldManageAuthorizedClients() {
-		final var token = createAccessToken();
+		final var accessToken = createAccessToken();
+		final var refreshToken = createRefreshToken();
 		final var account = TestAccounts.john().build();
 		final var authentication = authentication(account);
 
 		final var client = new OAuth2AuthorizedClient(
 				registrationRepository.findByRegistrationId(CLIENT_REGISTRATION),
 				authentication.getName(),
-				token
+				accessToken,
+				refreshToken
+		);
+
+		assertThatObject(authorizedClientService.loadAuthorizedClient(CLIENT_REGISTRATION, authentication.getName()))
+				.isNull();
+
+		assertThatNoException()
+				.isThrownBy(() -> authorizedClientService.saveAuthorizedClient(client, authentication));
+
+		assertThatObject(authorizedClientService.loadAuthorizedClient(CLIENT_REGISTRATION, authentication.getName()))
+				.isNotNull()
+				.isInstanceOf(OAuth2AuthorizedClient.class)
+				.asInstanceOf(InstanceOfAssertFactories.type(OAuth2AuthorizedClient.class))
+				.returns(client.getClientRegistration(), OAuth2AuthorizedClient::getClientRegistration)
+				.returns(account.id().serialize(), OAuth2AuthorizedClient::getPrincipalName)
+				.satisfies(
+						it -> assertThat(it.getAccessToken())
+								.returns(accessToken.getTokenType(), OAuth2AccessToken::getTokenType)
+								.returns(accessToken.getTokenValue(), AbstractOAuth2Token::getTokenValue)
+								.returns(accessToken.getScopes(), OAuth2AccessToken::getScopes)
+								.satisfies(t -> assertThat(t.getIssuedAt())
+										.isNotNull()
+										.isCloseTo(accessToken.getIssuedAt(), within(1, ChronoUnit.SECONDS)))
+								.satisfies(t -> assertThat(t.getExpiresAt())
+										.isNotNull()
+										.isCloseTo(accessToken.getExpiresAt(), within(1, ChronoUnit.SECONDS)))
+				)
+				.satisfies(
+						it -> assertThat(it.getRefreshToken())
+								.returns(refreshToken.getTokenValue(), AbstractOAuth2Token::getTokenValue)
+								.satisfies(t -> assertThat(t.getIssuedAt())
+										.isNotNull()
+										.isCloseTo(refreshToken.getIssuedAt(), within(1, ChronoUnit.SECONDS)))
+								.satisfies(t -> assertThat(t.getExpiresAt())
+										.isNotNull()
+										.isCloseTo(refreshToken.getExpiresAt(), within(1, ChronoUnit.SECONDS)))
+				);
+
+		assertThatNoException()
+				.isThrownBy(() -> authorizedClientService.removeAuthorizedClient(CLIENT_REGISTRATION, authentication.getName()));
+
+		assertThatObject(authorizedClientService.loadAuthorizedClient(CLIENT_REGISTRATION, authentication.getName()))
+				.isNull();
+	}
+
+	@Test
+	@DisplayName("should create, retrieve and remove OAuth2 authorized clients without refresh token")
+	void shouldManageAuthorizedClientsWithoutRefreshToken() {
+		final var accessToken = createAccessToken();
+		final var account = TestAccounts.john().build();
+		final var authentication = authentication(account);
+
+		final var client = new OAuth2AuthorizedClient(
+				registrationRepository.findByRegistrationId(CLIENT_REGISTRATION),
+				authentication.getName(),
+				accessToken
 		);
 
 		assertThatObject(authorizedClientService.loadAuthorizedClient(CLIENT_REGISTRATION, authentication.getName()))
@@ -71,15 +126,15 @@ class OAuth2AuthorizedClientServiceTest {
 				.returns(null, OAuth2AuthorizedClient::getRefreshToken)
 				.satisfies(
 						it -> assertThat(it.getAccessToken())
-								.returns(token.getTokenType(), OAuth2AccessToken::getTokenType)
-								.returns(token.getTokenValue(), AbstractOAuth2Token::getTokenValue)
-								.returns(token.getScopes(), OAuth2AccessToken::getScopes)
+								.returns(accessToken.getTokenType(), OAuth2AccessToken::getTokenType)
+								.returns(accessToken.getTokenValue(), AbstractOAuth2Token::getTokenValue)
+								.returns(accessToken.getScopes(), OAuth2AccessToken::getScopes)
 								.satisfies(t -> assertThat(t.getIssuedAt())
 										.isNotNull()
-										.isCloseTo(token.getIssuedAt(), within(1, ChronoUnit.SECONDS)))
+										.isCloseTo(accessToken.getIssuedAt(), within(1, ChronoUnit.SECONDS)))
 								.satisfies(t -> assertThat(t.getExpiresAt())
 										.isNotNull()
-										.isCloseTo(token.getExpiresAt(), within(1, ChronoUnit.SECONDS)))
+										.isCloseTo(accessToken.getExpiresAt(), within(1, ChronoUnit.SECONDS)))
 				);
 
 		assertThatNoException()
@@ -138,8 +193,12 @@ class OAuth2AuthorizedClientServiceTest {
 		return OAuth2AccessTokens.createAccessToken("access-token");
 	}
 
+	static OAuth2RefreshToken createRefreshToken() {
+		return OAuth2AccessTokens.createRefreshToken("refresh-token");
+	}
+
 	static @NonNull Authentication authentication(@NonNull Account account) {
-		final var oauth = new OAuth2UserAccount(account);
+		final var oauth = new AccountPrincipal(account);
 		return new OAuth2AuthenticationToken(oauth, oauth.getAuthorities(), CLIENT_REGISTRATION);
 	}
 

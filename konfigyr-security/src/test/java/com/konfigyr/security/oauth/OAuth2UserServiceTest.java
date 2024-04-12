@@ -3,6 +3,8 @@ package com.konfigyr.security.oauth;
 import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountManager;
 import com.konfigyr.account.AccountRegistration;
+import com.konfigyr.security.AccountPrincipal;
+import com.konfigyr.security.AccountPrincipalService;
 import com.konfigyr.test.TestAccounts;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +46,7 @@ class OAuth2UserServiceTest {
 	@BeforeEach
 	void setup() {
 		account = TestAccounts.john().avatar("https://example.com/avatar.svg").build();
-		service = new DatabaseOAuth2UserService(manager, delegate);
+		service = new PrincipalAccountOAuth2UserService(new AccountPrincipalService(manager), delegate);
 	}
 
 	@Test
@@ -57,14 +59,14 @@ class OAuth2UserServiceTest {
 		doReturn(account).when(manager).create(any());
 
 		assertThat(service.loadUser(request))
-				.isInstanceOf(OAuth2UserAccount.class)
+				.isInstanceOf(AccountPrincipal.class)
 				.returns(account.id().serialize(), OAuth2User::getName)
 				.returns(Map.of(), OAuth2User::getAttributes)
-				.asInstanceOf(InstanceOfAssertFactories.type(OAuth2UserAccount.class))
-				.returns(account, OAuth2UserAccount::getAccount)
-				.returns(account.email(), OAuth2UserAccount::getEmail)
-				.returns(account.avatar(), OAuth2UserAccount::getAvatar)
-				.returns(account.displayName(), OAuth2UserAccount::getDisplayName);
+				.asInstanceOf(InstanceOfAssertFactories.type(AccountPrincipal.class))
+				.returns(account, AccountPrincipal::getAccount)
+				.returns(account.email(), AccountPrincipal::getEmail)
+				.returns(account.avatar(), AccountPrincipal::getAvatar)
+				.returns(account.displayName(), AccountPrincipal::getDisplayName);
 
 		final var captor = ArgumentCaptor.forClass(AccountRegistration.class);
 		verify(manager).create(captor.capture());
@@ -86,16 +88,29 @@ class OAuth2UserServiceTest {
 		doReturn(Optional.of(account)).when(manager).findByEmail("john.doe@konfigyr.com");
 
 		assertThat(service.loadUser(request))
-				.isInstanceOf(OAuth2UserAccount.class)
+				.isInstanceOf(AccountPrincipal.class)
 				.returns(account.id().serialize(), OAuth2User::getName)
 				.returns(Map.of(), OAuth2User::getAttributes)
-				.asInstanceOf(InstanceOfAssertFactories.type(OAuth2UserAccount.class))
-				.returns(account, OAuth2UserAccount::getAccount)
-				.returns(account.email(), OAuth2UserAccount::getEmail)
-				.returns(account.avatar(), OAuth2UserAccount::getAvatar)
-				.returns(account.displayName(), OAuth2UserAccount::getDisplayName);
+				.asInstanceOf(InstanceOfAssertFactories.type(AccountPrincipal.class))
+				.returns(account, AccountPrincipal::getAccount)
+				.returns(account.email(), AccountPrincipal::getEmail)
+				.returns(account.avatar(), AccountPrincipal::getAvatar)
+				.returns(account.displayName(), AccountPrincipal::getDisplayName);
 
 		verify(manager, times(0)).create(any());
+	}
+
+	@Test
+	@DisplayName("should fail to find user")
+	void shouldFailToFindUser() {
+		final var request = new OAuth2UserRequest(registration, OAuth2AccessTokens.createAccessToken("token"));
+
+		doReturn(null).when(delegate).loadUser(request);
+
+		assertThat(service.loadUser(request))
+				.isNull();
+
+		verifyNoInteractions(manager);
 	}
 
 	@Test
