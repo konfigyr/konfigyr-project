@@ -262,6 +262,34 @@ class AccountRememberMeServicesTest {
 	}
 
 	@Test
+	@DisplayName("should remove cookie on successful logout")
+	void logoutShouldClearRememberMeCookies() {
+		request.setCookies(createCookie(System.currentTimeMillis() + 2000, principal.getUsername()));
+
+		services.logout(request, response, createAuthentication(principal));
+
+		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
+				.isNotNull()
+				.returns(0, Cookie::getMaxAge);
+	}
+
+	@Test
+	@DisplayName("should only remove the remember-me cookie")
+	void logoutShouldNotClearOtherCookies() {
+		response.addCookie(new Cookie("other-cookie", "x"));
+
+		services.logout(request, response, createAuthentication(principal));
+
+		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
+				.isNotNull()
+				.returns(0, Cookie::getMaxAge);
+
+		assertThat(response.getCookie("other-cookie"))
+				.isNotNull()
+				.returns(-1, Cookie::getMaxAge);
+	}
+
+	@Test
 	@DisplayName("should catch unknown signing algorithm exceptions")
 	void shouldCatchUnknownAlgorithmExceptions() {
 		assertThatThrownBy(() -> AccountRememberMeServices.generateSignature("test", 1, "key", "unknown-algo"))
