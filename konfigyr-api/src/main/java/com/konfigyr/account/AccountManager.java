@@ -37,7 +37,7 @@ public interface AccountManager {
 	 * Attempts to register a new {@link Account} using the data present in the
 	 * {@link AccountRegistration}.
 	 * <p>
-	 * The implementations of this interface should publish an {@link AccountRegisteredEvent}
+	 * The implementations of this interface should publish an {@link AccountEvent.Registered}
 	 * when an {@link Account} was successfully registered.
 	 *
 	 * @param registration account data used for registration, can't be {@literal null}

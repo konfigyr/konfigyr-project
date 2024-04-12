@@ -59,7 +59,7 @@ public final class Slug implements Supplier<String>, Serializable {
 	 * @throws IllegalArgumentException when the value is blank or {@literal null} or longer than 255 characters
 	 */
 	@NonNull
-	static Slug slugify(@Nullable String value) {
+	public static Slug slugify(@Nullable String value) {
 		Assert.notNull(value, "Value to slugify can not be null");
 		Assert.hasText(value, "Value to slugify can not be blank");
 		Assert.isTrue(255 > value.length(), "Value to slugify is longer than 255 chars: \"" + value + "\".");
@@ -76,7 +76,7 @@ public final class Slug implements Supplier<String>, Serializable {
 	 * @param value value to be checked
 	 * @return {@literal true} if the value is a valid {@link Slug}
 	 */
-	static boolean isValid(@Nullable String value) {
+	public static boolean isValid(@Nullable String value) {
 		if (!StringUtils.hasText(value)) {
 			return false;
 		}

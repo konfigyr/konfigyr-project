@@ -1,6 +1,8 @@
 package com.konfigyr.namespace;
 
+import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.slug.Slug;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +73,69 @@ class NamespaceTest {
 				.returns(null, Namespace::description)
 				.returns(null, Namespace::createdAt)
 				.returns(null, Namespace::updatedAt);
+	}
+
+	@Test
+	@DisplayName("should create namespace definition using fluent builder")
+	void shouldCreateNamespaceDefinition() {
+		final var definition = NamespaceDefinition.builder()
+				.owner(1L)
+				.slug("Atreides")
+				.name("Atreides")
+				.type(NamespaceType.TEAM)
+				.description("Atreides Imperium")
+				.build();
+
+		assertThat(definition)
+				.returns(EntityId.from(1), NamespaceDefinition::owner)
+				.returns(Slug.slugify("atreides"), NamespaceDefinition::slug)
+				.returns(NamespaceType.TEAM, NamespaceDefinition::type)
+				.returns("Atreides", NamespaceDefinition::name)
+				.returns("Atreides Imperium", NamespaceDefinition::description);
+	}
+
+	@Test
+	@DisplayName("should fail to create namespace definition without required fields")
+	void shouldValidateNamespaceDefinitionBuilder() {
+		final var builder = NamespaceDefinition.builder();
+
+		assertThatThrownBy(builder::build)
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Namespace owner can not be null");
+
+		assertThatThrownBy(() -> builder.owner(EntityId.from(1).serialize()).build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Namespace type can not be null");
+
+		assertThatThrownBy(() -> builder.type("PERSONAL").build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Namespace slug can not be null");
+
+		assertThatThrownBy(() -> builder.slug("Muad'Dib").build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Namespace name can not be blank");
+
+		assertThat(builder.name("Muad'Dib").build())
+				.returns(EntityId.from(1), NamespaceDefinition::owner)
+				.returns(Slug.slugify("muaddib"), NamespaceDefinition::slug)
+				.returns(NamespaceType.PERSONAL, NamespaceDefinition::type)
+				.returns("Muad'Dib", NamespaceDefinition::name)
+				.returns(null, NamespaceDefinition::description);
+	}
+
+	@Test
+	@DisplayName("should create namespace created event")
+	void createNamespaceCreatedEvent() {
+		assertThat(NamespaceEvent.created(EntityId.from(3)))
+				.isNotNull()
+				.isInstanceOf(NamespaceEvent.Created.class)
+				.returns(EntityId.from(3), EntityEvent::id)
+				.satisfies(it -> assertThat(it.timestamp())
+						.isCloseTo(Instant.now(), byLessThan(600, ChronoUnit.MILLIS))
+				)
+				.isNotEqualTo(
+						NamespaceEvent.created(EntityId.from(3))
+				);
 	}
 
 }

@@ -41,4 +41,17 @@ public interface NamespaceManager {
 	 */
 	boolean exists(@NonNull String slug);
 
+	/**
+	 * Creates a new {@link Namespace} using the given definition.
+	 * <p>
+	 * The implementations of this interface should publish an {@link NamespaceEvent.Created}
+	 * when a {@link Namespace} was successfully created.
+	 *
+	 * @param definition definition used to create the namespace, can't be {@literal null}
+	 * @return created namespace, never {@literal null}
+	 * @throws NamespaceExistsException when there is already a {@link Namespace} with the same slug
+	 */
+	@NonNull
+	Namespace create(@NonNull NamespaceDefinition definition);
+
 }

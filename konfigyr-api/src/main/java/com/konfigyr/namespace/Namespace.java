@@ -38,7 +38,7 @@ public record Namespace(
 	private static final long serialVersionUID = 7324651962101230810L;
 
 	/**
-	 * Creates a new {@link Builder fluent account builder} instance used to create
+	 * Creates a new {@link Builder fluent namespace builder} instance used to create
 	 * the {@link Namespace} record.
 	 *
 	 * @return namespace builder, never {@literal null}
@@ -196,7 +196,7 @@ public record Namespace(
 		 * Creates a new instance of the {@link Namespace} using the values defined in the builder.
 		 *
 		 * @return namespace instance, never {@literal null}
-		 * @throws IllegalArgumentException when required is missing or invalid
+		 * @throws IllegalArgumentException when required fields are missing or invalid
 		 */
 		@NonNull
 		public Namespace build() {

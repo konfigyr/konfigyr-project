@@ -22,7 +22,7 @@ public class AccountExistsException extends AccountException {
 	private final AccountRegistration registration;
 
 	/**
-	 * Create new instance for the {@link AccountRegistration} that trigger the unique constraint
+	 * Create new instance for the {@link AccountRegistration} that triggered the unique constraint
 	 * violation when creating an {@link Account}.
 	 *
 	 * @param registration registration data that triggered this exception

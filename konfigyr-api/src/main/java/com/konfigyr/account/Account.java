@@ -257,7 +257,7 @@ public record Account(
 		 * Creates a new instance of the {@link Account} using the values defined in the builder.
 		 *
 		 * @return account instance, never {@literal null}
-		 * @throws IllegalArgumentException when required is missing or invalid
+		 * @throws IllegalArgumentException when required fields are missing or invalid
 		 */
 		@NonNull
 		public Account build() {

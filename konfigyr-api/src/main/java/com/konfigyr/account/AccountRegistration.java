@@ -137,7 +137,7 @@ public record AccountRegistration(
 		 * Creates a new instance of the {@link AccountRegistration} using the values defined in the builder.
 		 *
 		 * @return account registration instance, never {@literal null}
-		 * @throws IllegalArgumentException when required is missing or invalid
+		 * @throws IllegalArgumentException when required fields are missing or invalid
 		 */
 		public AccountRegistration build() {
 			Assert.hasText(email, "Account email address can not be blank");
