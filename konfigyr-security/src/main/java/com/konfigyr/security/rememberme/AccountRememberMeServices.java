@@ -8,7 +8,6 @@ import org.springframework.core.log.LogMessage;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.codec.Utf8;
@@ -48,11 +47,7 @@ public class AccountRememberMeServices extends AbstractRememberMeServices {
 	static final int TOKEN_VALIDITY = (int) Duration.ofDays(14).toSeconds();
 
 	public AccountRememberMeServices(PrincipalService service) {
-		this(service::lookup);
-	}
-
-	AccountRememberMeServices(UserDetailsService service) {
-		super(KEY, service);
+		super(KEY, service::lookup);
 
 		super.setTokenValiditySeconds(TOKEN_VALIDITY);
 		super.setCookieName(COOKIE_NAME);
@@ -74,7 +69,7 @@ public class AccountRememberMeServices extends AbstractRememberMeServices {
 		}
 
 		final long expiryTime = System.currentTimeMillis() + getTokenValiditySeconds();
-		final String signature = generateSignature(username, expiryTime, getKey());
+		final String signature = generateSignature(username, expiryTime);
 
 		setCookie(new String[] { username, Long.toString(expiryTime), signature }, getTokenValiditySeconds(), request, response);
 
@@ -99,7 +94,7 @@ public class AccountRememberMeServices extends AbstractRememberMeServices {
 		final UserDetails userDetails = retrieveUserDetails(cookieTokens[0]);
 
 		// Generate the signature to check if it matches the signature of token
-		final String signature = generateSignature(userDetails.getUsername(), tokenExpiryTime, getKey());
+		final String signature = generateSignature(userDetails.getUsername(), tokenExpiryTime);
 
 		if (signaturesMatch(signature, cookieTokens[2])) {
 			return userDetails;
@@ -171,20 +166,24 @@ public class AccountRememberMeServices extends AbstractRememberMeServices {
 		return Objects.toString(authentication.getPrincipal(), null);
 	}
 
+	private String generateSignature(String username, long tokenExpiryTime) {
+		return generateSignature(username, tokenExpiryTime, getKey(), DIGEST_ALGORITHM);
+	}
+
 	private static void assertTokenLength(String[] tokens) {
 		if (tokens.length != 3) {
 			throw new InvalidCookieException("Cookie needs to contain 3 tokens: '" + Arrays.asList(tokens) + "'");
 		}
 	}
 
-	private static String generateSignature(String username, long tokenExpiryTime, String key) {
+	static String generateSignature(String username, long tokenExpiryTime, String key, String algorithm) {
 		final String data = username + ":" + tokenExpiryTime + ":" + key;
 
 		try {
-			final MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
+			final MessageDigest digest = MessageDigest.getInstance(algorithm);
 			return new String(Hex.encode(digest.digest(data.getBytes())));
 		} catch (NoSuchAlgorithmException ex) {
-			throw new IllegalStateException("No SHA-256 digest algorithm is available!");
+			throw new IllegalStateException("No '" + algorithm + "' digest algorithm is available!", ex);
 		}
 	}
 
