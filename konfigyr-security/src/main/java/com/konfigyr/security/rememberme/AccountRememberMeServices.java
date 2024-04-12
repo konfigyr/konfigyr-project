@@ -39,8 +39,8 @@ import java.util.Objects;
  * </pre>
  * <p>
  * Keep in mind that this implementation of the {@link RememberMeServices} would <strong>always</strong>
- * add the cookie when there was a successful authentication. The cookie that is set would expire after
- * <strong>14 days</strong>
+ * add, or extend the existing, cookie when there was a successful authentication. The cookie that is
+ * set would have a name of <code>konfigyr.account</code> and would expire after <strong>14 days</strong>.
  *
  * @author Vladimir Spasic
  * @see org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices
