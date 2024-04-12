@@ -16,7 +16,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.support.NoOpCache;
 import org.springframework.cache.support.SimpleCacheManager;
-import org.springframework.security.core.userdetails.UserCache;
+import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
@@ -57,14 +57,19 @@ class SecurityAutoConfigurationTest {
 
 	@Test
 	void shouldCreateDefaultBeans() {
-		runner.withConfiguration(configurations).run(ctx -> assertThat(ctx)
-				.hasNotFailed()
-				.hasBean("accountPrincipalService")
-				.hasBean("principalAccountOAuth2UserService")
-				.hasBean("persistentAuthorizedClientService")
-				.doesNotHaveBean("userCache")
-				.doesNotHaveBean("cachingAccountPrincipalService")
-		);
+		runner.withConfiguration(configurations).run(ctx -> {
+			assertThat(ctx)
+					.hasNotFailed()
+					.hasBean("accountPrincipalService")
+					.hasBean("principalAccountOAuth2UserService")
+					.hasBean("persistentAuthorizedClientService")
+					.doesNotHaveBean("userCache");
+
+			assertThat(ctx.getBean(PrincipalService.class))
+					.isInstanceOf(AccountPrincipalService.class)
+					.extracting("cache")
+					.isInstanceOf(NullUserCache.class);
+		});
 	}
 
 	@Test
@@ -75,12 +80,13 @@ class SecurityAutoConfigurationTest {
 					assertThat(ctx)
 							.hasNotFailed()
 							.hasBean("userCache")
-							.hasBean("cachingAccountPrincipalService")
+							.hasBean("accountPrincipalService")
 							.hasBean("principalAccountOAuth2UserService")
-							.hasBean("persistentAuthorizedClientService")
-							.doesNotHaveBean("accountPrincipalService");
+							.hasBean("persistentAuthorizedClientService");
 
-					assertThat(ctx.getBean(UserCache.class))
+					assertThat(ctx.getBean(PrincipalService.class))
+							.isInstanceOf(AccountPrincipalService.class)
+							.extracting("cache")
 							.isInstanceOf(SpringCacheBasedUserCache.class)
 							.extracting("cache")
 							.isInstanceOf(NoOpCache.class);
@@ -99,12 +105,13 @@ class SecurityAutoConfigurationTest {
 					assertThat(ctx)
 							.hasNotFailed()
 							.hasBean("userCache")
-							.hasBean("cachingAccountPrincipalService")
+							.hasBean("accountPrincipalService")
 							.hasBean("principalAccountOAuth2UserService")
-							.hasBean("persistentAuthorizedClientService")
-							.doesNotHaveBean("accountPrincipalService");
+							.hasBean("persistentAuthorizedClientService");
 
-					assertThat(ctx.getBean(UserCache.class))
+					assertThat(ctx.getBean(PrincipalService.class))
+							.isInstanceOf(AccountPrincipalService.class)
+							.extracting("cache")
 							.isInstanceOf(SpringCacheBasedUserCache.class)
 							.extracting("cache")
 							.isEqualTo(cache);

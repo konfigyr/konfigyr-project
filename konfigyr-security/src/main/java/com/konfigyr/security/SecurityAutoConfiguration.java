@@ -6,6 +6,7 @@ import com.konfigyr.security.oauth.AuthorizedClientService;
 import com.konfigyr.security.oauth.PrincipalAccountOAuth2UserService;
 import com.konfigyr.security.oauth.OAuthKeysets;
 import org.jooq.DSLContext;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -15,6 +16,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.NoOpCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.userdetails.UserCache;
+import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -40,20 +42,13 @@ public class SecurityAutoConfiguration {
 		if (cache == null) {
 			cache = new NoOpCache("user-cache");
 		}
-
 		return new SpringCacheBasedUserCache(cache);
 	}
 
 	@Bean
-	@ConditionalOnBean(UserCache.class)
-	PrincipalService cachingAccountPrincipalService(AccountManager accountManager, UserCache userCache) {
+	PrincipalService accountPrincipalService(AccountManager accountManager, ObjectProvider<UserCache> cacheProvider) {
+		final UserCache userCache = cacheProvider.getIfAvailable(NullUserCache::new);
 		return new AccountPrincipalService(accountManager, userCache);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean(PrincipalService.class)
-	PrincipalService accountPrincipalService(AccountManager accountManager) {
-		return new AccountPrincipalService(accountManager);
 	}
 
 	@Bean
