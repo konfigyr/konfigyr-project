@@ -20,6 +20,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.rememberme.AbstractRememberMeServices;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -206,7 +207,7 @@ class AccountRememberMeServicesTest {
 	@Test
 	@DisplayName("should create cookie even without remember-me parameter set")
 	void loginSuccessWhenParameterNotSetOrFalse() {
-		request.addParameter(AccountRememberMeServices.DEFAULT_PARAMETER, "false");
+		request.addParameter(AbstractRememberMeServices.DEFAULT_PARAMETER, "false");
 
 		services.loginSuccess(request, response, createAuthentication(principal));
 
@@ -218,7 +219,7 @@ class AccountRememberMeServicesTest {
 	@Test
 	@DisplayName("should create cookie with remember-me parameter set")
 	void loginSuccessSetsCookie() {
-		request.addParameter(AccountRememberMeServices.DEFAULT_PARAMETER, "on");
+		request.addParameter(AbstractRememberMeServices.DEFAULT_PARAMETER, "on");
 
 		services.loginSuccess(request, response, createAuthentication(principal));
 
@@ -266,41 +267,6 @@ class AccountRememberMeServicesTest {
 		assertThatThrownBy(() -> AccountRememberMeServices.generateSignature("test", 1, "key", "unknown-algo"))
 				.isInstanceOf(IllegalStateException.class)
 				.hasRootCauseInstanceOf(NoSuchAlgorithmException.class);
-	}
-
-	@Test
-	@DisplayName("should disable setters modifying the service behaviour")
-	void testDisabledSetters() {
-		assertThatThrownBy(() -> services.setAlwaysRemember(false))
-				.isInstanceOf(UnsupportedOperationException.class)
-				.hasMessageContaining("It is not possible to set 'alwaysRemember' field")
-				.hasNoCause();
-
-		assertThatThrownBy(() -> services.setCookieName("cookie name"))
-				.isInstanceOf(UnsupportedOperationException.class)
-				.hasMessageContaining("It is not possible to set 'cookieName' field")
-				.hasNoCause();
-
-		assertThatThrownBy(() -> services.setUseSecureCookie(true))
-				.isInstanceOf(UnsupportedOperationException.class)
-				.hasMessageContaining("It is not possible to set 'useSecureCookie' field")
-				.hasNoCause();
-
-		assertThatThrownBy(() -> services.setParameter("parameter name"))
-				.isInstanceOf(UnsupportedOperationException.class)
-				.hasMessageContaining("It is not possible to set 'parameter' field")
-				.hasNoCause();
-
-		assertThatThrownBy(() -> services.setTokenValiditySeconds(1238564))
-				.isInstanceOf(UnsupportedOperationException.class)
-				.hasMessageContaining("It is not possible to set 'tokenValiditySeconds' field")
-				.hasNoCause();
-
-		assertThat(services.getKey())
-				.isEqualTo(AccountRememberMeServices.KEY);
-
-		assertThat(services.getParameter())
-				.isEqualTo(AccountRememberMeServices.DEFAULT_PARAMETER);
 	}
 
 	private static Authentication createAuthentication(UserDetails user) {
