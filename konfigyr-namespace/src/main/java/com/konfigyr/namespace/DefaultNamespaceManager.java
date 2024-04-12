@@ -11,7 +11,6 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.lang.NonNull;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +19,7 @@ import org.springframework.util.Assert;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
+import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 
 /**
@@ -70,6 +70,9 @@ class DefaultNamespaceManager implements NamespaceManager {
 			log.debug("Attempting to create namespace from: {}", definition);
 		}
 
+		final Long owner = lookupOwner(definition.owner())
+				.orElseThrow(() -> new NamespaceOwnerException(definition));
+
 		final Namespace namespace;
 
 		try {
@@ -77,7 +80,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 					.set(
 							SettableRecord.of(context, NAMESPACES)
 									.set(NAMESPACES.ID, EntityId.generate().map(EntityId::get))
-									.set(NAMESPACES.OWNER, definition.owner().get())
+									.set(NAMESPACES.OWNER, owner)
 									.set(NAMESPACES.TYPE, definition.type().name())
 									.set(NAMESPACES.SLUG, definition.slug().get())
 									.set(NAMESPACES.NAME, definition.name())
@@ -90,8 +93,6 @@ class DefaultNamespaceManager implements NamespaceManager {
 					.fetchOne(DefaultNamespaceManager::map);
 		} catch (DuplicateKeyException e) {
 			throw new NamespaceExistsException(definition, e);
-		} catch (DataIntegrityViolationException e) {
-			throw new NamespaceOwnerException(definition, e);
 		} catch (Exception e) {
 			throw new NamespaceException("Unexpected exception occurred while creating a namespace", e);
 		}
@@ -105,12 +106,22 @@ class DefaultNamespaceManager implements NamespaceManager {
 		return namespace;
 	}
 
+	@NonNull
 	private Optional<Namespace> fetch(@NonNull Condition condition) {
 		return context
 				.select(NAMESPACES.fields())
 				.from(NAMESPACES)
 				.where(condition)
 				.fetchOptional(DefaultNamespaceManager::map);
+	}
+
+	@NonNull
+	private Optional<Long> lookupOwner(@NonNull EntityId id) {
+		return context
+				.select(ACCOUNTS.ID)
+				.from(ACCOUNTS)
+				.where(ACCOUNTS.ID.eq(id.get()))
+				.fetchOptional(ACCOUNTS.ID);
 	}
 
 	@NonNull

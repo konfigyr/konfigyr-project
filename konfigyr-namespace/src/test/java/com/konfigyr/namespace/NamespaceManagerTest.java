@@ -2,12 +2,13 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.entity.EntityId;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.modulith.test.PublishedEvents;
 import org.springframework.modulith.test.PublishedEventsExtension;
@@ -127,7 +128,7 @@ class NamespaceManagerTest {
 
 		assertThatThrownBy(() -> manager.create(definition))
 				.isInstanceOf(NamespaceOwnerException.class)
-				.hasCauseInstanceOf(DataIntegrityViolationException.class)
+				.hasNoCause()
 				.extracting("definition", "owner")
 				.containsExactly(definition, definition.owner());
 
@@ -150,6 +151,24 @@ class NamespaceManagerTest {
 				.hasCauseInstanceOf(DuplicateKeyException.class)
 				.extracting("definition")
 				.isEqualTo(definition);
+
+		assertThat(events.ofType(NamespaceEvent.class))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to create namespace when name is too long")
+	void shouldNotCreateNamespaceWithLongNames(PublishedEvents events) {
+		final var definition = NamespaceDefinition.builder()
+				.owner(1L)
+				.type(NamespaceType.PERSONAL)
+				.slug("name-too-long")
+				.name(RandomStringUtils.randomAlphanumeric(512))
+				.build();
+
+		assertThatThrownBy(() -> manager.create(definition))
+				.isInstanceOf(NamespaceException.class)
+				.hasCauseInstanceOf(DataAccessException.class);
 
 		assertThat(events.ofType(NamespaceEvent.class))
 				.isEmpty();
