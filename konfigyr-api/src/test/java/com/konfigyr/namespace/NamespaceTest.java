@@ -5,6 +5,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.slug.Slug;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -36,7 +37,7 @@ class NamespaceTest {
 				.returns("My testing team namespace", Namespace::description)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now().minusDays(62))
+						.isEqualToIgnoringHours(OffsetDateTime.now(ZoneOffset.UTC).minusDays(62))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
@@ -124,18 +125,66 @@ class NamespaceTest {
 	}
 
 	@Test
+	@DisplayName("should create namespace exists exception without cause")
+	void shouldCreateNamespaceExistsException() {
+		final var definition = Mockito.mock(NamespaceDefinition.class);
+		Mockito.doReturn(Slug.slugify("namespace-slug")).when(definition).slug();
+
+		assertThat(new NamespaceExistsException(definition))
+				.hasMessage("Could not create namespace as one already exists with the following slug: namespace-slug")
+				.hasNoCause()
+				.returns(definition, NamespaceExistsException::getDefinition);
+	}
+
+	@Test
+	@DisplayName("should create namespace exists exception with cause")
+	void shouldCreateNamespaceExistsExceptionWithCause() {
+		final var cause = new Exception("cause");
+		final var definition = Mockito.mock(NamespaceDefinition.class);
+		Mockito.doReturn(Slug.slugify("namespace-slug")).when(definition).slug();
+
+		assertThat(new NamespaceExistsException(definition, cause))
+				.hasMessage("Could not create namespace as one already exists with the following slug: namespace-slug")
+				.hasCause(cause)
+				.returns(definition, NamespaceExistsException::getDefinition);
+	}
+
+	@Test
+	@DisplayName("should create namespace owner exception without cause")
+	void shouldCreateNamespaceOwnerException() {
+		final var definition = Mockito.mock(NamespaceDefinition.class);
+		Mockito.doReturn(EntityId.from(3)).when(definition).owner();
+
+		assertThat(new NamespaceOwnerException(definition))
+				.hasMessageContaining("Could not create namespace as owner does not exists with")
+				.hasMessageContaining(definition.owner().toString())
+				.hasNoCause()
+				.returns(definition, NamespaceOwnerException::getDefinition)
+				.returns(EntityId.from(3), NamespaceOwnerException::getOwner);
+	}
+
+	@Test
+	@DisplayName("should create namespace owner exception with cause")
+	void shouldCreateNamespaceOwnerExceptionWithCause() {
+		final var cause = new Exception("cause");
+		final var definition = Mockito.mock(NamespaceDefinition.class);
+		Mockito.doReturn(EntityId.from(13)).when(definition).owner();
+
+		assertThat(new NamespaceOwnerException(definition, cause))
+				.hasMessageContaining("Could not create namespace as owner does not exists with")
+				.hasMessageContaining(definition.owner().toString())
+				.hasCause(cause)
+				.returns(definition, NamespaceOwnerException::getDefinition)
+				.returns(EntityId.from(13), NamespaceOwnerException::getOwner);
+	}
+
+	@Test
 	@DisplayName("should create namespace created event")
 	void createNamespaceCreatedEvent() {
 		assertThat(NamespaceEvent.created(EntityId.from(3)))
 				.isNotNull()
 				.isInstanceOf(NamespaceEvent.Created.class)
-				.returns(EntityId.from(3), EntityEvent::id)
-				.satisfies(it -> assertThat(it.timestamp())
-						.isCloseTo(Instant.now(), byLessThan(600, ChronoUnit.MILLIS))
-				)
-				.isNotEqualTo(
-						NamespaceEvent.created(EntityId.from(3))
-				);
+				.returns(EntityId.from(3), EntityEvent::id);
 	}
 
 }

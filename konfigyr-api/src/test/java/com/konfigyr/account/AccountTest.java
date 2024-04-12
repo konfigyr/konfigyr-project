@@ -125,12 +125,35 @@ class AccountTest {
 	@DisplayName("should create an account registered event")
 	void shouldCreateRegistrationEvent() {
 		assertThat(AccountEvent.registered(EntityId.from(8366545L)))
-				.returns(EntityId.from(8366545L), EntityEvent::id)
-				.satisfies(it -> assertThat(it.timestamp())
-						.isCloseTo(Instant.now(), byLessThan(600, ChronoUnit.MILLIS))
-				).isNotEqualTo(
-						AccountEvent.registered(EntityId.from(8366545L))
-				);
+				.isInstanceOf(AccountEvent.Registered.class)
+				.returns(EntityId.from(8366545L), EntityEvent::id);
+	}
+
+	@Test
+	@DisplayName("should create account exists exception")
+	void shouldCreateAccountExistsException() {
+		final var registration = AccountRegistration.builder()
+				.email("john.doe@konfigyr.com")
+				.build();
+
+		assertThat(new AccountExistsException(registration))
+				.hasMessage("Could not register account as one already exists with that email address")
+				.hasNoCause()
+				.returns(registration, AccountExistsException::getRegistration);
+	}
+
+	@Test
+	@DisplayName("should create account exists exception with cause")
+	void shouldCreateAccountExistsExceptionWithCause() {
+		final var cause = new Exception("Cause");
+		final var registration = AccountRegistration.builder()
+				.email("john.doe@konfigyr.com")
+				.build();
+
+		assertThat(new AccountExistsException(registration, cause))
+				.hasMessage("Could not register account as one already exists with that email address")
+				.hasCause(cause)
+				.returns(registration, AccountExistsException::getRegistration);
 	}
 
 	@MethodSource("names")

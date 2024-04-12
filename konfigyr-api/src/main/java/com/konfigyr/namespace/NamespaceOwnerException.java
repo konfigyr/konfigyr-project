@@ -29,7 +29,7 @@ public class NamespaceOwnerException extends NamespaceException {
 	 * @param definition definition that triggered this exception
 	 */
 	public NamespaceOwnerException(@NonNull NamespaceDefinition definition) {
-		super("Could not create namespace as one already exists with the following slug: " + definition.slug());
+		super("Could not create namespace as owner does not exists with: " + definition.owner());
 		this.definition = definition;
 	}
 
@@ -41,7 +41,7 @@ public class NamespaceOwnerException extends NamespaceException {
 	 * @param cause the actual cause that triggered this exception
 	 */
 	public NamespaceOwnerException(@NonNull NamespaceDefinition definition, Throwable cause) {
-		super("Could not create namespace as one already exists with the following slug: " + definition.slug(), cause);
+		super("Could not create namespace as owner does not exists with: " + definition.owner(), cause);
 		this.definition = definition;
 	}
 
