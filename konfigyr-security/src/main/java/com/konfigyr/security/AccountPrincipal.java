@@ -48,7 +48,10 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Serializable {
 	private static final String EMPTY_PASSWORD = "";
 	private static final Map<String, Object> EMPTY_ATTRIBUTES = Collections.emptyMap();
 
-	Account account;
+	/**
+	 * The actual {@link Account} that identifies this {@link AccountPrincipal}.
+	 */
+	@NonNull Account account;
 
 	/**
 	 * Returns am {@link EntityId} of the {@link Account} that would be used as the
@@ -73,6 +76,11 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Serializable {
 		return account.id().serialize();
 	}
 
+	/**
+	 * The email address of the logged-in user account.
+	 *
+	 * @return account email address, never {@literal null}
+	 */
 	@NonNull
 	public String getEmail() {
 		return account.email();
