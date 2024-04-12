@@ -41,7 +41,7 @@ class AccountRememberMeServicesTest {
 	AccountRememberMeServices services;
 
 	@BeforeEach
-	public void createTokenBasedRememberMeServices() {
+	void createTokenBasedRememberMeServices() {
 		request = new MockHttpServletRequest();
 		response = new MockHttpServletResponse();
 		services = new AccountRememberMeServices(service);
@@ -49,7 +49,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when cookies are present in the request")
-	public void autoLoginReturnsNullIfNoCookiePresented() {
+	void autoLoginReturnsNullIfNoCookiePresented() {
 		assertThat(services.autoLogin(request, response))
 				.isNull();
 
@@ -59,7 +59,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when remember-me cookie is not present")
-	public void autoLoginIgnoresUnrelatedCookie() {
+	void autoLoginIgnoresUnrelatedCookie() {
 		request.setCookies(new Cookie("some", "cookie"));
 
 		assertThat(services.autoLogin(request, response))
@@ -71,7 +71,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when remember-me cookie is invalid and clear it")
-	public void autoLoginReturnsNullAndClearsCookieIfMissingThreeTokensInCookieValue() {
+	void autoLoginReturnsNullAndClearsCookieIfMissingThreeTokensInCookieValue() {
 		request.setCookies(createCookie(encode("x")));
 
 		assertThat(services.autoLogin(request, response))
@@ -84,7 +84,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when remember-me cookie is not Base64 encoded and clear it")
-	public void autoLoginClearsNonBase64EncodedCookie() {
+	void autoLoginClearsNonBase64EncodedCookie() {
 		request.setCookies(createCookie("non-encoded-value"));
 
 		assertThat(services.autoLogin(request, response))
@@ -97,7 +97,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when remember-me cookie is expired and clear it")
-	public void autoLoginReturnsNullForExpiredCookieAndClearsCookie() {
+	void autoLoginReturnsNullForExpiredCookieAndClearsCookie() {
 		request.setCookies(createCookie(System.currentTimeMillis() - 1000000, principal.getUsername()));
 
 		assertThat(services.autoLogin(request, response))
@@ -110,7 +110,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when remember-me cookie signature does not match and clear it")
-	public void autoLoginClearsCookieIfSignatureBlocksDoesNotMatchExpectedValue() {
+	void autoLoginClearsCookieIfSignatureBlocksDoesNotMatchExpectedValue() {
 		doReturn(principal).when(service).lookup(anyString());
 
 		request.setCookies(createCookie(System.currentTimeMillis() + 1000000, principal.getUsername(), "WRONG_KEY"));
@@ -125,7 +125,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when remember-me signing algorithm is different")
-	public void autoLoginClearsCookieIfSignatureAlgorithmDoesNotMatch() {
+	void autoLoginClearsCookieIfSignatureAlgorithmDoesNotMatch() {
 		doReturn(principal).when(service).lookup(anyString());
 
 		request.setCookies(createCookie(
@@ -142,7 +142,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when remember-me cookie expiry time is invalid and clear it")
-	public void autoLoginClearsCookieIfTokenDoesNotContainANumberInCookieValue() {
+	void autoLoginClearsCookieIfTokenDoesNotContainANumberInCookieValue() {
 		request.setCookies(createCookie(encode("username:NOT_A_NUMBER:signature")));
 
 		assertThat(services.autoLogin(request, response))
@@ -155,7 +155,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should return null when user account is not found and clear it")
-	public void autoLoginClearsCookieIfUserNotFound() {
+	void autoLoginClearsCookieIfUserNotFound() {
 		doThrow(UsernameNotFoundException.class).when(service).lookup(anyString());
 
 		request.setCookies(createCookie(System.currentTimeMillis() + 1000000, "not-found"));
@@ -170,7 +170,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should throw internal service error when user service returns null")
-	public void autoLoginClearsCookieIfUserServiceMisconfigured() {
+	void autoLoginClearsCookieIfUserServiceMisconfigured() {
 		doReturn(null).when(service).lookup(anyString());
 
 		request.setCookies(createCookie(System.currentTimeMillis() + 1000000, principal.getUsername()));
@@ -181,7 +181,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should create authentication for valid cookie")
-	public void autoLoginWithValidTokenAndUserSucceeds() {
+	void autoLoginWithValidTokenAndUserSucceeds() {
 		doReturn(principal).when(service).lookup(anyString());
 
 		request.setCookies(createCookie(System.currentTimeMillis() + 1000000, principal.getUsername()));
@@ -195,7 +195,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should clear cookie when authentication fails")
-	public void loginFailClearsCookie() {
+	void loginFailClearsCookie() {
 		assertThatNoException().isThrownBy(() -> services.loginFail(request, response));
 
 		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
@@ -205,7 +205,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should create cookie even without remember-me parameter set")
-	public void loginSuccessWhenParameterNotSetOrFalse() {
+	void loginSuccessWhenParameterNotSetOrFalse() {
 		request.addParameter(AccountRememberMeServices.DEFAULT_PARAMETER, "false");
 
 		services.loginSuccess(request, response, createAuthentication(principal));
@@ -217,7 +217,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should create cookie with remember-me parameter set")
-	public void loginSuccessSetsCookie() {
+	void loginSuccessSetsCookie() {
 		request.addParameter(AccountRememberMeServices.DEFAULT_PARAMETER, "on");
 
 		services.loginSuccess(request, response, createAuthentication(principal));
@@ -252,7 +252,7 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should not create cookie without a valid principal in authentication")
-	public void loginSuccessWithoutAuthenticationName() {
+	void loginSuccessWithoutAuthenticationName() {
 		final var authentication = new TestingAuthenticationToken(null, "", "authority");
 		services.loginSuccess(request, response, authentication);
 
@@ -262,29 +262,39 @@ class AccountRememberMeServicesTest {
 
 	@Test
 	@DisplayName("should catch unknown signing algorithm exceptions")
-	public void shouldCatchUnknownAlgorithmExceptions() {
+	void shouldCatchUnknownAlgorithmExceptions() {
 		assertThatThrownBy(() -> AccountRememberMeServices.generateSignature("test", 1, "key", "unknown-algo"))
 				.isInstanceOf(IllegalStateException.class)
 				.hasRootCauseInstanceOf(NoSuchAlgorithmException.class);
 	}
 
 	@Test
-	@DisplayName("should disable setters")
-	public void testDisabledSetters() {
+	@DisplayName("should disable setters modifying the service behaviour")
+	void testDisabledSetters() {
 		assertThatThrownBy(() -> services.setAlwaysRemember(false))
-				.isInstanceOf(UnsupportedOperationException.class);
+				.isInstanceOf(UnsupportedOperationException.class)
+				.hasMessageContaining("It is not possible to set 'alwaysRemember' field")
+				.hasNoCause();
 
 		assertThatThrownBy(() -> services.setCookieName("cookie name"))
-				.isInstanceOf(UnsupportedOperationException.class);
+				.isInstanceOf(UnsupportedOperationException.class)
+				.hasMessageContaining("It is not possible to set 'cookieName' field")
+				.hasNoCause();
 
 		assertThatThrownBy(() -> services.setUseSecureCookie(true))
-				.isInstanceOf(UnsupportedOperationException.class);
+				.isInstanceOf(UnsupportedOperationException.class)
+				.hasMessageContaining("It is not possible to set 'useSecureCookie' field")
+				.hasNoCause();
 
 		assertThatThrownBy(() -> services.setParameter("parameter name"))
-				.isInstanceOf(UnsupportedOperationException.class);
+				.isInstanceOf(UnsupportedOperationException.class)
+				.hasMessageContaining("It is not possible to set 'parameter' field")
+				.hasNoCause();
 
 		assertThatThrownBy(() -> services.setTokenValiditySeconds(1238564))
-				.isInstanceOf(UnsupportedOperationException.class);
+				.isInstanceOf(UnsupportedOperationException.class)
+				.hasMessageContaining("It is not possible to set 'tokenValiditySeconds' field")
+				.hasNoCause();
 
 		assertThat(services.getKey())
 				.isEqualTo(AccountRememberMeServices.KEY);
