@@ -116,7 +116,7 @@
                 <constraints nullable="false" />
             </column>
 
-            <column name="access_token_expiry_date" type="timestamptz">
+            <column name="access_token_expires_at" type="timestamptz">
                 <constraints nullable="false" />
             </column>
 
@@ -125,6 +125,10 @@
             </column>
 
             <column name="refresh_token_issued_at" type="timestamptz">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="refresh_token_expires_at" type="timestamptz">
                 <constraints nullable="true" />
             </column>
         </createTable>

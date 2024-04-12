@@ -1,5 +1,5 @@
 
-package com.konfigyr.controller;
+package com.konfigyr.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
@@ -27,14 +27,13 @@ import java.util.stream.Collectors;
  **/
 @Controller
 @RequiredArgsConstructor
-public class AuthenticationController {
+public class SecurityController {
 
 	private static final UriComponents REQUEST_PATTERN = UriComponentsBuilder
 		.fromPath(DefaultServerOAuth2AuthorizationRequestResolver.DEFAULT_AUTHORIZATION_REQUEST_PATTERN)
 		.build();
 
 	private final OAuth2ClientProperties properties;
-
 	private final ClientRegistrationRepository repository;
 
 	@GetMapping("/login")
@@ -52,6 +51,13 @@ public class AuthenticationController {
 		return "login";
 	}
 
+	/**
+	 * Record used by the template to render the authentication option based on the {@link ClientRegistration}.
+	 *
+	 * @param id unique option identifier, usually the {@link ClientRegistration#getRegistrationId()}
+	 * @param name display name of the option, usually the {@link ClientRegistration#getClientName()}
+	 * @param url location where the authentication would start
+	 */
 	record AuthenticationOption(String id, String name, URI url) {
 
 		static AuthenticationOption from(ClientRegistration registration) {

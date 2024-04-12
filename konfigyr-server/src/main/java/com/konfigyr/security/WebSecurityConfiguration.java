@@ -1,5 +1,6 @@
 package com.konfigyr.security;
 
+import com.konfigyr.security.rememberme.AccountRememberMeServices;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -22,7 +23,7 @@ import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 public class WebSecurityConfiguration {
 
 	@Bean
-	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, PrincipalService detailsService) throws Exception {
 		return http
 				.authorizeHttpRequests(requests -> requests
 						.requestMatchers(
@@ -40,12 +41,16 @@ public class WebSecurityConfiguration {
 				.oauth2Login(oauth -> oauth
 						.loginPage(SecurityRequestMatchers.LOGIN_PAGE)
 				)
+				.rememberMe(remember -> remember
+						.rememberMeServices(new AccountRememberMeServices(detailsService))
+				)
 				.logout(Customizer.withDefaults())
 				.httpBasic(AbstractHttpConfigurer::disable)
 				.formLogin(AbstractHttpConfigurer::disable)
 				.anonymous(AbstractHttpConfigurer::disable)
 				.exceptionHandling(exceptions -> exceptions
-						.defaultAuthenticationEntryPointFor(loginAuthenticationEntryPoint(), AnyRequestMatcher.INSTANCE))
+						.defaultAuthenticationEntryPointFor(loginAuthenticationEntryPoint(), AnyRequestMatcher.INSTANCE)
+				)
 				.build();
 	}
 

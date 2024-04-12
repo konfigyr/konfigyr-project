@@ -31,4 +31,5 @@ konfigyr:
 logging:
   level:
     com.konfigyr: DEBUG
+    org.jooq: DEBUG
     org.springframework.security: DEBUG

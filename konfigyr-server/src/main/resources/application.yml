@@ -6,7 +6,7 @@ spring:
     basename: messages/konfigyr, messages/validation
 
   cache:
-    cache-names: crypto-keysets
+    cache-names: crypto-keysets, user-cache
     caffeine:
       spec: expireAfterWrite=1h
 
