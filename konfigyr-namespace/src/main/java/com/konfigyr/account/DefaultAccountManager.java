@@ -1,6 +1,7 @@
 package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.jooq.SettableRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.*;
@@ -11,10 +12,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.lang.NonNull;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 
 import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
@@ -61,13 +61,17 @@ class DefaultAccountManager implements AccountManager {
 
 		try {
 			account = context.insertInto(ACCOUNTS)
-					.set(generateIdentifier())
-					.set(ACCOUNTS.EMAIL, registration.email())
-					.set(ACCOUNTS.FIRST_NAME, registration.firstName())
-					.set(ACCOUNTS.LAST_NAME, registration.lastName())
-					.set(ACCOUNTS.AVATAR, registration.avatar())
-					.set(ACCOUNTS.CREATED_AT, OffsetDateTime.now())
-					.set(ACCOUNTS.CREATED_AT, OffsetDateTime.now())
+					.set(
+							SettableRecord.of(context, ACCOUNTS)
+									.set(ACCOUNTS.ID, EntityId.generate().map(EntityId::get))
+									.set(ACCOUNTS.EMAIL, registration.email())
+									.set(ACCOUNTS.FIRST_NAME, registration.firstName())
+									.set(ACCOUNTS.LAST_NAME, registration.lastName())
+									.set(ACCOUNTS.AVATAR, registration.avatar())
+									.set(ACCOUNTS.CREATED_AT, OffsetDateTime.now())
+									.set(ACCOUNTS.CREATED_AT, OffsetDateTime.now())
+									.get()
+					)
 					.returning(ACCOUNTS.fields())
 					.fetchOne(DefaultAccountManager::map);
 		} catch (DuplicateKeyException e) {
@@ -76,11 +80,9 @@ class DefaultAccountManager implements AccountManager {
 			throw new AccountException("Unexpected exception occurred while registering an account", e);
 		}
 
-		if (account == null) {
-			throw new IllegalStateException("Could not create user account from: " + registration);
-		}
+		Assert.state(account != null, () -> "Could not create user account from: " + registration);
 
-		publisher.publishEvent(new AccountRegisteredEvent(account.id()));
+		publisher.publishEvent(AccountEvent.registered(account.id()));
 
 		log.info(REGISTERED, "Successfully registered new account {} from {}", account.id(), registration);
 
@@ -93,14 +95,6 @@ class DefaultAccountManager implements AccountManager {
 			.from(ACCOUNTS)
 			.where(condition)
 			.fetchOptional(DefaultAccountManager::map);
-	}
-
-	@NonNull
-	private Map<? extends Field<Long>, Long> generateIdentifier() {
-		return EntityId.generate()
-				.map(EntityId::get)
-				.map(id -> Map.of(ACCOUNTS.ID, id))
-				.orElseGet(Collections::emptyMap);
 	}
 
 	@NonNull

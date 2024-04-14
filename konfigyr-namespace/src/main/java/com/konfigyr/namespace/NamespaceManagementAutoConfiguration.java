@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -18,10 +19,12 @@ import org.springframework.context.annotation.Bean;
 @AutoConfigureAfter(JooqAutoConfiguration.class)
 public class NamespaceManagementAutoConfiguration {
 
+	private final ApplicationEventPublisher applicationEventPublisher;
+
 	@Bean
 	@ConditionalOnMissingBean(NamespaceManager.class)
 	NamespaceManager defaultNamespaceManager(DSLContext context) {
-		return new DefaultNamespaceManager(context);
+		return new DefaultNamespaceManager(context, applicationEventPublisher);
 	}
 
 }

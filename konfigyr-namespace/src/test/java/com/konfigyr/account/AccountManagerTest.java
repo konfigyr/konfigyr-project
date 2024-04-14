@@ -123,7 +123,7 @@ class AccountManagerTest {
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
 				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
 
-		events.eventOfTypeWasPublished(AccountRegisteredEvent.class);
+		events.eventOfTypeWasPublished(AccountEvent.Registered.class);
 	}
 
 	@Test
@@ -147,7 +147,7 @@ class AccountManagerTest {
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
 				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
 
-		events.eventOfTypeWasPublished(AccountRegisteredEvent.class);
+		events.eventOfTypeWasPublished(AccountEvent.Registered.class);
 	}
 
 	@Test
@@ -161,7 +161,7 @@ class AccountManagerTest {
 				.isInstanceOf(AccountExistsException.class)
 				.hasCauseInstanceOf(DuplicateKeyException.class);
 
-		assertThat(events.ofType(AccountRegisteredEvent.class))
+		assertThat(events.ofType(AccountEvent.class))
 				.isEmpty();
 	}
 

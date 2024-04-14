@@ -22,7 +22,18 @@ public class AccountExistsException extends AccountException {
 	private final AccountRegistration registration;
 
 	/**
-	 * Create new instance for the {@link AccountRegistration} that trigger the unique constraint
+	 * Create new instance for the {@link AccountRegistration} that triggered the unique constraint
+	 * violation when creating an {@link Account}.
+	 *
+	 * @param registration registration data that triggered this exception
+	 */
+	public AccountExistsException(@NonNull AccountRegistration registration) {
+		super("Could not register account as one already exists with that email address");
+		this.registration = registration;
+	}
+
+	/**
+	 * Create new instance for the {@link AccountRegistration} that triggered the unique constraint
 	 * violation when creating an {@link Account}.
 	 *
 	 * @param registration registration data that triggered this exception
