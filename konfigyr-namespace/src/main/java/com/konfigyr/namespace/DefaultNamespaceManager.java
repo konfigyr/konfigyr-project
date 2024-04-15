@@ -188,7 +188,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 			log.debug("Creating new namespace member with: [namespace={}, account={}, role={}]", namespace, account, role);
 		}
 
-		final EntityId id;
+		final Long id;
 
 		try {
 			id = context.insertInto(NAMESPACE_MEMBERS)
@@ -201,7 +201,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 									.get()
 					)
 					.returning(NAMESPACE_MEMBERS.ID)
-					.fetchOne(record -> EntityId.from(record.get(NAMESPACE_MEMBERS.ID)));
+					.fetchOne(NAMESPACE_MEMBERS.ID);
 		} catch (Exception e) {
 			throw new NamespaceException("Unexpected exception occurred while creating the namespace member", e);
 		}
@@ -209,9 +209,9 @@ class DefaultNamespaceManager implements NamespaceManager {
 		Assert.state(id != null, () -> String.format("Could not create member for: " +
 				"[namespace=%s, account=%s, role=%s]", namespace, account, role));
 
-		return createMembersQuery(NAMESPACE_MEMBERS.ID.eq(id.get()))
+		return createMembersQuery(NAMESPACE_MEMBERS.ID.eq(id))
 				.fetchOptional(DefaultNamespaceManager::toMember)
-				.orElseThrow(() -> new IllegalStateException("Failed to lookup member with id: " + id));
+				.orElseThrow(() -> new IllegalStateException("Failed to lookup member with: " + EntityId.from(id)));
 	}
 
 	@NonNull
