@@ -157,10 +157,6 @@
                 <constraints primaryKey="true" nullable="false" />
             </column>
 
-            <column name="owner" type="bigint">
-                <constraints nullable="false" />
-            </column>
-
             <column name="slug" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
@@ -191,11 +187,58 @@
                 columnNames="slug"
                 constraintName="unique_namespace"
         />
+    </changeSet>
+
+    <changeSet author="vspasic" id="1.0.0-create-namespace-members-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="namespace_members" />
+            </not>
+        </preConditions>
+
+        <comment>Initial namespace members table migration</comment>
+
+        <createTable tableName="namespace_members" remarks="User accounts that are considered as namespace members">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="namespace_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="account_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="role" type="varchar(20)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="since" type="timestamptz" defaultValue="NOW()">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="namespace_members"
+                columnNames="namespace_id,account_id"
+                constraintName="unique_namespace_member"
+        />
 
         <addForeignKeyConstraint
-                baseTableName="namespaces"
-                baseColumnNames="owner"
-                constraintName="fk_namespace_owner"
+                baseTableName="namespace_members"
+                baseColumnNames="namespace_id"
+                constraintName="fk_namespace_member_namespace"
+                referencedTableName="namespaces"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+
+        <addForeignKeyConstraint
+                baseTableName="namespace_members"
+                baseColumnNames="account_id"
+                constraintName="fk_namespace_member_account"
                 referencedTableName="accounts"
                 referencedColumnNames="id"
                 onDelete="CASCADE"

@@ -125,6 +125,70 @@ class NamespaceTest {
 	}
 
 	@Test
+	@DisplayName("should create namespace member using fluent builder")
+	void shouldCreateNamespaceMember() {
+		final var member = Member.builder()
+				.id(8365L)
+				.namespace(972L)
+				.account(72L)
+				.role(NamespaceRole.ADMIN)
+				.email("john.doe@konfigyr.com")
+				.displayName("John Doe")
+				.avatar("https://example.com/avatar.svg")
+				.since(Instant.now().minus(17, ChronoUnit.DAYS))
+				.build();
+
+		assertThat(member)
+				.returns(EntityId.from(8365), Member::id)
+				.returns(EntityId.from(972), Member::namespace)
+				.returns(EntityId.from(72), Member::account)
+				.returns(NamespaceRole.ADMIN, Member::role)
+				.returns("john.doe@konfigyr.com", Member::email)
+				.returns("John Doe", Member::displayName)
+				.returns("https://example.com/avatar.svg", Member::avatar)
+				.satisfies(it -> assertThat(it.since())
+						.isNotNull()
+						.isEqualToIgnoringHours(OffsetDateTime.now(ZoneOffset.UTC).minusDays(17))
+				);
+	}
+
+	@Test
+	@DisplayName("should validate namespace member data when using fluent builder")
+	void shouldValidateNamespaceMemberBuilder() {
+		final var builder = Member.builder();
+
+		assertThatThrownBy(builder::build)
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Member entity identifier can not be null");
+
+		assertThatThrownBy(() -> builder.id("000000BKTH3TG").build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Namespace entity identifier can not be null");
+
+		assertThatThrownBy(() -> builder.namespace("000000BKTH3TG").build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Account entity identifier can not be null");
+
+		assertThatThrownBy(() -> builder.account("000000BKTH3TG").build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Namespace role can not be null");
+
+		assertThatThrownBy(() -> builder.role("USER").build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Member email address can not be blank");
+
+		assertThat(builder.email("jane.doe@konfigyr.com").build())
+				.returns(EntityId.from(12476518224L), Member::id)
+				.returns(EntityId.from(12476518224L), Member::namespace)
+				.returns(EntityId.from(12476518224L), Member::account)
+				.returns(NamespaceRole.USER, Member::role)
+				.returns("jane.doe@konfigyr.com", Member::email)
+				.returns("jane.doe@konfigyr.com", Member::displayName)
+				.returns(null, Member::avatar)
+				.returns(null, Member::since);
+	}
+
+	@Test
 	@DisplayName("should create namespace exists exception without cause")
 	void shouldCreateNamespaceExistsException() {
 		final var definition = Mockito.mock(NamespaceDefinition.class);

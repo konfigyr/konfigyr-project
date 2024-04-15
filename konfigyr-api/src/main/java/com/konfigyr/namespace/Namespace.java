@@ -16,13 +16,13 @@ import java.time.ZoneOffset;
 /**
  * Namespaces provide one single place to organize artifacts and vaults.
  *
- * @param id unique namespace identifier, can be null if the namespace is not yet created
- * @param slug unique namespace identifier derived from it's name, can not be null
- * @param type defines the type of the namespace, can not be null
- * @param name human friendly name of the namespace, can not be null
- * @param description short description of the namespace, can be null
- * @param createdAt when was this namespace created, can be null
- * @param updatedAt when was this namespace last updated, can be null
+ * @param id unique namespace identifier, can not be {@literal null}
+ * @param slug unique namespace identifier derived from it's name, can not be {@literal null}
+ * @param type defines the type of the namespace, can not be {@literal null}
+ * @param name human friendly name of the namespace, can not be {@literal null}
+ * @param description short description of the namespace, can be {@literal null}
+ * @param createdAt when was this namespace created, can be {@literal null}
+ * @param updatedAt when was this namespace last updated, can be {@literal null}
  * @author Vladimir Spasic
  * @since 1.0.0
  **/

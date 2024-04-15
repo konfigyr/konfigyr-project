@@ -3,6 +3,7 @@ package com.konfigyr.namespace;
 import com.konfigyr.entity.EntityId;
 import org.jmolecules.ddd.annotation.Repository;
 import org.jmolecules.event.annotation.DomainEventPublisher;
+import org.springframework.data.domain.Page;
 import org.springframework.lang.NonNull;
 
 import java.util.Optional;
@@ -57,5 +58,32 @@ public interface NamespaceManager {
 	@NonNull
 	@DomainEventPublisher(publishes = "namespaces.created")
 	Namespace create(@NonNull NamespaceDefinition definition);
+
+	/**
+	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param id namespace entity identifier for which to fetch members, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	Page<Member> findMembers(@NonNull EntityId id);
+
+	/**
+	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param slug namespace slug, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	Page<Member> findMembers(@NonNull String slug);
+
+	/**
+	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param namespace namespace for which to fetch members, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	Page<Member> findMembers(@NonNull Namespace namespace);
 
 }
