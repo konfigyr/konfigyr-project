@@ -17,7 +17,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 /**
- * Record entity that defines a member of a {@link Namespace}. Members are {@link Account user accounts}
+ * Immutable entity that defines a member of a {@link Namespace}. Members are {@link Account user accounts}
  * that are given certain rights, via {@link NamespaceRole namespace roles} within a {@link Namespace}.
  * <p>
  * When the {@link Namespace} is created, the {@link Account} that creates is automatically added as

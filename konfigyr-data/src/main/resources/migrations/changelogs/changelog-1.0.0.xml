@@ -198,7 +198,7 @@
 
         <comment>Initial namespace members table migration</comment>
 
-        <createTable tableName="namespace_members" remarks="User accounts that are considered as namespace members">
+        <createTable tableName="namespace_members" remarks="User accounts that are allowed to access and manage namespaces.">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false" />
             </column>
