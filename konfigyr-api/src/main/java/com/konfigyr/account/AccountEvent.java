@@ -2,8 +2,7 @@ package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
-import org.springframework.lang.NonNull;
-import org.springframework.util.Assert;
+import org.jmolecules.event.annotation.DomainEvent;
 
 /**
  * Abstract event type that should be used for all {@link Account} related events.
@@ -18,23 +17,18 @@ public abstract sealed class AccountEvent extends EntityEvent permits AccountEve
 	}
 
 	/**
-	 * Create a new {@link Registered} event with the {@link EntityId entity identifier} of the
-	 * {@link Account} that was just created by the {@link AccountManager}.
-	 *
-	 * @param id entity identifier of the registered account
-	 * @return account registered event, never {@literal null}
-	 */
-	@NonNull
-	public static Registered registered(EntityId id) {
-		Assert.notNull(id, "Account entity identifier can not be null");
-		return new Registered(id);
-	}
-
-	/**
 	 * Event that is published when the {@link Account} was successfully registered in our system.
 	 */
+	@DomainEvent(name = "registered", namespace = "accounts")
 	public static final class Registered extends AccountEvent {
-		private Registered(EntityId id) {
+
+		/**
+		 * Create a new {@link Registered} event with the {@link EntityId entity identifier} of the
+		 * {@link Account} that was just created by the {@link AccountManager}.
+		 *
+		 * @param id entity identifier of the registered account
+		 */
+		public Registered(EntityId id) {
 			super(id);
 		}
 	}

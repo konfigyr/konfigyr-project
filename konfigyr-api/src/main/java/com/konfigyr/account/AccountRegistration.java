@@ -1,5 +1,6 @@
 package com.konfigyr.account;
 
+import org.jmolecules.ddd.annotation.ValueObject;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -19,6 +20,7 @@ import java.util.StringTokenizer;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@ValueObject
 public record AccountRegistration(
 		String email,
 		String firstName,

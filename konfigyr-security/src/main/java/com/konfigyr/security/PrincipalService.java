@@ -2,6 +2,7 @@ package com.konfigyr.security;
 
 import com.konfigyr.account.AccountRegistration;
 import com.konfigyr.entity.EntityId;
+import org.jmolecules.ddd.annotation.Service;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -18,6 +19,7 @@ import java.util.function.Supplier;
  *
  * @author Vladimir Spasic
  **/
+@Service
 public interface PrincipalService {
 
 	/**

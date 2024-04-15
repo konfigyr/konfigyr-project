@@ -198,7 +198,7 @@ class OAuth2AuthorizedClientServiceTest {
 	}
 
 	static @NonNull Authentication authentication(@NonNull Account account) {
-		final var oauth = new AccountPrincipal(account);
+		final var oauth = AccountPrincipal.from(account);
 		return new OAuth2AuthenticationToken(oauth, oauth.getAuthorities(), CLIENT_REGISTRATION);
 	}
 

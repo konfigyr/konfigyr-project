@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.*;
 class AccountRememberMeServicesTest {
 
 	final Account account = TestAccounts.john().build();
-	final AccountPrincipal principal = new AccountPrincipal(account);
+	final AccountPrincipal principal = AccountPrincipal.from(account);
 
 	@Mock
 	PrincipalService service;

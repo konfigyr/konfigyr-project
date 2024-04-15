@@ -2,6 +2,7 @@ package com.konfigyr.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.jmolecules.ddd.types.Identifier;
 import org.springframework.lang.NonNull;
 
 import java.io.Serializable;
@@ -26,7 +27,7 @@ import java.util.Optional;
  * @since 1.0.0
  * @see EntityIdProvider
  **/
-public interface EntityId extends Comparable<EntityId>, Serializable {
+public interface EntityId extends Comparable<EntityId>, Identifier, Serializable {
 
 	/**
 	 * Generates a new unique {@link EntityId} for an entity. If the {@link EntityIdProvider} provides

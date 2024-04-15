@@ -1,5 +1,6 @@
 package com.konfigyr.entity;
 
+import org.jmolecules.ddd.annotation.Factory;
 import org.springframework.core.OrderComparator;
 import org.springframework.lang.NonNull;
 import org.springframework.util.ClassUtils;
@@ -16,6 +17,7 @@ import java.util.function.Supplier;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@Factory
 final class EntityIdFactory {
 
 	static final Supplier<EntityIdFactory> instance = SingletonSupplier.of(EntityIdFactory::new);

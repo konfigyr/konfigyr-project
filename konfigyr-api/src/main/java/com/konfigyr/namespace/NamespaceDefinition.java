@@ -2,6 +2,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.slug.Slug;
+import org.jmolecules.ddd.annotation.ValueObject;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -20,6 +21,7 @@ import java.io.Serializable;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@ValueObject
 public record NamespaceDefinition(
 		@NonNull EntityId owner,
 		@NonNull Slug slug,

@@ -1,6 +1,8 @@
 package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
+import org.jmolecules.ddd.annotation.AggregateRoot;
+import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -29,8 +31,9 @@ import java.util.StringJoiner;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@AggregateRoot
 public record Account(
-		@NonNull EntityId id,
+		@NonNull @Identity EntityId id,
 		@NonNull AccountStatus status,
 		@NonNull String email,
 		@Nullable String firstName,

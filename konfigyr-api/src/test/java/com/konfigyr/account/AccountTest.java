@@ -124,7 +124,7 @@ class AccountTest {
 	@Test
 	@DisplayName("should create an account registered event")
 	void shouldCreateRegistrationEvent() {
-		assertThat(AccountEvent.registered(EntityId.from(8366545L)))
+		assertThat(new AccountEvent.Registered(EntityId.from(8366545L)))
 				.isInstanceOf(AccountEvent.Registered.class)
 				.returns(EntityId.from(8366545L), EntityEvent::id);
 	}
