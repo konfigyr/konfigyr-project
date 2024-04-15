@@ -1,9 +1,16 @@
 coverage:
+  round: nearest
   status:
+    # Commits pushed to main should not make the overall project coverage decrease by more than 2%
     project:
       default:
-        target: 80%
-        threshold: 10%
+        target: auto
+        threshold: 2%
+    # Be more lenient when with coverage thresholds for PRs
+    patch:
+      default:
+        target: auto
+        threshold: 5%
 
 component_management:
   default_rules:
