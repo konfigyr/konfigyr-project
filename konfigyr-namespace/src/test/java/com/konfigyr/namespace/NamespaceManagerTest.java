@@ -15,9 +15,9 @@ import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest(classes = NamespaceTestConfiguration.class)
 @ExtendWith(PublishedEventsExtension.class)
@@ -50,6 +50,20 @@ class NamespaceManagerTest {
 	}
 
 	@Test
+	@DisplayName("should lookup namespace members by entity identifier")
+	void shouldLookupNamespaceMembersById() {
+		final var id = EntityId.from(1);
+
+		assertThat(manager.findMembers(id))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(Member::id, Member::namespace, Member::account, Member::role, Member::email)
+				.containsExactlyInAnyOrder(
+						tuple(EntityId.from(1), id, EntityId.from(1), NamespaceRole.ADMIN, "john.doe@konfigyr.com")
+				);
+	}
+
+	@Test
 	@DisplayName("should lookup namespace by slug path")
 	void shouldLookupNamespaceBySlug() {
 		final var slug = "konfigyr";
@@ -73,6 +87,21 @@ class NamespaceManagerTest {
 	}
 
 	@Test
+	@DisplayName("should lookup namespace members by slug path")
+	void shouldLookupNamespaceMembersBySlug() {
+		final var slug = "konfigyr";
+
+		assertThat(manager.findMembers(slug))
+				.isNotNull()
+				.hasSize(2)
+				.extracting(Member::id, Member::namespace, Member::account, Member::role, Member::email)
+				.containsExactlyInAnyOrder(
+						tuple(EntityId.from(2), EntityId.from(2), EntityId.from(1), NamespaceRole.ADMIN, "john.doe@konfigyr.com"),
+						tuple(EntityId.from(3), EntityId.from(2), EntityId.from(2), NamespaceRole.USER, "jane.doe@konfigyr.com")
+				);
+	}
+
+	@Test
 	@DisplayName("should check if namespaces exists by slug path")
 	void shouldCheckIfNamespaceExists() {
 		assertThat(manager.exists("john-doe")).isTrue();
@@ -87,9 +116,15 @@ class NamespaceManagerTest {
 	}
 
 	@Test
-	@DisplayName("should return empty optional when namespace is not found by path slug")
-	void shouldFailToLookupNamespaceByEmail() {
-		assertThat(manager.findBySlug("unknown")).isEmpty();
+	@DisplayName("should return empty members page when namespace is not found by entity identifier")
+	void shouldFailToLookupNamespaceMembersById() {
+		assertThat(manager.findMembers(EntityId.from(9914))).isEmpty();
+	}
+
+	@Test
+	@DisplayName("should return empty members page when namespace is not found by path slug")
+	void shouldFailToLookupNamespaceMembersByEmail() {
+		assertThat(manager.findMembers("unknown")).isEmpty();
 	}
 
 	@Test
@@ -104,16 +139,39 @@ class NamespaceManagerTest {
 				.description("Harsh desert planet located in the Canopus star system")
 				.build();
 
-		assertThat(manager.create(definition))
+		final Namespace namespace = manager.create(definition);
+
+		assertThat(namespace)
 				.returns(NamespaceType.ENTERPRISE, Namespace::type)
 				.returns("arakis", Namespace::slug)
 				.returns("Arakis", Namespace::name)
 				.returns("Harsh desert planet located in the Canopus star system", Namespace::description)
 				.satisfies(it -> assertThat(it.id()).isNotNull())
-				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
+				.satisfies(it -> assertThat(it.createdAt())
+						.isNotNull()
+						.isCloseTo(OffsetDateTime.now(), within(400, ChronoUnit.MILLIS))
+				)
+				.satisfies(it -> assertThat(it.updatedAt())
+						.isNotNull()
+						.isCloseTo(OffsetDateTime.now(), within(400, ChronoUnit.MILLIS))
+				);
 
 		events.eventOfTypeWasPublished(NamespaceEvent.Created.class);
+
+		assertThat(manager.findMembers(namespace))
+				.isNotNull()
+				.hasSize(1)
+				.first()
+				.returns(namespace.id(), Member::namespace)
+				.returns(definition.owner(), Member::account)
+				.returns(NamespaceRole.ADMIN, Member::role)
+				.returns("john.doe@konfigyr.com", Member::email)
+				.returns("john.doe@konfigyr.com", Member::displayName)
+				.returns(null, Member::avatar)
+				.satisfies(it -> assertThat(it.since())
+						.isNotNull()
+						.isCloseTo(OffsetDateTime.now(), within(600, ChronoUnit.MILLIS))
+				);
 	}
 
 	@Test
