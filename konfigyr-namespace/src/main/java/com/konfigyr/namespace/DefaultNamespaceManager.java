@@ -101,7 +101,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 		log.info(CREATED, "Successfully created new namespace {} from {}", namespace.id(), definition);
 
-		publisher.publishEvent(NamespaceEvent.created(namespace.id()));
+		publisher.publishEvent(new NamespaceEvent.Created(namespace.id()));
 
 		return namespace;
 	}

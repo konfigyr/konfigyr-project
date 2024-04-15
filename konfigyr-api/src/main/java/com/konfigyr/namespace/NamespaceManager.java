@@ -1,6 +1,8 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
+import org.jmolecules.ddd.annotation.Repository;
+import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.springframework.lang.NonNull;
 
 import java.util.Optional;
@@ -11,6 +13,7 @@ import java.util.Optional;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@Repository
 public interface NamespaceManager {
 
 	/**
@@ -52,6 +55,7 @@ public interface NamespaceManager {
 	 * @throws NamespaceExistsException when there is already a {@link Namespace} with the same slug
 	 */
 	@NonNull
+	@DomainEventPublisher(publishes = "namespaces.created")
 	Namespace create(@NonNull NamespaceDefinition definition);
 
 }

@@ -35,6 +35,7 @@ subprojects {
             mavenBom "org.springframework.boot:spring-boot-dependencies:${findProperty('versions.spring.boot')}"
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${findProperty('versions.spring.cloud')}"
             mavenBom "org.springframework.modulith:spring-modulith-bom:${findProperty('versions.spring.modulith')}"
+            mavenBom "org.jmolecules:jmolecules-bom:${findProperty('versions.spring.jmolecules')}"
         }
 
         dependencies {

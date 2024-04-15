@@ -3,14 +3,17 @@ package com.konfigyr.security;
 import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountStatus;
 import com.konfigyr.entity.EntityId;
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
+import lombok.*;
+import org.jmolecules.ddd.annotation.AggregateRoot;
+import org.jmolecules.ddd.annotation.Identity;
+import org.jmolecules.ddd.types.Identifiable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.util.Assert;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -39,8 +42,9 @@ import java.util.Map;
  * @see UserDetails
  **/
 @Value
-@RequiredArgsConstructor
-public class AccountPrincipal implements OAuth2User, UserDetails, Serializable {
+@Builder
+@AggregateRoot
+public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<EntityId>, Serializable {
 
 	@Serial
 	private static final long serialVersionUID = -4208974779066630762L;
@@ -49,19 +53,66 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Serializable {
 	private static final Map<String, Object> EMPTY_ATTRIBUTES = Collections.emptyMap();
 
 	/**
-	 * The actual {@link Account} that identifies this {@link AccountPrincipal}.
+	 * Entity identifier of the {@link Account} behind this principal.
 	 */
-	@NonNull Account account;
+	@NonNull
+	EntityId id;
 
 	/**
-	 * Returns am {@link EntityId} of the {@link Account} that would be used as the
+	 * The current status of the {@link Account} that is used to check if this
+	 * principal can be used.
+	 */
+	@NonNull
+	AccountStatus status;
+
+	/**
+	 * E-Mail address of the {@link Account}.
+	 */
+	@NonNull
+	String email;
+
+	/**
+	 * Display name, or an email address, of this {@link AccountPrincipal}.
+	 */
+	@NonNull
+	String name;
+
+	/**
+	 * URL that points to the profile picture of this {@link Account}.
+	 */
+	@Nullable
+	String avatar;
+
+	/**
+	 * Creates a new {@link AccountPrincipal} using the attributes from the {@link Account} entity.
+	 *
+	 * @param account account behind the principal
+	 * @return authenticated account principal, never {@literal null}
+	 * @throws IllegalArgumentException when account is {@literal null}
+	 */
+	@NonNull
+	public static AccountPrincipal from(Account account) {
+		Assert.notNull(account, "Account cano not be null");
+
+		return builder()
+				.id(account.id())
+				.status(account.status())
+				.email(account.email())
+				.name(account.displayName())
+				.avatar(account.avatar())
+				.build();
+	}
+
+	/**
+	 * Returns an {@link EntityId} of the {@link Account} that would be used as the
 	 * {@link org.springframework.security.core.AuthenticatedPrincipal}.
 	 *
 	 * @return account entity identifier, never {@literal null}
 	 */
 	@NonNull
+	@Identity
 	public EntityId getId() {
-		return account.id();
+		return id;
 	}
 
 	/**
@@ -73,7 +124,12 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Serializable {
 	@NonNull
 	@Override
 	public String getName() {
-		return account.id().serialize();
+		return id.serialize();
+	}
+
+	@Override
+	public String getUsername() {
+		return getName();
 	}
 
 	/**
@@ -83,12 +139,7 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Serializable {
 	 */
 	@NonNull
 	public String getEmail() {
-		return account.email();
-	}
-
-	@Override
-	public String getUsername() {
-		return getName();
+		return email;
 	}
 
 	/**
@@ -98,7 +149,7 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Serializable {
 	 */
 	@NonNull
 	public String getDisplayName() {
-		return account.displayName();
+		return name;
 	}
 
 	/**
@@ -108,27 +159,27 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Serializable {
 	 */
 	@Nullable
 	public String getAvatar() {
-		return account.avatar();
+		return avatar;
 	}
 
 	@Override
 	public boolean isAccountNonExpired() {
-		return AccountStatus.DEACTIVATED != account.status();
+		return AccountStatus.DEACTIVATED != status;
 	}
 
 	@Override
 	public boolean isAccountNonLocked() {
-		return AccountStatus.SUSPENDED != account.status();
+		return AccountStatus.SUSPENDED != status;
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired() {
-		return AccountStatus.ACTIVE == account.status();
+		return AccountStatus.ACTIVE == status;
 	}
 
 	@Override
 	public boolean isEnabled() {
-		return AccountStatus.ACTIVE == account.status();
+		return AccountStatus.ACTIVE == status;
 	}
 
 	@Override

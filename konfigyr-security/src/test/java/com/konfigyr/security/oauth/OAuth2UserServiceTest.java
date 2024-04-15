@@ -63,7 +63,6 @@ class OAuth2UserServiceTest {
 				.returns(account.id().serialize(), OAuth2User::getName)
 				.returns(Map.of(), OAuth2User::getAttributes)
 				.asInstanceOf(InstanceOfAssertFactories.type(AccountPrincipal.class))
-				.returns(account, AccountPrincipal::getAccount)
 				.returns(account.email(), AccountPrincipal::getEmail)
 				.returns(account.avatar(), AccountPrincipal::getAvatar)
 				.returns(account.displayName(), AccountPrincipal::getDisplayName);
@@ -92,7 +91,6 @@ class OAuth2UserServiceTest {
 				.returns(account.id().serialize(), OAuth2User::getName)
 				.returns(Map.of(), OAuth2User::getAttributes)
 				.asInstanceOf(InstanceOfAssertFactories.type(AccountPrincipal.class))
-				.returns(account, AccountPrincipal::getAccount)
 				.returns(account.email(), AccountPrincipal::getEmail)
 				.returns(account.avatar(), AccountPrincipal::getAvatar)
 				.returns(account.displayName(), AccountPrincipal::getDisplayName);

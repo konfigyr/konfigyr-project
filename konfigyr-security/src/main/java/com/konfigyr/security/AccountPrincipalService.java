@@ -50,7 +50,7 @@ public class AccountPrincipalService implements PrincipalService {
 		Assert.notNull(account.id(), "User account identifier can not be null");
 		Assert.hasText(account.email(), "User account needs to have an email address set");
 
-		return new AccountPrincipal(account);
+		return AccountPrincipal.from(account);
 	}
 
 	@NonNull
@@ -112,7 +112,7 @@ public class AccountPrincipalService implements PrincipalService {
 	@Nullable
 	private AccountPrincipal lookupFromManager(@NonNull EntityId id) {
 		return manager.findById(id)
-				.map(AccountPrincipal::new)
+				.map(AccountPrincipal::from)
 				.orElse(null);
 	}
 

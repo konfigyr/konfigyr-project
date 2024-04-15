@@ -181,7 +181,7 @@ class NamespaceTest {
 	@Test
 	@DisplayName("should create namespace created event")
 	void createNamespaceCreatedEvent() {
-		assertThat(NamespaceEvent.created(EntityId.from(3)))
+		assertThat(new NamespaceEvent.Created(EntityId.from(3)))
 				.isNotNull()
 				.isInstanceOf(NamespaceEvent.Created.class)
 				.returns(EntityId.from(3), EntityEvent::id);

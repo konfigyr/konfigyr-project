@@ -13,8 +13,10 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-observation'
 
-    /* Spring Moduliths */
+    /* Spring Moduliths and JMolecules */
     api 'org.springframework.modulith:spring-modulith-starter-core'
+    api 'org.jmolecules:jmolecules-ddd'
+    api 'org.jmolecules:jmolecules-events'
 
     /* Spring Common libraries */
     api 'org.springframework.retry:spring-retry'

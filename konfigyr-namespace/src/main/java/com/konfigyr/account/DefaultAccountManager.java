@@ -82,7 +82,7 @@ class DefaultAccountManager implements AccountManager {
 
 		Assert.state(account != null, () -> "Could not create user account from: " + registration);
 
-		publisher.publishEvent(AccountEvent.registered(account.id()));
+		publisher.publishEvent(new AccountEvent.Registered(account.id()));
 
 		log.info(REGISTERED, "Successfully registered new account {} from {}", account.id(), registration);
 

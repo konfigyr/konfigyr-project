@@ -18,7 +18,7 @@ class AccountPrincipalTest {
 	void shouldCreatePrincipalFromActiveAccount() {
 		final var account = TestAccounts.john().build();
 
-		assertThat(new AccountPrincipal(account))
+		assertThat(AccountPrincipal.from(account))
 				.returns(account.id(), AccountPrincipal::getId)
 				.returns(account.email(), AccountPrincipal::getEmail)
 				.returns(account.id().serialize(), UserDetails::getUsername)
@@ -30,8 +30,8 @@ class AccountPrincipalTest {
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
 				.returns(true, UserDetails::isCredentialsNonExpired)
-				.hasSameHashCodeAs(new AccountPrincipal(account))
-				.isEqualTo(new AccountPrincipal(account));
+				.hasSameHashCodeAs(AccountPrincipal.from(account))
+				.isEqualTo(AccountPrincipal.from(account));
 	}
 
 	@Test
@@ -39,7 +39,7 @@ class AccountPrincipalTest {
 	void shouldCreatePrincipalFromInactiveAccount() {
 		final var account = TestAccounts.jane().build();
 
-		assertThat(new AccountPrincipal(account))
+		assertThat(AccountPrincipal.from(account))
 				.returns(account.id(), AccountPrincipal::getId)
 				.returns(account.email(), AccountPrincipal::getEmail)
 				.returns(account.id().serialize(), UserDetails::getUsername)
@@ -51,8 +51,8 @@ class AccountPrincipalTest {
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
 				.returns(false, UserDetails::isCredentialsNonExpired)
-				.hasSameHashCodeAs(new AccountPrincipal(account))
-				.isEqualTo(new AccountPrincipal(account));
+				.hasSameHashCodeAs(AccountPrincipal.from(account))
+				.isEqualTo(AccountPrincipal.from(account));
 	}
 
 	@Test
@@ -62,7 +62,7 @@ class AccountPrincipalTest {
 				.status(AccountStatus.DEACTIVATED)
 				.build();
 
-		assertThat(new AccountPrincipal(account))
+		assertThat(AccountPrincipal.from(account))
 				.returns(account.id(), AccountPrincipal::getId)
 				.returns(account.email(), AccountPrincipal::getEmail)
 				.returns(account.id().serialize(), UserDetails::getUsername)
@@ -74,8 +74,8 @@ class AccountPrincipalTest {
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(false, UserDetails::isAccountNonExpired)
 				.returns(false, UserDetails::isCredentialsNonExpired)
-				.hasSameHashCodeAs(new AccountPrincipal(account))
-				.isEqualTo(new AccountPrincipal(account));
+				.hasSameHashCodeAs(AccountPrincipal.from(account))
+				.isEqualTo(AccountPrincipal.from(account));
 	}
 
 	@Test
@@ -85,7 +85,7 @@ class AccountPrincipalTest {
 				.status(AccountStatus.SUSPENDED)
 				.build();
 
-		assertThat(new AccountPrincipal(account))
+		assertThat(AccountPrincipal.from(account))
 				.returns(account.id(), AccountPrincipal::getId)
 				.returns(account.email(), AccountPrincipal::getEmail)
 				.returns(account.id().serialize(), UserDetails::getUsername)
@@ -97,8 +97,8 @@ class AccountPrincipalTest {
 				.returns(false, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
 				.returns(false, UserDetails::isCredentialsNonExpired)
-				.hasSameHashCodeAs(new AccountPrincipal(account))
-				.isEqualTo(new AccountPrincipal(account));
+				.hasSameHashCodeAs(AccountPrincipal.from(account))
+				.isEqualTo(AccountPrincipal.from(account));
 	}
 
 }

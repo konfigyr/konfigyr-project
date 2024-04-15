@@ -2,6 +2,7 @@ package com.konfigyr.slug;
 
 import com.github.slugify.Slugify;
 import lombok.EqualsAndHashCode;
+import org.jmolecules.ddd.annotation.ValueObject;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -35,6 +36,7 @@ import java.util.function.Supplier;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@ValueObject
 @EqualsAndHashCode
 public final class Slug implements Supplier<String>, Serializable {
 

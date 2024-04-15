@@ -1,6 +1,8 @@
 package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
+import org.jmolecules.ddd.annotation.Repository;
+import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.springframework.lang.NonNull;
 
 import java.util.Optional;
@@ -11,6 +13,7 @@ import java.util.Optional;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@Repository
 public interface AccountManager {
 
 	/**
@@ -46,6 +49,7 @@ public interface AccountManager {
 	 * @throws AccountException when there is an unexpected exception while creating the account
 	 */
 	@NonNull
+	@DomainEventPublisher(publishes = "accounts.registered")
 	Account create(@NonNull AccountRegistration registration);
 
 }

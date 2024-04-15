@@ -10,6 +10,9 @@ dependencies {
     api 'org.springframework.modulith:spring-modulith-starter-core'
     api 'org.springframework.modulith:spring-modulith-starter-test'
 
+    /* Test support for JMolecules DDD patterns */
+    api 'org.jmolecules.integrations:jmolecules-starter-test'
+
     /* Spring Boot Testcontainers support */
     api 'org.springframework.boot:spring-boot-testcontainers'
     api 'org.testcontainers:junit-jupiter'
