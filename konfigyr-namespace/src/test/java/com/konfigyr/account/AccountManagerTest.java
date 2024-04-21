@@ -2,6 +2,8 @@ package com.konfigyr.account;
 
 import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.namespace.NamespaceRole;
+import com.konfigyr.namespace.NamespaceType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +46,15 @@ class AccountManagerTest {
 						.isCloseTo(OffsetDateTime.now(), byLessThan(10, ChronoUnit.MINUTES))
 				)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
+				.satisfies(it -> assertThat(it.updatedAt()).isNotNull())
+				.satisfies(it -> assertThat(it.memberships())
+						.hasSize(2)
+						.extracting(Membership::id, Membership::namespace, Membership::type, Membership::role)
+						.containsExactly(
+								tuple(EntityId.from(1), "john-doe", NamespaceType.PERSONAL, NamespaceRole.ADMIN),
+								tuple(EntityId.from(2), "konfigyr", NamespaceType.TEAM, NamespaceRole.ADMIN)
+						)
+				);
 	}
 
 	@Test
@@ -64,7 +74,32 @@ class AccountManagerTest {
 				.returns(null, Account::avatar)
 				.returns(null, Account::lastLoginAt)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
+				.satisfies(it -> assertThat(it.updatedAt()).isNotNull())
+				.satisfies(it -> assertThat(it.memberships())
+						.hasSize(1)
+						.extracting(Membership::id, Membership::namespace, Membership::type, Membership::role)
+						.containsExactly(
+								tuple(EntityId.from(3), "konfigyr", NamespaceType.TEAM, NamespaceRole.USER)
+						)
+				);
+	}
+
+	@Test
+	@DisplayName("should lookup account memberships")
+	void shouldLookupAccountMemberships() {
+		assertThat(manager.findMemberships(EntityId.from(2)))
+				.hasSize(1)
+				.first()
+				.returns(EntityId.from(3), Membership::id)
+				.returns("konfigyr", Membership::namespace)
+				.returns(NamespaceRole.USER, Membership::role)
+				.returns(NamespaceType.TEAM, Membership::type)
+				.returns("Konfigyr", Membership::name)
+				.returns(null, Membership::avatar)
+				.satisfies(it -> assertThat(it.since())
+						.isNotNull()
+						.isEqualToIgnoringHours(OffsetDateTime.now().minusDays(2))
+				);
 	}
 
 	@Test
@@ -77,6 +112,13 @@ class AccountManagerTest {
 	@DisplayName("should return empty optional when account is not found by email address")
 	void shouldFailToLookupAccountByEmail() {
 		assertThat(manager.findByEmail("unknown@konfigyr.com")).isEmpty();
+	}
+
+	@Test
+	@DisplayName("should throw account not found when fetching memberships for an unknown account")
+	void shouldFailToLookupAccountMemberships() {
+		assertThatThrownBy(() -> manager.findMemberships(EntityId.from(18365)))
+				.isInstanceOf(AccountNotFoundException.class);
 	}
 
 	@Test
@@ -118,6 +160,7 @@ class AccountManagerTest {
 				.returns(null, Account::lastName)
 				.returns("muad.dib@arakis.com", Account::displayName)
 				.returns(null, Account::avatar)
+				.returns(Memberships.empty(), Account::memberships)
 				.returns(null, Account::lastLoginAt)
 				.satisfies(it -> assertThat(it.id()).isNotNull())
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
@@ -142,6 +185,7 @@ class AccountManagerTest {
 				.returns("Atreides", Account::lastName)
 				.returns("Paul Atreides", Account::displayName)
 				.returns(null, Account::avatar)
+				.returns(Memberships.empty(), Account::memberships)
 				.returns(null, Account::lastLoginAt)
 				.satisfies(it -> assertThat(it.id()).isNotNull())
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())

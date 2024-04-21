@@ -23,6 +23,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.rememberme.AbstractRememberMeServices;
 
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 
 import static org.mockito.Mockito.*;
@@ -213,7 +215,7 @@ class AccountRememberMeServicesTest {
 
 		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
 				.isNotNull()
-				.returns(AccountRememberMeServices.TOKEN_VALIDITY, Cookie::getMaxAge);
+				.returns((int) Duration.ofDays(14).toSeconds(), Cookie::getMaxAge);
 	}
 
 	@Test
@@ -227,7 +229,7 @@ class AccountRememberMeServicesTest {
 
 		assertThat(cookie)
 				.isNotNull()
-				.returns(AccountRememberMeServices.TOKEN_VALIDITY, Cookie::getMaxAge)
+				.returns((int) Duration.ofDays(14).toSeconds(), Cookie::getMaxAge)
 				.returns(true, Cookie::getSecure)
 				.returns("/", Cookie::getPath)
 				.returns(null, Cookie::getDomain);
@@ -241,7 +243,7 @@ class AccountRememberMeServicesTest {
 				.contains(principal.getUsername(), Index.atIndex(0))
 				.satisfies(tokens -> assertThat(Long.parseLong(tokens[1]))
 						.isCloseTo(
-								System.currentTimeMillis() + AccountRememberMeServices.TOKEN_VALIDITY,
+								System.currentTimeMillis() + Duration.ofDays(14).toMillis(),
 								Offset.offset(300L) // should not take more than 300ms to generate cookie
 						)
 				)

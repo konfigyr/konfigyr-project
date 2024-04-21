@@ -6,6 +6,7 @@ import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.Serial;
@@ -13,6 +14,8 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringJoiner;
 
 /**
@@ -25,6 +28,7 @@ import java.util.StringJoiner;
  * @param lastName users last name, can be {@literal null}
  * @param displayName users full name or email address, can't be {@literal null}
  * @param avatar URL where the avatar for the user account is hosted, can be {@literal null}
+ * @param memberships account namespace memberships, can not be {@literal null}
  * @param lastLoginAt when was the user account last online, can be {@literal null}
  * @param createdAt when was this user account created, can be {@literal null}
  * @param updatedAt when was this user account last updated, can be {@literal null}
@@ -40,6 +44,7 @@ public record Account(
 		@Nullable String lastName,
 		@NonNull String displayName,
 		@Nullable String avatar,
+		@NonNull Memberships memberships,
 		@Nullable OffsetDateTime lastLoginAt,
 		@Nullable OffsetDateTime createdAt,
 		@Nullable OffsetDateTime updatedAt
@@ -70,6 +75,7 @@ public record Account(
 		private String firstName;
 		private String lastName;
 		private String avatar;
+		private List<Membership> memberships;
 		private OffsetDateTime lastLoginAt;
 		private OffsetDateTime createdAt;
 		private OffsetDateTime updatedAt;
@@ -176,6 +182,36 @@ public record Account(
 		}
 
 		/**
+		 * Adds a {@link com.konfigyr.namespace.Namespace} {@link Membership} for this account.
+		 *
+		 * @param membership membership to be added.
+		 * @return account builder
+		 */
+		public Builder membership(Membership membership) {
+			if (membership != null) {
+				if (memberships == null) {
+					memberships = new ArrayList<>();
+				}
+
+				memberships.add(membership);
+			}
+			return this;
+		}
+
+		/**
+		 * Adds a {@link com.konfigyr.namespace.Namespace} {@link Membership memberships} for this account.
+		 *
+		 * @param memberships memberships to be added.
+		 * @return account builder
+		 */
+		public Builder memberships(Iterable<Membership> memberships) {
+			if (memberships != null) {
+				memberships.forEach(this::membership);
+			}
+			return this;
+		}
+
+		/**
 		 * Specify when this {@link Account} was last logged-in.
 		 *
 		 * @param lastLoginAt last login date
@@ -268,8 +304,11 @@ public record Account(
 			Assert.notNull(status, "Account status can not be null");
 			Assert.hasText(email, "Account email address can not be blank");
 
+			final Memberships memberships = CollectionUtils.isEmpty(this.memberships) ?
+					Memberships.empty() : Memberships.of(this.memberships);
+
 			return new Account(id, status, email, firstName, lastName, generateDisplayName(),
-					avatar, lastLoginAt, createdAt, updatedAt);
+					avatar, memberships, lastLoginAt, createdAt, updatedAt);
 		}
 
 	}

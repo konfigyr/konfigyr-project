@@ -5,7 +5,7 @@ import com.konfigyr.jooq.SettableRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.*;
-import org.jooq.Record;
+import org.jooq.impl.DSL;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -15,9 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
+import static com.konfigyr.data.tables.NamespaceMembers.NAMESPACE_MEMBERS;
+import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 
 /**
  * Implementation of the {@link AccountManager} that uses {@link DSLContext jOOQ} to communicate with the
@@ -30,7 +33,11 @@ import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
 @RequiredArgsConstructor
 class DefaultAccountManager implements AccountManager {
 
-	private final Marker REGISTERED = MarkerFactory.getMarker("ACCOUNT_REGISTERED");
+	static Name MEMBERSHIPS_ALIAS = DSL.name("memberships");
+
+	private static final Marker REGISTERED = MarkerFactory.getMarker("ACCOUNT_REGISTERED");
+
+	private final AccountMapper mapper = new AccountMapper(MEMBERSHIPS_ALIAS);
 
 	private final DSLContext context;
 	private final ApplicationEventPublisher publisher;
@@ -73,7 +80,7 @@ class DefaultAccountManager implements AccountManager {
 									.get()
 					)
 					.returning(ACCOUNTS.fields())
-					.fetchOne(DefaultAccountManager::map);
+					.fetchOne(mapper::account);
 		} catch (DuplicateKeyException e) {
 			throw new AccountExistsException(registration, e);
 		} catch (Exception e) {
@@ -89,27 +96,52 @@ class DefaultAccountManager implements AccountManager {
 		return account;
 	}
 
-	private Optional<Account> fetch(@NonNull Condition condition) {
-		return context
-			.select(ACCOUNTS.fields())
-			.from(ACCOUNTS)
-			.where(condition)
-			.fetchOptional(DefaultAccountManager::map);
+	@NonNull
+	@Override
+	@Transactional(readOnly = true)
+	public Memberships findMemberships(@NonNull EntityId id) {
+		final var memberships = createMembershipsMultiselectField();
+
+		return context.select(ACCOUNTS.ID, memberships)
+				.from(ACCOUNTS)
+				.where(ACCOUNTS.ID.eq(id.get()))
+				.fetchOptional(record -> Memberships.of(record.get(memberships)))
+				.orElseThrow(() -> new AccountNotFoundException(id));
 	}
 
-	@NonNull
-	private static Account map(@NonNull Record record) {
-		return Account.builder()
-				.id(record.get(ACCOUNTS.ID))
-				.status(record.get(ACCOUNTS.STATUS))
-				.email(record.get(ACCOUNTS.EMAIL))
-				.firstName(record.get(ACCOUNTS.FIRST_NAME))
-				.lastName(record.get(ACCOUNTS.LAST_NAME))
-				.avatar(record.get(ACCOUNTS.AVATAR))
-				.lastLoginAt(record.get(ACCOUNTS.LAST_LOGIN_AT))
-				.createdAt(record.get(ACCOUNTS.CREATED_AT))
-				.updatedAt(record.get(ACCOUNTS.UPDATED_AT))
-				.build();
+	private Optional<Account> fetch(@NonNull Condition condition) {
+		return context.select(
+				ACCOUNTS.ID,
+				ACCOUNTS.EMAIL,
+				ACCOUNTS.STATUS,
+				ACCOUNTS.FIRST_NAME,
+				ACCOUNTS.LAST_NAME,
+				ACCOUNTS.AVATAR,
+				ACCOUNTS.LAST_LOGIN_AT,
+				ACCOUNTS.CREATED_AT,
+				ACCOUNTS.UPDATED_AT,
+				createMembershipsMultiselectField()
+			)
+			.from(ACCOUNTS)
+			.where(condition)
+			.fetchOptional(mapper::account);
+	}
+
+	private Field<List<Membership>> createMembershipsMultiselectField() {
+		return DSL.multiset(
+				DSL.select(
+						NAMESPACE_MEMBERS.ID,
+						NAMESPACE_MEMBERS.ROLE,
+						NAMESPACE_MEMBERS.SINCE,
+						NAMESPACES.SLUG,
+						NAMESPACES.NAME,
+						NAMESPACES.TYPE
+				)
+				.from(NAMESPACE_MEMBERS)
+				.join(NAMESPACES)
+				.on(NAMESPACES.ID.eq(NAMESPACE_MEMBERS.NAMESPACE_ID))
+				.where(ACCOUNTS.ID.eq(NAMESPACE_MEMBERS.ACCOUNT_ID))
+		).as(MEMBERSHIPS_ALIAS).convertFrom(mapper::memberships);
 	}
 
 }
