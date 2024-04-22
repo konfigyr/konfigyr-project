@@ -40,7 +40,8 @@ class AccountTest {
 				.firstName("John")
 				.lastName("Doe")
 				.avatar("https://example.com/avatar.gif")
-				.membership(membership)
+				.membership(null)
+				.memberships(List.of(membership))
 				.lastLoginAt(Instant.now().minus(7, ChronoUnit.MINUTES))
 				.createdAt(Instant.now().minus(10, ChronoUnit.DAYS))
 				.updatedAt(Instant.now().minus(3, ChronoUnit.HOURS))
@@ -82,7 +83,7 @@ class AccountTest {
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Account status can not be null");
 
-		assertThatThrownBy(() -> builder.status(AccountStatus.INITIAL).build())
+		assertThatThrownBy(() -> builder.status("INITIAL").build())
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Account email address can not be blank");
 
@@ -238,7 +239,8 @@ class AccountTest {
 		assertThat(Memberships.empty())
 				.hasSize(0)
 				.isSameAs(Memberships.of())
-				.isSameAs(Memberships.of(List.of()));
+				.isSameAs(Memberships.of(List.of()))
+				.isSameAs(Memberships.of((Membership) null));
 	}
 
 	@Test
