@@ -24,7 +24,7 @@ dependencies {
 
     /* Slugify library to generate slugs */
     api 'com.github.slugify:slugify:3.0.6'
-    implementation 'com.ibm.icu:icu4j:74.2'
+    implementation 'com.ibm.icu:icu4j:75.1'
 
     /* TSID */
     implementation 'io.hypersistence:hypersistence-tsid:2.1.1'
