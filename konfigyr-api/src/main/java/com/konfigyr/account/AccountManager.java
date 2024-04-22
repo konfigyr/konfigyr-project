@@ -52,4 +52,14 @@ public interface AccountManager {
 	@DomainEventPublisher(publishes = "accounts.registered")
 	Account create(@NonNull AccountRegistration registration);
 
+	/**
+	 * Retrieves all {@link Memberships} for an {@link Account} with a given {@link EntityId entity identifier}.
+	 *
+	 * @param id account entity identifier, can't be {@literal null}
+	 * @return account memberships or empty, never {@literal null}
+	 * @throws AccountNotFoundException when {@link Account} does not exist
+	 */
+	@NonNull
+	Memberships findMemberships(@NonNull EntityId id);
+
 }

@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
@@ -47,10 +48,15 @@ import java.util.Objects;
  **/
 public class AccountRememberMeServices implements RememberMeServices, LogoutHandler {
 
-	static final String KEY = EntityId.from(123456789).serialize();
+	/**
+	 * The key used to validate the {@link Authentication} that is returned by this service
+	 * when the {@link UserDetails} was successfully resolved.
+	 */
+	public static final String KEY = EntityId.from(123456789).serialize();
+
 	static final String COOKIE_NAME = "konfigyr.account";
 	static final String DIGEST_ALGORITHM = "SHA-256";
-	static final int TOKEN_VALIDITY = 14 * 24 * 60 * 60; // 14 days in seconds (days * hours * minutes * seconds = 1209600)
+	static final Duration TOKEN_VALIDITY = Duration.ofDays(14);
 
 	private final AbstractRememberMeServices delegate;
 
@@ -66,7 +72,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 	 */
 	public AccountRememberMeServices(PrincipalService service) {
 		this.delegate = new InternalRememberMeServices(KEY, service::lookup);
-		delegate.setTokenValiditySeconds(TOKEN_VALIDITY);
+		delegate.setTokenValiditySeconds((int) TOKEN_VALIDITY.toSeconds());
 		delegate.setCookieName(COOKIE_NAME);
 		delegate.setUseSecureCookie(true);
 		delegate.setAlwaysRemember(true);
@@ -133,7 +139,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 				return;
 			}
 
-			final long expiryTime = System.currentTimeMillis() + getTokenValiditySeconds();
+			final long expiryTime = System.currentTimeMillis() + (1000L * getTokenValiditySeconds());
 			final String signature = generateSignature(username, expiryTime, getKey(), DIGEST_ALGORITHM);
 
 			setCookie(new String[] { username, Long.toString(expiryTime), signature }, getTokenValiditySeconds(), request, response);

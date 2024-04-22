@@ -2,7 +2,6 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.entity.EntityId;
-import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.lang.NonNull;
@@ -43,8 +42,8 @@ import java.time.ZoneOffset;
 @Entity
 public record Member(
 		@NonNull @Identity EntityId id,
-		@NonNull @Association(aggregateType = Namespace.class) EntityId namespace,
-		@NonNull @Association(aggregateType = Account.class) EntityId account,
+		@NonNull EntityId namespace,
+		@NonNull EntityId account,
 		@NonNull NamespaceRole role,
 		@NonNull String email,
 		@NonNull String displayName,

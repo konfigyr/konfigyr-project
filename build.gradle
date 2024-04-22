@@ -25,6 +25,8 @@ subprojects {
         annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
+        compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+
         checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.41'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -67,6 +69,10 @@ subprojects {
             xml.required = true
             html.required = false
         }
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        options.addStringOption('Xdoclint:-missing', '-quiet')
     }
 
     check.dependsOn jacocoTestReport
