@@ -2,6 +2,7 @@ package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
 import org.jmolecules.ddd.annotation.AggregateRoot;
+import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -44,7 +45,7 @@ public record Account(
 		@Nullable String lastName,
 		@NonNull String displayName,
 		@Nullable String avatar,
-		@NonNull Memberships memberships,
+		@NonNull @Association(aggregateType = Account.class) Memberships memberships,
 		@Nullable OffsetDateTime lastLoginAt,
 		@Nullable OffsetDateTime createdAt,
 		@Nullable OffsetDateTime updatedAt

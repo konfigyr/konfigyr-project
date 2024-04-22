@@ -24,7 +24,6 @@ import org.springframework.security.web.authentication.rememberme.AbstractRememb
 
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Base64;
 
 import static org.mockito.Mockito.*;
