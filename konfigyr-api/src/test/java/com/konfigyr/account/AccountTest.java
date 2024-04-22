@@ -42,6 +42,7 @@ class AccountTest {
 				.avatar("https://example.com/avatar.gif")
 				.membership(null)
 				.memberships(List.of(membership))
+				.membership(null)
 				.lastLoginAt(Instant.now().minus(7, ChronoUnit.MINUTES))
 				.createdAt(Instant.now().minus(10, ChronoUnit.DAYS))
 				.updatedAt(Instant.now().minus(3, ChronoUnit.HOURS))
@@ -240,7 +241,7 @@ class AccountTest {
 				.hasSize(0)
 				.isSameAs(Memberships.of())
 				.isSameAs(Memberships.of(List.of()))
-				.isSameAs(Memberships.of((Membership) null));
+				.isSameAs(Memberships.of((Membership[]) null));
 	}
 
 	@Test
