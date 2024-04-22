@@ -69,5 +69,9 @@ subprojects {
         }
     }
 
+    tasks.withType(Javadoc).configureEach {
+        options.addStringOption('Xdoclint:-missing', '-quiet')
+    }
+
     check.dependsOn jacocoTestReport
 }
