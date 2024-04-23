@@ -2,11 +2,9 @@ package com.konfigyr;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.modulith.Modulith;
 import org.springframework.modulith.core.ApplicationModules;
 import org.springframework.modulith.docs.Documenter;
 
-@Modulith(systemName = "Konfigyr")
 class KonfigyrServerModulesTest {
 
 	private final ApplicationModules modules = ApplicationModules.of(KonfigyrApplication.class);

@@ -3,6 +3,7 @@ package com.konfigyr;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.modulith.Modulith;
 
 /**
  * Konfigyr Spring server application main class.
@@ -12,6 +13,7 @@ import org.springframework.cache.annotation.EnableCaching;
  **/
 @EnableCaching
 @SpringBootApplication
+@Modulith(systemName = "Konfigyr")
 public class KonfigyrApplication {
 
 	public static void main(String[] args) {
