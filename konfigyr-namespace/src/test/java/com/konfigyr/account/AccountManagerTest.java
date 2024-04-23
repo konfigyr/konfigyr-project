@@ -4,11 +4,13 @@ import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.namespace.NamespaceType;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.modulith.test.PublishedEvents;
 import org.springframework.modulith.test.PublishedEventsExtension;
@@ -18,6 +20,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.within;
 
 @SpringBootTest(classes = NamespaceTestConfiguration.class)
 @ExtendWith(PublishedEventsExtension.class)
@@ -41,6 +44,7 @@ class AccountManagerTest {
 				.returns("Doe", Account::lastName)
 				.returns("John Doe", Account::displayName)
 				.returns(null, Account::avatar)
+				.returns(false, Account::isDeletable)
 				.satisfies(it -> assertThat(it.lastLoginAt())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now(), byLessThan(10, ChronoUnit.MINUTES))
@@ -72,6 +76,7 @@ class AccountManagerTest {
 				.returns("Doe", Account::lastName)
 				.returns("Jane Doe", Account::displayName)
 				.returns(null, Account::avatar)
+				.returns(true, Account::isDeletable)
 				.returns(null, Account::lastLoginAt)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
 				.satisfies(it -> assertThat(it.updatedAt()).isNotNull())
@@ -204,6 +209,103 @@ class AccountManagerTest {
 		assertThatThrownBy(() -> manager.create(registration))
 				.isInstanceOf(AccountExistsException.class)
 				.hasCauseInstanceOf(DuplicateKeyException.class);
+
+		assertThat(events.ofType(AccountEvent.class))
+				.isEmpty();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should update account information")
+	void shouldUpdateAccount(PublishedEvents events) {
+		final var john = manager.findById(EntityId.from(1)).orElseThrow();
+		final var updates = Account.builder(john)
+				.firstName("Gurney")
+				.lastName("Halleck")
+				.avatar("https://example.com/gurney.svg")
+				.build();
+
+		assertThat(manager.update(updates))
+				.returns(john.id(), Account::id)
+				.returns(john.email(), Account::email)
+				.returns(john.status(), Account::status)
+				.returns(updates.firstName(), Account::firstName)
+				.returns(updates.lastName(), Account::lastName)
+				.returns(updates.avatar(), Account::avatar)
+				.returns(john.memberships(), Account::memberships)
+				.satisfies(it -> assertThat(it.updatedAt())
+						.isNotNull()
+						.isNotEqualTo(john.updatedAt())
+						.isCloseTo(OffsetDateTime.now(), within(400, ChronoUnit.MILLIS))
+				);
+
+		events.eventOfTypeWasPublished(AccountEvent.Updated.class);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to update account due to database constraint violation")
+	void shouldFailToUpdateAccount(PublishedEvents events) {
+		final var john = manager.findById(EntityId.from(1)).orElseThrow();
+		final var updates = Account.builder(john)
+					.firstName(RandomStringUtils.randomAlphanumeric(512))
+					.build();
+
+		assertThatThrownBy(() -> manager.update(updates))
+				.isInstanceOf(AccountException.class)
+				.hasCauseInstanceOf(DataIntegrityViolationException.class);
+
+		assertThat(events.ofType(AccountEvent.class))
+				.isEmpty();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to update account that does not exist")
+	void shouldNotUpdateAccountThatDoesNotExist(PublishedEvents events) {
+		final var updates = Account.builder()
+				.id(1248765124L)
+				.status(AccountStatus.ACTIVE)
+				.email("gurney.halleck@atreides.com")
+				.build();
+
+		assertThatThrownBy(() -> manager.update(updates))
+				.isInstanceOf(AccountNotFoundException.class);
+
+		assertThat(events.ofType(AccountEvent.class))
+				.isEmpty();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should delete account when he is no longer an admin member")
+	void shouldDeleteAccount(PublishedEvents events) {
+		assertThatNoException().isThrownBy(() -> manager.delete(EntityId.from(2)));
+
+		events.eventOfTypeWasPublished(AccountEvent.Deleted.class);
+
+		assertThat(manager.findById(EntityId.from(2)))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to delete account when he is an admin member")
+	void shouldNotDeleteAccountWithAdminMemberships(PublishedEvents events) {
+		assertThatThrownBy(() -> manager.delete(EntityId.from(1)))
+				.isInstanceOf(AccountException.class)
+				.hasMessageContaining("Can not delete account that is still an admin of non-personal namespaces")
+				.hasNoCause();
+
+		assertThat(events.ofType(AccountEvent.class))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to delete account that does not exist")
+	void shouldFailToDeleteUnknownAccount(PublishedEvents events) {
+		assertThatThrownBy(() -> manager.delete(EntityId.from(1247811)))
+				.isInstanceOf(AccountNotFoundException.class)
+				.hasNoCause();
 
 		assertThat(events.ofType(AccountEvent.class))
 				.isEmpty();

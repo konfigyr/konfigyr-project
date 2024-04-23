@@ -62,4 +62,29 @@ public interface AccountManager {
 	@NonNull
 	Memberships findMemberships(@NonNull EntityId id);
 
+	/**
+	 * Updates the {@link Account} and publishes the {@link AccountEvent.Updated} event when successful.
+	 *
+	 * @param account account to be updated, can't be {@literal null}
+	 * @return updated account, never {@link null}
+	 * @throws AccountNotFoundException when {@link Account} does not exist
+	 * @throws AccountException when there is an unexpected exception while updating the account
+	 */
+	@NonNull
+	@DomainEventPublisher(publishes = "accounts.updated")
+	Account update(@NonNull Account account);
+
+	/**
+	 * Deletes the {@link Account} with a given {@link EntityId entity identifier}.
+	 * <p>
+	 * The implementations of this interface should publish an {@link AccountEvent.Deleted}
+	 * when an {@link Account} was successfully removed from the system.
+	 *
+	 * @param id account entity identifier, can't be {@literal null}
+	 * @throws AccountNotFoundException when {@link Account} does not exist
+	 * @throws AccountException when there is an unexpected exception while deleting the account
+	 */
+	@DomainEventPublisher(publishes = "accounts.deleted")
+	void delete(@NonNull EntityId id);
+
 }

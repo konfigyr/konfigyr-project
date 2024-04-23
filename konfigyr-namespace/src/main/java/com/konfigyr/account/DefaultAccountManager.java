@@ -36,6 +36,8 @@ class DefaultAccountManager implements AccountManager {
 	static Name MEMBERSHIPS_ALIAS = DSL.name("memberships");
 
 	private static final Marker REGISTERED = MarkerFactory.getMarker("ACCOUNT_REGISTERED");
+	private static final Marker UPDATED = MarkerFactory.getMarker("ACCOUNT_UPDATED");
+	private static final Marker DELETED = MarkerFactory.getMarker("ACCOUNT_DELETED");
 
 	private final AccountMapper mapper = new AccountMapper(MEMBERSHIPS_ALIAS);
 
@@ -100,13 +102,79 @@ class DefaultAccountManager implements AccountManager {
 	@Override
 	@Transactional(readOnly = true)
 	public Memberships findMemberships(@NonNull EntityId id) {
-		final var memberships = createMembershipsMultiselectField();
+		final Field<List<Membership>> memberships = createMembershipsMultiselectField();
 
 		return context.select(ACCOUNTS.ID, memberships)
 				.from(ACCOUNTS)
 				.where(ACCOUNTS.ID.eq(id.get()))
 				.fetchOptional(record -> Memberships.of(record.get(memberships)))
 				.orElseThrow(() -> new AccountNotFoundException(id));
+	}
+
+	@NonNull
+	@Override
+	@Transactional
+	public Account update(@NonNull Account account) {
+		if (log.isDebugEnabled()) {
+			log.debug("Attempting to update account with data: {}", account);
+		}
+
+		final int count;
+
+		try {
+			count = context.update(ACCOUNTS)
+					.set(ACCOUNTS.FIRST_NAME, account.firstName())
+					.set(ACCOUNTS.LAST_NAME, account.lastName())
+					.set(ACCOUNTS.AVATAR, account.avatar())
+					.set(ACCOUNTS.UPDATED_AT, OffsetDateTime.now())
+					.where(ACCOUNTS.ID.eq(account.id().get()))
+					.execute();
+		} catch (Exception e) {
+			throw new AccountException("Failed to update account with identifier: " + account.id(), e);
+		}
+
+		if (count == 0) {
+			throw new AccountNotFoundException(account.id());
+		}
+
+		publisher.publishEvent(new AccountEvent.Deleted(account.id()));
+
+		log.info(UPDATED, "Successfully updated account with identifier {}", account.id());
+
+		return findById(account.id()).orElseThrow(
+				() -> new IllegalStateException("Failed to lookup updated account with identifier: " + account.id())
+		);
+	}
+
+	@Override
+	@Transactional
+	public void delete(@NonNull EntityId id) {
+		if (log.isDebugEnabled()) {
+			log.debug("Attempting to delete account with identifier: {}", id);
+		}
+
+		final Account account = findById(id).orElseThrow(() -> new AccountNotFoundException(id));
+
+		// check if the account is an administrator member of any non-personal namespaces...
+		if (!account.isDeletable()) {
+			throw new AccountException("Can not delete account that is still an admin of non-personal namespaces");
+		}
+
+		final int count;
+
+		try {
+			count = context.delete(ACCOUNTS)
+					.where(ACCOUNTS.ID.eq(id.get()))
+					.execute();
+		} catch (Exception e) {
+			throw new AccountException("Failed to delete account with identifier: " + id, e);
+		}
+
+		Assert.state(count == 1, "Failed to delete account from the database");
+
+		publisher.publishEvent(new AccountEvent.Deleted(id));
+
+		log.info(DELETED, "Successfully deleted account with identifier {}", id);
 	}
 
 	private Optional<Account> fetch(@NonNull Condition condition) {
