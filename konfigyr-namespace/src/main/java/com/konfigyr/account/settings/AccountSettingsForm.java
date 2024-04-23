@@ -12,6 +12,7 @@ import org.springframework.lang.NonNull;
  * account settings page, mainly the first and last name.
  *
  * @author Vladimir Spasic
+ * @since 1.0.0
  **/
 @Data
 class AccountSettingsForm {
