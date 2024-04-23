@@ -1,5 +1,6 @@
 package com.konfigyr.security;
 
+import com.konfigyr.account.AccountEvent;
 import com.konfigyr.account.AccountManager;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.test.TestAccounts;
@@ -12,14 +13,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -166,6 +167,24 @@ class AccountPrincipalServiceTest {
 				.hasRootCauseInstanceOf(IllegalArgumentException.class);
 
 		verifyNoInteractions(manager);
+	}
+
+	@Test
+	@DisplayName("should evict account from cache when account is updated or deleted")
+	void shouldClearCacheOnAccountUpdated() {
+		final var cache = mock(UserCache.class);
+		final var service = new AccountPrincipalService(manager, cache);
+
+		assertThatNoException().isThrownBy(
+				() -> service.onAccountUpdatedEvent(new AccountEvent.Updated(EntityId.from(46)))
+		);
+
+		assertThatNoException().isThrownBy(
+				() -> service.onAccountDeletedEvent(new AccountEvent.Deleted(EntityId.from(51)))
+		);
+
+		verify(cache).removeUserFromCache(EntityId.from(46).serialize());
+		verify(cache).removeUserFromCache(EntityId.from(51).serialize());
 	}
 
 }
