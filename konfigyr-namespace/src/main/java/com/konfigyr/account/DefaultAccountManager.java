@@ -137,7 +137,7 @@ class DefaultAccountManager implements AccountManager {
 			throw new AccountNotFoundException(account.id());
 		}
 
-		publisher.publishEvent(new AccountEvent.Deleted(account.id()));
+		publisher.publishEvent(new AccountEvent.Updated(account.id()));
 
 		log.info(UPDATED, "Successfully updated account with identifier {}", account.id());
 

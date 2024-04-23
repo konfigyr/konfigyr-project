@@ -1,18 +1,21 @@
 package com.konfigyr.security;
 
 import com.konfigyr.account.Account;
+import com.konfigyr.account.AccountEvent;
 import com.konfigyr.account.AccountManager;
 import com.konfigyr.account.AccountRegistration;
 import com.konfigyr.entity.EntityId;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jmolecules.event.annotation.DomainEventHandler;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.Assert;
 
 import java.util.function.Supplier;
@@ -85,6 +88,18 @@ public class AccountPrincipalService implements PrincipalService {
 		cache.putUserInCache(user);
 
 		return user;
+	}
+
+	@DomainEventHandler(name = "updated", namespace = "accounts")
+	@TransactionalEventListener(classes = AccountEvent.Updated.class)
+	void onAccountUpdatedEvent(@NonNull AccountEvent.Updated event) {
+		cache.removeUserFromCache(event.id().serialize());
+	}
+
+	@DomainEventHandler(name = "deleted", namespace = "accounts")
+	@TransactionalEventListener(classes = AccountEvent.Deleted.class)
+	void onAccountDeletedEvent(@NonNull AccountEvent.Deleted event) {
+		cache.removeUserFromCache(event.id().serialize());
 	}
 
 	@Nullable
