@@ -203,7 +203,8 @@ class DefaultAccountManager implements AccountManager {
 						NAMESPACE_MEMBERS.SINCE,
 						NAMESPACES.SLUG,
 						NAMESPACES.NAME,
-						NAMESPACES.TYPE
+						NAMESPACES.TYPE,
+						NAMESPACES.AVATAR
 				)
 				.from(NAMESPACE_MEMBERS)
 				.join(NAMESPACES)

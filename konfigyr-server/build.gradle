@@ -55,5 +55,5 @@ tasks.register('npmTest', NpmTask) {
     inputs.dir('src/main/assets/scripts')
 }
 
-processResources.dependsOn('rollup')
+//processResources.dependsOn('rollup')
 check.dependsOn('npmTest')

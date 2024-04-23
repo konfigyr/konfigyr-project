@@ -12,7 +12,7 @@
         />
 
         <figure th:if="${#strings.isEmpty(avatar)}" class="avatar me-1" th:style="${#strings.isEmpty(size) ? '--size: 22px' : '--size: ' + size}">
-            <svg th:replace="~{fragments/icon :: icon (name='user', size='icon-xl')}"></svg>
+            <svg th:replace="~{fragments/icon :: icon (name=${#strings.isEmpty(icon) ? 'user' : icon}, size='icon-xl')}"></svg>
         </figure>
     </th:block>
 </body>

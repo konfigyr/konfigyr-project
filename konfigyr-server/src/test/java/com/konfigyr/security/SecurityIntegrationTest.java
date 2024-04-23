@@ -48,7 +48,7 @@ class SecurityIntegrationTest {
 
 	@Test
 	@DisplayName("should render index page when not authenticated")
-	void shoulRenderIndexPage() throws Exception {
+	void shouldRenderIndexPage() throws Exception {
 		mvc.perform(get("/"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))

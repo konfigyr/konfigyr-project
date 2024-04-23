@@ -1,0 +1,10 @@
+.badge {
+  box-shadow: var(--konfigyr-card-box-shadow);
+  border-radius: 2em;
+  display: inline-block;
+  font-size: var(--font-size, 0.75rem);
+  font-weight: var(--font-wight, 500);
+  line-height: 1.25rem;
+  padding: 0 0.5rem;
+  white-space: nowrap;
+}

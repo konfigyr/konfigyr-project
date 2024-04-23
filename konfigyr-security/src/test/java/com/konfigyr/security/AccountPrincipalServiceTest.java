@@ -11,7 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -171,17 +173,27 @@ class AccountPrincipalServiceTest {
 
 	@Test
 	@DisplayName("should evict account from cache when account is updated or deleted")
-	void shouldClearCacheOnAccountUpdated() {
+	void shouldClearCacheOnAccountEvents() {
 		final var cache = mock(UserCache.class);
+		final var authentication = mock(Authentication.class);
 		final var service = new AccountPrincipalService(manager, cache);
+
+		final var context = SecurityContextHolder.getContextHolderStrategy().getContext();
+		context.setAuthentication(authentication);
 
 		assertThatNoException().isThrownBy(
 				() -> service.onAccountUpdatedEvent(new AccountEvent.Updated(EntityId.from(46)))
 		);
 
+		assertThat(context.getAuthentication())
+				.isNull();
+
 		assertThatNoException().isThrownBy(
 				() -> service.onAccountDeletedEvent(new AccountEvent.Deleted(EntityId.from(51)))
 		);
+
+		assertThat(context.getAuthentication())
+				.isNull();
 
 		verify(cache).removeUserFromCache(EntityId.from(46).serialize());
 		verify(cache).removeUserFromCache(EntityId.from(51).serialize());

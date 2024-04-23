@@ -1,0 +1,150 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{accounts/layout}"
+      lang="en">
+<head>
+    <title th:text="#{account.settings.title}">Account settings</title>
+</head>
+<body>
+<div layout:fragment="contents">
+    <div class="heading">
+        <i class="heading-icon">
+            <svg th:replace="~{fragments/icon :: icon (name='user', size='icon-lg')}" />
+        </i>
+        <h2 class="heading-title" th:text="#{account.settings.headlines.profile}">
+            Your profile settings
+        </h2>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <form th:object="${form}" th:action="@{/account}" method="post" class="col-12 col-md-10 col-xl-8">
+            <th:block th:with="control=${#forms.control('email')}">
+                <input
+                        readonly
+                        type="email"
+                        th:id="${control.id}"
+                        th:name="${control.name}"
+                        th:value="${control.value}"
+                        th:attr="aria-describedby=${control.help.id}"
+                >
+                <small th:id="${control.help.id}" th:text="#{account.settings.form.help.email}" class="help-text">
+                    This email will be used for account-related notifications.
+                </small>
+            </th:block>
+
+            <th:block th:with="control=${#forms.control('firstName')}">
+                <label
+                    th:for="${control.id}"
+                    th:text="#{account.settings.form.labels.first-name}"
+                >
+                    First name
+                </label>
+                <input
+                        type="text"
+                        th:id="${control.id}"
+                        th:name="${control.name}"
+                        th:value="${control.value}"
+                        th:attr="aria-invalid=${control.aria.invalid}, aria-describedby=${control.aria.describedBy}"
+                >
+                <small th:id="${control.errors.id}"
+                       th:text="${control.errors.value}"
+                       th:unless="${#strings.isEmpty(control.errors.value)}"
+                       class="validation-error">
+                    Validation error text
+                </small>
+            </th:block>
+
+            <th:block th:with="control=${#forms.control('lastName')}">
+                <label
+                        th:for="${control.id}"
+                        th:text="#{account.settings.form.labels.last-name}"
+                >
+                    Last name
+                </label>
+                <input
+                        type="text"
+                        th:id="${control.id}"
+                        th:name="${control.name}"
+                        th:value="${control.value}"
+                        th:attr="aria-invalid=${control.aria.invalid}, aria-describedby=${control.aria.describedBy}"
+                >
+                <small th:id="${control.errors.id}"
+                       th:text="${control.errors.value}"
+                       th:unless="${#strings.isEmpty(control.errors.value)}"
+                       class="validation-error">
+                    Validation error text
+                </small>
+            </th:block>
+
+            <button type="submit">
+                <svg th:replace="~{fragments/icon :: icon (name='save')}"></svg>
+                <span th:text="#{account.settings.form.labels.submit}">Update profile</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="heading">
+        <i class="heading-icon">
+            <svg th:replace="~{fragments/icon :: icon (name='users', size='icon-lg')}" />
+        </i>
+        <h2 class="heading-title" th:text="#{account.settings.headlines.memberships}">
+            Memberships
+        </h2>
+    </div>
+
+    <div class="mb-5">
+        <th:block th:if="${#lists.isEmpty(memberships)}">
+            <div th:replace="~{fragments/empty-state :: empty-state (
+                message=#{account.settings.memberships.empty},
+                icon='maximize',
+                action=@{/namespace/new},
+                label=#{account.settings.memberships.create-namespace}
+            )}">
+                Your account is currently not yet a part of any namespace.
+            </div>
+        </th:block>
+
+        <article th:each="membership : ${memberships}" class="d-flex flex-justify-between flex-wrap">
+            <div>
+                <img th:replace="~{fragments/avatar :: avatar (
+                    avatar=${'https://ui-avatars.com/api/?name=' + membership.namespace},
+                    title=${membership.name},
+                    alt=${membership.name},
+                    size='32px'
+                )}" />
+                <strong th:text="${membership.namespace}">Konfigyr</strong>
+                <span th:text="${membership.role}" class="badge">ADMIN</span>
+            </div>
+        </article>
+    </div>
+
+    <div class="heading">
+        <i class="heading-icon">
+            <svg th:replace="~{fragments/icon :: icon (name='x-octagon', size='icon-lg')}" />
+        </i>
+        <h2 class="heading-title" th:text="#{account.settings.headlines.delete}">
+            Delete your account
+        </h2>
+    </div>
+
+    <th:block th:unless="${account.deletable}">
+        <p th:utext="${#messages.msg('account.settings.delete.active-memberships', namespaceNames)}">
+            Your account is currently an administrator of these namespaces: konfigyr.
+        </p>
+        <p th:text="#{account.settings.delete.leave-memberships}">
+            You must remove yourself, transfer ownership, or delete these namespaces before you can delete your account.
+        </p>
+    </th:block>
+
+    <form th:action="@{/account/delete}" th:disabled="${!account.deletable}" method="post">
+        <button th:disabled="${!account.deletable}" type="submit">
+            <svg th:replace="~{fragments/icon :: icon (name='trash')}"></svg>
+            <span th:text="#{account.settings.form.labels.delete}">Delete profile</span>
+        </button>
+    </form>
+
+</div>
+</body>
+</html>
