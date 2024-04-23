@@ -173,6 +173,8 @@
                 <constraints nullable="true" />
             </column>
 
+            <column name="avatar" type="varchar(255)" />
+
             <column name="created_at" type="timestamptz" defaultValue="NOW()">
                 <constraints nullable="false" />
             </column>

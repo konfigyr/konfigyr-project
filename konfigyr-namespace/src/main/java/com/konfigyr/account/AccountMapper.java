@@ -46,10 +46,12 @@ final class AccountMapper {
 		return builder.build();
 	}
 
+	@NonNull
 	List<Membership> memberships(@NonNull Result<?> results) {
 		return results.map(result -> result.map(this::membership));
 	}
 
+	@NonNull
 	Membership membership(@NonNull Record record) {
 		return Membership.builder()
 				.id(record.get(NAMESPACE_MEMBERS.ID))
@@ -57,6 +59,7 @@ final class AccountMapper {
 				.role(record.get(NAMESPACE_MEMBERS.ROLE))
 				.namespace(record.get(NAMESPACES.SLUG))
 				.name(record.get(NAMESPACES.NAME))
+				.avatar(record.get(NAMESPACES.AVATAR))
 				.since(record.get(NAMESPACE_MEMBERS.SINCE))
 				.build();
 	}

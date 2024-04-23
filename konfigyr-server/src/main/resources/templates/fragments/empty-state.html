@@ -1,0 +1,23 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="empty-state">
+    <div class="empty-state">
+        <div class="empty-state-content">
+            <div class="empty-state-icon" th:if="${icon}">
+                <svg th:replace="~{fragments/icon :: icon (name=${icon}, size='icon-4x')}"></svg>
+            </div>
+
+            <p th:if="${title}">
+                <strong th:text="${title}">Empty state title</strong>
+            </p>
+            <p th:if="${message}" th:text="${message}">Empty state message</p>
+
+            <a th:if="${action}" th:href="${action}" role="button" class="secondary outline">
+                <th:block th:text="${label}">Action label</th:block>
+            </a>
+        </div>
+    </div>
+</th:block>
+</body>

@@ -1,0 +1,20 @@
+.empty-state {
+  padding: var(--konfigy-empty-state-spacing-vertical) var(--konfigy-empty-state-spacing-horizontal);
+  box-shadow: var(--konfigyr-empty-state-box-shadow);
+  border-radius: var(--konfigyr-border-radius);
+
+  .empty-state-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .empty-state-icon {
+    width: auto;
+    margin-bottom: calc(var(--konfigyr-spacing) * 2.5);
+    padding: var(--konfigyr-spacing);
+    box-shadow: var(--konfigyr-empty-state-box-shadow);
+    border-radius: var(--konfigy-border-radius);
+  }
+}

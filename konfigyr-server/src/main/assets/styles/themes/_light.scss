@@ -53,7 +53,7 @@
   --konfigyr-contrast-inverse: #{$white};
 
   // Box shadow
-  --konfigyr-box-shadow: shadow($slate-400);
+  --konfigyr-box-shadow: 0 0 1px rgba(0, 0, 0, 0.24), 0 0 3px rgba(0, 0, 0, 0.08);
 
   // Typography
   // Headings colors
@@ -142,9 +142,11 @@
 
   // Card (<article>)
   --konfigyr-card-background-color: var(--konfigyr-background-color);
-  --konfigyr-card-border-color: var(--konfigyr-muted-border-color);
   --konfigyr-card-box-shadow: var(--konfigyr-box-shadow);
   --konfigyr-card-sectioning-background-color: #{mix($slate-50, $white, 25%)};
+
+  // Empty Space (.empty-space)
+  --konfigyr-empty-state-box-shadow: var(--konfigyr-box-shadow);
 
   // Dropdown (details.dropdown)
   --konfigyr-dropdown-background-color: #{$white};

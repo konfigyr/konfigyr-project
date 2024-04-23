@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jmolecules.event.annotation.DomainEventHandler;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -93,13 +94,20 @@ public class AccountPrincipalService implements PrincipalService {
 	@DomainEventHandler(name = "updated", namespace = "accounts")
 	@TransactionalEventListener(classes = AccountEvent.Updated.class)
 	void onAccountUpdatedEvent(@NonNull AccountEvent.Updated event) {
-		cache.removeUserFromCache(event.id().serialize());
+		resetSecurityContextForPrincipal(event.id());
 	}
 
 	@DomainEventHandler(name = "deleted", namespace = "accounts")
 	@TransactionalEventListener(classes = AccountEvent.Deleted.class)
 	void onAccountDeletedEvent(@NonNull AccountEvent.Deleted event) {
-		cache.removeUserFromCache(event.id().serialize());
+		resetSecurityContextForPrincipal(event.id());
+	}
+
+	private void resetSecurityContextForPrincipal(@NonNull EntityId principal) {
+		log.debug("Clearing security context and user cache for account principal: {}", principal);
+
+		cache.removeUserFromCache(principal.serialize());
+		SecurityContextHolder.getContextHolderStrategy().getContext().setAuthentication(null);
 	}
 
 	@Nullable

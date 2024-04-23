@@ -11,6 +11,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 /**
  * Spring web security configuration class that would register the Spring Security OAuth2 Login flow.
@@ -25,9 +26,12 @@ public class WebSecurityConfiguration {
 	@Bean
 	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, PrincipalService detailsService) throws Exception {
 		return http
+				.securityMatcher(
+						// do not apply for static assets
+						new NegatedRequestMatcher(SecurityRequestMatchers.STATIC_ASSETS)
+				)
 				.authorizeHttpRequests(requests -> requests
 						.requestMatchers(
-								SecurityRequestMatchers.STATIC_ASSETS,
 								SecurityRequestMatchers.OAUTH,
 								SecurityRequestMatchers.OAUTH_LOGIN
 						)
@@ -42,6 +46,7 @@ public class WebSecurityConfiguration {
 						.loginPage(SecurityRequestMatchers.LOGIN_PAGE)
 				)
 				.rememberMe(remember -> remember
+						.key(AccountRememberMeServices.KEY)
 						.rememberMeServices(new AccountRememberMeServices(detailsService))
 				)
 				.logout(Customizer.withDefaults())

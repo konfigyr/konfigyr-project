@@ -127,6 +127,11 @@ aside {
 
     a {
       display: block;
+      text-decoration: none;
+    }
+
+    a:hover {
+      background-color: darken(#FFF, 7.5);
     }
 
     // Minimal support for links as buttons

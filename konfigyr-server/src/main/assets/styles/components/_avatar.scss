@@ -8,8 +8,14 @@
   height: var(--size);
   border-radius: 100%;
   overflow: hidden;
-  border: 1px solid var(--muted-border-color);
+  border: 1px solid var(--konfigyr-muted-border-color);
   line-height: 0;
-  vertical-align: top;
+  vertical-align: middle;
   box-sizing: border-box;
+
+  // SVG Icon fallback
+  > svg {
+    width: var(--size);
+    height: var(--size);
+  }
 }

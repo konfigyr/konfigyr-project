@@ -93,6 +93,14 @@
   --konfigyr-nav-link-spacing-horizontal: calc(var(--konfigyr-spacing) * 0.75);
   --konfigyr-nav-breadcrumb-divider: ">";
 
+  // Configuration for the card/article component
+  --konfigyr-card-background-color: var(--konfigyr-background-color);
+  --konfigyr-card-border-radius: var(--konfigyr-border-radius);
+
+  // Configuration for empty-space
+  --konfigy-empty-state-spacing-vertical: calc(var(--konfigyr-spacing) * 3);
+  --konfigy-empty-state-spacing-horizontal: calc(var(--konfigyr-spacing) * 5);
+
   // Button
   --konfigyr-button-box-shadow: 0 0 0 rgba(0, 0, 0, 0);
   --konfigyr-button-hover-box-shadow: 0 0 0 rgba(0, 0, 0, 0);
@@ -145,10 +153,6 @@ header, main, footer, section {
 
 // Card (<article>)
 article {
-  --konfigyr-card-background-color: var(--konfigyr-background-color);
-  --konfigyr-card-border-radius: var(--konfigyr-border-radius);
-  --konfigyr-card-box-shadow: 0 0 1px rgba(0, 0, 0, 0.24), 0 0 3px rgba(0, 0, 0, 0.08);
-
   @each $key, $values in $breakpoints {
     @if $values {
       @media (min-width: map.get($values, "breakpoint")) {
