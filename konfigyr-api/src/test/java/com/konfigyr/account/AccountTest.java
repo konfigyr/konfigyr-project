@@ -245,7 +245,7 @@ class AccountTest {
 				.id(2L)
 				.type(NamespaceType.ENTERPRISE)
 				.role(NamespaceRole.ADMIN)
-				.namespace("Empire")
+				.namespace("empire")
 				.name("Empire")
 				.build();
 
@@ -258,6 +258,11 @@ class AccountTest {
 				.isNotEqualTo(Memberships.of(freemen, empire, paul))
 				.hasSameHashCodeAs(Memberships.of(paul, freemen, empire, atreides))
 				.doesNotHaveSameHashCodeAs(Memberships.of(freemen, empire, paul));
+
+		assertThatObject(memberships)
+				.returns("paul.atreides, atreides, freemen, empire", Memberships::join)
+				.extracting(it -> it.ofType(NamespaceType.ENTERPRISE))
+				.returns("atreides, empire", Memberships::join);
 
 		assertThat(memberships.ofType(NamespaceType.PERSONAL))
 				.hasSize(1)
