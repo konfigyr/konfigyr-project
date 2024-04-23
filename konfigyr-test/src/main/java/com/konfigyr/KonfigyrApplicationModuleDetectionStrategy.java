@@ -19,8 +19,10 @@ import java.util.stream.Stream;
 class KonfigyrApplicationModuleDetectionStrategy implements ApplicationModuleDetectionStrategy {
 
 	private static final DescribedPredicate<JavaPackage> IGNORED_PACKAGES = DescribedPredicate.or(
+			ignorePackage("com.konfigyr.security"),
 			ignorePackage("com.konfigyr.crypto"),
 			ignorePackage("com.konfigyr.data"),
+			ignorePackage("com.konfigyr.test"),
 			ignorePackage("com.konfigyr.io")
 	);
 
