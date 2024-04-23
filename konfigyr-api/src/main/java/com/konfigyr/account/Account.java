@@ -1,6 +1,8 @@
 package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.namespace.NamespaceRole;
+import com.konfigyr.namespace.NamespaceType;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Identity;
@@ -55,6 +57,20 @@ public record Account(
 	private static final long serialVersionUID = 294304163437354662L;
 
 	/**
+	 * To successfully delete the {@link Account} user accounts are required to leave or delete
+	 * {@link com.konfigyr.namespace.Namespace non-personal namespaces} where they are specified as
+	 * {@link NamespaceRole#ADMIN administrors}.
+	 * <p>
+	 * Keep in mind that any {@link com.konfigyr.namespace.Namespace namespaces} with a
+	 * {@link NamespaceType#PERSONAL personal type} would automatically be deleted with the account.
+	 */
+	public boolean isDeletable() {
+		return memberships.stream()
+				.noneMatch(membership -> membership.type() != NamespaceType.PERSONAL
+						&& membership.role() == NamespaceRole.ADMIN);
+	}
+
+	/**
 	 * Creates a new {@link Builder fluent account builder} instance used to create
 	 * the {@link Account} record.
 	 *
@@ -63,6 +79,18 @@ public record Account(
 	@NonNull
 	public static Builder builder() {
 		return new Builder();
+	}
+
+	/**
+	 * Creates a new {@link Builder fluent account builder} instance and pre-populate its
+	 * state from the given{@link Account} record.
+	 *
+	 * @param account account data to be copied, can't be {@literal null}
+	 * @return account builder, never {@literal null}
+	 */
+	@NonNull
+	public static Builder builder(@NonNull Account account) {
+		return new Builder(account);
 	}
 
 	/**
@@ -82,6 +110,21 @@ public record Account(
 		private OffsetDateTime updatedAt;
 
 		private Builder() {
+		}
+
+		private Builder(@NonNull Account account) {
+			id = account.id();
+			status = account.status();
+			email = account.email();
+			firstName = account.firstName();
+			lastName = account.lastName();
+			avatar = account.avatar();
+			lastLoginAt = account.lastLoginAt();
+			createdAt = account.createdAt();
+			updatedAt = account.updatedAt();
+
+			// copy the memberships using the builder method
+			memberships(account.memberships());
 		}
 
 		/**

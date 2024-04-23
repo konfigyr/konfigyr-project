@@ -28,7 +28,7 @@ class AccountTest {
 		final var membership = Membership.builder()
 				.id(1L)
 				.type(NamespaceType.PERSONAL)
-				.role(NamespaceRole.USER)
+				.role(NamespaceRole.ADMIN)
 				.namespace("john.doe")
 				.name("John Doe")
 				.build();
@@ -56,6 +56,7 @@ class AccountTest {
 				.returns("Doe", Account::lastName)
 				.returns("John Doe", Account::displayName)
 				.returns("https://example.com/avatar.gif", Account::avatar)
+				.returns(true, Account::isDeletable)
 				.returns(Memberships.of(membership), Account::memberships)
 				.satisfies(it -> assertThat(it.lastLoginAt())
 						.isNotNull()
@@ -69,6 +70,54 @@ class AccountTest {
 						.isNotNull()
 						.isEqualToIgnoringMinutes(OffsetDateTime.now(ZoneOffset.UTC).minusHours(3))
 				);
+
+		assertThat(Account.builder(account).build())
+				.isEqualTo(account);
+	}
+
+	@Test
+	@DisplayName("should check if account can be deleted")
+	void verifyAccountDeleteCheck() {
+		final var builder = Account.builder()
+				.id(31L)
+				.status(AccountStatus.ACTIVE)
+				.email("admin@konfigyr.com");
+
+		// no memberships, can delete
+		assertThat(builder.build().isDeletable()).isTrue();
+
+		final var personal = Membership.builder()
+				.id(1L)
+				.type(NamespaceType.PERSONAL)
+				.role(NamespaceRole.ADMIN)
+				.namespace("personal")
+				.name("Personal")
+				.build();
+
+		// personal membership only, can delete
+		assertThat(builder.membership(personal).build().isDeletable()).isTrue();
+
+		final var team = Membership.builder()
+				.id(2L)
+				.type(NamespaceType.TEAM)
+				.role(NamespaceRole.USER)
+				.namespace("team")
+				.name("Team")
+				.build();
+
+		// personal membership + user in team namespace, can delete
+		assertThat(builder.membership(team).build().isDeletable()).isTrue();
+
+		final var org = Membership.builder()
+				.id(2L)
+				.type(NamespaceType.ENTERPRISE)
+				.role(NamespaceRole.ADMIN)
+				.namespace("org")
+				.name("Org")
+				.build();
+
+		// personal membership + user in team namespace + admin in org namespace, can not delete
+		assertThat(builder.membership(org).build().isDeletable()).isFalse();
 	}
 
 	@Test
@@ -96,6 +145,7 @@ class AccountTest {
 				.returns(null, Account::lastName)
 				.returns("john.doe@konfigyr.com", Account::displayName)
 				.returns(null, Account::avatar)
+				.returns(true, Account::isDeletable)
 				.returns(Memberships.empty(), Account::memberships)
 				.returns(null, Account::lastLoginAt)
 				.returns(null, Account::createdAt)
@@ -280,10 +330,18 @@ class AccountTest {
 	}
 
 	@Test
-	@DisplayName("should create an account registered event")
-	void shouldCreateRegistrationEvent() {
+	@DisplayName("should create an account events")
+	void shouldCreateAccountEvents() {
 		assertThat(new AccountEvent.Registered(EntityId.from(8366545L)))
-				.isInstanceOf(AccountEvent.Registered.class)
+				.isInstanceOf(AccountEvent.class)
+				.returns(EntityId.from(8366545L), EntityEvent::id);
+
+		assertThat(new AccountEvent.Updated(EntityId.from(8366545L)))
+				.isInstanceOf(AccountEvent.class)
+				.returns(EntityId.from(8366545L), EntityEvent::id);
+
+		assertThat(new AccountEvent.Deleted(EntityId.from(8366545L)))
+				.isInstanceOf(AccountEvent.class)
 				.returns(EntityId.from(8366545L), EntityEvent::id);
 	}
 

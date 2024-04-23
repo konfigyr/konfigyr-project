@@ -9,6 +9,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Represents a sorted {@link Streamable} collection of {@link Membership memberships} of an {@link Account}.
@@ -90,6 +91,17 @@ public final class Memberships implements Streamable<Membership> {
 	@NonNull
 	public Memberships ofRole(@NonNull NamespaceRole role) {
 		return filter(membership -> role == membership.role());
+	}
+
+	/**
+	 * Joins the {@link com.konfigyr.namespace.Namespace} slug values in a comma-separated string.
+	 *
+	 * @return comma-separated string of namespace slugs, never {@literal null}
+	 */
+	public String join() {
+		return get()
+				.map(Membership::namespace)
+				.collect(Collectors.joining(", "));
 	}
 
 	@NonNull

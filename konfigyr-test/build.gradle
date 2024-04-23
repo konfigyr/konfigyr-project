@@ -2,9 +2,13 @@ apply plugin: 'java-library'
 
 dependencies {
     compileOnly project(':konfigyr-api')
+    compileOnly project(':konfigyr-security')
 
     /* Spring Validator support */
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    /* Spring Security Test suite */
+    api 'org.springframework.security:spring-security-test'
 
     /* Spring Moduliths */
     api 'org.springframework.modulith:spring-modulith-starter-core'
@@ -19,6 +23,7 @@ dependencies {
     api 'org.testcontainers:postgresql'
 
     testImplementation project(':konfigyr-api')
+    testImplementation project(':konfigyr-security')
 }
 
 /* Disable any Javadoc task, this library should not be published */

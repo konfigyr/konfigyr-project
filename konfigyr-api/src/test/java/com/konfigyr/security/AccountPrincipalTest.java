@@ -22,6 +22,7 @@ class AccountPrincipalTest {
 				.returns(account.id(), AccountPrincipal::getId)
 				.returns(account.email(), AccountPrincipal::getEmail)
 				.returns(account.id().serialize(), UserDetails::getUsername)
+				.returns(account.displayName(), AccountPrincipal::getDisplayName)
 				.returns(account.avatar(), AccountPrincipal::getAvatar)
 				.returns(Map.of(), AccountPrincipal::getAttributes)
 				.returns("", UserDetails::getPassword)
