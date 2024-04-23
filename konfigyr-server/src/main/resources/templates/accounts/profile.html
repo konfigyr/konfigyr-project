@@ -109,7 +109,7 @@
         <article th:each="membership : ${memberships}" class="d-flex flex-justify-between flex-wrap">
             <div>
                 <img th:replace="~{fragments/avatar :: avatar (
-                    avatar=${'https://ui-avatars.com/api/?name=' + membership.namespace},
+                    avatar=${membership.avatar},
                     title=${membership.name},
                     alt=${membership.name},
                     size='32px'
