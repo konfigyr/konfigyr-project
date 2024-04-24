@@ -2,7 +2,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.slug.Slug;
+import com.konfigyr.support.Slug;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

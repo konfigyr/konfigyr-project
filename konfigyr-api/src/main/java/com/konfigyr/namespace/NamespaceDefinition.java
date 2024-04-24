@@ -1,7 +1,7 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.slug.Slug;
+import com.konfigyr.support.Slug;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;

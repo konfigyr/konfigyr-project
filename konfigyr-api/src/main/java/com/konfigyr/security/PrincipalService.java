@@ -1,13 +1,12 @@
 package com.konfigyr.security;
 
-import com.konfigyr.account.AccountRegistration;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.provisioning.ProvisioningRequiredException;
 import org.jmolecules.ddd.annotation.Service;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-
-import java.util.function.Supplier;
 
 /**
  * Service used to retrieve {@link AccountPrincipal account principals} that would be used
@@ -44,19 +43,20 @@ public interface PrincipalService {
 	@NonNull AccountPrincipal lookup(@NonNull String username) throws UsernameNotFoundException;
 
 	/**
-	 * Looks up a {@link AccountPrincipal} using the resolved {@link OAuth2User} that was retrieved from
-	 * an external OAuth Authorization server.
+	 * Looks up a {@link AccountPrincipal} using the resolved {@link OAuth2AuthenticatedPrincipal} that was
+	 * retrieved from an external OAuth Authorization server.
 	 * <p>
 	 * The principal lookup is performed by matching the email address of the {@link com.konfigyr.account.Account},
-	 * therefore it is important the {@link OAuth2User#getName()} value is configured to use the email attribute.
+	 * therefore it is important that the {@link OAuth2AuthenticatedPrincipal#getName()} returns a value of
+	 * the email attribute.
 	 * <p>
-	 * In case the {@link AccountPrincipal} does not exist for the given {@link OAuth2User} user, the
-	 * {@link AccountRegistration} supplier function is needed. This registration data would be used to create
-	 * new {@link com.konfigyr.account.Account} and set up the {@link AccountPrincipal}.
+	 * In case the {@link AccountPrincipal} does not exist for the given {@link OAuth2User} user, a
+	 * {@link ProvisioningRequiredException} would be thrown.
 	 *
 	 * @param user retrieved OAuth user, never {@literal null}
-	 * @param supplier account registration supplier, never {@literal null}
-	 * @return existing or new account principal, never {@literal null}
+	 * @param provider OAuth provider name, never {@literal null}
+	 * @return located account principal, never {@literal null}
+	 * @throws ProvisioningRequiredException when account principal is not found
 	 */
-	@NonNull AccountPrincipal lookup(@NonNull OAuth2User user, @NonNull Supplier<AccountRegistration> supplier);
+	@NonNull AccountPrincipal lookup(@NonNull OAuth2AuthenticatedPrincipal user, @NonNull String provider) throws ProvisioningRequiredException;
 }

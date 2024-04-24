@@ -1,13 +1,12 @@
 package com.konfigyr.account;
 
+import com.konfigyr.support.FullName;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.StringTokenizer;
 
 /**
  * Record that defines which data is needed to create a new {@link Account} using the
@@ -71,31 +70,16 @@ public record AccountRegistration(
 		 * <p>
 		 * This method would try its parse the full name into first and last name parts.
 		 *
-		 * @param fullName full name
+		 * @param value full name
 		 * @return account registration builder
+		 * @see FullName
 		 */
-		public Builder fullName(String fullName) {
-			if (!StringUtils.hasText(fullName)) {
-				return this;
-			}
+		public Builder fullName(String value) {
+			final FullName fullName = FullName.parse(value);
 
-			final StringTokenizer tokenizer = new StringTokenizer(fullName);
-
-			if (tokenizer.hasMoreTokens()) {
-				this.firstName = tokenizer.nextToken();
-			}
-
-			final StringBuilder builder = new StringBuilder();
-			while (tokenizer.hasMoreTokens()) {
-				builder.append(tokenizer.nextToken());
-
-				if (tokenizer.hasMoreTokens()) {
-					builder.append(" ");
-				}
-			}
-
-			if (!builder.isEmpty()) {
-				this.lastName = builder.toString();
+			if (fullName != null) {
+				this.firstName = fullName.firstName();
+				this.lastName = fullName.lastName();
 			}
 
 			return this;

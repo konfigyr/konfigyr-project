@@ -11,7 +11,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.util.Assert;
 
 /**
  * Implementation of the {@link OAuth2UserService} that would try to resolve the
@@ -57,19 +56,8 @@ public class PrincipalAccountOAuth2UserService implements OAuth2UserService<OAut
 			return null;
 		}
 
-		return principalService.lookup(user, () -> createAccountRegistration(request, user));
-	}
-
-	private AccountRegistration createAccountRegistration(OAuth2UserRequest request, OAuth2User user) {
 		final ClientRegistration clientRegistration = request.getClientRegistration();
-
-		final AccountRegistration accountRegistration = OAuth2UserConverters.get(clientRegistration)
-				.convert(user);
-
-		Assert.notNull(accountRegistration, "Failed to create account registration for " +
-				"OAuth client registration with id: " + clientRegistration.getRegistrationId());
-
-		return accountRegistration;
+		return principalService.lookup(user, clientRegistration.getRegistrationId());
 	}
 
 	private static OAuth2UserService<OAuth2UserRequest, ? extends OAuth2User> createDefaultDelegate(
