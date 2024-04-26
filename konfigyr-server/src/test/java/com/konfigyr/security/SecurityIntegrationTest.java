@@ -43,6 +43,7 @@ class SecurityIntegrationTest {
 	void setup() {
 		driver = MockMvcHtmlUnitDriverBuilder
 				.mockMvcSetup(mvc)
+				.javascriptEnabled(false)
 				.build();
 	}
 
