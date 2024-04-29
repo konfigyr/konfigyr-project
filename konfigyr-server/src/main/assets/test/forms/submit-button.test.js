@@ -1,5 +1,4 @@
 import { getByTestId, waitFor } from '@testing-library/dom';
-import '@testing-library/jest-dom';
 import '../../scripts/forms/submit-button';
 
 const render = () => {

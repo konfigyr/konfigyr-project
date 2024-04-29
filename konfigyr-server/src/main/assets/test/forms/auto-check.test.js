@@ -1,5 +1,4 @@
 import { getByTestId, fireEvent, waitFor } from '@testing-library/dom';
-import '@testing-library/jest-dom';
 import '@github/auto-check-element';
 import '../../scripts/forms/auto-check.js';
 
@@ -70,7 +69,7 @@ describe('forms', () => {
             const check = getByTestId(container, 'check');
             const input = getByTestId(container, 'input');
 
-            fetch.mockResponseOnce('Success message');
+            fetchMock.mockResponseOnce('Success message');
 
             fillIn(input, 'Some value');
 
@@ -107,7 +106,7 @@ describe('forms', () => {
             const check = getByTestId(container, 'check');
             const input = getByTestId(container, 'input');
 
-            fetch.mockResponseOnce('Error message', { status: 422 });
+            fetchMock.mockResponseOnce('Error message', { status: 422 });
 
             fillIn(input, 'Some value');
 
@@ -175,7 +174,7 @@ describe('forms', () => {
             const input = getByTestId(container, 'input');
             const help = container.querySelector('.help-text');
 
-            fetch.mockResponseOnce('Remote message');
+            fetchMock.mockResponseOnce('Remote message');
 
             fillIn(input, 'Some value');
 
@@ -199,7 +198,7 @@ describe('forms', () => {
             const input = getByTestId(container, 'input');
             const help = container.querySelector('.help-text');
 
-            fetch.mockResponseOnce('Remote message', { status: 400 });
+            fetchMock.mockResponseOnce('Remote message', { status: 400 });
 
             fillIn(input, 'Some value');
 
