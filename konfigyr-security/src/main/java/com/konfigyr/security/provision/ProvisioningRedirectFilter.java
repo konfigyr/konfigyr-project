@@ -39,7 +39,7 @@ public class ProvisioningRedirectFilter extends OncePerRequestFilter {
 
 	private String provisioningUrl = DEFAULT_PROVISIONING_URL;
 
-	private RequestMatcher requestMatcher = AntPathRequestMatcher.antMatcher(DEFAULT_PROVISIONING_URL);
+	private RequestMatcher requestMatcher = createRequestMatcher(DEFAULT_PROVISIONING_URL);
 
 	private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
@@ -72,7 +72,7 @@ public class ProvisioningRedirectFilter extends OncePerRequestFilter {
 	public void setProvisioningUrl(String provisioningUrl) {
 		Assert.hasText(provisioningUrl, "Provisioning URL can not be blank");
 		this.provisioningUrl = provisioningUrl;
-		this.requestMatcher = AntPathRequestMatcher.antMatcher(provisioningUrl);
+		this.requestMatcher = createRequestMatcher(provisioningUrl);
 	}
 
 	/**
@@ -105,5 +105,14 @@ public class ProvisioningRedirectFilter extends OncePerRequestFilter {
 
 		return false;
 	}
+
+	private static RequestMatcher createRequestMatcher(@NonNull String provisioningUrl) {
+		final StringBuilder pattern = new StringBuilder(provisioningUrl);
+		if (!provisioningUrl.endsWith("/")) {
+			pattern.append("/");
+		}
+		return AntPathRequestMatcher.antMatcher(pattern.append("**").toString());
+	}
+
 
 }

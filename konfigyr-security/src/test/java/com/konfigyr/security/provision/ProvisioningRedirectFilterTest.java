@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.WebAttributes;
+
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -130,7 +135,7 @@ class ProvisioningRedirectFilterTest {
 	}
 
 	@Test
-	@DisplayName("should redirect when provisioning required exceptions is in session")
+	@DisplayName("should redirect when provisioning required exception is in session")
 	void shouldRedirectWhenProvisioningIsRequired() throws Exception {
 		setupSession(new ProvisioningRequiredException());
 		request.setPathInfo("/some-page");
@@ -143,6 +148,36 @@ class ProvisioningRedirectFilterTest {
 		assertThat(response.getRedirectedUrl())
 				.isEqualTo("/account-provisioning-url");
 	}
+
+	@MethodSource("patterns")
+	@DisplayName("should evaluate request matcher patterns")
+	@ParameterizedTest(name = "[provisioningUrl={0}, requestUri={1}, shouldNotFilter={2}]")
+	void evaluateRequestMatcherPatterns(String redirectUrl, String requestUri, boolean result) {
+		filter.setProvisioningUrl(redirectUrl);
+		request.setPathInfo(requestUri);
+
+		assertThat(filter.shouldNotFilter(request)).isEqualTo(result);
+	}
+
+	static Stream<Arguments> patterns() {
+		return Stream.of(
+				Arguments.of("/account-provisioning-url", "/account-provisioning-url", true),
+				Arguments.of("/account-provisioning-url/", "/account-provisioning-url", true),
+				Arguments.of("/account-provisioning-url", "/account-provisioning-url/", true),
+				Arguments.of("/account-provisioning-url/", "/account-provisioning-url/", true),
+				Arguments.of("/account-provisioning-url", "/account-provisioning-url/path", true),
+				Arguments.of("/account-provisioning-url/", "/account-provisioning-url/path", true),
+				Arguments.of("/account-provisioning-url", "/account-provisioning-url/path/sub", true),
+				Arguments.of("/account-provisioning-url", "/account-provisioning", false),
+				Arguments.of("/account/provision/", "/account/provision", true),
+				Arguments.of("/account/provision", "/account/provision/do", true),
+				Arguments.of("/account/provision", "/account/provisioning", false),
+				Arguments.of("/account/provision", "/account-provision", false),
+				Arguments.of("/account/provision", "/login", false),
+				Arguments.of("/account/provision", "/", false)
+		);
+	}
+
 
 	void setupSession(AuthenticationException exception) {
 		final var session = new MockHttpSession();
