@@ -31,7 +31,7 @@ dependencies {
     implementation 'com.ibm.icu:icu4j:75.1'
 
     /* TSID */
-    implementation 'io.hypersistence:hypersistence-tsid:2.1.1'
+    implementation 'io.hypersistence:hypersistence-tsid:2.1.2'
 
     testImplementation project(':konfigyr-test')
     testImplementation 'org.springframework.security:spring-security-oauth2-core'
