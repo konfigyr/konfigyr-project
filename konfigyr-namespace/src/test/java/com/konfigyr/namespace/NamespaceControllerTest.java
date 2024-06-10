@@ -78,4 +78,27 @@ class NamespaceControllerTest {
 				.andExpect(model().attribute("valid", true));
 	}
 
+	@Test
+	@DisplayName("should fail to check namespace name without CSRF token")
+	void shouldNotCheckWhenMissingCSRFToken() throws Exception {
+		final var request = post("/namespaces/check-name")
+				.queryParam("value", "csrf-missing");
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to check namespace name with invalid CSRF token")
+	void shouldNotCheckWithInvalidCSRFToken() throws Exception {
+		final var request = post("/namespaces/check-name")
+				.queryParam("value", "csrf-invalid")
+				.with(csrf().useInvalidToken());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
+	}
+
 }
