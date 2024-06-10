@@ -36,9 +36,11 @@ class AccountPrincipalTest {
 	}
 
 	@Test
-	@DisplayName("should create inactive account principal")
+	@DisplayName("should create suspended account principal")
 	void shouldCreatePrincipalFromInactiveAccount() {
-		final var account = TestAccounts.jane().build();
+		final var account = TestAccounts.jane()
+				.status(AccountStatus.SUSPENDED)
+				.build();
 
 		assertThat(AccountPrincipal.from(account))
 				.returns(account.id(), AccountPrincipal::getId)
@@ -49,7 +51,7 @@ class AccountPrincipalTest {
 				.returns("", UserDetails::getPassword)
 				.returns(AuthorityUtils.createAuthorityList("admin"), UserDetails::getAuthorities)
 				.returns(false, UserDetails::isEnabled)
-				.returns(true, UserDetails::isAccountNonLocked)
+				.returns(false, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
 				.returns(false, UserDetails::isCredentialsNonExpired)
 				.hasSameHashCodeAs(AccountPrincipal.from(account))

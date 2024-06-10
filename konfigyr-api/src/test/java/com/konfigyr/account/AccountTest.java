@@ -129,14 +129,14 @@ class AccountTest {
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Account status can not be null");
 
-		assertThatThrownBy(() -> builder.status("INITIAL").build())
+		assertThatThrownBy(() -> builder.status("SUSPENDED").build())
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Account email address can not be blank");
 
 		assertThat(builder.email("john.doe@konfigyr.com").build())
 				.returns(EntityId.from(12476518224L), Account::id)
 				.returns("john.doe@konfigyr.com", Account::email)
-				.returns(AccountStatus.ACTIVE, Account::status)
+				.returns(AccountStatus.SUSPENDED, Account::status)
 				.returns(null, Account::firstName)
 				.returns(null, Account::lastName)
 				.returns("john.doe@konfigyr.com", Account::displayName)

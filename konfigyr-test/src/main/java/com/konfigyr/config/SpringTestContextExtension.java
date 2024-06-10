@@ -1,6 +1,5 @@
 package com.konfigyr.config;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,14 +12,14 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * JUnit extension that would setup the {@link SpringTestContext} fields in a test class.
+ * JUnit Extension that would initialize the {@link SpringTestContext} fields in a test class.
  *
  * @author Vladimir Spasic
  **/
 public class SpringTestContextExtension implements BeforeEachCallback, AfterEachCallback {
 
 	@Override
-	public void afterEach(ExtensionContext context) throws Exception {
+	public void afterEach(ExtensionContext context) {
 		TestSecurityContextHolder.clearContext();
 		getContexts(context.getRequiredTestInstance()).forEach(SpringTestContext::close);
 	}

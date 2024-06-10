@@ -4,7 +4,6 @@ import com.konfigyr.entity.EntityId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.format.Formatter;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.format.Printer;
 import org.springframework.http.CacheControl;
