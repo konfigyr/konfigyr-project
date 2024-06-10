@@ -1,4 +1,4 @@
-package com.konfigyr.slug;
+package com.konfigyr.support;
 
 import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.DisplayName;

@@ -2,16 +2,18 @@ package com.konfigyr.security.oauth;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountManager;
-import com.konfigyr.account.AccountRegistration;
+import com.konfigyr.namespace.NamespaceType;
 import com.konfigyr.security.AccountPrincipal;
 import com.konfigyr.security.AccountPrincipalService;
+import com.konfigyr.security.provisioning.ProvisioningHints;
+import com.konfigyr.security.provisioning.ProvisioningRequiredException;
+import com.konfigyr.support.FullName;
 import com.konfigyr.test.TestAccounts;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -22,6 +24,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,35 +53,6 @@ class OAuth2UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("should retrieve account for registration from delegate")
-	void shouldRegisterAccount() {
-		final var request = new OAuth2UserRequest(registration, OAuth2AccessTokens.createAccessToken("token"));
-
-		doReturn("github").when(registration).getRegistrationId();
-		doReturn(createUser()).when(delegate).loadUser(request);
-		doReturn(account).when(manager).create(any());
-
-		assertThat(service.loadUser(request))
-				.isInstanceOf(AccountPrincipal.class)
-				.returns(account.id().serialize(), OAuth2User::getName)
-				.returns(Map.of(), OAuth2User::getAttributes)
-				.asInstanceOf(InstanceOfAssertFactories.type(AccountPrincipal.class))
-				.returns(account.email(), AccountPrincipal::getEmail)
-				.returns(account.avatar(), AccountPrincipal::getAvatar)
-				.returns(account.displayName(), AccountPrincipal::getDisplayName);
-
-		final var captor = ArgumentCaptor.forClass(AccountRegistration.class);
-		verify(manager).create(captor.capture());
-
-		assertThat(captor.getValue())
-				.isNotNull()
-				.returns(account.email(), AccountRegistration::email)
-				.returns(account.firstName(), AccountRegistration::firstName)
-				.returns(account.lastName(), AccountRegistration::lastName)
-				.returns(account.avatar(), AccountRegistration::avatar);
-	}
-
-	@Test
 	@DisplayName("should retrieve existing account from delegate")
 	void shouldLoadExistingAccount() {
 		final var request = new OAuth2UserRequest(registration, OAuth2AccessTokens.createAccessToken("token"));
@@ -95,11 +69,36 @@ class OAuth2UserServiceTest {
 				.returns(account.avatar(), AccountPrincipal::getAvatar)
 				.returns(account.displayName(), AccountPrincipal::getDisplayName);
 
+		verify(manager).findByEmail("john.doe@konfigyr.com");
+		verify(manager, times(0)).create(any());
+	}
+
+
+
+	@Test
+	@DisplayName("should throw provisioning required exception when account does not exist")
+	void shouldThrowProvisioningRequiredException() {
+		final var request = new OAuth2UserRequest(registration, OAuth2AccessTokens.createAccessToken("token"));
+
+		doReturn("github").when(registration).getRegistrationId();
+		doReturn(createUser()).when(delegate).loadUser(request);
+
+		assertThatThrownBy(() -> service.loadUser(request))
+				.isInstanceOf(ProvisioningRequiredException.class)
+				.asInstanceOf(InstanceOfAssertFactories.type(ProvisioningRequiredException.class))
+				.extracting(ProvisioningRequiredException::getHints)
+				.returns("john.doe@konfigyr.com", ProvisioningHints::getEmail)
+				.returns(FullName.parse("John Doe"), ProvisioningHints::getName)
+				.returns(URI.create("https://example.com/avatar.svg"), ProvisioningHints::getAvatar)
+				.returns(null, ProvisioningHints::getNamespace)
+				.returns(NamespaceType.PERSONAL, ProvisioningHints::getType);
+
+		verify(manager).findByEmail("john.doe@konfigyr.com");
 		verify(manager, times(0)).create(any());
 	}
 
 	@Test
-	@DisplayName("should fail to find user")
+	@DisplayName("should fail to find OAUth user atributes from delegating user service")
 	void shouldFailToFindUser() {
 		final var request = new OAuth2UserRequest(registration, OAuth2AccessTokens.createAccessToken("token"));
 
@@ -112,7 +111,7 @@ class OAuth2UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("should fail to load user")
+	@DisplayName("should rethrow exceptions thrown by the delegating user service")
 	void shouldFailToLoadUser() {
 		final var request = new OAuth2UserRequest(registration, OAuth2AccessTokens.createAccessToken("token"));
 
@@ -122,21 +121,6 @@ class OAuth2UserServiceTest {
 				.isInstanceOf(OAuth2AuthenticationException.class);
 
 		verifyNoInteractions(manager);
-	}
-
-	@Test
-	@DisplayName("should fail to find user attribute converter")
-	void shouldFailToFindConverter() {
-		final var request = new OAuth2UserRequest(registration, OAuth2AccessTokens.createAccessToken("token"));
-
-		doReturn("unknown").when(registration).getRegistrationId();
-		doReturn(createUser()).when(delegate).loadUser(request);
-
-		assertThatThrownBy(() -> service.loadUser(request))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Unsupported OAuth Client registration")
-				.hasMessageContaining(registration.getRegistrationId())
-				.hasNoCause();
 	}
 
 	static OAuth2User createUser() {

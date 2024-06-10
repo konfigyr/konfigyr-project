@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
  * Represents a sorted {@link Streamable} collection of {@link Membership memberships} of an {@link Account}.
  *
  * @author Vladimir Spasic
+ * @since 1.0.0
  **/
 @EqualsAndHashCode
 public final class Memberships implements Streamable<Membership> {

@@ -1,0 +1,103 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}"
+      lang="en">
+<body>
+<header layout:fragment="header">
+    <nav class="container-fluid">
+        <ol class="breadcrumb">
+            <li>
+                <a th:href="@{/}" th:title="#{konfigyr.title}">
+                    <strong>K</strong>
+                </a>
+            </li>
+        </ol>
+    </nav>
+</header>
+<main layout:fragment="main">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-xl-6">
+                <article>
+                    <form th:object="${form}" method="post">
+                        <th:block th:replace="~{fragments/forms :: global-errors}"/>
+
+                        <fieldset name="account">
+                            <legend class="fs-3">Account information</legend>
+
+                            <th:block th:replace="~{fragments/forms :: input-group (
+                                name='email',
+                                type='email',
+                                required='required',
+                                label=#{account.settings.form.labels.email},
+                                help=#{account.settings.form.help.email}
+                            )}"/>
+
+                            <th:block th:replace="~{fragments/forms :: input-group (
+                                name='firstName',
+                                required='required',
+                                label=#{account.settings.form.labels.first-name}
+                            )}"/>
+
+                            <th:block th:replace="~{fragments/forms :: input-group (
+                                name='lastName',
+                                required='required',
+                                label=#{account.settings.form.labels.last-name}
+                            )}"/>
+                        </fieldset>
+
+                        <fieldset name="namespace">
+                            <legend class="fs-3">Namespace</legend>
+                            <p>Create your first namespace where you can upload artifacts and manage vaults.</p>
+
+                            <auto-check th:src="@{/namespaces/check-name}" th:csrf-field="${_csrf.parameterName}" required>
+                                <th:block th:replace="~{fragments/forms :: input-group (
+                                    name='namespace',
+                                    required='required',
+                                    autocomplete='off',
+                                    spellcheck='false',
+                                    label=#{namespace.form.labels.slug},
+                                    help=${#messages.msg('namespace.form.help.slug', form.namespace)}
+                                )}"/>
+
+                                <input type="hidden"
+                                       th:value="${_csrf.token}"
+                                       th:name="${_csrf.parameterName}"
+                                       data-csrf="true" />
+                            </auto-check>
+                        </fieldset>
+
+                        <fieldset name="namespace-type">
+                            <legend class="required">How are you going to use your namespace?</legend>
+
+                            <th:block th:replace="~{fragments/forms :: radio-box (
+                                        name='type',
+                                        option='PERSONAL',
+                                        value=*{type},
+                                        label='Personal use',
+                                        help='I am working on some personal projects of mine.'
+                                    )}"/>
+                            <th:block th:replace="~{fragments/forms :: radio-box (
+                                        name='type',
+                                        option='ORGANIZATION',
+                                        value=*{type},
+                                        label='Business use',
+                                        help='I am working in an organization that requires configuration management.'
+                                    )}"/>
+                        </fieldset>
+
+                        <button type="submit" data-disable-invalid>
+                            <svg th:replace="~{fragments/icon :: icon (name='save')}"></svg>
+                            <span th:text="#{account.provision.form.labels.submit}">Create account</span>
+                        </button>
+                    </form>
+                </article>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

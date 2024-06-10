@@ -141,6 +141,15 @@ $color-mappings: (
         "black": $black,
 );
 
+$font-size-mappings: (
+        "fs-1": var(--konfigyr-h1-font-size),
+        "fs-2": var(--konfigyr-h2-font-size),
+        "fs-3": var(--konfigyr-h3-font-size),
+        "fs-4": var(--konfigyr-h4-font-size),
+        "fs-5": var(--konfigyr-h5-font-size),
+        "fs-6": var(--konfigyr-h6-font-size),
+);
+
 @mixin generate-utility($utility) {
   $values: map.get($utility, 'values');
   $property-class: map.get($utility, 'class');
@@ -171,4 +180,11 @@ $color-mappings: (
 @each $key, $value in $color-mappings {
   @include generate-color-utility($key, color, $value, 'color');
   @include generate-color-utility($key, background-color, $value, 'bg');
+}
+
+// Loop over each font size mappings and specify font size variable
+@each $class, $value in $font-size-mappings {
+  .#{$class} {
+    --font-size: #{$value} !important;
+  }
 }

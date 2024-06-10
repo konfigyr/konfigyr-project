@@ -3,8 +3,8 @@ package com.konfigyr.security;
 import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountEvent;
 import com.konfigyr.account.AccountManager;
-import com.konfigyr.account.AccountRegistration;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.provisioning.ProvisioningRequiredException;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,11 +15,9 @@ import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.Assert;
-
-import java.util.function.Supplier;
 
 /**
  * Implementation of the {@link PrincipalService} that is able to load the {@link AccountPrincipal}
@@ -47,9 +45,9 @@ public class AccountPrincipalService implements PrincipalService {
 
 	@NonNull
 	@Override
-	public AccountPrincipal lookup(@NonNull OAuth2User user, @NonNull Supplier<AccountRegistration> supplier) {
+	public AccountPrincipal lookup(@NonNull OAuth2AuthenticatedPrincipal user, @NonNull String provider) {
 		final Account account = manager.findByEmail(user.getName())
-				.orElseGet(() -> manager.create(supplier.get()));
+				.orElseThrow(() -> new ProvisioningRequiredException(user, provider));
 
 		Assert.notNull(account.id(), "User account identifier can not be null");
 		Assert.hasText(account.email(), "User account needs to have an email address set");

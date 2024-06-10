@@ -51,10 +51,10 @@ class AccountPrincipalServiceTest {
 				.returns(account.id().serialize(), UserDetails::getUsername)
 				.returns("", UserDetails::getPassword)
 				.returns(AuthorityUtils.createAuthorityList("admin"), UserDetails::getAuthorities)
-				.returns(false, UserDetails::isEnabled)
+				.returns(true, UserDetails::isEnabled)
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
-				.returns(false, UserDetails::isCredentialsNonExpired);
+				.returns(true, UserDetails::isCredentialsNonExpired);
 	}
 
 	@Test

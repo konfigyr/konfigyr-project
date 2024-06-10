@@ -24,6 +24,14 @@
     }
   }
 
+  // Header font sizes
+  --konfigyr-h1-font-size: 2rem;
+  --konfigyr-h2-font-size: 1.75rem;
+  --konfigyr-h3-font-size: 1.5rem;
+  --konfigyr-h4-font-size: 1.25rem;
+  --konfigyr-h5-font-size: 1.15rem;
+  --konfigyr-h6-font-size: 1rem;
+
   // Borders
   --konfigyr-border-radius: 0.3rem;
   --konfigyr-border-width: 0.0625rem;
@@ -204,37 +212,37 @@ h6 {
 }
 
 h1 {
-  --konfigyr-font-size: 2rem;
+  --konfigyr-font-size: var(--konfigyr-h1-font-size);
   --konfigyr-line-height: 1.125;
   --konfigyr-typography-spacing-top: 3rem;
 }
 
 h2 {
-  --konfigyr-font-size: 1.75rem;
+  --konfigyr-font-size: var(--konfigyr-h2-font-size);
   --konfigyr-line-height: 1.15;
   --konfigyr-typography-spacing-top: 2.625rem;
 }
 
 h3 {
-  --konfigyr-font-size: 1.5rem;
+  --konfigyr-font-size: var(--konfigyr-h3-font-size);
   --konfigyr-line-height: 1.175;
   --konfigyr-typography-spacing-top: 2.25rem;
 }
 
 h4 {
-  --konfigyr-font-size: 1.25rem;
+  --konfigyr-font-size: var(--konfigyr-h4-font-size);
   --konfigyr-line-height: 1.2;
   --konfigyr-typography-spacing-top: 1.874rem;
 }
 
 h5 {
-  --konfigyr-font-size: 1.15rem;
+  --konfigyr-font-size: var(--konfigyr-h5-font-size);
   --konfigyr-line-height: 1.225;
   --konfigyr-typography-spacing-top: 1.6875rem;
 }
 
 h6 {
-  --konfigyr-font-size: 1rem;
+  --konfigyr-font-size: var(--konfigyr-h5-font-size);
   --konfigyr-line-height: 1.25;
   --konfigyr-typography-spacing-top: 1.5rem;
 }

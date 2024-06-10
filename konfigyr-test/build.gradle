@@ -4,6 +4,10 @@ dependencies {
     compileOnly project(':konfigyr-api')
     compileOnly project(':konfigyr-security')
 
+    /* Spring WebMvc support */
+    compileOnly 'org.springframework:spring-webmvc'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
+
     /* Spring Validator support */
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
@@ -24,6 +28,8 @@ dependencies {
 
     testImplementation project(':konfigyr-api')
     testImplementation project(':konfigyr-security')
+    testImplementation 'org.springframework.boot:spring-boot-starter-web'
+
 }
 
 /* Disable any Javadoc task, this library should not be published */

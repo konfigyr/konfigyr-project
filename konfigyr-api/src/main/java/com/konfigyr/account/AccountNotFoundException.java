@@ -9,6 +9,7 @@ import java.io.Serial;
  * Exception thrown when {@link Account} could not be found.
  *
  * @author Vladimir Spasic
+ * @since 1.0.0
  **/
 public class AccountNotFoundException extends AccountException {
 	@Serial

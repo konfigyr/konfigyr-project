@@ -73,6 +73,7 @@ class DefaultAccountManager implements AccountManager {
 					.set(
 							SettableRecord.of(context, ACCOUNTS)
 									.set(ACCOUNTS.ID, EntityId.generate().map(EntityId::get))
+									.set(ACCOUNTS.STATUS, AccountStatus.ACTIVE.name())
 									.set(ACCOUNTS.EMAIL, registration.email())
 									.set(ACCOUNTS.FIRST_NAME, registration.firstName())
 									.set(ACCOUNTS.LAST_NAME, registration.lastName())

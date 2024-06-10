@@ -126,9 +126,12 @@ fieldset {
 // Label & legend
 label,
 fieldset legend {
+  --font-size: var(--konfigyr-form-element-font-size);
+
   display: block;
   margin-bottom: calc(var(--konfigyr-spacing) * 0.375);
   color: var(--konfigyr-color);
+  font-size: var(--font-size);
   font-weight: var(--konfigyr-form-label-font-weight, var(--konfigyr-font-weight));
 }
 
@@ -242,6 +245,16 @@ label[aria-disabled="true"],
 
 label[aria-disabled="true"] input[disabled] {
   opacity: 1;
+}
+
+// Required
+legend.required::after,
+label.required::after,
+label[required="true"]::after,
+label[required="required"]::after {
+  padding-left: 5px;
+  color: var(--konfigyr-del-color);
+  content: "*";
 }
 
 // Aria-invalid

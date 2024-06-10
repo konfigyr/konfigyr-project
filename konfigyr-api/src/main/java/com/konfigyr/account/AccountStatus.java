@@ -9,11 +9,6 @@ package com.konfigyr.account;
 public enum AccountStatus {
 
 	/**
-	 * Accounts have an initial status when they are first created, before the provisioning flow is initiated.
-	 */
-	INITIAL,
-
-	/**
 	 * Accounts have an active status when they are successfully provisioned after their registration.
 	 */
 	ACTIVE,
