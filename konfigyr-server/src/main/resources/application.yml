@@ -10,6 +10,14 @@ spring:
     caffeine:
       spec: expireAfterWrite=1h
 
+  mail:
+    host: smtp.resend.com
+    port: 587
+    username: resend
+    properties:
+      mail.smtp.starttls.required: true
+      mail.smtp.starttls.enable: true
+
   mvc:
     static-path-pattern: /assets/**
 

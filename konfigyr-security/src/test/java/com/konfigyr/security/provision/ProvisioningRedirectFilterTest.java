@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.WebAttributes;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.stream.Stream;
 
@@ -50,6 +51,7 @@ class ProvisioningRedirectFilterTest {
 
 		filter = new ProvisioningRedirectFilter();
 		filter.setProvisioningUrl("/account-provisioning-url");
+		filter.setIgnoringRequestMatcher(AntPathRequestMatcher.antMatcher("/ignored"));
 		filter.setRedirectStrategy(redirectStrategy);
 		filter.afterPropertiesSet();
 	}
@@ -84,6 +86,20 @@ class ProvisioningRedirectFilterTest {
 	void shouldNotRedirectForTargetPage() throws Exception {
 		setupSession(new ProvisioningRequiredException());
 		request.setPathInfo("/account-provisioning-url");
+
+		filter.doFilter(request, response, chain);
+
+		verify(chain).doFilter(request, response);
+		verifyNoInteractions(redirectStrategy);
+
+		assertThat(response.getRedirectedUrl()).isNullOrEmpty();
+	}
+
+	@Test
+	@DisplayName("should not redirect when requesting ignored request")
+	void shouldNotRedirectForIgnoredRequests() throws Exception {
+		setupSession(new ProvisioningRequiredException());
+		request.setPathInfo("/ignored");
 
 		filter.doFilter(request, response, chain);
 
@@ -163,18 +179,22 @@ class ProvisioningRedirectFilterTest {
 		return Stream.of(
 				Arguments.of("/account-provisioning-url", "/account-provisioning-url", true),
 				Arguments.of("/account-provisioning-url/", "/account-provisioning-url", true),
-				Arguments.of("/account-provisioning-url", "/account-provisioning-url/", true),
+				Arguments.of("/account-provisioning-url", "/account-provisioning-url/", false),
 				Arguments.of("/account-provisioning-url/", "/account-provisioning-url/", true),
-				Arguments.of("/account-provisioning-url", "/account-provisioning-url/path", true),
-				Arguments.of("/account-provisioning-url/", "/account-provisioning-url/path", true),
-				Arguments.of("/account-provisioning-url", "/account-provisioning-url/path/sub", true),
+				Arguments.of("/account-provisioning-url", "/account-provisioning-url/path", false),
+				Arguments.of("/account-provisioning-url/", "/account-provisioning-url/path", false),
+				Arguments.of("/account-provisioning-url", "/account-provisioning-url/path/sub", false),
 				Arguments.of("/account-provisioning-url", "/account-provisioning", false),
-				Arguments.of("/account/provision/", "/account/provision", true),
-				Arguments.of("/account/provision", "/account/provision/do", true),
+				Arguments.of("/account-provisioning-url/", "/ignored", true),
+				Arguments.of("/account-provisioning-url", "/ignored", true),
+				Arguments.of("/account/provision/", "/account/provision", false),
+				Arguments.of("/account/provision", "/account/provision/do", false),
 				Arguments.of("/account/provision", "/account/provisioning", false),
 				Arguments.of("/account/provision", "/account-provision", false),
 				Arguments.of("/account/provision", "/login", false),
-				Arguments.of("/account/provision", "/", false)
+				Arguments.of("/account/provision", "/", false),
+				Arguments.of("/account/provision/", "/ignored", true),
+				Arguments.of("/account/provision", "/ignored", true)
 		);
 	}
 

@@ -136,7 +136,7 @@ class AccountTest {
 		assertThat(builder.email("john.doe@konfigyr.com").build())
 				.returns(EntityId.from(12476518224L), Account::id)
 				.returns("john.doe@konfigyr.com", Account::email)
-				.returns(AccountStatus.INITIAL, Account::status)
+				.returns(AccountStatus.ACTIVE, Account::status)
 				.returns(null, Account::firstName)
 				.returns(null, Account::lastName)
 				.returns("john.doe@konfigyr.com", Account::displayName)

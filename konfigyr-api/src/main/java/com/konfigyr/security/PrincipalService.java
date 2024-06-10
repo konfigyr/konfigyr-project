@@ -59,4 +59,5 @@ public interface PrincipalService {
 	 * @throws ProvisioningRequiredException when account principal is not found
 	 */
 	@NonNull AccountPrincipal lookup(@NonNull OAuth2AuthenticatedPrincipal user, @NonNull String provider) throws ProvisioningRequiredException;
+
 }

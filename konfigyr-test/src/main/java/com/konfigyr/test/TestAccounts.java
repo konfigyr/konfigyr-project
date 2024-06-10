@@ -36,7 +36,7 @@ public interface TestAccounts {
 	 */
 	static @NonNull Account.Builder jane() {
 		return Account.builder().id(2L)
-				.status(AccountStatus.INITIAL)
+				.status(AccountStatus.ACTIVE)
 				.email("jane.doe@konfigyr.com")
 				.firstName("Jane")
 				.lastName("Doe");

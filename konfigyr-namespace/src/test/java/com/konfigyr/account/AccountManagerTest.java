@@ -70,7 +70,7 @@ class AccountManagerTest {
 				.isPresent()
 				.get()
 				.returns(EntityId.from(2), Account::id)
-				.returns(AccountStatus.INITIAL, Account::status)
+				.returns(AccountStatus.ACTIVE, Account::status)
 				.returns(email, Account::email)
 				.returns("Jane", Account::firstName)
 				.returns("Doe", Account::lastName)
@@ -138,7 +138,7 @@ class AccountManagerTest {
 				.build();
 
 		assertThat(manager.create(registration))
-				.returns(AccountStatus.INITIAL, Account::status)
+				.returns(AccountStatus.ACTIVE, Account::status)
 				.returns("muad.dib@arakis.com", Account::email)
 				.returns("Paul", Account::firstName)
 				.returns("Atreides", Account::lastName)
@@ -159,7 +159,7 @@ class AccountManagerTest {
 						.build();
 
 		assertThat(manager.create(registration))
-				.returns(AccountStatus.INITIAL, Account::status)
+				.returns(AccountStatus.ACTIVE, Account::status)
 				.returns("muad.dib@arakis.com", Account::email)
 				.returns(null, Account::firstName)
 				.returns(null, Account::lastName)
@@ -184,7 +184,7 @@ class AccountManagerTest {
 				.build();
 
 		assertThat(manager.create(registration))
-				.returns(AccountStatus.INITIAL, Account::status)
+				.returns(AccountStatus.ACTIVE, Account::status)
 				.returns("muad.dib@arakis.com", Account::email)
 				.returns("Paul", Account::firstName)
 				.returns("Atreides", Account::lastName)

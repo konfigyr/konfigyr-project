@@ -15,9 +15,25 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public interface SecurityRequestMatchers {
 
 	/**
-	 * Path that matches the login page: <code>login</code>.
+	 * Path that matches the error page: <code>/error</code>.
+	 */
+	String ERROR_PAGE = "/error";
+
+	/**
+	 * Path that matches the login page: <code>/login</code>.
 	 */
 	String LOGIN_PAGE = "/login";
+
+	/**
+	 * Path that matches the authentication error page: <code>/login?error</code>.
+	 * @see com.konfigyr.security.authentication.AuthenticationFailureHandlerBuilder
+	 */
+	String AUTHENTICATION_ERROR_PAGE = "/login?error";
+
+	/**
+	 * Path that matches the account provisioning page: <code>/provision</code>.
+	 */
+	String PROVISIONING_PAGE = "/provision";
 
 	/**
 	 * Request matcher that matches the following ant path pattern: <code>/oauth/**</code>.

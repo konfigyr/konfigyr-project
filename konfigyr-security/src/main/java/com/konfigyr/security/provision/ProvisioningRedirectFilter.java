@@ -11,6 +11,7 @@ import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -39,7 +40,7 @@ public class ProvisioningRedirectFilter extends OncePerRequestFilter {
 
 	private String provisioningUrl = DEFAULT_PROVISIONING_URL;
 
-	private RequestMatcher requestMatcher = createRequestMatcher(DEFAULT_PROVISIONING_URL);
+	private RequestMatcher ignoringRequestMatcher = AntPathRequestMatcher.antMatcher(DEFAULT_PROVISIONING_URL);
 
 	private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
@@ -60,19 +61,34 @@ public class ProvisioningRedirectFilter extends OncePerRequestFilter {
 
 	@Override
 	protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-		return requestMatcher.matches(request);
+		return ignoringRequestMatcher.matches(request);
 	}
 
 	/**
-	 * Sets the Account Provisioning Endpoint redirect URI.
+	 * Sets the Account Provisioning Endpoint redirect URL.
 	 *
-	 * @param provisioningUrl the redirect URI
-	 * @throws IllegalArgumentException when redirect IRU is {@literal null} or blank
+	 * @param provisioningUrl the redirect URL
+	 * @throws IllegalArgumentException when redirect URL is {@literal null} or blank
 	 */
 	public void setProvisioningUrl(String provisioningUrl) {
 		Assert.hasText(provisioningUrl, "Provisioning URL can not be blank");
 		this.provisioningUrl = provisioningUrl;
-		this.requestMatcher = createRequestMatcher(provisioningUrl);
+		this.ignoringRequestMatcher = new OrRequestMatcher(
+				AntPathRequestMatcher.antMatcher(provisioningUrl), ignoringRequestMatcher);
+	}
+
+	/**
+	 * Sets the {@link RequestMatcher} that would be used to check if this should skip processing
+	 * this HTTP request or not.
+	 *
+	 * @param ignoringRequestMatcher the request matcher to ignore requests by this filter
+	 * @throws IllegalArgumentException when request matcher is {@literal null}
+	 */
+	public void setIgnoringRequestMatcher(RequestMatcher ignoringRequestMatcher) {
+		Assert.notNull(ignoringRequestMatcher, "Ignoring request matcher can not be null");
+
+		this.ignoringRequestMatcher = new OrRequestMatcher(
+				AntPathRequestMatcher.antMatcher(provisioningUrl), ignoringRequestMatcher);
 	}
 
 	/**
@@ -105,14 +121,5 @@ public class ProvisioningRedirectFilter extends OncePerRequestFilter {
 
 		return false;
 	}
-
-	private static RequestMatcher createRequestMatcher(@NonNull String provisioningUrl) {
-		final StringBuilder pattern = new StringBuilder(provisioningUrl);
-		if (!provisioningUrl.endsWith("/")) {
-			pattern.append("/");
-		}
-		return AntPathRequestMatcher.antMatcher(pattern.append("**").toString());
-	}
-
 
 }

@@ -87,6 +87,7 @@ h6 {
 
 // Paragraphs
 p {
+  font-size: var(--konfigyr-font-size);
   margin-bottom: var(--konfigyr-typography-spacing-vertical);
 }
 
@@ -109,6 +110,7 @@ hgroup {
 // Lists
 :where(ol, ul) {
   li {
+    font-size: var(--konfigyr-font-size);
     margin-bottom: calc(var(--konfigyr-typography-spacing-vertical) * 0.25);
   }
 }

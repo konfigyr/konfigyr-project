@@ -3,9 +3,10 @@
       xmlns:th="http://www.thymeleaf.org">
 <body>
     <th:block th:fragment="input-group">
-        <th:block th:with="control=${#forms.control(name)}">
+        <th:block th:with="control=${#forms.control(name, help)}">
             <label th:for="${control.id}"
                    th:text="${label}"
+                   th:required="${required}"
                    th:unless="${#strings.isEmpty(label)}"
             >
                 Input label
@@ -17,6 +18,8 @@
                         th:id="${control.id}"
                         th:name="${control.name}"
                         th:text="${control.value}"
+                        th:required="${required}"
+                        th:spellcheck="${spellcheck}"
                         th:attr="
                             aria-invalid=${control.aria.invalid},
                             aria-describedby=${control.aria.describedBy},
@@ -28,6 +31,9 @@
                         th:id="${control.id}"
                         th:name="${control.name}"
                         th:value="${control.value}"
+                        th:required="${required}"
+                        th:autocomplete="${autocomplete}"
+                        th:spellcheck="${spellcheck}"
                         th:type="${#strings.isEmpty(type) ? 'text' : type}"
                         th:attr="
                             aria-invalid=${control.aria.invalid},
@@ -72,8 +78,18 @@
         </div>
     </th:block>
 
+    <th:block th:fragment="global-errors">
+        <div th:id="${id}" class="validation-error mb-3" th:if="${#fields.hasGlobalErrors()}">
+            <svg th:replace="~{fragments/icon :: icon (name='alert-triangle', size='icon-sm')}"></svg>
+
+            <div th:text="${#strings.listJoin(#fields.globalErrors(), ', ')}">
+                Validation error, and another one, then another...
+            </div>
+        </div>
+    </th:block>
+
     <th:block th:fragment="help-text (text)">
-        <small th:id="${id}" class="help-text" th:unless="${#strings.isEmpty(text)}" th:text="${text}">
+        <small th:id="${id}" class="help-text" th:unless="${#strings.isEmpty(text)}" th:utext="${text}">
             Help text
         </small>
     </th:block>

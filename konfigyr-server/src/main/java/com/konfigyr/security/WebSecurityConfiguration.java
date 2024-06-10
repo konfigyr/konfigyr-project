@@ -1,5 +1,8 @@
 package com.konfigyr.security;
 
+import com.konfigyr.security.authentication.AuthenticationFailureHandlerBuilder;
+import com.konfigyr.security.provision.ProvisioningConfigurer;
+import com.konfigyr.security.provisioning.ProvisioningRequiredException;
 import com.konfigyr.security.rememberme.AccountRememberMeServices;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,9 +12,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 /**
  * Spring web security configuration class that would register the Spring Security OAuth2 Login flow.
@@ -25,10 +31,16 @@ public class WebSecurityConfiguration {
 
 	@Bean
 	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, PrincipalService detailsService) throws Exception {
+		final AuthenticationFailureHandler failureHandler = authenticationFailureHandler();
+
 		return http
 				.securityMatcher(
-						// do not apply for static assets
-						new NegatedRequestMatcher(SecurityRequestMatchers.STATIC_ASSETS)
+						new NegatedRequestMatcher(new OrRequestMatcher(
+								// do not apply for static assets
+								SecurityRequestMatchers.STATIC_ASSETS,
+								// do not apply for error page
+								AntPathRequestMatcher.antMatcher(SecurityRequestMatchers.ERROR_PAGE)
+						))
 				)
 				.authorizeHttpRequests(requests -> requests
 						.requestMatchers(
@@ -36,7 +48,11 @@ public class WebSecurityConfiguration {
 								SecurityRequestMatchers.OAUTH_LOGIN
 						)
 						.permitAll()
-						.requestMatchers("/")
+						.requestMatchers(
+								"/",
+								"/namespaces/check-name",
+								SecurityRequestMatchers.PROVISIONING_PAGE
+						)
 						.permitAll()
 						.anyRequest()
 						.authenticated()
@@ -44,6 +60,7 @@ public class WebSecurityConfiguration {
 				.cors(Customizer.withDefaults())
 				.oauth2Login(oauth -> oauth
 						.loginPage(SecurityRequestMatchers.LOGIN_PAGE)
+						.failureHandler(failureHandler)
 				)
 				.rememberMe(remember -> remember
 						.key(AccountRememberMeServices.KEY)
@@ -56,6 +73,11 @@ public class WebSecurityConfiguration {
 				.exceptionHandling(exceptions -> exceptions
 						.defaultAuthenticationEntryPointFor(loginAuthenticationEntryPoint(), AnyRequestMatcher.INSTANCE)
 				)
+				.with(new ProvisioningConfigurer<>(), provisioning -> provisioning
+						.ignoringRequestMatchers("/namespaces/check-name")
+						.principalService(detailsService)
+						.failureHandler(failureHandler)
+				)
 				.build();
 	}
 
@@ -64,6 +86,12 @@ public class WebSecurityConfiguration {
 		entryPoint.setUseForward(false);
 		entryPoint.afterPropertiesSet();
 		return entryPoint;
+	}
+
+	private static AuthenticationFailureHandler authenticationFailureHandler() {
+		return new AuthenticationFailureHandlerBuilder(SecurityRequestMatchers.AUTHENTICATION_ERROR_PAGE)
+				.register(ProvisioningRequiredException.class, SecurityRequestMatchers.PROVISIONING_PAGE)
+				.build();
 	}
 
 }
