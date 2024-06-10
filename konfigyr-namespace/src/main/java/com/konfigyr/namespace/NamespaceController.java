@@ -39,7 +39,7 @@ public class NamespaceController {
 			slug = value;
 		}
 
-		final boolean unavailable = manager.exists(value);
+		final boolean unavailable = manager.exists(slug);
 		final HttpStatus status = unavailable ? HttpStatus.UNPROCESSABLE_ENTITY : HttpStatus.OK;
 
 		model.addAttribute("slug", slug)
