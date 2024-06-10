@@ -54,7 +54,7 @@ class AccountPrincipalServiceTest {
 				.returns(true, UserDetails::isEnabled)
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
-				.returns(false, UserDetails::isCredentialsNonExpired);
+				.returns(true, UserDetails::isCredentialsNonExpired);
 	}
 
 	@Test
