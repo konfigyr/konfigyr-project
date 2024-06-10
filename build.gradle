@@ -51,7 +51,7 @@ subprojects {
 
             /* Fix Dependabot alerts */
             dependency('org.apache.commons:commons-compress:1.26.1') // used by testcontainers
-            dependency('com.google.guava:guava:33.1.0-jre') // used by checkstyle
+            dependency('com.google.guava:guava:33.2.1-jre') // used by checkstyle
         }
     }
 
