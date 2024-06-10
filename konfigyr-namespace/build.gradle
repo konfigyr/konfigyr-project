@@ -4,10 +4,12 @@ dependencies {
     implementation project(':konfigyr-api')
     implementation project(':konfigyr-data')
 
+    compileOnly 'com.konfigyr:konfigyr-mail-api'
     compileOnly 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.springframework.security:spring-security-oauth2-core'
 
     testImplementation project(':konfigyr-test')
+    testImplementation 'com.konfigyr:konfigyr-mail-api'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.security:spring-security-config'
     testImplementation 'org.springframework.security:spring-security-oauth2-core'
