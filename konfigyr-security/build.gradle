@@ -10,6 +10,7 @@ dependencies {
 
     testImplementation project(':konfigyr-test')
     testImplementation project(':konfigyr-namespace')
+    testImplementation 'com.konfigyr:konfigyr-mail-api'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.security:spring-security-test'
 }

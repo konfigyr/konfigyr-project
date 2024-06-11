@@ -60,7 +60,7 @@ class AccountEventListenerTest {
 				.isNotNull()
 				.returns("mail/welcome", Mail::template)
 				.satisfies(it -> assertThat(it.subject())
-						.returns("account-welcome", Subject::value)
+						.returns("mail.welcome", Subject::value)
 						.returns(new Object[0], Subject::arguments)
 				)
 				.satisfies(it -> assertThat(it.recipients())
