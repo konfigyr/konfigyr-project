@@ -45,8 +45,8 @@ public final class Slug implements Supplier<String>, Serializable {
 	private static final Slugify slugify = Slugify.builder()
 			.underscoreSeparator(false)
 			.transliterator(true)
+			.lowerCase(true)
 			.locale(Locale.ENGLISH)
-			.lowerCase(false)
 			.build();
 
 	private final String value;
