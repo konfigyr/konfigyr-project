@@ -1,6 +1,6 @@
 plugins {
     id 'io.freefair.lombok' version '8.6' apply false
-    id 'org.springframework.boot' version '3.3.0' apply false
+    id 'org.springframework.boot' version '3.3.3' apply false
     id 'io.spring.dependency-management' version '1.1.5' apply false
 }
 
@@ -51,7 +51,7 @@ subprojects {
             dependency('com.konfigyr:konfigyr-crypto-jdbc:1.0.0-RC2')
 
             /* Fix Dependabot alerts */
-            dependency('org.apache.commons:commons-compress:1.26.2') // used by testcontainers
+            dependency('org.apache.commons:commons-compress:1.27.1') // used by testcontainers
             dependency('com.google.guava:guava:33.2.1-jre') // used by checkstyle
         }
     }
