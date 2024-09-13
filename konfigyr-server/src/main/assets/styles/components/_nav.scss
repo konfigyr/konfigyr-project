@@ -43,11 +43,24 @@ nav {
 
     :where(a, [role="link"]) {
       display: inline-block;
-      margin: calc(var(--konfigyr-nav-link-spacing-vertical) * -1)
-        calc(var(--konfigyr-nav-link-spacing-horizontal) * -1);
+      margin: calc(var(--konfigyr-nav-link-spacing-vertical) * -0.5)
+        calc(var(--konfigyr-nav-link-spacing-horizontal) * -0.5);
       padding: var(--konfigyr-nav-link-spacing-vertical)
         var(--konfigyr-nav-link-spacing-horizontal);
       border-radius: var(--konfigyr-border-radius);
+      color: var(--konfigyr-nav-link-color);
+      background-color: var(--konfigyr-nav-link-background-color);
+      text-decoration: var(--konfigyr-nav-link-text-decoration);
+
+      &.active {
+        color: var(--konfigyr-nav-link-color-active);
+        background-color: var(--konfigyr-nav-link-background-color-active);
+      }
+
+      &:hover {
+        color: var(--konfigyr-nav-link-color-hover);
+        background-color: var(--konfigyr-nav-link-background-color-hover);
+      }
 
       &:not(:hover) {
         text-decoration: none;

@@ -1,0 +1,52 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}"
+      lang="en">
+<head>
+    <title th:text="${namespace.name}">Konfigyr</title>
+</head>
+<body>
+
+<th:block layout:fragment="header">
+    <nav th:replace="~{layout/header :: header (namespace=${namespace.slug})}">
+    </nav>
+</th:block>
+
+<th:block layout:fragment="sub-header">
+    <nav th:replace="~{namespaces/header :: header (namespace=${namespace.slug}, active='overview')}">
+    </nav>
+</th:block>
+
+<main layout:fragment="main">
+    <div class="container">
+        <th:block th:replace="~{fragments/heading :: heading(
+            avatar=${namespace.avatar},
+            title=${namespace.name},
+            subtitle=${namespace.description},
+        )}" />
+
+        <div class="my-4">
+            <h3 class="fs-5 text-normal" th:text="#{namespace.overview.popular-repositories}">
+                Popular repositories
+            </h3>
+
+            <th:block th:replace="~{fragments/empty-state :: empty-state(
+                title='No repositories'
+            )}" />
+        </div>
+
+        <div class="my-4">
+            <h3 class="fs-5 text-normal" th:text="#{namespace.overview.popular-artifacts}">
+                Popular artifacts
+            </h3>
+
+            <th:block th:replace="~{fragments/empty-state :: empty-state(
+                title='No artifacts'
+            )}" />
+        </div>
+    </div>
+</main>
+</body>
+</html>

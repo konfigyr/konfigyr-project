@@ -5,7 +5,7 @@
       layout:decorate="~{layout/layout}"
       lang="en">
 <body>
-<header layout:fragment="header">
+<th:block layout:fragment="header">
     <nav class="container-fluid">
         <ol class="breadcrumb">
             <li>
@@ -15,7 +15,8 @@
             </li>
         </ol>
     </nav>
-</header>
+</th:block>
+
 <main layout:fragment="main">
     <div class="container">
         <div class="row justify-content-center">

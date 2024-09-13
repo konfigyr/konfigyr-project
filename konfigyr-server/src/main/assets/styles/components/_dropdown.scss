@@ -177,9 +177,8 @@ details.dropdown summary + ul {
 
   li {
     width: 100%;
-    margin-bottom: 0;
-    padding: calc(var(--konfigyr-form-element-spacing-vertical) * 0.5)
-    var(--konfigyr-form-element-spacing-horizontal);
+    margin: 0;
+    padding: 0 calc(var(--konfigyr-form-element-spacing-horizontal) * 0.5);
     list-style: none;
 
     &:first-of-type {
@@ -190,14 +189,24 @@ details.dropdown summary + ul {
       margin-bottom: calc(var(--konfigyr-form-element-spacing-vertical) * 0.5);
     }
 
-    a {
+    &.divider {
+      line-height: 0;
+      padding: calc(var(--konfigyr-form-element-spacing-vertical) * 0.25)
+      calc(var(--konfigyr-form-element-spacing-horizontal) * 0.5);
+
+      hr {
+        margin: calc(var(--konfigyr-typography-spacing-vertical) * 0.25) 0;
+      }
+    }
+
+    a, button {
       display: block;
-      margin: calc(var(--konfigyr-form-element-spacing-vertical) * -0.5)
-      calc(var(--konfigyr-form-element-spacing-horizontal) * -1);
+      margin: calc(var(--konfigyr-form-element-spacing-vertical) * 0.25)
+      calc(var(--konfigyr-form-element-spacing-horizontal) * 0.25);
       padding: calc(var(--konfigyr-form-element-spacing-vertical) * 0.5)
       var(--konfigyr-form-element-spacing-horizontal);
       overflow: hidden;
-      border-radius: 0;
+      border-radius: var(--konfigyr-border-radius);
       color: var(--konfigyr-dropdown-color);
       text-decoration: none;
       text-overflow: ellipsis;
@@ -209,6 +218,14 @@ details.dropdown summary + ul {
       &[aria-current]:not([aria-current="false"]) {
         background-color: var(--konfigyr-dropdown-hover-background-color);
       }
+    }
+
+    button {
+      width: 100%;
+      background: none;
+      border: 0 none;
+      text-align: left;
+      box-shadow: none;
     }
 
     label {

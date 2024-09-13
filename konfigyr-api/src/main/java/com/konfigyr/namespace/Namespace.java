@@ -21,6 +21,7 @@ import java.time.ZoneOffset;
  * @param type defines the type of the namespace, can not be {@literal null}
  * @param name human friendly name of the namespace, can not be {@literal null}
  * @param description short description of the namespace, can be {@literal null}
+ * @param avatar URL where the avatar for the namespace is hosted, can be {@literal null}
  * @param createdAt when was this namespace created, can be {@literal null}
  * @param updatedAt when was this namespace last updated, can be {@literal null}
  * @author Vladimir Spasic
@@ -33,6 +34,7 @@ public record Namespace(
 		@NonNull NamespaceType type,
 		@NonNull String name,
 		@Nullable String description,
+		@Nullable String avatar,
 		@Nullable OffsetDateTime createdAt,
 		@Nullable OffsetDateTime updatedAt
 ) implements Serializable {
@@ -60,6 +62,7 @@ public record Namespace(
 		private NamespaceType type;
 		private String name;
 		private String description;
+		private String avatar;
 		private OffsetDateTime createdAt;
 		private OffsetDateTime updatedAt;
 
@@ -154,6 +157,17 @@ public record Namespace(
 		}
 
 		/**
+		 * Specify the location of the {@link Namespace} avatar.
+		 *
+		 * @param avatar namespace avatar image location
+		 * @return namespace builder
+		 */
+		public Builder avatar(String avatar) {
+			this.avatar = avatar;
+			return this;
+		}
+
+		/**
 		 * Specify when this {@link Namespace} was created.
 		 *
 		 * @param createdAt created date
@@ -208,7 +222,7 @@ public record Namespace(
 			Assert.hasText(slug, "Namespace slug can not be blank");
 			Assert.hasText(name, "Namespace name can not be blank");
 
-			return new Namespace(id, slug, type, name, description, createdAt, updatedAt);
+			return new Namespace(id, slug, type, name, description, avatar, createdAt, updatedAt);
 		}
 
 	}

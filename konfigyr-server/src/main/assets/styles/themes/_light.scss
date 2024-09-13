@@ -161,6 +161,14 @@
   // Modal (<dialog>)
   --konfigyr-modal-overlay-background-color: #{rgba(mix($zinc-100, $zinc-50), 0.75)};
 
+  // Navigation (<nav>)
+  --konfigyr-nav-link-color: var(--konfigyr-color);
+  --konfigyr-nav-link-background-color: transparent;
+  --konfigyr-nav-link-color-hover: var(--konfigyr-primary);
+  --konfigyr-nav-link-background-color-hover: #{rgba(mix($zinc-100, $zinc-50), 0.5)};
+  --konfigyr-nav-link-color-active: var(--konfigyr-primary);
+  --konfigyr-nav-link-background-color-active: transparent;
+
   // Progress
   --konfigyr-progress-background-color: #{$slate-100};
   --konfigyr-progress-color: var(--konfigyr-primary-background);

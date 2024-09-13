@@ -8,6 +8,11 @@
                     <strong>K</strong>
                 </a>
             </li>
+            <li th:if="${namespace}" class="fs-6">
+                <a th:href="@{/namespace/{slug}(slug=${namespace})}" th:text="${namespace}">
+                    konfigyr
+                </a>
+            </li>
         </ol>
 
         <ul>
@@ -30,20 +35,30 @@
                             John Doe
                         </small>
                     </summary>
-                    <ul role="listbox">
+                    <ul role="listbox" style="--konfigyr-font-size: 0.9rem">
                         <li>
                             <a th:href="@{/account}">
                                 <svg th:replace="~{fragments/icon :: icon (name='user')}"></svg>
-                                <span class="ms-2" th:text="#{header.labels.your-profile}">Your profile</span>
+                                <span th:text="#{header.labels.your-profile}">Your profile</span>
                             </a>
                         </li>
-                        <li>
+                        <li class="divider" th:if="${#authentication.principal.memberships}">
+                            <hr />
+                        </li>
+                        <li th:each="membership: ${#authentication.principal.memberships}">
+                            <a th:href="@{/namespace/{name}(name=${membership.namespace})}">
+                                <svg th:replace="~{fragments/icon :: icon (name='table')}"></svg>
+                                <span th:text="${membership.name}">Konfigyr</span>
+                            </a>
+                        </li>
+                        <li class="divider">
                             <hr />
                         </li>
                         <li>
                             <form th:action="@{/logout}" method="POST" class="m-0">
-                                <button type="submit" th:text="#{header.labels.logout}">
-                                    Sign out
+                                <button type="submit" role="link">
+                                    <svg th:replace="~{fragments/icon :: icon (name='log-out')}"></svg>
+                                    <span th:text="#{header.labels.logout}">Sign out</span>
                                 </button>
                             </form>
                         </li>

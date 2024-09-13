@@ -2,6 +2,7 @@ package com.konfigyr.security;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountStatus;
+import com.konfigyr.account.Memberships;
 import com.konfigyr.entity.EntityId;
 import lombok.*;
 import org.jmolecules.ddd.annotation.AggregateRoot;
@@ -53,20 +54,20 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<E
 	private static final Map<String, Object> EMPTY_ATTRIBUTES = Collections.emptyMap();
 
 	/**
-	 * Entity identifier of the {@link Account} behind this principal.
+	 * Entity identifier of the {@link Account} behind this {@link AccountPrincipal}.
 	 */
 	@NonNull
 	EntityId id;
 
 	/**
 	 * The current status of the {@link Account} that is used to check if this
-	 * principal can be used.
+	 * {@link AccountPrincipal} can be used.
 	 */
 	@NonNull
 	AccountStatus status;
 
 	/**
-	 * E-Mail address of the {@link Account}.
+	 * E-Mail address of the {@link AccountPrincipal}.
 	 */
 	@NonNull
 	String email;
@@ -78,10 +79,16 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<E
 	String name;
 
 	/**
-	 * URL that points to the profile picture of this {@link Account}.
+	 * URL that points to the profile picture of this {@link AccountPrincipal}.
 	 */
 	@Nullable
 	String avatar;
+
+	/**
+	 * Namespace memberships for this {@link AccountPrincipal}, can not be {@code null}.
+	 */
+	@NonNull
+	Memberships memberships;
 
 	/**
 	 * Creates a new {@link AccountPrincipal} using the attributes from the {@link Account} entity.
@@ -100,6 +107,7 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<E
 				.email(account.email())
 				.name(account.displayName())
 				.avatar(account.avatar())
+				.memberships(account.memberships())
 				.build();
 	}
 

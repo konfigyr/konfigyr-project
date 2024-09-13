@@ -67,6 +67,7 @@ class OAuth2UserServiceTest {
 				.asInstanceOf(InstanceOfAssertFactories.type(AccountPrincipal.class))
 				.returns(account.email(), AccountPrincipal::getEmail)
 				.returns(account.avatar(), AccountPrincipal::getAvatar)
+				.returns(account.memberships(), AccountPrincipal::getMemberships)
 				.returns(account.displayName(), AccountPrincipal::getDisplayName);
 
 		verify(manager).findByEmail("john.doe@konfigyr.com");
