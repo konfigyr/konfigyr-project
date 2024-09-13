@@ -25,6 +25,7 @@ class NamespaceTest {
 				.slug("test-namespace")
 				.name("Test namespace")
 				.description("My testing team namespace")
+				.avatar("https://example.com/avatar.gif")
 				.createdAt(Instant.now().minus(62, ChronoUnit.DAYS))
 				.updatedAt(Instant.now().minus(16, ChronoUnit.HOURS))
 				.build();
@@ -35,6 +36,7 @@ class NamespaceTest {
 				.returns("test-namespace", Namespace::slug)
 				.returns("Test namespace", Namespace::name)
 				.returns("My testing team namespace", Namespace::description)
+				.returns("https://example.com/avatar.gif", Namespace::avatar)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
 						.isEqualToIgnoringHours(OffsetDateTime.now(ZoneOffset.UTC).minusDays(62))
@@ -72,6 +74,7 @@ class NamespaceTest {
 				.returns("test-namespace", Namespace::slug)
 				.returns("Test namespace", Namespace::name)
 				.returns(null, Namespace::description)
+				.returns(null, Namespace::avatar)
 				.returns(null, Namespace::createdAt)
 				.returns(null, Namespace::updatedAt);
 	}
@@ -240,6 +243,20 @@ class NamespaceTest {
 				.hasCause(cause)
 				.returns(definition, NamespaceOwnerException::getDefinition)
 				.returns(EntityId.from(13), NamespaceOwnerException::getOwner);
+	}
+
+	@Test
+	@DisplayName("should create namespace exists exception with cause")
+	void shouldCreateNamespaceNotFoundException() {
+		assertThat(new NamespaceNotFoundException("unknown"))
+				.hasMessage("Could not find a namespace with the following name: unknown")
+				.hasNoCause();
+
+		final var id = EntityId.from(1234);
+
+		assertThat(new NamespaceNotFoundException(EntityId.from(1234)))
+				.hasMessage("Could not find a namespace with the following identifier: " + id.serialize())
+				.hasNoCause();
 	}
 
 	@Test
