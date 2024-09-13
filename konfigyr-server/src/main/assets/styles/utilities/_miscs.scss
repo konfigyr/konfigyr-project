@@ -14,6 +14,19 @@
   text-align: right;
 }
 
+// Text font weight
+.text-lighter {
+  font-weight: lighter;
+}
+
+.text-normal {
+  font-weight: normal;
+}
+
+.text-bolder {
+  font-weight: bolder;
+}
+
 // Muted text color
 .muted {
   color: var(--muted-color);
@@ -185,6 +198,6 @@ $font-size-mappings: (
 // Loop over each font size mappings and specify font size variable
 @each $class, $value in $font-size-mappings {
   .#{$class} {
-    --font-size: #{$value} !important;
+    --konfigyr-font-size: #{$value} !important;
   }
 }

@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,6 +22,70 @@ import org.springframework.web.servlet.ModelAndView;
 public class NamespaceController {
 
 	private final NamespaceManager manager;
+
+	/**
+	 * Request mapping that would render the {@link Namespace} details page.
+	 *
+	 * @param slug namespace name slug, can't be {@link null}
+	 * @param model Spring MVC model, can't be {@link null}
+	 * @return <code>namespaces/details</code> template
+	 */
+	@GetMapping("/namespace/{namespace}")
+	ModelAndView namespace(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
+		final Namespace namespace = lookupNamespace(slug);
+
+		model.addAttribute("namespace", namespace);
+
+		return new ModelAndView("namespaces/details", model.asMap());
+	}
+
+	/**
+	 * Request mapping that would render the {@link Namespace} {@link Member members} page.
+	 *
+	 * @param slug namespace name slug, can't be {@link null}
+	 * @param model Spring MVC model, can't be {@link null}
+	 * @return <code>namespaces/details</code> template
+	 */
+	@GetMapping("/namespace/{namespace}/members")
+	ModelAndView members(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
+		return namespace(slug, model);
+	}
+
+	/**
+	 * Request mapping that would render the {@link Namespace} repositories page.
+	 *
+	 * @param slug namespace name slug, can't be {@link null}
+	 * @param model Spring MVC model, can't be {@link null}
+	 * @return <code>namespaces/details</code> template
+	 */
+	@GetMapping("/namespace/{namespace}/repositories")
+	ModelAndView repositories(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
+		return namespace(slug, model);
+	}
+
+	/**
+	 * Request mapping that would render the {@link Namespace} applications page.
+	 *
+	 * @param slug namespace name slug, can't be {@link null}
+	 * @param model Spring MVC model, can't be {@link null}
+	 * @return <code>namespaces/details</code> template
+	 */
+	@GetMapping("/namespace/{namespace}/applications")
+	ModelAndView vaults(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
+		return namespace(slug, model);
+	}
+
+	/**
+	 * Request mapping that would render the {@link Namespace} settings page.
+	 *
+	 * @param slug namespace name slug, can't be {@link null}
+	 * @param model Spring MVC model, can't be {@link null}
+	 * @return <code>namespaces/details</code> template
+	 */
+	@GetMapping("/namespace/{namespace}/settings")
+	ModelAndView settings(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
+		return namespace(slug, model);
+	}
 
 	/**
 	 * Request mapping that would perform a check if there are any {@link Namespace Namespaces}
@@ -47,6 +113,15 @@ public class NamespaceController {
 				.addAttribute("valid", slug.equals(value));
 
 		return new ModelAndView("namespaces/check-name", model.asMap(), status);
+	}
+
+	@NonNull
+	private Namespace lookupNamespace(@NonNull String slug) {
+		if (!Slug.isValid(slug)) {
+			throw new NamespaceNotFoundException(slug);
+		}
+
+		return manager.findBySlug(slug).orElseThrow(() -> new NamespaceNotFoundException(slug));
 	}
 
 }

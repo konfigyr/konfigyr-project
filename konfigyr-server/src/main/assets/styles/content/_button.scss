@@ -44,7 +44,7 @@ button,
   box-shadow: var(--konfigyr-box-shadow);
   color: var(--konfigyr-color);
   font-weight: var(--konfigyr-font-weight);
-  font-size: 1rem;
+  font-size: var(--konfigyr-font-size, 1rem);
   line-height: var(--konfigyr-line-height);
   text-align: center;
   text-decoration: none;

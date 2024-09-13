@@ -5,11 +5,10 @@
       layout:decorate="~{layout/layout}"
       lang="en">
 <body>
-<header layout:fragment="header">
+<th:block layout:fragment="header">
     <nav th:replace="~{layout/header :: header (active='index')}">
-
     </nav>
-</header>
+</th:block>
 
 <main layout:fragment="main">
     <div class="container">

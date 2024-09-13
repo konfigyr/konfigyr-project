@@ -95,10 +95,11 @@
   --konfigyr-footer-spacing-horizontal: var(--konfigyr-block-spacing-horizontal);
 
   // Spacings for nav component
-  --konfigyr-nav-element-spacing-vertical: 0;
-  --konfigyr-nav-element-spacing-horizontal: 0;
-  --konfigyr-nav-link-spacing-vertical: calc(var(--konfigyr-spacing) * 0.5);
-  --konfigyr-nav-link-spacing-horizontal: calc(var(--konfigyr-spacing) * 0.75);
+  --konfigyr-nav-element-spacing-vertical: calc(var(--konfigyr-spacing) * 0.25);
+  --konfigyr-nav-element-spacing-horizontal: calc(var(--konfigyr-spacing) * 0.5);
+  --konfigyr-nav-link-spacing-vertical: calc(var(--konfigyr-spacing) * 0.25);
+  --konfigyr-nav-link-spacing-horizontal: calc(var(--konfigyr-spacing) * 0.5);
+  --konfigyr-nav-link-text-decoration: none;
   --konfigyr-nav-breadcrumb-divider: ">";
 
   // Configuration for the card/article component

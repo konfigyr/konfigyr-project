@@ -222,6 +222,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.slug(record.get(NAMESPACES.SLUG))
 				.name(record.get(NAMESPACES.NAME))
 				.description(record.get(NAMESPACES.DESCRIPTION))
+				.avatar(record.get(NAMESPACES.AVATAR))
 				.createdAt(record.get(NAMESPACES.CREATED_AT))
 				.updatedAt(record.get(NAMESPACES.UPDATED_AT))
 				.build();

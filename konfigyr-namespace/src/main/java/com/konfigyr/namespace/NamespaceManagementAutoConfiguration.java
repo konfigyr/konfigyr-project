@@ -26,5 +26,4 @@ public class NamespaceManagementAutoConfiguration {
 	NamespaceManager defaultNamespaceManager(DSLContext context) {
 		return new DefaultNamespaceManager(context, applicationEventPublisher);
 	}
-
 }

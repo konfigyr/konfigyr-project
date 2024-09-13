@@ -9,10 +9,12 @@
     <title th:text="#{login.title}">Login</title>
 </head>
 <body>
-<header layout:fragment="header">
+
+<th:block layout:fragment="header">
     <nav th:replace="~{layout/header :: header (active='login')}">
     </nav>
-</header>
+</th:block>
+
 <main layout:fragment="main" class="d-flex align-items-center justify-content-center">
     <div class="container">
         <article th:if="${logout}" class="text-center">
