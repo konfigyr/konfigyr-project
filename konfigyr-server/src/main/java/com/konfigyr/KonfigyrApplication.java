@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.modulith.Modulith;
+import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 
 /**
  * Konfigyr Spring server application main class.
@@ -12,6 +13,7 @@ import org.springframework.modulith.Modulith;
  * @since 1.0.0
  **/
 @EnableCaching
+@EnableJdbcHttpSession
 @SpringBootApplication
 @Modulith(systemName = "Konfigyr")
 public class KonfigyrApplication {

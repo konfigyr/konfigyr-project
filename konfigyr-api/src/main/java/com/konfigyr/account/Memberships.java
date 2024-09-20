@@ -7,6 +7,8 @@ import org.springframework.data.util.Streamable;
 import org.springframework.lang.NonNull;
 import org.springframework.util.CollectionUtils;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -18,7 +20,10 @@ import java.util.stream.Collectors;
  * @since 1.0.0
  **/
 @EqualsAndHashCode
-public final class Memberships implements Streamable<Membership> {
+public final class Memberships implements Streamable<Membership>, Serializable {
+
+	@Serial
+	private static final long serialVersionUID = 1591242249270881071L;
 
 	private static final Memberships EMPTY = new Memberships(Collections.emptyList());
 
