@@ -17,6 +17,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    /* Spring JDBC session implementation */
+    implementation 'org.springframework.session:spring-session-jdbc'
+
     /* Spring Boot Thymeleaf */
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
