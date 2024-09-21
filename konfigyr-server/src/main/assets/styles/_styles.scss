@@ -32,6 +32,10 @@
   --konfigyr-h5-font-size: 1.15rem;
   --konfigyr-h6-font-size: 1rem;
 
+  // Small and large font sizes
+  --konfigyr-font-size-small: 0.875em;
+  --konfigyr-font-size-large: 1.125em;
+
   // Borders
   --konfigyr-border-radius: 0.3rem;
   --konfigyr-border-width: 0.0625rem;
@@ -199,7 +203,7 @@ a {
 // Typography
 // Small
 small {
-  --konfigyr-font-size: 0.875em;
+  --konfigyr-font-size: var(--konfigyr-font-size-small);
 }
 
 // Headings

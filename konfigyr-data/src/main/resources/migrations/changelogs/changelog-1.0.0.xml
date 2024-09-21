@@ -247,6 +247,65 @@
         />
     </changeSet>
 
+    <changeSet author="vspasic" id="1.0.0-create-repository-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="repositories" />
+            </not>
+        </preConditions>
+
+        <comment>Initial repositories table migration</comment>
+
+        <createTable tableName="repositories" remarks="Repositories represent a virtual storage of artifacts and applications.">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="namespace_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="slug" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="is_private" type="boolean">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="description" type="text">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="created_at" type="timestamptz" defaultValue="NOW()">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="updated_at" type="timestamptz" defaultValue="NOW()">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="repositories"
+                columnNames="namespace_id,slug"
+                constraintName="unique_namespace_repository"
+        />
+
+        <addForeignKeyConstraint
+                baseTableName="repositories"
+                baseColumnNames="namespace_id"
+                constraintName="fk_repository_namespace"
+                referencedTableName="namespaces"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
     <changeSet author="vspasic" id="1.0.0-create-sessions-table">
         <preConditions onFail="MARK_RAN">
             <not>

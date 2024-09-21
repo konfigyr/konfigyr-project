@@ -1,7 +1,12 @@
 package com.konfigyr.namespace;
 
+import com.konfigyr.registry.Artifactory;
+import com.konfigyr.registry.ArtifactorySearchQuery;
+import com.konfigyr.registry.Repository;
 import com.konfigyr.support.Slug;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
@@ -21,6 +26,7 @@ import org.springframework.web.servlet.ModelAndView;
 @RequiredArgsConstructor
 public class NamespaceController {
 
+	private final Artifactory artifactory;
 	private final NamespaceManager manager;
 
 	/**
@@ -33,8 +39,12 @@ public class NamespaceController {
 	@GetMapping("/namespace/{namespace}")
 	ModelAndView namespace(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
 		final Namespace namespace = lookupNamespace(slug);
+		final Page<Repository> repositories = artifactory.searchRepositories(
+				ArtifactorySearchQuery.of(null, namespace.slug(), Pageable.ofSize(20))
+		);
 
 		model.addAttribute("namespace", namespace);
+		model.addAttribute("repositories", repositories);
 
 		return new ModelAndView("namespaces/details", model.asMap());
 	}

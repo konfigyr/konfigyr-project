@@ -38,6 +38,10 @@ component_management:
       name: Namespaces
       paths:
         - konfigyr-namespace/**
+    - component_id: konfigyr-registry
+      name: Registry
+      paths:
+        - konfigyr-registry/**
     - component_id: konfigyr-security
       name: Security
       paths:

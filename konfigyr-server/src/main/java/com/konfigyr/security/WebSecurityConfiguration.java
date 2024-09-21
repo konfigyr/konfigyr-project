@@ -50,6 +50,7 @@ public class WebSecurityConfiguration {
 						.permitAll()
 						.requestMatchers(
 								"/",
+								"/namespace/**",
 								"/namespaces/check-name",
 								SecurityRequestMatchers.PROVISIONING_PAGE
 						)
