@@ -66,7 +66,7 @@ public interface AccountManager {
 	 * Updates the {@link Account} and publishes the {@link AccountEvent.Updated} event when successful.
 	 *
 	 * @param account account to be updated, can't be {@literal null}
-	 * @return updated account, never {@link null}
+	 * @return updated account, never {@literal null}
 	 * @throws AccountNotFoundException when {@link Account} does not exist
 	 * @throws AccountException when there is an unexpected exception while updating the account
 	 */

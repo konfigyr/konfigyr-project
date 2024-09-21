@@ -1,7 +1,6 @@
 package com.konfigyr.registry;
 
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.namespace.Namespace;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
@@ -16,7 +15,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 /**
- * A Konfigyr repository is a virtual storage that can be created under a {@link Namespace}.
+ * A Konfigyr repository is a virtual storage that can be created under a {@link com.konfigyr.namespace.Namespace}.
  * <p>
  * It allows storing artifacts, and their versions, or your applications.
  *
@@ -34,7 +33,7 @@ import java.time.ZoneOffset;
 @Entity
 public record Repository(
 		@NonNull @Identity EntityId id,
-		@NonNull @Association(aggregateType = Namespace.class) String namespace,
+		@NonNull @Association String namespace,
 		@NonNull String slug,
 		@NonNull String name,
 		@Nullable String description,
@@ -105,7 +104,7 @@ public record Repository(
 		}
 
 		/**
-		 * Specify the {@link Namespace} URL slug to which this {@link Repository} belongs to.
+		 * Specify the {@link com.konfigyr.namespace.Namespace} URL slug to which this {@link Repository} belongs to.
 		 *
 		 * @param namespace namespace slug
 		 * @return repository builder
