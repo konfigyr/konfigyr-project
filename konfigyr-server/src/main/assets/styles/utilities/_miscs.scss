@@ -29,12 +29,12 @@
 
 // Muted text color
 .muted {
-  color: var(--muted-color);
+  color: var(--konfigyr-muted-color);
 }
 
 // Radius
 .border-radius {
-  border-radius: var(--border-radius);
+  border-radius: var(--konfigyr-border-radius);
 }
 
 .rounded {
@@ -56,6 +56,11 @@
 
 .d-none {
   display: none !important;
+}
+
+// Disable Default List styles
+.list-style-none {
+  list-style: none;
 }
 
 $spacers: (
@@ -161,6 +166,8 @@ $font-size-mappings: (
         "fs-4": var(--konfigyr-h4-font-size),
         "fs-5": var(--konfigyr-h5-font-size),
         "fs-6": var(--konfigyr-h6-font-size),
+        "text-small": var(--konfigyr-font-size-small),
+        "text-large": var(--konfigyr-font-size-large),
 );
 
 @mixin generate-utility($utility) {

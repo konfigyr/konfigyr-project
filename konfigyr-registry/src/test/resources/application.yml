@@ -1,0 +1,8 @@
+spring:
+  liquibase:
+    change-log: classpath:test-changelog.xml
+
+logging:
+  level:
+    com.konfigyr: DEBUG
+    org.jooq.tools.LoggerListener: DEBUG

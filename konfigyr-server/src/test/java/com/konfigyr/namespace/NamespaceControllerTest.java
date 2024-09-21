@@ -1,15 +1,20 @@
 package com.konfigyr.namespace;
 
-import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.assertions.AssertMatcher;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.registry.Repository;
+import com.konfigyr.test.TestContainers;
+import com.konfigyr.test.TestProfile;
 import jakarta.servlet.ServletException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.context.ImportTestcontainers;
+import org.springframework.data.domain.Page;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -23,7 +28,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(classes = NamespaceTestConfiguration.class)
+@TestProfile
+@SpringBootTest
+@AutoConfigureMockMvc
+@ImportTestcontainers(TestContainers.class)
 class NamespaceControllerTest {
 
 	static MockMvc mvc;
@@ -50,6 +58,13 @@ class NamespaceControllerTest {
 						.returns("konfigyr", Namespace::slug)
 						.returns("Konfigyr", Namespace::name)
 						.returns(NamespaceType.TEAM, Namespace::type)
+				)))
+				.andExpect(model().attribute("repositories", AssertMatcher.of(repositories -> assertThat(repositories)
+						.isNotNull()
+						.isInstanceOf(Page.class)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(Repository.class))
+						.extracting(Repository::id)
+						.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3))
 				)));
 	}
 

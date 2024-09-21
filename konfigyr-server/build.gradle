@@ -7,6 +7,7 @@ apply plugin: 'org.springframework.boot'
 dependencies {
     implementation project(':konfigyr-api')
     implementation project(':konfigyr-namespace')
+    implementation project(':konfigyr-registry')
     implementation project(':konfigyr-security')
 
     /* Konfigyr Mail - SMTP sender and Thymeleaf renderer */

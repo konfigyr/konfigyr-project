@@ -32,7 +32,29 @@
                 Popular repositories
             </h3>
 
-            <th:block th:replace="~{fragments/empty-state :: empty-state(
+            <ol th:unless="${repositories.empty}" class="d-flex flex-wrap list-style-none row p-0">
+                <li th:each="repository : ${repositories}" class="col-12 col-md-6 p-2">
+                    <article class="mb-0">
+                        <div class="d-flex justify-content-between">
+                            <div class="mb-2">
+                                <a th:href="@{/namespace/{namespace}/{slug}(namespace=${namespace.slug}, slug=${repository.slug})}"
+                                   th:text="${repository.slug}">konfigyr-crypto</a>
+                            </div>
+                            <div>
+                                <span class="badge" th:text="${repository.isPrivate() ? 'Private' : 'Public'}">
+                                    Public
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="muted text-small m-0" th:text="${repository.description}">
+                            Spring Boot Crypto library
+                        </p>
+                    </article>
+                </li>
+            </ol>
+
+            <th:block th:if="${repositories.empty}" th:insert="~{fragments/empty-state :: empty-state(
                 title='No repositories'
             )}" />
         </div>
