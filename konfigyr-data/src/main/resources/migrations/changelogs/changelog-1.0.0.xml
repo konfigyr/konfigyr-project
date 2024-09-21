@@ -256,7 +256,7 @@
 
         <comment>Initial repositories table migration</comment>
 
-        <createTable tableName="repositories" remarks="Repositories represent a virtual storage of artifacts and applications">
+        <createTable tableName="repositories" remarks="Repositories represent a virtual storage of artifacts and applications.">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false" />
             </column>
