@@ -1,6 +1,11 @@
 spring:
   liquibase:
-    change-log: classpath:test-changelog.xml
+    change-log: classpath:namespace-test-changelog.xml
+
+konfigyr:
+  invitations:
+    cleanup:
+      cron: '-'
 
 logging:
   level:

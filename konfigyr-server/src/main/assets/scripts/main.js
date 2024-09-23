@@ -3,10 +3,9 @@ import '@github/auto-check-element';
 import '@primer/live-region-element';
 
 /* Internal libraries */
-import { assert } from './debug';
+import './dialog';
 import './forms';
+import './notifications';
 
 /* Konfigyr Styles */
 import '../styles/konfigyr.scss';
-
-assert(true, 'Passing');

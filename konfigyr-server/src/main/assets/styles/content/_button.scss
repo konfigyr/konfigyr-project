@@ -44,7 +44,7 @@ button,
   box-shadow: var(--konfigyr-box-shadow);
   color: var(--konfigyr-color);
   font-weight: var(--konfigyr-font-weight);
-  font-size: var(--konfigyr-font-size, 1rem);
+  font-size: var(--konfigyr-button-font-size, 0.9rem);
   line-height: var(--konfigyr-line-height);
   text-align: center;
   text-decoration: none;
@@ -122,6 +122,29 @@ button,
   }
 }
 
+// Danger
+:is(button, [type="submit"], [type="button"], [role="button"]).danger,
+[type="reset"],
+[type="file"]::file-selector-button {
+  --konfigyr-background-color: var(--konfigyr-danger-background);
+  --konfigyr-border-color: var(--konfigyr-danger-border);
+  --konfigyr-color: var(--konfigyr-danger-inverse);
+  cursor: pointer;
+
+  &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+    --konfigyr-background-color: var(--konfigyr-danger-hover-background);
+    --konfigyr-border-color: var(--konfigyr-danger-hover-border);
+    --konfigyr-color: var(--konfigyr-danger-inverse);
+  }
+
+  &:focus,
+  &:is([aria-current]:not([aria-current="false"])):focus {
+    --konfigyr-box-shadow:
+            var(--konfigyr-button-hover-box-shadow),
+            0 0 0 var(--konfigyr-outline-width) var(--konfigyr-danger-focus);
+  }
+}
+
 // Outline (primary)
 :is(button, [type="submit"], [type="button"], [role="button"]).outline,
 [type="reset"].outline {
@@ -156,6 +179,17 @@ button,
   &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
     --konfigyr-color: var(--konfigyr-contrast-hover);
     --konfigyr-border-color: var(--konfigyr-contrast-hover);
+  }
+}
+
+// Outline (danger)
+:is(button, [type="submit"], [type="button"], [role="button"]).outline.danger {
+  --konfigyr-color: var(--konfigyr-danger);
+  --konfigyr-border-color: var(--konfigyr-danger);
+
+  &:is([aria-current]:not([aria-current="false"]), :hover, :active, :focus) {
+    --konfigyr-color: var(--konfigyr-danger-hover);
+    --konfigyr-border-color: var(--konfigyr-danger-hover);
   }
 }
 

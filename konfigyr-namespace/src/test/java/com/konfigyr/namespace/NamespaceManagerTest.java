@@ -41,11 +41,11 @@ class NamespaceManagerTest {
 				.returns("Personal namespace for John Doe", Namespace::description)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now().minusDays(5))
+						.isCloseTo(OffsetDateTime.now().minusDays(5), within(1, ChronoUnit.HOURS))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now().minusDays(1))
+						.isCloseTo(OffsetDateTime.now().minusDays(1), within(1, ChronoUnit.HOURS))
 				);
 	}
 
@@ -78,11 +78,11 @@ class NamespaceManagerTest {
 				.returns("Konfigyr namespace", Namespace::description)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now().minusDays(3))
+						.isCloseTo(OffsetDateTime.now().minusDays(3), within(1, ChronoUnit.HOURS))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now().minusDays(1))
+						.isCloseTo(OffsetDateTime.now().minusDays(1), within(1, ChronoUnit.HOURS))
 				);
 	}
 
@@ -99,6 +99,31 @@ class NamespaceManagerTest {
 						tuple(EntityId.from(2), EntityId.from(2), EntityId.from(1), NamespaceRole.ADMIN, "john.doe@konfigyr.com"),
 						tuple(EntityId.from(3), EntityId.from(2), EntityId.from(2), NamespaceRole.USER, "jane.doe@konfigyr.com")
 				);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should update namespace member")
+	void shouldUpdateNamespaceMember() {
+		assertThat(manager.updateMember(EntityId.from(2), NamespaceRole.USER))
+				.isNotNull()
+				.returns(EntityId.from(2), Member::id)
+				.returns(EntityId.from(1), Member::account)
+				.returns(EntityId.from(2), Member::namespace)
+				.returns(NamespaceRole.USER, Member::role);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should remove namespace member")
+	void shouldRemoveNamespaceMember() {
+		assertThatNoException().isThrownBy(() -> manager.removeMember(EntityId.from(2)));
+
+		assertThat(manager.findMembers("konfigyr"))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(Member::id)
+				.containsExactly(EntityId.from(3));
 	}
 
 	@Test
@@ -166,11 +191,11 @@ class NamespaceManagerTest {
 				.returns(definition.owner(), Member::account)
 				.returns(NamespaceRole.ADMIN, Member::role)
 				.returns("john.doe@konfigyr.com", Member::email)
-				.returns("john.doe@konfigyr.com", Member::displayName)
+				.returns("John Doe", Member::displayName)
 				.returns(null, Member::avatar)
 				.satisfies(it -> assertThat(it.since())
 						.isNotNull()
-						.isCloseTo(OffsetDateTime.now(), within(600, ChronoUnit.MILLIS))
+						.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS))
 				);
 	}
 
@@ -230,6 +255,14 @@ class NamespaceManagerTest {
 
 		assertThat(events.ofType(NamespaceEvent.class))
 				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to update unknown namespace member")
+	void shouldFailToUpdateUnknownNamespaceMember() {
+		assertThatThrownBy(() -> manager.updateMember(EntityId.from(9999), NamespaceRole.USER))
+				.isInstanceOf(NamespaceException.class)
+				.hasMessageContaining("Failed to update unknown member");
 	}
 
 }

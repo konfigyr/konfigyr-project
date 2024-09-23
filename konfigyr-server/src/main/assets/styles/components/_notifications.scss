@@ -1,0 +1,72 @@
+@keyframes notification-show {
+  0% {
+    opacity: 0;
+    transform: translateY(25%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes notification-hide {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(25%);
+  }
+}
+
+.notifications {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  pointer-events: none;
+  box-sizing: border-box;
+  padding: var(--konfigyr-spacing);
+
+  .notification {
+    display: grid;
+    align-items: center;
+    grid-template-columns: auto auto;
+    grid-gap: var(--konfigyr-notification-spacing-vertical);
+    position: relative;
+    overflow: hidden;
+    pointer-events: auto;
+    background-color: var(--konfigyr-background-color);
+    box-shadow: var(--konfigyr-notification-box-shadow);
+    padding: var(--konfigyr-notification-spacing-vertical) var(--konfigyr-notification-spacing-horizontal);
+    border-radius: var(--konfigyr-notification-border-radius);
+    transform: translateY(150%);
+    max-width: 300px;
+
+    .icon {
+      color: var(--konfigyr-notification-icon-color);
+    }
+
+    p {
+      --konfigyr-font-size: var(--konfigyr-notification-font-size);
+      --konfigyr-color: var(--konfigyr-notification-text-color);
+
+      margin-bottom: 0;
+    }
+
+    &.show {
+      animation: notification-show 0.4s forwards;
+    }
+
+    &.hide {
+      animation: notification-hide 0.3s forwards;
+    }
+  }
+}
