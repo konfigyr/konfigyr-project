@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.HtmlUtils;
 
 /**
  * Class used to test {@link PreAuthorize} annotations with our custom implementation of
@@ -26,7 +27,7 @@ public class AuthorizationTestController {
 	@PreAuthorize("isMember(#namespace)")
 	@GetMapping("/authorization/{namespace}/members")
 	public String members(@PathVariable @NonNull String namespace) {
-		return namespace;
+		return HtmlUtils.htmlEscape(namespace);
 	}
 
 	@NonNull
@@ -39,7 +40,7 @@ public class AuthorizationTestController {
 	@PreAuthorize("isAdmin(#namespace)")
 	@GetMapping("/authorization/{namespace}/admins")
 	public String admins(@PathVariable @NonNull String namespace) {
-		return namespace;
+		return HtmlUtils.htmlEscape(namespace);
 	}
 
 }
