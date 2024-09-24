@@ -4,6 +4,7 @@ import com.konfigyr.account.AccountStatus;
 import com.konfigyr.test.TestAccounts;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -27,11 +28,14 @@ class AccountPrincipalTest {
 				.returns(account.memberships(), AccountPrincipal::getMemberships)
 				.returns(Map.of(), AccountPrincipal::getAttributes)
 				.returns("", UserDetails::getPassword)
-				.returns(AuthorityUtils.createAuthorityList("admin"), UserDetails::getAuthorities)
 				.returns(true, UserDetails::isEnabled)
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
 				.returns(true, UserDetails::isCredentialsNonExpired)
+				.satisfies(it -> assertThat(it.getAuthorities())
+						.extracting(GrantedAuthority::getAuthority)
+						.containsExactlyInAnyOrder("konfigyr:admin", "john-doe:admin")
+				)
 				.hasSameHashCodeAs(AccountPrincipal.from(account))
 				.isEqualTo(AccountPrincipal.from(account));
 	}
@@ -51,11 +55,14 @@ class AccountPrincipalTest {
 				.returns(account.memberships(), AccountPrincipal::getMemberships)
 				.returns(Map.of(), AccountPrincipal::getAttributes)
 				.returns("", UserDetails::getPassword)
-				.returns(AuthorityUtils.createAuthorityList("admin"), UserDetails::getAuthorities)
 				.returns(false, UserDetails::isEnabled)
 				.returns(false, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
 				.returns(false, UserDetails::isCredentialsNonExpired)
+				.satisfies(it -> assertThat(it.getAuthorities())
+						.extracting(GrantedAuthority::getAuthority)
+						.containsExactlyInAnyOrder("konfigyr:user")
+				)
 				.hasSameHashCodeAs(AccountPrincipal.from(account))
 				.isEqualTo(AccountPrincipal.from(account));
 	}
@@ -75,11 +82,14 @@ class AccountPrincipalTest {
 				.returns(Map.of(), AccountPrincipal::getAttributes)
 				.returns(account.memberships(), AccountPrincipal::getMemberships)
 				.returns("", UserDetails::getPassword)
-				.returns(AuthorityUtils.createAuthorityList("admin"), UserDetails::getAuthorities)
 				.returns(false, UserDetails::isEnabled)
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(false, UserDetails::isAccountNonExpired)
 				.returns(false, UserDetails::isCredentialsNonExpired)
+				.satisfies(it -> assertThat(it.getAuthorities())
+						.extracting(GrantedAuthority::getAuthority)
+						.containsExactlyInAnyOrder("konfigyr:admin", "john-doe:admin")
+				)
 				.hasSameHashCodeAs(AccountPrincipal.from(account))
 				.isEqualTo(AccountPrincipal.from(account));
 	}
@@ -99,11 +109,14 @@ class AccountPrincipalTest {
 				.returns(account.memberships(), AccountPrincipal::getMemberships)
 				.returns(Map.of(), AccountPrincipal::getAttributes)
 				.returns("", UserDetails::getPassword)
-				.returns(AuthorityUtils.createAuthorityList("admin"), UserDetails::getAuthorities)
 				.returns(false, UserDetails::isEnabled)
 				.returns(false, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
 				.returns(false, UserDetails::isCredentialsNonExpired)
+				.satisfies(it -> assertThat(it.getAuthorities())
+						.extracting(GrantedAuthority::getAuthority)
+						.containsExactlyInAnyOrder("konfigyr:admin", "john-doe:admin")
+				)
 				.hasSameHashCodeAs(AccountPrincipal.from(account))
 				.isEqualTo(AccountPrincipal.from(account));
 	}
