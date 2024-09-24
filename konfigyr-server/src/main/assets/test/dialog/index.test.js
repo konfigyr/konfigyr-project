@@ -7,9 +7,19 @@ const render = () => {
         <button data-testid="open-dialog" data-show-dialog="test-dialog">Open dialog</button>
         <button data-testid="close-dialog" data-close-dialog="test-dialog">Close dialog</button>
         
+        <button data-testid="disabled-open-dialog" disabled data-show-dialog="test-dialog">Open dialog</button>
+        <button data-testid="disabled-close-dialog" aria-disabled="true" data-close-dialog="test-dialog">Close dialog</button>
+        
+        <button data-testid="open-non-dialog" data-show-dialog="non-dialog">Open dialog</button>
+        <button data-testid="close-non-dialog" data-close-dialog="non-dialog">Close dialog</button>
+        
         <dialog id="test-dialog" data-testid="dialog" aria-modal="true">
             Dialog
         </dialog>
+        
+        <div id="non-dialog" data-testid="non-dialog">
+            Non dialog
+        </div>
     `;
 
     return container;
@@ -59,6 +69,28 @@ describe('dialog', () => {
         });
     });
 
+    it('should not open dialog when button is disabled', async () => {
+        const button = getByTestId(container, 'disabled-open-dialog');
+        const dialog = getByTestId(container, 'dialog');
+
+        button.click();
+
+        await waitFor(() => {
+            expect(dialog.open).toBeFalsy();
+        });
+    });
+
+    it('should not open dialog when dialog element is invalid', async () => {
+        const button = getByTestId(container, 'open-non-dialog');
+
+        button.click();
+
+        await waitFor(() => {
+            expect(getByTestId(container, 'dialog').open).toBeFalsy();
+            expect(getByTestId(container, 'non-dialog').open).toBeFalsy();
+        });
+    });
+
     it('should close dialog', async () => {
         const button = getByTestId(container, 'close-dialog');
         const dialog = getByTestId(container, 'dialog');
@@ -75,6 +107,33 @@ describe('dialog', () => {
             expect(dialog.open).toBeFalsy();
             expect(dialog).not.toHaveAttribute('open');
             expect(dialog.close).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    it('should not close dialog when button is disabled', async () => {
+        const button = getByTestId(container, 'disabled-close-dialog');
+        const dialog = getByTestId(container, 'dialog');
+
+        dialog.showModal();
+
+        button.click();
+
+        await waitFor(() => {
+            expect(dialog.open).toBeTruthy();
+        });
+    });
+
+    it('should not close dialog when dialog element is invalid', async () => {
+        const button = getByTestId(container, 'open-non-dialog');
+        const dialog = getByTestId(container, 'dialog');
+
+        dialog.showModal();
+
+        button.click();
+
+        await waitFor(() => {
+            expect(dialog.open).toBeTruthy();
+            expect(getByTestId(container, 'non-dialog').open).toBeFalsy();
         });
     });
 
