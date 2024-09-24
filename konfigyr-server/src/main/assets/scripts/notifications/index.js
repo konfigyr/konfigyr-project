@@ -17,7 +17,7 @@ function register(notification) {
 
     notification.classList.add('show');
 
-    notification[timer] = setTimeout(() => console.log('REMOVING') || remove(notification), timeout);
+    notification[timer] = setTimeout(() => remove(notification), timeout);
 }
 
 /**
