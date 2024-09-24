@@ -109,6 +109,7 @@ class NamespaceControllerTest {
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.param("member", EntityId.from(2).serialize())
 				.param("role", NamespaceRole.USER.name())
+				.with(authentication(TestPrincipals.john()))
 				.with(csrf());
 
 		mvc.perform(request)
@@ -127,12 +128,28 @@ class NamespaceControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to update namespace member for non-admins")
+	void blockUpdateNamespaceMemberForNonAdmins() throws Exception {
+		final var request = post("/namespace/konfigyr/members/update")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.param("member", EntityId.from(2).serialize())
+				.param("role", NamespaceRole.USER.name())
+				.with(authentication(TestPrincipals.jane()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should remove namespace member")
 	void shouldRemoveNamespaceMember() throws Exception {
 		var request = post("/namespace/konfigyr/members/remove")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.param("member", EntityId.from(2).serialize())
+				.with(authentication(TestPrincipals.john()))
 				.with(csrf());
 
 		mvc.perform(request)
@@ -150,9 +167,26 @@ class NamespaceControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to remove namespace member for non-admins")
+	void blockRemoveNamespaceMemberForNonAdmins() throws Exception {
+		final var request = post("/namespace/konfigyr/members/remove")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.param("member", EntityId.from(2).serialize())
+				.with(authentication(TestPrincipals.jane()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
 	@DisplayName("should render namespace invitations page")
 	void shouldRenderNamespaceInvitations() throws Exception {
-		mvc.perform(get("/namespace/konfigyr/members/invitations"))
+		final var request = get("/namespace/konfigyr/members/invitations")
+				.with(authentication(TestPrincipals.john()));
+
+		mvc.perform(request)
 				.andDo(log())
 				.andExpect(status().isOk())
 				.andExpect(view().name("namespaces/invitations"))
@@ -171,6 +205,17 @@ class NamespaceControllerTest {
 						.asInstanceOf(InstanceOfAssertFactories.iterable(Invitation.class))
 						.isEmpty()
 				)));
+	}
+
+	@Test
+	@DisplayName("should fail to render namespace invitations page for non-admins")
+	void shouldFailToRenderNamespaceInvitationsForMembers() throws Exception {
+		final var request = get("/namespace/konfigyr/members/invitations")
+				.with(authentication(TestPrincipals.jane()));
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
 	}
 
 	@Test
@@ -202,7 +247,9 @@ class NamespaceControllerTest {
 				.containsExactly(tuple(TestAccounts.john().build().email(), "muad.dib@konfigyr.com", NamespaceRole.USER));
 
 		// make sure that invitation is also rendered in the invitations page
-		mvc.perform(get("/namespace/konfigyr/members/invitations"))
+		mvc.perform(get("/namespace/konfigyr/members/invitations")
+						.with(authentication(TestPrincipals.john()))
+				)
 				.andDo(log())
 				.andExpect(status().isOk())
 				.andExpect(view().name("namespaces/invitations"))
@@ -216,7 +263,9 @@ class NamespaceControllerTest {
 		final Invitation invitation = invitations.stream().findFirst().orElseThrow();
 
 		// make sure that invitation page works with the generated key
-		mvc.perform(get("/namespace/konfigyr/members/invitation/{key}", invitation.key()))
+		mvc.perform(get("/namespace/konfigyr/members/invitation/{key}", invitation.key())
+						.with(authentication(TestPrincipals.jane()))
+				)
 				.andDo(log())
 				.andExpect(status().isOk())
 				.andExpect(view().name("namespaces/invitation"))
@@ -225,10 +274,28 @@ class NamespaceControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to send invitations for non-admins")
+	void shouldFailToSendInvitationsForMembers() throws Exception {
+		final var request = post("/namespace/konfigyr/members")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.param("email", "muad.dib@konfigyr.com")
+				.param("role", NamespaceRole.USER.name())
+				.with(authentication(TestPrincipals.jane()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should render an empty invitation page when key is expired")
 	void shouldRenderEmptyInvitationPage() throws Exception {
-		mvc.perform(get("/namespace/konfigyr/members/invitation/expired-key"))
+		final var request = get("/namespace/konfigyr/members/invitation/expired-key")
+				.with(authentication(TestPrincipals.john()));
+
+		mvc.perform(request)
 				.andDo(log())
 				.andExpect(status().isOk())
 				.andExpect(view().name("namespaces/invitation"))

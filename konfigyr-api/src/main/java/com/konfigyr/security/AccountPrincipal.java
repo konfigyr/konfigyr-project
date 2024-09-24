@@ -4,6 +4,7 @@ import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountStatus;
 import com.konfigyr.account.Memberships;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.authority.MembershipAuthoritiesConverter;
 import lombok.*;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
@@ -11,7 +12,6 @@ import org.jmolecules.ddd.types.Identifiable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.util.Assert;
@@ -90,6 +90,9 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<E
 	@NonNull
 	Memberships memberships;
 
+	@NonNull
+	Collection<? extends GrantedAuthority> authorities;
+
 	/**
 	 * Creates a new {@link AccountPrincipal} using the attributes from the {@link Account} entity.
 	 *
@@ -108,6 +111,7 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<E
 				.name(account.displayName())
 				.avatar(account.avatar())
 				.memberships(account.memberships())
+				.authorities(MembershipAuthoritiesConverter.getInstance().convert(account.memberships()))
 				.build();
 	}
 
@@ -198,11 +202,6 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<E
 	@Override
 	public Map<String, Object> getAttributes() {
 		return EMPTY_ATTRIBUTES;
-	}
-
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return AuthorityUtils.createAuthorityList("admin");
 	}
 
 }

@@ -2,6 +2,8 @@ package com.konfigyr.security;
 
 import com.konfigyr.account.AccountManager;
 import com.konfigyr.crypto.KeysetOperationsFactory;
+import com.konfigyr.security.access.KonfigyrMethodSecurityExpressionHandler;
+import com.konfigyr.security.access.KonfigyrWebSecurityExpressionHandler;
 import com.konfigyr.security.oauth.AuthorizedClientService;
 import com.konfigyr.security.oauth.PrincipalAccountOAuth2UserService;
 import com.konfigyr.security.oauth.OAuthKeysets;
@@ -15,6 +17,9 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.NoOpCache;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.access.expression.SecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
@@ -23,6 +28,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.FilterInvocation;
 
 /**
  * Spring autoconfiguration that would register required OAuth Client Spring Beans to interact with
@@ -67,4 +73,20 @@ public class SecurityAutoConfiguration {
 				clientRegistrationRepository);
 	}
 
+	@Bean
+	static MethodSecurityExpressionHandler konfigyrMethodSecurityExpressionHandler() {
+		return new KonfigyrMethodSecurityExpressionHandler();
+	}
+
+	@Bean
+	static SecurityExpressionHandler<FilterInvocation> konfigyrWebSecurityExpressionHandler() {
+		return new KonfigyrWebSecurityExpressionHandler();
+	}
+
+	@Bean
+	static WebSecurityCustomizer konfigyrSecurityCustomizer(
+			SecurityExpressionHandler<FilterInvocation> konfigyrWebSecurityExpressionHandler
+	) {
+		return security -> security.expressionHandler(konfigyrWebSecurityExpressionHandler);
+	}
 }
