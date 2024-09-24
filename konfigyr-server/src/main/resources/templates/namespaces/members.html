@@ -144,7 +144,7 @@
                 </form>
 
                 <article th:each="member : ${members}"
-                         th:include="~{namespaces/fragments/members :: member-information(
+                         th:insert="~{namespaces/fragments/members :: member-information(
                             namespace=${namespace}, member=${member}
                          )}">
                 </article>

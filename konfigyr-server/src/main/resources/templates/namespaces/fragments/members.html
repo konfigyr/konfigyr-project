@@ -25,7 +25,7 @@
         </div>
 
         <div sec:authorize="isAdmin(#vars.namespace.slug)"
-            th:include="~{namespaces/fragments/members :: member-actions(namespace=${namespace}, member=${member})}">
+            th:insert="~{namespaces/fragments/members :: member-actions(namespace=${namespace}, member=${member})}">
 
         </div>
     </div>

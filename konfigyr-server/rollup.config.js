@@ -7,7 +7,7 @@ import sass from 'rollup-plugin-sass';
 import path from 'path';
 
 const project = path.resolve('src/main/resources');
-const assets = path.resolve('src/main/assets')
+const assets = path.resolve('src/main/assets');
 const dist = path.resolve('build/resources/main/dist');
 
 export default {
