@@ -33,3 +33,4 @@ logging:
     com.konfigyr: DEBUG
     org.jooq: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.test.web.servlet.result: DEBUG

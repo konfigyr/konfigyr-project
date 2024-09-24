@@ -104,6 +104,8 @@ public class ProvisioningIntegrationTest {
 				.param("email", "muad.dib@atreides.com")
 				.param("namespace", "Atreides")
 				.param("type", NamespaceType.TEAM.name())
+				.param("firstName", "Muad Dib")
+				.param("lastName", "Atreides")
 				.with(csrf());
 
 		final var result = mvc.perform(request)
@@ -118,8 +120,8 @@ public class ProvisioningIntegrationTest {
 		assertThat(account)
 				.returns("muad.dib@atreides.com", Account::email)
 				.returns(AccountStatus.ACTIVE, Account::status)
-				.returns(null, Account::firstName)
-				.returns(null, Account::lastName);
+				.returns("Muad Dib", Account::firstName)
+				.returns("Atreides", Account::lastName);
 
 		assertThat(namespaceManager.findBySlug("atreides"))
 				.isNotEmpty()
@@ -150,6 +152,8 @@ public class ProvisioningIntegrationTest {
 				.param("email", "john.doe@konfigyr.com")
 				.param("namespace", "john.doe")
 				.param("type", NamespaceType.PERSONAL.name())
+				.param("firstName", "John")
+				.param("lastName", "Doe")
 				.with(csrf());
 
 		mvc.perform(request)
@@ -168,6 +172,8 @@ public class ProvisioningIntegrationTest {
 				.param("email", "ci@konfigyr.com")
 				.param("namespace", "konfigyr")
 				.param("type", NamespaceType.TEAM.name())
+				.param("firstName", "CI")
+				.param("lastName", "Konfigyr")
 				.with(csrf());
 
 		mvc.perform(request)
@@ -186,6 +192,8 @@ public class ProvisioningIntegrationTest {
 				.param("email", "ci@konfigyr.com")
 				.param("namespace", RandomStringUtils.randomAlphanumeric(300))
 				.param("type", NamespaceType.TEAM.name())
+				.param("firstName", "CI")
+				.param("lastName", "Konfigyr")
 				.with(csrf());
 
 		mvc.perform(request)
