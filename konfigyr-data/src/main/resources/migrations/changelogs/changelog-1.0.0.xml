@@ -325,7 +325,10 @@
             <column name="sender_id" type="bigint">
                 <constraints nullable="true" />
             </column>
-            <column name="email" type="varchar(255)">
+            <column name="recipient_id" type="bigint">
+                <constraints nullable="true" />
+            </column>
+            <column name="recipient_email" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
             <column name="role" type="varchar(10)">
@@ -360,9 +363,18 @@
                 onDelete="SET NULL"
         />
 
+        <addForeignKeyConstraint
+                baseTableName="invitations"
+                baseColumnNames="recipient_id"
+                constraintName="fk_invitation_recipient"
+                referencedTableName="accounts"
+                referencedColumnNames="id"
+                onDelete="SET NULL"
+        />
+
         <addUniqueConstraint
                 tableName="invitations"
-                columnNames="namespace_id,email"
+                columnNames="namespace_id,recipient_email"
                 constraintName="unique_namespace_invitation"
         />
     </changeSet>

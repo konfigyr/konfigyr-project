@@ -57,7 +57,16 @@
                         </thead>
                         <tbody>
                             <tr th:each="invitation : ${invitations}">
-                                <td th:text="${invitation.recipient}">john.doe@konfigyr.com</td>
+                                <td>
+                                    <th:block th:if="${invitation.recipient.exists}">
+                                        <strong class="d-block" th:text="${invitation.recipient.name}">John Doe</strong>
+                                        <small class="muted" th:text="${invitation.recipient.email}">john.doe@konfigyr.com</small>
+                                    </th:block>
+
+                                    <th:block th:unless="${invitation.recipient.exists}" th:text="${invitation.recipient.email}">
+                                        john.doe@konfigyr.com
+                                    </th:block>
+                                </td>
                                 <td>
                                     <span class="badge" th:text="${#messages.msg('namespace.roles.' + invitation.role)}">
                                         User

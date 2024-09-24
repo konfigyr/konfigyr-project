@@ -80,6 +80,21 @@ class SettableRecordTest {
 	}
 
 	@Test
+	@DisplayName("should set a value with functional converter")
+	void setConvertableValueWithFunction() {
+		final var timestamp = Instant.now();
+
+		final var record = SettableRecord.of(ACCOUNTS.newRecord())
+				.set(ACCOUNTS.LAST_LOGIN_AT, timestamp, it -> it.atOffset(ZoneOffset.UTC));
+
+		assertThat(record.get())
+				.returns(true, Record::changed)
+				.returns(false, it -> it.changed(ACCOUNTS.ID))
+				.returns(false, it -> it.changed(ACCOUNTS.STATUS))
+				.returns(timestamp.atOffset(ZoneOffset.UTC), it -> it.get(ACCOUNTS.LAST_LOGIN_AT));
+	}
+
+	@Test
 	@DisplayName("should fail to set a value to a field that does not exist in the record")
 	void failToSetUnknownField() {
 		assertThatThrownBy(() -> SettableRecord.of(context.newRecord()).set(ACCOUNTS.ID, 1L))

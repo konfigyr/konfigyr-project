@@ -55,12 +55,86 @@ class InvitationsTest {
 		assertThat(invitation)
 				.isNotNull()
 				.returns(invite.role(), Invitation::role)
-				.returns(invite.recipient(), Invitation::recipient)
 				.satisfies(it -> assertThat(it.key())
 						.isNotBlank()
 						.hasSize(16)
 						.isAlphanumeric()
 						.isPrintable()
+				)
+				.satisfies(it -> assertThat(it.recipient())
+						.returns(invite.recipient(), Invitation.Recipient::email)
+						.returns(false, Invitation.Recipient::exists)
+						.returns(null, Invitation.Recipient::id)
+						.returns(null, Invitation.Recipient::name)
+				)
+				.satisfies(it -> assertThat(it.sender())
+						.isNotNull()
+						.returns(EntityId.from(1), Invitation.Sender::id)
+						.returns("john.doe@konfigyr.com", Invitation.Sender::email)
+						.returns(FullName.of("John", "Doe"), Invitation.Sender::name)
+				)
+				.satisfies(it -> assertThat(it.createdAt())
+						.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS))
+				)
+				.satisfies(it -> assertThat(it.expiryDate())
+						.isCloseTo(OffsetDateTime.now().plusDays(7), within(1, ChronoUnit.SECONDS))
+				);
+
+		events.assertThat()
+				.contains(Mail.class)
+				.matching(mail -> {
+					assertThat(mail)
+							.returns("mail/invitation", Mail::template)
+							.satisfies(it -> assertThat(it.subject())
+									.returns("mail.invitation", Subject::value)
+									.extracting(Subject::arguments)
+									.asInstanceOf(InstanceOfAssertFactories.array(Object[].class))
+									.containsExactly("Konfigyr")
+							)
+							.satisfies(it -> assertThat(it.recipients())
+									.containsExactly(Recipient.to(invite.recipient()))
+							)
+							.satisfies(it -> assertThat(it.attributes())
+									.containsEntry("sender", "John Doe")
+									.containsEntry("namespace", "Konfigyr")
+									.containsEntry("namespaceLink", "http://localhost/konfigyr/artifacts")
+									.containsEntry("link", "http://localhost/konfigyr/invitation/" + invitation.key())
+									.containsEntry("expiration", 7L)
+							);
+
+					return true;
+				});
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should create invitation to an existing account and send invitation email to recipient")
+	void shouldCreateAndSendInvitationToExistingAccount(AssertablePublishedEvents events) {
+		final var account = createAccount("peter.vries@arakis.com", "Piter", "De Vries");
+
+		final var invite = new Invite(
+				EntityId.from(2),
+				EntityId.from(1),
+				"peter.vries@arakis.com",
+				NamespaceRole.USER
+		);
+
+		final var invitation = invitations.create(invite);
+
+		assertThat(invitation)
+				.isNotNull()
+				.returns(invite.role(), Invitation::role)
+				.satisfies(it -> assertThat(it.key())
+						.isNotBlank()
+						.hasSize(16)
+						.isAlphanumeric()
+						.isPrintable()
+				)
+				.satisfies(it -> assertThat(it.recipient())
+						.returns(invite.recipient(), Invitation.Recipient::email)
+						.returns(true, Invitation.Recipient::exists)
+						.returns(account, Invitation.Recipient::id)
+						.returns(FullName.of("Piter", "De Vries"), Invitation.Recipient::name)
 				)
 				.satisfies(it -> assertThat(it.sender())
 						.isNotNull()
@@ -210,9 +284,14 @@ class InvitationsTest {
 				.get()
 				.returns("qT6uq2ZP1Yv2bWmt", Invitation::key)
 				.returns(namespace.get().id(), Invitation::namespace)
-				.returns("invitee@konfigyr.com", Invitation::recipient)
 				.returns(NamespaceRole.ADMIN, Invitation::role)
 				.returns(false, Invitation::isExpired)
+				.satisfies(it -> assertThat(it.recipient())
+						.returns("invitee@konfigyr.com", Invitation.Recipient::email)
+						.returns(false, Invitation.Recipient::exists)
+						.returns(null, Invitation.Recipient::id)
+						.returns(null, Invitation.Recipient::name)
+				)
 				.satisfies(it -> assertThat(it.sender())
 						.isNotNull()
 						.returns(EntityId.from(1), Invitation.Sender::id)
@@ -238,7 +317,12 @@ class InvitationsTest {
 				.get()
 				.returns("B1LPctaRXp6sxRo7", Invitation::key)
 				.returns(namespace.get().id(), Invitation::namespace)
-				.returns("expiring@konfigyr.com", Invitation::recipient)
+				.satisfies(it -> assertThat(it.recipient())
+						.returns("expiring@konfigyr.com", Invitation.Recipient::email)
+						.returns(false, Invitation.Recipient::exists)
+						.returns(null, Invitation.Recipient::id)
+						.returns(null, Invitation.Recipient::name)
+				)
 				.returns(NamespaceRole.USER, Invitation::role)
 				.returns(true, Invitation::isExpired)
 				.returns(null, Invitation::sender)

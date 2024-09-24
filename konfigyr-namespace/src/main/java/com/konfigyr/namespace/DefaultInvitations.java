@@ -5,7 +5,6 @@ import com.konfigyr.data.tables.Accounts;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.jooq.SettableRecord;
 import com.konfigyr.mail.Mail;
-import com.konfigyr.support.FullName;
 import com.konfigyr.support.KeyGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.konfigyr.data.tables.Invitations.INVITATIONS;
@@ -98,18 +98,23 @@ class DefaultInvitations implements Invitations {
 					"Can not create invitations for personal namespaces");
 		}
 
-		if (context.member()) {
+		if (context.isMember()) {
 			throw new InvitationException(InvitationException.ErrorCode.ALREADY_INVITED,
 					"Can not create invitation as the recipient is already a namespace member");
 		}
 
 		final String key = this.context.insertInto(INVITATIONS)
-				.set(INVITATIONS.KEY, KeyGenerator.getInstance().generateKey())
-				.set(INVITATIONS.NAMESPACE_ID, invite.namespace().get())
-				.set(INVITATIONS.SENDER_ID, invite.sender().get())
-				.set(INVITATIONS.EMAIL, invite.recipient())
-				.set(INVITATIONS.ROLE, invite.role().name())
-				.set(INVITATIONS.EXPIRY_DATE, OffsetDateTime.now().plus(TTL))
+				.set(
+						SettableRecord.of(INVITATIONS)
+								.set(INVITATIONS.KEY, KeyGenerator.getInstance().generateKey())
+								.set(INVITATIONS.NAMESPACE_ID, invite.namespace().get())
+								.set(INVITATIONS.SENDER_ID, context.sender().id(), EntityId::get)
+								.set(INVITATIONS.RECIPIENT_ID, context.recipient().id(), EntityId::get)
+								.set(INVITATIONS.RECIPIENT_EMAIL, context.recipient().email())
+								.set(INVITATIONS.ROLE, invite.role().name())
+								.set(INVITATIONS.EXPIRY_DATE, OffsetDateTime.now().plus(TTL))
+								.get()
+				)
 				.onConflictOnConstraint(Keys.UNIQUE_NAMESPACE_INVITATION.constraint())
 				.doUpdate()
 				.set(INVITATIONS.SENDER_ID, invite.sender().get())
@@ -207,11 +212,11 @@ class DefaultInvitations implements Invitations {
 		final Mail mail = Mail.builder()
 				.subject("mail.invitation", context.name())
 				.template("mail/invitation")
-				.to(invitation.recipient())
+				.to(invitation.recipient().email())
 				.attribute("invitation", invitation)
 				.attribute("namespace", context.name())
 				.attribute("namespaceLink", namespaceLink)
-				.attribute("sender", context.sender().get())
+				.attribute("sender", context.sender().name().get())
 				.attribute("expiration", TTL.toDays())
 				.attribute("link", invitationLink)
 				.build();
@@ -229,18 +234,23 @@ class DefaultInvitations implements Invitations {
 		return context
 				.select(
 						NAMESPACES.ID,
-						ACCOUNTS.ID,
-						ACCOUNTS.EMAIL,
-						ACCOUNTS.FIRST_NAME,
-						ACCOUNTS.LAST_NAME,
+						SENDER_ACCOUNTS.ID,
+						SENDER_ACCOUNTS.EMAIL,
+						SENDER_ACCOUNTS.FIRST_NAME,
+						SENDER_ACCOUNTS.LAST_NAME,
+						RECIPIENT_ACCOUNTS.ID,
+						RECIPIENT_ACCOUNTS.FIRST_NAME,
+						RECIPIENT_ACCOUNTS.LAST_NAME,
 						INVITATIONS.KEY,
-						INVITATIONS.EMAIL,
+						INVITATIONS.RECIPIENT_EMAIL,
 						INVITATIONS.ROLE,
 						INVITATIONS.CREATED_AT,
 						INVITATIONS.EXPIRY_DATE)
 				.from(INVITATIONS)
-				.fullOuterJoin(ACCOUNTS)
-				.on(ACCOUNTS.ID.eq(INVITATIONS.SENDER_ID))
+				.fullOuterJoin(SENDER_ACCOUNTS)
+				.on(SENDER_ACCOUNTS.ID.eq(INVITATIONS.SENDER_ID))
+				.fullOuterJoin(RECIPIENT_ACCOUNTS)
+				.on(RECIPIENT_ACCOUNTS.ID.eq(INVITATIONS.RECIPIENT_ID))
 				.innerJoin(NAMESPACES)
 				.on(NAMESPACES.ID.eq(INVITATIONS.NAMESPACE_ID))
 				.where(condition);
@@ -252,18 +262,23 @@ class DefaultInvitations implements Invitations {
 						NAMESPACES.SLUG,
 						NAMESPACES.NAME,
 						NAMESPACES.TYPE,
+						SENDER_ACCOUNTS.ID,
+						SENDER_ACCOUNTS.EMAIL,
 						SENDER_ACCOUNTS.FIRST_NAME,
 						SENDER_ACCOUNTS.LAST_NAME,
-						RECIPIENT_ACCOUNTS.ID.isNotNull()
+						RECIPIENT_ACCOUNTS.ID,
+						RECIPIENT_ACCOUNTS.FIRST_NAME,
+						RECIPIENT_ACCOUNTS.LAST_NAME,
+						RECIPIENT_ACCOUNTS.ID.in(NAMESPACE_MEMBERS.ACCOUNT_ID)
 				)
 				.from(NAMESPACE_MEMBERS)
+				/* join sender accounts to retrieve sender information */
 				.innerJoin(SENDER_ACCOUNTS)
 				.on(NAMESPACE_MEMBERS.ACCOUNT_ID.eq(SENDER_ACCOUNTS.ID))
+				/* join recipient accounts to check if recipient is already known */
 				.fullOuterJoin(RECIPIENT_ACCOUNTS)
-				.on(DSL.and(
-						NAMESPACE_MEMBERS.ACCOUNT_ID.eq(RECIPIENT_ACCOUNTS.ID),
-						RECIPIENT_ACCOUNTS.EMAIL.equalIgnoreCase(invite.recipient())
-				))
+				.on(RECIPIENT_ACCOUNTS.EMAIL.equalIgnoreCase(invite.recipient()))
+				/* join namespaces to retrieve namespace information */
 				.innerJoin(NAMESPACES)
 				.on(NAMESPACE_MEMBERS.NAMESPACE_ID.eq(NAMESPACES.ID))
 				.where(DSL.and(
@@ -271,29 +286,44 @@ class DefaultInvitations implements Invitations {
 						NAMESPACE_MEMBERS.NAMESPACE_ID.eq(invite.namespace().get()),
 						NAMESPACE_MEMBERS.ROLE.eq(NamespaceRole.ADMIN.name())
 				))
-				.fetchOptional(NamespaceInvitationContext::create);
+				.fetchOptional(record -> NamespaceInvitationContext.create(record, invite));
 	}
 
 	@Nullable
 	private static Invitation.Sender sender(Record record) {
-		if (record.get(ACCOUNTS.ID) == null) {
+		if (record.get(SENDER_ACCOUNTS.ID) == null) {
 			return null;
 		}
 
 		return new Invitation.Sender(
-				EntityId.from(record.get(ACCOUNTS.ID)),
-				record.get(ACCOUNTS.EMAIL),
-				record.get(ACCOUNTS.FIRST_NAME),
-				record.get(ACCOUNTS.LAST_NAME)
+				EntityId.from(record.get(SENDER_ACCOUNTS.ID)),
+				record.get(SENDER_ACCOUNTS.EMAIL),
+				record.get(SENDER_ACCOUNTS.FIRST_NAME),
+				record.get(SENDER_ACCOUNTS.LAST_NAME)
 		);
 	}
 
+	@NonNull
+	private static Invitation.Recipient recipient(Record record, String email) {
+		if (record.get(RECIPIENT_ACCOUNTS.ID) == null) {
+			return new Invitation.Recipient(email);
+		}
+
+		return new Invitation.Recipient(
+				EntityId.from(record.get(RECIPIENT_ACCOUNTS.ID)),
+				email,
+				record.get(RECIPIENT_ACCOUNTS.FIRST_NAME),
+				record.get(RECIPIENT_ACCOUNTS.LAST_NAME)
+		);
+	}
+
+	@NonNull
 	private static Invitation invitation(Record record) {
 		return Invitation.builder()
 				.key(record.get(INVITATIONS.KEY))
 				.namespace(record.get(NAMESPACES.ID))
 				.sender(sender(record))
-				.recipient(record.get(INVITATIONS.EMAIL))
+				.recipient(recipient(record, record.get(INVITATIONS.RECIPIENT_EMAIL)))
 				.role(NamespaceRole.valueOf(record.get(INVITATIONS.ROLE)))
 				.createdAt(record.get(INVITATIONS.CREATED_AT))
 				.expiryDate(record.get(INVITATIONS.EXPIRY_DATE))
@@ -304,16 +334,18 @@ class DefaultInvitations implements Invitations {
 			@NonNull String slug,
 			@NonNull String name,
 			@NonNull NamespaceType type,
-			@NonNull FullName sender,
-			boolean member
+			@NonNull Invitation.Sender sender,
+			@NonNull Invitation.Recipient recipient,
+			boolean isMember
 	) {
-		static NamespaceInvitationContext create(@NonNull Record record) {
+		static NamespaceInvitationContext create(@NonNull Record record, @NonNull Invite invite) {
 			return new NamespaceInvitationContext(
 					record.get(NAMESPACES.SLUG),
 					record.get(NAMESPACES.NAME),
 					NamespaceType.valueOf(record.get(NAMESPACES.TYPE)),
-					FullName.of(record.get(SENDER_ACCOUNTS.FIRST_NAME), record.get(SENDER_ACCOUNTS.LAST_NAME)),
-					record.get(RECIPIENT_ACCOUNTS.ID.isNotNull())
+					Objects.requireNonNull(DefaultInvitations.sender(record)),
+					DefaultInvitations.recipient(record, invite.recipient()),
+					Boolean.TRUE.equals(record.get(RECIPIENT_ACCOUNTS.ID.in(NAMESPACE_MEMBERS.ACCOUNT_ID)))
 			);
 		}
 	}

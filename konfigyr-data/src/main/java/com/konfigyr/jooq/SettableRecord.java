@@ -7,6 +7,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -89,6 +90,21 @@ public final class SettableRecord implements Supplier<Record> {
 	public <T> SettableRecord set(@NonNull Field<T> field, @NonNull Optional<? extends T> value) {
 		value.ifPresent(it -> delegate.set(field, it));
 		return this;
+	}
+
+	/**
+	 * Set a value into the target {@link Record} for the given {@link Field}.
+	 *
+	 * @param <T> The generic field parameter
+	 * @param <U> The generic value parameter
+	 * @param field The field that should be set
+	 * @param value The value that should be set
+	 * @param converter The converter function used to convert <code>value</code> into the field type
+	 * @return the settable record, never {@literal null}
+	 */
+	@NonNull
+	public <T, U> SettableRecord set(@NonNull Field<T> field, @Nullable U value, @NonNull Function<? super U, ? extends T> converter) {
+		return set(field, Optional.ofNullable(value).map(converter));
 	}
 
 	/**
