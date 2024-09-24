@@ -3,6 +3,7 @@ package com.konfigyr.namespace;
 import com.konfigyr.assertions.AssertMatcher;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.registry.Repository;
+import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.test.TestProfile;
@@ -197,8 +198,8 @@ class NamespaceControllerTest {
 
 		assertThat(invitations)
 				.hasSize(1)
-				.extracting(Invitation::recipient, Invitation::role)
-				.containsExactly(tuple("muad.dib@konfigyr.com", NamespaceRole.USER));
+				.extracting("sender.email", "recipient.email", "role")
+				.containsExactly(tuple(TestAccounts.john().build().email(), "muad.dib@konfigyr.com", NamespaceRole.USER));
 
 		// make sure that invitation is also rendered in the invitations page
 		mvc.perform(get("/namespace/konfigyr/members/invitations"))
