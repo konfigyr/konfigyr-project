@@ -9,11 +9,15 @@ const timer = Symbol('notification-close-timeout');
  * @param {HTMLElement} notification
  */
 function register(notification) {
-    const timeout = parseInt(notification.getAttribute('data-timeout')) || DEFAULT_TIMEOUT;
+    let timeout = parseInt(notification.getAttribute('data-timeout'));
+
+    if (isNaN(timeout)) {
+        timeout = DEFAULT_TIMEOUT;
+    }
 
     notification.classList.add('show');
 
-    notification[timer] = setTimeout(() => remove(notification), timeout);
+    notification[timer] = setTimeout(() => console.log('REMOVING') || remove(notification), timeout);
 }
 
 /**
@@ -33,7 +37,9 @@ function unregister(notification) {
 function remove(notification) {
     notification.classList.add('hide');
 
-    notification.addEventListener('animationend', () => notification.remove(), { once: true });
+    notification.addEventListener('animationend', () => notification.remove(), {
+        once: true,
+    });
 }
 
 /**

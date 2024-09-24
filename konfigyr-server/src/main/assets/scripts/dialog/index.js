@@ -10,9 +10,11 @@ import observe from 'spect';
  */
 function lookupDialogElement(element, attribute) {
     // check if it is an actual button and that is not disabled...
-    if (!(element instanceof HTMLButtonElement)
-        || element.hasAttribute('disabled')
-        || element.getAttribute('aria-disabled') === 'true') {
+    if (
+        !(element instanceof HTMLButtonElement) ||
+        element.hasAttribute('disabled') ||
+        element.getAttribute('aria-disabled') === 'true'
+    ) {
         return null;
     }
 
@@ -49,9 +51,11 @@ function opener(event) {
 
         // register close event that would remove the classes that show dialog
         // animations and block the interaction with the rest of the HTML page
-        dialog.addEventListener('close', () => {
-            html.classList.remove('modal-is-open');
-        }, { once: true });
+        dialog.addEventListener(
+            'close',
+            () => html.classList.remove('modal-is-open'),
+            { once: true },
+        );
 
         dialog.showModal();
 
