@@ -18,6 +18,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.rememberme.AbstractRememberMeServices;
@@ -192,7 +193,9 @@ class AccountRememberMeServicesTest {
 				.isNotNull()
 				.returns(principal, Authentication::getPrincipal)
 				.returns(principal.getUsername(), Authentication::getName)
-				.returns(principal.getAuthorities(), Authentication::getAuthorities);
+				.satisfies(it -> assertThat(it.getAuthorities())
+						.extracting(GrantedAuthority::getAuthority)
+						.containsExactly("konfigyr:admin", "john-doe:admin"));
 	}
 
 	@Test

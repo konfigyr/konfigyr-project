@@ -63,6 +63,9 @@ class SecurityAutoConfigurationTest {
 					.hasBean("accountPrincipalService")
 					.hasBean("principalAccountOAuth2UserService")
 					.hasBean("persistentAuthorizedClientService")
+					.hasBean("konfigyrWebSecurityExpressionHandler")
+					.hasBean("konfigyrMethodSecurityExpressionHandler")
+					.hasBean("konfigyrSecurityCustomizer")
 					.doesNotHaveBean("userCache");
 
 			assertThat(ctx.getBean(PrincipalService.class))
@@ -82,7 +85,10 @@ class SecurityAutoConfigurationTest {
 							.hasBean("userCache")
 							.hasBean("accountPrincipalService")
 							.hasBean("principalAccountOAuth2UserService")
-							.hasBean("persistentAuthorizedClientService");
+							.hasBean("persistentAuthorizedClientService")
+							.hasBean("konfigyrWebSecurityExpressionHandler")
+							.hasBean("konfigyrMethodSecurityExpressionHandler")
+							.hasBean("konfigyrSecurityCustomizer");
 
 					assertThat(ctx.getBean(PrincipalService.class))
 							.isInstanceOf(AccountPrincipalService.class)
@@ -107,7 +113,10 @@ class SecurityAutoConfigurationTest {
 							.hasBean("userCache")
 							.hasBean("accountPrincipalService")
 							.hasBean("principalAccountOAuth2UserService")
-							.hasBean("persistentAuthorizedClientService");
+							.hasBean("persistentAuthorizedClientService")
+							.hasBean("konfigyrWebSecurityExpressionHandler")
+							.hasBean("konfigyrMethodSecurityExpressionHandler")
+							.hasBean("konfigyrSecurityCustomizer");
 
 					assertThat(ctx.getBean(PrincipalService.class))
 							.isInstanceOf(AccountPrincipalService.class)

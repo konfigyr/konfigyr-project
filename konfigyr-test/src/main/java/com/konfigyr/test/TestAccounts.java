@@ -2,6 +2,11 @@ package com.konfigyr.test;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountStatus;
+import com.konfigyr.account.Membership;
+import com.konfigyr.account.Memberships;
+import com.konfigyr.entity.EntityId;
+import com.konfigyr.namespace.NamespaceRole;
+import com.konfigyr.namespace.NamespaceType;
 import org.springframework.lang.NonNull;
 
 import java.time.Instant;
@@ -26,7 +31,25 @@ public interface TestAccounts {
 				.email("john.doe@konfigyr.com")
 				.firstName("John")
 				.lastName("Doe")
-				.lastLoginAt(Instant.now().minus(5, ChronoUnit.MINUTES));
+				.lastLoginAt(Instant.now().minus(5, ChronoUnit.MINUTES))
+				.memberships(Memberships.of(
+						Membership.builder()
+								.id(EntityId.from(1L))
+								.namespace("john-doe")
+								.name("John Doe")
+								.type(NamespaceType.PERSONAL)
+								.role(NamespaceRole.ADMIN)
+								.since(Instant.now())
+								.build(),
+						Membership.builder()
+								.id(EntityId.from(2L))
+								.namespace("konfigyr")
+								.name("Konfigyr")
+								.type(NamespaceType.TEAM)
+								.role(NamespaceRole.ADMIN)
+								.since(Instant.now())
+								.build()
+				));
 	}
 
 	/**
@@ -39,7 +62,17 @@ public interface TestAccounts {
 				.status(AccountStatus.ACTIVE)
 				.email("jane.doe@konfigyr.com")
 				.firstName("Jane")
-				.lastName("Doe");
+				.lastName("Doe")
+				.memberships(Memberships.of(
+						Membership.builder()
+								.id(EntityId.from(3L))
+								.namespace("konfigyr")
+								.name("Konfigyr")
+								.type(NamespaceType.TEAM)
+								.role(NamespaceRole.USER)
+								.since(Instant.now())
+								.build()
+				));
 	}
 
 }

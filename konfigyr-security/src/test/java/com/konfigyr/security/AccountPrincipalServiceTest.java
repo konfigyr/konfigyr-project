@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserCache;
@@ -50,11 +50,14 @@ class AccountPrincipalServiceTest {
 				.isInstanceOf(AccountPrincipal.class)
 				.returns(account.id().serialize(), UserDetails::getUsername)
 				.returns("", UserDetails::getPassword)
-				.returns(AuthorityUtils.createAuthorityList("admin"), UserDetails::getAuthorities)
 				.returns(true, UserDetails::isEnabled)
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
-				.returns(true, UserDetails::isCredentialsNonExpired);
+				.returns(true, UserDetails::isCredentialsNonExpired)
+				.satisfies(it -> assertThat(it.getAuthorities())
+						.extracting(GrantedAuthority::getAuthority)
+						.containsExactlyInAnyOrder("konfigyr:user")
+				);
 	}
 
 	@Test
@@ -69,11 +72,14 @@ class AccountPrincipalServiceTest {
 				.isInstanceOf(AccountPrincipal.class)
 				.returns(account.id().serialize(), UserDetails::getUsername)
 				.returns("", UserDetails::getPassword)
-				.returns(AuthorityUtils.createAuthorityList("admin"), UserDetails::getAuthorities)
 				.returns(true, UserDetails::isEnabled)
 				.returns(true, UserDetails::isAccountNonLocked)
 				.returns(true, UserDetails::isAccountNonExpired)
-				.returns(true, UserDetails::isCredentialsNonExpired);
+				.returns(true, UserDetails::isCredentialsNonExpired)
+				.satisfies(it -> assertThat(it.getAuthorities())
+						.extracting(GrantedAuthority::getAuthority)
+						.containsExactlyInAnyOrder("konfigyr:admin", "john-doe:admin")
+				);
 	}
 
 	@Test

@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -109,6 +110,7 @@ public class NamespaceController implements MessageSourceAware {
 	 * @param redirectAttributes redirect attributes that should contain the success message, can't be {@link null}
 	 * @return <code>namespaces/members</code> template
 	 */
+	@PreAuthorize("isAdmin(#slug)")
 	@PostMapping("/namespace/{namespace}/members/update")
 	RedirectView updateMember(
 			@PathVariable("namespace") @NonNull String slug,
@@ -134,6 +136,7 @@ public class NamespaceController implements MessageSourceAware {
 	 * @param redirectAttributes redirect attributes that should contain the success message, can't be {@link null}
 	 * @return <code>namespaces/members</code> template
 	 */
+	@PreAuthorize("isAdmin(#slug)")
 	@PostMapping("/namespace/{namespace}/members/remove")
 	RedirectView removeMember(
 			@PathVariable("namespace") @NonNull String slug,
@@ -161,6 +164,7 @@ public class NamespaceController implements MessageSourceAware {
 	 * @param model Spring MVC model, can't be {@link null}
 	 * @return <code>namespaces/members</code> template
 	 */
+	@PreAuthorize("isAdmin(#slug)")
 	@PostMapping("/namespace/{namespace}/members")
 	Object invite(
 			@PathVariable("namespace") @NonNull String slug,
@@ -207,6 +211,7 @@ public class NamespaceController implements MessageSourceAware {
 	 * @param model Spring MVC model, can't be {@link null}
 	 * @return <code>namespaces/members</code> template
 	 */
+	@PreAuthorize("isAdmin(#slug)")
 	@GetMapping("/namespace/{namespace}/members/invitations")
 	ModelAndView invitations(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
 		final Namespace namespace = lookupNamespace(slug);
@@ -226,6 +231,7 @@ public class NamespaceController implements MessageSourceAware {
 	 * @param model Spring MVC model, can't be {@link null}
 	 * @return <code>namespaces/members</code> template
 	 */
+	@PreAuthorize("isAuthenticated()")
 	@RequestMapping("/namespace/{namespace}/members/invitation/{key}")
 	ModelAndView invitation(@PathVariable("namespace") String slug, @PathVariable String key, Model model) {
 		final Namespace namespace = lookupNamespace(slug);
@@ -248,6 +254,7 @@ public class NamespaceController implements MessageSourceAware {
 	 * @param principal currently logged-in user account, can't be {@link null}
 	 * @return redirect view to the namespace dashboard page
 	 */
+	@PreAuthorize("isAuthenticated()")
 	@PostMapping("/namespace/{namespace}/members/invitation/{key}")
 	Object accept(
 			@PathVariable("namespace") String slug,

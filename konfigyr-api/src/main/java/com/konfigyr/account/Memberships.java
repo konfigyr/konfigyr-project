@@ -121,4 +121,9 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 	public Iterator<Membership> iterator() {
 		return memberships.iterator();
 	}
+
+	@Override
+	public String toString() {
+		return memberships.toString();
+	}
 }

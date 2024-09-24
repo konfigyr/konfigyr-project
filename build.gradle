@@ -1,6 +1,6 @@
 plugins {
     id 'io.freefair.lombok' version '8.10' apply false
-    id 'org.springframework.boot' version '3.3.3' apply false
+    id 'org.springframework.boot' version '3.3.4' apply false
     id 'io.spring.dependency-management' version '1.1.6' apply false
 }
 
@@ -9,6 +9,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
+    apply plugin: 'project-report'
     apply plugin: 'io.freefair.lombok'
     apply plugin: 'io.spring.dependency-management'
 
@@ -70,6 +71,10 @@ subprojects {
             xml.required = true
             html.required = false
         }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs.add('-parameters')
     }
 
     tasks.withType(Javadoc).configureEach {
