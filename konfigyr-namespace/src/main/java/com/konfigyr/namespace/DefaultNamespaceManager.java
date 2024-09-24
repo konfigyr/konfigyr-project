@@ -2,6 +2,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.jooq.SettableRecord;
+import com.konfigyr.support.FullName;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
@@ -115,20 +116,55 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 	@NonNull
 	@Override
+	@Transactional(readOnly = true, label = "namespace-find-members")
 	public Page<Member> findMembers(@NonNull EntityId id) {
 		return findMembers(NAMESPACES.ID.eq(id.get()));
 	}
 
 	@NonNull
 	@Override
+	@Transactional(readOnly = true, label = "namespace-find-members")
 	public Page<Member> findMembers(@NonNull String slug) {
 		return findMembers(NAMESPACES.SLUG.eq(slug));
 	}
 
 	@NonNull
 	@Override
+	@Transactional(readOnly = true, label = "namespace-find-members")
 	public Page<Member> findMembers(@NonNull Namespace namespace) {
 		return findMembers(namespace.id());
+	}
+
+	@NonNull
+	@Override
+	public Member updateMember(@NonNull EntityId id, @NonNull NamespaceRole role) {
+		context.update(NAMESPACE_MEMBERS)
+				.set(NAMESPACE_MEMBERS.ROLE, role.name())
+				.where(NAMESPACE_MEMBERS.ID.eq(id.get()))
+				.execute();
+
+		final Member member = createMembersQuery(NAMESPACE_MEMBERS.ID.eq(id.get()))
+				.fetchOptional(DefaultNamespaceManager::toMember)
+				.orElseThrow(() -> new NamespaceException("Failed to update unknown member with: " + id));
+
+		log.info("Successfully updated member role: [id={}, namespace={}, account={}, role={}]",
+				member.id(), member.namespace(), member.account(), member.role());
+
+		return member;
+	}
+
+	@Override
+	@Transactional(label = "namespace-remove-member")
+	public void removeMember(@NonNull EntityId member) {
+		final Record result = context.deleteFrom(NAMESPACE_MEMBERS)
+				.where(NAMESPACE_MEMBERS.ID.eq(member.get()))
+				.returning(NAMESPACE_MEMBERS.ACCOUNT_ID, NAMESPACE_MEMBERS.NAMESPACE_ID)
+				.fetchAny();
+
+		if (result != null) {
+			log.info("Successfully removed member: [id={}, namespace={}, account={}]",
+					member.get(), result.get(NAMESPACE_MEMBERS.NAMESPACE_ID), result.get(NAMESPACE_MEMBERS.ACCOUNT_ID));
+		}
 	}
 
 	@NonNull
@@ -172,6 +208,8 @@ class DefaultNamespaceManager implements NamespaceManager {
 						NAMESPACE_MEMBERS.ROLE,
 						NAMESPACE_MEMBERS.SINCE,
 						ACCOUNTS.EMAIL,
+						ACCOUNTS.FIRST_NAME,
+						ACCOUNTS.LAST_NAME,
 						ACCOUNTS.AVATAR
 				)
 				.from(NAMESPACE_MEMBERS)
@@ -230,12 +268,19 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 	@NonNull
 	private static Member toMember(@NonNull Record record) {
+		final FullName displayName = FullName.of(
+				record.get(ACCOUNTS.FIRST_NAME),
+				record.get(ACCOUNTS.LAST_NAME)
+		);
+
 		return Member.builder()
 				.id(record.get(NAMESPACE_MEMBERS.ID))
 				.namespace(record.get(NAMESPACE_MEMBERS.NAMESPACE_ID))
 				.account(record.get(NAMESPACE_MEMBERS.ACCOUNT_ID))
 				.role(record.get(NAMESPACE_MEMBERS.ROLE))
 				.email(record.get(ACCOUNTS.EMAIL))
+				.displayName(displayName.get())
+				.avatar(record.get(ACCOUNTS.AVATAR))
 				.since(record.get(NAMESPACE_MEMBERS.SINCE))
 				.build();
 	}

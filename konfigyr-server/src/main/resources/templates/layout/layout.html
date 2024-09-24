@@ -33,6 +33,13 @@
         <p>Made with ❤️ in Berlin.</p>
     </footer>
 
+    <div id="notifications" class="notifications">
+        <div role="status" class="notification" th:if="${notification}">
+            <svg th:replace="~{fragments/icon :: icon (name='info', size='icon-lg')}"></svg>
+            <p th:text="${notification}">Notification message</p>
+        </div>
+    </div>
+
     <live-region>
     </live-region>
 

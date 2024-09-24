@@ -52,7 +52,8 @@ dialog {
         margin-bottom: 0;
       }
 
-      .close, :is(a, button)[rel=prev] {
+      .close,
+      :is(a, button)[rel=prev] {
         margin: 0;
         margin-left: var(--konfigyr-spacing);
         padding: 0;
@@ -117,32 +118,20 @@ dialog {
 }
 
 // Animations
-$animation-duration: 0.2s;
-
-:where(.modal-is-opening, .modal-is-closing) {
+:where(.modal-is-opening) {
   dialog,
-  dialog > article {
-    animation-duration: $animation-duration;
-    animation-timing-function: ease-in-out;
+  dialog article {
+    animation-duration: 0.2s;
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
     animation-fill-mode: both;
   }
 
   dialog {
-    animation-duration: ($animation-duration * 4);
     animation-name: modal-overlay;
 
-    > article {
-      animation-delay: $animation-duration;
+    article {
       animation-name: modal;
     }
-  }
-}
-
-.modal-is-closing {
-  dialog,
-  dialog > article {
-    animation-delay: 0s;
-    animation-direction: reverse;
   }
 }
 
@@ -154,8 +143,13 @@ $animation-duration: 0.2s;
 }
 
 @keyframes modal {
-  from {
-    transform: translateY(-100%);
+  0% {
     opacity: 0;
+    transform: scale(0.5);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }

@@ -59,15 +59,16 @@
   --konfigyr-card-spacing-horizontal: var(--konfigyr-spacing);
 
   // Configuration for buttons
-  --konfigyr-button-spacing-vertical: calc(var(--konfigyr-spacing) * 0.5);
-  --konfigyr-button-spacing-horizontal: calc(var(--konfigyr-spacing) * 2);
+  --konfigyr-button-font-size: 0.9rem;
+  --konfigyr-button-spacing-vertical: calc(var(--konfigyr-spacing) * 0.4);
+  --konfigyr-button-spacing-horizontal: calc(var(--konfigyr-spacing) * 1.25);
 
   // Configuration for form elements
   --konfigyr-form-element-font-size: 0.9rem;
   --konfigyr-form-element-line-height: var(--konfigyr-line-height);
   --konfigyr-form-label-font-weight: var(--konfigyr-font-weight);
-  --konfigyr-form-element-spacing-vertical: calc(var(--konfigyr-spacing) * 0.5);
-  --konfigyr-form-element-spacing-horizontal: calc(var(--konfigyr-spacing) * 0.75);
+  --konfigyr-form-element-spacing-vertical: calc(var(--konfigyr-spacing) * 0.4);
+  --konfigyr-form-element-spacing-horizontal: calc(var(--konfigyr-spacing) * 1);
 
   // Configuration for radio-box
   --konfigyr-radio-box-label-font-weight: 600;
@@ -113,6 +114,13 @@
   // Configuration for empty-space
   --konfigy-empty-state-spacing-vertical: calc(var(--konfigyr-spacing) * 3);
   --konfigy-empty-state-spacing-horizontal: calc(var(--konfigyr-spacing) * 5);
+
+  // Configuration for notification
+  --konfigyr-notification-spacing-vertical: calc(var(--konfigyr-spacing) * 0.75);
+  --konfigyr-notification-spacing-horizontal: calc(var(--konfigyr-spacing) * 1.25);
+  --konfigyr-notification-font-size: var(--konfigyr-font-size-small);
+  --konfigyr-notification-border-radius: 0.2rem;
+  --konfigyr-notification-box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
 
   // Button
   --konfigyr-button-box-shadow: 0 0 0 rgba(0, 0, 0, 0);

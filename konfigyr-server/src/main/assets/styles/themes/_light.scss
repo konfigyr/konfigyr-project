@@ -52,6 +52,18 @@
   --konfigyr-contrast-focus: #{rgba($slate-550, 0.25)};
   --konfigyr-contrast-inverse: #{$white};
 
+  // Danger colors
+  --konfigyr-danger: #{$red-500};
+  --konfigyr-danger-background: #{$red-500};
+  --konfigyr-danger-border: var(--konfigyr-contrast-background);
+  --konfigyr-danger-underline: #{rgba($red-500, 0.5)};
+  --konfigyr-danger-hover: #{$red-700};
+  --konfigyr-danger-hover-background: #{$red-700};
+  --konfigyr-danger-hover-border: var(--konfigyr-contrast-hover-background);
+  --konfigyr-danger-hover-underline: var(--konfigyr-secondary-hover);
+  --konfigyr-danger-focus: #{rgba($red-550, 0.25)};
+  --konfigyr-danger-inverse: #{$white};
+
   // Box shadow
   --konfigyr-box-shadow: 0 0 1px rgba(0, 0, 0, 0.24), 0 0 3px rgba(0, 0, 0, 0.08);
 
@@ -144,9 +156,15 @@
   --konfigyr-card-background-color: var(--konfigyr-background-color);
   --konfigyr-card-box-shadow: var(--konfigyr-box-shadow);
   --konfigyr-card-sectioning-background-color: #{mix($slate-50, $white, 25%)};
+  --konfigyr-card-sectioning-border-color: #{$slate-50};
 
   // Empty Space (.empty-space)
   --konfigyr-empty-state-box-shadow: var(--konfigyr-box-shadow);
+
+  // Notifications (.notifications)
+  --konfigyr-notification-background-color: var(--konfigyr-background-color);
+  --konfigyr-notification-icon-color: var(--konfigyr-primary);
+  --konfigyr-notification-text-color: var(--konfigyr-color);
 
   // Dropdown (details.dropdown)
   --konfigyr-dropdown-background-color: #{$white};

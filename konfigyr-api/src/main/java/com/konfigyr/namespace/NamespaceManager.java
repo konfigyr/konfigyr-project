@@ -86,4 +86,22 @@ public interface NamespaceManager {
 	@NonNull
 	Page<Member> findMembers(@NonNull Namespace namespace);
 
+	/**
+	 * Updates the {@link NamespaceRole} of the {@link Member} with given entity identifier
+	 * in the {@link Namespace} team.
+	 *
+	 * @param member entity identifier of the {@link Member} to be removed, can't be {@literal null}
+	 * @param role the new {@link NamespaceRole} that should be assigned, can't be {@literal null}
+	 * @return the update member, never {@literal null}
+	 */
+	@NonNull
+	Member updateMember(@NonNull EntityId member, @NonNull NamespaceRole role);
+
+	/**
+	 * Removes the {@link Member} with given entity identifier from the {@link Namespace} team.
+	 *
+	 * @param member entity identifier of the {@link Member} to be removed, can't be {@literal null}
+	 */
+	void removeMember(@NonNull EntityId member);
+
 }

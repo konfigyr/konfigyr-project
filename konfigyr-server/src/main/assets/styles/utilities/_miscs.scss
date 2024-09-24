@@ -153,9 +153,9 @@ $utilities: (
 
 $color-mappings: (
         "white": $white,
-        "primary": var(--primary),
-        "secondary": var(--secondary),
-        "contrast": var(--contrast),
+        "primary": var(--konfigyr-primary),
+        "secondary": var(--konfigyr-secondary),
+        "contrast": var(--konfigyr-contrast),
         "black": $black,
 );
 

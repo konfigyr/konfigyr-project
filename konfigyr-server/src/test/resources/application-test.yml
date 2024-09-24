@@ -31,3 +31,4 @@ logging:
   level:
     com.konfigyr: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.test.web.servlet.result: DEBUG

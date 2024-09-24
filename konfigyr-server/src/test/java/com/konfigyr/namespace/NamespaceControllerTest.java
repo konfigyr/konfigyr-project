@@ -3,7 +3,9 @@ package com.konfigyr.namespace;
 import com.konfigyr.assertions.AssertMatcher;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.registry.Repository;
+import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestContainers;
+import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.test.TestProfile;
 import jakarta.servlet.ServletException;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -11,17 +13,20 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,6 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ImportTestcontainers(TestContainers.class)
 class NamespaceControllerTest {
+
+	@Autowired Invitations invitations;
+	@Autowired NamespaceManager namespaces;
 
 	static MockMvc mvc;
 
@@ -66,6 +74,174 @@ class NamespaceControllerTest {
 						.extracting(Repository::id)
 						.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3))
 				)));
+	}
+
+	@Test
+	@DisplayName("should render namespace members page")
+	void shouldRenderNamespaceMembers() throws Exception {
+		mvc.perform(get("/namespace/konfigyr/members"))
+				.andDo(log())
+				.andExpect(status().isOk())
+				.andExpect(view().name("namespaces/members"))
+				.andExpect(model().attribute("namespace", AssertMatcher.of(namespace -> assertThat(namespace)
+						.isNotNull()
+						.isInstanceOf(Namespace.class)
+						.asInstanceOf(InstanceOfAssertFactories.type(Namespace.class))
+						.returns(EntityId.from(2), Namespace::id)
+						.returns("konfigyr", Namespace::slug)
+						.returns("Konfigyr", Namespace::name)
+						.returns(NamespaceType.TEAM, Namespace::type)
+				)))
+				.andExpect(model().attribute("members", AssertMatcher.of(members -> assertThat(members)
+						.isNotNull()
+						.isInstanceOf(Page.class)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(Member.class))
+						.extracting(Member::id)
+						.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3))
+				)));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should update namespace members role")
+	void shouldUpdateNamespaceMemberRole() throws Exception {
+		var request = post("/namespace/konfigyr/members/update")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.param("member", EntityId.from(2).serialize())
+				.param("role", NamespaceRole.USER.name())
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr/members"))
+				.andExpect(flash().attribute("notification", AssertMatcher.of(notification -> assertThat(notification)
+						.asString()
+						.containsIgnoringCase("member was successfully updated")
+				)));
+
+		assertThat(namespaces.findMembers("konfigyr"))
+				.filteredOn(it -> EntityId.from(2).equals(it.id()))
+				.extracting(Member::role)
+				.containsExactly(NamespaceRole.USER);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should remove namespace member")
+	void shouldRemoveNamespaceMember() throws Exception {
+		var request = post("/namespace/konfigyr/members/remove")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.param("member", EntityId.from(2).serialize())
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr/members"))
+				.andExpect(flash().attribute("notification", AssertMatcher.of(notification -> assertThat(notification)
+						.asString()
+						.containsIgnoringCase("member was successfully removed")
+				)));
+
+		assertThat(namespaces.findMembers("konfigyr"))
+				.filteredOn(it -> EntityId.from(2).equals(it.id()))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should render namespace invitations page")
+	void shouldRenderNamespaceInvitations() throws Exception {
+		mvc.perform(get("/namespace/konfigyr/members/invitations"))
+				.andDo(log())
+				.andExpect(status().isOk())
+				.andExpect(view().name("namespaces/invitations"))
+				.andExpect(model().attribute("namespace", AssertMatcher.of(namespace -> assertThat(namespace)
+						.isNotNull()
+						.isInstanceOf(Namespace.class)
+						.asInstanceOf(InstanceOfAssertFactories.type(Namespace.class))
+						.returns(EntityId.from(2), Namespace::id)
+						.returns("konfigyr", Namespace::slug)
+						.returns("Konfigyr", Namespace::name)
+						.returns(NamespaceType.TEAM, Namespace::type)
+				)))
+				.andExpect(model().attribute("invitations", AssertMatcher.of(invitations -> assertThat(invitations)
+						.isNotNull()
+						.isInstanceOf(Page.class)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(Invitation.class))
+						.isEmpty()
+				)));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should send invite to new member")
+	void shouldSendInvite() throws Exception {
+		var request = post("/namespace/konfigyr/members")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.param("email", "muad.dib@konfigyr.com")
+				.param("role", NamespaceRole.USER.name())
+				.with(authentication(TestPrincipals.john()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr/members"))
+				.andExpect(flash().attribute("success", AssertMatcher.of(message -> assertThat(message)
+						.asString()
+						.contains("muad.dib@konfigyr.com")
+				)));
+
+		final var namespace = namespaces.findBySlug("konfigyr").orElseThrow();
+		final var invitations = this.invitations.find(namespace, Pageable.unpaged());
+
+		assertThat(invitations)
+				.hasSize(1)
+				.extracting("sender.email", "recipient.email", "role")
+				.containsExactly(tuple(TestAccounts.john().build().email(), "muad.dib@konfigyr.com", NamespaceRole.USER));
+
+		// make sure that invitation is also rendered in the invitations page
+		mvc.perform(get("/namespace/konfigyr/members/invitations"))
+				.andDo(log())
+				.andExpect(status().isOk())
+				.andExpect(view().name("namespaces/invitations"))
+				.andExpect(model().attribute("invitations", AssertMatcher.of(it -> assertThat(it)
+						.isNotNull()
+						.isInstanceOf(Page.class)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(Invitation.class))
+						.containsAll(invitations)
+				)));
+
+		final Invitation invitation = invitations.stream().findFirst().orElseThrow();
+
+		// make sure that invitation page works with the generated key
+		mvc.perform(get("/namespace/konfigyr/members/invitation/{key}", invitation.key()))
+				.andDo(log())
+				.andExpect(status().isOk())
+				.andExpect(view().name("namespaces/invitation"))
+				.andExpect(model().attribute("namespace", namespace))
+				.andExpect(model().attribute("invitation", invitation));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should render an empty invitation page when key is expired")
+	void shouldRenderEmptyInvitationPage() throws Exception {
+		mvc.perform(get("/namespace/konfigyr/members/invitation/expired-key"))
+				.andDo(log())
+				.andExpect(status().isOk())
+				.andExpect(view().name("namespaces/invitation"))
+				.andExpect(model().attribute("namespace", AssertMatcher.of(namespace -> assertThat(namespace)
+						.isNotNull()
+						.isInstanceOf(Namespace.class)
+						.asInstanceOf(InstanceOfAssertFactories.type(Namespace.class))
+						.returns(EntityId.from(2), Namespace::id)
+						.returns("konfigyr", Namespace::slug)
+						.returns("Konfigyr", Namespace::name)
+						.returns(NamespaceType.TEAM, Namespace::type)
+				)))
+				.andExpect(model().attributeDoesNotExist("invitation"));
 	}
 
 	@Test
