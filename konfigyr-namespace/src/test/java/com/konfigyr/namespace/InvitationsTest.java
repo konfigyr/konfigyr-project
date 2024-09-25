@@ -6,6 +6,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.jooq.SettableRecord;
 import com.konfigyr.mail.Mail;
 import com.konfigyr.support.FullName;
+import com.konfigyr.support.SearchQuery;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -328,7 +329,7 @@ class InvitationsTest {
 
 		assertThatNoException().isThrownBy(() -> invitations.accept(invitation.get(), recipient));
 
-		assertThat(namespaces.findMembers(namespace.get()))
+		assertThat(namespaces.findMembers(namespace.get(), SearchQuery.of(Pageable.unpaged())))
 			.extracting(Member::account, Member::role)
 			.contains(tuple(recipient, invitation.get().role()));
 
@@ -360,7 +361,7 @@ class InvitationsTest {
 				.extracting("code")
 				.isEqualTo(InvitationException.ErrorCode.INVITATION_EXPIRED);
 
-		assertThat(namespaces.findMembers(namespace.get()))
+		assertThat(namespaces.findMembers(namespace.get(), SearchQuery.of(Pageable.unpaged())))
 				.extracting(Member::account)
 				.doesNotContain(recipient);
 
@@ -382,7 +383,7 @@ class InvitationsTest {
 				.extracting("code")
 				.isEqualTo(InvitationException.ErrorCode.RECIPIENT_NOT_FOUND);
 
-		assertThat(namespaces.findMembers(namespace.get()))
+		assertThat(namespaces.findMembers(namespace.get(), SearchQuery.of(Pageable.unpaged())))
 				.extracting(Member::account)
 				.doesNotContain(EntityId.from(9999));
 

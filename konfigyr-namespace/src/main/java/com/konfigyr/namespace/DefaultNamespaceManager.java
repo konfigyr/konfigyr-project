@@ -1,26 +1,29 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.jooq.PageableExecutor;
 import com.konfigyr.jooq.SettableRecord;
 import com.konfigyr.support.FullName;
+import com.konfigyr.support.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SelectConditionStep;
+import org.jooq.impl.DSL;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.lang.NonNull;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +45,12 @@ class DefaultNamespaceManager implements NamespaceManager {
 	private final Marker CREATED = MarkerFactory.getMarker("NAMEPSPACE_CREATED");
 
 	static final String CACHE_NAME = "namespaces";
+
+	static final PageableExecutor membersExecutor = PageableExecutor.builder()
+			.defaultSortField(NAMESPACE_MEMBERS.SINCE.desc())
+			.sortField("name", ACCOUNTS.FIRST_NAME)
+			.sortField("date", NAMESPACE_MEMBERS.SINCE)
+			.build();
 
 	private final DSLContext context;
 	private final ApplicationEventPublisher publisher;
@@ -117,22 +126,22 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<Member> findMembers(@NonNull EntityId id) {
-		return findMembers(NAMESPACES.ID.eq(id.get()));
+	public Page<Member> findMembers(@NonNull EntityId id, @NonNull SearchQuery query) {
+		return findMembers(NAMESPACES.ID.eq(id.get()), query);
 	}
 
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<Member> findMembers(@NonNull String slug) {
-		return findMembers(NAMESPACES.SLUG.eq(slug));
+	public Page<Member> findMembers(@NonNull String slug, @NonNull SearchQuery query) {
+		return findMembers(NAMESPACES.SLUG.eq(slug), query);
 	}
 
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<Member> findMembers(@NonNull Namespace namespace) {
-		return findMembers(namespace.id());
+	public Page<Member> findMembers(@NonNull Namespace namespace, @NonNull SearchQuery query) {
+		return findMembers(namespace.id(), query);
 	}
 
 	@NonNull
@@ -187,16 +196,26 @@ class DefaultNamespaceManager implements NamespaceManager {
 	}
 
 	@NonNull
-	private Page<Member> findMembers(@NonNull Condition condition) {
+	private Page<Member> findMembers(@NonNull Condition condition, @NonNull SearchQuery query) {
+		final List<Condition> conditions = new ArrayList<>();
+		conditions.add(condition);
+
+		query.term().map(term -> "%" + term + "%").ifPresent(term -> conditions.add(DSL.or(
+				ACCOUNTS.EMAIL.likeIgnoreCase(term),
+				ACCOUNTS.FIRST_NAME.likeIgnoreCase(term),
+				ACCOUNTS.LAST_NAME.likeIgnoreCase(term)
+		)));
+
 		if (log.isDebugEnabled()) {
-			log.debug("Fetching namespace members for namespace for Condition: {}", condition);
+			log.debug("Fetching namespace members for namespace for conditions: {}", conditions);
 		}
 
-		final List<Member> members = createMembersQuery(condition)
-				.fetch()
-				.map(DefaultNamespaceManager::toMember);
-
-		return new PageImpl<>(members);
+		return membersExecutor.execute(
+				createMembersQuery(DSL.and(conditions)),
+				DefaultNamespaceManager::toMember,
+				query.pageable(),
+				() -> context.fetchCount(createMembersQuery(DSL.and(conditions)))
+		);
 	}
 
 	@NonNull

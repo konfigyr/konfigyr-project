@@ -3,6 +3,7 @@ package com.konfigyr.namespace;
 import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.Avatar;
+import com.konfigyr.support.SearchQuery;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.modulith.test.PublishedEvents;
 import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +57,7 @@ class NamespaceManagerTest {
 	void shouldLookupNamespaceMembersById() {
 		final var id = EntityId.from(1);
 
-		assertThat(manager.findMembers(id))
+		assertThat(manager.findMembers(id, SearchQuery.of(Pageable.unpaged())))
 				.isNotNull()
 				.hasSize(1)
 				.extracting(Member::id, Member::namespace, Member::account, Member::role, Member::email)
@@ -92,7 +94,7 @@ class NamespaceManagerTest {
 	void shouldLookupNamespaceMembersBySlug() {
 		final var slug = "konfigyr";
 
-		assertThat(manager.findMembers(slug))
+		assertThat(manager.findMembers(slug, SearchQuery.of(Pageable.unpaged())))
 				.isNotNull()
 				.hasSize(2)
 				.extracting(Member::id, Member::namespace, Member::account, Member::role, Member::email)
@@ -100,6 +102,20 @@ class NamespaceManagerTest {
 						tuple(EntityId.from(2), EntityId.from(2), EntityId.from(1), NamespaceRole.ADMIN, "john.doe@konfigyr.com"),
 						tuple(EntityId.from(3), EntityId.from(2), EntityId.from(2), NamespaceRole.USER, "jane.doe@konfigyr.com")
 				);
+	}
+
+	@Test
+	@DisplayName("should search namespace members")
+	void shouldSearchMembers() {
+		final var query = SearchQuery.builder()
+				.term("John")
+				.build();
+
+		assertThat(manager.findMembers("konfigyr", query))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(Member::id)
+				.containsExactlyInAnyOrder(EntityId.from(2));
 	}
 
 	@Test
@@ -120,7 +136,7 @@ class NamespaceManagerTest {
 	void shouldRemoveNamespaceMember() {
 		assertThatNoException().isThrownBy(() -> manager.removeMember(EntityId.from(2)));
 
-		assertThat(manager.findMembers("konfigyr"))
+		assertThat(manager.findMembers("konfigyr", SearchQuery.of(Pageable.unpaged())))
 				.isNotNull()
 				.hasSize(1)
 				.extracting(Member::id)
@@ -144,13 +160,13 @@ class NamespaceManagerTest {
 	@Test
 	@DisplayName("should return empty members page when namespace is not found by entity identifier")
 	void shouldFailToLookupNamespaceMembersById() {
-		assertThat(manager.findMembers(EntityId.from(9914))).isEmpty();
+		assertThat(manager.findMembers(EntityId.from(9914), SearchQuery.of(Pageable.unpaged()))).isEmpty();
 	}
 
 	@Test
 	@DisplayName("should return empty members page when namespace is not found by path slug")
 	void shouldFailToLookupNamespaceMembersByEmail() {
-		assertThat(manager.findMembers("unknown")).isEmpty();
+		assertThat(manager.findMembers("unknown", SearchQuery.of(Pageable.unpaged()))).isEmpty();
 	}
 
 	@Test
@@ -184,7 +200,7 @@ class NamespaceManagerTest {
 
 		events.eventOfTypeWasPublished(NamespaceEvent.Created.class);
 
-		assertThat(manager.findMembers(namespace))
+		assertThat(manager.findMembers(namespace, SearchQuery.of(Pageable.unpaged())))
 				.isNotNull()
 				.hasSize(1)
 				.first()

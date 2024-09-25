@@ -22,39 +22,77 @@ class ArtifactoryTest {
 	Artifactory artifactory;
 
 	@Test
-	@DisplayName("should search for all repositories")
+	@DisplayName("should search for all public repositories")
 	void shouldSearchForAllRepositories() {
-		final SearchQuery query = ArtifactorySearchQuery.of(Pageable.ofSize(2));
+		final SearchQuery query = SearchQuery.of(Pageable.ofSize(1));
 
 		assertThatObject(artifactory.searchRepositories(query))
-				.returns(2, Page::getSize)
-				.returns(2, Page::getNumberOfElements)
-				.returns(3L, Page::getTotalElements)
+				.returns(1, Page::getSize)
+				.returns(0, Page::getNumber)
+				.returns(1, Page::getNumberOfElements)
+				.returns(2L, Page::getTotalElements)
 				.returns(2, Page::getTotalPages)
 				.asInstanceOf(InstanceOfAssertFactories.iterable(Repository.class))
 				.extracting(Repository::id)
-				.containsExactlyInAnyOrder(EntityId.from(1), EntityId.from(2));
+				.containsExactlyInAnyOrder(EntityId.from(2));
+
+		assertThatObject(artifactory.searchRepositories(query.next()))
+				.returns(1, Page::getSize)
+				.returns(1, Page::getNumber)
+				.returns(1, Page::getNumberOfElements)
+				.returns(2L, Page::getTotalElements)
+				.returns(2, Page::getTotalPages)
+				.asInstanceOf(InstanceOfAssertFactories.iterable(Repository.class))
+				.extracting(Repository::id)
+				.containsExactlyInAnyOrder(EntityId.from(3));
 	}
 
 	@Test
-	@DisplayName("should search repositories with a matching name")
-	void shouldSearchForRepositoriesByTerm() {
-		final SearchQuery query = ArtifactorySearchQuery.of("Website", null, Pageable.ofSize(20));
+	@DisplayName("should search for repositories that this member has access to")
+	void shouldSearchForAccessibleRepositories() {
+		final SearchQuery query = SearchQuery.builder()
+				.criteria(SearchQuery.ACCOUNT, EntityId.from(1))
+				.build();
 
 		assertThatObject(artifactory.searchRepositories(query))
 				.returns(20, Page::getSize)
-				.returns(2, Page::getNumberOfElements)
-				.returns(2L, Page::getTotalElements)
+				.returns(0, Page::getNumber)
+				.returns(4, Page::getNumberOfElements)
+				.returns(4L, Page::getTotalElements)
 				.returns(1, Page::getTotalPages)
 				.asInstanceOf(InstanceOfAssertFactories.iterable(Repository.class))
 				.extracting(Repository::id)
-				.containsExactlyInAnyOrder(EntityId.from(1), EntityId.from(3));
+				.containsExactly(
+						EntityId.from(1),
+						EntityId.from(2),
+						EntityId.from(3),
+						EntityId.from(4)
+				);
 	}
 
 	@Test
-	@DisplayName("should search repositories within a namespace")
+	@DisplayName("should search public repositories with a matching name")
+	void shouldSearchForRepositoriesByTerm() {
+		final SearchQuery query = SearchQuery.builder()
+				.term("Website")
+				.build();
+
+		assertThatObject(artifactory.searchRepositories(query))
+				.returns(20, Page::getSize)
+				.returns(1, Page::getNumberOfElements)
+				.returns(1L, Page::getTotalElements)
+				.returns(1, Page::getTotalPages)
+				.asInstanceOf(InstanceOfAssertFactories.iterable(Repository.class))
+				.extracting(Repository::id)
+				.containsExactlyInAnyOrder(EntityId.from(3));
+	}
+
+	@Test
+	@DisplayName("should search public repositories within a namespace")
 	void shouldSearchForRepositoriesByNamespace() {
-		final SearchQuery query = ArtifactorySearchQuery.of(null, "konfigyr", Pageable.ofSize(20));
+		final SearchQuery query = SearchQuery.builder()
+				.criteria(SearchQuery.NAMESPACE, "konfigyr")
+				.build();
 
 		assertThatObject(artifactory.searchRepositories(query))
 				.returns(20, Page::getSize)
@@ -69,7 +107,10 @@ class ArtifactoryTest {
 	@Test
 	@DisplayName("should search repositories within a namespace and search term")
 	void shouldSearchForRepositoriesByNamespaceAndTerm() {
-		final SearchQuery query = ArtifactorySearchQuery.of("crypto", "konfigyr", Pageable.ofSize(20));
+		final SearchQuery query = SearchQuery.builder()
+				.term("crypto")
+				.criteria(SearchQuery.NAMESPACE, "konfigyr")
+				.build();
 
 		assertThatObject(artifactory.searchRepositories(query))
 				.returns(20, Page::getSize)
@@ -158,7 +199,9 @@ class ArtifactoryTest {
 	@Test
 	@DisplayName("should return empty repository search results when namespace is unknown")
 	void shouldFailToSearchRepositoriesByUnknownNamespace() {
-		final SearchQuery query = ArtifactorySearchQuery.of(null, "unknown", Pageable.ofSize(20));
+		final SearchQuery query = SearchQuery.builder()
+				.criteria(SearchQuery.NAMESPACE, "unknown")
+				.build();
 
 		assertThat(artifactory.searchRepositories(query)).isEmpty();
 	}
@@ -166,7 +209,9 @@ class ArtifactoryTest {
 	@Test
 	@DisplayName("should return empty repository search results when name does not match")
 	void shouldFailToSearchRepositoriesByNonMatchingTerm() {
-		final SearchQuery query = ArtifactorySearchQuery.of("unknown", null, Pageable.ofSize(20));
+		final SearchQuery query = SearchQuery.builder()
+				.term("unknown")
+				.build();
 
 		assertThat(artifactory.searchRepositories(query)).isEmpty();
 	}
@@ -174,7 +219,10 @@ class ArtifactoryTest {
 	@Test
 	@DisplayName("should return empty repository search results when name matches but not the namespace")
 	void shouldFailToSearchRepositoriesByMatchingTermForDifferentNamespace() {
-		final SearchQuery query = ArtifactorySearchQuery.of("crypto", "john-doe", Pageable.ofSize(20));
+		final SearchQuery query = SearchQuery.builder()
+				.term("crypto")
+				.criteria(SearchQuery.NAMESPACE, "john-doe")
+				.build();
 
 		assertThat(artifactory.searchRepositories(query)).isEmpty();
 	}
