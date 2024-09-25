@@ -6,7 +6,6 @@ import org.jmolecules.event.annotation.DomainEvent;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Abstract event type that should be used for all {@link Invitation} related events.
@@ -60,6 +59,7 @@ public abstract sealed class InvitationEvent extends EntityEvent permits
 		 *
 		 * @param id entity identifier of the created invitation
 		 * @param key invitation key
+   		 * @param host the URI components host used to construct links
 		 */
 		public Created(EntityId id, String key, UriComponents host) {
 			super(id, key);
