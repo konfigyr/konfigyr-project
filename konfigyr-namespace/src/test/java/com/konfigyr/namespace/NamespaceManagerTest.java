@@ -57,7 +57,7 @@ class NamespaceManagerTest {
 	void shouldLookupNamespaceMembersById() {
 		final var id = EntityId.from(1);
 
-		assertThat(manager.findMembers(id, SearchQuery.of(Pageable.unpaged())))
+		assertThat(manager.findMembers(id))
 				.isNotNull()
 				.hasSize(1)
 				.extracting(Member::id, Member::namespace, Member::account, Member::role, Member::email)
@@ -94,7 +94,7 @@ class NamespaceManagerTest {
 	void shouldLookupNamespaceMembersBySlug() {
 		final var slug = "konfigyr";
 
-		assertThat(manager.findMembers(slug, SearchQuery.of(Pageable.unpaged())))
+		assertThat(manager.findMembers(slug))
 				.isNotNull()
 				.hasSize(2)
 				.extracting(Member::id, Member::namespace, Member::account, Member::role, Member::email)
@@ -136,7 +136,7 @@ class NamespaceManagerTest {
 	void shouldRemoveNamespaceMember() {
 		assertThatNoException().isThrownBy(() -> manager.removeMember(EntityId.from(2)));
 
-		assertThat(manager.findMembers("konfigyr", SearchQuery.of(Pageable.unpaged())))
+		assertThat(manager.findMembers("konfigyr"))
 				.isNotNull()
 				.hasSize(1)
 				.extracting(Member::id)
@@ -160,13 +160,13 @@ class NamespaceManagerTest {
 	@Test
 	@DisplayName("should return empty members page when namespace is not found by entity identifier")
 	void shouldFailToLookupNamespaceMembersById() {
-		assertThat(manager.findMembers(EntityId.from(9914), SearchQuery.of(Pageable.unpaged()))).isEmpty();
+		assertThat(manager.findMembers(EntityId.from(9914))).isEmpty();
 	}
 
 	@Test
 	@DisplayName("should return empty members page when namespace is not found by path slug")
 	void shouldFailToLookupNamespaceMembersByEmail() {
-		assertThat(manager.findMembers("unknown", SearchQuery.of(Pageable.unpaged()))).isEmpty();
+		assertThat(manager.findMembers("unknown")).isEmpty();
 	}
 
 	@Test
@@ -200,7 +200,7 @@ class NamespaceManagerTest {
 
 		events.eventOfTypeWasPublished(NamespaceEvent.Created.class);
 
-		assertThat(manager.findMembers(namespace, SearchQuery.of(Pageable.unpaged())))
+		assertThat(manager.findMembers(namespace))
 				.isNotNull()
 				.hasSize(1)
 				.first()

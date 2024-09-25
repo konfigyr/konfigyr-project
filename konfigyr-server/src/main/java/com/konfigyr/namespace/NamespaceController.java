@@ -94,7 +94,7 @@ public class NamespaceController implements MessageSourceAware {
 	@GetMapping("/namespace/{namespace}/members")
 	ModelAndView members(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
 		final Namespace namespace = lookupNamespace(slug);
-		final Page<Member> members = manager.findMembers(namespace, SearchQuery.of(Pageable.unpaged()));
+		final Page<Member> members = manager.findMembers(namespace, Pageable.unpaged());
 
 		model.addAttribute("namespace", namespace);
 		model.addAttribute("members", members);
@@ -180,7 +180,7 @@ public class NamespaceController implements MessageSourceAware {
 
 		if (errors.hasErrors()) {
 			model.addAttribute("namespace", namespace);
-			model.addAttribute("members", manager.findMembers(namespace, SearchQuery.of(Pageable.unpaged())));
+			model.addAttribute("members", manager.findMembers(namespace));
 
 			return new ModelAndView("namespaces/members", model.asMap());
 		}
@@ -193,7 +193,7 @@ public class NamespaceController implements MessageSourceAware {
 			errors.addError(new ObjectError(errors.getObjectName(), messageFor(ex)));
 
 			model.addAttribute("namespace", namespace);
-			model.addAttribute("members", manager.findMembers(namespace, SearchQuery.of(Pageable.unpaged())));
+			model.addAttribute("members", manager.findMembers(namespace));
 
 			return new ModelAndView("namespaces/members", model.asMap());
 		}
