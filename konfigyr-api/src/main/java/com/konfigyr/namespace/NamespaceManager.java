@@ -1,9 +1,11 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.support.SearchQuery;
 import org.jmolecules.ddd.annotation.Repository;
 import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 
 import java.util.Optional;
@@ -60,31 +62,103 @@ public interface NamespaceManager {
 	Namespace create(@NonNull NamespaceDefinition definition);
 
 	/**
-	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 * Retrieves all {@link Member members} of a given {@link Namespace} within a single page.
 	 *
 	 * @param id namespace entity identifier for which to fetch members, can't be {@literal null}
 	 * @return namespace members, never {@literal null}
 	 */
 	@NonNull
-	Page<Member> findMembers(@NonNull EntityId id);
+	default Page<Member> findMembers(@NonNull EntityId id) {
+		return findMembers(id, Pageable.unpaged());
+	}
 
 	/**
 	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param id namespace entity identifier for which to fetch members, can't be {@literal null}
+	 * @param pageable paging instructions, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	default Page<Member> findMembers(@NonNull EntityId id, @NonNull Pageable pageable) {
+		return findMembers(id, SearchQuery.of(pageable));
+	}
+
+	/**
+	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param id namespace entity identifier for which to fetch members, can't be {@literal null}
+	 * @param query search query to be executed when searching for {@link Member members}, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	Page<Member> findMembers(@NonNull EntityId id, @NonNull SearchQuery query);
+
+	/**
+	 * Retrieves all {@link Member members} of a given {@link Namespace} within a single page.
 	 *
 	 * @param slug namespace slug, can't be {@literal null}
 	 * @return namespace members, never {@literal null}
 	 */
 	@NonNull
-	Page<Member> findMembers(@NonNull String slug);
+	default Page<Member> findMembers(@NonNull String slug) {
+		return findMembers(slug, Pageable.unpaged());
+	}
 
 	/**
 	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param slug namespace slug, can't be {@literal null}
+	 * @param pageable paging instructions, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	default Page<Member> findMembers(@NonNull String slug, @NonNull Pageable pageable) {
+		return findMembers(slug, SearchQuery.of(pageable));
+	}
+
+	/**
+	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param slug namespace slug, can't be {@literal null}
+	 * @param query search query to be executed when searching for {@link Member members}, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	Page<Member> findMembers(@NonNull String slug, @NonNull SearchQuery query);
+
+	/**
+	 * Retrieves all {@link Member members} of a given {@link Namespace} within a single page.
 	 *
 	 * @param namespace namespace for which to fetch members, can't be {@literal null}
 	 * @return namespace members, never {@literal null}
 	 */
 	@NonNull
-	Page<Member> findMembers(@NonNull Namespace namespace);
+	default Page<Member> findMembers(@NonNull Namespace namespace) {
+		return findMembers(namespace, Pageable.unpaged());
+	}
+
+	/**
+	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param namespace namespace for which to fetch members, can't be {@literal null}
+	 * @param pageable paging instructions, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	default Page<Member> findMembers(@NonNull Namespace namespace, @NonNull Pageable pageable) {
+		return findMembers(namespace, SearchQuery.of(pageable));
+	}
+
+	/**
+	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
+	 *
+	 * @param namespace namespace for which to fetch members, can't be {@literal null}
+	 * @param query search query to be executed when searching for {@link Member members}, can't be {@literal null}
+	 * @return namespace members, never {@literal null}
+	 */
+	@NonNull
+	Page<Member> findMembers(@NonNull Namespace namespace, @NonNull SearchQuery query);
 
 	/**
 	 * Updates the {@link NamespaceRole} of the {@link Member} with given entity identifier

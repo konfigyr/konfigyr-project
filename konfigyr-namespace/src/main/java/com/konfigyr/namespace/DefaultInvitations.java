@@ -3,6 +3,7 @@ package com.konfigyr.namespace;
 import com.konfigyr.data.Keys;
 import com.konfigyr.data.tables.Accounts;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.jooq.PageableExecutor;
 import com.konfigyr.jooq.SettableRecord;
 import com.konfigyr.support.KeyGenerator;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,6 @@ import org.jooq.impl.DSL;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -26,7 +26,6 @@ import org.springframework.web.util.UriComponents;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -50,6 +49,12 @@ class DefaultInvitations implements Invitations {
 
 	static final Duration TTL = Duration.ofDays(7);
 
+	static final PageableExecutor executor = PageableExecutor.builder()
+			.defaultSortField(INVITATIONS.CREATED_AT.desc())
+			.sortField("date", INVITATIONS.CREATED_AT)
+			.sortField("recipient", INVITATIONS.RECIPIENT_EMAIL)
+			.build();
+
 	private final DSLContext context;
 	private final ApplicationEventPublisher publisher;
 
@@ -57,10 +62,14 @@ class DefaultInvitations implements Invitations {
 	@Override
 	@Transactional(readOnly = true, label = "invitations-find")
 	public Page<Invitation> find(@NonNull Namespace namespace, @NonNull Pageable pageable) {
-		final List<Invitation> invitations = createInvitationsQuery(INVITATIONS.NAMESPACE_ID.eq(namespace.id().get()))
-				.fetch(DefaultInvitations::invitation);
+		final Condition condition = INVITATIONS.NAMESPACE_ID.eq(namespace.id().get());
 
-		return new PageImpl<>(invitations, pageable, invitations.size());
+		return executor.execute(
+				createInvitationsQuery(condition),
+				DefaultInvitations::invitation,
+				pageable,
+				() -> context.fetchCount(createInvitationsQuery(condition))
+		);
 	}
 
 	@NonNull

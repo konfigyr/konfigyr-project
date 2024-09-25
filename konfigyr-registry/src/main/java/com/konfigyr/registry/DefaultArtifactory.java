@@ -1,6 +1,7 @@
 package com.konfigyr.registry;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.jooq.PageableExecutor;
 import com.konfigyr.support.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,6 @@ import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
+import static com.konfigyr.data.tables.NamespaceMembers.NAMESPACE_MEMBERS;
 import static com.konfigyr.data.tables.Repositories.REPOSITORIES;
 
 /**
@@ -32,6 +33,13 @@ import static com.konfigyr.data.tables.Repositories.REPOSITORIES;
 @RequiredArgsConstructor
 class DefaultArtifactory implements Artifactory {
 
+	private static final PageableExecutor executor = PageableExecutor.builder()
+			.defaultSortField(REPOSITORIES.UPDATED_AT.desc())
+			.sortField("id", REPOSITORIES.ID)
+			.sortField("name", REPOSITORIES.NAME)
+			.sortField("date", REPOSITORIES.UPDATED_AT)
+			.build();
+
 	private final DSLContext context;
 
 	@NonNull
@@ -44,20 +52,28 @@ class DefaultArtifactory implements Artifactory {
 				REPOSITORIES.NAME.likeIgnoreCase("%" + term + "%")
 		));
 
-		if (query instanceof ArtifactorySearchQuery asq) {
-			asq.namespace().ifPresent(namespace -> conditions.add(
-					NAMESPACES.SLUG.eq(namespace)
-			));
-		}
+		query.criteria(SearchQuery.NAMESPACE).ifPresent(namespace -> conditions.add(
+				NAMESPACES.SLUG.eq(namespace)
+		));
 
-		final List<Repository> repositories = createRepositoryQuery(DSL.and(conditions))
-				.offset(query.pageable().getOffset())
-				.limit(query.pageable().getPageSize())
-				.fetch(DefaultArtifactory::toRepository);
+		query.criteria(SearchQuery.ACCOUNT).ifPresentOrElse(
+				account -> conditions.add(
+						REPOSITORIES.IS_PRIVATE.isFalse().or(
+								DSL.and(
+										REPOSITORIES.IS_PRIVATE.isTrue(),
+										NAMESPACE_MEMBERS.ACCOUNT_ID.eq(account.get())
+								)
+						)
+				),
+				() -> conditions.add(REPOSITORIES.IS_PRIVATE.isFalse())
+		);
 
-		final long count = context.fetchCount(createRepositoryQuery(DSL.and(conditions)));
-
-		return new PageImpl<>(repositories, query.pageable(), count);
+		return executor.execute(
+				createRepositoryQuery(DSL.and(conditions)),
+				DefaultArtifactory::toRepository,
+				query.pageable(),
+				() -> context.fetchCount(createRepositoryQuery(DSL.and(conditions)))
+		);
 	}
 
 	@NonNull
@@ -93,7 +109,7 @@ class DefaultArtifactory implements Artifactory {
 	}
 
 	private SelectConditionStep<? extends Record> createRepositoryQuery(@NonNull Condition predicate) {
-		return context.select(
+		return context.selectDistinct(
 						REPOSITORIES.ID,
 						NAMESPACES.SLUG,
 						REPOSITORIES.SLUG,
@@ -106,6 +122,8 @@ class DefaultArtifactory implements Artifactory {
 				.from(REPOSITORIES)
 				.innerJoin(NAMESPACES)
 				.on(REPOSITORIES.NAMESPACE_ID.eq(NAMESPACES.ID))
+				.fullOuterJoin(NAMESPACE_MEMBERS)
+				.on(NAMESPACE_MEMBERS.NAMESPACE_ID.eq(NAMESPACES.ID))
 				.where(predicate);
 	}
 

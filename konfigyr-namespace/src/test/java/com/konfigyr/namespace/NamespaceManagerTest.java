@@ -3,6 +3,7 @@ package com.konfigyr.namespace;
 import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.Avatar;
+import com.konfigyr.support.SearchQuery;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -100,6 +101,20 @@ class NamespaceManagerTest {
 						tuple(EntityId.from(2), EntityId.from(2), EntityId.from(1), NamespaceRole.ADMIN, "john.doe@konfigyr.com"),
 						tuple(EntityId.from(3), EntityId.from(2), EntityId.from(2), NamespaceRole.USER, "jane.doe@konfigyr.com")
 				);
+	}
+
+	@Test
+	@DisplayName("should search namespace members")
+	void shouldSearchMembers() {
+		final var query = SearchQuery.builder()
+				.term("John")
+				.build();
+
+		assertThat(manager.findMembers("konfigyr", query))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(Member::id)
+				.containsExactlyInAnyOrder(EntityId.from(2));
 	}
 
 	@Test

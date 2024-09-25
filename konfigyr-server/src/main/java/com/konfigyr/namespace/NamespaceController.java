@@ -2,9 +2,9 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.registry.Artifactory;
-import com.konfigyr.registry.ArtifactorySearchQuery;
 import com.konfigyr.registry.Repository;
 import com.konfigyr.security.AccountPrincipal;
+import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -72,7 +72,10 @@ public class NamespaceController implements MessageSourceAware {
 	ModelAndView namespace(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
 		final Namespace namespace = lookupNamespace(slug);
 		final Page<Repository> repositories = artifactory.searchRepositories(
-				ArtifactorySearchQuery.of(null, namespace.slug(), Pageable.ofSize(20))
+				SearchQuery.builder()
+						.criteria(SearchQuery.NAMESPACE, namespace.slug())
+						.pageable(Pageable.ofSize(20))
+						.build()
 		);
 
 		model.addAttribute("namespace", namespace);
@@ -91,7 +94,7 @@ public class NamespaceController implements MessageSourceAware {
 	@GetMapping("/namespace/{namespace}/members")
 	ModelAndView members(@PathVariable("namespace") @NonNull String slug, @NonNull Model model) {
 		final Namespace namespace = lookupNamespace(slug);
-		final Page<Member> members = manager.findMembers(namespace);
+		final Page<Member> members = manager.findMembers(namespace, Pageable.unpaged());
 
 		model.addAttribute("namespace", namespace);
 		model.addAttribute("members", members);
