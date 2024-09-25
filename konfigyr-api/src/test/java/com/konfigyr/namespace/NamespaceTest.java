@@ -38,7 +38,7 @@ class NamespaceTest {
 				.returns("test-namespace", Namespace::slug)
 				.returns("Test namespace", Namespace::name)
 				.returns("My testing team namespace", Namespace::description)
-				.returns("https://example.com/avatar.gif", Namespace::avatar)
+				.returns(Avatar.parse("https://example.com/avatar.gif"), Namespace::avatar)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now(ZoneOffset.UTC).minusDays(62), within(1, ChronoUnit.HOURS))
@@ -76,7 +76,7 @@ class NamespaceTest {
 				.returns("test-namespace", Namespace::slug)
 				.returns("Test namespace", Namespace::name)
 				.returns(null, Namespace::description)
-				.returns(null, Namespace::avatar)
+				.returns(Avatar.generate("test-namespace", "T"), Namespace::avatar)
 				.returns(null, Namespace::createdAt)
 				.returns(null, Namespace::updatedAt);
 	}
