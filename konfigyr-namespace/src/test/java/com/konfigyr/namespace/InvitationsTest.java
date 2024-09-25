@@ -5,10 +5,7 @@ import com.konfigyr.account.AccountStatus;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.jooq.SettableRecord;
 import com.konfigyr.mail.Mail;
-import com.konfigyr.mail.Recipient;
-import com.konfigyr.mail.Subject;
 import com.konfigyr.support.FullName;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -81,29 +78,10 @@ class InvitationsTest {
 				);
 
 		events.assertThat()
-				.contains(Mail.class)
-				.matching(mail -> {
-					assertThat(mail)
-							.returns("mail/invitation", Mail::template)
-							.satisfies(it -> assertThat(it.subject())
-									.returns("mail.invitation", Subject::value)
-									.extracting(Subject::arguments)
-									.asInstanceOf(InstanceOfAssertFactories.array(Object[].class))
-									.containsExactly("Konfigyr")
-							)
-							.satisfies(it -> assertThat(it.recipients())
-									.containsExactly(Recipient.to(invite.recipient()))
-							)
-							.satisfies(it -> assertThat(it.attributes())
-									.containsEntry("sender", "John Doe")
-									.containsEntry("namespace", "Konfigyr")
-									.containsEntry("namespaceLink", "http://localhost/konfigyr/artifacts")
-									.containsEntry("link", "http://localhost/konfigyr/invitation/" + invitation.key())
-									.containsEntry("expiration", 7L)
-							);
-
-					return true;
-				});
+				.contains(InvitationEvent.Created.class)
+				.matching(event -> invitation.namespace().equals(event.id()))
+				.matching(event -> invitation.namespace().equals(event.namespace()))
+				.matching(event -> invitation.key().equals(event.key()));
 	}
 
 	@Test
@@ -150,29 +128,10 @@ class InvitationsTest {
 				);
 
 		events.assertThat()
-				.contains(Mail.class)
-				.matching(mail -> {
-					assertThat(mail)
-							.returns("mail/invitation", Mail::template)
-							.satisfies(it -> assertThat(it.subject())
-									.returns("mail.invitation", Subject::value)
-									.extracting(Subject::arguments)
-									.asInstanceOf(InstanceOfAssertFactories.array(Object[].class))
-									.containsExactly("Konfigyr")
-							)
-							.satisfies(it -> assertThat(it.recipients())
-									.containsExactly(Recipient.to(invite.recipient()))
-							)
-							.satisfies(it -> assertThat(it.attributes())
-									.containsEntry("sender", "John Doe")
-									.containsEntry("namespace", "Konfigyr")
-									.containsEntry("namespaceLink", "http://localhost/konfigyr/artifacts")
-									.containsEntry("link", "http://localhost/konfigyr/invitation/" + invitation.key())
-									.containsEntry("expiration", 7L)
-							);
-
-					return true;
-				});
+				.contains(InvitationEvent.Created.class)
+				.matching(event -> invitation.namespace().equals(event.id()))
+				.matching(event -> invitation.namespace().equals(event.namespace()))
+				.matching(event -> invitation.key().equals(event.key()));
 	}
 
 	@Test
@@ -357,7 +316,7 @@ class InvitationsTest {
 	@Test
 	@Transactional
 	@DisplayName("should accept pending invitation and create namespace member")
-	void shouldAcceptInvitation() {
+	void shouldAcceptInvitation(AssertablePublishedEvents events) {
 		final var namespace = namespaces.findBySlug("konfigyr");
 		assertThat(namespace).isPresent();
 
@@ -375,6 +334,12 @@ class InvitationsTest {
 
 		assertThat(invitations.get(namespace.get(), "qT6uq2ZP1Yv2bWmt"))
 				.isEmpty();
+
+		events.assertThat()
+				.contains(InvitationEvent.Accepted.class)
+				.matching(event -> invitation.get().namespace().equals(event.id()))
+				.matching(event -> invitation.get().namespace().equals(event.namespace()))
+				.matching(event -> invitation.get().key().equals(event.key()));
 	}
 
 	@Test
