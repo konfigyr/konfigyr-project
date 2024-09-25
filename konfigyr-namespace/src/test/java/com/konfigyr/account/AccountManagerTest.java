@@ -4,6 +4,8 @@ import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.namespace.NamespaceType;
+import com.konfigyr.support.Avatar;
+import com.konfigyr.support.FullName;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,7 +45,8 @@ class AccountManagerTest {
 				.returns("John", Account::firstName)
 				.returns("Doe", Account::lastName)
 				.returns("John Doe", Account::displayName)
-				.returns(null, Account::avatar)
+				.returns(FullName.of("John", "Doe"), Account::fullName)
+				.returns(Avatar.generate(id, "JD"), Account::avatar)
 				.returns(false, Account::isDeletable)
 				.satisfies(it -> assertThat(it.lastLoginAt())
 						.isNotNull()
@@ -75,7 +78,8 @@ class AccountManagerTest {
 				.returns("Jane", Account::firstName)
 				.returns("Doe", Account::lastName)
 				.returns("Jane Doe", Account::displayName)
-				.returns(null, Account::avatar)
+				.returns(FullName.of("Jane", "Doe"), Account::fullName)
+				.returns(Avatar.generate(EntityId.from(2), "JD"), Account::avatar)
 				.returns(true, Account::isDeletable)
 				.returns(null, Account::lastLoginAt)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
@@ -100,10 +104,10 @@ class AccountManagerTest {
 				.returns(NamespaceRole.USER, Membership::role)
 				.returns(NamespaceType.TEAM, Membership::type)
 				.returns("Konfigyr", Membership::name)
-				.returns(null, Membership::avatar)
+				.returns(Avatar.generate("konfigyr", "K"), Membership::avatar)
 				.satisfies(it -> assertThat(it.since())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now().minusDays(2))
+						.isCloseTo(OffsetDateTime.now().minusDays(2), within(2, ChronoUnit.HOURS))
 				);
 	}
 
@@ -128,7 +132,7 @@ class AccountManagerTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should create account with registration data")
+	@DisplayName("should create account with registration data with an avatar")
 	void shouldRegisterAccount() {
 		final var registration = AccountRegistration.builder()
 				.email("muad.dib@arakis.com")
@@ -143,7 +147,8 @@ class AccountManagerTest {
 				.returns("Paul", Account::firstName)
 				.returns("Atreides", Account::lastName)
 				.returns("Paul Atreides", Account::displayName)
-				.returns("https://i.pinimg.com/originals/53/32/87/53328770473d527d3400355e9d0edb15.jpg", Account::avatar)
+				.returns(FullName.of("Paul", "Atreides"), Account::fullName)
+				.returns(Avatar.parse("https://i.pinimg.com/originals/53/32/87/53328770473d527d3400355e9d0edb15.jpg"), Account::avatar)
 				.returns(null, Account::lastLoginAt)
 				.satisfies(it -> assertThat(it.id()).isNotNull())
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
@@ -152,44 +157,23 @@ class AccountManagerTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should create account with registration data containing only an email address")
-	void shouldRegisterAccountWithJustEmail(PublishedEvents events) {
-		final var registration = AccountRegistration.builder()
-						.email("muad.dib@arakis.com")
-						.build();
-
-		assertThat(manager.create(registration))
-				.returns(AccountStatus.ACTIVE, Account::status)
-				.returns("muad.dib@arakis.com", Account::email)
-				.returns(null, Account::firstName)
-				.returns(null, Account::lastName)
-				.returns("muad.dib@arakis.com", Account::displayName)
-				.returns(null, Account::avatar)
-				.returns(Memberships.empty(), Account::memberships)
-				.returns(null, Account::lastLoginAt)
-				.satisfies(it -> assertThat(it.id()).isNotNull())
-				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
-
-		events.eventOfTypeWasPublished(AccountEvent.Registered.class);
-	}
-
-	@Test
-	@Transactional
-	@DisplayName("should create account with registration data with full name and email address")
-	void shouldRegisterAccountWithFullName(PublishedEvents events) {
+	@DisplayName("should create account with registration data with a generated avatar")
+	void shouldRegisterAccountWithGeneratedAvatar(PublishedEvents events) {
 		final var registration = AccountRegistration.builder()
 				.email("muad.dib@arakis.com")
 				.fullName("Paul Atreides")
 				.build();
 
-		assertThat(manager.create(registration))
+		final var account = manager.create(registration);
+
+		assertThat(account)
 				.returns(AccountStatus.ACTIVE, Account::status)
 				.returns("muad.dib@arakis.com", Account::email)
 				.returns("Paul", Account::firstName)
 				.returns("Atreides", Account::lastName)
 				.returns("Paul Atreides", Account::displayName)
-				.returns(null, Account::avatar)
+				.returns(FullName.of("Paul", "Atreides"), Account::fullName)
+				.returns(Avatar.generate(account.id(), "PA"), Account::avatar)
 				.returns(Memberships.empty(), Account::memberships)
 				.returns(null, Account::lastLoginAt)
 				.satisfies(it -> assertThat(it.id()).isNotNull())
@@ -204,6 +188,7 @@ class AccountManagerTest {
 	void shouldNotRegisterAccountWithSameEmail(PublishedEvents events) {
 		final var registration = AccountRegistration.builder()
 				.email("jane.doe@konfigyr.com")
+				.fullName("Jane Doe")
 				.build();
 
 		assertThatThrownBy(() -> manager.create(registration))

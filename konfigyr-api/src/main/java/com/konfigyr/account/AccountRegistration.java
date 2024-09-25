@@ -13,8 +13,8 @@ import java.io.Serializable;
  * {@link AccountManager}.
  *
  * @param email email address of the user account, can not be {@literal null}
- * @param firstName users first name, can be {@literal null}
- * @param lastName users last name, can be {@literal null}
+ * @param firstName users first name, can't be {@literal null}
+ * @param lastName users last name, can't be {@literal null}
  * @param avatar URL where the avatar for the user account is hosted, can be {@literal null}
  * @author Vladimir Spasic
  * @since 1.0.0
@@ -127,6 +127,8 @@ public record AccountRegistration(
 		 */
 		public AccountRegistration build() {
 			Assert.hasText(email, "Account email address can not be blank");
+			Assert.hasText(firstName, "Account first name can not be blank");
+			Assert.hasText(lastName, "Account last name can not be blank");
 
 			return new AccountRegistration(email, firstName, lastName, avatar);
 		}

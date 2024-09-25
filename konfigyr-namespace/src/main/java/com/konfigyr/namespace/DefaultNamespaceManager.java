@@ -268,7 +268,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 	@NonNull
 	private static Member toMember(@NonNull Record record) {
-		final FullName displayName = FullName.of(
+		final FullName fullName = FullName.of(
 				record.get(ACCOUNTS.FIRST_NAME),
 				record.get(ACCOUNTS.LAST_NAME)
 		);
@@ -279,7 +279,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.account(record.get(NAMESPACE_MEMBERS.ACCOUNT_ID))
 				.role(record.get(NAMESPACE_MEMBERS.ROLE))
 				.email(record.get(ACCOUNTS.EMAIL))
-				.displayName(displayName.get())
+				.fullName(fullName)
 				.avatar(record.get(ACCOUNTS.AVATAR))
 				.since(record.get(NAMESPACE_MEMBERS.SINCE))
 				.build();

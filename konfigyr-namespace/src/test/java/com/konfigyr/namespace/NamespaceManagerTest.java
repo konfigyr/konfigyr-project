@@ -2,6 +2,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.NamespaceTestConfiguration;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.support.Avatar;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -192,7 +193,7 @@ class NamespaceManagerTest {
 				.returns(NamespaceRole.ADMIN, Member::role)
 				.returns("john.doe@konfigyr.com", Member::email)
 				.returns("John Doe", Member::displayName)
-				.returns(null, Member::avatar)
+				.returns(Avatar.generate(definition.owner(), "JD"), Member::avatar)
 				.satisfies(it -> assertThat(it.since())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS))

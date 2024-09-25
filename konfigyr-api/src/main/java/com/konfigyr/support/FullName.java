@@ -115,6 +115,23 @@ public class FullName implements Supplier<String>, Serializable {
 	}
 
 	/**
+	 * Returns the initials of this full name.
+	 *
+	 * @return the full name initials, never {@literal null}
+	 */
+	@NonNull
+	public String initials() {
+		final StringBuilder builder = new StringBuilder()
+				.append(firstName.charAt(0));
+
+		if (StringUtils.hasText(lastName)) {
+			builder.append(lastName.charAt(0));
+		}
+
+		return builder.toString();
+	}
+
+	/**
 	 * Returns the full name as a string.
 	 *
 	 * @return the full name, never {@literal null}

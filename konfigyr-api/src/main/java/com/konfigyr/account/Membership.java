@@ -4,12 +4,14 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.namespace.NamespaceType;
+import com.konfigyr.support.Avatar;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -26,7 +28,7 @@ import java.util.Objects;
  * @param type type of the namespace, can't be {@literal null}
  * @param role role of this account within the namespace, can't be {@literal null}
  * @param name namespace name to which this account is a member of, can't be {@literal null}
- * @param avatar URL where the avatar for the namespace is hosted, can be {@literal null}
+ * @param avatar namespace avatar, can't be {@literal null}
  * @param since when did this account join the namespace, can be {@literal null}
  * @author Vladimir Spasic
  * @since 1.0.0
@@ -39,7 +41,7 @@ public record Membership(
 		@NonNull NamespaceType type,
 		@NonNull NamespaceRole role,
 		@NonNull String name,
-		@Nullable String avatar,
+		@NonNull Avatar avatar,
 		@Nullable OffsetDateTime since
 ) implements Comparable<Membership>, Serializable {
 
@@ -77,7 +79,7 @@ public record Membership(
 		private NamespaceType type;
 		private NamespaceRole role;
 		private String name;
-		private String avatar;
+		private Avatar avatar;
 		private OffsetDateTime since;
 
 		private Builder() {
@@ -183,12 +185,22 @@ public record Membership(
 		}
 
 		/**
-		 * Specify the avatar URL name of the {@link Namespace}.
+		 * Specify the avatar URI location that is used by the {@link Namespace}.
 		 *
-		 * @param avatar profile image location
+		 * @param uri namespace avatar location
 		 * @return membership builder
 		 */
-		public Builder avatar(String avatar) {
+		public Builder avatar(String uri) {
+			return StringUtils.hasText(uri) ? avatar(Avatar.parse(uri)) : this;
+		}
+
+		/**
+		 * Specify the {@link Avatar} that is used by the {@link Namespace}.
+		 *
+		 * @param avatar namespace avatar
+		 * @return membership builder
+		 */
+		public Builder avatar(Avatar avatar) {
 			this.avatar = avatar;
 			return this;
 		}
@@ -227,6 +239,10 @@ public record Membership(
 			Assert.notNull(role, "Namespace role can not be null");
 			Assert.hasText(namespace, "Namespace slug can not be blank");
 			Assert.hasText(name, "Namespace name can not be blank");
+
+			if (avatar == null) {
+				avatar = Avatar.generate(namespace, name.substring(0, 1));
+			}
 
 			return new Membership(id, namespace, type, role, name, avatar, since);
 		}

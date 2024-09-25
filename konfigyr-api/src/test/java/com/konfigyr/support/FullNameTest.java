@@ -32,21 +32,22 @@ class FullNameTest {
 	@MethodSource("names")
 	@ParameterizedTest(name = "should parse full name: \"{0}\" into \"{1}\" \"{2}\"")
 	@DisplayName("should parse full name")
-	void shouldParseFullName(String value, String firstName, String lastname) {
+	void shouldParseFullName(String value, String firstName, String lastname, String initials) {
 		assertThat(FullName.parse(value))
 				.isNotNull()
 				.returns(firstName, FullName::firstName)
 				.returns(lastname, FullName::lastName)
+				.returns(initials, FullName::initials)
 				.returns(value, FullName::get);
 	}
 
 	static Stream<Arguments> names() {
 		return Stream.of(
-				Arguments.of(".. .", "..", "."),
-				Arguments.of("Stilgar", "Stilgar", ""),
-				Arguments.of("Paul Atreides", "Paul",  "Atreides"),
-				Arguments.of("Liet-Kynes", "Liet-Kynes", ""),
-				Arguments.of("Piter De Vries", "Piter", "De Vries")
+				Arguments.of(".. .", "..", ".", ".."),
+				Arguments.of("Stilgar", "Stilgar", "", "S"),
+				Arguments.of("Paul Atreides", "Paul",  "Atreides", "PA"),
+				Arguments.of("Liet-Kynes", "Liet-Kynes", "", "L"),
+				Arguments.of("Piter De Vries", "Piter", "De Vries", "PD")
 		);
 	}
 

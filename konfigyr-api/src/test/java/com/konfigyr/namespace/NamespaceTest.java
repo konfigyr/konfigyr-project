@@ -2,6 +2,8 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.support.Avatar;
+import com.konfigyr.support.FullName;
 import com.konfigyr.support.Slug;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,14 +38,14 @@ class NamespaceTest {
 				.returns("test-namespace", Namespace::slug)
 				.returns("Test namespace", Namespace::name)
 				.returns("My testing team namespace", Namespace::description)
-				.returns("https://example.com/avatar.gif", Namespace::avatar)
+				.returns(Avatar.parse("https://example.com/avatar.gif"), Namespace::avatar)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now(ZoneOffset.UTC).minusDays(62))
+						.isCloseTo(OffsetDateTime.now(ZoneOffset.UTC).minusDays(62), within(1, ChronoUnit.HOURS))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
-						.isEqualToIgnoringMinutes(OffsetDateTime.now(ZoneOffset.UTC).minusHours(16))
+						.isCloseTo(OffsetDateTime.now(ZoneOffset.UTC).minusHours(16), within(1, ChronoUnit.HOURS))
 				);
 	}
 
@@ -74,7 +76,7 @@ class NamespaceTest {
 				.returns("test-namespace", Namespace::slug)
 				.returns("Test namespace", Namespace::name)
 				.returns(null, Namespace::description)
-				.returns(null, Namespace::avatar)
+				.returns(Avatar.generate("test-namespace", "T"), Namespace::avatar)
 				.returns(null, Namespace::createdAt)
 				.returns(null, Namespace::updatedAt);
 	}
@@ -136,7 +138,7 @@ class NamespaceTest {
 				.account(72L)
 				.role(NamespaceRole.ADMIN)
 				.email("john.doe@konfigyr.com")
-				.displayName("John Doe")
+				.fullName("John Doe")
 				.avatar("https://example.com/avatar.svg")
 				.since(Instant.now().minus(17, ChronoUnit.DAYS))
 				.build();
@@ -147,11 +149,14 @@ class NamespaceTest {
 				.returns(EntityId.from(72), Member::account)
 				.returns(NamespaceRole.ADMIN, Member::role)
 				.returns("john.doe@konfigyr.com", Member::email)
+				.returns("John", Member::firstName)
+				.returns("Doe", Member::lastName)
 				.returns("John Doe", Member::displayName)
-				.returns("https://example.com/avatar.svg", Member::avatar)
+				.returns(FullName.of("John", "Doe"), Member::fullName)
+				.returns(Avatar.parse("https://example.com/avatar.svg"), Member::avatar)
 				.satisfies(it -> assertThat(it.since())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now(ZoneOffset.UTC).minusDays(17))
+						.isCloseTo(OffsetDateTime.now(ZoneOffset.UTC).minusDays(17), within(1, ChronoUnit.HOURS))
 				);
 	}
 
@@ -180,14 +185,21 @@ class NamespaceTest {
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Member email address can not be blank");
 
-		assertThat(builder.email("jane.doe@konfigyr.com").build())
+		assertThatThrownBy(() -> builder.email("jane.doe@konfigyr.com").build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Member full name can not be null");
+
+		assertThat(builder.fullName("Jane Doe").build())
 				.returns(EntityId.from(12476518224L), Member::id)
 				.returns(EntityId.from(12476518224L), Member::namespace)
 				.returns(EntityId.from(12476518224L), Member::account)
 				.returns(NamespaceRole.USER, Member::role)
 				.returns("jane.doe@konfigyr.com", Member::email)
-				.returns("jane.doe@konfigyr.com", Member::displayName)
-				.returns(null, Member::avatar)
+				.returns(FullName.of("Jane", "Doe"), Member::fullName)
+				.returns("Jane Doe", Member::displayName)
+				.returns("Jane", Member::firstName)
+				.returns("Doe", Member::lastName)
+				.returns(Avatar.generate(EntityId.from(12476518224L), "JD"), Member::avatar)
 				.returns(null, Member::since);
 	}
 
