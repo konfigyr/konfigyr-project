@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -52,10 +54,11 @@ class ArtifactoryTest {
 	void shouldSearchForAccessibleRepositories() {
 		final SearchQuery query = SearchQuery.builder()
 				.criteria(SearchQuery.ACCOUNT, EntityId.from(1))
+				.pageable(PageRequest.of(0, 10, Sort.by("id")))
 				.build();
 
 		assertThatObject(artifactory.searchRepositories(query))
-				.returns(20, Page::getSize)
+				.returns(10, Page::getSize)
 				.returns(0, Page::getNumber)
 				.returns(4, Page::getNumberOfElements)
 				.returns(4L, Page::getTotalElements)
@@ -138,11 +141,11 @@ class ArtifactoryTest {
 				.returns(true, Repository::isPrivate)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
-						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
+						.isCloseTo(OffsetDateTime.now().minusDays(3), within(5, ChronoUnit.MINUTES))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
-						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
+						.isCloseTo(OffsetDateTime.now().minusDays(1), within(5, ChronoUnit.MINUTES))
 				);
 	}
 
@@ -163,11 +166,11 @@ class ArtifactoryTest {
 				.returns(false, Repository::isPrivate)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
-						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
+						.isCloseTo(OffsetDateTime.now().minusDays(7), within(5, ChronoUnit.MINUTES))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
-						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
+						.isCloseTo(OffsetDateTime.now().minusDays(1), within(5, ChronoUnit.MINUTES))
 				);
 	}
 
@@ -188,11 +191,11 @@ class ArtifactoryTest {
 				.returns(false, Repository::isPrivate)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
-						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
+						.isCloseTo(OffsetDateTime.now().minusDays(5), within(5, ChronoUnit.MINUTES))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
-						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
+						.isCloseTo(OffsetDateTime.now().minusDays(2), within(5, ChronoUnit.MINUTES))
 				);
 	}
 
