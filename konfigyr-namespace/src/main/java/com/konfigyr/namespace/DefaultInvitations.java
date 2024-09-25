@@ -4,7 +4,6 @@ import com.konfigyr.data.Keys;
 import com.konfigyr.data.tables.Accounts;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.jooq.SettableRecord;
-import com.konfigyr.mail.Mail;
 import com.konfigyr.support.KeyGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponents;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -43,7 +42,6 @@ import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
  * @since 1.0.0
  **/
 @Slf4j
-@Service
 @RequiredArgsConstructor
 class DefaultInvitations implements Invitations {
 
@@ -135,7 +133,8 @@ class DefaultInvitations implements Invitations {
 		log.info("Invitation has been created for namespace '{}' with: [key{}, role={}, sender={}]",
 				context.name(), key, invite.role(), invite.sender());
 
-		send(context, invitation);
+		final UriComponents host = ServletUriComponentsBuilder.fromCurrentServletMapping().build();
+		publisher.publishEvent(new InvitationEvent.Created(invitation.namespace(), invitation.key(), host));
 
 		return invitation;
 	}
@@ -174,6 +173,8 @@ class DefaultInvitations implements Invitations {
 						INVITATIONS.KEY.eq(invitation.key())
 				))
 				.execute();
+
+		publisher.publishEvent(new InvitationEvent.Accepted(invitation.namespace(), invitation.key()));
 	}
 
 	/**
@@ -198,30 +199,6 @@ class DefaultInvitations implements Invitations {
 		if (count > 0) {
 			log.info("Successfully cleaned up {} expired invitations", count);
 		}
-	}
-
-	private void send(NamespaceInvitationContext context, Invitation invitation) {
-		final String namespaceLink = ServletUriComponentsBuilder.fromCurrentServletMapping()
-				.pathSegment(context.slug(), "artifacts")
-				.toUriString();
-
-		final String invitationLink = ServletUriComponentsBuilder.fromCurrentServletMapping()
-				.pathSegment(context.slug(), "invitation", invitation.key())
-				.toUriString();
-
-		final Mail mail = Mail.builder()
-				.subject("mail.invitation", context.name())
-				.template("mail/invitation")
-				.to(invitation.recipient().email())
-				.attribute("invitation", invitation)
-				.attribute("namespace", context.name())
-				.attribute("namespaceLink", namespaceLink)
-				.attribute("sender", context.sender().name().get())
-				.attribute("expiration", TTL.toDays())
-				.attribute("link", invitationLink)
-				.build();
-
-		publisher.publishEvent(mail);
 	}
 
 	@NonNull
