@@ -4,6 +4,8 @@ import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.namespace.NamespaceType;
+import com.konfigyr.support.Avatar;
+import com.konfigyr.support.FullName;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +53,8 @@ class AccountTest {
 				.returns("John", Account::firstName)
 				.returns("Doe", Account::lastName)
 				.returns("John Doe", Account::displayName)
-				.returns("https://example.com/avatar.gif", Account::avatar)
+				.returns(FullName.of("John", "Doe"), Account::fullName)
+				.returns(Avatar.parse("https://example.com/avatar.gif"), Account::avatar)
 				.returns(true, Account::isDeletable)
 				.returns(Memberships.of(membership), Account::memberships)
 				.satisfies(it -> assertThat(it.lastLoginAt())
@@ -60,11 +63,11 @@ class AccountTest {
 				)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isNotNull()
-						.isEqualToIgnoringHours(OffsetDateTime.now(ZoneOffset.UTC).minusDays(10))
+						.isCloseTo(OffsetDateTime.now(ZoneOffset.UTC).minusDays(10), within(1, ChronoUnit.SECONDS))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
-						.isEqualToIgnoringMinutes(OffsetDateTime.now(ZoneOffset.UTC).minusHours(3))
+						.isCloseTo(OffsetDateTime.now(ZoneOffset.UTC).minusHours(3), within(1, ChronoUnit.SECONDS))
 				);
 
 		assertThat(Account.builder(account).build())
@@ -140,7 +143,8 @@ class AccountTest {
 				.returns(null, Account::firstName)
 				.returns(null, Account::lastName)
 				.returns("john.doe@konfigyr.com", Account::displayName)
-				.returns(null, Account::avatar)
+				.returns(null, Account::fullName)
+				.returns(Avatar.generate(EntityId.from(12476518224L), "J"), Account::avatar)
 				.returns(true, Account::isDeletable)
 				.returns(Memberships.empty(), Account::memberships)
 				.returns(null, Account::lastLoginAt)
@@ -169,18 +173,12 @@ class AccountTest {
 	@DisplayName("should create account registration using fluent builder with full names")
 	void shouldCreateAccountRegistrationWithFullName() {
 		final var builder = AccountRegistration.builder()
-				.email("john.doe@konfigyr.com")
-				.fullName(null);
+				.email("john.doe@konfigyr.com");
 
-		assertThat(builder.build())
-				.returns("john.doe@konfigyr.com", AccountRegistration::email)
-				.returns(null, AccountRegistration::firstName)
-				.returns(null, AccountRegistration::lastName);
-
-		assertThat(builder.fullName("John").build())
+		assertThat(builder.fullName("John Doe").build())
 				.returns("john.doe@konfigyr.com", AccountRegistration::email)
 				.returns("John", AccountRegistration::firstName)
-				.returns("", AccountRegistration::lastName);
+				.returns("Doe", AccountRegistration::lastName);
 
 		assertThat(builder.fullName("Jane Doe").build())
 				.returns("john.doe@konfigyr.com", AccountRegistration::email)
@@ -189,7 +187,7 @@ class AccountTest {
 	}
 
 	@Test
-	@DisplayName("should fail to create account registration without email address")
+	@DisplayName("should fail to create account registration without required information")
 	void shouldValidateAccountRegistrationBuilder() {
 		final var builder = AccountRegistration.builder();
 
@@ -197,10 +195,18 @@ class AccountTest {
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Account email address can not be blank");
 
-		assertThat(builder.email("john.doe@konfigyr.com").build())
+		assertThatThrownBy(builder.email("john.doe@konfigyr.com")::build)
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Account first name can not be blank");
+
+		assertThatThrownBy(builder.firstName("John")::build)
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Account last name can not be blank");
+
+		assertThat(builder.lastName("Doe").build())
 				.returns("john.doe@konfigyr.com", AccountRegistration::email)
-				.returns(null, AccountRegistration::firstName)
-				.returns(null, AccountRegistration::lastName)
+				.returns("John", AccountRegistration::firstName)
+				.returns("Doe", AccountRegistration::lastName)
 				.returns(null, AccountRegistration::avatar);
 	}
 
@@ -223,7 +229,7 @@ class AccountTest {
 				.returns(NamespaceType.TEAM, Membership::type)
 				.returns("konfigyr", Membership::namespace)
 				.returns("Konfigyr", Membership::name)
-				.returns("https://example.com/avatar.gif", Membership::avatar)
+				.returns(Avatar.parse("https://example.com/avatar.gif"), Membership::avatar)
 				.satisfies(it -> assertThat(it.since())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now(ZoneOffset.UTC), byLessThan(300, ChronoUnit.MILLIS))
@@ -349,7 +355,7 @@ class AccountTest {
 				.returns(NamespaceRole.USER, Membership::role)
 				.returns("konfigyr", Membership::namespace)
 				.returns("Konfigyr", Membership::name)
-				.returns(null, Membership::avatar)
+				.returns(Avatar.generate("konfigyr", "K"), Membership::avatar)
 				.returns(null, Membership::since);
 	}
 
@@ -374,6 +380,8 @@ class AccountTest {
 	void shouldCreateAccountExistsException() {
 		final var registration = AccountRegistration.builder()
 				.email("john.doe@konfigyr.com")
+				.firstName("John")
+				.lastName("Doe")
 				.build();
 
 		assertThat(new AccountExistsException(registration))
@@ -388,6 +396,7 @@ class AccountTest {
 		final var cause = new Exception("Cause");
 		final var registration = AccountRegistration.builder()
 				.email("john.doe@konfigyr.com")
+				.fullName("John Doe")
 				.build();
 
 		assertThat(new AccountExistsException(registration, cause))

@@ -126,7 +126,7 @@ class DefaultAccountManager implements AccountManager {
 			count = context.update(ACCOUNTS)
 					.set(ACCOUNTS.FIRST_NAME, account.firstName())
 					.set(ACCOUNTS.LAST_NAME, account.lastName())
-					.set(ACCOUNTS.AVATAR, account.avatar())
+					.set(ACCOUNTS.AVATAR, account.avatar().get())
 					.set(ACCOUNTS.UPDATED_AT, OffsetDateTime.now())
 					.where(ACCOUNTS.ID.eq(account.id().get()))
 					.execute();

@@ -5,12 +5,12 @@ import com.konfigyr.account.AccountStatus;
 import com.konfigyr.account.Memberships;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.security.authority.MembershipAuthoritiesConverter;
+import com.konfigyr.support.Avatar;
 import lombok.*;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jmolecules.ddd.types.Identifiable;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -79,10 +79,10 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<E
 	String name;
 
 	/**
-	 * URL that points to the profile picture of this {@link AccountPrincipal}.
+	 * Avatar that points to the profile picture of this {@link AccountPrincipal}.
 	 */
-	@Nullable
-	String avatar;
+	@NonNull
+	Avatar avatar;
 
 	/**
 	 * Namespace memberships for this {@link AccountPrincipal}, can not be {@code null}.
@@ -165,12 +165,12 @@ public class AccountPrincipal implements OAuth2User, UserDetails, Identifiable<E
 	}
 
 	/**
-	 * URL where the avatar for the {@link Account user account} is hosted.
+	 * Avatar for the {@link Account user account} is hosted.
 	 *
-	 * @return avatar URL, can be {@literal null}
+	 * @return avatar URL, can't be {@literal null}
 	 */
-	@Nullable
-	public String getAvatar() {
+	@NonNull
+	public Avatar getAvatar() {
 		return avatar;
 	}
 

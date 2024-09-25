@@ -2,6 +2,8 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.support.Avatar;
+import com.konfigyr.support.FullName;
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.lang.NonNull;
@@ -33,8 +35,8 @@ import java.time.ZoneOffset;
  * @param account identifier of the account used by the member, can't be {@literal null}
  * @param role role of this member within the namespace, can't be {@literal null}
  * @param email email address of this member, can't be {@literal null}
- * @param displayName full name or an email address of this member, can't be {@literal null}
- * @param avatar URL where the avatar for the member is hosted, can be {@literal null}
+ * @param fullName full name of this member, can't be {@literal null}
+ * @param avatar member profile avatar, can't be {@literal null}
  * @param since when did this member join the namespace, can be {@literal null}
  * @author Vladimir Spasic
  * @since 1.0.0
@@ -46,13 +48,43 @@ public record Member(
 		@NonNull EntityId account,
 		@NonNull NamespaceRole role,
 		@NonNull String email,
-		@NonNull String displayName,
-		@Nullable String avatar,
+		@NonNull FullName fullName,
+		@NonNull Avatar avatar,
 		@Nullable OffsetDateTime since
 ) implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = -9192528953125322241L;
+
+	/**
+	 * Returns the first name for this {@link Member}.
+	 *
+	 * @return member's first name, can't be {@literal null}
+	 */
+	@NonNull
+	public String firstName() {
+		return fullName.firstName();
+	}
+
+	/**
+	 * Returns the last name for this {@link Member}.
+	 *
+	 * @return member's last name, can't be {@literal null}
+	 */
+	@NonNull
+	public String lastName() {
+		return fullName.lastName();
+	}
+
+	/**
+	 * Returns the full name as a string to display the full name of the {@link Member}.
+	 *
+	 * @return full name string representation, can't be {@literal null}
+	 */
+	@NonNull
+	public String displayName() {
+		return fullName.get();
+	}
 
 	/**
 	 * Creates a new {@link Builder fluent namespace member builder} instance used to create
@@ -74,8 +106,8 @@ public record Member(
 		private EntityId account;
 		private NamespaceRole role;
 		private String email;
-		private String displayName;
-		private String avatar;
+		private FullName fullName;
+		private Avatar avatar;
 		private OffsetDateTime since;
 
 		private Builder() {
@@ -214,23 +246,43 @@ public record Member(
 		}
 
 		/**
-		 * Specify the location of the {@link Member} avatar or profile image.
+		 * Specify the full name of this {@link Member}.
 		 *
-		 * @param displayName display name
+		 * @param fullName members full name
 		 * @return namespace member builder
 		 */
-		public Builder displayName(String displayName) {
-			this.displayName = displayName;
+		public Builder fullName(String fullName) {
+			return fullName(FullName.parse(fullName));
+		}
+
+		/**
+		 * Specify the {@link FullName} of this {@link Member}.
+		 *
+		 * @param fullName members full name
+		 * @return namespace member builder
+		 */
+		public Builder fullName(FullName fullName) {
+			this.fullName = fullName;
 			return this;
 		}
 
 		/**
-		 * Specify the display name of this {@link Member}.
+		 * Specify the account avatar location of this {@link Member}.
 		 *
-		 * @param avatar profile image location
+		 * @param uri avatar image location
 		 * @return namespace member builder
 		 */
-		public Builder avatar(String avatar) {
+		public Builder avatar(String uri) {
+			return StringUtils.hasText(uri) ? avatar(Avatar.parse(uri)) : this;
+		}
+
+		/**
+		 * Specify the account {@link Avatar} of this {@link Member}.
+		 *
+		 * @param avatar account avatar
+		 * @return namespace member builder
+		 */
+		public Builder avatar(Avatar avatar) {
 			this.avatar = avatar;
 			return this;
 		}
@@ -270,12 +322,13 @@ public record Member(
 			Assert.notNull(account, "Account entity identifier can not be null");
 			Assert.notNull(role, "Namespace role can not be null");
 			Assert.hasText(email, "Member email address can not be blank");
+			Assert.notNull(fullName, "Member full name can not be null");
 
-			if (!StringUtils.hasText(displayName)) {
-				displayName = email;
+			if (avatar == null) {
+				avatar = Avatar.generate(account, fullName.initials());
 			}
 
-			return new Member(id, namespace, account, role, email, displayName, avatar, since);
+			return new Member(id, namespace, account, role, email, fullName, avatar, since);
 		}
 	}
 }

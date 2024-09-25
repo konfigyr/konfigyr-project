@@ -3,6 +3,8 @@ package com.konfigyr.account;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.namespace.NamespaceType;
+import com.konfigyr.support.Avatar;
+import com.konfigyr.support.FullName;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Identity;
@@ -19,7 +21,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 
 /**
  * Record defining the user account.
@@ -27,10 +28,8 @@ import java.util.StringJoiner;
  * @param id unique user account identifier, can not be {@literal null}
  * @param status account status, can not be {@literal null}
  * @param email email address of the user account, can not be {@literal null}
- * @param firstName users first name, can be {@literal null}
- * @param lastName users last name, can be {@literal null}
- * @param displayName users full name or email address, can't be {@literal null}
- * @param avatar URL where the avatar for the user account is hosted, can be {@literal null}
+ * @param fullName users full name, can be {@literal null}
+ * @param avatar URL where the avatar for the user account is hosted, can't be {@literal null}
  * @param memberships account namespace memberships, can not be {@literal null}
  * @param lastLoginAt when was the user account last online, can be {@literal null}
  * @param createdAt when was this user account created, can be {@literal null}
@@ -43,10 +42,8 @@ public record Account(
 		@NonNull @Identity EntityId id,
 		@NonNull AccountStatus status,
 		@NonNull String email,
-		@Nullable String firstName,
-		@Nullable String lastName,
-		@NonNull String displayName,
-		@Nullable String avatar,
+		@Nullable FullName fullName,
+		@NonNull Avatar avatar,
 		@NonNull @Association(aggregateType = Account.class) Memberships memberships,
 		@Nullable OffsetDateTime lastLoginAt,
 		@Nullable OffsetDateTime createdAt,
@@ -55,6 +52,36 @@ public record Account(
 
 	@Serial
 	private static final long serialVersionUID = 294304163437354662L;
+
+	/**
+	 * Returns the first name for this {@link Account} if the {@link FullName} is known.
+	 *
+	 * @return account's first name, can be {@literal null}
+	 */
+	@Nullable
+	public String firstName() {
+		return fullName == null ? null : fullName.firstName();
+	}
+
+	/**
+	 * Returns the last name for this {@link Account} if the {@link FullName} is known.
+	 *
+	 * @return account's last name, can be {@literal null}
+	 */
+	@Nullable
+	public String lastName() {
+		return fullName == null ? null : fullName.lastName();
+	}
+
+	/**
+	 * Returns the full name or email address for this {@link Account}.
+	 *
+	 * @return full name or email address, can't be {@literal null}
+	 */
+	@NonNull
+	public String displayName() {
+		return fullName == null ? email : fullName.get();
+	}
 
 	/**
 	 * To successfully delete the {@link Account} user accounts are required to leave or delete
@@ -103,7 +130,7 @@ public record Account(
 		private String email;
 		private String firstName;
 		private String lastName;
-		private String avatar;
+		private Avatar avatar;
 		private List<Membership> memberships;
 		private OffsetDateTime lastLoginAt;
 		private OffsetDateTime createdAt;
@@ -215,12 +242,36 @@ public record Account(
 		}
 
 		/**
+		 * Specify the full name of the {@link Account}.
+		 *
+		 * @param fullName full name
+		 * @return account builder
+		 */
+		public Builder fullName(FullName fullName) {
+			if (fullName != null) {
+				this.firstName = fullName.firstName();
+				this.lastName = fullName.lastName();
+			}
+			return this;
+		}
+
+		/**
+		 * Specify the location of the {@link Account} avatar or profile image.
+		 *
+		 * @param uri profile image location
+		 * @return account builder
+		 */
+		public Builder avatar(String uri) {
+			return StringUtils.hasText(uri) ? avatar(Avatar.parse(uri)) : this;
+		}
+
+		/**
 		 * Specify the location of the {@link Account} avatar or profile image.
 		 *
 		 * @param avatar profile image location
 		 * @return account builder
 		 */
-		public Builder avatar(String avatar) {
+		public Builder avatar(Avatar avatar) {
 			this.avatar = avatar;
 			return this;
 		}
@@ -318,24 +369,6 @@ public record Account(
 			return this;
 		}
 
-		private String generateDisplayName() {
-			final StringJoiner joiner = new StringJoiner(" ");
-
-			if (StringUtils.hasText(firstName)) {
-				joiner.add(firstName);
-			}
-
-			if (StringUtils.hasText(lastName)) {
-				joiner.add(lastName);
-			}
-
-			if (joiner.length() == 0) {
-				joiner.add(email);
-			}
-
-			return joiner.toString();
-		}
-
 		/**
 		 * Creates a new instance of the {@link Account} using the values defined in the builder.
 		 *
@@ -351,7 +384,15 @@ public record Account(
 			final Memberships memberships = CollectionUtils.isEmpty(this.memberships) ?
 					Memberships.empty() : Memberships.of(this.memberships);
 
-			return new Account(id, status, email, firstName, lastName, generateDisplayName(),
+			final FullName fullName = StringUtils.hasText(firstName) ?
+					FullName.of(firstName, lastName) : null;
+
+			if (avatar == null) {
+				avatar = Avatar.generate(id.serialize(),
+						fullName == null ? email.substring(0, 1) : fullName.initials());
+			}
+
+			return new Account(id, status, email, fullName,
 					avatar, memberships, lastLoginAt, createdAt, updatedAt);
 		}
 
