@@ -1,8 +1,8 @@
 /**
- * Card (<article>)
+ * Card (<article>, .card)
  */
 
-article {
+article, .card {
   margin-bottom: var(--konfigyr-card-spacing-vertical);
   padding: var(--konfigyr-card-spacing-vertical)
     var(--konfigyr-card-spacing-horizontal);
@@ -14,7 +14,7 @@ article {
   > footer {
     margin-right: calc(var(--konfigyr-card-spacing-horizontal) * -1);
     margin-left: calc(var(--konfigyr-card-spacing-horizontal) * -1);
-    padding: calc(var(--konfigyr-card-spacing-vertical) * 0.66)
+    padding: calc(var(--konfigyr-card-spacing-vertical) * 0.5)
       var(--konfigyr-card-spacing-horizontal);
     background-color: var(--konfigyr-card-sectioning-background-color);
 

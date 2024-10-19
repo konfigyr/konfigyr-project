@@ -2,6 +2,8 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.assertions.AssertMatcher;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.integration.Integration;
+import com.konfigyr.integration.IntegrationProvider;
 import com.konfigyr.registry.Repository;
 import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestContainers;
@@ -24,6 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
@@ -309,6 +313,238 @@ class NamespaceControllerTest {
 						.returns(NamespaceType.TEAM, Namespace::type)
 				)))
 				.andExpect(model().attributeDoesNotExist("invitation"));
+	}
+
+	@Test
+	@DisplayName("should render namespace settings page")
+	void shouldRenderNamespaceSettings() throws Exception {
+		final var request = get("/namespace/konfigyr/settings")
+				.with(authentication(TestPrincipals.john()));
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isOk())
+				.andExpect(view().name("namespaces/settings/general"))
+				.andExpect(model().attribute("namespace", AssertMatcher.of(namespace -> assertThat(namespace)
+						.isNotNull()
+						.isInstanceOf(Namespace.class)
+						.asInstanceOf(InstanceOfAssertFactories.type(Namespace.class))
+						.returns(EntityId.from(2), Namespace::id)
+						.returns("konfigyr", Namespace::slug)
+						.returns("Konfigyr", Namespace::name)
+						.returns(NamespaceType.TEAM, Namespace::type)
+				)))
+				.andExpect(model().attribute("administrators", AssertMatcher.of(members -> assertThat(members)
+						.isNotNull()
+						.isInstanceOf(Set.class)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(Member.class))
+						.isEmpty()
+				)))
+				.andExpect(model().attribute("nameForm", AssertMatcher.of(form -> assertThat(form)
+						.isNotNull()
+						.isInstanceOf(NamespaceController.SettingsForm.class)
+						.extracting("value")
+						.isEqualTo("Konfigyr")
+				)))
+				.andExpect(model().attribute("urlForm", AssertMatcher.of(form -> assertThat(form)
+						.isNotNull()
+						.isInstanceOf(NamespaceController.SettingsForm.class)
+						.extracting("value")
+						.isEqualTo("konfigyr")
+				)))
+				.andExpect(model().attribute("descriptionForm", AssertMatcher.of(form -> assertThat(form)
+						.isNotNull()
+						.isInstanceOf(NamespaceController.SettingsForm.class)
+						.extracting("value")
+						.isEqualTo("Konfigyr namespace")
+				)));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should update namespace slug - rename")
+	void shouldUpdateNamespaceSlug() throws Exception {
+		final var request = post("/namespace/konfigyr/settings/rename")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.with(authentication(TestPrincipals.john()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isBadRequest())
+				.andExpect(view().name("namespaces/settings/general"))
+				.andExpect(model().attributeHasFieldErrors("urlForm", "value"));
+
+		mvc.perform(request.param("value", RandomStringUtils.randomAlphanumeric(300)))
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr/settings"))
+				.andExpect(flash().attributeExists("notification"));
+
+		mvc.perform(request.param("value", "konfigyr-team"))
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr-team/settings"))
+				.andExpect(flash().attributeExists("notification"));
+
+		assertThat(namespaces.findBySlug("konfigyr-team"))
+				.isPresent()
+				.get()
+				.returns(EntityId.from(2L), Namespace::id);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should update namespace name")
+	void shouldUpdateNamespaceName() throws Exception {
+		final var request = post("/namespace/konfigyr/settings/name")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.with(authentication(TestPrincipals.john()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isBadRequest())
+				.andExpect(view().name("namespaces/settings/general"))
+				.andExpect(model().attributeHasFieldErrors("nameForm", "value"));
+
+		mvc.perform(request.param("value", "Update namespace name"))
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr/settings"));
+
+		assertThat(namespaces.findBySlug("konfigyr"))
+				.isPresent()
+				.get()
+				.returns(EntityId.from(2L), Namespace::id)
+				.returns("Update namespace name", Namespace::name);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should update namespace description")
+	void shouldUpdateNamespaceDescription() throws Exception {
+		final var request = post("/namespace/konfigyr/settings/description")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.with(authentication(TestPrincipals.john()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isBadRequest())
+				.andExpect(view().name("namespaces/settings/general"))
+				.andExpect(model().attributeHasFieldErrors("descriptionForm", "value"));
+
+		mvc.perform(request.param("value", "Update namespace description"))
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr/settings"));
+
+		assertThat(namespaces.findBySlug("konfigyr"))
+				.isPresent()
+				.get()
+				.returns(EntityId.from(2L), Namespace::id)
+				.returns("Update namespace description", Namespace::description);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should delete namespace")
+	void shouldDeleteNamespace() throws Exception {
+		final var request = post("/namespace/konfigyr/delete")
+				.with(authentication(TestPrincipals.john()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/"));
+
+		assertThat(namespaces.findBySlug("konfigyr"))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to delete namespace without admin membership")
+	void shouldNotDeleteNamespaceWithoutPermissions() throws Exception {
+		final var request = post("/namespace/konfigyr/delete")
+				.with(authentication(TestPrincipals.jane()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
+
+		assertThat(namespaces.findBySlug("konfigyr"))
+				.isPresent();
+	}
+
+	@Test
+	@DisplayName("should fail to delete unknown namespace")
+	void shouldDeleteUnknownNamespace() throws Exception {
+		final var request = post("/namespace/unknown/delete")
+				.with(authentication(TestPrincipals.john()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
+
+		assertThat(namespaces.findBySlug("konfigyr"))
+				.isPresent();
+	}
+
+	@Test
+	@DisplayName("should render namespace integrations page")
+	void shouldRenderNamespaceIntegrations() throws Exception {
+		final var request = get("/namespace/konfigyr/settings/integrations")
+				.with(authentication(TestPrincipals.john()));
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isOk())
+				.andExpect(view().name("namespaces/settings/integrations"))
+				.andExpect(model().attribute("namespace", AssertMatcher.of(namespace -> assertThat(namespace)
+						.isNotNull()
+						.isInstanceOf(Namespace.class)
+						.asInstanceOf(InstanceOfAssertFactories.type(Namespace.class))
+						.returns(EntityId.from(2), Namespace::id)
+						.returns("konfigyr", Namespace::slug)
+						.returns("Konfigyr", Namespace::name)
+						.returns(NamespaceType.TEAM, Namespace::type)
+				)))
+				.andExpect(model().attribute("integrations", AssertMatcher.of(members -> assertThat(members)
+						.isNotNull()
+						.isInstanceOf(Page.class)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(Integration.class))
+						.hasSize(1)
+						.extracting(Integration::id, Integration::provider, Integration::reference)
+						.contains(
+								tuple(EntityId.from(2), IntegrationProvider.GITHUB, "220022")
+						)
+				)));
+	}
+
+	@Test
+	@DisplayName("should fail to render settings page for non-admins")
+	void shouldFailToRenderSettingsPageForNonAdmins() throws Exception {
+		final var request = get("/namespace/konfigyr/settings")
+				.with(authentication(TestPrincipals.jane()));
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to render integrations page for non-admins")
+	void shouldFailToRenderIntegrationsPageForNonAdmins() throws Exception {
+		final var request = get("/namespace/konfigyr/settings/integrations")
+				.with(authentication(TestPrincipals.jane()));
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().isForbidden());
 	}
 
 	@Test

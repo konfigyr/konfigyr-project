@@ -247,6 +247,55 @@
         />
     </changeSet>
 
+	<changeSet author="vspasic" id="1.0.0-create-namespace-integrations-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="integrations" />
+			</not>
+		</preConditions>
+
+		<comment>Initial Namespace Integrations table migration</comment>
+
+		<createTable tableName="integrations" remarks="Third party integrations granted by the namespace owners.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="type" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="provider" type="varchar(50)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="provider_reference" type="varchar(255)">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="integrations"
+				baseColumnNames="namespace_id"
+				constraintName="fk_namespace_integration"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
+
     <changeSet author="vspasic" id="1.0.0-create-repository-table">
         <preConditions onFail="MARK_RAN">
             <not>
