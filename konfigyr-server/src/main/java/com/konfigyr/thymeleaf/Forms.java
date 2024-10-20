@@ -61,6 +61,10 @@ public final class Forms {
 		return FormControl.create(id, name, helpText, status);
 	}
 
+	private static String generateId(String id, String suffix) {
+		return id + "-" + suffix;
+	}
+
 	/**
 	 * Record that encapsulates all required HTML element identifiers and attribute values
 	 * needed to create a form control input for a field.
@@ -158,7 +162,4 @@ public final class Forms {
 		}
 	}
 
-	private static String generateId(String id, String suffix) {
-		return id + "-" + suffix;
-	}
 }

@@ -366,6 +366,27 @@ class NamespaceControllerTest {
 	void shouldUpdateNamespaceSlug() throws Exception {
 		final var request = post("/namespace/konfigyr/settings/rename")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.param("value", "konfigyr-team")
+				.with(authentication(TestPrincipals.john()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr-team/settings"))
+				.andExpect(flash().attributeExists("notification"));
+
+		assertThat(namespaces.findBySlug("konfigyr-team"))
+				.isPresent()
+				.get()
+				.returns(EntityId.from(2L), Namespace::id);
+	}
+
+	@Test
+	@DisplayName("should validate namespace slug")
+	void shouldValidateNamespaceSlug() throws Exception {
+		final var request = post("/namespace/konfigyr/settings/rename")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.with(authentication(TestPrincipals.john()))
 				.with(csrf());
 
@@ -377,17 +398,11 @@ class NamespaceControllerTest {
 
 		mvc.perform(request.param("value", RandomStringUtils.randomAlphanumeric(300)))
 				.andDo(log())
-				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/namespace/konfigyr/settings"))
-				.andExpect(flash().attributeExists("notification"));
+				.andExpect(status().isBadRequest())
+				.andExpect(view().name("namespaces/settings/general"))
+				.andExpect(model().attributeHasFieldErrors("urlForm", "value"));
 
-		mvc.perform(request.param("value", "konfigyr-team"))
-				.andDo(log())
-				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/namespace/konfigyr-team/settings"))
-				.andExpect(flash().attributeExists("notification"));
-
-		assertThat(namespaces.findBySlug("konfigyr-team"))
+		assertThat(namespaces.findBySlug("konfigyr"))
 				.isPresent()
 				.get()
 				.returns(EntityId.from(2L), Namespace::id);
@@ -426,16 +441,11 @@ class NamespaceControllerTest {
 	void shouldUpdateNamespaceDescription() throws Exception {
 		final var request = post("/namespace/konfigyr/settings/description")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.param("value", "Update namespace description")
 				.with(authentication(TestPrincipals.john()))
 				.with(csrf());
 
 		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().isBadRequest())
-				.andExpect(view().name("namespaces/settings/general"))
-				.andExpect(model().attributeHasFieldErrors("descriptionForm", "value"));
-
-		mvc.perform(request.param("value", "Update namespace description"))
 				.andDo(log())
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/namespace/konfigyr/settings"));
@@ -445,6 +455,27 @@ class NamespaceControllerTest {
 				.get()
 				.returns(EntityId.from(2L), Namespace::id)
 				.returns("Update namespace description", Namespace::description);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should remove namespace description")
+	void shouldRemoveNamespaceDescription() throws Exception {
+		final var request = post("/namespace/konfigyr/settings/description")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.with(authentication(TestPrincipals.john()))
+				.with(csrf());
+
+		mvc.perform(request)
+				.andDo(log())
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/namespace/konfigyr/settings"));
+
+		assertThat(namespaces.findBySlug("konfigyr"))
+				.isPresent()
+				.get()
+				.returns(EntityId.from(2L), Namespace::id)
+				.returns(null, Namespace::description);
 	}
 
 	@Test

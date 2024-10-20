@@ -317,6 +317,7 @@ public class NamespaceController implements MessageSourceAware {
 	 *
 	 * @param slug namespace name slug, can't be {@literal null}
 	 * @param model Spring MVC model, can't be {@literal null}
+	 * @param principal the authenticated principal, can't be {@literal null}
 	 * @return <code>namespaces/settings/details</code> template
 	 */
 	@PreAuthorize("isAdmin(#slug)")
@@ -607,7 +608,7 @@ public class NamespaceController implements MessageSourceAware {
 	}
 
 	public record SettingsForm(
-			@NotBlank
+			@NotBlank(groups = { NameValidation.class, SlugValidation.class })
 			@Length(min = 3, max = 30, groups = NameValidation.class)
 			@Length(min = 3, max = 50, groups = SlugValidation.class)
 			@Length(max = 255, groups = DescriptionValidation.class)
