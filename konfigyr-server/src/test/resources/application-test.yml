@@ -1,4 +1,7 @@
 spring:
+  cache:
+    type: NONE
+
   liquibase:
     change-log: classpath:test-changelog.xml
 

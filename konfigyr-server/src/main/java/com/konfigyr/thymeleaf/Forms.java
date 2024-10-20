@@ -61,6 +61,10 @@ public final class Forms {
 		return FormControl.create(id, name, helpText, status);
 	}
 
+	private static String generateId(String id, String suffix) {
+		return id + "-" + suffix;
+	}
+
 	/**
 	 * Record that encapsulates all required HTML element identifiers and attribute values
 	 * needed to create a form control input for a field.
@@ -86,6 +90,17 @@ public final class Forms {
 
 			return new FormControl(id, name, status.getDisplayValue(), help, errors, Aria.create(help, errors));
 		}
+
+		/**
+		 * Creates a custom HTML element identifier for the current form control.
+		 *
+		 * @param suffix the suffix element for which the identifier would be created
+		 * @return generated custom HTML element identifier, never {@literal null}
+		 */
+		@NonNull
+		public String idFor(String suffix) {
+			return generateId(id, suffix);
+		}
 	}
 
 	/**
@@ -96,7 +111,7 @@ public final class Forms {
 	 */
 	public record HelpText(@NonNull String id, @Nullable String value) {
 		static HelpText create(String id, String value) {
-			return new HelpText(id + "-help", value);
+			return new HelpText(generateId(id, "help"), value);
 		}
 	}
 
@@ -111,7 +126,7 @@ public final class Forms {
 	 */
 	public record Errors(@NonNull String id, @Nullable String value) {
 		static Errors create(String id, String value) {
-			return new Errors(id + "-errors", value);
+			return new Errors(generateId(id, "errors"), value);
 		}
 	}
 
@@ -146,4 +161,5 @@ public final class Forms {
 			return new Aria(invalid ? true : null, builder.toString());
 		}
 	}
+
 }

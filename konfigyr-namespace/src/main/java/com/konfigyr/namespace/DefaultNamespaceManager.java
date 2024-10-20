@@ -123,6 +123,22 @@ class DefaultNamespaceManager implements NamespaceManager {
 		return namespace;
 	}
 
+	@Override
+	@Transactional(label = "namespace-delete")
+	public void delete(@NonNull String slug) {
+		final EntityId id = context.select(NAMESPACES.ID)
+				.from(NAMESPACES)
+				.where(NAMESPACES.SLUG.eq(slug))
+				.fetchOptional(record -> EntityId.from(record.get(NAMESPACES.ID)))
+				.orElseThrow(() -> new NamespaceNotFoundException(slug));
+
+		context.delete(NAMESPACES)
+				.where(NAMESPACES.ID.eq(id.get()))
+				.execute();
+
+		publisher.publishEvent(new NamespaceEvent.Deleted(id));
+	}
+
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-find-members")

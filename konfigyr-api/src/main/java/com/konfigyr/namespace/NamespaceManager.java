@@ -62,6 +62,14 @@ public interface NamespaceManager {
 	Namespace create(@NonNull NamespaceDefinition definition);
 
 	/**
+	 * Deletes an existing {@link Namespace} with a given URL slug.
+	 *
+	 * @param slug namespace slug, can't be {@literal null}
+	 * @throws NamespaceNotFoundException when a {@link Namespace} with the given slug does not exist
+	 */
+	void delete(@NonNull String slug);
+
+	/**
 	 * Retrieves all {@link Member members} of a given {@link Namespace} within a single page.
 	 *
 	 * @param id namespace entity identifier for which to fetch members, can't be {@literal null}

@@ -1,0 +1,56 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}"
+      lang="en">
+<head>
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE" th:text="${namespace.name}">
+        Konfigyr
+    </title>
+</head>
+<body>
+
+<th:block layout:fragment="header">
+    <nav th:replace="~{layout/header :: header (namespace=${namespace.slug})}">
+    </nav>
+</th:block>
+
+<th:block layout:fragment="sub-header">
+    <nav th:replace="~{namespaces/header :: header (namespace=${namespace.slug}, active='overview')}">
+    </nav>
+</th:block>
+
+<main layout:fragment="main">
+    <div class="container">
+        <th:block th:replace="~{fragments/heading :: heading(
+            avatar=${namespace.avatar},
+            title=${namespace.name},
+            subtitle=${namespace.description},
+        )}" />
+
+        <div class="row">
+            <aside class="col-12 col-md-3">
+                <ul class="px-0">
+                    <li>
+                        <a th:href="@{/namespace/{slug}/settings(slug=${namespace.slug})}"
+                           th:text="#{namespace.nav.settings.general}">
+                            General
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/namespace/{slug}/settings/integrations(slug=${namespace.slug})}"
+                           th:text="#{namespace.nav.settings.integrations}">
+                            Integrations
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+            <div class="col-12 col-md-9" layout:fragment="contents">
+
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

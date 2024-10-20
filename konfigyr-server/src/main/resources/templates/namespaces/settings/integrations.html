@@ -1,0 +1,55 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{namespaces/settings/layout}"
+      lang="en">
+<head>
+    <title th:text="#{namespace.nav.settings.integrations}">Integrations</title>
+</head>
+
+<body>
+
+<th:block layout:fragment="header">
+    <nav th:replace="~{layout/header :: header (namespace=${namespace.slug})}">
+    </nav>
+</th:block>
+
+<th:block layout:fragment="sub-header">
+    <nav th:replace="~{namespaces/header :: header (namespace=${namespace.slug}, active='overview')}">
+    </nav>
+</th:block>
+
+<div layout:fragment="contents">
+    <ol th:unless="${integrations.empty}" class="d-flex flex-wrap list-style-none row p-0">
+        <li th:each="integration : ${integrations}" class="col-12 mb-3">
+            <article class="mb-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <svg th:replace="~{fragments/icon :: icon (name=${integration.provider.icon}, size='icon-2x')}"></svg>
+                </div>
+
+                <div class="flex-grow-1 px-3">
+                    <strong class="d-block" th:text="${integration.provider.label}">
+                        Github
+                    </strong>
+                    <small class="muted" th:text="${#messages.msg('integration.type.' + integration.type)}">
+                        Source code
+                    </small>
+                </div>
+
+                <a th:href="@{https://github.com/settings/installations/{reference}(reference=${integration.reference})}"
+                   target="_blank"
+                   role="button">
+                    <span th:text="#{namespace.integrations.manage}">Manage</span>
+                    <svg th:replace="~{fragments/icon :: icon (name='external-link')}"></svg>
+                </a>
+            </article>
+        </li>
+    </ol>
+
+    <th:block th:if="${integrations.empty}" th:insert="~{fragments/empty-state :: empty-state(
+        title='No integrations available for this namespace'
+    )}" />
+</div>
+</body>
+</html>

@@ -130,6 +130,14 @@ class NamespaceManagerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to update unknown namespace member")
+	void shouldFailToUpdateUnknownNamespaceMember() {
+		assertThatThrownBy(() -> manager.updateMember(EntityId.from(9999), NamespaceRole.USER))
+				.isInstanceOf(NamespaceException.class)
+				.hasMessageContaining("Failed to update unknown member");
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should remove namespace member")
 	void shouldRemoveNamespaceMember() {
@@ -197,7 +205,8 @@ class NamespaceManagerTest {
 						.isCloseTo(OffsetDateTime.now(), within(400, ChronoUnit.MILLIS))
 				);
 
-		events.eventOfTypeWasPublished(NamespaceEvent.Created.class);
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.Created.class))
+				.isTrue();
 
 		assertThat(manager.findMembers(namespace))
 				.isNotNull()
@@ -274,11 +283,27 @@ class NamespaceManagerTest {
 	}
 
 	@Test
-	@DisplayName("should fail to update unknown namespace member")
-	void shouldFailToUpdateUnknownNamespaceMember() {
-		assertThatThrownBy(() -> manager.updateMember(EntityId.from(9999), NamespaceRole.USER))
-				.isInstanceOf(NamespaceException.class)
-				.hasMessageContaining("Failed to update unknown member");
+	@Transactional
+	@DisplayName("should delete namespace")
+	void shouldDeleteNamespace(PublishedEvents events) {
+		assertThatNoException().isThrownBy(() -> manager.delete("konfigyr"));
+
+		assertThat(manager.findBySlug("konfigyr"))
+				.isEmpty();
+
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.Deleted.class))
+				.isTrue();
+	}
+
+	@Test
+	@DisplayName("should fail to delete unknown namespace")
+	void shouldFailToDeleteUnknownNamespace(PublishedEvents events) {
+		assertThatThrownBy(() -> manager.delete("unknown"))
+				.isInstanceOf(NamespaceNotFoundException.class)
+				.hasNoCause();
+
+		assertThat(events.ofType(NamespaceEvent.class))
+				.isEmpty();
 	}
 
 }
