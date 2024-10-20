@@ -128,7 +128,7 @@ public sealed interface SearchQuery permits CriteriaSearchQuery {
 		 * Specify the search term {@link Criteria}.
 		 *
 		 * @param term search term
-		 * @return the search query builder, never {@link null}
+		 * @return the search query builder, never {@literal null}
 		 */
 		@NonNull
 		default Builder term(String term) {
@@ -141,7 +141,7 @@ public sealed interface SearchQuery permits CriteriaSearchQuery {
 		 * @param criteria search criteria type descriptor
 		 * @param value search criteria value
 		 * @param <T> generic search criteria value type
-		 * @return the search query builder, never {@link null}
+		 * @return the search query builder, never {@literal null}
 		 */
 		@NonNull
 		<T> Builder criteria(Criteria<T> criteria, T value);
@@ -150,14 +150,14 @@ public sealed interface SearchQuery permits CriteriaSearchQuery {
 		 * Specify the {@link Pageable paging instructions} for the {@link SearchQuery}.
 		 *
 		 * @param pageable paging instructions
-		 * @return the search query builder, never {@link null}
+		 * @return the search query builder, never {@literal null}
 		 */
 		@NonNull
 		Builder pageable(Pageable pageable);
 
 		/**
 		 * Creates the {@link SearchQuery} based in the {@link Criteria} that is added to the builder.
-		 * @return the search query, never {@link null}
+		 * @return the search query, never {@literal null}
 		 */
 		@NonNull
 		SearchQuery build();
