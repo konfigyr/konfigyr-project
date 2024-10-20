@@ -1,0 +1,152 @@
+plugins {
+    id 'java-library'
+    id 'nu.studer.jooq' version '9.0'
+    id 'org.springframework.boot'
+    id 'com.github.node-gradle.node' version '7.0.2'
+}
+
+dependencies {
+    /* Spring Boot starter */
+    api 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-jooq'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+
+    /* Spring Cache and Caffeine implementation */
+    api 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    /* Spring OAuth Client Security starter */
+    api 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    /* Tracing and observability */
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-observation'
+
+    /* Spring Moduliths and JMolecules */
+    api 'org.springframework.modulith:spring-modulith-starter-core'
+    api 'org.jmolecules:jmolecules-ddd'
+    api 'org.jmolecules:jmolecules-events'
+
+    /* Spring Common libraries */
+    api 'org.springframework.retry:spring-retry'
+    api 'org.springframework.data:spring-data-commons'
+
+    /* Spring JDBC session implementation */
+    implementation 'org.springframework.session:spring-session-jdbc'
+
+    /* Konfigyr Cryptography that uses Google Tink algorithms and JDBC as a repository */
+    api 'com.konfigyr:konfigyr-crypto-api'
+    api 'com.konfigyr:konfigyr-crypto-tink'
+    implementation 'com.konfigyr:konfigyr-crypto-jdbc'
+
+    /* Konfigyr Mail using SMTP and Thymeleaf template engine */
+    implementation('com.konfigyr:konfigyr-mail-smtp')
+    implementation('com.konfigyr:konfigyr-mail-thymeleaf')
+
+    /* Spring Boot Thymeleaf */
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+    implementation 'com.github.zhanhb:thymeleaf-layout-dialect:3.2.0'
+
+    /* Liquibase - migrations runtime  */
+    implementation 'org.liquibase:liquibase-core'
+
+    /* Postgresql driver */
+    implementation 'org.postgresql:postgresql'
+
+    /* Slugify library to generate slugs */
+    api 'com.github.slugify:slugify:3.0.7'
+    implementation 'com.ibm.icu:icu4j:75.1'
+
+    /* TSID */
+    implementation 'io.hypersistence:hypersistence-tsid:2.1.2'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    /* jOOQ extensions dependency for the gradle task */
+    jooqGenerator project(':konfigyr-jooq-extensions')
+    jooqGenerator 'ch.qos.logback:logback-classic'
+
+    testImplementation project(':konfigyr-test')
+    testImplementation 'org.seleniumhq.selenium:htmlunit-driver'
+    testImplementation 'org.thymeleaf:thymeleaf-testing-spring6:3.1.0.M2'
+}
+
+jooq {
+    /* Force jOOQ plugin to use the same Spring version */
+    version = dependencyManagement.importedProperties['jooq.version']
+
+    configurations {
+        main {
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.INFO
+                generator {
+                    name = 'org.jooq.codegen.JavaGenerator'
+                    database {
+                        name = "com.konfigyr.jooq.KonfigyrDatabase"
+                        inputSchema = "public"
+                        excludes = 'databasechangelog.*|keysets'
+                    }
+                    generate {
+                        pojos = false
+                        records = false
+                        interfaces = false
+                        javaTimeTypes = true
+                        javadoc = true
+                    }
+                    target {
+                        packageName = "com.konfigyr.data"
+                    }
+                    strategy {
+                        name = "org.jooq.codegen.DefaultGeneratorStrategy"
+                    }
+                }
+            }
+        }
+    }
+}
+
+node {
+    npmCommand = '/usr/local/bin/npm'
+
+    /* use the CI NPM command when executing Github actions */
+    npmInstallCommand = System.getenv('CI') ? 'ci' : 'install'
+}
+
+tasks.register('rollup', NpmTask) {
+    dependsOn npmInstall
+
+    args = ['run', 'build']
+
+    /* define inputs for the task in order to run only when the inputs change */
+    inputs.files('package.json', 'package-lock.json', 'rollup.config.js')
+    inputs.dir('src/main/assets')
+    inputs.dir(fileTree("node_modules").exclude(".cache"))
+
+    /* mark the dist as the output directory */
+    outputs.dir(project.layout.buildDirectory.dir('resources/main/dist'))
+}
+
+tasks.register('npmTest', NpmTask) {
+    dependsOn npmInstall
+
+    args = ['test']
+
+    /* define inputs for the test task in order to run only when the related files change */
+    inputs.files('package.json', 'package-lock.json', '.eslintrc.json', '.prettierrc.json')
+    inputs.dir('src/main/assets/scripts')
+}
+
+processResources.dependsOn('rollup')
+check.dependsOn('npmTest')
+
+tasks.named('generateJooq').configure {
+    inputs.files(fileTree('src/main/resources/migrations'))
+            .withPropertyName('migrations')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    allInputsDeclared = true
+
+    outputs.cacheIf { true }
+}

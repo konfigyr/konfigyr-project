@@ -1,0 +1,44 @@
+spring:
+  liquibase:
+    change-log: migrations/changelog.xml
+
+  messages:
+    basename: messages/konfigyr, messages/validation, messages/mail
+
+  cache:
+    cache-names: crypto-keysets, user-cache, namespaces
+    caffeine:
+      spec: expireAfterWrite=1h
+
+  mail:
+    host: smtp.resend.com
+    port: 587
+    username: resend
+    properties:
+      mail.smtp.starttls.required: true
+      mail.smtp.starttls.enable: true
+    sender:
+      name: Konfigyr
+      email: noreply@konfigyr.com
+
+  mvc:
+    static-path-pattern: /assets/**
+
+  web:
+    resources:
+      static-locations:
+        - classpath:/dist/
+        - classpath:/static/
+      cache:
+        cachecontrol:
+          max-age: 30d
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        name: "konfigyr.sid"
+        max-age: 1d
+        same-site: strict
+        secure: true

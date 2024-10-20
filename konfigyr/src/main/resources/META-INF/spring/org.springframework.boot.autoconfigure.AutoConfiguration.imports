@@ -1,0 +1,6 @@
+com.konfigyr.account.AccountManagementAutoConfiguration
+com.konfigyr.crypto.CryptographyAutoConfiguration
+com.konfigyr.integration.IntegrationAutoConfiguration
+com.konfigyr.namespace.NamespaceManagementAutoConfiguration
+com.konfigyr.registry.RegistryAutoConfiguration
+com.konfigyr.security.SecurityAutoConfiguration

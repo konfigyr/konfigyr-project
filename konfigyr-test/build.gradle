@@ -1,8 +1,7 @@
 apply plugin: 'java-library'
 
 dependencies {
-    compileOnly project(':konfigyr-api')
-    compileOnly project(':konfigyr-security')
+    compileOnly project(':konfigyr')
 
     /* Spring WebMvc support */
     compileOnly 'org.springframework:spring-webmvc'
@@ -26,8 +25,7 @@ dependencies {
     api 'org.testcontainers:junit-jupiter'
     api 'org.testcontainers:postgresql'
 
-    testImplementation project(':konfigyr-api')
-    testImplementation project(':konfigyr-security')
+    testImplementation project(':konfigyr')
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
 
 }
