@@ -1,7 +1,5 @@
-package com.konfigyr.config;
+package com.konfigyr.test.config;
 
-import com.konfigyr.test.config.SpringTestContext;
-import com.konfigyr.test.config.SpringTestContextExtension;
 import lombok.Value;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

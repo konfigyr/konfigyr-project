@@ -1,6 +1,5 @@
-package com.konfigyr.assertions;
+package com.konfigyr.test.assertions;
 
-import com.konfigyr.test.assertions.AssertMatcher;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hamcrest.MatcherAssert;
