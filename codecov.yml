@@ -18,38 +18,14 @@ component_management:
       - type: project
         target: auto
   individual_components:
-    - component_id: konfigyr-api
+    - component_id: konfigyr-application
       name: API
       paths:
-        - konfigyr-api/**
-    - component_id: konfigyr-cryptography
-      name: Cryptography
-      paths:
-        - konfigyr-cryptography/**
-    - component_id: konfigyr-data
-      name: Data
-      paths:
-        - konfigyr-cryptography/**
+        - konfigyr/**
     - component_id: konfigyr-jooq
       name: jOOQ Extensions
       paths:
         - konfigyr-jooq-extensions/**
-    - component_id: konfigyr-namespace
-      name: Namespaces
-      paths:
-        - konfigyr-namespace/**
-    - component_id: konfigyr-registry
-      name: Registry
-      paths:
-        - konfigyr-registry/**
-    - component_id: konfigyr-security
-      name: Security
-      paths:
-        - konfigyr-security/**
-    - component_id: konfigyr-server
-      name: Server
-      paths:
-        - konfigyr-server/**
     - component_id: konfigyr-test
       name: Test
       paths:
