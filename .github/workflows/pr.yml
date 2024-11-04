@@ -37,7 +37,7 @@ jobs:
         run: ./gradlew --no-daemon --no-parallel --continue build
 
       - name: Test Reports
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v5
         if: success() || failure()
         with:
           report_paths: '**/build/test-results/test/TEST-*.xml'
