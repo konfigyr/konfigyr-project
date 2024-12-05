@@ -11,7 +11,7 @@ import org.springframework.boot.testcontainers.context.ImportTestcontainers;
  * @since 1.0.0
  */
 @TestProfile
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @ImportTestcontainers(TestContainers.class)
 public abstract class AbstractIntegrationTest {
 }
