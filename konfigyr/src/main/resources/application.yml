@@ -37,8 +37,8 @@ server:
   servlet:
     session:
       cookie:
-        http-only: true
         name: "konfigyr.sid"
-        max-age: 1d
-        same-site: strict
+        max-age: 7d
+        same-site: none
+        http-only: true
         secure: true

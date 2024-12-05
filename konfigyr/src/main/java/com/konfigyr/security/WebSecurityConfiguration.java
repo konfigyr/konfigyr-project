@@ -10,6 +10,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -73,6 +74,9 @@ public class WebSecurityConfiguration {
 				.anonymous(AbstractHttpConfigurer::disable)
 				.exceptionHandling(exceptions -> exceptions
 						.defaultAuthenticationEntryPointFor(loginAuthenticationEntryPoint(), AnyRequestMatcher.INSTANCE)
+				)
+				.sessionManagement(sessions -> sessions
+						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
 				)
 				.with(new ProvisioningConfigurer<>(), provisioning -> provisioning
 						.ignoringRequestMatchers("/namespaces/check-name")

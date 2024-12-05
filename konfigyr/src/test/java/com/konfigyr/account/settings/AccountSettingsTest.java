@@ -12,18 +12,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class AccountSettingsTest extends AbstractMvcIntegrationTest {
 
@@ -32,74 +31,76 @@ class AccountSettingsTest extends AbstractMvcIntegrationTest {
 
 	@Test
 	@DisplayName("should generate model for account profile settings page that can not be deleted")
-	void shouldRenderProfilePage() throws Exception {
+	void shouldRenderProfilePage() {
 		final var request = get("/account")
 				.with(authentication(TestPrincipals.john()))
 				.with(csrf());
 
-		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().isOk())
-				.andExpect(model().attribute("id", EntityId.from(1)))
-				.andExpect(model().attribute("form", matches(value -> assertThat(value)
+		assertThat(mvc.perform(request))
+				.apply(log())
+				.hasStatusOk()
+				.hasViewName("accounts/profile")
+				.model()
+				.containsEntry("id", EntityId.from(1))
+				.containsEntry("namespaceNames", "konfigyr")
+				.hasEntrySatisfying("form", value -> assertThat(value)
 						.isNotNull()
 						.isInstanceOf(AccountSettingsForm.class)
 						.asInstanceOf(InstanceOfAssertFactories.type(AccountSettingsForm.class))
 						.returns("john.doe@konfigyr.com", AccountSettingsForm::getEmail)
 						.returns("John", AccountSettingsForm::getFirstName)
 						.returns("Doe", AccountSettingsForm::getLastName)
-				)))
-				.andExpect(model().attribute("account", matches(value -> assertThat(value)
+				)
+				.hasEntrySatisfying("account", value -> assertThat(value)
 						.isNotNull()
 						.isInstanceOf(Account.class)
 						.asInstanceOf(InstanceOfAssertFactories.type(Account.class))
 						.returns(EntityId.from(1), Account::id)
 						.returns(false, Account::isDeletable)
-				)))
-				.andExpect(model().attribute("memberships", matches(value -> assertThat(value)
+				)
+				.hasEntrySatisfying("memberships", value -> assertThat(value)
 						.isNotNull()
 						.isInstanceOf(Memberships.class)
 						.asInstanceOf(InstanceOfAssertFactories.iterable(Membership.class))
 						.hasSize(2)
-				)))
-				.andExpect(model().attribute("namespaceNames", "konfigyr"))
-				.andExpect(view().name("accounts/profile"));
+				);
 	}
 
 	@Test
 	@DisplayName("should generate model for account profile settings page that can be deleted")
-	void shouldRenderProfilePageForDeletableUser() throws Exception {
+	void shouldRenderProfilePageForDeletableUser() {
 		final var request = get("/account")
 				.with(authentication(TestPrincipals.jane()))
 				.with(csrf());
 
-		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().isOk())
-				.andExpect(model().attribute("id", EntityId.from(2)))
-				.andExpect(model().attribute("form", matches(value -> assertThat(value)
+		assertThat(mvc.perform(request))
+				.apply(log())
+				.hasStatusOk()
+				.hasViewName("accounts/profile")
+				.model()
+				.containsEntry("id", EntityId.from(2))
+				.containsEntry("namespaceNames", "konfigyr")
+				.hasEntrySatisfying("form", value -> assertThat(value)
 						.isNotNull()
 						.isInstanceOf(AccountSettingsForm.class)
 						.asInstanceOf(InstanceOfAssertFactories.type(AccountSettingsForm.class))
 						.returns("jane.doe@konfigyr.com", AccountSettingsForm::getEmail)
 						.returns("Jane", AccountSettingsForm::getFirstName)
 						.returns("Doe", AccountSettingsForm::getLastName)
-				)))
-				.andExpect(model().attribute("account", matches(value -> assertThat(value)
+				)
+				.hasEntrySatisfying("account", value -> assertThat(value)
 						.isNotNull()
 						.isInstanceOf(Account.class)
 						.asInstanceOf(InstanceOfAssertFactories.type(Account.class))
 						.returns(EntityId.from(2), Account::id)
 						.returns(true, Account::isDeletable)
-				)))
-				.andExpect(model().attribute("memberships", matches(value -> assertThat(value)
+				)
+				.hasEntrySatisfying("memberships", value -> assertThat(value)
 						.isNotNull()
 						.isInstanceOf(Memberships.class)
 						.asInstanceOf(InstanceOfAssertFactories.iterable(Membership.class))
 						.hasSize(1)
-				)))
-				.andExpect(model().attribute("namespaceNames", "konfigyr"))
-				.andExpect(view().name("accounts/profile"));
+				);
 	}
 
 	@Test
@@ -112,7 +113,9 @@ class AccountSettingsTest extends AbstractMvcIntegrationTest {
 		final var request = get("/account")
 				.with(authentication(TestPrincipals.from(account)));
 
-		assertThatThrownBy(() -> mvc.perform(request))
+		assertThat(mvc.perform(request))
+				.hasFailed()
+				.failure()
 				.isInstanceOf(ServletException.class)
 				.hasRootCauseInstanceOf(AccountNotFoundException.class);
 	}
@@ -120,7 +123,7 @@ class AccountSettingsTest extends AbstractMvcIntegrationTest {
 	@Test
 	@Transactional
 	@DisplayName("should submit account settings form and update account")
-	void shouldSubmitSettingsForm() throws Exception {
+	void shouldSubmitSettingsForm() {
 		final var request = multipart(HttpMethod.POST, "/account")
 				.param("email", "irulan.corrino@empire.com")
 				.param("firstName", "Irulan")
@@ -128,10 +131,10 @@ class AccountSettingsTest extends AbstractMvcIntegrationTest {
 				.with(authentication(TestPrincipals.jane()))
 				.with(csrf());
 
-		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/account"));
+		assertThat(mvc.perform(request))
+				.apply(log())
+				.hasStatus3xxRedirection()
+				.hasRedirectedUrl("/account");
 
 		assertThat(manager.findById(EntityId.from(2)))
 				.isNotEmpty()
@@ -143,27 +146,27 @@ class AccountSettingsTest extends AbstractMvcIntegrationTest {
 
 	@Test
 	@DisplayName("should fail to update account when form is invalid")
-	void shouldValidateSettingsForm() throws Exception {
+	void shouldValidateSettingsForm() {
 		final var request = multipart(HttpMethod.POST, "/account")
 				.param("email", "jane.doe@konfigyr.com")
 				.with(authentication(TestPrincipals.jane()))
 				.with(csrf());
 
-		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().isBadRequest())
-				.andExpect(model().errorCount(2))
-				.andExpect(model().attributeHasFieldErrorCode("form", "firstName", "NotEmpty"))
-				.andExpect(model().attributeHasFieldErrorCode("form", "lastName", "NotEmpty"))
-				.andExpect(model().attribute("form", matches(value -> assertThat(value)
+		assertThat(mvc.perform(request))
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.hasViewName("accounts/profile")
+				.model()
+				.hasErrors()
+				.hasAttributeErrors("form")
+				.hasEntrySatisfying("form", value -> assertThat(value)
 						.isNotNull()
 						.isInstanceOf(AccountSettingsForm.class)
 						.asInstanceOf(InstanceOfAssertFactories.type(AccountSettingsForm.class))
 						.returns("jane.doe@konfigyr.com", AccountSettingsForm::getEmail)
 						.returns(null, AccountSettingsForm::getFirstName)
 						.returns(null, AccountSettingsForm::getLastName)
-				)))
-				.andExpect(view().name("accounts/profile"));
+				);
 
 		assertThat(manager.findById(EntityId.from(2)))
 				.isPresent()
@@ -186,20 +189,22 @@ class AccountSettingsTest extends AbstractMvcIntegrationTest {
 				.with(authentication(TestPrincipals.from(account)))
 				.with(csrf());
 
-		assertThatThrownBy(() -> mvc.perform(request).andDo(log()))
+		assertThat(mvc.perform(request))
+				.hasFailed()
+				.failure()
 				.isInstanceOf(ServletException.class)
 				.hasRootCauseInstanceOf(AccountNotFoundException.class);
 	}
 
 	@Test
 	@DisplayName("should fail to update account when CSRF Token is not sent")
-	void shouldFailToUpdateAccountDueToMissingCsrfToken() throws Exception {
+	void shouldFailToUpdateAccountDueToMissingCsrfToken() {
 		final var request = multipart(HttpMethod.POST, "/account")
 				.with(authentication(TestPrincipals.jane()));
 
-		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().isForbidden());
+		assertThat(mvc.perform(request))
+				.apply(log())
+				.hasStatus(HttpStatus.FORBIDDEN);
 
 		assertThat(manager.findById(EntityId.from(2)))
 				.isPresent()
@@ -211,34 +216,35 @@ class AccountSettingsTest extends AbstractMvcIntegrationTest {
 	@Test
 	@Transactional
 	@DisplayName("should submit account delete form and delete account")
-	void shouldSubmitDeleteForm() throws Exception {
+	void shouldSubmitDeleteForm() {
 		final var request = multipart(HttpMethod.POST, "/account/delete")
 				.with(authentication(TestPrincipals.jane()))
 				.with(csrf());
 
-		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/"));
+		assertThat(mvc.perform(request))
+				.apply(log())
+				.hasStatus3xxRedirection()
+				.hasRedirectedUrl("/");
 
 		assertThat(manager.findById(EntityId.from(2))).isEmpty();
 	}
 
 	@Test
 	@DisplayName("should fail to delete account when he is an admin member")
-	void shouldFailToDeleteAccount() throws Exception {
+	void shouldFailToDeleteAccount() {
 		final var request = multipart(HttpMethod.POST, "/account/delete")
 				.with(authentication(TestPrincipals.john()))
 				.with(csrf());
 
-		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().isBadRequest())
-				.andExpect(model().errorCount(1))
-				.andExpect(model().attributeExists("form"))
-				.andExpect(model().attributeExists("account"))
-				.andExpect(model().attributeExists("memberships"))
-				.andExpect(model().attributeExists("namespaceNames"));
+		assertThat(mvc.perform(request))
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.model()
+				.hasErrors()
+				.containsKey("form")
+				.containsKey("account")
+				.containsKey("memberships")
+				.containsKey("namespaceNames");
 
 		assertThat(manager.findById(EntityId.from(1))).isPresent();
 	}
@@ -254,20 +260,22 @@ class AccountSettingsTest extends AbstractMvcIntegrationTest {
 				.with(authentication(TestPrincipals.from(account)))
 				.with(csrf());
 
-		assertThatThrownBy(() -> mvc.perform(request).andDo(log()))
+		assertThat(mvc.perform(request))
+				.hasFailed()
+				.failure()
 				.isInstanceOf(ServletException.class)
 				.hasRootCauseInstanceOf(AccountNotFoundException.class);
 	}
 
 	@Test
 	@DisplayName("should fail to delete account when CSRF Token is not sent")
-	void shouldFailToDeleteAccountDueToMissingCsrfToken() throws Exception {
+	void shouldFailToDeleteAccountDueToMissingCsrfToken() {
 		final var request = multipart(HttpMethod.POST, "/account/delete")
 				.with(authentication(TestPrincipals.jane()));
 
-		mvc.perform(request)
-				.andDo(log())
-				.andExpect(status().isForbidden());
+		assertThat(mvc.perform(request))
+				.apply(log())
+				.hasStatus(HttpStatus.FORBIDDEN);
 
 		assertThat(manager.findById(EntityId.from(2))).isPresent();
 	}

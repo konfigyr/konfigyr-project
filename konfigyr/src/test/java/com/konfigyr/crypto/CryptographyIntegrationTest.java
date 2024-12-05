@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
@@ -25,7 +25,7 @@ public class CryptographyIntegrationTest extends AbstractIntegrationTest {
 	@Autowired
 	KeysetOperationsFactory factory;
 
-	@SpyBean
+	@MockitoSpyBean
 	KeysetRepository repository;
 
 	@Test

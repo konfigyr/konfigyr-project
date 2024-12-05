@@ -1,6 +1,6 @@
 plugins {
     id 'io.freefair.lombok' version '8.10' apply false
-    id 'org.springframework.boot' version '3.3.4' apply false
+    id 'org.springframework.boot' version '3.4.0' apply false
     id 'io.spring.dependency-management' version '1.1.6' apply false
 }
 
@@ -26,7 +26,7 @@ subprojects {
         annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-        compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+        implementation 'com.github.spotbugs:spotbugs-annotations:4.8.6'
 
         checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.43'
 
@@ -53,7 +53,7 @@ subprojects {
 
             /* Fix Dependabot alerts */
             dependency('org.apache.commons:commons-compress:1.27.1') // used by testcontainers
-            dependency('com.google.guava:guava:33.3.0-jre') // used by checkstyle
+            dependency('com.google.guava:guava:33.3.1-jre') // used by checkstyle
         }
     }
 
