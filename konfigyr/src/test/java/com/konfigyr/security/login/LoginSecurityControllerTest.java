@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponseType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
@@ -63,24 +64,6 @@ class LoginSecurityControllerTest extends AbstractMvcIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should render login page with OAuth exception")
-	void shouldRenderLoginErrors() {
-		final var page = LoginPage.create(driver, localServerPort);
-		page.load(true, false);
-
-		assertThat(driver.findElements(By.cssSelector("#oauth-error p")))
-				.hasSize(2)
-				.extracting(WebElement::getText)
-				.containsExactly(
-						"server_error",
-						"Unexpected server occurred while logging you in."
-				);
-
-		assertThat(page.getLoginButtons())
-				.hasSize(1);
-	}
-
-	@Test
 	@DisplayName("should render login page with logout success message")
 	void shouldRenderLogoutSuccess() {
 		final var page = LoginPage.create(driver, localServerPort);
@@ -90,6 +73,22 @@ class LoginSecurityControllerTest extends AbstractMvcIntegrationTest {
 				.isNotNull()
 				.extracting(WebElement::getText)
 				.isEqualTo("You have been successfully logged out of your account");
+
+		assertThat(page.getLoginButtons())
+				.hasSize(1);
+	}
+
+	@Test
+	@DisplayName("should render login page with OAuth exception")
+	void shouldRenderLoginErrors() {
+		final var page = LoginPage.create(driver, localServerPort);
+		// this should force the invalid_request OAuth error
+		driver.get(page.getUriFor("/login/oauth2/code/konfigyr-test").toUriString());
+
+		assertThat(driver.findElement(By.cssSelector("#oauth-error")))
+				.isNotNull()
+				.extracting(WebElement::getText)
+				.isEqualTo(OAuth2ErrorCodes.INVALID_REQUEST);
 
 		assertThat(page.getLoginButtons())
 				.hasSize(1);

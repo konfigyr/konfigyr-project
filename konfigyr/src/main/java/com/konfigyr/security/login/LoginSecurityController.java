@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
@@ -65,6 +66,7 @@ public class LoginSecurityController {
 		return "login";
 	}
 
+	@Nullable
 	static OAuth2Error extractError(@NonNull HttpServletRequest request) {
 		final HttpSession session = request.getSession(false);
 		Object attribute = null;
@@ -85,7 +87,7 @@ public class LoginSecurityController {
 			return ex.getError();
 		}
 
-		return new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR, "Unexpected server occurred while logging you in.", null);
+		return null;
 	}
 
 	/**

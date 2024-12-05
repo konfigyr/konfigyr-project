@@ -28,24 +28,20 @@ class LoginControllerErrorExtractorTest {
 	}
 
 	@Test
-	@DisplayName("should resolve default OAuth error when no session or request attributes are present")
-	void shouldResolveDefaultOAuthError() {
+	@DisplayName("should resolve to null when no session or request attributes are present")
+	void shouldResolveNoOAuthError() {
 		assertThat(LoginSecurityController.extractError(request))
-				.returns(OAuth2ErrorCodes.SERVER_ERROR, OAuth2Error::getErrorCode)
-				.returns("Unexpected server occurred while logging you in.", OAuth2Error::getDescription)
-				.returns(null, OAuth2Error::getUri);
+				.isNull();
 	}
 
 	@Test
-	@DisplayName("should resolve default OAuth error when exception is of different type")
-	void shouldResolveDefaultOAuthErrorWhenNotOAuthException() {
+	@DisplayName("should resolve to null when exception is of different type")
+	void shouldResolveNoOAuthErrorWhenNotOAuthException() {
 		request.setAttribute(WebAttributes.AUTHENTICATION_EXCEPTION, new BadCredentialsException("Wrong..."));
 		session.setAttribute(WebAttributes.AUTHENTICATION_EXCEPTION, new BadCredentialsException("Wrong..."));
 
 		assertThat(LoginSecurityController.extractError(request))
-				.returns(OAuth2ErrorCodes.SERVER_ERROR, OAuth2Error::getErrorCode)
-				.returns("Unexpected server occurred while logging you in.", OAuth2Error::getDescription)
-				.returns(null, OAuth2Error::getUri);
+				.isNull();
 	}
 
 	@Test
