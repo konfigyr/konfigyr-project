@@ -5,7 +5,9 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContext;
@@ -58,6 +60,39 @@ class LoginSecurityControllerTest extends AbstractMvcIntegrationTest {
 				.apply(log())
 				.hasStatus3xxRedirection()
 				.hasRedirectedUrl("http://localhost/login");
+	}
+
+	@Test
+	@DisplayName("should render login page with OAuth exception")
+	void shouldRenderLoginErrors() {
+		final var page = LoginPage.create(driver, localServerPort);
+		page.load(true, false);
+
+		assertThat(driver.findElements(By.cssSelector("#oauth-error p")))
+				.hasSize(2)
+				.extracting(WebElement::getText)
+				.containsExactly(
+						"server_error",
+						"Unexpected server occurred while logging you in."
+				);
+
+		assertThat(page.getLoginButtons())
+				.hasSize(1);
+	}
+
+	@Test
+	@DisplayName("should render login page with logout success message")
+	void shouldRenderLogoutSuccess() {
+		final var page = LoginPage.create(driver, localServerPort);
+		page.load(false, true);
+
+		assertThat(driver.findElement(By.cssSelector("#logout-success")))
+				.isNotNull()
+				.extracting(WebElement::getText)
+				.isEqualTo("You have been successfully logged out of your account");
+
+		assertThat(page.getLoginButtons())
+				.hasSize(1);
 	}
 
 	@Test

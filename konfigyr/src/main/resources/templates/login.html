@@ -17,9 +17,23 @@
 
 <main layout:fragment="main" class="d-flex align-items-center justify-content-center">
     <div class="container">
-        <article th:if="${logout}" class="text-center">
-            <p th:text="#{login.logged-out}"></p>
-        </article>
+        <div class="row justify-content-center">
+            <article id="logout-success" th:if="${logout}" class="text-center col-12 col-md-6">
+                <p class="mb-0" th:text="#{login.logged-out}"></p>
+            </article>
+
+            <article id="oauth-error" th:if="${error}" class="text-center col-12 col-md-6">
+                <p th:text="${error.errorCode}" class="text-bolder">
+                    insufficient_scope
+                </p>
+                <p th:if="${error.description}" th:text="${error.description}">
+                    Forbidden: Insufficient scope
+                </p>
+                <a th:if="${error.uri}" th:href="${error.uri}" target="_blank" referrerpolicy="no-referrer">
+                    Learn more
+                </a>
+            </article>
+        </div>
 
         <div class="hero text-center">
             <h1 class="hero-title" th:text="#{konfigyr.hero}">

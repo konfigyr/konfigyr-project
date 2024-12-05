@@ -3,12 +3,18 @@ package com.konfigyr.security.login;
 
 import com.konfigyr.security.SecurityRequestMatchers;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.web.WebAttributes;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,9 +60,32 @@ public class LoginSecurityController {
 
 		model.addAttribute("options", options)
 				.addAttribute("logout", logout != null)
-				.addAttribute("error", error != null);
+				.addAttribute("error", error != null ? extractError(request) : null);
 
 		return "login";
+	}
+
+	static OAuth2Error extractError(@NonNull HttpServletRequest request) {
+		final HttpSession session = request.getSession(false);
+		Object attribute = null;
+
+		if (session != null) {
+			attribute = session.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+		}
+
+		if (attribute == null) {
+			attribute = request.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+		}
+
+		if (attribute instanceof OAuth2AuthenticationException ex) {
+			return ex.getError();
+		}
+
+		if (attribute instanceof OAuth2AuthorizationException ex) {
+			return ex.getError();
+		}
+
+		return new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR, "Unexpected server occurred while logging you in.", null);
 	}
 
 	/**
