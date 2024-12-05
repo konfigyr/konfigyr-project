@@ -108,8 +108,7 @@ jooq {
 }
 
 node {
-    download = false
-    npmCommand = '/Users/vladimir.spasic/.nvm/versions/node/v22.9.0/bin/npm'
+    npmCommand = String.valueOf(getProperty('node.npm'))
 
     /* use the CI NPM command when executing Github actions */
     npmInstallCommand = System.getenv('CI') ? 'ci' : 'install'
