@@ -41,6 +41,7 @@ public class LoginSecurityController {
 	@GetMapping(SecurityRequestMatchers.LOGIN_PAGE)
 	String login(
 			@NonNull Model model,
+			@RequestParam(value = "error", required = false) String error,
 			@RequestParam(value = "logout", required = false) String logout,
 			HttpServletRequest request
 	) {
@@ -51,8 +52,9 @@ public class LoginSecurityController {
 				.map(AuthenticationOption::from)
 				.collect(Collectors.toUnmodifiableSet());
 
-		model.addAttribute("options", options);
-		model.addAttribute("logout", logout != null);
+		model.addAttribute("options", options)
+				.addAttribute("logout", logout != null)
+				.addAttribute("error", error != null);
 
 		return "login";
 	}

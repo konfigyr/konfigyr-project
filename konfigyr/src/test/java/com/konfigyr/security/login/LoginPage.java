@@ -18,14 +18,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Getter
 class LoginPage extends AbstractPage<LoginPage> {
 
-	static final String PAGE_URL = "http://localhost/login";
-
 	static LoginPage load(WebDriver driver) {
-		return new LoginPage(driver).get();
+		return load(driver, 80);
 	}
 
-	LoginPage(WebDriver driver) {
-		super(driver);
+	static LoginPage load(WebDriver driver, int port) {
+		return new LoginPage(driver, port).get();
+	}
+
+	LoginPage(WebDriver driver, int port) {
+		super(driver, port);
 	}
 
 	@FindBy(css = "[data-test-selector=\"oauth-login-button\"]")
@@ -33,7 +35,7 @@ class LoginPage extends AbstractPage<LoginPage> {
 
 	@Override
 	protected void load() {
-		driver.get(PAGE_URL);
+		driver.get(getUriBuilder().path("login").toUriString());
 	}
 
 	@Override

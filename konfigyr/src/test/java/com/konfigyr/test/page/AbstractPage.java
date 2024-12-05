@@ -5,6 +5,8 @@ import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.LoadableComponent;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 
@@ -22,11 +24,32 @@ public abstract class AbstractPage<T extends AbstractPage<T>> extends LoadableCo
 	@NonNull
 	protected final WebDriver driver;
 
-	protected AbstractPage(WebDriver driver) {
+	@NonNull
+	protected UriComponents host;
+
+	protected final int port;
+
+	protected AbstractPage(WebDriver driver, int port) {
 		Assert.notNull(driver, "Driver can not be null");
+		Assert.isTrue(port > 0, "Port must be greater than 0");
+
 		this.driver = driver;
+		this.port = port;
+		this.host = UriComponentsBuilder.newInstance()
+						.scheme("http")
+						.host("localhost")
+						.port(port)
+						.build();
 
 		PageFactory.initElements(driver, this);
+	}
+
+	public UriComponentsBuilder getUriBuilder() {
+		return UriComponentsBuilder.newInstance().uriComponents(host);
+	}
+
+	public UriComponentsBuilder getUriFor(String path) {
+		return getUriBuilder().path(path);
 	}
 
 	public String getTitle() {

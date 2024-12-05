@@ -36,7 +36,7 @@ import java.sql.SQLException;
 public class KonfigyrDatabase extends PostgresDatabase {
 
 	private static final String CHANGELOG = "src/main/resources/migrations";
-	private static final String POSTGRESQL_IMAGE = "postgres:16.2";
+	private static final String POSTGRESQL_IMAGE = "postgres:17.2-alpine";
 
 	private final JooqLogger logger = JooqLogger.getLogger(KonfigyrDatabase.class);
 	private final File changelogs;
