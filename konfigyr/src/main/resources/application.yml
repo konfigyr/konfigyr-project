@@ -24,6 +24,13 @@ spring:
   mvc:
     static-path-pattern: /assets/**
 
+  security:
+    oauth2:
+      client:
+        provider:
+          github:
+            user-name-attribute: email
+
   web:
     resources:
       static-locations:

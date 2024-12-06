@@ -232,7 +232,7 @@ class AccountRememberMeServicesTest {
 		assertThat(cookie)
 				.isNotNull()
 				.returns((int) Duration.ofDays(14).toSeconds(), Cookie::getMaxAge)
-				.returns(true, Cookie::getSecure)
+				.returns(request.isSecure(), Cookie::getSecure)
 				.returns("/", Cookie::getPath)
 				.returns(null, Cookie::getDomain);
 

@@ -341,6 +341,12 @@ class InvitationsTest extends AbstractIntegrationTest {
 				.matching(event -> invitation.get().namespace().equals(event.id()))
 				.matching(event -> invitation.get().namespace().equals(event.namespace()))
 				.matching(event -> invitation.get().key().equals(event.key()));
+
+		events.assertThat()
+				.contains(NamespaceEvent.MemberAdded.class)
+				.matching(event -> invitation.get().namespace().equals(event.id()))
+				.matching(event -> recipient.equals(event.account()))
+				.matching(event -> invitation.get().role().equals(event.role()));
 	}
 
 	@Test
