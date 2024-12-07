@@ -10,11 +10,15 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.context.DelegatingSecurityContextRepository;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
@@ -75,8 +79,12 @@ public class WebSecurityConfiguration {
 				.exceptionHandling(exceptions -> exceptions
 						.defaultAuthenticationEntryPointFor(loginAuthenticationEntryPoint(), AnyRequestMatcher.INSTANCE)
 				)
+				.securityContext(context -> context
+						.securityContextRepository(securityContextRepository())
+				)
 				.sessionManagement(sessions -> sessions
-						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+						.sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+						.sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::changeSessionId)
 				)
 				.with(new ProvisioningConfigurer<>(), provisioning -> provisioning
 						.ignoringRequestMatchers("/namespaces/check-name")
@@ -97,6 +105,22 @@ public class WebSecurityConfiguration {
 		return new AuthenticationFailureHandlerBuilder(SecurityRequestMatchers.AUTHENTICATION_ERROR_PAGE)
 				.register(ProvisioningRequiredException.class, SecurityRequestMatchers.PROVISIONING_PAGE)
 				.build();
+	}
+
+	/**
+	 * Create a new {@link DelegatingSecurityContextRepository} that would only store/read the
+	 * {@link org.springframework.security.core.context.SecurityContext} in the request attributes and not
+	 * in the session.
+	 * <p>
+	 * Instead on relying on the session to retrieve the context, the context, and the authentication,
+	 * would be resolved by the {@link org.springframework.security.web.authentication.RememberMeServices}.
+	 *
+	 * @return security context repository
+	 */
+	private static SecurityContextRepository securityContextRepository() {
+		return new DelegatingSecurityContextRepository(
+				new RequestAttributeSecurityContextRepository()
+		);
 	}
 
 }

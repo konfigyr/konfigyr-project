@@ -1,5 +1,6 @@
 package com.konfigyr.namespace;
 
+import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.SearchQuery;
@@ -118,27 +119,37 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Test
 	@Transactional
 	@DisplayName("should update namespace member")
-	void shouldUpdateNamespaceMember() {
+	void shouldUpdateNamespaceMember(PublishedEvents events) {
 		assertThat(manager.updateMember(EntityId.from(2), NamespaceRole.USER))
 				.isNotNull()
 				.returns(EntityId.from(2), Member::id)
 				.returns(EntityId.from(1), Member::account)
 				.returns(EntityId.from(2), Member::namespace)
 				.returns(NamespaceRole.USER, Member::role);
+
+		assertThat(events.ofType(NamespaceEvent.MemberUpdated.class))
+				.hasSize(1)
+				.first()
+				.returns(EntityId.from(2), NamespaceEvent.MemberUpdated::id)
+				.returns(EntityId.from(1), NamespaceEvent.MemberUpdated::account)
+				.returns(NamespaceRole.USER, NamespaceEvent.MemberUpdated::role);
 	}
 
 	@Test
 	@DisplayName("should fail to update unknown namespace member")
-	void shouldFailToUpdateUnknownNamespaceMember() {
+	void shouldFailToUpdateUnknownNamespaceMember(PublishedEvents events) {
 		assertThatThrownBy(() -> manager.updateMember(EntityId.from(9999), NamespaceRole.USER))
 				.isInstanceOf(NamespaceException.class)
 				.hasMessageContaining("Failed to update unknown member");
+
+		assertThat(events.ofType(NamespaceEvent.MemberUpdated.class))
+				.isEmpty();
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should remove namespace member")
-	void shouldRemoveNamespaceMember() {
+	void shouldRemoveNamespaceMember(PublishedEvents events) {
 		assertThatNoException().isThrownBy(() -> manager.removeMember(EntityId.from(2)));
 
 		assertThat(manager.findMembers("konfigyr"))
@@ -146,6 +157,27 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 				.hasSize(1)
 				.extracting(Member::id)
 				.containsExactly(EntityId.from(3));
+
+		assertThat(events.ofType(NamespaceEvent.MemberRemoved.class))
+				.hasSize(1)
+				.first()
+				.returns(EntityId.from(2L), NamespaceEvent.MemberRemoved::id)
+				.returns(EntityId.from(1L), NamespaceEvent.MemberRemoved::account);
+	}
+
+	@Test
+	@DisplayName("should remove namespace member that does not exist")
+	void shouldRemoveNonExistingNamespaceMember(PublishedEvents events) {
+		assertThatNoException().isThrownBy(() -> manager.removeMember(EntityId.from(9999)));
+
+		assertThat(manager.findMembers("konfigyr"))
+				.isNotNull()
+				.hasSize(2)
+				.extracting(Member::id)
+				.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3));
+
+		assertThat(events.ofType(NamespaceEvent.MemberRemoved.class))
+				.isEmpty();
 	}
 
 	@Test
@@ -203,8 +235,10 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 						.isCloseTo(OffsetDateTime.now(), within(400, ChronoUnit.MILLIS))
 				);
 
-		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.Created.class))
-				.isTrue();
+		assertThat(events.ofType(NamespaceEvent.Created.class))
+				.hasSize(1)
+				.first()
+				.returns(namespace.id(), NamespaceEvent::id);
 
 		assertThat(manager.findMembers(namespace))
 				.isNotNull()
@@ -289,8 +323,10 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 		assertThat(manager.findBySlug("konfigyr"))
 				.isEmpty();
 
-		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.Deleted.class))
-				.isTrue();
+		assertThat(events.ofType(NamespaceEvent.Deleted.class))
+				.hasSize(1)
+				.first()
+				.returns(EntityId.from(2), EntityEvent::id);
 	}
 
 	@Test

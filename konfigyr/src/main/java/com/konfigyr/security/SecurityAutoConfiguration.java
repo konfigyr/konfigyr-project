@@ -2,6 +2,7 @@ package com.konfigyr.security;
 
 import com.konfigyr.account.AccountManager;
 import com.konfigyr.crypto.KeysetOperationsFactory;
+import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.security.access.KonfigyrMethodSecurityExpressionHandler;
 import com.konfigyr.security.access.KonfigyrWebSecurityExpressionHandler;
 import com.konfigyr.security.oauth.AuthorizedClientService;
@@ -52,9 +53,13 @@ public class SecurityAutoConfiguration {
 	}
 
 	@Bean
-	PrincipalService accountPrincipalService(AccountManager accountManager, ObjectProvider<UserCache> cacheProvider) {
+	PrincipalService accountPrincipalService(
+			AccountManager accountManager,
+			NamespaceManager namespaceManager,
+			ObjectProvider<UserCache> cacheProvider
+	) {
 		final UserCache userCache = cacheProvider.getIfAvailable(NullUserCache::new);
-		return new AccountPrincipalService(accountManager, userCache);
+		return new AccountPrincipalService(accountManager, namespaceManager, userCache);
 	}
 
 	@Bean

@@ -74,7 +74,6 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 		this.delegate = new InternalRememberMeServices(KEY, service::lookup);
 		delegate.setTokenValiditySeconds((int) TOKEN_VALIDITY.toSeconds());
 		delegate.setCookieName(COOKIE_NAME);
-		delegate.setUseSecureCookie(true);
 		delegate.setAlwaysRemember(true);
 		delegate.afterPropertiesSet();
 	}

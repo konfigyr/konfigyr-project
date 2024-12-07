@@ -164,6 +164,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 	@NonNull
 	@Override
+	@Transactional(label = "namespace-update-member")
 	public Member updateMember(@NonNull EntityId id, @NonNull NamespaceRole role) {
 		context.update(NAMESPACE_MEMBERS)
 				.set(NAMESPACE_MEMBERS.ROLE, role.name())
@@ -176,6 +177,10 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 		log.info("Successfully updated member role: [id={}, namespace={}, account={}, role={}]",
 				member.id(), member.namespace(), member.account(), member.role());
+
+		publisher.publishEvent(new NamespaceEvent.MemberUpdated(
+				member.namespace(), member.account(), member.role()
+		));
 
 		return member;
 	}
@@ -191,6 +196,11 @@ class DefaultNamespaceManager implements NamespaceManager {
 		if (result != null) {
 			log.info("Successfully removed member: [id={}, namespace={}, account={}]",
 					member.get(), result.get(NAMESPACE_MEMBERS.NAMESPACE_ID), result.get(NAMESPACE_MEMBERS.ACCOUNT_ID));
+
+			publisher.publishEvent(new NamespaceEvent.MemberRemoved(
+					result.get(NAMESPACE_MEMBERS.NAMESPACE_ID, EntityId.class),
+					result.get(NAMESPACE_MEMBERS.ACCOUNT_ID, EntityId.class)
+			));
 		}
 	}
 

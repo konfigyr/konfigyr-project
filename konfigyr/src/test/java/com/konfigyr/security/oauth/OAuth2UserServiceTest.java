@@ -2,6 +2,7 @@ package com.konfigyr.security.oauth;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountManager;
+import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.namespace.NamespaceType;
 import com.konfigyr.security.AccountPrincipal;
 import com.konfigyr.security.AccountPrincipalService;
@@ -49,7 +50,9 @@ class OAuth2UserServiceTest {
 	@BeforeEach
 	void setup() {
 		account = TestAccounts.john().avatar("https://example.com/avatar.svg").build();
-		service = new PrincipalAccountOAuth2UserService(new AccountPrincipalService(manager), delegate);
+		service = new PrincipalAccountOAuth2UserService(
+				new AccountPrincipalService(manager, mock(NamespaceManager.class)), delegate
+		);
 	}
 
 	@Test

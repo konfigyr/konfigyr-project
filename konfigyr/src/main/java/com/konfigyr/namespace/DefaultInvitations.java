@@ -184,6 +184,10 @@ class DefaultInvitations implements Invitations {
 				.execute();
 
 		publisher.publishEvent(new InvitationEvent.Accepted(invitation.namespace(), invitation.key()));
+
+		publisher.publishEvent(new NamespaceEvent.MemberAdded(
+				invitation.namespace(), EntityId.from(recipient.get()), invitation.role()
+		));
 	}
 
 	/**

@@ -1,10 +1,8 @@
 package com.konfigyr;
 
-import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.lang.NonNull;
 import org.springframework.modulith.core.ApplicationModules;
 import org.springframework.modulith.docs.Documenter;
 
@@ -12,13 +10,13 @@ class KonfigyrServerModulesTest {
 
 	private final ApplicationModules modules = ApplicationModules.of(
 			KonfigyrApplication.class,
-			DescribedPredicate.or(
-					ignore("com.konfigyr.data"),
-					ignore("com.konfigyr.jooq"),
-					ignore("com.konfigyr.io"),
-					ignore("com.konfigyr.security"),
-					ignore("com.konfigyr.support"),
-					ignore("com.konfigyr.web")
+			JavaClass.Predicates.resideInAnyPackage(
+					"com.konfigyr.data..",
+					"com.konfigyr.jooq..",
+					"com.konfigyr.io..",
+					"com.konfigyr.security..",
+					"com.konfigyr.support..",
+					"com.konfigyr.web.."
 			)
 	);
 
@@ -35,13 +33,6 @@ class KonfigyrServerModulesTest {
 				.writeModuleCanvases()
 				.writeModulesAsPlantUml()
 				.writeIndividualModulesAsPlantUml();
-	}
-
-	private static DescribedPredicate<JavaClass> ignore(@NonNull String name) {
-		return DescribedPredicate.describe(
-				"Ignoring '" + name + "' package",
-				type -> type.getPackage().getName().startsWith(name)
-		);
 	}
 
 }

@@ -47,8 +47,6 @@ class IntegrationManagerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should lookup an integration for namespace")
 	void shouldLookupIntegrationForNamespace() {
-		final var id = EntityId.from(1);
-
 		assertThat(manager.get("konfigyr", EntityId.from(2)))
 				.isPresent()
 				.get()

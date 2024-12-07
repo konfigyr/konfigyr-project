@@ -2,11 +2,11 @@ package com.konfigyr.security;
 
 import com.konfigyr.account.AccountManager;
 import com.konfigyr.crypto.*;
+import com.konfigyr.namespace.NamespaceManager;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
@@ -22,6 +22,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,27 +33,16 @@ class SecurityAutoConfigurationTest {
 			RestTemplateAutoConfiguration.class
 	);
 
-	@Mock
-	DSLContext context;
-
-	@Mock
-	AccountManager manager;
-
-	@Mock
-	KeysetOperationsFactory operationsFactory;
-
-	@Mock
-	ClientRegistrationRepository registrationRepository;
-
 	ApplicationContextRunner runner;
 
 	@BeforeEach
 	void setup() {
 		runner = new ApplicationContextRunner().withConfiguration(configurations)
-				.withBean(DSLContext.class, () -> context)
-				.withBean(AccountManager.class, () -> manager)
-				.withBean(KeysetOperationsFactory.class, () -> operationsFactory)
-				.withBean(ClientRegistrationRepository.class, () -> registrationRepository);
+				.withBean(DSLContext.class, () -> mock(DSLContext.class))
+				.withBean(AccountManager.class, () -> mock(AccountManager.class))
+				.withBean(NamespaceManager.class, () -> mock(NamespaceManager.class))
+				.withBean(KeysetOperationsFactory.class, () -> mock(KeysetOperationsFactory.class))
+				.withBean(ClientRegistrationRepository.class, () -> mock(ClientRegistrationRepository.class));
 	}
 
 	@Test
