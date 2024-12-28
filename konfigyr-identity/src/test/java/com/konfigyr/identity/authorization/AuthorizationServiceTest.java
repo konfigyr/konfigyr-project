@@ -2,6 +2,7 @@ package com.konfigyr.identity.authorization;
 
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
+import com.konfigyr.test.assertions.OAuth2TokenAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -27,9 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static com.konfigyr.identity.authorization.DefaultAuthorizationService.*;
 import static org.assertj.core.api.Assertions.*;
@@ -66,16 +70,19 @@ class AuthorizationServiceTest {
 	@Test
 	@DisplayName("should store authorization with OAuth authorization code token and state")
 	void shouldStoreAuthorizationCode(AssertablePublishedEvents events) {
+		final var code = authorizationCode("authorization-code-value");
+
 		OAuth2Authorization authorization = builder
 				.attribute(OAuth2ParameterNames.STATE, "state")
 				.attribute(OidcParameterNames.NONCE, "nonce")
-				.token(authorizationCode("authorization-code-value"))
+				.token(code)
 				.build();
 
 		assertThatNoException().isThrownBy(() -> authorizationService.save(authorization));
 
 		assertThat(authorizationService.findById(authorization.getId()))
-				.isEqualTo(authorization)
+				.satisfies(assertAuthorization(authorization))
+				.satisfies(assertAuthorizationToken(code))
 				.isEqualTo(authorizationService.findByToken("authorization-code-value", null))
 				.isEqualTo(authorizationService.findByToken("authorization-code-value", AUTHORIZATION_CODE_TOKEN_TYPE))
 				.isEqualTo(authorizationService.findByToken("state", null))
@@ -89,16 +96,19 @@ class AuthorizationServiceTest {
 	@Test
 	@DisplayName("should update existing authorization")
 	void shouldUpdateExistingAuthorization(AssertablePublishedEvents events) {
+		final var code = authorizationCode("authorization-code-value");
+
 		OAuth2Authorization initial = builder
 				.attribute(OAuth2ParameterNames.STATE, "state")
 				.attribute(OidcParameterNames.NONCE, "nonce")
-				.token(authorizationCode("authorization-code-value"))
+				.token(code)
 				.build();
 
 		assertThatNoException().isThrownBy(() -> authorizationService.save(initial));
 
 		assertThat(authorizationService.findById(initial.getId()))
-				.isEqualTo(initial);
+				.satisfies(assertAuthorization(initial))
+				.satisfies(assertAuthorizationToken(code));
 
 		final var token = idToken("updated-token");
 
@@ -109,8 +119,10 @@ class AuthorizationServiceTest {
 		assertThatNoException().isThrownBy(() -> authorizationService.save(updated));
 
 		assertThat(authorizationService.findById(initial.getId()))
-				.isEqualTo(updated)
-				.isNotEqualTo(initial);
+				.isNotEqualTo(initial)
+				.satisfies(assertAuthorization(updated))
+				.satisfies(assertAuthorizationToken(code))
+				.satisfies(assertAuthorizationToken(token));
 
 		events.assertThat()
 				.contains(AuthorizationEvent.Stored.class)
@@ -132,7 +144,11 @@ class AuthorizationServiceTest {
 		assertThatNoException().isThrownBy(() -> authorizationService.save(authorization));
 
 		assertThat(authorizationService.findById(authorization.getId()))
-				.isEqualTo(authorization)
+				.satisfies(assertAuthorization(authorization))
+				.satisfies(assertAuthorizationToken(id))
+				.satisfies(assertAuthorizationToken(authorization.getToken(OAuth2AuthorizationCode.class)))
+				.satisfies(assertAuthorizationToken(authorization.getAccessToken()))
+				.satisfies(assertAuthorizationToken(authorization.getRefreshToken()))
 				.isEqualTo(authorizationService.findByToken("authorization-code", AUTHORIZATION_CODE_TOKEN_TYPE))
 				.isEqualTo(authorizationService.findByToken("access-token", OAuth2TokenType.ACCESS_TOKEN))
 				.isEqualTo(authorizationService.findByToken("refresh-token", OAuth2TokenType.REFRESH_TOKEN))
@@ -174,7 +190,8 @@ class AuthorizationServiceTest {
 		assertThatNoException().isThrownBy(() -> authorizationService.save(authorization));
 
 		assertThat(authorizationService.findById(authorization.getId()))
-				.isEqualTo(authorization);
+				.satisfies(assertAuthorization(authorization))
+				.satisfies(assertAuthorizationToken(authorization.getAccessToken()));
 
 		assertThatNoException().isThrownBy(() -> authorizationService.remove(authorization));
 
@@ -444,6 +461,35 @@ class AuthorizationServiceTest {
 		assertThatThrownBy(() -> authorizationService.findById("konfigyr", " "))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Principal name cannot be empty");
+	}
+
+	static Consumer<OAuth2Authorization> assertAuthorization(OAuth2Authorization authorization) {
+		return it -> assertThat(it)
+				.returns(authorization.getId(), OAuth2Authorization::getId)
+				.returns(authorization.getRegisteredClientId(), OAuth2Authorization::getRegisteredClientId)
+				.returns(authorization.getPrincipalName(), OAuth2Authorization::getPrincipalName)
+				.returns(authorization.getAuthorizationGrantType(), OAuth2Authorization::getAuthorizationGrantType)
+				.returns(authorization.getAuthorizedScopes(), OAuth2Authorization::getAuthorizedScopes)
+				.returns(authorization.getAttributes(), OAuth2Authorization::getAttributes);
+	}
+
+	static <T extends OAuth2Token> Consumer<OAuth2Authorization> assertAuthorizationToken(OAuth2Authorization.Token<T> token) {
+		assertThat(token)
+				.isNotNull()
+				.extracting(OAuth2Authorization.Token::getToken)
+				.isNotNull();
+
+		return assertAuthorizationToken(token.getToken());
+	}
+
+	static <T extends OAuth2Token> Consumer<OAuth2Authorization> assertAuthorizationToken(T token) {
+		return it -> assertThat(it.getToken(token.getClass()))
+				.isNotNull()
+				.extracting(OAuth2Authorization.Token::getToken)
+				.asInstanceOf(OAuth2TokenAssert.factory())
+				.hasValue(token.getTokenValue())
+				.issuedAt(token.getIssuedAt(), within(500, ChronoUnit.MILLIS))
+				.expiresAt(token.getExpiresAt(), within(500, ChronoUnit.MILLIS));
 	}
 
 	static OAuth2AuthorizationCode authorizationCode(String code) {

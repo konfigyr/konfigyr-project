@@ -1,6 +1,5 @@
 package com.konfigyr.test.assertions;
 
-import org.assertj.core.api.AbstractInstantAssert;
 import org.assertj.core.api.InstanceOfAssertFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.core.OAuth2Token;

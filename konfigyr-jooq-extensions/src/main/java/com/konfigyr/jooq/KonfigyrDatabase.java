@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
 
 /**
  * Customized JOOQ {@link PostgresDatabase} that would be used with Gradle
@@ -106,7 +105,6 @@ public class KonfigyrDatabase extends PostgresDatabase {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	private void migrate() {
 		logger.info("Executing Liquibase migrations from changeset: " + changelogs);
 
