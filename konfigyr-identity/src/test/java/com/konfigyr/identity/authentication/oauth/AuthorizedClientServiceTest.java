@@ -6,6 +6,8 @@ import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.test.OAuth2AccessTokens;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
+import com.konfigyr.test.assertions.OAuth2AccessTokenAssert;
+import com.konfigyr.test.assertions.OAuth2TokenAssert;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,27 +72,19 @@ class AuthorizedClientServiceTest {
 				.asInstanceOf(InstanceOfAssertFactories.type(OAuth2AuthorizedClient.class))
 				.returns(client.getClientRegistration(), OAuth2AuthorizedClient::getClientRegistration)
 				.returns(account.getName(), OAuth2AuthorizedClient::getPrincipalName)
-				.satisfies(
-						it -> assertThat(it.getAccessToken())
-								.returns(accessToken.getTokenType(), OAuth2AccessToken::getTokenType)
-								.returns(accessToken.getTokenValue(), AbstractOAuth2Token::getTokenValue)
-								.returns(accessToken.getScopes(), OAuth2AccessToken::getScopes)
-								.satisfies(t -> assertThat(t.getIssuedAt())
-										.isNotNull()
-										.isCloseTo(accessToken.getIssuedAt(), within(1, ChronoUnit.SECONDS)))
-								.satisfies(t -> assertThat(t.getExpiresAt())
-										.isNotNull()
-										.isCloseTo(accessToken.getExpiresAt(), within(1, ChronoUnit.SECONDS)))
+				.satisfies(it -> OAuth2AccessTokenAssert.assertThat(it.getAccessToken())
+						.isNotNull()
+						.isBearerToken()
+						.hasValue(accessToken.getTokenValue())
+						.hasScopes(accessToken.getScopes())
+						.issuedAt(accessToken.getIssuedAt(), within(1, ChronoUnit.SECONDS))
+						.expiresAt(accessToken.getExpiresAt(), within(1, ChronoUnit.SECONDS))
 				)
-				.satisfies(
-						it -> assertThat(it.getRefreshToken())
-								.returns(refreshToken.getTokenValue(), AbstractOAuth2Token::getTokenValue)
-								.satisfies(t -> assertThat(t.getIssuedAt())
-										.isNotNull()
-										.isCloseTo(refreshToken.getIssuedAt(), within(1, ChronoUnit.SECONDS)))
-								.satisfies(t -> assertThat(t.getExpiresAt())
-										.isNotNull()
-										.isCloseTo(refreshToken.getExpiresAt(), within(1, ChronoUnit.SECONDS)))
+				.satisfies(it -> OAuth2TokenAssert.assertThat(it.getRefreshToken())
+						.isNotNull()
+						.hasValue(refreshToken.getTokenValue())
+						.issuedAt(refreshToken.getIssuedAt(), within(1, ChronoUnit.SECONDS))
+						.expiresAt(refreshToken.getExpiresAt(), within(1, ChronoUnit.SECONDS))
 				);
 
 		assertThatNoException()
@@ -127,17 +121,13 @@ class AuthorizedClientServiceTest {
 				.returns(client.getClientRegistration(), OAuth2AuthorizedClient::getClientRegistration)
 				.returns(account.getName(), OAuth2AuthorizedClient::getPrincipalName)
 				.returns(null, OAuth2AuthorizedClient::getRefreshToken)
-				.satisfies(
-						it -> assertThat(it.getAccessToken())
-								.returns(accessToken.getTokenType(), OAuth2AccessToken::getTokenType)
-								.returns(accessToken.getTokenValue(), AbstractOAuth2Token::getTokenValue)
-								.returns(accessToken.getScopes(), OAuth2AccessToken::getScopes)
-								.satisfies(t -> assertThat(t.getIssuedAt())
-										.isNotNull()
-										.isCloseTo(accessToken.getIssuedAt(), within(1, ChronoUnit.SECONDS)))
-								.satisfies(t -> assertThat(t.getExpiresAt())
-										.isNotNull()
-										.isCloseTo(accessToken.getExpiresAt(), within(1, ChronoUnit.SECONDS)))
+				.satisfies(it -> OAuth2AccessTokenAssert.assertThat(it.getAccessToken())
+						.isNotNull()
+						.isBearerToken()
+						.hasValue(accessToken.getTokenValue())
+						.hasScopes(accessToken.getScopes())
+						.issuedAt(accessToken.getIssuedAt(), within(1, ChronoUnit.SECONDS))
+						.expiresAt(accessToken.getExpiresAt(), within(1, ChronoUnit.SECONDS))
 				);
 
 		assertThatNoException()
@@ -167,12 +157,12 @@ class AuthorizedClientServiceTest {
 				.satisfies(it -> assertThat(it.getRefreshToken())
 						.isNull()
 				)
-				.satisfies(it -> assertThat(it.getAccessToken())
+				.satisfies(it -> OAuth2AccessTokenAssert.assertThat(it.getAccessToken())
 						.isNotNull()
-						.returns(initialAccessToken.getTokenValue(), OAuth2AccessToken::getTokenValue)
-						.returns(initialAccessToken.getIssuedAt(), OAuth2AccessToken::getIssuedAt)
-						.returns(initialAccessToken.getExpiresAt(), OAuth2AccessToken::getExpiresAt)
-						.returns(initialAccessToken.getScopes(), OAuth2AccessToken::getScopes)
+						.hasValue(initialAccessToken.getTokenValue())
+						.hasScopes(initialAccessToken.getScopes())
+						.issuedAt(initialAccessToken.getIssuedAt(), within(100, ChronoUnit.MILLIS))
+						.expiresAt(initialAccessToken.getExpiresAt(), within(100, ChronoUnit.MILLIS))
 				);
 
 		assertThatNoException().isThrownBy(() -> authorizedClientService.saveAuthorizedClient(new OAuth2AuthorizedClient(
@@ -188,12 +178,12 @@ class AuthorizedClientServiceTest {
 				.satisfies(it -> assertThat(it.getRefreshToken())
 						.isNotNull()
 				)
-				.satisfies(it -> assertThat(it.getAccessToken())
+				.satisfies(it -> OAuth2AccessTokenAssert.assertThat(it.getAccessToken())
 						.isNotNull()
-						.returns(updatedAccessToken.getTokenValue(), OAuth2AccessToken::getTokenValue)
-						.returns(updatedAccessToken.getIssuedAt(), OAuth2AccessToken::getIssuedAt)
-						.returns(updatedAccessToken.getExpiresAt(), OAuth2AccessToken::getExpiresAt)
-						.returns(updatedAccessToken.getScopes(), OAuth2AccessToken::getScopes)
+						.hasValue(updatedAccessToken.getTokenValue())
+						.hasScopes(updatedAccessToken.getScopes())
+						.issuedAt(updatedAccessToken.getIssuedAt(), within(100, ChronoUnit.MILLIS))
+						.expiresAt(updatedAccessToken.getExpiresAt(), within(100, ChronoUnit.MILLIS))
 				);
 	}
 
