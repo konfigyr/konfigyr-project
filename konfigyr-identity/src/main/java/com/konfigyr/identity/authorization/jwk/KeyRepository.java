@@ -12,7 +12,6 @@ import org.jooq.*;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 import org.springframework.util.function.ThrowingFunction;
 
 import java.security.Key;
