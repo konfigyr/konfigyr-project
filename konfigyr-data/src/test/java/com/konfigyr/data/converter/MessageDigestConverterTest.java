@@ -2,12 +2,15 @@ package com.konfigyr.data.converter;
 
 import com.konfigyr.io.ByteArray;
 import org.jooq.Converter;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.Security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,6 +21,11 @@ class MessageDigestConverterTest {
 	static ByteArray digest = ByteArray.fromBase64String("lEsH5gLfsuHsl3Sl72uluKrNuPOHATczBn-JUc5chTg=");
 
 	Converter<ByteArray, ByteArray> converter;
+
+	@BeforeAll
+	static void registerProvider() {
+		Security.addProvider(new BouncyCastleProvider());
+	}
 
 	@BeforeEach
 	void setup() {
@@ -66,10 +74,10 @@ class MessageDigestConverterTest {
 				.hasMessageContaining("Could not create converter as digest algorithm is not supported")
 				.hasCauseInstanceOf(NoSuchAlgorithmException.class);
 
-		assertThatThrownBy(() -> MessageDigestConverter.create("unknown", "unknown"))
+		assertThatThrownBy(() -> MessageDigestConverter.create("unknown", BouncyCastleProvider.PROVIDER_NAME))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Could not create converter as digest algorithm is not supported")
-				.hasCauseInstanceOf(NoSuchProviderException.class);
+				.hasCauseInstanceOf(NoSuchAlgorithmException.class);
 
 		assertThatThrownBy(() -> MessageDigestConverter.create("SHA-256", "unknown"))
 				.isInstanceOf(IllegalArgumentException.class)
