@@ -61,7 +61,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 	private final DSLContext context;
 	private final ClientRegistrationRepository clientRegistrationRepository;
 
-	private final Converter<ByteArray, ByteArray> encryptionConverter;
+	private final EncryptionConverter encryptionConverter;
 	private final Converter<String, Set> scopesConverter = Converter.ofNullable(
 			String.class,
 			Set.class,
@@ -132,8 +132,8 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 				registration.getRegistrationId(), account);
 
 		final SettableRecord record = SettableRecord.of(context, ACCOUNT_ACCESS_TOKENS)
-				.with(applyAccessToken(authorizedClient.getAccessToken()))
-				.with(applyRefreshToken(authorizedClient.getRefreshToken()));
+				.with(applyAccessToken(account, authorizedClient.getAccessToken()))
+				.with(applyRefreshToken(account, authorizedClient.getRefreshToken()));
 
 		context.insertInto(ACCOUNT_ACCESS_TOKENS)
 				.set(ACCOUNT_ACCESS_TOKENS.CLIENT_REGISTRATION_ID, registration.getRegistrationId())
@@ -167,7 +167,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 
 		final OAuth2AccessToken accessToken = new OAuth2AccessToken(
 				OAuth2AccessToken.TokenType.BEARER,
-				createTokenValue(record, ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE),
+				createTokenValue(account, record, ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE),
 				record.get(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_ISSUED_AT, instantConverter),
 				record.get(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_EXPIRES_AT, instantConverter),
 				record.get(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_SCOPES, scopesConverter)
@@ -179,7 +179,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 		}
 
 		final OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(
-				createTokenValue(record, ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE),
+				createTokenValue(account, record, ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE),
 				record.get(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_ISSUED_AT, instantConverter),
 				record.get(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_EXPIRES_AT, instantConverter)
 		);
@@ -188,7 +188,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 	}
 
 	@NonNull
-	private UnaryOperator<SettableRecord> applyAccessToken(@Nullable OAuth2AccessToken token) {
+	private UnaryOperator<SettableRecord> applyAccessToken(@NonNull EntityId account, @Nullable OAuth2AccessToken token) {
 		if (token == null) {
 			return UnaryOperator.identity();
 		}
@@ -196,7 +196,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 		return record -> {
 			final ByteArray value = ByteArray.fromString(token.getTokenValue());
 
-			return record.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE, value, encryptionConverter)
+			return record.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_VALUE, value, encryptionConverter.with(account.serialize()))
 					.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_SCOPES, token.getScopes(), scopesConverter)
 					.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_ISSUED_AT, token.getIssuedAt(), instantConverter)
 					.set(ACCOUNT_ACCESS_TOKENS.ACCESS_TOKEN_EXPIRES_AT, token.getExpiresAt(), instantConverter);
@@ -204,7 +204,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 	}
 
 	@NonNull
-	private UnaryOperator<SettableRecord> applyRefreshToken(@Nullable OAuth2RefreshToken token) {
+	private UnaryOperator<SettableRecord> applyRefreshToken(@NonNull EntityId account, @Nullable OAuth2RefreshToken token) {
 		if (token == null) {
 			return UnaryOperator.identity();
 		}
@@ -212,14 +212,14 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 		return record -> {
 			final ByteArray value = ByteArray.fromString(token.getTokenValue());
 
-			return record.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE, value, encryptionConverter)
+			return record.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_VALUE, value, encryptionConverter.with(account.serialize()))
 					.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_ISSUED_AT, token.getIssuedAt(), instantConverter)
 					.set(ACCOUNT_ACCESS_TOKENS.REFRESH_TOKEN_EXPIRES_AT, token.getExpiresAt(), instantConverter);
 		};
 	}
 
-	private String createTokenValue(@NonNull Record record, @NonNull Field<ByteArray> field) {
-		final ByteArray value = record.get(field, encryptionConverter);
+	private String createTokenValue(@NonNull EntityId account, @NonNull Record record, @NonNull Field<ByteArray> field) {
+		final ByteArray value = record.get(field, encryptionConverter.with(account.serialize()));
 		return value == null ? null : new String(value.array(), StandardCharsets.UTF_8);
 	}
 

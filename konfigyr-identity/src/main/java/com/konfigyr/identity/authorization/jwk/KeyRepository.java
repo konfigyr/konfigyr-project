@@ -12,6 +12,7 @@ import org.jooq.*;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import org.springframework.util.function.ThrowingFunction;
 
 import java.security.Key;
@@ -43,7 +44,7 @@ public class KeyRepository {
 	);
 
 	private final DSLContext context;
-	private final Converter<ByteArray, ByteArray> encryptionConverter;
+	private final EncryptionConverter encryptionConverter;
 
 	public KeyRepository(DSLContext context, KeysetOperations operations) {
 		this.context = context;
@@ -81,7 +82,7 @@ public class KeyRepository {
 				.set(OAUTH_KEYS.ID, key.getKeyID())
 				.set(OAUTH_KEYS.KEY_ALGORITHM.convert(algorithmConverter), algorithm)
 				.set(OAUTH_KEYS.PUBLIC_KEY, encode(key, AsymmetricJWK::toPublicKey, UnaryOperator.identity()))
-				.set(OAUTH_KEYS.PRIVATE_KEY, encode(key, AsymmetricJWK::toPrivateKey, encryptionConverter::to))
+				.set(OAUTH_KEYS.PRIVATE_KEY, encode(key, AsymmetricJWK::toPrivateKey, encryptionConverter.with(key.getKeyID())::to))
 				.set(OAUTH_KEYS.ISSUED_AT.convert(dateConverter), key.getIssueTime())
 				.set(OAUTH_KEYS.EXPIRES_AT.convert(dateConverter), key.getExpirationTime())
 				.execute();
@@ -118,6 +119,7 @@ public class KeyRepository {
 	 * @return the Asymmetric JWK, never {@literal null}
 	 */
 	private JWK convert(@NonNull Record record) {
+		final String id = record.get(OAUTH_KEYS.ID);
 		final KeyAlgorithm algorithm = record.get(OAUTH_KEYS.KEY_ALGORITHM, algorithmConverter);
 
 		final KeyPair pair;
@@ -125,7 +127,7 @@ public class KeyRepository {
 		try {
 			pair = algorithm.createKeyPair(
 					record.get(OAUTH_KEYS.PUBLIC_KEY),
-					record.get(OAUTH_KEYS.PRIVATE_KEY, encryptionConverter)
+					record.get(OAUTH_KEYS.PRIVATE_KEY, encryptionConverter.with(id))
 			);
 		} catch (JOSEException ex) {
 			throw new IllegalStateException("failed to create key pair", ex);
@@ -133,7 +135,7 @@ public class KeyRepository {
 
 		return switch (algorithm) {
 			case RS256, RSA_OAEP_256 -> new RSAKey.Builder((RSAPublicKey) pair.getPublic())
-					.keyID(record.get(OAUTH_KEYS.ID))
+					.keyID(id)
 					.keyUse(algorithm.usage())
 					.algorithm(algorithm.get())
 					.keyOperations(algorithm.operations())

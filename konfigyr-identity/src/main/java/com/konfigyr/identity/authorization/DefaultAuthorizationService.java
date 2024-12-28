@@ -71,9 +71,9 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	private final ApplicationEventPublisher publisher;
 
 	/* jOOQ Converters */
+	private final EncryptionConverter encryptionConverter;
 	private final Converter<String, Map> attributeConverter;
 	private final Converter<ByteArray, ByteArray> hashingConverter;
-	private final Converter<ByteArray, ByteArray> encrptionConverter;
 	private final Converter<String, RegisteredClient> registeredClientConverter;
 	private final Converter<OffsetDateTime, Instant> instantConverter = Converter.of(
 			OffsetDateTime.class,
@@ -102,7 +102,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 		this.publisher = publisher;
 		this.attributeConverter = JsonConverter.create(mapper, Map.class);
 		this.hashingConverter = MessageDigestConverter.create("BLAKE2s-256", BouncyCastleProvider.PROVIDER_NAME);
-		this.encrptionConverter = EncryptionConverter.create(operations);
+		this.encryptionConverter = EncryptionConverter.create(operations);
 		this.registeredClientConverter = Converter.fromNullable(String.class, RegisteredClient.class, repository::findByClientId);
 	}
 
@@ -419,12 +419,14 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
 	@NonNull
 	private UnaryOperator<SettableRecord> applyAccessToken(@NonNull OAuth2Authorization authorization) {
+		final ByteArray context = ByteArray.fromString(authorization.getId());
+
 		return apply(
 				authorization::getAccessToken,
 				(record, token) -> {
 					final ByteArray value = ByteArray.fromString(token.getToken().getTokenValue());
 
-					return record.set(OAUTH_AUTHORIZATIONS.ACCESS_TOKEN_VALUE, value, encrptionConverter)
+					return record.set(OAUTH_AUTHORIZATIONS.ACCESS_TOKEN_VALUE, value, encryptionConverter.with(context))
 							.set(OAUTH_AUTHORIZATIONS.ACCESS_TOKEN_HASH, value, hashingConverter)
 							.set(OAUTH_AUTHORIZATIONS.ACCESS_TOKEN_ISSUED_AT, token.getToken().getIssuedAt(), instantConverter)
 							.set(OAUTH_AUTHORIZATIONS.ACCESS_TOKEN_EXPIRES_AT, token.getToken().getExpiresAt(), instantConverter)
@@ -436,12 +438,14 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
 	@NonNull
 	private UnaryOperator<SettableRecord> applyRefreshToken(@NonNull OAuth2Authorization authorization) {
+		final ByteArray context = ByteArray.fromString(authorization.getId());
+
 		return apply(
 				authorization::getRefreshToken,
 				(record, token) -> {
 					final ByteArray value = ByteArray.fromString(token.getToken().getTokenValue());
 
-					return record.set(OAUTH_AUTHORIZATIONS.REFRESH_TOKEN_VALUE, value, encrptionConverter)
+					return record.set(OAUTH_AUTHORIZATIONS.REFRESH_TOKEN_VALUE, value, encryptionConverter.with(context))
 							.set(OAUTH_AUTHORIZATIONS.REFRESH_TOKEN_HASH, value, hashingConverter)
 							.set(OAUTH_AUTHORIZATIONS.REFRESH_TOKEN_ISSUED_AT, token.getToken().getIssuedAt(), instantConverter)
 							.set(OAUTH_AUTHORIZATIONS.REFRESH_TOKEN_EXPIRES_AT, token.getToken().getExpiresAt(), instantConverter)
@@ -452,12 +456,14 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
 	@NonNull
 	private UnaryOperator<SettableRecord> applyIdToken(@NonNull OAuth2Authorization authorization) {
+		final ByteArray context = ByteArray.fromString(authorization.getId());
+
 		return apply(
 				() -> authorization.getToken(OidcIdToken.class),
 				(record, token) -> {
 					final ByteArray value = ByteArray.fromString(token.getToken().getTokenValue());
 
-					return record.set(OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_VALUE, value, encrptionConverter)
+					return record.set(OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_VALUE, value, encryptionConverter.with(context))
 							.set(OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_HASH, value, hashingConverter)
 							.set(OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_ISSUED_AT, token.getToken().getIssuedAt(), instantConverter)
 							.set(OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_EXPIRES_AT, token.getToken().getExpiresAt(), instantConverter)
@@ -560,7 +566,10 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	}
 
 	private String createTokenValue(@NonNull Record record, @NonNull Field<ByteArray> field) {
-		final ByteArray value = record.get(field, encrptionConverter);
+		final String id = record.get(OAUTH_AUTHORIZATIONS.ID);
+		Assert.hasText(id, "Authorization identifier can not be null");
+
+		final ByteArray value = record.get(field, encryptionConverter.with(id));
 		return value == null ? null : new String(value.array(), StandardCharsets.UTF_8);
 	}
 

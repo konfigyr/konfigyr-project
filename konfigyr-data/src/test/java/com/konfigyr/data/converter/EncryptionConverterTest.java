@@ -4,7 +4,6 @@ import com.konfigyr.crypto.CryptoException;
 import com.konfigyr.crypto.Keyset;
 import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.io.ByteArray;
-import org.jooq.Converter;
 import org.jooq.exception.DataTypeException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +24,7 @@ class EncryptionConverterTest {
 	@Mock
 	Keyset keyset;
 
-	Converter<ByteArray, ByteArray> converter;
+	EncryptionConverter converter;
 
 	@BeforeEach
 	void setup() {
@@ -35,11 +34,11 @@ class EncryptionConverterTest {
 	@Test
 	@DisplayName("should encrypt byte array")
 	void shouldEncryptByteArray() {
-		doReturn(decrypted).when(keyset).encrypt(encrypted);
+		doReturn(encrypted).when(keyset).encrypt(decrypted, null);
 
-		assertThat(converter.to(encrypted))
+		assertThat(converter.to(decrypted))
 				.isNotNull()
-				.isEqualTo(decrypted);
+				.isEqualTo(encrypted);
 	}
 
 	@Test
@@ -57,9 +56,26 @@ class EncryptionConverterTest {
 	@Test
 	@DisplayName("should decrypt byte array")
 	void shouldDecryptByteArray() {
-		doReturn(encrypted).when(keyset).decrypt(decrypted);
+		doReturn(decrypted).when(keyset).decrypt(encrypted, null);
 
-		assertThat(converter.from(decrypted))
+		assertThat(converter.from(encrypted))
+				.isNotNull()
+				.isEqualTo(decrypted);
+	}
+
+	@Test
+	@DisplayName("should create new converter with context")
+	void shouldCreateNewConverterWithContext() {
+		final var converter = this.converter.with("context");
+
+		doReturn(encrypted).when(keyset).encrypt(decrypted, ByteArray.fromString("context"));
+		doReturn(decrypted).when(keyset).decrypt(encrypted, ByteArray.fromString("context"));
+
+		assertThat(converter.from(encrypted))
+				.isNotNull()
+				.isEqualTo(decrypted);
+
+		assertThat(converter.to(decrypted))
 				.isNotNull()
 				.isEqualTo(encrypted);
 	}
@@ -79,8 +95,8 @@ class EncryptionConverterTest {
 	@Test
 	@DisplayName("should catch crypto exceptions")
 	void shouldCatchCryptoExceptions() {
-		doThrow(CryptoException.KeysetOperationException.class).when(keyset).encrypt(encrypted);
-		doThrow(CryptoException.KeysetOperationException.class).when(keyset).decrypt(decrypted);
+		doThrow(CryptoException.KeysetOperationException.class).when(keyset).encrypt(encrypted, null);
+		doThrow(CryptoException.KeysetOperationException.class).when(keyset).decrypt(decrypted, null);
 
 		assertThatThrownBy(() -> converter.to(encrypted))
 				.isInstanceOf(DataTypeException.class)

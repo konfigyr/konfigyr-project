@@ -66,6 +66,11 @@ class MessageDigestConverterTest {
 				.hasMessageContaining("Could not create converter as digest algorithm is not supported")
 				.hasCauseInstanceOf(NoSuchAlgorithmException.class);
 
+		assertThatThrownBy(() -> MessageDigestConverter.create("unknown", "unknown"))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Could not create converter as digest algorithm is not supported")
+				.hasCauseInstanceOf(NoSuchProviderException.class);
+
 		assertThatThrownBy(() -> MessageDigestConverter.create("SHA-256", "unknown"))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Could not create converter as security provider is not supported")
