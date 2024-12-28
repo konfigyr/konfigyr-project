@@ -100,7 +100,7 @@ class SettableRecordTest {
 		final var record = SettableRecord.of(TESTING_TABLE.newRecord()).with(it -> {
 			it.set(TESTING_TABLE.ID, 23L);
 		}).with(it -> {
-			it.set(TESTING_TABLE.STATUS, "UPDATED");
+			return it.set(TESTING_TABLE.STATUS, "UPDATED");
 		});
 
 		assertThat(record.get())

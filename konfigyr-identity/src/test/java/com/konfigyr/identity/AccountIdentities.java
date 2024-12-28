@@ -35,7 +35,7 @@ public interface AccountIdentities {
 				.status(AccountIdentityStatus.ACTIVE)
 				.email("jane.doe@konfigyr.com")
 				.name("Jane Doe")
-				.avatar(Avatar.generate(EntityId.from(1), "JD"))
+				.avatar(Avatar.generate(EntityId.from(2), "JD"))
 				.authorities(AuthorityUtils.commaSeparatedStringToAuthorityList("jane"));
 	}
 

@@ -85,6 +85,9 @@ class KeyRepositoryTest {
 	void shouldDeleteKey() {
 		final var key = repository.create(KeyAlgorithm.ECDH_ES_A128KW, Period.ofDays(30));
 
+		assertThat(repository.get(key.getKeyID()))
+				.isNotEmpty();
+
 		assertThatNoException().isThrownBy(() -> repository.delete(key.getKeyID()));
 
 		assertThat(repository.get(key.getKeyID()))

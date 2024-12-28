@@ -1,5 +1,7 @@
 package com.konfigyr.identity.authorization.jwk;
 
+import com.konfigyr.io.ByteArray;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEAlgorithm;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.*;
@@ -11,9 +13,11 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.Period;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -186,6 +190,42 @@ class KeyAlgorithmTest {
 	}
 
 	@Test
+	@DisplayName("should resolve key algorithm from JOSE algorithm instance")
+	void shouldResolveKeyAlgorithm() {
+		assertThat(KeyAlgorithm.from(JWEAlgorithm.RSA_OAEP_256))
+				.isEqualTo(KeyAlgorithm.RSA_OAEP_256)
+				.returns(JWEAlgorithm.RSA_OAEP_256.getName(), KeyAlgorithm::getName)
+				.returns(KeyType.RSA, KeyAlgorithm::type)
+				.returns(KeyUse.ENCRYPTION, KeyAlgorithm::usage)
+				.returns(Set.of(KeyOperation.ENCRYPT, KeyOperation.DECRYPT), KeyAlgorithm::operations);
+
+		assertThat(KeyAlgorithm.from(JWEAlgorithm.ECDH_ES_A128KW))
+				.isEqualTo(KeyAlgorithm.ECDH_ES_A128KW)
+				.returns(JWEAlgorithm.ECDH_ES_A128KW.getName(), KeyAlgorithm::getName)
+				.returns(KeyType.EC, KeyAlgorithm::type)
+				.returns(KeyUse.ENCRYPTION, KeyAlgorithm::usage)
+				.returns(Set.of(KeyOperation.ENCRYPT, KeyOperation.DECRYPT), KeyAlgorithm::operations);
+
+		assertThat(KeyAlgorithm.from(JWSAlgorithm.RS256))
+				.isEqualTo(KeyAlgorithm.RS256)
+				.returns(JWSAlgorithm.RS256.getName(), KeyAlgorithm::getName)
+				.returns(KeyType.RSA, KeyAlgorithm::type)
+				.returns(KeyUse.SIGNATURE, KeyAlgorithm::usage)
+				.returns(Set.of(KeyOperation.SIGN, KeyOperation.VERIFY), KeyAlgorithm::operations);
+
+		assertThat(KeyAlgorithm.from(JWSAlgorithm.ES256))
+				.isEqualTo(KeyAlgorithm.ES256)
+				.returns(JWSAlgorithm.ES256.getName(), KeyAlgorithm::getName)
+				.returns(KeyType.EC, KeyAlgorithm::type)
+				.returns(KeyUse.SIGNATURE, KeyAlgorithm::usage)
+				.returns(Set.of(KeyOperation.SIGN, KeyOperation.VERIFY), KeyAlgorithm::operations);
+
+		assertThatThrownBy(() -> KeyAlgorithm.from(JWEAlgorithm.DIR))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Unsupported key algorithm: dir");
+	}
+
+	@Test
 	@DisplayName("should fail to generate key with non-positive expiration period")
 	void shouldCheckExpirationPeriod() {
 		assertThatThrownBy(() -> KeyAlgorithm.ES256.generate(Period.ofDays(10).negated()))
@@ -195,6 +235,15 @@ class KeyAlgorithmTest {
 		assertThatThrownBy(() -> KeyAlgorithm.ES256.generate(Period.ZERO))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("JWK expiration period must be positive");
+	}
+
+	@Test
+	@DisplayName("should fail to create key pair with invalid data")
+	void shouldFailToCreateKeyPairs() {
+		assertThatThrownBy(() -> KeyAlgorithm.ES256.createKeyPair(ByteArray.empty(), ByteArray.empty()))
+				.isInstanceOf(JOSEException.class)
+				.hasMessageContaining("Unsupported key specification")
+				.hasRootCauseInstanceOf(InvalidKeySpecException.class);
 	}
 
 }
