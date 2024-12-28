@@ -1,6 +1,6 @@
 spring:
   liquibase:
-    change-log: migrations/changelog.xml
+    change-log: migrations/konfigyr-api-changelog.xml
 
   messages:
     basename: messages/konfigyr, messages/validation, messages/mail

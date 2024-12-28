@@ -51,6 +51,12 @@ subprojects {
             dependency('com.konfigyr:konfigyr-crypto-tink:1.0.0-RC2')
             dependency('com.konfigyr:konfigyr-crypto-jdbc:1.0.0-RC2')
 
+            /* Bouncy Castle provider */
+            dependency('org.bouncycastle:bcprov-jdk18on:1.79')
+
+            /* Thymeleaf layout dialect */
+            dependency('nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0')
+
             /* Fix Dependabot alerts */
             dependency('org.apache.commons:commons-compress:1.27.1') // used by testcontainers
             dependency('com.google.guava:guava:33.3.1-jre') // used by checkstyle

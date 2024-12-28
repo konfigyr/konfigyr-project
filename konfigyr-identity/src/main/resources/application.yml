@@ -1,0 +1,64 @@
+spring:
+  cache:
+    cache-names: crypto-keysets, user-cache
+    caffeine:
+      spec: expireAfterWrite=1h
+
+  liquibase:
+    change-log: classpath:migrations/konfigyr-identity-changelog.xml
+
+  messages:
+    basename: messages/messages, messages/mail
+
+  mail:
+    host: smtp.resend.com
+    port: 587
+    username: resend
+    properties:
+      mail.smtp.starttls.required: true
+      mail.smtp.starttls.enable: true
+    sender:
+      name: Konfigyr
+      email: noreply@konfigyr.com
+
+  security:
+    oauth2:
+      client:
+        provider:
+          github:
+            user-name-attribute: email
+
+      authorizationserver:
+        client:
+          konfigyr:
+            registration:
+              client-id: "konfigyr"
+              client-authentication-methods:
+                - "client_secret_basic"
+              authorization-grant-types:
+                - "authorization_code"
+                - "client_credentials"
+                - "refresh_token"
+                - "urn:ietf:params:oauth:grant-type:device_code"
+              redirect-uris:
+                - "http://127.0.0.1:8080/login/oauth2/code/konfigyr"
+                - "https://oauth.pstmn.io/v1/callback"
+              post-logout-redirect-uris:
+                - "http://127.0.0.1:8080/"
+              scopes:
+                - "openid"
+                - "profile"
+                - 'client.read'
+                - 'client.create'
+            require-authorization-consent: true
+            token:
+              access-token-time-to-live: 8h
+              refresh-token-time-to-live: 7d
+
+  web:
+    resources:
+      static-locations: classpath:/static/, classpath:/dist/
+
+logging:
+  pattern:
+    console: '%clr(%d{HH:mm:ss.SSS}){faint} %clr([%-20thread]) %clr(%-5level) [%mdc] %clr(%-40.40logger{39}){cyan} %clr(:){faint} %marker %m%n'

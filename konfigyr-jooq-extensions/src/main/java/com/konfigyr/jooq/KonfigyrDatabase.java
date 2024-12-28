@@ -6,6 +6,7 @@ import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
+import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.DirectoryResourceAccessor;
 import org.jooq.DSLContext;
 import org.jooq.meta.postgres.PostgresDatabase;
@@ -36,6 +37,7 @@ import java.sql.SQLException;
 public class KonfigyrDatabase extends PostgresDatabase {
 
 	private static final String CHANGELOG = "src/main/resources/migrations";
+	private static final String CHANGELOG_NAME = "changelog.xml";
 	private static final String POSTGRESQL_IMAGE = "postgres:17.2-alpine";
 
 	private final JooqLogger logger = JooqLogger.getLogger(KonfigyrDatabase.class);
@@ -54,6 +56,16 @@ public class KonfigyrDatabase extends PostgresDatabase {
 
 	KonfigyrDatabase(File changelogs) {
 		this.changelogs = changelogs;
+	}
+
+	protected String getChangelog() {
+		String changelog = getProperties().getProperty("changelog");
+
+		if (changelog == null) {
+			changelog = CHANGELOG_NAME;
+		}
+
+		return changelog;
 	}
 
 	@Override
@@ -107,8 +119,10 @@ public class KonfigyrDatabase extends PostgresDatabase {
 			database.setDefaultCatalogName(container.getDatabaseName());
 
 			liquibase = new Liquibase(
-					"changelog.xml",
-					new DirectoryResourceAccessor(changelogs),
+					getChangelog(),
+					new CompositeResourceAccessor(
+							new DirectoryResourceAccessor(changelogs)
+					),
 					database
 			);
 		} catch (FileNotFoundException e) {

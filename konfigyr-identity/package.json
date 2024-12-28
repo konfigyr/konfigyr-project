@@ -1,0 +1,17 @@
+{
+  "name": "konfigyr-identity",
+  "description": "Konfigyr Identity",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm run tailwind -- --minify",
+    "watch": "npm run tailwind -- --watch",
+    "tailwind": "tailwindcss -i ./src/main/resources/assets/konfigyr.css -o ./build/resources/main/static/css/konfigyr.dist.css"
+  },
+  "keywords": [
+    "konfigyr"
+  ],
+  "author": "vladimir.spasic.86@gmail.com",
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

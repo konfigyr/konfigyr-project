@@ -49,6 +49,9 @@
   "dependencies": {
     "@github/auto-check-element": "^5.4.2",
     "@primer/live-region-element": "^0.7.1",
+    "@thumbtack/thumbprint-scss": "^4.0.3",
+    "@thumbtack/thumbprint-tokens": "^13.0.1",
+    "bootstrap": "^5.3.3",
     "spect": "^24.2.1"
   }
 }

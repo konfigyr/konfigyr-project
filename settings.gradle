@@ -1,5 +1,8 @@
 rootProject.name = 'konfigyr-project'
 
 include 'konfigyr'
+include 'konfigyr-core'
+include 'konfigyr-data'
+include 'konfigyr-identity'
 include 'konfigyr-jooq-extensions'
 include 'konfigyr-test'

@@ -1,0 +1,74 @@
+plugins {
+    id 'java-library'
+    id 'nu.studer.jooq' version '9.0'
+}
+
+description = 'Konfigyr module that contains jOOQ generated classes and database migrations'
+
+dependencies {
+    api project(':konfigyr-core')
+
+    /* Spring jOOQ and data dependencies */
+    api 'org.springframework.boot:spring-boot-starter-jooq'
+    api 'org.springframework.data:spring-data-commons'
+
+    implementation 'org.liquibase:liquibase-core'
+    implementation 'org.postgresql:postgresql'
+
+    /* jOOQ extensions dependency for the gradle task */
+    jooqGenerator project(':konfigyr-jooq-extensions')
+    jooqGenerator 'ch.qos.logback:logback-classic'
+
+    testImplementation project(':konfigyr-test')
+}
+
+jooq {
+    /* Force jOOQ plugin to use the same Spring version */
+    version = dependencyManagement.importedProperties['jooq.version']
+
+    configurations {
+        main {
+            generationTool {
+                generator {
+                    name = 'org.jooq.codegen.JavaGenerator'
+                    database {
+                        name = 'com.konfigyr.jooq.KonfigyrDatabase'
+                        inputSchema = "public"
+                        excludes = 'databasechangelog.*|keysets'
+
+                        forcedTypes {
+                            forcedType {
+                                userType = 'com.konfigyr.io.ByteArray'
+                                converter = 'com.konfigyr.data.converter.ByteArrayConverter'
+                                includeTypes = 'bytea'
+                            }
+                        }
+                    }
+                    generate {
+                        pojos = false
+                        records = false
+                        interfaces = false
+                        javaTimeTypes = true
+                        javadoc = true
+                    }
+                    target {
+                        packageName = 'com.konfigyr.data'
+                    }
+                    strategy {
+                        name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.named('generateJooq').configure {
+    inputs.files(fileTree('src/main/resources/migrations'))
+            .withPropertyName('migrations')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    allInputsDeclared = true
+
+    outputs.cacheIf { true }
+}

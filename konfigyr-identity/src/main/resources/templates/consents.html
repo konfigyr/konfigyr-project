@@ -1,0 +1,85 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+      lang="en">
+<head>
+    <title th:text="#{konfigyr.consent.title}">Consents</title>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelector('button[type="reset"]').addEventListener('click', function () {
+                document.consents.reset();
+                document.consents.submit();
+            });
+        });
+    </script>
+</head>
+<body>
+    <main layout:fragment="main">
+        <div class="container">
+            <div class="w-full md:w-1/2 lg:w-1/3 mx-auto">
+                <h1 class="text-center text-2xl mb-4">
+                    <span class="text-secondary">konfigyr</span>.<small class="font-mono">id</small>
+                </h1>
+
+                <form name="consents" th:method="post" th:action="@{/oauth/authorize}">
+                    <input type="hidden" name="client_id" th:value="${client.id}" />
+                    <input type="hidden" name="state" th:value="${state}" />
+
+                    <div class="rounded-xl border bg-card text-card-foreground shadow">
+                        <div class="flex flex-col space-y-1.5 p-6">
+                            <h2 class="font-semibold leading-none tracking-tight"
+                                th:text="${#messages.msg('konfigyr.consent.card.title', client.clientName)}"
+                            >
+                                Allow client to access your account?
+                            </h2>
+                            <p class="text-sm text-muted-foreground" th:text="#{konfigyr.consent.card.description}">
+                               Please review the permissions that are requested and consent if you approve.
+                            </p>
+                        </div>
+
+                        <div class="p-6 pt-0">
+                            <p class="text-sm mb-4" th:text="${#messages.msg('konfigyr.consent.card.contents', client.clientName)}">
+                                Client is requesting permission to access your account
+                            </p>
+
+                            <div th:each="scope : ${scopes}" class="flex items-center my-2">
+                                <input
+                                        type="checkbox"
+                                        th:id="${scope.value()}"
+                                        class="h-4 w-4 rounded border border-primary bg-background checked:bg-primary checked:text-primary-foreground hover:border-primary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        role="checkbox"
+                                        th:checked="${scope.authorized()}">
+
+                                <label th:for="${scope.value()}" th:text="${scope.value()}" class="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    profile
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center p-6 pt-0">
+                            <div class="grid gap-2 grid-cols-2">
+                                <th:block th:replace="~{components/buttons :: primary (
+                                    label=#{konfigyr.consent.card.submit},
+                                    type='submit'
+                                )}">
+                                    Consent
+                                </th:block>
+
+                                <th:block th:replace="~{components/buttons :: outline (
+                                    label=#{konfigyr.consent.card.cancel},
+                                    type='reset'
+                                )}">
+                                    Cancel
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
