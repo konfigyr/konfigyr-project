@@ -103,8 +103,8 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 		final Instant refreshTokenIssuedAt = refreshToken != null ? refreshToken.getIssuedAt() : null;
 		final Instant refreshTokenExpiresAt = refreshToken != null ? refreshToken.getExpiresAt() : null;
 		final String accessTokenScopes = StringUtils.collectionToDelimitedString(accessToken.getScopes(), ",");
-		final byte[] accessTokenValue = encrypt(accessToken);
-		final byte[] refreshTokenValue = encrypt(refreshToken);
+		final ByteArray accessTokenValue = encrypt(accessToken);
+		final ByteArray refreshTokenValue = encrypt(refreshToken);
 
 		context.insertInto(ACCOUNT_ACCESS_TOKENS)
 				.set(ACCOUNT_ACCESS_TOKENS.CLIENT_REGISTRATION_ID, registration.getRegistrationId())
@@ -172,23 +172,23 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 		return new OAuth2AuthorizedClient(registration, account.serialize(), accessToken, refreshToken);
 	}
 
-	private String decrypt(byte[] data) {
-		if (data == null || data.length == 0) {
+	private String decrypt(ByteArray data) {
+		if (data == null) {
 			return null;
 		}
 
-		final ByteArray bytes = keyset.decrypt(new ByteArray(data));
+		final ByteArray bytes = keyset.decrypt(data);
 		return new String(bytes.array(), StandardCharsets.UTF_8);
 	}
 
-	private byte[] encrypt(AbstractOAuth2Token token) {
+	private ByteArray encrypt(AbstractOAuth2Token token) {
 		if (token == null || token.getTokenValue() == null) {
 			return null;
 		}
 
 		final ByteArray bytes = ByteArray.fromString(token.getTokenValue(), StandardCharsets.UTF_8);
 
-		return keyset.encrypt(bytes).array();
+		return keyset.encrypt(bytes);
 	}
 
 	private static EntityId lookupUserIdentifierForAuthentication(Authentication authentication) {

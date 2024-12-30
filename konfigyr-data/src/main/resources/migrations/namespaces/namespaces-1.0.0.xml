@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+		xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+	<changeSet author="vspasic" id="1.0.0-create-namespaces-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="namespaces" />
+			</not>
+		</preConditions>
+
+		<comment>Initial namespaces table migration</comment>
+
+		<createTable tableName="namespaces" remarks="Namespace under which artifacts and vaults would be managed.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="slug" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="type" type="varchar(20)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="name" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="description" type="text">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="avatar" type="varchar(255)" />
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addUniqueConstraint
+				tableName="namespaces"
+				columnNames="slug"
+				constraintName="unique_namespace"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-namespace-members-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="namespace_members" />
+			</not>
+		</preConditions>
+
+		<comment>Initial namespace members table migration</comment>
+
+		<createTable tableName="namespace_members" remarks="User accounts that are allowed to access and manage namespaces.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="account_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="role" type="varchar(20)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="since" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addUniqueConstraint
+				tableName="namespace_members"
+				columnNames="namespace_id,account_id"
+				constraintName="unique_namespace_member"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="namespace_members"
+				baseColumnNames="namespace_id"
+				constraintName="fk_namespace_member_namespace"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="namespace_members"
+				baseColumnNames="account_id"
+				constraintName="fk_namespace_member_account"
+				referencedTableName="accounts"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-namespace-integrations-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="integrations" />
+			</not>
+		</preConditions>
+
+		<comment>Initial Namespace Integrations table migration</comment>
+
+		<createTable tableName="integrations" remarks="Third party integrations granted by the namespace owners.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="type" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="provider" type="varchar(50)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="provider_reference" type="varchar(255)">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="integrations"
+				baseColumnNames="namespace_id"
+				constraintName="fk_namespace_integration"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-invitations-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="invitations" />
+			</not>
+		</preConditions>
+
+		<comment>Member invitations table migration</comment>
+
+		<createTable tableName="invitations" remarks="Table used to store namespace invitations for new team members.">
+			<column name="key" type="varchar(16)">
+				<constraints primaryKey="true" nullable="false"/>
+			</column>
+			<column name="namespace_id" type="bigint">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="sender_id" type="bigint">
+				<constraints nullable="true" />
+			</column>
+			<column name="recipient_id" type="bigint">
+				<constraints nullable="true" />
+			</column>
+			<column name="recipient_email" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="role" type="varchar(10)">
+				<constraints nullable="false" />
+			</column>
+			<column name="reminder_date" type="timestamptz">
+				<constraints nullable="true" />
+			</column>
+			<column name="expiry_date" type="timestamptz">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="invitations"
+				baseColumnNames="namespace_id"
+				constraintName="fk_namespace_invitation"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="invitations"
+				baseColumnNames="sender_id"
+				constraintName="fk_invitation_sender"
+				referencedTableName="accounts"
+				referencedColumnNames="id"
+				onDelete="SET NULL"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="invitations"
+				baseColumnNames="recipient_id"
+				constraintName="fk_invitation_recipient"
+				referencedTableName="accounts"
+				referencedColumnNames="id"
+				onDelete="SET NULL"
+		/>
+
+		<addUniqueConstraint
+				tableName="invitations"
+				columnNames="namespace_id,recipient_email"
+				constraintName="unique_namespace_invitation"
+		/>
+	</changeSet>
+</databaseChangeLog>

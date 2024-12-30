@@ -2,7 +2,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.account.AccountStatus;
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.jooq.SettableRecord;
+import com.konfigyr.data.SettableRecord;
 import com.konfigyr.mail.Mail;
 import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractIntegrationTest;

@@ -1,0 +1,45 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+    <th:block th:fragment="primary (label)">
+        <th:block th:replace="~{components/buttons :: button (label = ${label}, type = ${type}, href = ${href}, variant = 'primary', class = ${class})}" />
+    </th:block>
+
+    <th:block th:fragment="outline (label)">
+        <th:block th:replace="~{components/buttons :: button (label = ${label}, type = ${type}, href = ${href}, variant = 'outline', class = ${class})}" />
+    </th:block>
+
+    <th:block th:fragment="link (label)">
+        <th:block th:replace="~{components/buttons :: button (label = ${label}, type = ${type}, href = ${href}, variant = 'link', class = ${class})}" />
+    </th:block>
+
+    <th:block th:fragment="button (label, type, href, variant, class)">
+        <th:block th:switch="${variant}">
+            <th:block th:case="'outline'" th:with="classNames = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground'">
+                <button th:unless="${href}" th:type="${type}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
+                    Outline button
+                </button>
+                <a th:if="${href}" th:href="${href}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
+                    Outline button
+                </a>
+            </th:block>
+            <th:block th:case="'link'" th:with="classNames = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 text-primary underline-offset-4 hover:underline'">
+                <button th:unless="${href}" th:type="${type}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
+                    Link button
+                </button>
+                <a th:if="${href}" th:href="${href}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
+                    Link button
+                </a>
+            </th:block>
+            <th:block th:case="*" th:with="classNames = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-primary text-primary-foreground shadow hover:bg-primary/90'">
+                <button th:unless="${href}" th:type="${type}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
+                    Link button
+                </button>
+                <a th:if="${href}" th:href="${href}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
+                    Link button
+                </a>
+            </th:block>
+        </th:block>
+    </th:block>
+</body>

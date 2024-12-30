@@ -1,0 +1,40 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    /* Spring Boot starter */
+    api 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+
+    /* Spring Security API */
+    api 'org.springframework.security:spring-security-web'
+    api 'org.springframework.security:spring-security-oauth2-core'
+
+    /* Spring Moduliths and JMolecules */
+    api 'org.springframework.modulith:spring-modulith-starter-core'
+    api 'org.jmolecules:jmolecules-ddd'
+    api 'org.jmolecules:jmolecules-events'
+
+    /* Konfigyr Cryptography that uses Google Tink algorithms and JDBC as a repository */
+    api 'com.konfigyr:konfigyr-crypto-api'
+    api 'com.konfigyr:konfigyr-crypto-tink'
+    implementation 'com.konfigyr:konfigyr-crypto-jdbc'
+
+    /* Slugify library to generate slugs */
+    api 'com.github.slugify:slugify:3.0.7'
+    implementation 'com.ibm.icu:icu4j:76.1'
+
+    /* TSID */
+    api 'io.hypersistence:hypersistence-tsid:2.1.3'
+
+    /* Common library */
+    api 'commons-codec:commons-codec'
+
+    testImplementation project(':konfigyr-test')
+
+    /* Database Test support */
+    testImplementation 'org.liquibase:liquibase-core'
+    testImplementation 'org.postgresql:postgresql'
+}

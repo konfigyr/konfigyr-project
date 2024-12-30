@@ -1,7 +1,7 @@
 package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.jooq.SettableRecord;
+import com.konfigyr.data.SettableRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;

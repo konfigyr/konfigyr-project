@@ -1,0 +1,32 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+      lang="en">
+<body>
+    <main layout:fragment="main">
+        <div class="container">
+            <div class="w-full md:w-1/2 mx-auto">
+                <h1 class="text-2xl" th:utext="${#messages.msg('konfigyr.account.welcome', #authentication.principal.displayName)}">
+                    Welcome back John Doe
+                </h1>
+                <p class="text-sm leading-relaxed mb-4" th:text="#{konfigyr.account.select-products}">
+                    Select products
+                </p>
+
+                <div class="grid gap-4 py-6" th:with="products = ${ { 'registry', 'vault' } }">
+                    <a th:each="product : ${products}" th:href="@{/}" class="transition-all rounded border bg-card text-card-foreground shadow hover:shadow-md p-6">
+                        <h2 class="text-2xl leading-none tracking-tight mb-2">
+                            <span class="text-secondary">konfigyr</span>.<small class="font-mono" th:text="${product}">vault</small>
+                        </h2>
+                        <p class="text-sm leading-relaxed" th:text="${#messages.msg('konfigyr.product.' + product + '.description')}">
+                            Something about the product
+                        </p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

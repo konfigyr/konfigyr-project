@@ -1,0 +1,13 @@
+spring:
+  liquibase:
+    change-log: migrations/test-changelog.xml
+
+konfigyr:
+  crypto:
+    master-key: c7miwShcEQkZUcNQGqliVA==
+
+logging:
+  level:
+    com.konfigyr: DEBUG
+    org.jooq.tools.LoggerListener: DEBUG
+    org.springframework.security: DEBUG

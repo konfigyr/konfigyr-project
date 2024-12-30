@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    
+    <changeSet author="vspasic" id="1.0.0-oauth-authorizations-consents-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="oauth_authorizations_consents"/>
+            </not>
+        </preConditions>
+
+        <comment>Initial OAuth2 Authorizations Consents table migration</comment>
+
+		<createTable tableName="oauth_authorizations_consents" remarks="Stores Authorization Server consents for Authorization requests.">
+			<column name="registered_client_id" type="varchar(100)">
+				<constraints primaryKey="true" nullable="false"/>
+			</column>
+			<column name="principal_name" type="varchar(200)">
+				<constraints primaryKey="true" nullable="false"/>
+			</column>
+			<column name="authorities" type="varchar(1000)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="timestamp" type="timestamptz">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+    </changeSet>
+</databaseChangeLog>

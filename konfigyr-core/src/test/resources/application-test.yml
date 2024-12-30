@@ -1,0 +1,12 @@
+spring:
+  cache:
+    type: SIMPLE
+
+konfigyr:
+  crypto:
+    master-key: c7miwShcEQkZUcNQGqliVA==
+
+logging:
+  level:
+    com.konfigyr: DEBUG
+    org.springframework.security: DEBUG

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    
+    <changeSet author="vspasic" id="1.0.0-oauth-authorizations-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="oauth_authorizations"/>
+            </not>
+        </preConditions>
+
+        <comment>Initial OAuth2 Authorizations table migration</comment>
+
+		<createTable tableName="oauth_authorizations" remarks="Stores OAuth2 Authorization attempts and Tokens.">
+			<column name="id" type="varchar(100)">
+				<constraints primaryKey="true" nullable="false"/>
+			</column>
+			<column name="registered_client_id" type="varchar(100)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="principal_name" type="varchar(200)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="authorization_grant_type" type="varchar(100)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="authorized_scopes" type="varchar(1000)"/>
+			<column name="attributes" type="text"/>
+			<column name="state" type="varchar(500)"/>
+			<column name="authorization_code_value" type="text"/>
+			<column name="authorization_code_issued_at" type="timestamptz"/>
+			<column name="authorization_code_expires_at" type="timestamptz"/>
+			<column name="authorization_code_metadata" type="text"/>
+			<column name="access_token_value" type="bytea"/>
+			<column name="access_token_hash" type="bytea"/>
+			<column name="access_token_issued_at" type="timestamptz"/>
+			<column name="access_token_expires_at" type="timestamptz"/>
+			<column name="access_token_metadata" type="text"/>
+			<column name="access_token_scopes" type="varchar(1000)"/>
+			<column name="oidc_id_token_value" type="bytea"/>
+			<column name="oidc_id_token_hash" type="bytea"/>
+			<column name="oidc_id_token_issued_at" type="timestamptz"/>
+			<column name="oidc_id_token_expires_at" type="timestamptz"/>
+			<column name="oidc_id_token_metadata" type="text"/>
+			<column name="refresh_token_value" type="bytea"/>
+			<column name="refresh_token_hash" type="bytea"/>
+			<column name="refresh_token_issued_at" type="timestamptz"/>
+			<column name="refresh_token_expires_at" type="timestamptz"/>
+			<column name="refresh_token_metadata" type="text"/>
+		</createTable>
+    </changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-oauth-keys">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="oauth_keys"/>
+			</not>
+		</preConditions>
+
+		<comment>Initial OAuth2 Keys table migration</comment>
+
+		<createTable tableName="oauth_keys" remarks="Stores OAuth2 RSA key pairs use to sign or encrypt JWT.">
+			<column name="id" type="varchar(100)">
+				<constraints primaryKey="true" nullable="false"/>
+			</column>
+			<column name="key_algorithm" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="public_key" type="bytea">
+				<constraints nullable="false"/>
+			</column>
+			<column name="private_key" type="bytea">
+				<constraints nullable="false"/>
+			</column>
+			<column name="issued_at" type="timestamptz" remarks="Timestamp when this key was created and issued.">
+				<constraints nullable="false"/>
+			</column>
+			<column name="expires_at" type="timestamptz" remarks="Timestamp when this key expires and should be removed.">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+</databaseChangeLog>

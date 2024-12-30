@@ -1,7 +1,7 @@
 package com.konfigyr.integration;
 
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.jooq.PageableExecutor;
+import com.konfigyr.data.PageableExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;

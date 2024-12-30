@@ -9,6 +9,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -45,8 +46,10 @@ class KonfigyrDatabaseTest {
 
 	static KonfigyrDatabase createDatabase(String changelogs) throws IOException {
 		final Resource resource = new ClassPathResource(changelogs);
+		final KonfigyrDatabase database = new KonfigyrDatabase(resource.getFile());
+		database.setProperties(new Properties());
 
-		return new KonfigyrDatabase(resource.getFile());
+		return database;
 	}
 
 }

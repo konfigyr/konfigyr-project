@@ -22,6 +22,18 @@ component_management:
       name: API
       paths:
         - konfigyr/**
+    - component_id: konfigyr-core
+      name: Core
+      paths:
+        - konfigyr-core/**
+    - component_id: konfigyr-data
+      name: Data
+      paths:
+        - konfigyr-data/**
+    - component_id: konfigyr-identity
+      name: Identity
+      paths:
+        - konfigyr-identity/**
     - component_id: konfigyr-jooq
       name: jOOQ Extensions
       paths:

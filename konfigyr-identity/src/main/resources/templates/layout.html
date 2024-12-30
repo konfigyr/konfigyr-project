@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE" th:text="#{konfigyr.title}">
+        Konfigyr
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link th:href="@{/css/konfigyr.dist.css}" rel="stylesheet" />
+</head>
+<body class="body-gradient">
+    <header id="header" class="border-b" layout:fragment="header">
+        <div class="container px-4 flex h-14 items-center gap-4">
+            <a th:href="@{/}" title="Konfigyr Identity" class="text-2xl">
+                <span class="text-secondary">konfigyr</span>.<small class="font-mono">id</small>
+            </a>
+
+            <div class="flex flex-1 items-center justify-end">
+                <form th:if="${#authentication}" th:action="@{/logout}" method="POST" class="m-0">
+                    <th:block th:replace="~{components/buttons :: primary (
+                        type='submit',
+                        label=#{konfigyr.authentication.logout}
+                    )}">
+                        Logout
+                    </th:block>
+                </form>
+
+                <th:block th:unless="${#authentication}">
+                    <th:block th:replace="~{components/buttons :: link (
+                        href=@{/login},
+                        label=#{konfigyr.authentication.login}
+                    )}">
+                        Login
+                    </th:block>
+                </th:block>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex items-center justify-center px-4 py-6 lg:py-8" layout:fragment="main">
+
+    </main>
+
+    <footer id="footer" class="border-grid border-t py-4" layout:fragment="footer">
+        <div class="container px-4 text-balance text-sm leading-loose text-muted-foreground">
+            <p>Made with ❤️ in Berlin.</p>
+        </div>
+    </footer>
+</body>
+</html>

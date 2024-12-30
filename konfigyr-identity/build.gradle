@@ -1,0 +1,87 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'com.github.node-gradle.node' version '7.1.0'
+}
+
+dependencies {
+    implementation project(':konfigyr-core')
+    implementation project(':konfigyr-data')
+
+    /* Spring Boot starter */
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-authorization-server"
+
+    /* Spring Cache and Caffeine implementation */
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    /* Tracing and observability */
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-observation'
+
+    /* Spring Common libraries */
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework.data:spring-data-commons'
+
+    /* Spring JDBC session implementation */
+    implementation 'org.springframework.session:spring-session-jdbc'
+
+    /* Konfigyr Mail using SMTP and Thymeleaf template engine */
+    implementation 'com.konfigyr:konfigyr-mail-smtp'
+    implementation 'com.konfigyr:konfigyr-mail-thymeleaf'
+
+    /* Spring Boot Thymeleaf */
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
+    implementation 'org.bouncycastle:bcprov-jdk18on'
+
+    /* Liquibase - migrations runtime  */
+    implementation 'org.liquibase:liquibase-core'
+
+    /* Postgresql driver */
+    implementation 'org.postgresql:postgresql'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    testImplementation project(':konfigyr-test')
+    testImplementation 'org.seleniumhq.selenium:htmlunit3-driver'
+}
+
+node {
+    npmCommand = String.valueOf(getProperty('node.npm'))
+
+    /* use the CI NPM command when executing Github actions */
+    npmInstallCommand = System.getenv('CI') ? 'ci' : 'install'
+}
+
+tasks.register('rollup', NpmTask) {
+    dependsOn npmInstall
+
+    args = ['run', 'build']
+
+    /* define inputs for the task in order to run only when the inputs change */
+    inputs.files('package.json', 'package-lock.json', 'rollup.config.js')
+    inputs.dir('src/main/assets')
+    inputs.dir(fileTree("node_modules").exclude(".cache"))
+
+    /* mark the dist as the output directory */
+    outputs.dir(project.layout.buildDirectory.dir('resources/main/dist'))
+}
+
+tasks.register('npmTest', NpmTask) {
+    dependsOn npmInstall
+
+    args = ['test']
+
+    /* define inputs for the test task in order to run only when the related files change */
+    inputs.files('package.json', 'package-lock.json', '.eslintrc.json', '.prettierrc.json')
+    inputs.dir('src/main/assets/scripts')
+}
+
+//processResources.dependsOn('rollup')
+//check.dependsOn('npmTest')
+
