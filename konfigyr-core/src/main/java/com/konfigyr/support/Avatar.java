@@ -1,5 +1,7 @@
 package com.konfigyr.support;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.konfigyr.entity.EntityId;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
@@ -34,6 +36,7 @@ public record Avatar(@NonNull URI uri) implements Supplier<String>, Serializable
 
 	@NonNull
 	@Override
+	@JsonValue
 	public String get() {
 		return uri.toString();
 	}
@@ -51,6 +54,7 @@ public record Avatar(@NonNull URI uri) implements Supplier<String>, Serializable
 	 * @return avatar with the given resource location, never {@literal null}
 	 * @throws IllegalArgumentException when the URI string is blank or invalid
 	 */
+	@JsonCreator
 	public static Avatar parse(@NonNull String uri) {
 		Assert.hasText(uri, "Avatar URI cannot be blank");
 

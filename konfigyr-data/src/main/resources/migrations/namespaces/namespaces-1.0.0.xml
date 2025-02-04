@@ -167,7 +167,7 @@
 		<comment>Member invitations table migration</comment>
 
 		<createTable tableName="invitations" remarks="Table used to store namespace invitations for new team members.">
-			<column name="key" type="varchar(16)">
+			<column name="key" type="char(32)">
 				<constraints primaryKey="true" nullable="false"/>
 			</column>
 			<column name="namespace_id" type="bigint">

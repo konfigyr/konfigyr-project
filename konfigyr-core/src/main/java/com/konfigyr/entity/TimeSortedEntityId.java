@@ -1,5 +1,7 @@
 package com.konfigyr.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hypersistence.tsid.TSID;
 import lombok.EqualsAndHashCode;
 import org.springframework.lang.NonNull;
@@ -15,6 +17,7 @@ import java.io.Serial;
  * @see TimeSortedEntityIdProvider
  **/
 @EqualsAndHashCode(of = "id")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 final class TimeSortedEntityId implements EntityId {
 
 	@Serial
@@ -48,4 +51,10 @@ final class TimeSortedEntityId implements EntityId {
 	public String toString() {
 		return "EntityId(" + id + ", " + hash + ")";
 	}
+
+	@JsonCreator
+	static EntityId create(@NonNull String value) {
+		return TimeSortedEntityIdProvider.getInstance().create(value);
+	}
+
 }

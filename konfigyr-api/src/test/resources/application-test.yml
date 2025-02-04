@@ -1,0 +1,25 @@
+spring:
+  cache:
+    type: none
+
+  liquibase:
+    change-log: classpath:changelog.xml
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:${wiremock.server.port:8888}
+
+konfigyr:
+  crypto:
+    master-key: c7miwShcEQkZUcNQGqliVA==
+    jdbc:
+      initialize-schema: never
+
+logging:
+  level:
+    com.konfigyr: DEBUG
+    org.jooq.tools.LoggerListener: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.test.web.servlet.result: DEBUG

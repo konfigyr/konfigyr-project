@@ -50,6 +50,10 @@ public class SecurityConfiguration {
 				.authorizeHttpRequests((authorize) -> authorize
 						.anyRequest().authenticated()
 				)
+				.rememberMe(remember -> remember
+						.key(AccountRememberMeServices.KEY)
+						.rememberMeServices(new AccountRememberMeServices(accountIdentityService::get))
+				)
 				// Redirect to the login page when not authenticated from the authorization endpoint
 				.exceptionHandling((exceptions) -> exceptions
 						.defaultAuthenticationEntryPointFor(

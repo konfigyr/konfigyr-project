@@ -1,9 +1,12 @@
 package com.konfigyr.identity.authentication;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.Avatar;
 import lombok.Builder;
 import lombok.Value;
+import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jmolecules.ddd.types.Identifiable;
 import org.springframework.lang.NonNull;
@@ -39,6 +42,8 @@ import java.util.Map;
  **/
 @Value
 @Builder
+@AggregateRoot
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AccountIdentity implements OAuth2User, UserDetails, Identifiable<EntityId>, Serializable {
 
 	@Serial
@@ -105,6 +110,7 @@ public class AccountIdentity implements OAuth2User, UserDetails, Identifiable<En
 	}
 
 	@Override
+	@JsonIgnore
 	public String getUsername() {
 		return getName();
 	}
@@ -160,11 +166,13 @@ public class AccountIdentity implements OAuth2User, UserDetails, Identifiable<En
 	}
 
 	@Override
+	@JsonIgnore
 	public String getPassword() {
 		return EMPTY_PASSWORD;
 	}
 
 	@Override
+	@JsonIgnore
 	public Map<String, Object> getAttributes() {
 		return EMPTY_ATTRIBUTES;
 	}

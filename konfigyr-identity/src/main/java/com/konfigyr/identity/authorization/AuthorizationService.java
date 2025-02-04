@@ -1,5 +1,8 @@
 package com.konfigyr.identity.authorization;
 
+import org.jmolecules.event.annotation.DomainEventPublisher;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 
@@ -18,5 +21,21 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
  * @see org.springframework.security.oauth2.server.authorization.OAuth2Authorization
  */
 public interface AuthorizationService extends OAuth2AuthorizationService, OAuth2AuthorizationConsentService {
+
+	@Override
+	@DomainEventPublisher(publishes = "authorization.authorization-stored")
+	void save(OAuth2Authorization authorization);
+
+	@Override
+	@DomainEventPublisher(publishes = "authorization.authorization-consent-granted")
+	void save(OAuth2AuthorizationConsent authorizationConsent);
+
+	@Override
+	@DomainEventPublisher(publishes = "authorization.authorization-revoked")
+	void remove(OAuth2Authorization authorization);
+
+	@Override
+	@DomainEventPublisher(publishes = "authorization.authorization-consent-revoked")
+	void remove(OAuth2AuthorizationConsent authorizationConsent);
 
 }
