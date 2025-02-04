@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 class NamespaceControllerTest extends AbstractControllerTest {

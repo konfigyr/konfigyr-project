@@ -26,6 +26,6 @@ public abstract class AbstractIntegrationTest {
 	 * The {@link WireMockServer} instance that is created by the {@link EnableWireMock} annotation.
 	 */
 	@InjectWireMock
-	protected WireMockServer wiremock;
+	protected static WireMockServer wiremock;
 
 }

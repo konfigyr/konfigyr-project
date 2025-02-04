@@ -107,7 +107,7 @@ public sealed interface LinkRelation extends Supplier<String> permits SimpleLink
 	/**
 	 * Returns the actual {@link LinkRelation} value as a string.
 	 *
-	 * @return the relation value, never {@link null}
+	 * @return the relation value, never {@literal null}
 	 */
 	@NonNull
 	@JsonValue

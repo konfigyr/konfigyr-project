@@ -1,21 +1,35 @@
 package com.konfigyr.test;
 
+import com.konfigyr.account.Account;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.test.assertions.ProblemDetailAssert;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jwt.JWTClaimsSet;
 import org.assertj.core.api.*;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.core.ResolvableType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.RequestContextFilter;
 
+import java.time.Instant;
+import java.util.Date;
+import java.util.function.Consumer;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 public abstract class AbstractControllerTest extends AbstractIntegrationTest {
@@ -31,6 +45,18 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 						.build()
 		).withHttpMessageConverters(
 				context.getBean(HttpMessageConverters.class)
+		);
+	}
+
+	@BeforeEach
+	final void registerSigningKeyStub() {
+		final JWK key = KeyGenerator.getInstance().get();
+
+		stubFor(
+				get(urlPathEqualTo("/oauth/jwks"))
+						.willReturn(jsonResponse(
+								new JWKSet(key).toString(true), 200
+						))
 		);
 	}
 
@@ -79,6 +105,69 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 						.convertTo(ProblemDetailAssert.factory())
 						.hasStatus(statusCode)
 		);
+	}
+
+	/**
+	 * Creates a {@link RequestPostProcessor} that would generate a JWT OAuth2 Access Token from this
+	 * {@link Authentication} and append it as an {@link HttpHeaders#AUTHORIZATION} header to the mock request.
+	 * <p>
+	 * The JWT contains the {@code iss} claim that uses the current Wiremock Server URL and a {@code sub} claim
+	 * that uses the value extracted from the authentication name.
+	 *
+	 * @param authentication authentication for which access token is generated, can't be {@literal null}
+	 * @return the post processor, never {@literal null}
+	 */
+	@NonNull
+	protected static RequestPostProcessor authentication(@NonNull Authentication authentication) {
+		return authentication(claims -> claims.subject(authentication.getName()));
+	}
+
+	/**
+	 * Creates a {@link RequestPostProcessor} that would generate a JWT OAuth2 Access Token from this
+	 * {@link Account} and append it as an {@link HttpHeaders#AUTHORIZATION} header to the mock request.
+	 * <p>
+	 * The JWT contains the {@code iss} claim that uses the current Wiremock Server URL and a {@code sub} claim
+	 * that uses the serialized account entity identifier value.
+	 *
+	 * @param account account for which access token is generated, can't be {@literal null}
+	 * @return the post processor, never {@literal null}
+	 */
+	@NonNull
+	protected static RequestPostProcessor authentication(Account account) {
+		return authentication(TestPrincipals.from(account));
+	}
+
+	/**
+	 * Creates a {@link RequestPostProcessor} that would generate a JWT OAuth2 Access Token and append
+	 * it as an {@link HttpHeaders#AUTHORIZATION} header to the mock request.
+	 * <p>
+	 * The JWT contains the {@code iss} claim that uses the current Wiremock Server URL. Use supplier function
+	 * append add claims to the JWT.
+	 *
+	 * @param customizer supplier function that is used to customize JWT claims, can't be {@literal null}
+	 * @return the post processor, never {@literal null}
+	 */
+	@NonNull
+	protected static RequestPostProcessor authentication(@NonNull Consumer<JWTClaimsSet.Builder> customizer) {
+		return request -> {
+			final var instant = Instant.now();
+
+			final var claims = new JWTClaimsSet.Builder()
+					.jwtID(String.valueOf(instant.toEpochMilli()))
+					.notBeforeTime(Date.from(instant))
+					.issueTime(Date.from(instant))
+					.issuer(wiremock.baseUrl());
+
+			customizer.accept(claims);
+
+			final var token = KeyGenerator.getInstance()
+					.sign(claims.build())
+					.serialize();
+
+			request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+			return request;
+		};
 	}
 
 }

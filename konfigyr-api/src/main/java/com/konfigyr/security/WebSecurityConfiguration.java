@@ -1,5 +1,7 @@
 package com.konfigyr.security;
 
+import com.konfigyr.security.csrf.CsrfRequestMatcher;
+import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -8,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -28,13 +31,17 @@ public class WebSecurityConfiguration {
 
 	@Bean
 	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http) throws Exception {
+		final BearerTokenResolver bearerTokenResolver = new RequestAttributeBearerTokenResolver();
+
 		return http
 				.authorizeHttpRequests(requests -> requests
 						.anyRequest()
 						.authenticated()
 				)
 				.cors(Customizer.withDefaults())
-				.csrf(AbstractHttpConfigurer::disable)
+				.csrf(csrf -> csrf
+						.requireCsrfProtectionMatcher(new CsrfRequestMatcher(bearerTokenResolver))
+				)
 				.logout(AbstractHttpConfigurer::disable)
 				.httpBasic(AbstractHttpConfigurer::disable)
 				.formLogin(AbstractHttpConfigurer::disable)
@@ -42,6 +49,7 @@ public class WebSecurityConfiguration {
 				.rememberMe(AbstractHttpConfigurer::disable)
 				.oauth2ResourceServer(server -> server
 						.jwt(Customizer.withDefaults())
+						.bearerTokenResolver(bearerTokenResolver)
 				)
 				.securityContext(context -> context
 						.securityContextRepository(securityContextRepository())
