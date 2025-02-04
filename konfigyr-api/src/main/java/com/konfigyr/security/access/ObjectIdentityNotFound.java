@@ -12,7 +12,7 @@ import java.io.Serial;
  * @since 1.0.0
  */
 @Getter
-public class ObjectIdentityNotFound extends RuntimeException {
+public class ObjectIdentityNotFound extends AccessControlException {
 
 	@Serial
 	private static final long serialVersionUID = 8903903432016141816L;

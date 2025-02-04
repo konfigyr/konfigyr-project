@@ -5,12 +5,12 @@ import org.springframework.core.NestedRuntimeException;
 import java.io.Serial;
 
 /**
- * Abstract base class for {@link AccessControl} operations.
+ * General exception type for {@link AccessControl} operations.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
  */
-public abstract class AccessControlException extends NestedRuntimeException {
+public class AccessControlException extends NestedRuntimeException {
 
 	@Serial
 	private static final long serialVersionUID = 6179810569647384554L;

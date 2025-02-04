@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -42,6 +43,21 @@ class AccessServiceTest {
 	void setup() {
 		cache = spy(new ConcurrentMapCache("test-cache"));
 		service = new KonfigyrAccessService(repository, cache);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve access control from repository")
+	void repositoryFails() {
+		doThrow(IllegalArgumentException.class).when(repository).get(objectIdentity);
+
+		assertThatExceptionOfType(AccessControlException.class)
+				.isThrownBy(() -> service.hasAccess(authentication, "konfigyr"))
+				.withMessageContaining("Failed to retrieve access control")
+				.withCauseInstanceOf(IllegalArgumentException.class);
+
+		verify(repository).get(objectIdentity);
+		verify(cache).get(objectIdentity);
+		verify(cache, never()).put(eq(objectIdentity), any());
 	}
 
 	@Test

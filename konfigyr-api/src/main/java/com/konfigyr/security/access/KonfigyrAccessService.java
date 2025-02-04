@@ -71,6 +71,8 @@ class KonfigyrAccessService implements AccessService {
 				accessControl = accessControlRepository.get(object);
 			} catch (ObjectIdentityNotFound ex) {
 				log.debug("Object identity does not exist, can not find access control for {}", object);
+			} catch (Exception ex) {
+				throw new AccessControlException("Failed to retrieve access control for " + object, ex);
 			}
 
 			cache.put(object, accessControl);
