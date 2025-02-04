@@ -1,10 +1,10 @@
 package com.konfigyr.test;
 
 import com.konfigyr.account.Account;
-import com.konfigyr.security.AccountPrincipal;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 
 /***
  * Utility class that contains test {@link Authentication} stubs.
@@ -35,21 +35,11 @@ public interface TestPrincipals {
 	/**
 	 * Creates an {@link Authentication} for the given {@link Account}.
 	 *
-	 * @param account account to be used as the {@link AccountPrincipal}, never {@literal null}
-	 * @return Account authentication, never {@literal null}
-	 */
-	static @NonNull Authentication from(@NonNull Account account) {
-		return from(AccountPrincipal.from(account));
-	}
-
-	/**
-	 * Creates an {@link Authentication} for the given {@link AccountPrincipal}.
-	 *
-	 * @param principal account principal, never {@literal null}
+	 * @param account account to be used in the authentication, never {@literal null}
 	 * @return Account principal authentication, never {@literal null}
 	 */
-	static @NonNull Authentication from(@NonNull AccountPrincipal principal) {
-		return new TestingAuthenticationToken(principal, principal.getPassword(), principal.getAuthorities());
+	static @NonNull Authentication from(@NonNull Account account) {
+		return new TestingAuthenticationToken(account.id().serialize(), "", AuthorityUtils.NO_AUTHORITIES);
 	}
 
 }

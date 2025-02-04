@@ -23,7 +23,6 @@ dependencies {
 
     /* Spring Common libraries */
     implementation 'org.springframework.retry:spring-retry'
-    implementation 'org.springframework.data:spring-data-commons'
 
     /* Spring JDBC session implementation */
     implementation 'org.springframework.session:spring-session-jdbc'

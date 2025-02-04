@@ -6,6 +6,7 @@ import com.konfigyr.support.Avatar;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -289,8 +290,8 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 		assertThatThrownBy(() -> manager.create(definition))
 				.isInstanceOf(NamespaceExistsException.class)
 				.hasCauseInstanceOf(DuplicateKeyException.class)
-				.extracting("definition")
-				.isEqualTo(definition);
+				.asInstanceOf(InstanceOfAssertFactories.type(NamespaceExistsException.class))
+				.returns(definition, NamespaceExistsException::getDefinition);
 
 		assertThat(events.ofType(NamespaceEvent.class))
 				.isEmpty();

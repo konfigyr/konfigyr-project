@@ -1,5 +1,7 @@
 package com.konfigyr.support;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.github.slugify.Slugify;
 import com.google.errorprone.annotations.Immutable;
 import lombok.EqualsAndHashCode;
@@ -61,6 +63,7 @@ public final class Slug implements Supplier<String>, Serializable {
 	 * @throws IllegalArgumentException when the value is blank or {@literal null} or longer than 255 characters
 	 */
 	@NonNull
+	@JsonCreator
 	public static Slug slugify(@Nullable String value) {
 		Assert.notNull(value, "Value to slugify can not be null");
 		Assert.hasText(value, "Value to slugify can not be blank");
@@ -94,6 +97,7 @@ public final class Slug implements Supplier<String>, Serializable {
 	 */
 	@NonNull
 	@Override
+	@JsonValue
 	public String get() {
 		return value;
 	}

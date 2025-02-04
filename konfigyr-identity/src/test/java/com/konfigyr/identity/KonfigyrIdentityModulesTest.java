@@ -22,10 +22,7 @@ class KonfigyrIdentityModulesTest {
 	@Test
 	@DisplayName("generate konfigyr-identity module documentation")
 	void document() {
-		new Documenter(modules)
-				.writeModuleCanvases()
-				.writeModulesAsPlantUml()
-				.writeIndividualModulesAsPlantUml();
+		new Documenter(modules).writeDocumentation();
 	}
 
 }

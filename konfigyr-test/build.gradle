@@ -1,7 +1,7 @@
 apply plugin: 'java-library'
 
 dependencies {
-    compileOnly project(':konfigyr')
+    compileOnly project(':konfigyr-core')
 
     /* Spring WebMvc support */
     compileOnly 'org.springframework:spring-webmvc'
@@ -12,6 +12,9 @@ dependencies {
 
     /* Spring Security Test suite */
     api 'org.springframework.security:spring-security-test'
+
+    /* Spring Security OAuth runtime support */
+    compileOnly 'org.springframework.security:spring-security-oauth2-core'
 
     /* Spring Moduliths */
     api 'org.springframework.modulith:spring-modulith-starter-core'
@@ -25,8 +28,9 @@ dependencies {
     api 'org.testcontainers:junit-jupiter'
     api 'org.testcontainers:postgresql'
 
-    testImplementation project(':konfigyr')
+    testImplementation project(':konfigyr-core')
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.security:spring-security-oauth2-core'
 
 }
 

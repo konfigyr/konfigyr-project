@@ -1,6 +1,6 @@
 rootProject.name = 'konfigyr-project'
 
-include 'konfigyr'
+include 'konfigyr-api'
 include 'konfigyr-core'
 include 'konfigyr-data'
 include 'konfigyr-identity'

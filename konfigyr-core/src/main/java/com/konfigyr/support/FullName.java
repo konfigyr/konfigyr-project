@@ -1,5 +1,7 @@
 package com.konfigyr.support;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.errorprone.annotations.Immutable;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -68,6 +70,7 @@ public class FullName implements Supplier<String>, Serializable {
 	 * @return parsed full name instance or {@code null}
 	 */
 	@Nullable
+	@JsonCreator
 	public static FullName parse(String value) {
 		if (value == null) {
 			return null;
@@ -138,6 +141,7 @@ public class FullName implements Supplier<String>, Serializable {
 	 */
 	@NonNull
 	@Override
+	@JsonValue
 	public String get() {
 		return value;
 	}

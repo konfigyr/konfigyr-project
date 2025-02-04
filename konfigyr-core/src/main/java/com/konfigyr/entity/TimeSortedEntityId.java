@@ -48,4 +48,5 @@ final class TimeSortedEntityId implements EntityId {
 	public String toString() {
 		return "EntityId(" + id + ", " + hash + ")";
 	}
+
 }

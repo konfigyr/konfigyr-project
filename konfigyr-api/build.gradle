@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    implementation project(':konfigyr-core')
+    implementation project(':konfigyr-data')
+
+    /* Spring Boot starter */
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+    /* Spring Cache and Caffeine implementation */
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    /* Tracing and observability */
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-observation'
+
+    /* Spring Common libraries */
+    implementation 'org.springframework.retry:spring-retry'
+
+    /* Konfigyr Mail using SMTP and Thymeleaf template engine */
+    implementation 'com.konfigyr:konfigyr-mail-smtp'
+    implementation 'com.konfigyr:konfigyr-mail-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
+    implementation 'org.bouncycastle:bcprov-jdk18on'
+
+    /* Liquibase - migrations runtime  */
+    implementation 'org.liquibase:liquibase-core'
+
+    /* Postgresql driver */
+    implementation 'org.postgresql:postgresql'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    testImplementation project(':konfigyr-test')
+    testImplementation 'org.wiremock.integrations:wiremock-spring-boot:3.6.0'
+}

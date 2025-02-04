@@ -8,6 +8,7 @@ import com.konfigyr.identity.authentication.AccountIdentityExistsException;
 import com.konfigyr.identity.authentication.AccountIdentityStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -63,6 +64,7 @@ public class AccountIdentityRepository {
 
 	@NonNull
 	@Transactional(label = "account-identity-service.authenticate")
+	@DomainEventPublisher(publishes = "authentication.account-identity-created")
 	public AccountIdentity create(@NonNull OAuth2AuthenticatedPrincipal user, @NonNull ClientRegistration client) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to create account from: {}", user);
