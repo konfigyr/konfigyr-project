@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public enum OAuthScope {
 
 	/**
-	 *
+	 * Scope used to indicate that the application intends to use OIDC to verify the user's identity.
 	 */
 	OPENID(OidcScopes.OPENID),
 

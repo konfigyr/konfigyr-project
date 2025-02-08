@@ -44,4 +44,4 @@ logging:
   level:
     com.konfigyr: DEBUG
     org.jooq.tools.LoggerListener: DEBUG
-    org.springframework.security: trace
+    org.springframework.security: TRACE
