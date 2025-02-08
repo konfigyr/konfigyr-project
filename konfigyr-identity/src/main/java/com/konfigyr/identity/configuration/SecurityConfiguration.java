@@ -9,6 +9,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.RememberMeAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -16,8 +19,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -25,11 +31,14 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @EnableWebSecurity
-@RequiredArgsConstructor
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfiguration {
 
-	private final AccountIdentityService accountIdentityService;
+	private final RememberMeServices rememberMeServices;
+
+	public SecurityConfiguration(AccountIdentityService accountIdentityService) {
+		this.rememberMeServices = new AccountRememberMeServices(accountIdentityService::get);
+	}
 
 	@Bean
 	@Order(1)
@@ -45,22 +54,23 @@ public class SecurityConfiguration {
 								.oidc(Customizer.withDefaults())
 								// Specify a custom OAuth 2.0 client consent page
 								.authorizationEndpoint(endpoint -> endpoint
-										.consentPage(KonfigyrIdentityRequestMatchers.CONSENTS_PAGE))
+										.consentPage(KonfigyrIdentityRequestMatchers.CONSENTS_PAGE)
+								)
 				)
 				.authorizeHttpRequests((authorize) -> authorize
 						.anyRequest().authenticated()
 				)
-				.rememberMe(remember -> remember
-						.key(AccountRememberMeServices.KEY)
-						.rememberMeServices(new AccountRememberMeServices(accountIdentityService::get))
-				)
+				// Disable default Spring Security configurer and replace it with our custom one
+				.rememberMe(AbstractHttpConfigurer::disable)
+				.with(new RememberMeConfigurer(rememberMeServices), Customizer.withDefaults())
 				// Redirect to the login page when not authenticated from the authorization endpoint
 				.exceptionHandling((exceptions) -> exceptions
 						.defaultAuthenticationEntryPointFor(
 								new LoginUrlAuthenticationEntryPoint(KonfigyrIdentityRequestMatchers.LOGIN_PAGE),
 								new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
 						)
-				).build();
+				)
+				.build();
 	}
 
 	@Bean
@@ -80,7 +90,7 @@ public class SecurityConfiguration {
 				.formLogin(AbstractHttpConfigurer::disable)
 				.rememberMe(remember -> remember
 						.key(AccountRememberMeServices.KEY)
-						.rememberMeServices(new AccountRememberMeServices(accountIdentityService::get))
+						.rememberMeServices(rememberMeServices)
 				)
 				.oauth2Login(login -> login
 						.loginPage(KonfigyrIdentityRequestMatchers.LOGIN_PAGE)
@@ -109,6 +119,37 @@ public class SecurityConfiguration {
 		return new DelegatingSecurityContextRepository(
 				new RequestAttributeSecurityContextRepository()
 		);
+	}
+
+	/**
+	 * HTTP Configurer that would create and register the {@link RememberMeAuthenticationFilter} before the
+	 * {@link OAuth2AuthorizationEndpointFilter} because we are not using an HTTP Session to resolve the
+	 * current {@link org.springframework.security.core.context.SecurityContext}.
+	 */
+	@RequiredArgsConstructor
+	private static class RememberMeConfigurer extends AbstractHttpConfigurer<RememberMeConfigurer, HttpSecurity> {
+
+		private final RememberMeServices rememberMeServices;
+
+		public void init(HttpSecurity http) {
+			http.setSharedObject(RememberMeServices.class, rememberMeServices);
+
+			AuthenticationProvider provider = new RememberMeAuthenticationProvider(AccountRememberMeServices.KEY);
+			provider = postProcess(provider);
+
+			http.authenticationProvider(provider);
+		}
+
+		public void configure(HttpSecurity http) {
+			final RememberMeAuthenticationFilter filter = new RememberMeAuthenticationFilter(
+					http.getSharedObject(AuthenticationManager.class), rememberMeServices
+			);
+			filter.setSecurityContextRepository(securityContextRepository());
+			filter.setSecurityContextHolderStrategy(getSecurityContextHolderStrategy());
+			postProcess(filter);
+
+			http.addFilterBefore(filter, OAuth2AuthorizationEndpointFilter.class);
+		}
 	}
 
 }

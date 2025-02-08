@@ -45,17 +45,25 @@
                                 Client is requesting permission to access your account
                             </p>
 
-                            <div th:each="scope : ${scopes}" class="flex items-center my-2">
-                                <input
-                                        type="checkbox"
-                                        th:id="${scope.value()}"
-                                        class="h-4 w-4 rounded border border-primary bg-background checked:bg-primary checked:text-primary-foreground hover:border-primary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                        role="checkbox"
-                                        th:checked="${scope.authorized()}">
+                            <div th:each="scope : ${scopes}" class="my-2">
+                                <div class="flex items-center mb-1">
+                                    <input
+                                            type="checkbox"
+                                            th:id="${scope.value()}"
+                                            class="h-4 w-4 rounded border border-primary bg-background checked:bg-primary checked:text-primary-foreground hover:border-primary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                            role="checkbox"
+                                            th:checked="${scope.authorized()}">
 
-                                <label th:for="${scope.value()}" th:text="${scope.value()}" class="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    profile
-                                </label>
+                                    <label th:for="${scope.value()}"
+                                           th:text="${scope.value()}"
+                                           class="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        namespaces
+                                    </label>
+                                </div>
+
+                                <p th:text="${#messages.msg(scope.messageKey())}" class="text-sm leading-relaxed text-muted-foreground">
+                                    Grants full access to namespaces
+                                </p>
                             </div>
                         </div>
 

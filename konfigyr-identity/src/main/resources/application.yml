@@ -39,7 +39,6 @@ spring:
                 - "authorization_code"
                 - "client_credentials"
                 - "refresh_token"
-                - "urn:ietf:params:oauth:grant-type:device_code"
               redirect-uris:
                 - "http://127.0.0.1:8080/login/oauth2/code/konfigyr"
                 - "https://oauth.pstmn.io/v1/callback"
@@ -47,9 +46,11 @@ spring:
                 - "http://127.0.0.1:8080/"
               scopes:
                 - "openid"
-                - "profile"
-                - 'client.read'
-                - 'client.create'
+                - "namespaces"
+                - 'namespaces:read'
+                - 'namespaces:write'
+                - 'namespaces:delete'
+                - 'namespaces:invite'
             require-authorization-consent: true
             token:
               access-token-time-to-live: 8h

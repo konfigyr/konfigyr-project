@@ -1,6 +1,7 @@
 package com.konfigyr.identity.authorization.controller;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -87,7 +88,7 @@ class AuthorizationConsentControllerTest {
 		final var request = get("/oauth/consents")
 				.queryParam("client_id", "konfigyr")
 				.queryParam("state", "test-state")
-				.queryParam("scope", "profile")
+				.queryParam("scope", "namespaces:read")
 				.with(authenticated());
 
 		assertThat(mvc.perform(request))
@@ -96,7 +97,7 @@ class AuthorizationConsentControllerTest {
 				.hasViewName("consents")
 				.model()
 				.containsEntry("state", "test-state")
-				.containsEntry("scope", "profile")
+				.containsEntry("scope", "namespaces:read")
 				.hasEntrySatisfying("client", it -> assertThat(it)
 						.isInstanceOf(RegisteredClient.class)
 						.asInstanceOf(InstanceOfAssertFactories.type(RegisteredClient.class))
@@ -109,7 +110,7 @@ class AuthorizationConsentControllerTest {
 						.asInstanceOf(InstanceOfAssertFactories.iterable(AuthorizedScope.class))
 						.hasSize(1)
 						.containsExactlyInAnyOrder(
-								AuthorizedScope.unauthorized("profile")
+								AuthorizedScope.unauthorized(OAuthScope.READ_NAMESPACES)
 						)
 				)
 				.hasEntrySatisfying("consent", it -> assertThat(it).isNull());
