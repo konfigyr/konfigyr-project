@@ -39,5 +39,5 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     testImplementation project(':konfigyr-test')
-    testImplementation 'org.wiremock.integrations:wiremock-spring-boot:3.6.0'
+    testImplementation 'org.wiremock.integrations:wiremock-spring-boot'
 }

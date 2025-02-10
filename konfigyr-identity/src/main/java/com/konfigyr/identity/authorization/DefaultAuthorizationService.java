@@ -7,7 +7,6 @@ import com.konfigyr.data.converter.EncryptionConverter;
 import com.konfigyr.data.converter.JsonConverter;
 import com.konfigyr.data.converter.MessageDigestConverter;
 import com.konfigyr.io.ByteArray;
-import com.tngtech.archunit.thirdparty.com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jmolecules.event.annotation.DomainEventHandler;
@@ -346,7 +345,6 @@ public class DefaultAuthorizationService implements AuthorizationService {
 		remove(consent.getPrincipalName(), consent.getRegisteredClientId());
 	}
 
-	@VisibleForTesting
 	void remove(String registeredClientId, String principalName) {
 		Assert.hasText(principalName, "Principal name cannot be null");
 		Assert.hasText(registeredClientId, "Client registration identifier cannot be null");
