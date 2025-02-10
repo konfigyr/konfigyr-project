@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder;
+import org.springframework.security.jackson2.SecurityJackson2Modules;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -70,13 +71,53 @@ class EntityIdTest {
 				.as("Should write entity identifier using external form")
 				.isEqualTo("\"00W9BCAZYQ01R\"");
 
+		assertThat(mapper.writeValueAsString(Map.of("id", id)))
+				.as("Should write entity identifier as a map value")
+				.isEqualTo("{\"id\":\"00W9BCAZYQ01R\"}");
+
+		assertThat(mapper.writeValueAsString(new EntityIdHolder(id)))
+				.as("Should write entity identifier as holder value")
+				.isEqualTo("{\"id\":\"00W9BCAZYQ01R\"}");
+
 		Assertions.assertThat(mapper.readValue("\"00W9BCAZYQ01R\"", EntityId.class))
 				.as("Should generate entity identifier from external form")
 				.isEqualTo(id);
 
+		Assertions.assertThat(mapper.readValue("{\"id\":\"00W9BCAZYQ01R\"}", EntityIdHolder.class))
+				.as("Should generate entity identifier holder from external form")
+				.isEqualTo(new EntityIdHolder(id));
+
 		assertThatThrownBy(() -> mapper.readValue("31854375494975544", EntityId.class))
 				.as("Should not generate entity identifier from internal form")
 				.isInstanceOf(JsonMappingException.class);
+	}
+
+	@Test
+	@DisplayName("should be serializable into JSON via Jackson using Spring Security default typing")
+	void assertSpringSecurityCompatibility() throws Exception {
+		final var id = EntityId.from(31854375494975544L);
+		final var mapper = new ObjectMapper();
+		SecurityJackson2Modules.enableDefaultTyping(mapper);
+
+		assertThat(mapper.writeValueAsString(id))
+				.as("Should write entity identifier using external form")
+				.isEqualTo("\"00W9BCAZYQ01R\"");
+
+		assertThat(mapper.writeValueAsString(Map.of("id", id)))
+				.as("Should write entity identifier with type information")
+				.isEqualTo("{\"id\":[\"com.konfigyr.entity.TimeSortedEntityId\",\"00W9BCAZYQ01R\"]}");
+
+		assertThat(mapper.writeValueAsString(new EntityIdHolder(id)))
+				.as("Should write entity identifier with type information")
+				.isEqualTo("{\"id\":[\"com.konfigyr.entity.TimeSortedEntityId\",\"00W9BCAZYQ01R\"]}");
+
+		Assertions.assertThat(mapper.readValue("[\"com.konfigyr.entity.TimeSortedEntityId\",\"00W9BCAZYQ01R\"]", EntityId.class))
+				.as("Should generate entity identifier from external form and type information")
+				.isEqualTo(id);
+
+		Assertions.assertThat(mapper.readValue("{\"id\":[\"com.konfigyr.entity.TimeSortedEntityId\",\"00W9BCAZYQ01R\"]}", EntityIdHolder.class))
+				.as("Should generate entity identifier holder from external form and type information")
+				.isEqualTo(new EntityIdHolder(id));
 	}
 
 	@ValueSource(longs = { -124, 0 })
@@ -149,6 +190,10 @@ class EntityIdTest {
 				Arguments.of(10, 10000),
 				Arguments.of(20, 10000)
 		);
+	}
+
+	record EntityIdHolder(EntityId id) {
+
 	}
 
 }

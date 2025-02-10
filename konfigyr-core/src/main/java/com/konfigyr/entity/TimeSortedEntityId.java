@@ -1,10 +1,14 @@
 package com.konfigyr.entity;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.hypersistence.tsid.TSID;
 import lombok.EqualsAndHashCode;
 import org.springframework.lang.NonNull;
 
 import java.io.Serial;
+
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 
 /**
  * Implementation of the {@link EntityId} that is based on the {@link TSID}.
@@ -15,6 +19,7 @@ import java.io.Serial;
  * @see TimeSortedEntityIdProvider
  **/
 @EqualsAndHashCode(of = "id")
+@JsonAutoDetect(creatorVisibility = ANY, fieldVisibility = ANY)
 final class TimeSortedEntityId implements EntityId {
 
 	@Serial
@@ -47,6 +52,11 @@ final class TimeSortedEntityId implements EntityId {
 	@Override
 	public String toString() {
 		return "EntityId(" + id + ", " + hash + ")";
+	}
+
+	@JsonCreator
+	static TimeSortedEntityId from(@NonNull String hash) {
+		return (TimeSortedEntityId) TimeSortedEntityIdProvider.getInstance().create(hash);
 	}
 
 }

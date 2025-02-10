@@ -29,6 +29,8 @@ spring:
           konfigyr:
             registration:
               client-secret: "{noop}secret"
+              redirect-uris:
+                - http://localhost/oauth/client/code
 
 konfigyr:
   authorization:
@@ -44,4 +46,4 @@ logging:
   level:
     com.konfigyr: DEBUG
     org.jooq.tools.LoggerListener: DEBUG
-    org.springframework.security: trace
+    org.springframework.security: TRACE
