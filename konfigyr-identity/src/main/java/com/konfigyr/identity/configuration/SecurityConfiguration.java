@@ -3,6 +3,7 @@ package com.konfigyr.identity.configuration;
 import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
 import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
+import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +49,7 @@ public class SecurityConfiguration {
 
 		return http
 				.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+				.anonymous(AbstractHttpConfigurer::disable)
 				.with(authorizationServerConfigurer, (authorizationServer) ->
 						authorizationServer
 								// Enable OpenID Connect 1.0
@@ -55,7 +57,9 @@ public class SecurityConfiguration {
 								// Specify a custom OAuth 2.0 client consent page
 								.authorizationEndpoint(endpoint -> endpoint
 										.consentPage(KonfigyrIdentityRequestMatchers.CONSENTS_PAGE)
+										.errorResponseHandler(new AuthorizationFailureHandler())
 								)
+
 				)
 				.authorizeHttpRequests((authorize) -> authorize
 						.anyRequest().authenticated()
@@ -63,6 +67,9 @@ public class SecurityConfiguration {
 				// Disable default Spring Security configurer and replace it with our custom one
 				.rememberMe(AbstractHttpConfigurer::disable)
 				.with(new RememberMeConfigurer(rememberMeServices), Customizer.withDefaults())
+				.sessionManagement(session -> session
+						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				)
 				// Redirect to the login page when not authenticated from the authorization endpoint
 				.exceptionHandling((exceptions) -> exceptions
 						.defaultAuthenticationEntryPointFor(

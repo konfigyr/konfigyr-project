@@ -3,24 +3,45 @@
       xmlns:th="http://www.thymeleaf.org">
 <body>
     <th:block th:fragment="primary (label)">
-        <th:block th:replace="~{components/buttons :: button (label = ${label}, type = ${type}, href = ${href}, variant = 'primary', class = ${class})}" />
+        <th:block th:replace="~{components/buttons :: button (
+            label = ${label},
+            type = ${type},
+            href = ${href},
+            variant = 'primary',
+            class = ${class},
+            target=${target}
+        )}" />
     </th:block>
 
     <th:block th:fragment="outline (label)">
-        <th:block th:replace="~{components/buttons :: button (label = ${label}, type = ${type}, href = ${href}, variant = 'outline', class = ${class})}" />
+        <th:block th:replace="~{components/buttons :: button (
+            label = ${label},
+            type = ${type},
+            href = ${href},
+            variant = 'outline',
+            class = ${class},
+            target=${target}
+        )}" />
     </th:block>
 
     <th:block th:fragment="link (label)">
-        <th:block th:replace="~{components/buttons :: button (label = ${label}, type = ${type}, href = ${href}, variant = 'link', class = ${class})}" />
+        <th:block th:replace="~{components/buttons :: button (
+            label = ${label},
+            type = ${type},
+            href = ${href},
+            variant = 'link',
+            class = ${class},
+            target=${target}
+        )}" />
     </th:block>
 
-    <th:block th:fragment="button (label, type, href, variant, class)">
+    <th:block th:fragment="button (label, type, href, variant, class, target)">
         <th:block th:switch="${variant}">
             <th:block th:case="'outline'" th:with="classNames = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground'">
                 <button th:unless="${href}" th:type="${type}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
                     Outline button
                 </button>
-                <a th:if="${href}" th:href="${href}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
+                <a th:if="${href}" th:href="${href}" th:text="${label}" th:classappend="${class}" th:class="${classNames}" th:target="${target}">
                     Outline button
                 </a>
             </th:block>
