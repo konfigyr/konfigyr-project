@@ -63,7 +63,7 @@ class OAuthScopeTest {
 	@ParameterizedTest(name = "permission for {0} - {1} - {2}")
 	void sanityTest(OAuthScope scope, String label, Set<OAuthScope> included) {
 		assertThat(scope)
-				.returns(label, OAuthScope::getValue)
+				.returns(label, OAuthScope::getAuthority)
 				.returns(included, OAuthScope::getIncluded);
 	}
 

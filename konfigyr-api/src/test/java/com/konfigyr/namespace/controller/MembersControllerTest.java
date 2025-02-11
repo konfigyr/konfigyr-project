@@ -6,6 +6,7 @@ import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Member;
 import com.konfigyr.namespace.NamespaceRole;
+import com.konfigyr.security.OAuthScope;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractControllerTest;
@@ -22,7 +23,6 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 class MembersControllerTest extends AbstractControllerTest {
@@ -32,7 +32,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	void listMembers() {
 		mvc.get().uri("/namespaces/{slug}/members", "john-doe")
 				.queryParam("sort", "name")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -73,21 +73,30 @@ class MembersControllerTest extends AbstractControllerTest {
 	void listMembersWithoutAccessRights()  {
 		mvc.get().uri("/namespaces/{slug}/members", "john-doe")
 				.queryParam("sort", "name")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to list members for namespace without namespaces:invite scope")
+	void listMembersWithoutScope()  {
+		mvc.get().uri("/namespaces/{slug}/members", "john-doe")
+				.queryParam("sort", "name")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
 	@Test
 	@DisplayName("should retrieve member for namespace")
 	void getMember() {
 		mvc.get().uri("/namespaces/{slug}/members/{id}", "john-doe", EntityId.from(1).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -111,7 +120,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to retrieve unknown member")
 	void getUnknownMember() {
 		mvc.get().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -122,7 +131,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to retrieve member for different namespace")
 	void getMemberForDifferentNamespace() {
 		mvc.get().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(1).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -133,7 +142,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to retrieve member for unknown namespace")
 	void getMemberForUnknownNamespace() {
 		mvc.get().uri("/namespaces/{slug}/members/{id}", "unknown", EntityId.from(1).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -148,14 +157,23 @@ class MembersControllerTest extends AbstractControllerTest {
 	void retrieveMembersWithoutAccessRights()  {
 		mvc.get().uri("/namespaces/{slug}/members/{id}", "john-doe", EntityId.from(1).serialize())
 				.queryParam("sort", "name")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve members for namespace without scope")
+	void retrieveMembersWithoutScope()  {
+		mvc.get().uri("/namespaces/{slug}/members/{id}", "john-doe", EntityId.from(1).serialize())
+				.queryParam("sort", "name")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
 	@Test
@@ -165,7 +183,7 @@ class MembersControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(3).serialize())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"role\":\"ADMIN\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -191,7 +209,7 @@ class MembersControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(2).serialize())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -207,7 +225,7 @@ class MembersControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(999).serialize())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -220,7 +238,7 @@ class MembersControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(1).serialize())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -233,7 +251,7 @@ class MembersControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/members/{id}", "unknown", EntityId.from(1).serialize())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -249,14 +267,24 @@ class MembersControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(2).serialize())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to update member when not namespaces:invite is missing")
+	void updateMemberWithoutScope() {
+		mvc.put().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(2).serialize())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"role\":\"USER\"}")
+				.with(authentication(TestPrincipals.john(), OAuthScope.DELETE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
 	@Test
@@ -264,7 +292,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should remove member for namespace")
 	void removeMember() {
 		mvc.delete().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(3).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -276,7 +304,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to remove last admin member")
 	void removeLastAdminMember() {
 		mvc.delete().uri("/namespaces/{slug}/members/{id}", "john-doe", EntityId.from(1).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -290,7 +318,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to remove unknown member")
 	void removeUnknownMember() {
 		mvc.delete().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -301,7 +329,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to remove member for different namespace")
 	void removeMemberForDifferentNamespace() {
 		mvc.delete().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(1).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -312,7 +340,7 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to remove member for unknown namespace")
 	void removeMemberForUnknownNamespace() {
 		mvc.delete().uri("/namespaces/{slug}/members/{id}", "unknown", EntityId.from(1).serialize())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -326,14 +354,22 @@ class MembersControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to remove member when not namespace administrator")
 	void removeMemberForNonAdministrators() {
 		mvc.delete().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(2).serialize())
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to remove member when namespaces:invite scope is missing")
+	void removeMemberWithoutScope() {
+		mvc.delete().uri("/namespaces/{slug}/members/{id}", "konfigyr", EntityId.from(2).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
 	static ThrowingConsumer<MvcTestResult> memberNotFound(long id) {

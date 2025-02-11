@@ -30,7 +30,7 @@ record AuthorizedScope(OAuthScope scope, boolean authorized) implements Serializ
 	 */
 	@NonNull
 	public String value() {
-		return scope.getValue();
+		return scope.getAuthority();
 	}
 
 	/**
@@ -89,7 +89,7 @@ record AuthorizedScope(OAuthScope scope, boolean authorized) implements Serializ
 		final Set<AuthorizedScope> scopes = new LinkedHashSet<>();
 
 		for (final OAuthScope candidate : requested) {
-			if (authorizedScopes.contains(candidate.getValue())) {
+			if (authorizedScopes.contains(candidate.getAuthority())) {
 				scopes.add(AuthorizedScope.authorized(candidate));
 			} else if (OAuthScope.OPENID != candidate) {
 				// openid scope does not require consent

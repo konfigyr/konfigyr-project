@@ -6,6 +6,7 @@ import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.NamespaceType;
+import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -30,7 +31,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void shouldListNamespaces() {
 		mvc.get().uri("/namespaces")
 				.queryParam("sort", "name")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -66,7 +67,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void shouldListNamespace() {
 		mvc.get().uri("/namespaces")
 				.queryParam("sort", "name")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -97,10 +98,21 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should not retrieve namespaces when namespaces:read scope is not present")
+	void retrieveNamespacesWithoutScope() {
+		mvc.get().uri("/namespaces")
+				.with(authentication(TestPrincipals.jane()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.READ_NAMESPACES));
+	}
+
+	@Test
 	@DisplayName("should retrieve namespace by slug")
 	void shouldRetrieveNamespace() {
 		mvc.get().uri("/namespaces/{slug}", "konfigyr")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -115,7 +127,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	@DisplayName("should retrieve unknown namespace by slug")
 	void shouldRetrieveUnknownNamespace() {
 		mvc.get().uri("/namespaces/{slug}", "unknown")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -129,14 +141,22 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	@DisplayName("should not retrieve namespace when not a member")
 	void retrieveNamespaceForNonMembers() {
 		mvc.get().uri("/namespaces/{slug}", "john-doe")
+				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should not retrieve namespace when namespaces:read scope is not present")
+	void retrieveNamespaceWithoutScope() {
+		mvc.get().uri("/namespaces/{slug}", "john-doe")
 				.with(authentication(TestPrincipals.jane()))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden(OAuthScope.READ_NAMESPACES));
 	}
 
 	@Test
@@ -146,7 +166,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"slug\":\"arakis\",\"name\":\"Arakis\",\"type\":\"ENTERPRISE\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -177,7 +197,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"slug\":\"\",\"name\":\"    \"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -200,7 +220,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr\",\"type\":\"ENTERPRISE\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -211,13 +231,25 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should not update namespace when namespaces:write is not present")
+	void createNamespaceWithoutScope() {
+		mvc.post().uri("/namespaces")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"slug\":\"arakis\",\"name\":\"Arakis\",\"type\":\"ENTERPRISE\"}")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.WRITE_NAMESPACES));
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should update namespace by slug")
 	void shouldUpdateNamespace() {
 		mvc.put().uri("/namespaces/{slug}", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\",\"type\":\"ENTERPRISE\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -247,7 +279,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -270,7 +302,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}", "john-doe")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr\",\"type\":\"ENTERPRISE\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -286,7 +318,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}", "unknown")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"slug\":\"unknown\",\"name\":\"Unknown\",\"type\":\"PERSONAL\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -302,14 +334,11 @@ class NamespaceControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}", "john-doe")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\",\"type\":\"ENTERPRISE\"}")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
 	}
 
 	@Test
@@ -318,14 +347,24 @@ class NamespaceControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\",\"type\":\"ENTERPRISE\"}")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should not update namespace when namespaces:write is not present")
+	void updateNamespaceWithoutScope() {
+		mvc.put().uri("/namespaces/{slug}", "konfigyr")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\",\"type\":\"ENTERPRISE\"}")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.WRITE_NAMESPACES));
 	}
 
 	@Test
@@ -333,7 +372,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	@DisplayName("should delete namespace by slug")
 	void shouldDeleteNamespace() {
 		mvc.delete().uri("/namespaces/{slug}", "konfigyr")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.DELETE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -344,7 +383,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	@DisplayName("should delete unknown namespace by slug")
 	void shouldDeleteUnknownNamespace() {
 		mvc.delete().uri("/namespaces/{slug}", "unknown")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.DELETE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -358,28 +397,33 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	@DisplayName("should not delete namespace when not a member")
 	void deleteNamespaceForNonMembers() {
 		mvc.delete().uri("/namespaces/{slug}", "john-doe")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.DELETE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
 	}
 
 	@Test
 	@DisplayName("should not delete namespace when not an administrator")
 	void deleteNamespaceForNonAdministrators() {
 		mvc.delete().uri("/namespaces/{slug}", "konfigyr")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.DELETE_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should not delete namespace when namespaces:delete scope is not present")
+	void deleteNamespaceWithoutScope() {
+		mvc.delete().uri("/namespaces/{slug}", "konfigyr")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.DELETE_NAMESPACES));
 	}
 
 }

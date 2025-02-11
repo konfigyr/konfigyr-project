@@ -42,7 +42,7 @@ class AuthorizedOAuthScopeTest {
 				.isNotNull()
 				.returns(OAuthScope.READ_NAMESPACES, AuthorizedScope::scope)
 				.returns(true, AuthorizedScope::authorized)
-				.returns(OAuthScope.READ_NAMESPACES.getValue(), AuthorizedScope::value)
+				.returns(OAuthScope.READ_NAMESPACES.getAuthority(), AuthorizedScope::value)
 				.returns("konfigyr.oauth.scope.READ_NAMESPACES", AuthorizedScope::messageKey);
 	}
 
@@ -53,7 +53,7 @@ class AuthorizedOAuthScopeTest {
 				.isNotNull()
 				.returns(OAuthScope.DELETE_NAMESPACES, AuthorizedScope::scope)
 				.returns(false, AuthorizedScope::authorized)
-				.returns(OAuthScope.DELETE_NAMESPACES.getValue(), AuthorizedScope::value)
+				.returns(OAuthScope.DELETE_NAMESPACES.getAuthority(), AuthorizedScope::value)
 				.returns("konfigyr.oauth.scope.DELETE_NAMESPACES", AuthorizedScope::messageKey);
 	}
 
