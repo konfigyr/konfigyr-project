@@ -69,6 +69,18 @@ class RequiresScopeAuthorizationManagerTest {
 		assertThatNoException().isThrownBy(() -> manager.verify(() -> authentication, invocation));
 	}
 
+	@Test
+	@DisplayName("should grant access when no required scopes can be found")
+	void shouldGrantAccessForMissingScopes() {
+		final var invocation = new SimpleMethodInvocation(new Protected(),
+				ReflectionUtils.findMethod(Protected.class, "missing"));
+
+		final var authentication = new TestingAuthenticationToken("john", "doe",
+				List.of(OAuthScope.DELETE_NAMESPACES));
+
+		assertThatNoException().isThrownBy(() -> manager.verify(() -> authentication, invocation));
+	}
+
 	void denied(@Nullable Authentication authentication) {
 		assertThatExceptionOfType(AuthorizationDeniedException.class)
 				.isThrownBy(() -> manager.verify(() -> authentication, invocation))
@@ -91,6 +103,10 @@ class RequiresScopeAuthorizationManagerTest {
 		@RequiresScope(OAuthScope.WRITE_NAMESPACES)
 		void protect() {
 			// do something...
+		}
+
+		void missing() {
+			// do nothing
 		}
 
 	}
