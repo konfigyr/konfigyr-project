@@ -37,7 +37,7 @@ class RequiresScopeAuthorizationManager implements AuthorizationManager<MethodIn
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public AuthorizationDecision check(Supplier< Authentication > authentication, MethodInvocation invocation) {
+	public AuthorizationDecision check(Supplier<Authentication> authentication, MethodInvocation invocation) {
 		final OAuthScopes scopes = resolveRequiredScopes(invocation);
 		final boolean granted = isAuthorized(authentication.get(), scopes);
 

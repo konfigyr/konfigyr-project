@@ -1,6 +1,7 @@
 package com.konfigyr.hateoas;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.konfigyr.security.access.AccessControlDecision;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.MethodParameter;
@@ -16,7 +17,6 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.rememberme.InvalidCookieException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.MethodValidationException;
@@ -83,6 +83,11 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 			case AuthorityAuthorizationDecision decision -> ErrorResponse.builder(ex, HttpStatus.FORBIDDEN, ex.getMessage())
 					.detailMessageCode(ErrorResponse.getDefaultDetailMessageCode(result.getClass(), null))
 					.detailMessageArguments(authoritiesToString(decision.getAuthorities()))
+					.build(getMessageSource(), LocaleContextHolder.getLocale());
+
+			case AccessControlDecision decision -> ErrorResponse.builder(ex, HttpStatus.FORBIDDEN, ex.getMessage())
+					.detailMessageCode(ErrorResponse.getDefaultDetailMessageCode(result.getClass(), null))
+					.detailMessageArguments(decision.getPermissions())
 					.build(getMessageSource(), LocaleContextHolder.getLocale());
 
 			default -> ErrorResponse.builder(ex, HttpStatus.FORBIDDEN, ex.getMessage())

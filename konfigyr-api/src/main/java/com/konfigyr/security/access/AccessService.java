@@ -2,6 +2,8 @@ package com.konfigyr.security.access;
 
 import com.konfigyr.namespace.NamespaceRole;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 
 /**
@@ -19,9 +21,10 @@ public interface AccessService {
 	 *
 	 * @param authentication the current authentication object, can't be {@literal null}
 	 * @param namespace the namespace slug to be accessed, can't be {@literal null}
-	 * @return {@literal true} when this authentication object has access to namespace
+	 * @return the authorization result or {@literal null} if no decision could be made
 	 */
-	boolean hasAccess(@NonNull Authentication authentication, @NonNull String namespace);
+	@Nullable
+	AuthorizationResult hasAccess(@NonNull Authentication authentication, @NonNull String namespace);
 
 	/**
 	 * Checks if the given {@link Authentication} has access to the {@link com.konfigyr.namespace.Namespace} with the
@@ -30,8 +33,9 @@ public interface AccessService {
 	 * @param authentication the current authentication object, can't be {@literal null}
 	 * @param namespace the namespace slug to be accessed, can't be {@literal null}
 	 * @param role the namespace role that current authentication should have, can't be {@literal null}
-	 * @return {@literal true} when this authentication object has access to namespace with the given role
+	 * @return the authorization result or {@literal null} if no decision could be made
 	 */
-	boolean hasAccess(@NonNull Authentication authentication, @NonNull String namespace, @NonNull NamespaceRole role);
+	@Nullable
+	AuthorizationResult hasAccess(@NonNull Authentication authentication, @NonNull String namespace, @NonNull NamespaceRole role);
 
 }

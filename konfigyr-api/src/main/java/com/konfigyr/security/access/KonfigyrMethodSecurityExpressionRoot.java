@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.expression.SecurityExpressionRoot;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 
 import java.util.function.Supplier;
@@ -41,22 +42,22 @@ class KonfigyrMethodSecurityExpressionRoot extends SecurityExpressionRoot
 	}
 
 	@Override
-	public boolean isMember(@NonNull Namespace namespace) {
+	public AuthorizationResult isMember(@NonNull Namespace namespace) {
 		return KonfigyrSecurityExpressionOperations.super.isMember(namespace);
 	}
 
 	@Override
-	public boolean isMember(@NonNull String namespace) {
+	public AuthorizationResult isMember(@NonNull String namespace) {
 		return accessService.hasAccess(getAuthentication(), namespace);
 	}
 
 	@Override
-	public boolean isAdmin(@NonNull Namespace namespace) {
+	public AuthorizationResult isAdmin(@NonNull Namespace namespace) {
 		return KonfigyrSecurityExpressionOperations.super.isAdmin(namespace);
 	}
 
 	@Override
-	public boolean isAdmin(@NonNull String namespace) {
+	public AuthorizationResult isAdmin(@NonNull String namespace) {
 		return accessService.hasAccess(getAuthentication(), namespace, NamespaceRole.ADMIN);
 	}
 

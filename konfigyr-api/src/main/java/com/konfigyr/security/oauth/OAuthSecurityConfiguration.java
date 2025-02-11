@@ -1,7 +1,6 @@
 package com.konfigyr.security.oauth;
 
 import org.springframework.aop.Advisor;
-import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.Pointcuts;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
 import org.springframework.beans.factory.config.BeanDefinition;

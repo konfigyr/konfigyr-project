@@ -8,10 +8,14 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.support.NoOpCache;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,28 +28,31 @@ class KonfigyrAccessService implements AccessService {
 		this(accessControlRepository, new NoOpCache("access-controls"));
 	}
 
+	@Nullable
 	@Override
-	public boolean hasAccess(@NonNull Authentication authentication, @NonNull String namespace) {
+	public AuthorizationResult hasAccess(@NonNull Authentication authentication, @NonNull String namespace) {
 		return check(authentication, namespace, NamespaceRole.USER, NamespaceRole.ADMIN);
 	}
 
+	@Nullable
 	@Override
-	public boolean hasAccess(@NonNull Authentication authentication, @NonNull String namespace, @NonNull NamespaceRole role) {
+	public AuthorizationResult hasAccess(@NonNull Authentication authentication, @NonNull String namespace, @NonNull NamespaceRole role) {
 		return check(authentication, namespace, role);
 	}
 
-	private boolean check(@NonNull Authentication authentication, @NonNull String namespace, @NonNull Serializable... permissions) {
+	@Nullable
+	private AuthorizationResult check(@NonNull Authentication authentication, @NonNull String namespace, @NonNull Serializable... permissions) {
 		final SecurityIdentity securityIdentity = resolveSecurityIdentity(authentication);
 		final ObjectIdentity objectIdentity = ObjectIdentity.namespace(namespace);
 
 		if (securityIdentity == null) {
-			return false;
+			return new AccessControlDecision(false, objectIdentity, permissions);
 		}
 
 		final AccessControl accessControl = getAccessControl(objectIdentity);
 
 		if (accessControl == null) {
-			return true;
+			return null;
 		}
 
 		if (log.isDebugEnabled()) {
@@ -53,7 +60,10 @@ class KonfigyrAccessService implements AccessService {
 					permissions, securityIdentity, accessControl);
 		}
 
-		return accessControl.isGranted(securityIdentity, Set.of(permissions));
+		final Set<Serializable> permissionSet = normalizePermissions(permissions);
+		final boolean granted = accessControl.isGranted(securityIdentity, permissionSet);
+
+		return new AccessControlDecision(granted, objectIdentity, permissionSet);
 	}
 
 	@Nullable
@@ -92,6 +102,12 @@ class KonfigyrAccessService implements AccessService {
 		}
 
 		return SecurityIdentity.of(id);
+	}
+
+	private static Set<Serializable> normalizePermissions(Serializable... permissions) {
+		return Arrays.stream(permissions)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toUnmodifiableSet());
 	}
 
 }
