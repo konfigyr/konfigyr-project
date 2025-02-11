@@ -247,7 +247,7 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 	/**
 	 * Creates a {@link Stream} of {@link OAuthScope OAuth scopes}.
 	 *
-	 * @return OAuth scopes stream, never {@link null}
+	 * @return OAuth scopes stream, never {@literal null}
 	 */
 	@NonNull
 	public Stream<OAuthScope> stream() {
