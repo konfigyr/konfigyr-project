@@ -2,6 +2,7 @@ package com.konfigyr.security;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
-public enum OAuthScope {
+public enum OAuthScope implements GrantedAuthority {
 
 	/**
 	 * Scope used to indicate that the application intends to use OIDC to verify the user's identity.
@@ -65,12 +66,13 @@ public enum OAuthScope {
 	}
 
 	/**
-	 * Returns the value of the OAuth scope that would be granted to OAuth2 Access Tokens.
+	 * Returns the granted authority value of the OAuth scope that would be granted to OAuth2 Access Tokens.
 	 *
 	 * @return the scope value, never {@literal null}.
 	 */
 	@NonNull
-	public String getValue() {
+	@Override
+	public String getAuthority() {
 		return value;
 	}
 

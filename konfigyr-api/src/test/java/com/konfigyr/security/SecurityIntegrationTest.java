@@ -26,6 +26,7 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
 				.subject(TestPrincipals.john().getName())
+				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
 		);
 
 		assertThatRequest(token)
@@ -45,11 +46,24 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to retrieve namespaces when claims are not set")
+	void missingRequiredClaims() {
+		final String token = generateAccessToken(claims -> claims
+				.issuer(wiremock.baseUrl())
+				.subject(TestPrincipals.john().getName())
+		);
+
+		assertThatRequest(token)
+				.hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
 	@DisplayName("should fail to retrieve namespaces when subject is incorrect")
 	void invalidSubject() {
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
 				.subject("some subject")
+				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
 		);
 
 		assertThatRequest(token)

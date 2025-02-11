@@ -1,6 +1,7 @@
 package com.konfigyr.hateoas;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.konfigyr.security.access.AccessControlDecision;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.MethodParameter;
@@ -8,14 +9,20 @@ import org.springframework.http.*;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.ProviderNotFoundException;
+import org.springframework.security.authorization.AuthorityAuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.rememberme.InvalidCookieException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.MethodValidationException;
 import org.springframework.validation.method.ParameterValidationResult;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -27,8 +34,10 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
@@ -58,8 +67,44 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(AccessDeniedException.class)
 	final ResponseEntity<Object> handleAccessDeniedException(@NonNull AccessDeniedException ex, @NonNull WebRequest request) {
-		final ProblemDetail body = createProblemDetail(ex, HttpStatus.FORBIDDEN, ex.getMessage(), null, null, request);
-		return createResponseEntity(body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
+		return switch (ex) {
+			case AuthorizationDeniedException exception -> handleAuthorizationDeniedException(exception, request);
+			case AuthorizationServiceException exception -> handleInternalServerException(
+					exception, HttpHeaders.EMPTY, request
+			);
+			default -> {
+				final ProblemDetail body = createProblemDetail(ex, HttpStatus.FORBIDDEN, ex.getMessage(), null, null, request);
+				yield createResponseEntity(body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
+			}
+		};
+	}
+
+	protected ResponseEntity<Object> handleAuthorizationDeniedException(
+			@NonNull AuthorizationDeniedException ex, @NonNull WebRequest request
+	) {
+		final AuthorizationResult result = ex.getAuthorizationResult();
+
+		if (result == null) {
+			final ProblemDetail body = createProblemDetail(ex, HttpStatus.FORBIDDEN, ex.getMessage(), null, null, request);
+			return createResponseEntity(body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
+		}
+
+		final ErrorResponse response = switch (result) {
+			case AuthorityAuthorizationDecision decision -> ErrorResponse.builder(ex, HttpStatus.FORBIDDEN, ex.getMessage())
+					.detailMessageCode(ErrorResponse.getDefaultDetailMessageCode(result.getClass(), null))
+					.detailMessageArguments(authoritiesToString(decision.getAuthorities()))
+					.build(getMessageSource(), LocaleContextHolder.getLocale());
+
+			case AccessControlDecision decision -> ErrorResponse.builder(ex, HttpStatus.FORBIDDEN, ex.getMessage())
+					.detailMessageCode(ErrorResponse.getDefaultDetailMessageCode(result.getClass(), null))
+					.detailMessageArguments(decision.getPermissions())
+					.build(getMessageSource(), LocaleContextHolder.getLocale());
+
+			default -> ErrorResponse.builder(ex, HttpStatus.FORBIDDEN, ex.getMessage())
+					.build(getMessageSource(), LocaleContextHolder.getLocale());
+		};
+
+		return createResponseEntity(response.getBody(), HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
 	}
 
 	@Override
@@ -160,6 +205,10 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 			return resolvable.getDefaultMessage();
 		}
 		return getMessageSource().getMessage(resolvable, locale);
+	}
+
+	protected static String authoritiesToString(Collection<? extends GrantedAuthority> authorities) {
+		return authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(" "));
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)

@@ -5,6 +5,8 @@ import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.hateoas.RepresentationModelAssembler;
 import com.konfigyr.namespace.*;
+import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +31,7 @@ class NamespaceController {
 	private final RepresentationModelAssembler<Namespace, EntityModel<Namespace>> assembler = Assemblers.namespace();
 
 	@GetMapping
+	@RequiresScope(OAuthScope.READ_NAMESPACES)
 	PagedModel<?> search(
 			@Nullable @RequestParam(required = false) String term,
 			@NonNull Authentication authentication,
@@ -45,6 +48,7 @@ class NamespaceController {
 
 	@GetMapping("/{slug}")
 	@PreAuthorize("isMember(#slug)")
+	@RequiresScope(OAuthScope.READ_NAMESPACES)
 	EntityModel<Namespace> get(@PathVariable String slug, @NonNull Authentication authentication) {
 		final SearchQuery query = SearchQuery.builder()
 				.criteria(SearchQuery.ACCOUNT, retrieveAccountIdentifier(authentication))
@@ -60,6 +64,7 @@ class NamespaceController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
+	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
 	EntityModel<Namespace> create(
 			@RequestBody @Validated NamespaceAttributes attributes,
 			@NonNull Authentication authentication
@@ -69,6 +74,7 @@ class NamespaceController {
 
 	@PutMapping("/{slug}")
 	@PreAuthorize("isAdmin(#slug)")
+	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
 	EntityModel<Namespace> update(
 			@PathVariable String slug,
 			@RequestBody @Validated NamespaceAttributes attributes,
@@ -80,6 +86,7 @@ class NamespaceController {
 	@DeleteMapping("/{slug}")
 	@PreAuthorize("isAdmin(#slug)")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@RequiresScope(OAuthScope.DELETE_NAMESPACES)
 	void delete(@PathVariable String slug) {
 		namespaces.delete(slug);
 	}

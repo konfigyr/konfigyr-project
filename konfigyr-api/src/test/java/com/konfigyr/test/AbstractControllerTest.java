@@ -2,6 +2,8 @@ package com.konfigyr.test;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.hateoas.PagedModel;
+import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.test.assertions.ProblemDetailAssert;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -11,10 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.core.ResolvableType;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
+import org.springframework.http.*;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -25,8 +24,10 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.RequestContextFilter;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
@@ -108,6 +109,49 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	}
 
 	/**
+	 * Creates consumer that can be used to assert that the {@link ProblemDetail} contains a
+	 * {@link HttpStatus#FORBIDDEN} response status.
+	 *
+	 * @return the problem detail consumer
+	 * @see #problemDetailFor(HttpStatusCode, ThrowingConsumer)
+	 */
+	protected static ThrowingConsumer<MvcTestResult> forbidden() {
+		return forbidden(ignore -> { /* noop */ });
+	}
+
+	/**
+	 * Creates consumer that can be used to assert that the {@link ProblemDetail} contains a
+	 * {@link HttpStatus#FORBIDDEN} response status.
+	 *
+	 * @param consumer consumer function to assert {@link ProblemDetail}
+	 * @return the problem detail consumer
+	 * @see #problemDetailFor(HttpStatusCode, ThrowingConsumer)
+	 */
+	protected static ThrowingConsumer<MvcTestResult> forbidden(@NonNull ThrowingConsumer<ProblemDetailAssert> consumer) {
+		return problemDetailFor(HttpStatus.FORBIDDEN, consumer);
+	}
+
+	/**
+	 * Creates consumer that can be used to assert the {@link ProblemDetail} for missing {@link OAuthScope}.
+	 * <p>
+	 * This method would also assert the following values from the {@link MvcTestResult}:
+	 * <ul>
+	 *     <li>The HTTP status code should match {@link HttpStatus#FORBIDDEN}</li>
+	 *     <li>The HTTP response content type should match {@link MediaType#APPLICATION_PROBLEM_JSON}</li>
+	 *     <li>The {@link ProblemDetail} should contain the given scopes in the error details</li>
+	 * </ul>
+	 *
+	 * @param scopes scopes to be required, can not be {@literal null}
+	 * @return the problem detail consumer
+	 */
+	protected static ThrowingConsumer<MvcTestResult> forbidden(@NonNull OAuthScope... scopes) {
+		return forbidden(problem -> problem
+						.hasTitle("Access Denied")
+						.hasDetailContaining(OAuthScopes.of(scopes).toString())
+		);
+	}
+
+	/**
 	 * Creates a {@link RequestPostProcessor} that would generate a JWT OAuth2 Access Token from this
 	 * {@link Authentication} and append it as an {@link HttpHeaders#AUTHORIZATION} header to the mock request.
 	 * <p>
@@ -118,8 +162,14 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * @return the post processor, never {@literal null}
 	 */
 	@NonNull
-	protected static RequestPostProcessor authentication(@NonNull Authentication authentication) {
-		return authentication(claims -> claims.subject(authentication.getName()));
+	protected static RequestPostProcessor authentication(@NonNull Authentication authentication, OAuthScope... scopes) {
+		return authentication(claims -> claims
+				.subject(authentication.getName())
+				.claim("scope", Arrays.stream(scopes)
+						.map(OAuthScope::getAuthority)
+						.collect(Collectors.joining(" "))
+				)
+		);
 	}
 
 	/**
@@ -133,8 +183,8 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * @return the post processor, never {@literal null}
 	 */
 	@NonNull
-	protected static RequestPostProcessor authentication(Account account) {
-		return authentication(TestPrincipals.from(account));
+	protected static RequestPostProcessor authentication(Account account, OAuthScope... scopes) {
+		return authentication(TestPrincipals.from(account), scopes);
 	}
 
 	/**

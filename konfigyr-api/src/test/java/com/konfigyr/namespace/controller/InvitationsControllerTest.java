@@ -7,6 +7,7 @@ import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Invitation;
 import com.konfigyr.namespace.InvitationException;
 import com.konfigyr.namespace.NamespaceRole;
+import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -25,7 +26,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.within;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 class InvitationsControllerTest extends AbstractControllerTest {
@@ -35,7 +35,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	void listInvitations() {
 		mvc.get().uri("/namespaces/{slug}/invitations", "konfigyr")
 				.queryParam("sort", "name")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -80,21 +80,29 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to list invitations for namespace when principal is not an administrator")
 	void listInvitationsForNonAdministrators() {
 		mvc.get().uri("/namespaces/{slug}/invitations", "konfigyr")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to list invitations for namespace when namespaces:invite scope is not present")
+	void listInvitationsWithoutScope() {
+		mvc.get().uri("/namespaces/{slug}/invitations", "konfigyr")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
 	@Test
 	@DisplayName("should retrieve pending invitation for namespace by key")
 	void retrieveInvitation() {
 		mvc.get().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320f6c6481c1fed73573a5430758f1")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -120,7 +128,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should retrieve invitation for namespace by unknown key")
 	void retrieveInvitationByUnknownKey() {
 		mvc.get().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "unknown")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -131,7 +139,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should retrieve invitation for namespace by unknown namespace")
 	void retrieveInvitationByUnknownNamespace() {
 		mvc.get().uri("/namespaces/{slug}/invitations/{key}", "unknown", "09320f6c6481c1fed73573a5430758f1")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -145,14 +153,22 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to retrieve invitation for namespace when principal is not an administrator")
 	void retrieveInvitationForNonAdministrators() {
 		mvc.get().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320f6c6481c1fed73573a5430758f1")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve invitation for namespace when namespaces:invite scope is not present")
+	void retrieveInvitationWithoutScope() {
+		mvc.get().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320f6c6481c1fed73573a5430758f1")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
 	@Test
@@ -162,7 +178,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/invitations", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"email\":\"recipient@konfigyr.com\",\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -202,7 +218,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/invitations", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"email\":\"john.doe@konfigyr.com\",\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -219,7 +235,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/invitations", "john-doe")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"email\":\"invitee@konfigyr.com\",\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -236,7 +252,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/invitations", "unknown")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"email\":\"invitee@konfigyr.com\",\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -252,14 +268,24 @@ class InvitationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/invitations", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"email\":\"recipient@konfigyr.com\",\"role\":\"USER\"}")
-				.with(authentication(TestPrincipals.jane()))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.FORBIDDEN, problem -> problem
-						.hasTitle(HttpStatus.FORBIDDEN.getReasonPhrase())
-						.hasDetailContaining("Access Denied")
-				));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to create invitation for namespace when namespaces:invite scope is not present")
+	void createInvitationWithoutScope() {
+		mvc.post().uri("/namespaces/{slug}/invitations", "konfigyr")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"recipient@konfigyr.com\",\"role\":\"USER\"}")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
 	@Test
@@ -268,7 +294,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/invitations", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{}")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -290,7 +316,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should accept pending invitation")
 	void acceptPendingInvitation() {
 		mvc.post().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320d7f8e21143b2957f1caded74cbc")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -301,7 +327,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to accept expired invitation")
 	void acceptExpiredInvitation() {
 		mvc.post().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320f6c6481c1fed73573a5430758f1")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -316,7 +342,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to accept unknown invitation")
 	void acceptUnknownInvitation() {
 		mvc.post().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "unknown")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -324,11 +350,22 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to accept without namespaces:invite scope")
+	void acceptWithoutScope() {
+		mvc.post().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320d7f8e21143b2957f1caded74cbc")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should cancel pending invitation for namespace")
 	void cancelPendingInvitation() {
 		mvc.delete().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320d7f8e21143b2957f1caded74cbc")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -340,7 +377,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should cancel expiring invitation for namespace")
 	void cancelExpiringInvitation() {
 		mvc.delete().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320f6c6481c1fed73573a5430758f1")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -351,11 +388,22 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should cancel unknown invitation for namespace")
 	void cancelUnknownInvitation() {
 		mvc.delete().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "unknown")
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
 				.satisfies(invitationNotFound("unknown"));
+	}
+
+	@Test
+	@DisplayName("should fail to cancel invitation without namespaces:invite scope")
+	void cancelInvitationsWithoutScope() {
+		mvc.delete().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320f6c6481c1fed73573a5430758f1")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
 	static ThrowingConsumer<MvcTestResult> invitationNotFound(String key) {

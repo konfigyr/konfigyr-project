@@ -4,6 +4,7 @@ import com.konfigyr.account.Memberships;
 import com.konfigyr.namespace.Namespace;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.expression.SecurityExpressionOperations;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 
 /**
@@ -24,7 +25,7 @@ public interface KonfigyrSecurityExpressionOperations extends SecurityExpression
 	 * @param namespace slug of the namespace that the current principal should be a member of, can't be {@literal null}
 	 * @return {@code true} when the current principal is a namespace member.
 	 */
-	default boolean isMember(@NonNull Namespace namespace) {
+	default AuthorizationResult isMember(@NonNull Namespace namespace) {
 		return isMember(namespace.slug());
 	}
 
@@ -35,7 +36,7 @@ public interface KonfigyrSecurityExpressionOperations extends SecurityExpression
 	 * @param namespace slug of the namespace that the current principal should be a member of, can't be {@literal null}
 	 * @return {@code true} when the current principal is a namespace member.
 	 */
-	boolean isMember(@NonNull String namespace);
+	AuthorizationResult isMember(@NonNull String namespace);
 
 	/**
 	 * Checks if the current {@link java.security.Principal} is an administrative member of this {@link Namespace}.
@@ -43,7 +44,7 @@ public interface KonfigyrSecurityExpressionOperations extends SecurityExpression
 	 * @param namespace slug of the namespace that the current principal should be an admin of, can't be {@literal null}
 	 * @return {@code true} when the current principal is a namespace administrator.
 	 */
-	default boolean isAdmin(@NonNull Namespace namespace) {
+	default AuthorizationResult isAdmin(@NonNull Namespace namespace) {
 		return isAdmin(namespace.slug());
 	}
 
@@ -54,6 +55,6 @@ public interface KonfigyrSecurityExpressionOperations extends SecurityExpression
 	 * @param namespace slug of the namespace that the current principal should be an admin of, can't be {@literal null}
 	 * @return {@code true} when the current principal is a namespace administrator.
 	 */
-	boolean isAdmin(@NonNull String namespace);
+	AuthorizationResult isAdmin(@NonNull String namespace);
 
 }

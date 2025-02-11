@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -32,6 +33,9 @@ public class MethodSecurityExpressionHandlerTest {
 	@Mock
 	AccessService accessService;
 
+	@Mock
+	AuthorizationResult result;
+
 	KonfigyrMethodSecurityExpressionHandler expressionHandler;
 
 	@BeforeEach
@@ -49,7 +53,8 @@ public class MethodSecurityExpressionHandlerTest {
 	@Test
 	@DisplayName("service should allow access to method for members")
 	void shouldAllowMembers() {
-		doReturn(true).when(accessService).hasAccess(any(), eq("konfigyr"));
+		doReturn(true).when(result).isGranted();
+		doReturn(result).when(accessService).hasAccess(any(), eq("konfigyr"));
 
 		assertThat(members(TestPrincipals.jane())).isTrue();
 
@@ -59,7 +64,8 @@ public class MethodSecurityExpressionHandlerTest {
 	@Test
 	@DisplayName("service should allow access to method for administrators")
 	void shouldAllowAdmins() {
-		doReturn(true).when(accessService).hasAccess(any(), eq("konfigyr"), eq(NamespaceRole.ADMIN));
+		doReturn(true).when(result).isGranted();
+		doReturn(result).when(accessService).hasAccess(any(), eq("konfigyr"), eq(NamespaceRole.ADMIN));
 
 		assertThat(admins(TestPrincipals.john())).isTrue();
 
@@ -69,6 +75,8 @@ public class MethodSecurityExpressionHandlerTest {
 	@Test
 	@DisplayName("service should not allow access to method for non-members")
 	void shouldDenyNonMembers() {
+		doReturn(result).when(accessService).hasAccess(TestPrincipals.jane(), "konfigyr");
+
 		assertThat(members(TestPrincipals.jane())).isFalse();
 
 		verify(accessService).hasAccess(TestPrincipals.jane(), "konfigyr");
@@ -77,6 +85,8 @@ public class MethodSecurityExpressionHandlerTest {
 	@Test
 	@DisplayName("service should not allow access to method for non-administrators")
 	void shouldDenyNonAdmins() {
+		doReturn(result).when(accessService).hasAccess(TestPrincipals.john(), "konfigyr", NamespaceRole.ADMIN);
+
 		assertThat(admins(TestPrincipals.john())).isFalse();
 
 		verify(accessService).hasAccess(TestPrincipals.john(), "konfigyr", NamespaceRole.ADMIN);
@@ -100,8 +110,9 @@ public class MethodSecurityExpressionHandlerTest {
 		context.setVariable("namespace", namespace);
 
 		final var expression =  expressionHandler.getExpressionParser().parseExpression(template);
+		final var result = expression.getValue(context, AuthorizationResult.class);
 
-		return Boolean.TRUE.equals(expression.getValue(context));
+		return result != null && result.isGranted();
 	}
 
 	static class TestInvocation {

@@ -13,6 +13,7 @@ class KonfigyrApplicationModuleTest {
 			JavaClass.Predicates.resideInAnyPackage(
 					"com.konfigyr.data..",
 					"com.konfigyr.io..",
+					"com.konfigyr.security..",
 					"com.konfigyr.support..",
 					"com.konfigyr.test..",
 					"com.konfigyr.web.."

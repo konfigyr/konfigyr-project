@@ -5,6 +5,8 @@ import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.hateoas.RepresentationModelAssembler;
 import com.konfigyr.namespace.*;
+import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.oauth.RequiresScope;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@RequiresScope(OAuthScope.INVITE_MEMBERS)
 @RequestMapping("/namespaces/{slug}/invitations")
 class InvitationsController {
 
