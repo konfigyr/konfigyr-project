@@ -9,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.ProviderNotFoundException;
@@ -66,18 +67,27 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(AccessDeniedException.class)
 	final ResponseEntity<Object> handleAccessDeniedException(@NonNull AccessDeniedException ex, @NonNull WebRequest request) {
-		if (ex instanceof AuthorizationDeniedException exception) {
-			return handleAuthorizationDeniedException(exception, request);
-		}
-
-		final ProblemDetail body = createProblemDetail(ex, HttpStatus.FORBIDDEN, ex.getMessage(), null, null, request);
-		return createResponseEntity(body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
+		return switch (ex) {
+			case AuthorizationDeniedException exception -> handleAuthorizationDeniedException(exception, request);
+			case AuthorizationServiceException exception -> handleInternalServerException(
+					exception, HttpHeaders.EMPTY, request
+			);
+			default -> {
+				final ProblemDetail body = createProblemDetail(ex, HttpStatus.FORBIDDEN, ex.getMessage(), null, null, request);
+				yield createResponseEntity(body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
+			}
+		};
 	}
 
 	protected ResponseEntity<Object> handleAuthorizationDeniedException(
 			@NonNull AuthorizationDeniedException ex, @NonNull WebRequest request
 	) {
 		final AuthorizationResult result = ex.getAuthorizationResult();
+
+		if (result == null) {
+			final ProblemDetail body = createProblemDetail(ex, HttpStatus.FORBIDDEN, ex.getMessage(), null, null, request);
+			return createResponseEntity(body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
+		}
 
 		final ErrorResponse response = switch (result) {
 			case AuthorityAuthorizationDecision decision -> ErrorResponse.builder(ex, HttpStatus.FORBIDDEN, ex.getMessage())

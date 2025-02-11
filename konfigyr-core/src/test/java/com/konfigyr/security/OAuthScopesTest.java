@@ -136,6 +136,7 @@ class OAuthScopesTest {
 	void containsNullScopes() {
 		final var scopes = OAuthScopes.of(OAuthScope.OPENID);
 
+		assertThat(scopes.contains(OAuthScope.OPENID.getAuthority())).isTrue();
 		assertThat(scopes.contains((GrantedAuthority) null)).isFalse();
 		assertThat(scopes.contains((OAuthScope) null)).isFalse();
 		assertThat(scopes.contains((String) null)).isFalse();
@@ -160,6 +161,7 @@ class OAuthScopesTest {
 	void permitsNullScopes() {
 		final var scopes = OAuthScopes.of(OAuthScope.OPENID);
 
+		assertThat(scopes.permits(OAuthScope.OPENID.getAuthority())).isTrue();
 		assertThat(scopes.permits((GrantedAuthority) null)).isFalse();
 		assertThat(scopes.permits((OAuthScope) null)).isFalse();
 		assertThat(scopes.permits((String) null)).isFalse();
