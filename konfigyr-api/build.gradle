@@ -1,7 +1,8 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot'
 }
+
+apply from: '../gradle/build-image.gradle'
 
 dependencies {
     implementation project(':konfigyr-core')
