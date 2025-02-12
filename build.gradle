@@ -20,7 +20,7 @@ subprojects {
     }
 
     group = 'com.konfigyr'
-    version = '0.0.1'
+    version = '1.0.0'
 
     dependencies {
         annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
