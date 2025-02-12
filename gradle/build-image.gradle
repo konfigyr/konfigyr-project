@@ -6,7 +6,7 @@ tasks.named('bootBuildImage') {
     imageName = "konfigyr/${project.name}:${tag}"
 
     environment['BPE_APPEND_JAVA_TOOL_OPTIONS'] = '-XX:MaxDirectMemorySize=10M, -XX:MaxMetaspaceSize=79862K, -XX:ReservedCodeCacheSize=120M'
-    environment['BPL_JVM_THREAD_COUNT'] = 25
+    environment['BPL_JVM_THREAD_COUNT'] = '25'
 
     docker {
         publishRegistry {
