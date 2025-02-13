@@ -38,7 +38,8 @@ konfigyr:
       cron: "-"
 
   crypto:
-    master-key: c7miwShcEQkZUcNQGqliVA==
+    master-key:
+      value: u17zpizKhYfdYGZFTZAK1an6fwUb45UMFDVhhwOT4m0=
     jdbc:
       initialize-schema: never
 

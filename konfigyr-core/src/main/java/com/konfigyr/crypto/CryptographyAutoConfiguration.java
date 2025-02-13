@@ -30,7 +30,7 @@ public class CryptographyAutoConfiguration {
 
 	@Bean
 	KeyEncryptionKeyProvider konfigyrKekProvider() {
-		final ByteArray master = ByteArray.fromBase64String(properties.getMasterKey());
+		final ByteArray master = properties.getMasterKey().get();
 
 		// create a new master KEK using Tink AEAD primitive
 		final KeyEncryptionKey kek = TinkKeyEncryptionKey

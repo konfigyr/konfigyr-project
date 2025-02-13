@@ -13,7 +13,8 @@ spring:
 
 konfigyr:
   crypto:
-    master-key: c7miwShcEQkZUcNQGqliVA==
+    master-key:
+      value: F95fYHXZgV1SFko-HZJShmF70ys8tXP9LGnW6cX5dmc=
     jdbc:
       initialize-schema: never
 

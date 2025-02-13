@@ -6,10 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.BeanInstantiationException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.context.annotation.Configurations;
-import org.springframework.boot.context.properties.ConfigurationPropertiesBindException;
-import org.springframework.boot.context.properties.bind.validation.BindValidationException;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.NoOpCacheManager;
@@ -42,8 +41,9 @@ class CryptographyAutoConfigurationTest {
 		runner.run(ctx -> assertThat(ctx)
 				.hasFailed()
 				.getFailure()
-				.hasCauseInstanceOf(ConfigurationPropertiesBindException.class)
-				.hasRootCauseInstanceOf(BindValidationException.class)
+				.hasCauseInstanceOf(BeanInstantiationException.class)
+				.hasRootCauseInstanceOf(IllegalStateException.class)
+				.hasRootCauseMessage("Failed to resolve Key Encryption Key (KEK), no shares or value specified")
 		);
 	}
 
@@ -52,7 +52,23 @@ class CryptographyAutoConfigurationTest {
 	void shouldCreateContextWithoutKeysetCache() {
 		runner.withPropertyValues(
 				"konfigyr.crypto.cache=false",
-				"konfigyr.crypto.master-key=c7miwShcEQkZUcNQGqliVA=="
+				"konfigyr.crypto.master-key.value=c7miwShcEQkZUcNQGqliVA=="
+		).run(ctx -> assertThat(ctx)
+				.hasNotFailed()
+				.hasBean("konfigyrKeysetOperationsFactory")
+				.hasBean("konfigyrKekProvider")
+				.doesNotHaveBean("registryKeysetCache")
+		);
+	}
+
+	@Test
+	@DisplayName("should setup context with master key defined as shares")
+	void shouldCreateContextWithShares() {
+		runner.withPropertyValues(
+				"konfigyr.crypto.cache=false",
+				"konfigyr.crypto.master-key.shares[0]=AAAAAeBidNgpLYqxb7yvarNYOoYF4hlfUvvpeAQ9D-jQfRoc",
+				"konfigyr.crypto.master-key.shares[1]=AAAAArutxHdXromUjZTDugLPGH6zZJoBSgXb7bw0mGU4gHRu",
+				"konfigyr.crypto.master-key.shares[2]=AAAAA1-YWR3Dc8h40fykrtxy_hOs66v_9aIDtJ9oWD8gJ7eW"
 		).run(ctx -> assertThat(ctx)
 				.hasNotFailed()
 				.hasBean("konfigyrKeysetOperationsFactory")
@@ -66,7 +82,7 @@ class CryptographyAutoConfigurationTest {
 	void shouldCreateContextWithoutCacheManager() {
 		runner.withPropertyValues(
 				"konfigyr.crypto.cache=true",
-				"konfigyr.crypto.master-key=c7miwShcEQkZUcNQGqliVA=="
+				"konfigyr.crypto.master-key.value=c7miwShcEQkZUcNQGqliVA=="
 		).run(ctx -> assertThat(ctx)
 				.hasNotFailed()
 				.hasBean("konfigyrKeysetOperationsFactory")
@@ -79,7 +95,7 @@ class CryptographyAutoConfigurationTest {
 	@DisplayName("should setup context with keyset cache")
 	void shouldCreateContextWithKeysetCache() {
 		runner.withPropertyValues(
-				"konfigyr.crypto.master-key=c7miwShcEQkZUcNQGqliVA=="
+				"konfigyr.crypto.master-key.value=meITChyITJK_Z46MKXNN2LeSYJQdb1aGaLAWoy9-g3Y="
 		).withBean(
 				CacheManager.class, NoOpCacheManager::new
 		).run(ctx -> assertThat(ctx)
