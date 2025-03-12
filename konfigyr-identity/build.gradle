@@ -65,11 +65,11 @@ tasks.register('rollup', NpmTask) {
 
     /* define inputs for the task in order to run only when the inputs change */
     inputs.files('package.json', 'package-lock.json', 'rollup.config.js')
-    inputs.dir('src/main/assets')
+    inputs.dir('src/main/resources/assets')
     inputs.dir(fileTree("node_modules").exclude(".cache"))
 
     /* mark the dist as the output directory */
-    outputs.dir(project.layout.buildDirectory.dir('resources/main/dist'))
+    outputs.dir(project.layout.buildDirectory.dir('resources/main/static'))
 }
 
 tasks.register('npmTest', NpmTask) {
