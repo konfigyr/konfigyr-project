@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 
 import java.util.Set;
 import java.util.stream.Stream;
@@ -24,9 +27,9 @@ class OAuthScopeTest {
 	@DisplayName("should fail to resolve OAuth scope from value")
 	void invalidValue() {
 		assertThatIllegalArgumentException().isThrownBy(() -> OAuthScope.from(null));
-		assertThatIllegalArgumentException().isThrownBy(() -> OAuthScope.from(""));
-		assertThatIllegalArgumentException().isThrownBy(() -> OAuthScope.from(" "));
-		assertThatIllegalArgumentException().isThrownBy(() -> OAuthScope.from("unknown"));
+		assertThatExceptionOfType(InvalidOAuthScopeException.class).isThrownBy(() -> OAuthScope.from(""));
+		assertThatExceptionOfType(InvalidOAuthScopeException.class).isThrownBy(() -> OAuthScope.from(" "));
+		assertThatExceptionOfType(InvalidOAuthScopeException.class).isThrownBy(() -> OAuthScope.from("unknown"));
 	}
 
 	@Test
@@ -55,7 +58,14 @@ class OAuthScopeTest {
 	@Test
 	@DisplayName("should fail to parse invalid scopes")
 	void parseInvalidScope() {
-		assertThatIllegalArgumentException().isThrownBy(() -> OAuthScope.parse("namespaces:write unknown"));
+		assertThatExceptionOfType(InvalidOAuthScopeException.class)
+				.isThrownBy(() -> OAuthScope.parse("namespaces:write unknown"))
+				.withMessageContaining("Invalid OAuth scope of: unknown")
+				.withNoCause()
+				.extracting(OAuth2AuthenticationException::getError)
+				.returns(OAuth2ErrorCodes.INVALID_SCOPE, OAuth2Error::getErrorCode)
+				.returns("Invalid OAuth scope of: unknown", OAuth2Error::getDescription)
+				.returns(null, OAuth2Error::getUri);
 	}
 
 	@MethodSource("scenarios")

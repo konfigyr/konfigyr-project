@@ -58,7 +58,20 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 
 		for (String scope : SCOPE_NAMES) {
 			if (claims.hasClaim(scope)) {
-				return parse(claims.getClaimAsString(scope));
+				final List<String> values = claims.getClaimAsStringList(scope);
+
+				if (CollectionUtils.isEmpty(values)) {
+					return EMPTY;
+				}
+
+				return OAuthScopes.of(
+						values.stream()
+								.map(OAuthScope::parse)
+								.filter(Objects::nonNull)
+								.flatMap(Collection::stream)
+								.filter(Objects::nonNull)
+								.collect(Collectors.toUnmodifiableSet())
+				);
 			}
 		}
 
