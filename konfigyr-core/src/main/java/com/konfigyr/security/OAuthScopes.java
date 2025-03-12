@@ -64,14 +64,14 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 					return EMPTY;
 				}
 
-				return OAuthScopes.of(
+				final List<OAuthScope> scopes = collect(
 						values.stream()
 								.map(OAuthScope::parse)
 								.filter(Objects::nonNull)
 								.flatMap(Collection::stream)
-								.filter(Objects::nonNull)
-								.collect(Collectors.toUnmodifiableSet())
 				);
+
+				return new OAuthScopes(scopes);
 			}
 		}
 
