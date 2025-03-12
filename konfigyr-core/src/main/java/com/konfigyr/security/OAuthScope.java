@@ -95,7 +95,7 @@ public enum OAuthScope implements GrantedAuthority {
 	 * @throws IllegalArgumentException when scope value is blank or unknown.
 	 */
 	public static OAuthScope from(@Nullable String value) {
-		Assert.hasText(value, "OAuth scope can not be blank");
+		Assert.notNull(value, "OAuth scope can not be blank");
 
 		for (OAuthScope scope : OAuthScope.values()) {
 			if (scope.value.equals(value)) {
@@ -103,7 +103,7 @@ public enum OAuthScope implements GrantedAuthority {
 			}
 		}
 
-		throw new IllegalArgumentException("Invalid OAuth scope of: " + value);
+		throw new InvalidOAuthScopeException(value);
 	}
 
 	/**

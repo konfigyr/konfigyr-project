@@ -1,17 +1,28 @@
 package com.konfigyr.security;
 
+import lombok.Value;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.ClaimAccessor;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
-import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class OAuthScopesTest {
 
@@ -64,19 +75,41 @@ class OAuthScopesTest {
 	}
 
 	@Test
-	@DisplayName("should parse scope set from JWT")
-	void claims() {
-		final var claims = mock(ClaimAccessor.class);
-		doReturn(true).when(claims).hasClaim("scope");
-		doReturn("openid namespaces:read namespaces:delete").when(claims).getClaimAsString("scope");
+	@DisplayName("should return a sorted list of OAuth Scopes as Granted Authorities")
+	void assertSortedAuthorities() {
+		final var scopes = OAuthScopes.of(
+				OAuthScope.READ_NAMESPACES,
+				OAuthScope.DELETE_NAMESPACES,
+				OAuthScope.OPENID,
+				OAuthScope.WRITE_NAMESPACES,
+				OAuthScope.INVITE_MEMBERS
+		);
 
-		final var scopes = OAuthScopes.from(claims);
+		assertThat(scopes.toAuthorities())
+				.allMatch(OAuthScope.class::isInstance)
+				.asInstanceOf(InstanceOfAssertFactories.iterable(OAuthScope.class))
+				.contains(
+						OAuthScope.OPENID,
+						OAuthScope.READ_NAMESPACES,
+						OAuthScope.WRITE_NAMESPACES,
+						OAuthScope.DELETE_NAMESPACES,
+						OAuthScope.INVITE_MEMBERS
+				);
+	}
+
+	@Test
+	@DisplayName("should sort scopes by ordinal when creating string representation of OAuth scopes")
+	void assertStringRepresentation() {
+		assertThat(OAuthScopes.of(OAuthScope.READ_NAMESPACES, OAuthScope.DELETE_NAMESPACES, OAuthScope.OPENID))
+				.hasToString("openid namespaces:read namespaces:delete");
+	}
+
+	@Test
+	@DisplayName("should assert identity and equality of OAuth scopes")
+	void assertIdentityAndEquality() {
+		final var scopes = OAuthScopes.of(OAuthScope.READ_NAMESPACES, OAuthScope.DELETE_NAMESPACES, OAuthScope.OPENID);
 
 		assertThatObject(scopes)
-				.isNotNull()
-				.returns(3, OAuthScopes::size)
-				.returns(false, OAuthScopes::isEmpty)
-				.hasToString("openid namespaces:read namespaces:delete")
 				.returns(
 						List.of(OAuthScope.OPENID, OAuthScope.READ_NAMESPACES, OAuthScope.DELETE_NAMESPACES),
 						OAuthScopes::toAuthorities
@@ -87,12 +120,6 @@ class OAuthScopesTest {
 				.hasSameHashCodeAs(
 						OAuthScopes.of(OAuthScope.OPENID, OAuthScope.DELETE_NAMESPACES, OAuthScope.READ_NAMESPACES)
 				);
-
-		assertThat(scopes).containsExactlyInAnyOrder(
-				OAuthScope.OPENID,
-				OAuthScope.READ_NAMESPACES,
-				OAuthScope.DELETE_NAMESPACES
-		);
 	}
 
 	@Test
@@ -124,10 +151,10 @@ class OAuthScopesTest {
 	void containsUnsupportedScope() {
 		final var scopes = OAuthScopes.of(OAuthScope.OPENID);
 
-		assertThatIllegalArgumentException()
+		assertThatExceptionOfType(InvalidOAuthScopeException.class)
 				.isThrownBy(() -> scopes.contains("invalid"));
 
-		assertThatIllegalArgumentException()
+		assertThatExceptionOfType(InvalidOAuthScopeException.class)
 				.isThrownBy(() -> scopes.contains(new SimpleGrantedAuthority("invalid")));
 	}
 
@@ -149,10 +176,10 @@ class OAuthScopesTest {
 	void permitsUnsupportedScope() {
 		final var scopes = OAuthScopes.of(OAuthScope.OPENID);
 
-		assertThatIllegalArgumentException()
+		assertThatExceptionOfType(InvalidOAuthScopeException.class)
 				.isThrownBy(() -> scopes.permits("invalid"));
 
-		assertThatIllegalArgumentException()
+		assertThatExceptionOfType(InvalidOAuthScopeException.class)
 				.isThrownBy(() -> scopes.permits(new SimpleGrantedAuthority("invalid")));
 	}
 
@@ -189,6 +216,91 @@ class OAuthScopesTest {
 				new SimpleGrantedAuthority("SCOPE_namespaces:invite"),
 				OAuthScope.INVITE_MEMBERS::equals
 		)).isTrue();
+	}
+
+	@Test
+	@DisplayName("should fail to parse unknown scope")
+	void parseUnknownScope() {
+		assertThatExceptionOfType(InvalidOAuthScopeException.class)
+				.isThrownBy(() -> OAuthScopes.parse("openid unknown"))
+				.withMessageContaining("Invalid OAuth scope of: unknown")
+				.withNoCause()
+				.extracting(OAuth2AuthenticationException::getError)
+				.returns(OAuth2ErrorCodes.INVALID_SCOPE, OAuth2Error::getErrorCode)
+				.returns("Invalid OAuth scope of: unknown", OAuth2Error::getDescription)
+				.returns(null, OAuth2Error::getUri);
+	}
+
+	@MethodSource("scopes")
+	@ParameterizedTest(name = "should parse \"{0}\" scopes to: \"{1}\"")
+	@DisplayName("should extract scopes from JWT claims accessor as string value")
+	void parseScopesFromClaimsAccessorAsString(List<String> value, OAuthScopes expected) {
+		final var claims = TestingAccessor.string(value);
+
+		assertThatObject(OAuthScopes.from(claims))
+				.as("should parse `scope` JWT claim into OAuthScopes from values: %s", value)
+				.isEqualTo(expected);
+	}
+
+	@MethodSource("scopes")
+	@ParameterizedTest(name = "should parse \"{0}\" scopes to: \"{1}\"")
+	@DisplayName("should extract scopes from JWT claims accessor as list value")
+	void parseScopesFromClaimsAccessorAsList(List<String> value, OAuthScopes expected) {
+		final var claims = TestingAccessor.list(value);
+
+		assertThatObject(OAuthScopes.from(claims))
+				.as("should parse `scope` JWT claim into OAuthScopes from values: %s", value)
+				.isEqualTo(expected);
+	}
+
+	static Stream<Arguments> scopes() {
+		return Stream.of(
+				Arguments.of(
+						null,
+						OAuthScopes.empty()
+				),
+				Arguments.of(
+						List.of("   "),
+						OAuthScopes.empty()
+				),
+				Arguments.of(
+						List.of(),
+						OAuthScopes.empty()
+				),
+				Arguments.of(
+						List.of("openid"),
+						OAuthScopes.of(OAuthScope.OPENID)
+				),
+				Arguments.of(
+						List.of("openid", "namespaces:read", "namespaces:delete"),
+						OAuthScopes.of(OAuthScope.OPENID, OAuthScope.READ_NAMESPACES, OAuthScope.DELETE_NAMESPACES)
+				),
+				Arguments.of(
+						List.of("namespaces:delete", "namespaces:read", "namespaces:invite"),
+						OAuthScopes.of(OAuthScope.DELETE_NAMESPACES, OAuthScope.READ_NAMESPACES, OAuthScope.INVITE_MEMBERS)
+				)
+		);
+	}
+
+	@Value
+	static class TestingAccessor implements ClaimAccessor {
+		Map<String, Object> claims;
+
+		static ClaimAccessor list(List<String> values) {
+			if (CollectionUtils.isEmpty(values)) {
+				return new TestingAccessor(Map.of());
+			}
+
+			return new TestingAccessor(Map.of("scope", values));
+		}
+
+		static ClaimAccessor string(List<String> values) {
+			if (CollectionUtils.isEmpty(values)) {
+				return new TestingAccessor(Map.of());
+			}
+
+			return new TestingAccessor(Map.of("scope", String.join(" ", values)));
+		}
 	}
 
 }
