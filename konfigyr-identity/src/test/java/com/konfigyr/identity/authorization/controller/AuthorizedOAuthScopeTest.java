@@ -25,11 +25,13 @@ class AuthorizedOAuthScopeTest {
 	void shouldGenerateAuthorizedScopesWhenConsentGiven() {
 		final var consent = OAuth2AuthorizationConsent.withId("client", "john.doe")
 						.scope("namespaces:read")
+						.scope("openid")
 						.build();
 
 		assertThat(AuthorizedScope.from("openid namespaces:read namespaces:write", consent))
-				.hasSize(2)
+				.hasSize(3)
 				.containsExactlyInAnyOrder(
+						AuthorizedScope.authorized(OAuthScope.OPENID),
 						AuthorizedScope.authorized(OAuthScope.READ_NAMESPACES),
 						AuthorizedScope.unauthorized(OAuthScope.WRITE_NAMESPACES)
 				);

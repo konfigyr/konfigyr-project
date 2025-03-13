@@ -5,11 +5,8 @@ import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,11 +14,8 @@ import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
-import org.springframework.test.web.servlet.htmlunit.webdriver.MockMvcHtmlUnitDriverBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,24 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 @ImportTestcontainers(TestContainers.class)
 class AuthorizationConsentControllerTest {
 
-	static WebDriver driver;
-
 	@Autowired
 	MockMvcTester mvc;
-
-	@BeforeAll
-	static void setup(WebApplicationContext context) {
-		driver = MockMvcHtmlUnitDriverBuilder.mockMvcSetup(context.getBean(MockMvc.class))
-				.javascriptEnabled(false)
-				.build();
-	}
-
-	@AfterAll
-	static void cleanup() {
-		if (driver != null) {
-			driver.close();
-		}
-	}
 
 	@Test
 	@DisplayName("should redirect to login page when not authenticated")
