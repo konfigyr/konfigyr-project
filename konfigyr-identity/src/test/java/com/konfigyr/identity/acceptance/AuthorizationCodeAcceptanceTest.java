@@ -84,7 +84,7 @@ class AuthorizationCodeAcceptanceTest {
 	@DisplayName("should process authorization request with `code` response type")
 	void processAuthorizationRequest() {
 		final UriComponents uri = authorizationUri().build();
-		final Cookie cookie = generateRememberMeCookie(AccountIdentities.john().build());
+		final Cookie cookie = generateRememberMeCookie(AccountIdentities.jane().build());
 
 		driver.get(uri.toUriString());
 
