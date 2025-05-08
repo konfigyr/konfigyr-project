@@ -1,2 +1,3 @@
 com.konfigyr.account.AccountManagementAutoConfiguration
+com.konfigyr.feature.FeaturesAutoConfiguration
 com.konfigyr.namespace.NamespaceManagementAutoConfiguration
