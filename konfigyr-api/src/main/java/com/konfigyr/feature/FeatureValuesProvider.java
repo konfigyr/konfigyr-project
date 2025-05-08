@@ -5,6 +5,9 @@ import org.springframework.lang.NonNull;
 /**
  * Provider interface used to resolve or extract {@link FeatureValues} that are assigned to
  * {@link com.konfigyr.namespace.Namespace Namespaces}.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
  */
 @FunctionalInterface
 public interface FeatureValuesProvider {

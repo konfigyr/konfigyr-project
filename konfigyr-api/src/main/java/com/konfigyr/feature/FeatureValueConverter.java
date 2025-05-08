@@ -24,6 +24,10 @@ final class FeatureValueConverter {
 			Pattern.compile("^(?<value>\\d+)/(?<unit>[smhd])$"), FeatureValueConverter::rate
 	);
 
+	private FeatureValueConverter() {
+		// noop
+	}
+
 	@SuppressWarnings("unchecked")
 	static <T extends FeatureValue> T from(String value) {
 		Assert.hasText(value, "Feature value must not be null or empty");

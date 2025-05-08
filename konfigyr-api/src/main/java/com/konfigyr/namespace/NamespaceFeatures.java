@@ -9,6 +9,7 @@ import com.konfigyr.feature.LimitedFeatureValue;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
+@SuppressWarnings("InterfaceIsType")
 public interface NamespaceFeatures {
 
 	/**

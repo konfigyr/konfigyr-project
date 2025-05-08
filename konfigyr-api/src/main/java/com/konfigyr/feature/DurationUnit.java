@@ -22,9 +22,40 @@ import java.util.concurrent.TimeUnit;
  */
 @RequiredArgsConstructor
 public enum DurationUnit {
+
+	/**
+	 * The duration unit that represents a second time unit.
+	 * <p>
+	 * - Suitable for very high-throughput systems (e.g., API request throttling).<br>
+	 * - Often used to enforce "N requests per second" policies.<br>
+	 * - Example: 10 messages per second per user.
+	 */
 	SECONDS('s', TimeUnit.SECONDS),
+
+	/**
+	 * The duration unit that represents a minute time unit.
+	 * <p>
+	 * - Useful for moderate-frequency operations like login attempts.<br>
+	 * - Often easier to enforce with a background scheduler or sliding window algorithm.<br>
+	 * - Example: 100 requests per minute per IP address.
+	 */
 	MINUTES('m', TimeUnit.MINUTES),
+
+	/**
+	 * The duration unit that represents an hour time unit.
+	 * <p>
+	 * - Common for operational metrics and usage tracking.<br>
+	 * - Suitable for use cases like "500 emails per hour" or "30 uploads per hour".<br>
+	 * - Less sensitive than per-second limits, reduces infrastructure strain.
+	 */
 	HOURS('h', TimeUnit.HOURS),
+
+	/**
+	 * The duration unit that represents a day time unit.
+	 * <p>
+	 * - Ideal for subscription-based quotas or account-wide usage caps.<br>
+	 * - Examples: "Send up to 10,000 emails per day", "Download limit of 5GB/day".
+	 */
 	DAYS('d', TimeUnit.DAYS);
 
 	private final char symbol;

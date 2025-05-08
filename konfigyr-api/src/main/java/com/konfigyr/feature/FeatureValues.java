@@ -1,6 +1,6 @@
 package com.konfigyr.feature;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
@@ -16,9 +16,9 @@ import java.util.*;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
-@Value
 @ValueObject
-public class FeatureValues implements Serializable {
+@EqualsAndHashCode
+public final class FeatureValues implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 294304163437354662L;
