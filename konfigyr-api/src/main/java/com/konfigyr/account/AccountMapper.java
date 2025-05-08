@@ -55,7 +55,6 @@ final class AccountMapper {
 	Membership membership(@NonNull Record record) {
 		return Membership.builder()
 				.id(record.get(NAMESPACE_MEMBERS.ID))
-				.type(record.get(NAMESPACES.TYPE))
 				.role(record.get(NAMESPACE_MEMBERS.ROLE))
 				.namespace(record.get(NAMESPACES.SLUG))
 				.name(record.get(NAMESPACES.NAME))

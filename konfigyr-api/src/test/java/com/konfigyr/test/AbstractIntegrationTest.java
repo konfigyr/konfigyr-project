@@ -1,10 +1,12 @@
 package com.konfigyr.test;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.konfigyr.feature.Features;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.modulith.test.PublishedEventsExtension;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
 
@@ -27,5 +29,12 @@ public abstract class AbstractIntegrationTest {
 	 */
 	@InjectWireMock
 	protected static WireMockServer wiremock;
+
+	/**
+	 * The {@link Features} Bean that is being {@link org.mockito.Spy spied} upon by Mockito in order
+	 * to mock various feature testing scenarios.
+	 */
+	@MockitoSpyBean
+	protected Features features;
 
 }

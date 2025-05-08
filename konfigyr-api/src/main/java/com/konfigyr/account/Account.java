@@ -2,7 +2,6 @@ package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
-import com.konfigyr.namespace.NamespaceType;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
 import org.jmolecules.ddd.annotation.AggregateRoot;
@@ -85,16 +84,11 @@ public record Account(
 
 	/**
 	 * To successfully delete the {@link Account} user accounts are required to leave or delete
-	 * {@link com.konfigyr.namespace.Namespace non-personal namespaces} where they are specified as
+	 * {@link com.konfigyr.namespace.Namespace namespaces} where they are specified as
 	 * {@link NamespaceRole#ADMIN administrors}.
-	 * <p>
-	 * Keep in mind that any {@link com.konfigyr.namespace.Namespace namespaces} with a
-	 * {@link NamespaceType#PERSONAL personal type} would automatically be deleted with the account.
 	 */
 	public boolean isDeletable() {
-		return memberships.stream()
-				.noneMatch(membership -> membership.type() != NamespaceType.PERSONAL
-						&& membership.role() == NamespaceRole.ADMIN);
+		return memberships.stream().noneMatch(membership -> membership.role() == NamespaceRole.ADMIN);
 	}
 
 	/**

@@ -5,7 +5,6 @@ import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Namespace;
-import com.konfigyr.namespace.NamespaceType;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
@@ -41,11 +40,8 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.convertTo(pagedModel(Namespace.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.hasSize(2)
-						.extracting(Namespace::slug, Namespace::type)
-						.containsExactly(
-								tuple("john-doe", NamespaceType.PERSONAL),
-								tuple("konfigyr", NamespaceType.TEAM)
-						)
+						.extracting(Namespace::slug)
+						.containsExactly("john-doe", "konfigyr")
 				)
 				.satisfies(it -> assertThat(it.getMetadata())
 						.returns(20L, PagedModel.PageMetadata::size)
@@ -77,10 +73,8 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.convertTo(pagedModel(Namespace.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.hasSize(1)
-						.extracting(Namespace::slug, Namespace::type)
-						.containsExactly(
-								tuple("konfigyr", NamespaceType.TEAM)
-						)
+						.extracting(Namespace::slug)
+						.containsExactly("konfigyr")
 				)
 				.satisfies(it -> assertThat(it.getMetadata())
 						.returns(20L, PagedModel.PageMetadata::size)
@@ -165,7 +159,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void shouldCreateNamespace() {
 		mvc.post().uri("/namespaces")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"arakis\",\"name\":\"Arakis\",\"type\":\"ENTERPRISE\"}")
+				.content("{\"slug\":\"arakis\",\"name\":\"Arakis\"}")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -176,7 +170,6 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.convertTo(Namespace.class)
 				.returns("arakis", Namespace::slug)
 				.returns("Arakis", Namespace::name)
-				.returns(NamespaceType.ENTERPRISE, Namespace::type)
 				.returns(null, Namespace::description)
 				.satisfies(it -> assertThat(it.id())
 						.isNotNull()
@@ -209,7 +202,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 								.isInstanceOf(Collection.class)
 								.asInstanceOf(InstanceOfAssertFactories.collection(Map.class))
 								.extracting("pointer")
-								.containsExactlyInAnyOrder("slug", "slug", "name", "type")
+								.containsExactlyInAnyOrder("slug", "slug", "name")
 						)
 				));
 	}
@@ -219,7 +212,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void shouldFailCreateNamespaceWithExistingSlug() {
 		mvc.post().uri("/namespaces")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr\",\"type\":\"ENTERPRISE\"}")
+				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr\"}")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -235,7 +228,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void createNamespaceWithoutScope() {
 		mvc.post().uri("/namespaces")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"arakis\",\"name\":\"Arakis\",\"type\":\"ENTERPRISE\"}")
+				.content("{\"slug\":\"arakis\",\"name\":\"Arakis\"}")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.assertThat()
 				.apply(log())
@@ -248,7 +241,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void shouldUpdateNamespace() {
 		mvc.put().uri("/namespaces/{slug}", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\",\"type\":\"ENTERPRISE\"}")
+				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\"}")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -260,7 +253,6 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.returns(EntityId.from(2), Namespace::id)
 				.returns("konfigyr", Namespace::slug)
 				.returns("Konfigyr Project", Namespace::name)
-				.returns(NamespaceType.TEAM, Namespace::type)
 				.returns(null, Namespace::description)
 				.satisfies(it -> assertThat(it.avatar())
 						.isNotNull()
@@ -291,7 +283,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 								.isInstanceOf(Collection.class)
 								.asInstanceOf(InstanceOfAssertFactories.collection(Map.class))
 								.extracting("pointer")
-								.containsExactlyInAnyOrder("slug", "name", "type")
+								.containsExactlyInAnyOrder("slug", "name")
 						)
 				));
 	}
@@ -301,7 +293,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void shouldFailUpdateNamespaceWithExistingSlug() {
 		mvc.put().uri("/namespaces/{slug}", "john-doe")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr\",\"type\":\"ENTERPRISE\"}")
+				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr\"}")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -317,7 +309,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void shouldUpdateUnknownNamespace() {
 		mvc.put().uri("/namespaces/{slug}", "unknown")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"unknown\",\"name\":\"Unknown\",\"type\":\"PERSONAL\"}")
+				.content("{\"slug\":\"unknown\",\"name\":\"Unknown\"}")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -333,7 +325,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void updateNamespaceForNonMembers() {
 		mvc.put().uri("/namespaces/{slug}", "john-doe")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\",\"type\":\"ENTERPRISE\"}")
+				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\"}")
 				.with(authentication(TestPrincipals.jane(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -346,7 +338,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void updateNamespaceForNonAdministrators() {
 		mvc.put().uri("/namespaces/{slug}", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\",\"type\":\"ENTERPRISE\"}")
+				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\"}")
 				.with(authentication(TestPrincipals.jane(), OAuthScope.WRITE_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -359,7 +351,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 	void updateNamespaceWithoutScope() {
 		mvc.put().uri("/namespaces/{slug}", "konfigyr")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\",\"type\":\"ENTERPRISE\"}")
+				.content("{\"slug\":\"konfigyr\",\"name\":\"Konfigyr Project\"}")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()

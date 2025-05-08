@@ -2,7 +2,6 @@ package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
-import com.konfigyr.namespace.NamespaceType;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractIntegrationTest;
@@ -49,10 +48,10 @@ class AccountManagerTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it.updatedAt()).isNotNull())
 				.satisfies(it -> assertThat(it.memberships())
 						.hasSize(2)
-						.extracting(Membership::id, Membership::namespace, Membership::type, Membership::role)
+						.extracting(Membership::id, Membership::namespace, Membership::role)
 						.containsExactly(
-								tuple(EntityId.from(1), "john-doe", NamespaceType.PERSONAL, NamespaceRole.ADMIN),
-								tuple(EntityId.from(2), "konfigyr", NamespaceType.TEAM, NamespaceRole.ADMIN)
+								tuple(EntityId.from(1), "john-doe", NamespaceRole.ADMIN),
+								tuple(EntityId.from(2), "konfigyr", NamespaceRole.ADMIN)
 						)
 				);
 	}
@@ -79,9 +78,9 @@ class AccountManagerTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it.updatedAt()).isNotNull())
 				.satisfies(it -> assertThat(it.memberships())
 						.hasSize(1)
-						.extracting(Membership::id, Membership::namespace, Membership::type, Membership::role)
+						.extracting(Membership::id, Membership::namespace, Membership::role)
 						.containsExactly(
-								tuple(EntityId.from(3), "konfigyr", NamespaceType.TEAM, NamespaceRole.USER)
+								tuple(EntityId.from(3), "konfigyr", NamespaceRole.USER)
 						)
 				);
 	}
@@ -95,7 +94,6 @@ class AccountManagerTest extends AbstractIntegrationTest {
 				.returns(EntityId.from(3), Membership::id)
 				.returns("konfigyr", Membership::namespace)
 				.returns(NamespaceRole.USER, Membership::role)
-				.returns(NamespaceType.TEAM, Membership::type)
 				.returns("Konfigyr", Membership::name)
 				.returns(Avatar.generate("konfigyr", "K"), Membership::avatar)
 				.satisfies(it -> assertThat(it.since())

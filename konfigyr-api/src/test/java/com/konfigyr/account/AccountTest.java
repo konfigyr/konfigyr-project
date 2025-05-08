@@ -2,7 +2,6 @@ package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
-import com.konfigyr.namespace.NamespaceType;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +23,6 @@ class AccountTest {
 	void shouldCreateAccount() {
 		final var membership = Membership.builder()
 				.id(1L)
-				.type(NamespaceType.PERSONAL)
 				.role(NamespaceRole.ADMIN)
 				.namespace("john.doe")
 				.name("John Doe")
@@ -54,7 +52,7 @@ class AccountTest {
 				.returns("John Doe", Account::displayName)
 				.returns(FullName.of("John", "Doe"), Account::fullName)
 				.returns(Avatar.parse("https://example.com/avatar.gif"), Account::avatar)
-				.returns(true, Account::isDeletable)
+				.returns(false, Account::isDeletable)
 				.returns(Memberships.of(membership), Account::memberships)
 				.satisfies(it -> assertThat(it.lastLoginAt())
 						.isNotNull()
@@ -84,37 +82,24 @@ class AccountTest {
 		// no memberships, can delete
 		assertThat(builder.build().isDeletable()).isTrue();
 
-		final var personal = Membership.builder()
-				.id(1L)
-				.type(NamespaceType.PERSONAL)
-				.role(NamespaceRole.ADMIN)
-				.namespace("personal")
-				.name("Personal")
-				.build();
-
-		// personal membership only, can delete
-		assertThat(builder.membership(personal).build().isDeletable()).isTrue();
-
 		final var team = Membership.builder()
 				.id(2L)
-				.type(NamespaceType.TEAM)
 				.role(NamespaceRole.USER)
 				.namespace("team")
 				.name("Team")
 				.build();
 
-		// personal membership + user in team namespace, can delete
+		// user in team namespace, can delete
 		assertThat(builder.membership(team).build().isDeletable()).isTrue();
 
 		final var org = Membership.builder()
 				.id(2L)
-				.type(NamespaceType.ENTERPRISE)
 				.role(NamespaceRole.ADMIN)
 				.namespace("org")
 				.name("Org")
 				.build();
 
-		// personal membership + user in team namespace + admin in org namespace, can not delete
+		// user in team namespace + admin in org namespace, can not delete
 		assertThat(builder.membership(org).build().isDeletable()).isFalse();
 	}
 
@@ -156,7 +141,6 @@ class AccountTest {
 	void shouldCreateMembership() {
 		final var membership = Membership.builder()
 				.id(65L)
-				.type(NamespaceType.TEAM)
 				.role(NamespaceRole.USER)
 				.namespace("konfigyr")
 				.name("Konfigyr")
@@ -167,7 +151,6 @@ class AccountTest {
 		assertThat(membership)
 				.returns(EntityId.from(65), Membership::id)
 				.returns(NamespaceRole.USER, Membership::role)
-				.returns(NamespaceType.TEAM, Membership::type)
 				.returns("konfigyr", Membership::namespace)
 				.returns("Konfigyr", Membership::name)
 				.returns(Avatar.parse("https://example.com/avatar.gif"), Membership::avatar)
@@ -182,7 +165,6 @@ class AccountTest {
 	void shouldCreateMemberships() {
 		final var paul = Membership.builder()
 				.id(19L)
-				.type(NamespaceType.PERSONAL)
 				.role(NamespaceRole.ADMIN)
 				.namespace("paul.atreides")
 				.name("Paul Atreides")
@@ -191,7 +173,6 @@ class AccountTest {
 
 		final var atreides = Membership.builder()
 				.id(22L)
-				.type(NamespaceType.ENTERPRISE)
 				.role(NamespaceRole.ADMIN)
 				.namespace("atreides")
 				.name("Atreides")
@@ -200,7 +181,6 @@ class AccountTest {
 
 		final var freemen = Membership.builder()
 				.id(13L)
-				.type(NamespaceType.TEAM)
 				.role(NamespaceRole.USER)
 				.namespace("freemen")
 				.name("Freemen")
@@ -209,7 +189,6 @@ class AccountTest {
 
 		final var empire = Membership.builder()
 				.id(2L)
-				.type(NamespaceType.ENTERPRISE)
 				.role(NamespaceRole.ADMIN)
 				.namespace("empire")
 				.name("Empire")
@@ -226,25 +205,7 @@ class AccountTest {
 				.doesNotHaveSameHashCodeAs(Memberships.of(freemen, empire, paul));
 
 		assertThatObject(memberships)
-				.returns("paul.atreides, atreides, freemen, empire", Memberships::join)
-				.extracting(it -> it.ofType(NamespaceType.ENTERPRISE))
-				.returns("atreides, empire", Memberships::join);
-
-		assertThat(memberships.ofType(NamespaceType.PERSONAL))
-				.hasSize(1)
-				.containsExactly(paul);
-
-		assertThat(memberships.ofType(NamespaceType.TEAM))
-				.hasSize(1)
-				.containsExactly(freemen);
-
-		assertThat(memberships.ofType(NamespaceType.ENTERPRISE))
-				.hasSize(2)
-				.containsExactly(atreides, empire);
-
-		assertThat(memberships.ofType(NamespaceType.PERSONAL))
-				.hasSize(1)
-				.containsExactly(paul);
+				.returns("paul.atreides, atreides, freemen, empire", Memberships::join);
 
 		assertThat(memberships.ofRole(NamespaceRole.ADMIN))
 				.hasSize(3)
@@ -276,10 +237,6 @@ class AccountTest {
 
 		assertThatThrownBy(() -> builder.id(EntityId.from(5).serialize()).build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Namespace type can not be null");
-
-		assertThatThrownBy(() -> builder.type("ENTERPRISE").build())
-				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Namespace role can not be null");
 
 		assertThatThrownBy(() -> builder.role("USER").build())
@@ -292,7 +249,6 @@ class AccountTest {
 
 		assertThat(builder.name("Konfigyr").build())
 				.returns(EntityId.from(5), Membership::id)
-				.returns(NamespaceType.ENTERPRISE, Membership::type)
 				.returns(NamespaceRole.USER, Membership::role)
 				.returns("konfigyr", Membership::namespace)
 				.returns("Konfigyr", Membership::name)

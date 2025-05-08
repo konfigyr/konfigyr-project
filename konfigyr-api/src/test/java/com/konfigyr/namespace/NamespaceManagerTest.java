@@ -101,7 +101,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 				.get()
 				.returns(id, Namespace::id)
 				.returns("john-doe", Namespace::slug)
-				.returns(NamespaceType.PERSONAL, Namespace::type)
 				.returns("John Doe", Namespace::name)
 				.returns("Personal namespace for John Doe", Namespace::description)
 				.satisfies(it -> assertThat(it.createdAt())
@@ -138,7 +137,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 				.get()
 				.returns(EntityId.from(2), Namespace::id)
 				.returns(slug, Namespace::slug)
-				.returns(NamespaceType.TEAM, Namespace::type)
 				.returns("Konfigyr", Namespace::name)
 				.returns("Konfigyr namespace", Namespace::description)
 				.satisfies(it -> assertThat(it.createdAt())
@@ -315,7 +313,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldCreateNamespace(AssertablePublishedEvents events) {
 		final var definition = NamespaceDefinition.builder()
 				.owner(1L)
-				.type(NamespaceType.ENTERPRISE)
 				.slug("arakis")
 				.name("Arakis")
 				.description("Harsh desert planet located in the Canopus star system")
@@ -324,7 +321,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 		final Namespace namespace = manager.create(definition);
 
 		assertThat(namespace)
-				.returns(NamespaceType.ENTERPRISE, Namespace::type)
 				.returns("arakis", Namespace::slug)
 				.returns("Arakis", Namespace::name)
 				.returns("Harsh desert planet located in the Canopus star system", Namespace::description)
@@ -363,7 +359,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldNotCreateNamespaceWithUnknownOwner(AssertablePublishedEvents events) {
 		final var definition = NamespaceDefinition.builder()
 				.owner(EntityId.from(999999).serialize())
-				.type(NamespaceType.ENTERPRISE)
 				.slug("arakis")
 				.name("Arakis")
 				.build();
@@ -384,7 +379,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldNotCreateNamespaceWithExistingSlug(AssertablePublishedEvents events) {
 		final var definition = NamespaceDefinition.builder()
 				.owner(1L)
-				.type(NamespaceType.TEAM)
 				.slug("konfigyr")
 				.name("Konfigyr")
 				.build();
@@ -405,7 +399,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldNotCreateNamespaceWithLongNames(AssertablePublishedEvents events) {
 		final var definition = NamespaceDefinition.builder()
 				.owner(1L)
-				.type(NamespaceType.PERSONAL)
 				.slug("name-too-long")
 				.name(RandomStringUtils.randomAlphanumeric(512))
 				.build();
@@ -424,7 +417,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldUpdateNamespace(AssertablePublishedEvents events) {
 		final var definition = NamespaceDefinition.builder()
 				.owner(1L)
-				.type(NamespaceType.ENTERPRISE)
 				.slug("konfigyr")
 				.name("Konfigyr Namespace")
 				.description("Updated description")
@@ -434,7 +426,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(namespace)
 				.returns(EntityId.from(2), Namespace::id)
-				.returns(NamespaceType.TEAM, Namespace::type)
 				.returns("konfigyr", Namespace::slug)
 				.returns("Konfigyr Namespace", Namespace::name)
 				.returns("Updated description", Namespace::description)
@@ -458,7 +449,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldRenameNamespace(AssertablePublishedEvents events) {
 		final var definition = NamespaceDefinition.builder()
 				.owner(1L)
-				.type(NamespaceType.ENTERPRISE)
 				.slug("konfigyr-renamed")
 				.name("Konfigyr Namespace")
 				.build();
@@ -467,7 +457,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(namespace)
 				.returns(EntityId.from(2), Namespace::id)
-				.returns(NamespaceType.TEAM, Namespace::type)
 				.returns("konfigyr-renamed", Namespace::slug)
 				.returns("Konfigyr Namespace", Namespace::name)
 				.returns(null, Namespace::description)
@@ -493,7 +482,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldNotUpdateUnknownNamespace(AssertablePublishedEvents events) {
 		final var definition = NamespaceDefinition.builder()
 				.owner(1L)
-				.type(NamespaceType.ENTERPRISE)
 				.slug("konfigyr")
 				.name("Konfigyr Namespace")
 				.build();
@@ -511,7 +499,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldNotUpdateNamespaceWithExistingSlug(AssertablePublishedEvents events) {
 		final var definition = NamespaceDefinition.builder()
 				.owner(1L)
-				.type(NamespaceType.ENTERPRISE)
 				.slug("konfigyr")
 				.name("Konfigyr Namespace")
 				.build();

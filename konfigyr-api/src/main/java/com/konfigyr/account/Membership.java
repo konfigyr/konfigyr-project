@@ -3,7 +3,6 @@ package com.konfigyr.account;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.NamespaceRole;
-import com.konfigyr.namespace.NamespaceType;
 import com.konfigyr.support.Avatar;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
@@ -25,7 +24,6 @@ import java.util.Objects;
  *
  * @param id unique membership identifier, can't be {@literal null}
  * @param namespace namespace slug to which this account is a member of, can't be {@literal null}
- * @param type type of the namespace, can't be {@literal null}
  * @param role role of this account within the namespace, can't be {@literal null}
  * @param name namespace name to which this account is a member of, can't be {@literal null}
  * @param avatar namespace avatar, can't be {@literal null}
@@ -38,7 +36,6 @@ import java.util.Objects;
 public record Membership(
 		@NonNull @Identity EntityId id,
 		@NonNull @Association(aggregateType = Namespace.class) String namespace,
-		@NonNull NamespaceType type,
 		@NonNull NamespaceRole role,
 		@NonNull String name,
 		@NonNull Avatar avatar,
@@ -76,7 +73,6 @@ public record Membership(
 
 		private EntityId id;
 		private String namespace;
-		private NamespaceType type;
 		private NamespaceRole role;
 		private String name;
 		private Avatar avatar;
@@ -126,28 +122,6 @@ public record Membership(
 		@NonNull
 		public Builder namespace(String namespace) {
 			this.namespace = namespace;
-			return this;
-		}
-
-		/**
-		 * Specify the {@link NamespaceType type} of the {@link Namespace} that defines this {@link Membership}.
-		 *
-		 * @param type namespace type value
-		 * @return membership builder
-		 * @throws IllegalArgumentException when type is invalid
-		 */
-		public Builder type(String type) {
-			return type(NamespaceType.valueOf(type));
-		}
-
-		/**
-		 * Specify the {@link NamespaceType type} of the {@link Namespace} that defines this {@link Membership}.
-		 *
-		 * @param type namespace type
-		 * @return membership builder
-		 */
-		public Builder type(NamespaceType type) {
-			this.type = type;
 			return this;
 		}
 
@@ -235,7 +209,6 @@ public record Membership(
 		@NonNull
 		public Membership build() {
 			Assert.notNull(id, "Member entity identifier can not be null");
-			Assert.notNull(type, "Namespace type can not be null");
 			Assert.notNull(role, "Namespace role can not be null");
 			Assert.hasText(namespace, "Namespace slug can not be blank");
 			Assert.hasText(name, "Namespace name can not be blank");
@@ -244,7 +217,7 @@ public record Membership(
 				avatar = Avatar.generate(namespace, name.substring(0, 1));
 			}
 
-			return new Membership(id, namespace, type, role, name, avatar, since);
+			return new Membership(id, namespace, role, name, avatar, since);
 		}
 	}
 }

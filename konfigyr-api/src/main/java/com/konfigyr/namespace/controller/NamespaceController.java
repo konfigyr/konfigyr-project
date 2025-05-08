@@ -9,7 +9,6 @@ import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.domain.Pageable;
@@ -102,7 +101,6 @@ class NamespaceController {
 	}
 
 	record NamespaceAttributes(
-			@NotNull NamespaceType type,
 			@NotBlank @Length(min = 5, max = 30) String slug,
 			@NotBlank @Length(min = 3, max = 30) String name,
 			@Length(max = 255) String description
@@ -112,7 +110,6 @@ class NamespaceController {
 					.owner(1L)
 					.slug(slug)
 					.name(name)
-					.type(type)
 					.description(description)
 					.owner(retrieveAccountIdentifier(authentication))
 					.build();

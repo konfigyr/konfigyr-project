@@ -22,12 +22,11 @@ import java.time.ZoneOffset;
  * <p>
  * When the {@link Namespace} is created, the {@link com.konfigyr.account.Account} that creates is
  * automatically added as an {@link NamespaceRole#ADMIN administrator} of the namespace. Additional
- * members can be invited to a {@link Namespace} by the administrators if the {@link NamespaceType} supports it.
+ * members can be invited to a {@link Namespace} by the administrators if the selected licence supports it.
  * <p>
  * When managing {@link Member namespace members} it is important to highlight that there must be at least
- * one administrator member in the {@link Namespace}, unless it's not of {@link NamespaceType#PERSONAL} type.
- * Personal namespaces should be removed when the administrator account is removed from the namespace or deleted
- * from the application.
+ * one administrator member in the {@link Namespace}. Leaving a {@link Namespace} without an administrator can
+ * lead to an unrecoverable state.
  *
  * @param id unique namespace member identifier, can't be {@literal null}
  * @param namespace identifier of the namespace to which this member belongs to, can't be {@literal null}

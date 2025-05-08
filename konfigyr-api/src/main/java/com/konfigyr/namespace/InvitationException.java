@@ -72,10 +72,17 @@ public class InvitationException extends NamespaceException {
 		INSUFFICIENT_PERMISSIONS(HttpStatus.FORBIDDEN),
 
 		/**
-		 * When an {@link Invite} is being sent for the {@link Namespace} with an unsupported {@link NamespaceType},
-		 * like {@link NamespaceType#PERSONAL}, this error code would be used.
+		 *  When an {@link Invite} is being sent for the {@link Namespace} that does not have the required
+		 *  {@link NamespaceFeatures#MEMBERS_COUNT} Namespace feature, this error code would be used.
 		 */
-		UNSUPPORTED_NAMESPACE_TYPE(HttpStatus.BAD_REQUEST);
+		NOT_ALLOWED(HttpStatus.BAD_REQUEST),
+
+		/**
+		 * Error code used when an {@link Invite} is being sent for the {@link Namespace} that has reached the
+		 * maximum number of members. The maximum number of members is defined by the following Namespace
+		 * feature: {@link NamespaceFeatures#MEMBERS_COUNT}.
+		 */
+		MEMBER_LIMIT_REACHED(HttpStatus.BAD_REQUEST);
 
 		final HttpStatusCode statusCode;
 

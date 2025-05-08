@@ -14,8 +14,7 @@ import java.io.Serializable;
  * Record used to define one {@link Namespace} that would be created via {@link NamespaceManager}.
  *
  * @param owner entity identifier of the {@link com.konfigyr.account.Account} used as the {@link Namespace} owner
- * @param slug unique namespace identifier derived from it's name, can not be null
- * @param type defines the type of the namespace, can not be null
+ * @param slug unique namespace identifier derived from its name, can not be null
  * @param name human friendly name of the namespace, can not be null
  * @param description short description of the namespace, can be null
  * @author Vladimir Spasic
@@ -25,7 +24,6 @@ import java.io.Serializable;
 public record NamespaceDefinition(
 		@NonNull EntityId owner,
 		@NonNull Slug slug,
-		@NonNull NamespaceType type,
 		@NonNull String name,
 		@Nullable String description
 ) implements Serializable {
@@ -50,7 +48,6 @@ public record NamespaceDefinition(
 
 		private EntityId owner;
 		private Slug slug;
-		private NamespaceType type;
 		private String name;
 		private String description;
 
@@ -115,28 +112,6 @@ public record NamespaceDefinition(
 		}
 
 		/**
-		 * Specify the {@link NamespaceType} that should be used by {@link NamespaceDefinition}.
-		 *
-		 * @param type namespace type
-		 * @return namespace definition builder
-		 * @throws IllegalArgumentException when type name is invalid
-		 */
-		public Builder type(String type) {
-			return type(NamespaceType.valueOf(type));
-		}
-
-		/**
-		 * Specify the {@link NamespaceType} that should be used by {@link NamespaceDefinition}.
-		 *
-		 * @param type namespace type
-		 * @return namespace definition builder
-		 */
-		public Builder type(NamespaceType type) {
-			this.type = type;
-			return this;
-		}
-
-		/**
 		 * Specify the user-friendly name for this {@link NamespaceDefinition}.
 		 *
 		 * @param name namespace name
@@ -167,11 +142,10 @@ public record NamespaceDefinition(
 		@NonNull
 		public NamespaceDefinition build() {
 			Assert.notNull(owner, "Namespace owner can not be null");
-			Assert.notNull(type, "Namespace type can not be null");
 			Assert.notNull(slug, "Namespace slug can not be null");
 			Assert.hasText(name, "Namespace name can not be blank");
 
-			return new NamespaceDefinition(owner, slug, type, name, description);
+			return new NamespaceDefinition(owner, slug, name, description);
 		}
 
 	}
