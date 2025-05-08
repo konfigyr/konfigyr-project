@@ -21,7 +21,6 @@ class NamespaceTest {
 	void shouldCreateNamespace() {
 		final var namespace = Namespace.builder()
 				.id(836571L)
-				.type("TEAM")
 				.slug("test-namespace")
 				.name("Test namespace")
 				.description("My testing team namespace")
@@ -32,7 +31,6 @@ class NamespaceTest {
 
 		assertThat(namespace)
 				.returns(EntityId.from(836571L), Namespace::id)
-				.returns(NamespaceType.TEAM, Namespace::type)
 				.returns("test-namespace", Namespace::slug)
 				.returns("Test namespace", Namespace::name)
 				.returns("My testing team namespace", Namespace::description)
@@ -58,10 +56,6 @@ class NamespaceTest {
 
 		assertThatThrownBy(() -> builder.id("000000BKTH3TG").build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Namespace type can not be null");
-
-		assertThatThrownBy(() -> builder.type(NamespaceType.PERSONAL).build())
-				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Namespace slug can not be blank");
 
 		assertThatThrownBy(() -> builder.slug("test-namespace").build())
@@ -70,7 +64,6 @@ class NamespaceTest {
 
 		assertThat(builder.name("Test namespace").build())
 				.returns(EntityId.from(12476518224L), Namespace::id)
-				.returns(NamespaceType.PERSONAL, Namespace::type)
 				.returns("test-namespace", Namespace::slug)
 				.returns("Test namespace", Namespace::name)
 				.returns(null, Namespace::description)
@@ -86,14 +79,12 @@ class NamespaceTest {
 				.owner(1L)
 				.slug("Atreides")
 				.name("Atreides")
-				.type(NamespaceType.TEAM)
 				.description("Atreides Imperium")
 				.build();
 
 		assertThat(definition)
 				.returns(EntityId.from(1), NamespaceDefinition::owner)
 				.returns(Slug.slugify("atreides"), NamespaceDefinition::slug)
-				.returns(NamespaceType.TEAM, NamespaceDefinition::type)
 				.returns("Atreides", NamespaceDefinition::name)
 				.returns("Atreides Imperium", NamespaceDefinition::description);
 	}
@@ -109,10 +100,6 @@ class NamespaceTest {
 
 		assertThatThrownBy(() -> builder.owner(EntityId.from(1).serialize()).build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Namespace type can not be null");
-
-		assertThatThrownBy(() -> builder.type("PERSONAL").build())
-				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Namespace slug can not be null");
 
 		assertThatThrownBy(() -> builder.slug("Muad'Dib").build())
@@ -122,7 +109,6 @@ class NamespaceTest {
 		assertThat(builder.name("Muad'Dib").build())
 				.returns(EntityId.from(1), NamespaceDefinition::owner)
 				.returns(Slug.slugify("muaddib"), NamespaceDefinition::slug)
-				.returns(NamespaceType.PERSONAL, NamespaceDefinition::type)
 				.returns("Muad'Dib", NamespaceDefinition::name)
 				.returns(null, NamespaceDefinition::description);
 	}

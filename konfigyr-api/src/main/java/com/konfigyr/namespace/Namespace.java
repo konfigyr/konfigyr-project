@@ -20,7 +20,6 @@ import java.time.ZoneOffset;
  *
  * @param id unique namespace identifier, can not be {@literal null}
  * @param slug unique namespace identifier derived from it's name, can not be {@literal null}
- * @param type defines the type of the namespace, can not be {@literal null}
  * @param name human friendly name of the namespace, can not be {@literal null}
  * @param description short description of the namespace, can be {@literal null}
  * @param avatar namespace avatar image resource, can be {@literal null}
@@ -33,7 +32,6 @@ import java.time.ZoneOffset;
 public record Namespace(
 		@NonNull @Identity EntityId id,
 		@NonNull String slug,
-		@NonNull NamespaceType type,
 		@NonNull String name,
 		@Nullable String description,
 		@NonNull Avatar avatar,
@@ -61,7 +59,6 @@ public record Namespace(
 
 		private EntityId id;
 		private String slug;
-		private NamespaceType type;
 		private String name;
 		private String description;
 		private Avatar avatar;
@@ -111,28 +108,6 @@ public record Namespace(
 		 */
 		public Builder slug(String slug) {
 			this.slug = slug;
-			return this;
-		}
-
-		/**
-		 * Specify the {@link NamespaceType} that should be used by {@link Namespace}.
-		 *
-		 * @param type namespace type
-		 * @return namespace builder
-		 * @throws IllegalArgumentException when type name is invalid
-		 */
-		public Builder type(String type) {
-			return type(NamespaceType.valueOf(type));
-		}
-
-		/**
-		 * Specify the {@link NamespaceType} that should be used by {@link Namespace}.
-		 *
-		 * @param type namespace type
-		 * @return namespace builder
-		 */
-		public Builder type(NamespaceType type) {
-			this.type = type;
 			return this;
 		}
 
@@ -230,7 +205,6 @@ public record Namespace(
 		@NonNull
 		public Namespace build() {
 			Assert.notNull(id, "Namespace entity identifier can not be null");
-			Assert.notNull(type, "Namespace type can not be null");
 			Assert.hasText(slug, "Namespace slug can not be blank");
 			Assert.hasText(name, "Namespace name can not be blank");
 
@@ -238,7 +212,7 @@ public record Namespace(
 				avatar = Avatar.generate(slug, name.substring(0, 1));
 			}
 
-			return new Namespace(id, slug, type, name, description, avatar, createdAt, updatedAt);
+			return new Namespace(id, slug, name, description, avatar, createdAt, updatedAt);
 		}
 
 	}

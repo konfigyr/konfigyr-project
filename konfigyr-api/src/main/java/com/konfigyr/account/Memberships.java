@@ -1,7 +1,6 @@
 package com.konfigyr.account;
 
 import com.konfigyr.namespace.NamespaceRole;
-import com.konfigyr.namespace.NamespaceType;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.NonNull;
@@ -73,18 +72,6 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 	private Memberships(@NonNull Collection<Membership> memberships) {
 		this.memberships = new ArrayList<>(memberships);
 		this.memberships.sort(Membership::compareTo);
-	}
-
-	/**
-	 * Creates a filtered subset that contains only {@link Membership memberships} of a given
-	 * {@link NamespaceType}.
-	 *
-	 * @param type namespace type, can't be {@literal null}
-	 * @return filtered {@link Memberships} instance, never {@literal null}
-	 */
-	@NonNull
-	public Memberships ofType(@NonNull NamespaceType type) {
-		return filter(membership -> type == membership.type());
 	}
 
 	/**

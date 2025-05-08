@@ -1,11 +1,13 @@
 package com.konfigyr.namespace.controller;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.feature.FeatureValue;
 import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Invitation;
 import com.konfigyr.namespace.InvitationException;
+import com.konfigyr.namespace.NamespaceFeatures;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
@@ -23,9 +25,11 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.within;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 class InvitationsControllerTest extends AbstractControllerTest {
@@ -230,8 +234,10 @@ class InvitationsControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should fail to create invitation for personal namespace")
-	void createInvitationForPersonalNamespace() {
+	@DisplayName("should fail to create invitation for Namespaces when feature is not assigned")
+	void createInvitationForNamespaceWithoutFeature() {
+		doReturn(Optional.empty()).when(features).get("john-doe", NamespaceFeatures.MEMBERS_COUNT);
+
 		mvc.post().uri("/namespaces/{slug}/invitations", "john-doe")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"email\":\"invitee@konfigyr.com\",\"role\":\"USER\"}")
@@ -241,8 +247,27 @@ class InvitationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
 						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
-						.hasDetailContaining("Can not create invitations for personal namespaces")
-						.hasProperty("code", InvitationException.ErrorCode.UNSUPPORTED_NAMESPACE_TYPE.name())
+						.hasDetailContaining("Please upgrade your plan to invite team members")
+						.hasProperty("code", InvitationException.ErrorCode.NOT_ALLOWED.name())
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to create invitation for Namespaces when membership limit is reached")
+	void createInvitationForNamespaceWithMembershipLimitReached() {
+		doReturn(Optional.of(FeatureValue.limited(1))).when(features).get("john-doe", NamespaceFeatures.MEMBERS_COUNT);
+
+		mvc.post().uri("/namespaces/{slug}/invitations", "john-doe")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"invitee@konfigyr.com\",\"role\":\"USER\"}")
+				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
+						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
+						.hasDetailContaining("Can not create invitation as maximum number of members has been reached")
+						.hasProperty("code", InvitationException.ErrorCode.MEMBER_LIMIT_REACHED.name())
 				));
 	}
 

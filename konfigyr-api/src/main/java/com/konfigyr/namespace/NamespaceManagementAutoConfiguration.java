@@ -2,6 +2,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.feature.FeatureDefinition;
 import com.konfigyr.feature.FeatureDefinitionConfigurer;
+import com.konfigyr.feature.Features;
 import com.konfigyr.mail.Mailer;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -35,8 +36,8 @@ public class NamespaceManagementAutoConfiguration implements FeatureDefinitionCo
 
 	@Bean
 	@ConditionalOnMissingBean(Invitations.class)
-	Invitations defaultInvitations(DSLContext context) {
-		return new DefaultInvitations(context, applicationEventPublisher);
+	Invitations defaultInvitations(DSLContext context, Features features) {
+		return new DefaultInvitations(context, features, applicationEventPublisher);
 	}
 
 	@Bean

@@ -140,7 +140,6 @@ class DefaultNamespaceManager implements NamespaceManager {
 					.set(
 							SettableRecord.of(context, NAMESPACES)
 									.set(NAMESPACES.ID, EntityId.generate().map(EntityId::get))
-									.set(NAMESPACES.TYPE, definition.type().name())
 									.set(NAMESPACES.SLUG, definition.slug().get())
 									.set(NAMESPACES.NAME, definition.name())
 									.set(NAMESPACES.DESCRIPTION, definition.description())
@@ -425,7 +424,6 @@ class DefaultNamespaceManager implements NamespaceManager {
 	private static Namespace toNamespace(@NonNull Record record) {
 		return Namespace.builder()
 				.id(record.get(NAMESPACES.ID))
-				.type(record.get(NAMESPACES.TYPE))
 				.slug(record.get(NAMESPACES.SLUG))
 				.name(record.get(NAMESPACES.NAME))
 				.description(record.get(NAMESPACES.DESCRIPTION))

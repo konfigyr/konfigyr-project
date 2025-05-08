@@ -6,6 +6,8 @@ import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.data.tables.Accounts;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.feature.Features;
+import com.konfigyr.feature.LimitedFeatureValue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
@@ -61,6 +63,7 @@ class DefaultInvitations implements Invitations {
 	private final StringKeyGenerator keyGenerator = TokenGenerator.getInstance();
 
 	private final DSLContext context;
+	private final Features features;
 	private final ApplicationEventPublisher publisher;
 
 	@NonNull
@@ -105,15 +108,12 @@ class DefaultInvitations implements Invitations {
 						"Not enough permissions to create invitation")
 		);
 
-		if (NamespaceType.PERSONAL == context.type) {
-			throw new InvitationException(InvitationException.ErrorCode.UNSUPPORTED_NAMESPACE_TYPE,
-					"Can not create invitations for personal namespaces");
-		}
-
 		if (context.isMember()) {
 			throw new InvitationException(InvitationException.ErrorCode.ALREADY_INVITED,
 					"Can not create invitation as the recipient is already a namespace member");
 		}
+
+		assertNamespaceMemberCount(context);
 
 		final String key = this.context.insertInto(INVITATIONS)
 				.set(
@@ -266,9 +266,9 @@ class DefaultInvitations implements Invitations {
 	@NonNull
 	private Optional<NamespaceInvitationContext> lookupNamespaceInvitationContext(@NonNull Invite invite) {
 		return context.select(
+						NAMESPACES.ID,
 						NAMESPACES.SLUG,
 						NAMESPACES.NAME,
-						NAMESPACES.TYPE,
 						SENDER_ACCOUNTS.ID,
 						SENDER_ACCOUNTS.EMAIL,
 						SENDER_ACCOUNTS.FIRST_NAME,
@@ -294,6 +294,25 @@ class DefaultInvitations implements Invitations {
 						NAMESPACE_MEMBERS.ROLE.eq(NamespaceRole.ADMIN.name())
 				))
 				.fetchOptional(record -> NamespaceInvitationContext.create(record, invite));
+	}
+
+	private void assertNamespaceMemberCount(@NonNull NamespaceInvitationContext context) {
+		log.debug("Checking if Namespace({}) can invite additional members", context.slug());
+
+		final LimitedFeatureValue feature = features.get(context.slug(), NamespaceFeatures.MEMBERS_COUNT)
+				.orElseThrow(() -> new InvitationException(InvitationException.ErrorCode.NOT_ALLOWED,
+						"Please upgrade your plan to invite team members"));
+
+		if (feature.isUnlimited()) {
+			return;
+		}
+
+		final int count = this.context.fetchCount(NAMESPACE_MEMBERS, NAMESPACE_MEMBERS.NAMESPACE_ID.eq(context.id().get()));
+
+		if (count >= feature.get()) {
+			throw new InvitationException(InvitationException.ErrorCode.MEMBER_LIMIT_REACHED,
+					"Can not create invitation as maximum number of members has been reached");
+		}
 	}
 
 	@Nullable
@@ -338,18 +357,18 @@ class DefaultInvitations implements Invitations {
 	}
 
 	private record NamespaceInvitationContext(
+			@NonNull EntityId id,
 			@NonNull String slug,
 			@NonNull String name,
-			@NonNull NamespaceType type,
 			@NonNull Invitation.Sender sender,
 			@NonNull Invitation.Recipient recipient,
 			boolean isMember
 	) {
 		static NamespaceInvitationContext create(@NonNull Record record, @NonNull Invite invite) {
 			return new NamespaceInvitationContext(
+					record.get(NAMESPACES.ID, EntityId.class),
 					record.get(NAMESPACES.SLUG),
 					record.get(NAMESPACES.NAME),
-					NamespaceType.valueOf(record.get(NAMESPACES.TYPE)),
 					Objects.requireNonNull(DefaultInvitations.sender(record)),
 					DefaultInvitations.recipient(record, invite.recipient()),
 					Boolean.TRUE.equals(record.get(RECIPIENT_ACCOUNTS.ID.in(NAMESPACE_MEMBERS.ACCOUNT_ID)))

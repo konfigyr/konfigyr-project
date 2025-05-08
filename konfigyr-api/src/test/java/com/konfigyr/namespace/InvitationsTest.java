@@ -3,6 +3,7 @@ package com.konfigyr.namespace;
 import com.konfigyr.account.AccountStatus;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.feature.FeatureValue;
 import com.konfigyr.mail.Mail;
 import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractIntegrationTest;
@@ -17,9 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class InvitationsTest extends AbstractIntegrationTest {
 
@@ -140,13 +143,15 @@ class InvitationsTest extends AbstractIntegrationTest {
 				NamespaceRole.USER
 		);
 
-		assertThatThrownBy(() -> invitations.create(invite))
-				.isInstanceOf(InvitationException.class)
-				.extracting("code")
+		assertThatExceptionOfType(InvitationException.class)
+				.isThrownBy(() -> invitations.create(invite))
+				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.INSUFFICIENT_PERMISSIONS);
 
 		Assertions.assertThat(events.ofType(Mail.class))
 				.isEmpty();
+
+		verifyNoInteractions(features);
 	}
 
 	@Test
@@ -159,18 +164,22 @@ class InvitationsTest extends AbstractIntegrationTest {
 				NamespaceRole.ADMIN
 		);
 
-		assertThatThrownBy(() -> invitations.create(invite))
-				.isInstanceOf(InvitationException.class)
-				.extracting("code")
+		assertThatExceptionOfType(InvitationException.class)
+				.isThrownBy(() -> invitations.create(invite))
+				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.ALREADY_INVITED);
 
 		Assertions.assertThat(events.ofType(Mail.class))
 				.isEmpty();
+
+		verifyNoInteractions(features);
 	}
 
 	@Test
-	@DisplayName("should fail to create invitation for personal namespaces")
-	void shouldFailToCreateInvitationForPersonalNamespaces(AssertablePublishedEvents events) {
+	@DisplayName("should fail to create invitation when no feature has been assigned to a Namespace")
+	void shouldFailToCreateInvitationForMissingFeatureValue(AssertablePublishedEvents events) {
+		doReturn(Optional.empty()).when(features).get("john-doe", NamespaceFeatures.MEMBERS_COUNT);
+
 		final var invite = new Invite(
 				EntityId.from(1),
 				EntityId.from(1),
@@ -178,10 +187,31 @@ class InvitationsTest extends AbstractIntegrationTest {
 				NamespaceRole.USER
 		);
 
-		assertThatThrownBy(() -> invitations.create(invite))
-				.isInstanceOf(InvitationException.class)
-				.extracting("code")
-				.isEqualTo(InvitationException.ErrorCode.UNSUPPORTED_NAMESPACE_TYPE);
+		assertThatExceptionOfType(InvitationException.class)
+				.isThrownBy(() -> invitations.create(invite))
+				.extracting(InvitationException::getCode)
+				.isEqualTo(InvitationException.ErrorCode.NOT_ALLOWED);
+
+		Assertions.assertThat(events.ofType(Mail.class))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to create invitation when Namespace has reached maximum member count")
+	void shouldFailToCreateInvitationWhenMaximumCountIsReached(AssertablePublishedEvents events) {
+		doReturn(Optional.of(FeatureValue.limited(2))).when(features).get("konfigyr", NamespaceFeatures.MEMBERS_COUNT);
+
+		final var invite = new Invite(
+				EntityId.from(2),
+				EntityId.from(1),
+				"recipient@konfigyr.com",
+				NamespaceRole.USER
+		);
+
+		assertThatExceptionOfType(InvitationException.class)
+				.isThrownBy(() -> invitations.create(invite))
+				.extracting(InvitationException::getCode)
+				.isEqualTo(InvitationException.ErrorCode.MEMBER_LIMIT_REACHED);
 
 		Assertions.assertThat(events.ofType(Mail.class))
 				.isEmpty();
@@ -197,13 +227,15 @@ class InvitationsTest extends AbstractIntegrationTest {
 				NamespaceRole.USER
 		);
 
-		assertThatThrownBy(() -> invitations.create(invite))
-				.isInstanceOf(InvitationException.class)
-				.extracting("code")
+		assertThatExceptionOfType(InvitationException.class)
+				.isThrownBy(() -> invitations.create(invite))
+				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.INSUFFICIENT_PERMISSIONS);
 
 		Assertions.assertThat(events.ofType(Mail.class))
 				.isEmpty();
+
+		verifyNoInteractions(features);
 	}
 
 	@Test
@@ -359,9 +391,9 @@ class InvitationsTest extends AbstractIntegrationTest {
 		final var recipient = createAccount("expiring@konfigyr.com", "Leto", "Atreides");
 		assertThat(recipient).isNotNull();
 
-		assertThatThrownBy(() -> invitations.accept(invitation.get(), recipient))
-				.isInstanceOf(InvitationException.class)
-				.extracting("code")
+		assertThatExceptionOfType(InvitationException.class)
+				.isThrownBy(() -> invitations.accept(invitation.get(), recipient))
+				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.INVITATION_EXPIRED);
 
 		assertThat(namespaces.findMembers(namespace.get()))
@@ -381,9 +413,9 @@ class InvitationsTest extends AbstractIntegrationTest {
 		final var invitation = invitations.get(namespace.get(), "09320d7f8e21143b2957f1caded74cbc");
 		assertThat(invitation).isPresent();
 
-		assertThatThrownBy(() -> invitations.accept(invitation.get(), EntityId.from(9999)))
-				.isInstanceOf(InvitationException.class)
-				.extracting("code")
+		assertThatExceptionOfType(InvitationException.class)
+				.isThrownBy(() -> invitations.accept(invitation.get(), EntityId.from(9999)))
+				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.RECIPIENT_NOT_FOUND);
 
 		assertThat(namespaces.findMembers(namespace.get()))
