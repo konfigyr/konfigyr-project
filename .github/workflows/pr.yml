@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: latest
 
-      - name: Backend Build
+      - name: Build
         env:
           CI: 'true'
         run: ./gradlew --no-daemon --no-parallel --continue build
@@ -41,12 +41,6 @@ jobs:
         if: success() || failure()
         with:
           report_paths: '**/build/test-results/test/TEST-*.xml'
-
-      - name: Frontend Build
-        working-directory: ./konfigyr-frontend
-        env:
-          CI: 'true'
-        run: npm ci && npm run ci
 
       - name: Test coverage reports
         uses: codecov/codecov-action@v5

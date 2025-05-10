@@ -1,0 +1,86 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+
+plugins {
+    id 'com.github.node-gradle.node' version '7.1.0'
+    id 'com.bmuschko.docker-remote-api' version '9.4.0'
+}
+
+docker {
+    registryCredentials {
+        url = 'https://index.docker.io/v1/'
+        username = 'konfigyr'
+        password = System.getenv('DOCKER_HUB_TOKEN')
+    }
+}
+
+node {
+    npmCommand = String.valueOf(getProperty('node.npm'))
+
+    /* use the CI NPM command when executing Github actions */
+    npmInstallCommand = System.getenv('CI') ? 'ci' : 'install'
+}
+
+tasks.register('npmBuild', NpmTask) {
+    dependsOn npmInstall
+
+    description = 'Builds the Next.js application'
+
+    args = ['run', 'build']
+
+    /* define inputs for the task in order to run only when the inputs change */
+    inputs.files('package.json', 'package-lock.json', 'next.config.ts', 'tsconfig.json')
+    inputs.dir('src')
+    inputs.dir('messages')
+    inputs.dir('public')
+    inputs.dir(fileTree('node_modules').exclude('.cache'))
+
+    /* mark the dist as the output directory */
+    outputs.dir(project.layout.buildDirectory.dir('.next'))
+}
+
+tasks.register('npmTest', NpmTask) {
+    dependsOn npmInstall
+
+    description = 'Runs the Next.js application tests'
+
+    args = System.getenv('CI') ? ['run', 'ci'] : ['test']
+
+    /* define inputs for the test task in order to run only when the related files change */
+    inputs.files('package.json', 'package-lock.json', 'eslint.config.mjs', 'vitest.config.mts')
+    inputs.dir('src')
+    inputs.dir('messages')
+    inputs.dir('public')
+    inputs.dir('__tests__')
+}
+
+tasks.register('dockerBuild', DockerBuildImage) {
+    group = 'docker'
+    description = 'Builds the Docker image with a Next.js application'
+
+    def tag = Boolean.valueOf(System.getenv('NIGHTLY')) ? 'latest' : project.version
+
+    inputDir.set(project.layout.projectDirectory)
+    images.add("konfigyr/${project.name}:${tag}")
+}
+
+tasks.register('dockerPublish', DockerPushImage) {
+    dependsOn dockerBuild
+
+    group = 'docker'
+    description = 'Builds and publishes the Docker image with a Next.js application'
+
+    def tag = Boolean.valueOf(System.getenv('NIGHTLY')) ? 'latest' : project.version
+
+    images.add("konfigyr/${project.name}:${tag}")
+}
+
+tasks.register('bootBuildImage') {
+    dependsOn dockerPublish
+
+    group = 'build'
+    description = 'Tasks that that is an alias to `dockerPublish` Gradle task'
+}
+
+tasks.assemble.dependsOn('npmBuild')
+tasks.test.dependsOn('npmTest')
