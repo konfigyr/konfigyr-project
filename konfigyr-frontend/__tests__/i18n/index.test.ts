@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { Locale, resolve } from 'konfigyr/i18n';
 
 describe('i18n', () => {

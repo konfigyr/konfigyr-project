@@ -2,7 +2,9 @@ import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  eslint: {
+    dirs: ['src', '__tests__'],
+  },
 };
 
 const withNextIntl = createNextIntlPlugin();

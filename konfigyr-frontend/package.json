@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "ci": "next lint && vitest run --coverage"
   },
   "dependencies": {
     "next": "15.3.2",

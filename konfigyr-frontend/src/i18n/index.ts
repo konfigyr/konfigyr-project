@@ -1,6 +1,6 @@
 import type { IntlConfig } from 'use-intl/core';
 import messages from '../../messages/en.json';
-import assert from "node:assert";
+import assert from 'node:assert';
 
 /**
  * Enumeration that contains the supported locales.
@@ -11,7 +11,7 @@ export enum Locale {
 
 const MESSAGES = {
   [Locale.ENGLISH]: messages,
-}
+};
 
 /**
  * Function that would return the resolve the current locale context.
