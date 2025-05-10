@@ -30,6 +30,10 @@ component_management:
       name: Data
       paths:
         - konfigyr-data/**
+    - component_id: konfigyr-frontend
+      name: Frontend
+      paths:
+        - konfigyr-frontend/**
     - component_id: konfigyr-identity
       name: Identity
       paths:

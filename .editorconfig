@@ -9,7 +9,7 @@ indent_style = tab
 indent_size = 4
 continuation_indent_size = 8
 
-[*.{js,ts,cjs,mjs}]
+[*.{js,ts,tsx,cjs,mjs}]
 indent_style = space
 indent_size = 2
 
