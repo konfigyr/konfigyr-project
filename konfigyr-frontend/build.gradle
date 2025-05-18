@@ -4,6 +4,7 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 plugins {
     id 'com.github.node-gradle.node' version '7.1.0'
     id 'com.bmuschko.docker-remote-api' version '9.4.0'
+    id 'org.springframework.boot'
 }
 
 docker {
@@ -55,6 +56,8 @@ tasks.register('npmTest', NpmTask) {
 }
 
 tasks.register('dockerBuild', DockerBuildImage) {
+    dependsOn bootJar
+
     group = 'docker'
     description = 'Builds the Docker image with a Next.js application'
 
@@ -75,11 +78,19 @@ tasks.register('dockerPublish', DockerPushImage) {
     images.add("konfigyr/${project.name}:${tag}")
 }
 
-tasks.register('bootBuildImage') {
-    dependsOn dockerPublish
+/**
+ * Disable Spring Boot tasks and make sure that `bootBuildImage` is finalized
+ * by the `dockerPublish` task in order to publish the Frontend Docker image
+**/
 
-    group = 'build'
-    description = 'Tasks that that is an alias to `dockerPublish` Gradle task'
+tasks.named('bootJar') {
+    enabled(false)
+}
+
+tasks.named('bootBuildImage') {
+    enabled(false)
+
+    finalizedBy dockerPublish
 }
 
 tasks.assemble.dependsOn('npmBuild')
