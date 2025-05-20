@@ -3,7 +3,7 @@ import { SessionService } from './session';
 
 const ACCESS_TOKEN_SESSION_KEY = 'access-token';
 
-const session = new SessionService('konfigyr.access', process.env.KONFIGYR_IDENTITY_SESSION_SECRET!);
+const session = new SessionService('konfigyr.access', process.env.KONFIGYR_IDENTITY_SESSION_SECRET);
 
 export interface Identity {
   email: string,

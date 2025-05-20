@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createErrorResponse } from 'konfigyr/services/http';
 import * as tokens from 'konfigyr/services/identity';
 
-const TARGET = process.env.KONFIGYR_API_URL || 'http://localhost:8080';
+const TARGET = process.env.KONFIGYR_API_URL || 'https://api.konfigyr.com';
 const IGNORED_HEADERS = ['cookie', 'host'];
 
 function copyHeaders(headers: Headers, token: string): Headers {

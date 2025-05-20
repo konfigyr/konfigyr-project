@@ -49,9 +49,7 @@ describe('app/api', () => {
 
   test('should respond with 500 status code due to runtime errors', async () => {
     await createMockedAccessToken('access-token');
-    global.fetch = vi.fn().mockReturnValue(() => {
-      throw new Error('Oooops');
-    });
+    global.fetch = vi.fn().mockReturnValue(Promise.reject(new Error('Oooops')));
 
     const request = new NextRequest('http://localhost/api/test-uri');
     const response = await route.GET(request);

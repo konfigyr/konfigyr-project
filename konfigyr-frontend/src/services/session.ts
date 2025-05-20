@@ -25,8 +25,8 @@ type Session = IronSession<Record<string, string>>;
 export class SessionService {
   #options: SessionOptions;
 
-  constructor(name: string, secret: string) {
-    this.#options = { cookieName: name, password: secret, cookieOptions };
+  constructor(name: string, secret?: string) {
+    this.#options = { cookieName: name, password: secret || crypto.randomUUID(), cookieOptions };
   }
 
   /**
@@ -78,7 +78,7 @@ export class SessionService {
   }
 }
 
-const session = new SessionService('konfigyr.session', process.env.KONFIGYR_DEFAULT_SESSION_SECRET!);
+const session = new SessionService('konfigyr.session', process.env.KONFIGYR_DEFAULT_SESSION_SECRET);
 
 /**
  * Retrieves the session value by its name from the default `konfigyr.session` extracted from HTTP cookie store.

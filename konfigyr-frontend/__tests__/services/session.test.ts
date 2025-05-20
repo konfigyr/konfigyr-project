@@ -46,7 +46,7 @@ describe('services | session', () => {
   });
 
   test('should fail to read from cookie store when using different secret key', async () => {
-    const service = new session.SessionService('konfigyr.session', 'different-iron-session-secret-key');
+    const service = new session.SessionService('konfigyr.session');
 
     await session.set(cookies, 'key', 'test value');
 
@@ -55,15 +55,15 @@ describe('services | session', () => {
   });
 
   test('should clear cookie store', async () => {
-    const service = new session.SessionService('konfigyr.session', 'iron-session-secret-key-contents');
+    const service = new session.SessionService('cookie-name');
 
     await service.set(cookies, 'key', 'test value');
     expect(await service.get(cookies, 'key')).toStrictEqual('test value');
-    expect(cookies.get('konfigyr.session')?.value).not.toHaveLength(0);
+    expect(cookies.get('cookie-name')?.value).not.toHaveLength(0);
 
     await service.clear(cookies);
     expect(await service.get(cookies, 'key')).toBeUndefined();
-    expect(cookies.get('konfigyr.session')?.value).toHaveLength(0);
+    expect(cookies.get('cookie-name')?.value).toHaveLength(0);
   });
 
 });
