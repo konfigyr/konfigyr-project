@@ -1,5 +1,36 @@
 {
   "authentication": {
     "login": "Login"
+  },
+  "errors": {
+    "title": "Unexpected server error occurred",
+    "detail": "We could not process your request due to a runtime error. Please try again and if the problem persists, please get in touch with our support team.",
+    "contact-support": "Contact our support team",
+    "oauth": {
+      "title": "Authorization error",
+      "link": "Find out more here",
+      "code": {
+        "OAUTH_INTERNAL_SERVER_ERROR": "Unexpected server error occurred while logging you in. Please try again and if the problem persists, please get in touch with our support team.",
+        "OAUTH_MISSING_AUTHORIZATION_STATE": "Please try logging in again. If the problem persists, please get in touch with our support team.",
+        "OAUTH_RESPONSE_BODY_ERROR": "Authorization server returned an error. Please checkout the details below.",
+        "OAUTH_UNSUPPORTED_OPERATION": "Unexpected server error occurred while logging you in. Please try again and if the problem persists, please get in touch with our support team.",
+        "OAUTH_WWW_AUTHENTICATE_CHALLENGE": "Unexpected server error occurred while logging you in. Please try again and if the problem persists, please get in touch with our support team.",
+        "OAUTH_AUTHORIZATION_RESPONSE_ERROR": "Authorization server returned an error. Please checkout the details below.",
+        "OAUTH_JWT_USERINFO_EXPECTED": "Authorization server did not return your account information. Please get in touch with our support team to resolve this issue.",
+        "OAUTH_PARSE_ERROR": "Unexpected server error occurred while logging you in. Please try again and if the problem persists, please get in touch with our support team.",
+        "OAUTH_INVALID_RESPONSE": "Authorization server returned an invalid response. Please get in touch with our support team to resolve this issue.",
+        "OAUTH_INVALID_REQUEST": "Unexpected server error occurred while logging you in. Please try again and if the problem persists, please get in touch with our support team.",
+        "OAUTH_RESPONSE_IS_NOT_JSON": "Authorization server returned an invalid response. Please get in touch with our support team to resolve this issue.",
+        "OAUTH_RESPONSE_IS_NOT_CONFORM": "Authorization server returned an invalid response. Please get in touch with our support team to resolve this issue.",
+        "OAUTH_HTTP_REQUEST_FORBIDDEN": "Unexpected server error occurred while logging you in. Please try again and if the problem persists, please get in touch with our support team.",
+        "OAUTH_REQUEST_PROTOCOL_FORBIDDEN": "Unexpected server error occurred while logging you in. Please try again and if the problem persists, please get in touch with our support team.",
+        "OAUTH_JWT_TIMESTAMP_CHECK": "The issued Access Token is either expired or not yet ready for use.",
+        "OAUTH_JWT_CLAIM_COMPARISON": "The issued Access Token is invalid.",
+        "OAUTH_JSON_ATTRIBUTE_COMPARISON": "The issued Access Token is invalid.",
+        "OAUTH_KEY_SELECTION": "Could not find a JSON Web Key to validate the Access Token signatures. Please get in touch with our support team to resolve this issue.",
+        "OAUTH_MISSING_SERVER_METADATA": "Could not resolve Authorization Server metadata. Please get in touch with our support team to resolve this issue.",
+        "OAUTH_INVALID_SERVER_METADATA": "Could not resolve Authorization Server metadata. Please get in touch with our support team to resolve this issue."
+      }
+    }
   }
 }

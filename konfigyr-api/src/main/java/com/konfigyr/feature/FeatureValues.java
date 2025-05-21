@@ -84,7 +84,7 @@ public final class FeatureValues implements Serializable {
 	 * this operation if the specified container contains a different value for the feature.
 	 *
 	 * @param other feature values container to be merged, can't be {@literal null}
-	 * @return merged feature values, never {@link null}
+	 * @return merged feature values, never {@literal null}
 	 */
 	@NonNull
 	public FeatureValues concat(@NonNull FeatureValues other) {
