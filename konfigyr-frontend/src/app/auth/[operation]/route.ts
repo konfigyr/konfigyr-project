@@ -7,13 +7,8 @@ import * as tokens from 'konfigyr/services/identity';
 const STATE_KEY = 'oauth-authorization-state';
 const ATTEMPTED_REQUEST_KEY = 'attempted-request';
 
-export enum Operation {
-  AUTHORIZE = 'authorize',
-  EXCHANGE = 'code',
-}
-
 interface Parameters {
-  params: Promise<{ operation: Operation }>
+  params: Promise<{ operation: string }>
 }
 
 const client = new OpenidClient(
@@ -149,9 +144,9 @@ export async function GET(request: NextRequest, { params }: Parameters) {
   const { operation } = await params;
 
   switch (operation) {
-    case Operation.AUTHORIZE:
+    case 'authorize':
       return await authorize(request);
-    case Operation.EXCHANGE:
+    case 'code':
       return await exchange(request);
     default:
       return error(request, ErrorCodes.MISSING_AUTHORIZATION_STATE);

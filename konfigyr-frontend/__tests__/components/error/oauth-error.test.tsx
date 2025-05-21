@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { ErrorCard } from 'konfigyr/app/auth/error/page';
 import { ErrorCodes } from 'konfigyr/services/openid';
+import OAuthErrorCard from 'konfigyr/components/error/oauth-error';
 import messages from '../../../messages/en.json';
 
 describe('app/auth/error', () => {
@@ -12,7 +12,7 @@ describe('app/auth/error', () => {
   test('should render error card using default error details', () => {
     const container = render(
       <NextIntlClientProvider locale="en" messages={messages}>
-        <ErrorCard />
+        <OAuthErrorCard />
       </NextIntlClientProvider>,
     );
 
@@ -41,7 +41,7 @@ describe('app/auth/error', () => {
   test('should render error card using OAuth error details', () => {
     const container = render(
       <NextIntlClientProvider locale="en" messages={messages}>
-        <ErrorCard
+        <OAuthErrorCard
           code={ErrorCodes.RESPONSE_BODY_ERROR}
           error="oauth-error-code"
           error_description="Some error description"

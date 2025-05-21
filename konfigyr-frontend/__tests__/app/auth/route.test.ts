@@ -10,7 +10,7 @@ import {
   INVALID_SERVER_METADATA,
 } from 'oauth4webapi';
 import * as session from 'konfigyr/services/session';
-import { GET, Operation } from 'konfigyr/app/auth/[operation]/route';
+import { GET } from 'konfigyr/app/auth/[operation]/route';
 
 const client = vi.hoisted(() => {
   return { authorize: vi.fn(), exchange: vi.fn() };
@@ -30,7 +30,7 @@ vi.mock(import('konfigyr/services/session'), async (original) => {
 
 const invokeOperation = async (operation: string): Promise<NextResponse> => {
   const request = new NextRequest(`http://localhost/auth/${operation}`);
-  const params = Promise.resolve({ operation: operation as Operation });
+  const params = Promise.resolve({ operation: operation });
 
   return await GET(request, { params });
 };
@@ -46,7 +46,7 @@ describe('app/auth/operations', () => {
       state: { state: 'request-state', verifier: 'request-verifier' },
     });
 
-    const response = await invokeOperation(Operation.AUTHORIZE);
+    const response = await invokeOperation('authorize');
 
     expect(response.status).toStrictEqual(307);
     expect(response.cookies.has('konfigyr.session')).toStrictEqual(true);
@@ -63,7 +63,7 @@ describe('app/auth/operations', () => {
       access_token: 'access-token',
     });
 
-    const response = await invokeOperation(Operation.EXCHANGE);
+    const response = await invokeOperation('code');
 
     expect(response.status).toStrictEqual(307);
     expect(response.cookies.has('konfigyr.access')).toStrictEqual(true);
@@ -81,7 +81,7 @@ describe('app/auth/operations', () => {
   test('should redirect to error page when OIDC service could not generate redirect URI due to runtime error', async () => {
     client.authorize.mockRejectedValue('Unexpected runtime error');
 
-    const response = await invokeOperation(Operation.AUTHORIZE);
+    const response = await invokeOperation('authorize');
 
     expect(response.status).toStrictEqual(307);
     expect(response.cookies.has('konfigyr.session')).toStrictEqual(false);
@@ -91,7 +91,7 @@ describe('app/auth/operations', () => {
   test('should redirect to error page when OIDC service could not generate redirect URI due to unsupported operation', async () => {
     client.authorize.mockRejectedValue(new UnsupportedOperationError(INVALID_SERVER_METADATA));
 
-    const response = await invokeOperation(Operation.AUTHORIZE);
+    const response = await invokeOperation('authorize');
 
     expect(response.status).toStrictEqual(307);
     expect(response.headers.get('location')).toStrictEqual('http://localhost/auth/error?code=OAUTH_UNSUPPORTED_OPERATION');
@@ -100,7 +100,7 @@ describe('app/auth/operations', () => {
   test('should redirect to error page when OIDC service could not generate redirect URI due to unsupported operation', async () => {
     client.authorize.mockRejectedValue(new OperationProcessingError(INVALID_REQUEST));
 
-    const response = await invokeOperation(Operation.AUTHORIZE);
+    const response = await invokeOperation('authorize');
 
     expect(response.status).toStrictEqual(307);
     expect(response.cookies.has('konfigyr.session')).toStrictEqual(false);
@@ -110,7 +110,7 @@ describe('app/auth/operations', () => {
   test('should redirect to error page when authorization state is not present in the session', async () => {
     vi.mocked(session.get).mockResolvedValue(undefined);
 
-    const response = await invokeOperation(Operation.EXCHANGE);
+    const response = await invokeOperation('code');
 
     expect(response.status).toStrictEqual(307);
     expect(response.cookies.has('konfigyr.session')).toStrictEqual(false);
@@ -126,7 +126,7 @@ describe('app/auth/operations', () => {
       cause: new URLSearchParams(),
     }));
 
-    const response = await invokeOperation(Operation.EXCHANGE);
+    const response = await invokeOperation('code');
 
     expect(response.status).toStrictEqual(307);
     expect(response.cookies.has('konfigyr.session')).toStrictEqual(false);
