@@ -13,9 +13,9 @@ export default function Header() {
         </Link>
 
         <div className="flex flex-1 items-center justify-end">
-          <a href="/auth/authorize">
+          <Link href="/auth/authorize">
             {t('login')}
-          </a>
+          </Link>
         </div>
       </div>
     </header>

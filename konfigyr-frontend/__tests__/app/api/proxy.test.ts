@@ -1,4 +1,4 @@
-import {afterEach, describe, expect, Mock, test, vi } from 'vitest';
+import { afterEach, describe, expect, Mock, test, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import * as route from 'konfigyr/app/api/[[...slug]]/route';
 

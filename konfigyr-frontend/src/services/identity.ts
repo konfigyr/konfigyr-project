@@ -1,4 +1,5 @@
 import type { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { SessionService } from './session';
 
 const ACCESS_TOKEN_SESSION_KEY = 'access-token';
@@ -8,6 +9,18 @@ const session = new SessionService('konfigyr.access', process.env.KONFIGYR_IDENT
 export interface Identity {
   email: string,
   token: string,
+}
+
+/**
+ * Retrieves the currently logged-in user account, or `Identity`, from the cookie store extracted
+ * from Next `cookies()`. This method should be used in server side rendered pages that need
+ * information about the identity.
+ *
+ * @return {Promise<Identity>} promise that once resolved would contain the identity
+ */
+export async function identity(): Promise<Identity | undefined> {
+  const store = await cookies();
+  return await session.get(store, ACCESS_TOKEN_SESSION_KEY);
 }
 
 /**

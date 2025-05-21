@@ -1,6 +1,21 @@
-import { assert, beforeEach, describe, expect, test } from 'vitest';
+import { assert, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import * as identity from 'konfigyr/services/identity';
+
+vi.mock('next/headers', () => ({
+  cookies: () => Promise.resolve(),
+}));
+
+const mockNextCookies = async (request: NextRequest) => {
+  const headers = await import('next/headers');
+  headers.cookies = vi.fn().mockReturnValue(Promise.resolve(request.cookies));
+};
+
+const copyCookies = (request: NextRequest, response: NextResponse) => {
+  response.cookies.getAll().forEach(cookie => {
+    request.cookies.set(cookie.name, cookie.value);
+  });
+};
 
 describe('services | identity', () => {
   let request: NextRequest;
@@ -9,6 +24,10 @@ describe('services | identity', () => {
   beforeEach(() => {
     request = new NextRequest('http:/localhost/test-uri');
     response = NextResponse.next();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
   });
 
   test('should return an empty Identity value from request', async () => {
@@ -24,7 +43,7 @@ describe('services | identity', () => {
   });
 
   test('should store and read Identity from the session store', async () => {
-    const value = { email: 'paul.atreides@arakis.com' };
+    const value = { email: 'paul.atreides@arakis.com', token: 'access-token' };
     await identity.set(response, value);
 
     expect(response.cookies.has('konfigyr.access')).toStrictEqual(true);
@@ -37,12 +56,24 @@ describe('services | identity', () => {
     assert.deepEqual(cookie?.sameSite, 'lax');
     assert.deepEqual(cookie?.path, '/');
 
-    // copy the cookies to request...
-    response.cookies.getAll().forEach(cookie => {
-      request.cookies.set(cookie.name, cookie.value);
-    });
+    // copy the cookies to request in order to read them...
+    copyCookies(request, response);
 
     expect(await identity.has(request)).toStrictEqual(true);
     expect(await identity.get(request)).toStrictEqual(value);
+  });
+
+  test('should read Identity from the session store using Next cookies', async () => {
+    await mockNextCookies(request);
+
+    expect(await identity.identity()).toBeUndefined();
+
+    const value = { email: 'paul.atreides@arakis.com', token: 'access-token' };
+    await identity.set(response, value);
+
+    // copy the cookies to request in order to read them...
+    copyCookies(request, response);
+
+    expect(await identity.identity()).toStrictEqual(value);
   });
 });
