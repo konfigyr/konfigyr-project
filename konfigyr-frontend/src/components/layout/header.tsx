@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { Button } from 'konfigyr/components/ui';
 import ServiceLabel from 'konfigyr/components/service-label';
 
 export default function Header() {
@@ -13,9 +14,11 @@ export default function Header() {
         </Link>
 
         <div className="flex flex-1 items-center justify-end">
-          <Link href="/auth/authorize">
-            {t('login')}
-          </Link>
+          <Button variant="link" asChild>
+            <Link href="/auth/authorize">
+              {t('login')}
+            </Link>
+          </Button>
         </div>
       </div>
     </header>

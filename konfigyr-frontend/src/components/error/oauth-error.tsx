@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { SquareArrowOutUpRight, Headset } from 'lucide-react';
+import { Button } from 'konfigyr/components/ui';
 import { ErrorCodes, OAuthError } from 'konfigyr/services/openid';
 
 /**
@@ -33,19 +35,25 @@ export default function OAuthErrorCard(error: OAuthError & { code?: string }) {
 
         {error.error_uri && (
           <div className="pt-4">
-            <a href={error.error_uri} target='_blank'>
-              {t('errors.oauth.link')}
-            </a>
+            <Button variant="ghost" asChild>
+              <a href={error.error_uri} target='_blank'>
+                {t('errors.oauth.link')} <SquareArrowOutUpRight size={8} />
+              </a>
+            </Button>
           </div>
         )}
       </div>
       <div className="flex justify-between mt-4">
-        <Link href="/auth/authorize">
-          {t('authentication.login')}
-        </Link>
-        <a href="mailto:support@konfigyr.com" target="_blank">
-          {t('errors.contact-support')}
-        </a>
+        <Button asChild>
+          <Link href="/auth/authorize">
+            {t('authentication.login')}
+          </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <a href="mailto:support@konfigyr.com" target="_blank">
+            <Headset /> {t('errors.contact-support')}
+          </a>
+        </Button>
       </div>
     </div>
   );
