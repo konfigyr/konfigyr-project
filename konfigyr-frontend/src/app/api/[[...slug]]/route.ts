@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createErrorResponse } from 'konfigyr/services/http';
-import * as tokens from 'konfigyr/services/identity';
+import { getToken } from 'konfigyr/services/authentication';
 
 const TARGET = process.env.KONFIGYR_API_URL || 'https://api.konfigyr.com';
 const IGNORED_HEADERS = ['cookie', 'host'];
@@ -49,7 +49,7 @@ function isProxyUnavailable(response: Response): boolean {
  * @return the proxied response
  */
 async function execute(request: NextRequest): Promise<NextResponse> {
-  const token = await tokens.get(request);
+  const token = await getToken(request.cookies);
 
   if (!token) {
     return createErrorResponse({
@@ -64,7 +64,7 @@ async function execute(request: NextRequest): Promise<NextResponse> {
 
   const response = await fetch(url, {
     method: request.method,
-    headers: copyHeaders(request.headers, token.token),
+    headers: copyHeaders(request.headers, token.access),
     body: await copyBody(request, request.method),
   });
 

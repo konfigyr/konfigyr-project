@@ -19,7 +19,7 @@ public interface AccountIdentities {
 				.id(EntityId.from(1))
 				.status(AccountIdentityStatus.ACTIVE)
 				.email("john.doe@konfigyr.com")
-				.name("John Doe")
+				.displayName("John Doe")
 				.avatar(Avatar.generate(EntityId.from(1), "JD"))
 				.authorities(AuthorityUtils.commaSeparatedStringToAuthorityList("john"));
 	}
@@ -34,7 +34,7 @@ public interface AccountIdentities {
 				.id(EntityId.from(2))
 				.status(AccountIdentityStatus.ACTIVE)
 				.email("jane.doe@konfigyr.com")
-				.name("Jane Doe")
+				.displayName("Jane Doe")
 				.avatar(Avatar.generate(EntityId.from(2), "JD"))
 				.authorities(AuthorityUtils.commaSeparatedStringToAuthorityList("jane"));
 	}

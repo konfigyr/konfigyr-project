@@ -74,7 +74,7 @@ public class AccountIdentity implements OAuth2User, UserDetails, Identifiable<En
 	 * Display name, or an email address, of this {@link AccountIdentity}.
 	 */
 	@NonNull
-	String name;
+	String displayName;
 
 	/**
 	 * Avatar that points to the profile picture of this {@link AccountIdentity}.
@@ -132,7 +132,7 @@ public class AccountIdentity implements OAuth2User, UserDetails, Identifiable<En
 	 */
 	@NonNull
 	public String getDisplayName() {
-		return name;
+		return displayName;
 	}
 
 	/**

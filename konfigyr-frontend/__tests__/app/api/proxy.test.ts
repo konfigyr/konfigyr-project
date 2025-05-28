@@ -2,9 +2,9 @@ import { afterEach, describe, expect, Mock, test, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import * as route from 'konfigyr/app/api/[[...slug]]/route';
 
-vi.mock('konfigyr/services/identity', () => {
+vi.mock('konfigyr/services/authentication', () => {
   return {
-    get: () => Promise.resolve(),
+    getToken: () => Promise.resolve(),
   };
 });
 
@@ -18,10 +18,10 @@ const createMockedResponse = (status: number, body: unknown, headers = {}) => {
 };
 
 const createMockedAccessToken = async (token: string) => {
-  const tokens = await import('konfigyr/services/identity');
+  const authentication = await import('konfigyr/services/authentication');
 
-  tokens.get = vi.fn().mockReturnValue(Promise.resolve({
-    email: 'john.doe@konfigyr.com', token,
+  authentication.getToken = vi.fn().mockReturnValue(Promise.resolve({
+    access: token,
   }));
 };
 

@@ -1,4 +1,8 @@
 spring:
+  autoconfigure:
+    ## Exclude Session Auto configuration in order to assert HTTP sessions in MVC integration tests
+    exclude: org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+
   liquibase:
     change-log: changelog.xml
 

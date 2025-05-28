@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import csp, { CSP_HEADER_NAME } from 'konfigyr/middleware/csp';
+import identified from 'konfigyr/middleware/authentication';
 
-export function middleware(request: NextRequest): NextResponse {
+export async function middleware(request: NextRequest): Promise<NextResponse> {
+  let response = await identified(request);
+
+  if (response != null) {
+    return response;
+  }
+
   const contentSecurityPolicy = csp(request);
 
-  const response = NextResponse.next({
+  response = NextResponse.next({
     request: {
       headers: request.headers,
     },

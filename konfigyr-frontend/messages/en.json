@@ -1,6 +1,8 @@
 {
   "authentication": {
-    "login": "Login"
+    "login": "Login",
+    "logout": "Logout",
+    "settings": "Account settings"
   },
   "errors": {
     "title": "Unexpected server error occurred",
