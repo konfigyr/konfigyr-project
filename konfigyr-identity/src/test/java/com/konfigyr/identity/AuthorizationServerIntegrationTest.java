@@ -7,6 +7,7 @@ import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.WebAttributes;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -181,7 +183,25 @@ class AuthorizationServerIntegrationTest {
 				.assertThat()
 				.apply(log())
 				.hasStatus3xxRedirection()
-				.hasRedirectedUrl("http://localhost/login");
+				.hasRedirectedUrl("http://localhost/login")
+				.request()
+				.sessionAttributes()
+				.hasEntrySatisfying("SPRING_SECURITY_SAVED_REQUEST", it -> assertThat(it)
+						.isInstanceOf(SavedRequest.class)
+						.asInstanceOf(InstanceOfAssertFactories.type(SavedRequest.class))
+						.returns("GET", SavedRequest::getMethod)
+						.extracting(SavedRequest::getRedirectUrl)
+						.isNotNull()
+						.extracting(URI::create, InstanceOfAssertFactories.URI_TYPE)
+						.hasScheme("http")
+						.hasHost("localhost")
+						.hasNoPort()
+						.hasPath("/oauth/authorize")
+						.hasParameter(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
+						.hasParameter(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+						.hasParameter(OAuth2ParameterNames.SCOPE, "openid")
+						.hasParameter(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				);
 	}
 
 	@Test

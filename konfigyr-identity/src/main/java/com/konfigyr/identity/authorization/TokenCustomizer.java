@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 
 final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
-	private static final OAuth2TokenType ID_TOKEN_TOKEN_TYPE = new OAuth2TokenType(OidcParameterNames.ID_TOKEN);
+	static final OAuth2TokenType ID_TOKEN_TOKEN_TYPE = new OAuth2TokenType(OidcParameterNames.ID_TOKEN);
 
 	@Override
 	public void customize(@NonNull JwtEncodingContext context) {
