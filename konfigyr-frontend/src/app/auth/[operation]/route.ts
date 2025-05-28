@@ -1,8 +1,12 @@
+'use server';
+
+import type { TokenEndpointResponse, IDToken} from 'openid-client';
+import type { Authentication, Account, Token } from 'konfigyr/services/authentication';
 import { NextRequest, NextResponse } from 'next/server';
 import * as oauth from 'oauth4webapi';
 import OpenidClient, { ErrorCodes, AuthorizationState, OAuthError } from 'konfigyr/services/openid';
+import { setAuthentication } from 'konfigyr/services/authentication';
 import * as session from 'konfigyr/services/session';
-import * as tokens from 'konfigyr/services/identity';
 
 const STATE_KEY = 'oauth-authorization-state';
 const ATTEMPTED_REQUEST_KEY = 'attempted-request';
@@ -78,10 +82,38 @@ async function exchange(request: NextRequest): Promise<NextResponse> {
 
   const attemptedRequestUri: string = await session.get(request.cookies, ATTEMPTED_REQUEST_KEY) || '/';
   const response = NextResponse.redirect(new URL(attemptedRequestUri, request.url));
-  await tokens.set(response, { email: claims.sub, token: result.access_token });
+
+  await setAuthentication(response.cookies, createIdentity(claims, result));
   await session.remove(response.cookies, STATE_KEY);
 
   return response;
+}
+
+/**
+ * Creates the `Authentication` object that would be stored in the session from the OIDC Authorization Server
+ * response.
+ *
+ * @param {IDToken} claims ID Token claims
+ * @param {TokenEndpointResponse} response OAuth token response
+ * @return {Authentication} Konfigyr authentication
+ */
+function createIdentity(claims: IDToken, response: TokenEndpointResponse): Authentication {
+  const account: Account = {
+    oid: String(claims.oid),
+    name: String(claims.name),
+    email: String(claims.email),
+    picture: String(claims.picture),
+  };
+
+  const token: Token = {
+    access: response.access_token,
+    refresh: response.refresh_token,
+    expiry: Number(response.expires_in),
+  };
+
+  const scopes = response.scope?.split(' ') || [];
+
+  return { account, token, scopes };
 }
 
 /**

@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import * as session from 'konfigyr/services/session';
 
-class Cookies implements session.CookieStore {
+export class Cookies implements session.CookieStore {
   #store: Map<string, { name: string, value: string }> = new Map();
 
   get(name: string): { name: string, value: string } | undefined {

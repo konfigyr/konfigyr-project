@@ -51,7 +51,7 @@ interface AccountIdentityMapper {
 		return AccountIdentity.builder()
 				.id(id)
 				.email(email)
-				.name(name.get())
+				.displayName(name.get())
 				.avatar(avatar)
 				.status(record.get(ACCOUNTS.STATUS, AccountIdentityStatus.class))
 				.authorities(AUTHORITIES)

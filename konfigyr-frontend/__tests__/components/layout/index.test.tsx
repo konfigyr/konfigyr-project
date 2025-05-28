@@ -1,28 +1,41 @@
-import { describe, expect, test } from 'vitest';
+import type { Account } from 'konfigyr/services/authentication';
+
+import { afterEach, describe, expect, test } from 'vitest';
 import { NextIntlClientProvider } from 'next-intl';
-import { render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import Layout from 'konfigyr/components/layout';
+import { AccountContextProvider } from 'konfigyr/components/account';
 import messages from '../../../messages/en.json';
 
-describe('components/layout', () => {
-  const container = render(
+function TestLayout({ account }: { account?: Account }) {
+  return (
     <NextIntlClientProvider locale="en" messages={messages}>
-      <Layout>
-        <h1>Title</h1>
-      </Layout>
-    </NextIntlClientProvider>,
+      <AccountContextProvider account={account}>
+        <Layout>
+          <h1>Title</h1>
+        </Layout>
+      </AccountContextProvider>
+    </NextIntlClientProvider>
   );
+}
 
-  test('should render service label', () => {
+describe('components/layout', () => {
+  afterEach(() => cleanup());
+
+  test('should render service label and child elements', () => {
+    const container = render(<TestLayout />);
     const links = container.getAllByRole('link');
     expect(links).toHaveLength(2);
 
     const label = links[0];
     expect(label).toHaveAttribute('href', '/');
     expect(label).toHaveTextContent('konfigyr.vault');
+
+    expect(container.getByRole('heading', { level: 1, name: 'Title' })).toBeDefined();
   });
 
   test('should render login link', () => {
+    const container = render(<TestLayout />);
     const links = container.getAllByRole('link');
     expect(links).toHaveLength(2);
 
@@ -31,7 +44,26 @@ describe('components/layout', () => {
     expect(login).toHaveTextContent('Login');
   });
 
-  test('should render layout with child element', () => {
-    expect(screen.getByRole('heading', { level: 1, name: 'Title' })).toBeDefined();
+  test('should render account dropdown', async () => {
+    const account = { oid: 'test', email: 'john.doe@konfigyr.com', name: 'John Doe' };
+    const container = render(<TestLayout account={account} />);
+    const links = container.getAllByRole('link');
+    expect(links).toHaveLength(1);
+
+    const button = container.getByRole('button');
+    expect(button).toBeDefined();
+    expect(button).toHaveTextContent(account.name);
+    expect(button).toHaveAttribute('data-state', 'closed');
+
+    expect(container.queryByText(account.email)).not.toBeInTheDocument();
+    expect(container.queryByText('Account settings')).not.toBeInTheDocument();
+    expect(container.queryByText('Logout')).not.toBeInTheDocument();
+
+    fireEvent.keyDown(button, { key: ' ' });
+
+    expect(container.getByText(account.email)).toBeInTheDocument();
+    expect(container.getByText('Account settings')).toBeInTheDocument();
+    expect(container.getByText('Logout')).toBeInTheDocument();
   });
+
 });
