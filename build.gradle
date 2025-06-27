@@ -61,6 +61,10 @@ subprojects {
             dependency('org.apache.commons:commons-compress:1.27.1') // used by testcontainers
             dependency('com.google.guava:guava:33.4.0-jre') // used by checkstyle
 
+            /* JSoup HTML test support */
+            dependency('org.jsoup:jsoup:1.21.1')
+            dependency('com.icegreen:greenmail:2.1.3')
+
             /* Wiremock Spring Boot integration */
             dependency('org.wiremock.integrations:wiremock-spring-boot:3.7.0')
         }

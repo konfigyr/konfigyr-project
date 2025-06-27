@@ -1,7 +1,7 @@
 {
   "groups": [
     {
-      "name": "konfogyr.invitations",
+      "name": "konfigyr.invitations",
       "type": "com.konfigyr.namespace.Invitations",
       "sourceType": "com.konfigyr.namespace.Invitations"
     }

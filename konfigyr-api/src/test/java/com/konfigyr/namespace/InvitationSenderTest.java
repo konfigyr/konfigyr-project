@@ -2,7 +2,6 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.mail.Mail;
-import com.konfigyr.mail.Mailer;
 import com.konfigyr.mail.Recipient;
 import com.konfigyr.mail.Subject;
 import com.konfigyr.support.FullName;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSendException;
@@ -34,9 +32,6 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 
 	@Autowired
 	DSLContext context;
-
-	@Mock
-	Mailer mailer;
 
 	@Captor
 	ArgumentCaptor<Mail> captor;

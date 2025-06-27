@@ -1,0 +1,24 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{mail/layout}"
+      lang="en">
+<head>
+    <title th:text="#{email-verification.subject}">
+        Confirm your email change
+    </title>
+</head>
+<body>
+<header layout:fragment="header">
+    <h1 th:text="#{email-verification.subject}">
+        Confirm your email change
+    </h1>
+</header>
+<main layout:fragment="main">
+    <th:block th:utext="${#messages.msg('email-verification.contents', code, expiration)}">
+        Your email verification code is: 123456
+    </th:block>
+</main>
+</body>
+</html>

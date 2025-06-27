@@ -1,5 +1,6 @@
 package com.konfigyr.account;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.support.Avatar;
@@ -58,6 +59,7 @@ public record Account(
 	 * @return account's first name, can be {@literal null}
 	 */
 	@Nullable
+	@JsonGetter
 	public String firstName() {
 		return fullName == null ? null : fullName.firstName();
 	}
@@ -68,6 +70,7 @@ public record Account(
 	 * @return account's last name, can be {@literal null}
 	 */
 	@Nullable
+	@JsonGetter
 	public String lastName() {
 		return fullName == null ? null : fullName.lastName();
 	}

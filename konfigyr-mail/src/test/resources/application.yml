@@ -1,0 +1,7 @@
+spring:
+  mail:
+    host: localhost
+
+logging:
+  level:
+    org.springframework: DEBUG

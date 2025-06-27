@@ -3,6 +3,10 @@ apply plugin: 'java-library'
 dependencies {
     compileOnly project(':konfigyr-core')
 
+    /* Konfigyr Mail API and Green Mail SMTP test server */
+    compileOnly 'com.konfigyr:konfigyr-mail-api'
+    compileOnly 'com.icegreen:greenmail'
+
     /* Spring WebMvc support */
     compileOnly 'org.springframework:spring-webmvc'
     compileOnly 'jakarta.servlet:jakarta.servlet-api'
@@ -29,6 +33,8 @@ dependencies {
     api 'org.testcontainers:postgresql'
 
     testImplementation project(':konfigyr-core')
+    testImplementation 'com.icegreen:greenmail'
+    testImplementation 'com.konfigyr:konfigyr-mail-api'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.security:spring-security-oauth2-core'
 

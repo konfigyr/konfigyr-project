@@ -64,6 +64,10 @@ class ProblemDetailAssertTest {
 		assertThatThrownBy(() -> ProblemDetailAssert.assertThat(problem).hasProperty("foo", "baz"))
 				.isInstanceOf(AssertionError.class)
 				.hasMessageContaining("Problem Details should have a \"foo\" property that has a value of: baz");
+
+		assertThatThrownBy(() -> ProblemDetailAssert.assertThat(problem)
+				.hasPropertySatisfying("foo", it -> assertThat(it).isEqualTo("baz")))
+				.isInstanceOf(AssertionError.class);
 	}
 
 }

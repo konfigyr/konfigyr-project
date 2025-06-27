@@ -2,6 +2,8 @@ package com.konfigyr.test;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.konfigyr.feature.Features;
+import com.konfigyr.mail.Mailer;
+import com.konfigyr.test.smtp.TestSmtpServer;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
@@ -20,6 +22,7 @@ import org.wiremock.spring.InjectWireMock;
 @TestProfile
 @SpringBootTest
 @EnableWireMock
+@TestSmtpServer
 @ImportTestcontainers(TestContainers.class)
 @ExtendWith(PublishedEventsExtension.class)
 public abstract class AbstractIntegrationTest {
@@ -36,5 +39,12 @@ public abstract class AbstractIntegrationTest {
 	 */
 	@MockitoSpyBean
 	protected Features features;
+
+	/**
+	 * The {@link Mailer} Bean that is being {@link org.mockito.Spy spied} upon by Mockito in order
+	 * to intercept and inspect {@link com.konfigyr.mail.Mail Mail messages}.
+	 */
+	@MockitoSpyBean
+	protected Mailer mailer;
 
 }

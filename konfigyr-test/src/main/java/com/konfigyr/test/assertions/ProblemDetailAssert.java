@@ -3,6 +3,7 @@ package com.konfigyr.test.assertions;
 import org.assertj.core.api.AbstractObjectAssert;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactory;
+import org.assertj.core.api.ThrowingConsumer;
 import org.assertj.core.error.BasicErrorMessageFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -10,7 +11,6 @@ import org.springframework.lang.NonNull;
 
 import java.net.URI;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  * Assert class that should be used to test {@link ProblemDetail}.
@@ -225,13 +225,14 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	}
 
 	/**
-	 * Checks if the given {@link ProblemDetail} has a property with a matching name and value.
+	 * Checks if the given {@link ProblemDetail} has a property that satisfies the given requirements
+	 * expressed as a {@link ThrowingConsumer}.
 	 *
 	 * @param name the property name
 	 * @param consumer consumer used to evaluate the property value
 	 * @return the problem detail assert object, never {@literal null}
 	 */
-	public ProblemDetailAssert hasPropertySatisfying(String name, Consumer<Object> consumer) {
+	public ProblemDetailAssert hasPropertySatisfying(String name, ThrowingConsumer<Object> consumer) {
 		return satisfies(it -> Assertions.assertThat(it.getProperties())
 				.as("Problem Details should have a \"%s\" property", name)
 				.hasEntrySatisfying(name, consumer));

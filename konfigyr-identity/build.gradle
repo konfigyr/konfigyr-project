@@ -8,6 +8,7 @@ apply from: '../gradle/build-image.gradle'
 dependencies {
     implementation project(':konfigyr-core')
     implementation project(':konfigyr-data')
+    implementation project(':konfigyr-mail')
 
     /* Spring Boot starter */
     implementation 'org.springframework.boot:spring-boot-starter-mail'
@@ -27,10 +28,6 @@ dependencies {
 
     /* Spring JDBC session implementation */
     implementation 'org.springframework.session:spring-session-jdbc'
-
-    /* Konfigyr Mail using SMTP and Thymeleaf template engine */
-    implementation 'com.konfigyr:konfigyr-mail-smtp'
-    implementation 'com.konfigyr:konfigyr-mail-thymeleaf'
 
     /* Spring Boot Thymeleaf */
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'

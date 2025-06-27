@@ -1,6 +1,5 @@
 package com.konfigyr.security;
 
-import com.konfigyr.security.csrf.CsrfRequestMatcher;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,9 +43,7 @@ public class WebSecurityConfiguration {
 						.authenticated()
 				)
 				.cors(Customizer.withDefaults())
-				.csrf(csrf -> csrf
-						.requireCsrfProtectionMatcher(new CsrfRequestMatcher(bearerTokenResolver))
-				)
+				.csrf(AbstractHttpConfigurer::disable)
 				.logout(AbstractHttpConfigurer::disable)
 				.httpBasic(AbstractHttpConfigurer::disable)
 				.formLogin(AbstractHttpConfigurer::disable)

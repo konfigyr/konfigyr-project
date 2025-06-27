@@ -1,13 +1,11 @@
 package com.konfigyr.hateoas;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.konfigyr.security.access.AccessControlDecision;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.*;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -113,7 +111,7 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 			@NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
 		final ProblemDetail body = ex.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
-		body.setProperty("errors", List.of(Error.parameter(
+		body.setProperty("errors", List.of(ValidationError.parameter(
 				ex.getParameterName(),
 				ex.getLocalizedMessage()
 		)));
@@ -127,10 +125,10 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 			@NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
 		final Locale locale = LocaleContextHolder.getLocale();
-		final List<Error> errors = new ArrayList<>();
+		final List<ValidationError> errors = new ArrayList<>();
 
 		for (FieldError error : ex.getFieldErrors()) {
-			errors.add(Error.pointer(error.getField(), messageFor(error, locale)));
+			errors.add(ValidationError.pointer(error.getField(), messageFor(error, locale)));
 		}
 
 		final ProblemDetail body = ex.updateAndGetBody(getMessageSource(), locale);
@@ -162,20 +160,20 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 			@NonNull HttpHeaders headers, @NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
 		final Locale locale = LocaleContextHolder.getLocale();
-		final List<Error> errors = new ArrayList<>();
+		final List<ValidationError> errors = new ArrayList<>();
 
 		for (ParameterValidationResult result : results) {
 			final MethodParameter parameter = result.getMethodParameter();
 
 			for (MessageSourceResolvable resolvable : result.getResolvableErrors()) {
-				final Error error;
+				final ValidationError error;
 
 				if (parameter.hasParameterAnnotation(RequestHeader.class)) {
-					error = Error.header(parameter.getParameterName(), messageFor(resolvable, locale));
+					error = ValidationError.header(parameter.getParameterName(), messageFor(resolvable, locale));
 				} else if (parameter.hasParameterAnnotation(RequestParam.class)) {
-					error = Error.parameter(parameter.getParameterName(), messageFor(resolvable, locale));
+					error = ValidationError.parameter(parameter.getParameterName(), messageFor(resolvable, locale));
 				} else {
-					error = Error.pointer(parameter.getParameterName(), messageFor(resolvable, locale));
+					error = ValidationError.pointer(parameter.getParameterName(), messageFor(resolvable, locale));
 				}
 
 				errors.add(error);
@@ -211,23 +209,4 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 		return authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(" "));
 	}
 
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	record Error(
-			@NonNull String detail,
-			@Nullable String pointer,
-			@Nullable String parameter,
-			@Nullable String header
-	) {
-		static Error pointer(String name, String detail) {
-			return new Error(detail, name, null, null);
-		}
-
-		static Error parameter(String name, String detail) {
-			return new Error(detail, null, name, null);
-		}
-
-		static Error header(String name, String detail) {
-			return new Error(detail, null, null, name);
-		}
-	}
 }
