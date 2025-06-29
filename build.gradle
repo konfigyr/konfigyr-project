@@ -1,6 +1,6 @@
 plugins {
-    id 'io.freefair.lombok' version '8.12.1' apply false
-    id 'org.springframework.boot' version '3.4.2' apply false
+    id 'io.freefair.lombok' version '8.14' apply false
+    id 'org.springframework.boot' version '3.5.3' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
@@ -26,11 +26,12 @@ subprojects {
         annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-        implementation 'com.github.spotbugs:spotbugs-annotations:4.9.1'
+        implementation 'com.github.spotbugs:spotbugs-annotations:4.9.3'
 
-        checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.43'
+        checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.47'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly('org.junit.platform:junit-platform-launcher')
     }
 
     dependencyManagement {
@@ -59,20 +60,24 @@ subprojects {
 
             /* Fix Dependabot alerts */
             dependency('org.apache.commons:commons-compress:1.27.1') // used by testcontainers
-            dependency('com.google.guava:guava:33.4.0-jre') // used by checkstyle
+            dependency('com.google.guava:guava:33.4.8-jre') // used by checkstyle
 
             /* JSoup HTML test support */
             dependency('org.jsoup:jsoup:1.21.1')
             dependency('com.icegreen:greenmail:2.1.3')
 
             /* Wiremock Spring Boot integration */
-            dependency('org.wiremock.integrations:wiremock-spring-boot:3.7.0')
+            dependency('org.wiremock.integrations:wiremock-spring-boot:3.10.0')
         }
     }
 
     java {
         withJavadocJar()
         withSourcesJar()
+
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(24)
+        }
     }
 
     test {

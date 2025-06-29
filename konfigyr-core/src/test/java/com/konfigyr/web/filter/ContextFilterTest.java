@@ -15,7 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.FixedLocaleResolver;
 
@@ -56,7 +56,7 @@ class ContextFilterTest {
 	@Test
 	@DisplayName("should filter request when matcher matches")
 	void shouldFilterRequestWhenMatcherMatches() throws Exception {
-		final var filter = new ContextFilter(AntPathRequestMatcher.antMatcher("/test-url/**"));
+		final var filter = new ContextFilter(PathPatternRequestMatcher.withDefaults().matcher("/test-url/**"));
 
 		filter(filter, "/test-url", (request, response) ->
 				assertThat(MDC.getCopyOfContextMap()).isNotEmpty());
