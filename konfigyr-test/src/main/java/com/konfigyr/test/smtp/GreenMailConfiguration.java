@@ -3,9 +3,13 @@ package com.konfigyr.test.smtp;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
+import org.springframework.lang.NonNull;
 import org.springframework.test.context.DynamicPropertyRegistrar;
+import org.springframework.test.context.TestContext;
+import org.springframework.test.context.TestExecutionListener;
 
 final class GreenMailConfiguration implements SmartLifecycle, InitializingBean {
 
@@ -53,6 +57,17 @@ final class GreenMailConfiguration implements SmartLifecycle, InitializingBean {
 	@Override
 	public void stop() {
 		server.stop();
+	}
+
+	static class GreenMailTestExecutionListener implements TestExecutionListener {
+
+		@Override
+		public void afterTestMethod(@NonNull TestContext context) {
+			final ApplicationContext applicationContext = context.getApplicationContext();
+			final GreenMail server = applicationContext.getBean(GreenMail.class);
+			server.reset();
+		}
+
 	}
 
 }

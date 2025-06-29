@@ -5,18 +5,18 @@
       layout:decorate="~{mail/layout}"
       lang="en">
 <head>
-    <title th:text="#{email-verification.subject}">
+    <title th:text="#{mail.email-verification.subject}">
         Confirm your email change
     </title>
 </head>
 <body>
 <header layout:fragment="header">
-    <h1 th:text="#{email-verification.subject}">
+    <h1 th:text="#{mail.email-verification.subject}">
         Confirm your email change
     </h1>
 </header>
 <main layout:fragment="main">
-    <th:block th:utext="${#messages.msg('email-verification.contents', code, expiration)}">
+    <th:block th:utext="${#messages.msg('mail.email-verification.contents', code, expiration)}">
         Your email verification code is: 123456
     </th:block>
 </main>

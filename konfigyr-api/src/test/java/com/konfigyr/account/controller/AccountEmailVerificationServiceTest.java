@@ -63,7 +63,7 @@ class AccountEmailVerificationServiceTest extends AbstractIntegrationTest {
 		verify(mailer).send(captor.capture());
 
 		MailAssert.assertThat(captor.getValue())
-				.hasSubject("email-verification.subject")
+				.hasSubject("mail.email-verification.subject")
 				.hasTemplate("mail/email-verification")
 				.hasRecipients(Recipient.to("john-doe@konfigyr.com"))
 				.hasAttribute("expiration", 5L)
@@ -180,13 +180,5 @@ class AccountEmailVerificationServiceTest extends AbstractIntegrationTest {
 				.returns(AccountEmailVerificationException.ErrorCode.INVALID_VERIFICATION_CODE, AccountEmailVerificationException::getCode)
 				.withNoCause();
 	}
-
-//	@Test
-//	@DisplayName("should fail to verify code using a non JWT token value")
-//	void verif() {
-//		assertThat(verifier.verifyToken("invalid-token", "123456"))
-//				.isEqualTo("john-doe@konfigyr.com");
-//
-//	}
 
 }

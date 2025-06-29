@@ -1,0 +1,37 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{mail/layout}"
+      lang="en">
+<head>
+    <title th:text="${#messages.msg('mail.invitation.subject', namespace)}">
+        Invitation to Konfigyr organization
+    </title>
+</head>
+<body>
+<header layout:fragment="header">
+</header>
+<main layout:fragment="main">
+    <th:block th:utext="${#messages.msg('mail.invitation.title', sender, namespace)}">
+        John invited you to join Konfigyr organization.
+    </th:block>
+
+    <table>
+        <tr>
+            <td style="text-align: center; padding: 1rem 0">
+                <a th:href="${link}">
+                    <th:block th:text="${#messages.msg('mail.invitation.cta', namespace)}">
+                        Join organization
+                    </th:block>
+                </a>
+            </td>
+        </tr>
+    </table>
+
+    <th:block th:utext="${#messages.msg('mail.invitation.expiry', expiration, #temporals.format(expiration, 'EEEE, MMMM d, yyyy'))}">
+        This invitation would expire Sunday, July 6, 2025.
+    </th:block>
+</main>
+</body>
+</html>

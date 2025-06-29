@@ -40,9 +40,4 @@ class GreenMailConfigurationTest {
 		});
 	}
 
-	@TestSmtpServer
-	static class GreenMailTestConfiguration {
-
-	}
-
 }
