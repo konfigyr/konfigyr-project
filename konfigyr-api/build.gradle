@@ -7,6 +7,7 @@ apply from: '../gradle/build-image.gradle'
 dependencies {
     implementation project(':konfigyr-core')
     implementation project(':konfigyr-data')
+    implementation project(':konfigyr-mail')
 
     /* Spring Boot starter */
     implementation 'org.springframework.boot:spring-boot-starter-mail'
@@ -23,12 +24,6 @@ dependencies {
     /* Spring Common libraries */
     implementation 'org.springframework.retry:spring-retry'
 
-    /* Konfigyr Mail using SMTP and Thymeleaf template engine */
-    implementation 'com.konfigyr:konfigyr-mail-smtp'
-    implementation 'com.konfigyr:konfigyr-mail-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
-
     implementation 'org.bouncycastle:bcprov-jdk18on'
 
     /* Liquibase - migrations runtime  */
@@ -40,5 +35,6 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     testImplementation project(':konfigyr-test')
+    testImplementation 'com.icegreen:greenmail'
     testImplementation 'org.wiremock.integrations:wiremock-spring-boot'
 }

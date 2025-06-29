@@ -152,6 +152,27 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	}
 
 	/**
+	 * Creates a {@link RequestPostProcessor} that would generate a JWT OAuth2 Access Token using the
+	 * given subject claim and append it as an {@link HttpHeaders#AUTHORIZATION} header to the mock request.
+	 * <p>
+	 * The JWT contains the {@code iss} claim that uses the current Wiremock Server URL and a {@code sub} claim
+	 * that uses the value extracted from the authentication name.
+	 *
+	 * @param subject subject claim for which access token is generated, can't be {@literal null}
+	 * @return the post processor, never {@literal null}
+	 */
+	@NonNull
+	protected static RequestPostProcessor authentication(@NonNull String subject, OAuthScope... scopes) {
+		return authentication(claims -> claims
+				.subject(subject)
+				.claim("scope", Arrays.stream(scopes)
+						.map(OAuthScope::getAuthority)
+						.collect(Collectors.joining(" "))
+				)
+		);
+	}
+
+	/**
 	 * Creates a {@link RequestPostProcessor} that would generate a JWT OAuth2 Access Token from this
 	 * {@link Authentication} and append it as an {@link HttpHeaders#AUTHORIZATION} header to the mock request.
 	 * <p>
@@ -163,13 +184,7 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 */
 	@NonNull
 	protected static RequestPostProcessor authentication(@NonNull Authentication authentication, OAuthScope... scopes) {
-		return authentication(claims -> claims
-				.subject(authentication.getName())
-				.claim("scope", Arrays.stream(scopes)
-						.map(OAuthScope::getAuthority)
-						.collect(Collectors.joining(" "))
-				)
-		);
+		return authentication(authentication.getName(), scopes);
 	}
 
 	/**

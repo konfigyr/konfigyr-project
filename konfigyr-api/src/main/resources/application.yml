@@ -8,8 +8,19 @@ spring:
     caffeine:
       spec: recordStats,expireAfterWrite=20m
 
+  mail:
+    host: smtp.resend.com
+    port: 587
+    username: resend
+    properties:
+      mail.smtp.starttls.required: true
+      mail.smtp.starttls.enable: true
+    sender:
+      name: Konfigyr
+      email: noreply@konfigyr.com
+
   messages:
-     basename: messages/problem-detail
+     basename: messages/email, messages/problem-detail
 
   liquibase:
     change-log: classpath:migrations/konfigyr-api-changelog.xml

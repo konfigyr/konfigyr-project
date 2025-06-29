@@ -20,6 +20,6 @@ public @interface IntegrationTest {
 	 * @return the component classes used to load the application context
 	 */
 	@AliasFor(attribute = "classes", annotation = SpringBootTest.class)
-	String[] value() default {};
+	Class[] value() default {};
 
 }

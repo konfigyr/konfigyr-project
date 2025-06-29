@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      th:lang="${#locale.language}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE" th:text="#{konfigyr.title}">
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">
         Konfigyr
     </title>
 
@@ -83,13 +84,13 @@
         }
     </style>
 </head>
-<body class="body-gradient">
+<body>
     <table style="background: #FFF; margin: auto; max-width: 600px">
         <tbody>
             <tr>
                 <td style="padding: 40px 10px 10px">
                     <header id="header" layout:fragment="header">
-                        <h1 style="margin: 0; font-weight: 600" th:text="#{konfigyr.title}">Konfigyr</h1>
+                        <h1 style="margin: 0; font-weight: 600">Konfigyr</h1>
                     </header>
                 </td>
             </tr>
@@ -105,7 +106,7 @@
             <tr>
                 <td style="padding: 10px 10px 40px; text-align: center">
                     <footer id="footer" layout:fragment="footer">
-                        <p >Made with ❤️ in Berlin.</p>
+                        <p>Made with ❤️ in Berlin.</p>
                     </footer>
                 </td>
             </tr>

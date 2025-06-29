@@ -47,23 +47,18 @@ class InvitationSender {
 		final Record invitation = lookupInvitation(event);
 		final String namespace = invitation.get(NAMESPACES.SLUG);
 
-		final String namespaceLink = createUriComponentsBuilder(event.host())
-				.pathSegment("namespace", namespace)
-				.toUriString();
-
 		final String invitationLink = createUriComponentsBuilder(event.host())
 				.pathSegment("namespace", namespace, "members", "invitation", event.key())
 				.toUriString();
 
 		final Mail mail = Mail.builder()
-				.subject("mail.invitation", invitation.get(NAMESPACES.NAME))
+				.subject("mail.invitation.subject", invitation.get(NAMESPACES.NAME))
 				.template("mail/invitation")
 				.to(invitation.get(INVITATIONS.RECIPIENT_EMAIL))
 				.attribute("invitation", invitation)
 				.attribute("namespace", invitation.get(NAMESPACES.NAME))
 				.attribute("sender", FullName.of(invitation.get(ACCOUNTS.FIRST_NAME), invitation.get(ACCOUNTS.LAST_NAME)))
 				.attribute("expiration", invitation.get(INVITATIONS.EXPIRY_DATE))
-				.attribute("namespaceLink", namespaceLink)
 				.attribute("link", invitationLink)
 				.build();
 

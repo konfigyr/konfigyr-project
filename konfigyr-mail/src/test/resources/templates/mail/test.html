@@ -1,0 +1,22 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{mail/layout}"
+      lang="en">
+<head>
+    <title th:text="${title}">Welcome to Konfigyr</title>
+</head>
+<body>
+<header layout:fragment="header">
+    <h1 th:text="${title}">
+        Test Title
+    </h1>
+</header>
+<main layout:fragment="main">
+    <p th:text="${contents}">
+        Test contents
+    </p>
+</main>
+</body>
+</html>

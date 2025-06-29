@@ -12,6 +12,12 @@ spring:
           issuer-uri: http://localhost:${wiremock.server.port:8888}
 
 konfigyr:
+  account:
+    email-verification:
+      algorithm: HS384
+      secret: base64:5c2b2b9f31055ff68acb6c3be98699adbbd1a243fa65062ccc6aac4d3888edf1
+      expiration: 5m
+
   crypto:
     master-key:
       value: F95fYHXZgV1SFko-HZJShmF70ys8tXP9LGnW6cX5dmc=

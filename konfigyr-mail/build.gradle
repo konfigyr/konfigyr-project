@@ -1,0 +1,20 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    /* Spring Boot Mail starter */
+    api 'org.springframework.boot:spring-boot-starter-mail'
+
+    /* Konfigyr Mail using SMTP and Thymeleaf template engine */
+    api 'com.konfigyr:konfigyr-mail-smtp'
+    api 'com.konfigyr:konfigyr-mail-thymeleaf'
+
+    /* Spring Boot Thymeleaf */
+    api 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    api 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
+    testImplementation project(':konfigyr-test')
+    testImplementation 'com.icegreen:greenmail'
+    testImplementation 'org.jsoup:jsoup'
+}

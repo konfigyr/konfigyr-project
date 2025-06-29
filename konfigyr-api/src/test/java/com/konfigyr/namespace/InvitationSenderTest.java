@@ -2,11 +2,10 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.mail.Mail;
-import com.konfigyr.mail.Mailer;
 import com.konfigyr.mail.Recipient;
-import com.konfigyr.mail.Subject;
 import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractIntegrationTest;
+import com.konfigyr.test.assertions.MailAssert;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jooq.DSLContext;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSendException;
@@ -30,13 +28,10 @@ import static org.mockito.Mockito.*;
 
 class InvitationSenderTest extends AbstractIntegrationTest {
 
-	static UriComponents host = UriComponentsBuilder.fromUriString("https://localhost:8443/namespaces?foo=bar#segment").build();
+	static UriComponents host = UriComponentsBuilder.fromUriString("https://konfigyr.com:8443/namespaces?foo=bar#segment").build();
 
 	@Autowired
 	DSLContext context;
-
-	@Mock
-	Mailer mailer;
 
 	@Captor
 	ArgumentCaptor<Mail> captor;
@@ -57,28 +52,18 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 
 		verify(mailer).send(captor.capture());
 
-		Assertions.assertThat(captor.getValue())
+		MailAssert.assertThat(captor.getValue())
 				.isNotNull()
-				.returns("mail/invitation", Mail::template)
-				.satisfies(it -> Assertions.assertThat(it.subject())
-						.returns("mail.invitation", Subject::value)
-						.extracting(Subject::arguments)
-						.asInstanceOf(InstanceOfAssertFactories.array(Object[].class))
-						.containsExactly("Konfigyr")
-				)
-				.satisfies(it -> Assertions.assertThat(it.recipients())
-						.containsExactly(Recipient.to("invitee@konfigyr.com"))
-				)
-				.satisfies(it -> Assertions.assertThat(it.attributes())
-						.containsEntry("sender", FullName.of("John", "Doe"))
-						.containsEntry("namespace", "Konfigyr")
-						.containsEntry("namespaceLink", "https://localhost:8443/namespace/konfigyr")
-						.containsEntry("link", "https://localhost:8443/namespace/konfigyr/members/invitation/09320d7f8e21143b2957f1caded74cbc")
-						.hasEntrySatisfying("expiration", date -> Assertions.assertThat(date)
-								.isInstanceOf(OffsetDateTime.class)
-								.asInstanceOf(InstanceOfAssertFactories.OFFSET_DATE_TIME)
-								.isInTheFuture()
-						)
+				.hasSubject("mail.invitation.subject", "Konfigyr")
+				.hasTemplate("mail/invitation")
+				.hasRecipients(Recipient.to("invitee@konfigyr.com"))
+				.hasAttribute("sender", FullName.of("John", "Doe"))
+				.hasAttribute("namespace", "Konfigyr")
+				.hasAttribute("link", "https://konfigyr.com:8443/namespace/konfigyr/members/invitation/09320d7f8e21143b2957f1caded74cbc")
+				.hasAttributeSatisfying("expiration", date -> Assertions.assertThat(date)
+						.isInstanceOf(OffsetDateTime.class)
+						.asInstanceOf(InstanceOfAssertFactories.OFFSET_DATE_TIME)
+						.isInTheFuture()
 				);
 	}
 

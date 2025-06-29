@@ -1,5 +1,7 @@
 package com.konfigyr.account;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.konfigyr.namespace.NamespaceRole;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.util.Streamable;
@@ -59,6 +61,7 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 	 * @return the account memberships instance, never {@literal null}
 	 */
 	@NonNull
+	@JsonCreator
 	public static Memberships of(Collection<Membership> memberships) {
 		return CollectionUtils.isEmpty(memberships) ? empty() : new Memberships(memberships);
 	}
@@ -105,6 +108,7 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 
 	@NonNull
 	@Override
+	@JsonValue
 	public Iterator<Membership> iterator() {
 		return memberships.iterator();
 	}
