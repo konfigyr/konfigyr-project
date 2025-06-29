@@ -1,5 +1,6 @@
 package com.konfigyr.test.smtp;
 
+import com.icegreen.greenmail.store.FolderException;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
 import org.springframework.beans.factory.InitializingBean;
@@ -62,10 +63,11 @@ final class GreenMailConfiguration implements SmartLifecycle, InitializingBean {
 	static class GreenMailTestExecutionListener implements TestExecutionListener {
 
 		@Override
-		public void afterTestMethod(@NonNull TestContext context) {
+		public void afterTestMethod(@NonNull TestContext context) throws FolderException {
 			final ApplicationContext applicationContext = context.getApplicationContext();
+
 			final GreenMail server = applicationContext.getBean(GreenMail.class);
-			server.reset();
+			server.purgeEmailFromAllMailboxes();
 		}
 
 	}

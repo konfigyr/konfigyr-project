@@ -134,7 +134,7 @@ class AccountEmailVerificationService {
 
 		try {
 			final Mail mail = Mail.builder()
-					.subject("email-verification.subject")
+					.subject("mail.email-verification.subject")
 					.template("mail/email-verification")
 					.to(email.toLowerCase())
 					.attribute("code", otp)
