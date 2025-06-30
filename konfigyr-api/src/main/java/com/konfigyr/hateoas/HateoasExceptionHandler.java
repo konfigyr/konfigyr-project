@@ -51,14 +51,16 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 			result = handleAuthenticationException(authenticationException, request);
 		} else if (ex instanceof AccessDeniedException accessDeniedException) {
 			result = handleAccessDeniedException(accessDeniedException, request);
-		} else if (ex instanceof ErrorResponse errorResponse) {
-			result = handleErrorResponse(errorResponse, request);
 		} else {
 			try {
 				result = handleException(ex, request);
 			} catch (Exception ignored) {
 				result = null;
 			}
+		}
+
+		if (result == null && ex instanceof ErrorResponse errorResponse) {
+			result = handleErrorResponse(errorResponse, request);
 		}
 
 		if (result == null) {

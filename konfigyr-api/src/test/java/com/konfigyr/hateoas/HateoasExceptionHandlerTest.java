@@ -16,6 +16,7 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.*;
+import org.springframework.lang.NonNull;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,6 +36,7 @@ import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.method.MethodValidationException;
 import org.springframework.validation.method.MethodValidationResult;
 import org.springframework.validation.method.ParameterValidationResult;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -71,6 +73,19 @@ class HateoasExceptionHandlerTest {
 				.hasTitle("Something went wrong")
 				.hasDetail("An unexpected error occurred while processing your request. " +
 						"Please try again later. If the issue persists, contact support.");
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
+				.isNull();
+	}
+
+	@Test
+	@DisplayName("should handle non-mapped error response exceptions")
+	void handleNonMappedErrorResponseExceptions() {
+		final var ex = new NonMappedErrorResponseException(HttpStatus.SERVICE_UNAVAILABLE, "Outage");
+
+		expectProblemDetail(ex, HttpStatus.SERVICE_UNAVAILABLE)
+				.hasTitle(HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase())
+				.hasDetail("Outage");
 
 		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
 				.isNull();
@@ -268,6 +283,9 @@ class HateoasExceptionHandlerTest {
 	}
 
 	ProblemDetailAssert expectProblemDetail(Exception ex, HttpStatusCode status) {
+		System.out.println(
+				handler.handle(request, response, ex)
+		);
 		return assertThat(handler.handle(request, response, ex))
 				.isNotNull()
 				.returns(status, ResponseEntity::getStatusCode)
@@ -317,6 +335,27 @@ class HateoasExceptionHandlerTest {
 		handler.setMessageSource(messages);
 
 		return handler;
+	}
+
+	static final class NonMappedErrorResponseException extends RuntimeException implements ErrorResponse {
+		final ProblemDetail body;
+
+		public NonMappedErrorResponseException(HttpStatusCode status, String detail) {
+			super(detail);
+			body = ProblemDetail.forStatusAndDetail(status, detail);
+		}
+
+		@NonNull
+		@Override
+		public HttpStatusCode getStatusCode() {
+			return HttpStatus.valueOf(body.getStatus());
+		}
+
+		@NonNull
+		@Override
+		public ProblemDetail getBody() {
+			return body;
+		}
 	}
 
 }
