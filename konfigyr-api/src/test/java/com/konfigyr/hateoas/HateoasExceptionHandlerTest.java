@@ -2,6 +2,7 @@ package com.konfigyr.hateoas;
 
 import com.konfigyr.security.access.AccessControlDecision;
 import com.konfigyr.test.assertions.ProblemDetailAssert;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,7 +11,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.quality.Strictness;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AuthorizationServiceException;
@@ -24,13 +28,27 @@ import org.springframework.security.web.authentication.rememberme.InvalidCookieE
 import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.csrf.InvalidCsrfTokenException;
 import org.springframework.security.web.csrf.MissingCsrfTokenException;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.MapBindingResult;
+import org.springframework.validation.method.MethodValidationException;
+import org.springframework.validation.method.MethodValidationResult;
+import org.springframework.validation.method.ParameterValidationResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.util.WebUtils;
 
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThatException;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class HateoasExceptionHandlerTest {
@@ -40,12 +58,137 @@ class HateoasExceptionHandlerTest {
 	@Mock
 	WebRequest request;
 
+	@Test
+	@DisplayName("should fail to handle non-mapped exceptions")
+	void nonMappedExceptions() {
+		final var ex = new IllegalArgumentException();
+
+		assertThatException()
+				.isThrownBy(() -> handler.handleException(ex, request))
+				.isEqualTo(ex);
+	}
+
+	@Test
+	@DisplayName("should handle missing servlet request parameter exception")
+	void missingServletRequestParameter() throws Exception {
+		final var ex = new MissingServletRequestParameterException("parameter", "string");
+
+		assertThat(handler.handleException(ex, request))
+				.isNotNull()
+				.returns(HttpStatus.BAD_REQUEST, ResponseEntity::getStatusCode)
+				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
+				.extracting(HttpEntity::getBody)
+				.isInstanceOf(ProblemDetail.class)
+				.asInstanceOf(ProblemDetailAssert.factory())
+				.hasDefaultType()
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.hasTitle("Bad Request")
+				.hasDetail("Required parameter 'parameter' is not present.")
+				.hasProperty("errors", List.of(
+						ValidationError.parameter("parameter", ex.getLocalizedMessage())
+				));
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+				.isNull();
+	}
+
+	@Test
+	@DisplayName("should handle method argument invalid exception")
+	void methodArgumentInvalid() throws Exception {
+		final var parameter = mock(MethodParameter.class);
+		final var errors = new MapBindingResult(Map.of(), "map");
+		errors.addError(new FieldError("map", "field_name", "required field"));
+		errors.addError(new FieldError("map", "field_name", "invalid field"));
+
+		final var ex = new MethodArgumentNotValidException(parameter, errors);
+
+		assertThat(handler.handleException(ex, request))
+				.isNotNull()
+				.returns(HttpStatus.BAD_REQUEST, ResponseEntity::getStatusCode)
+				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
+				.extracting(HttpEntity::getBody)
+				.isInstanceOf(ProblemDetail.class)
+				.asInstanceOf(ProblemDetailAssert.factory())
+				.hasDefaultType()
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.hasTitle("Invalid request content")
+				.hasDetail("Your request contains invalid request data, please check the error response for more information.")
+				.hasPropertySatisfying("errors", it -> assertThat(it)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(ValidationError.class))
+						.containsExactlyInAnyOrder(
+								ValidationError.pointer("field_name", "required field"),
+								ValidationError.pointer("field_name", "invalid field")
+						)
+				);
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+				.isNull();
+	}
+
+	@Test
+	@DisplayName("should handler method validation exception")
+	void handlerMethodValidationException() throws Exception {
+		final var ex = new HandlerMethodValidationException(createMethodValidationResult());
+
+		assertThat(handler.handleException(ex, request))
+				.isNotNull()
+				.returns(HttpStatus.BAD_REQUEST, ResponseEntity::getStatusCode)
+				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
+				.extracting(HttpEntity::getBody)
+				.isInstanceOf(ProblemDetail.class)
+				.asInstanceOf(ProblemDetailAssert.factory())
+				.hasDefaultType()
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.hasTitle("Invalid request content")
+				.hasDetail("Your request contains invalid request data, please check the error response for more information.")
+				.hasPropertySatisfying("errors", errors -> assertThat(errors)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(ValidationError.class))
+						.containsExactlyInAnyOrder(
+								ValidationError.header("header", "Missing request header"),
+								ValidationError.parameter("request", "Missing request parameter"),
+								ValidationError.pointer("body", "Invalid request body")
+						)
+				);
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+				.isNull();
+	}
+
+	@Test
+	@DisplayName("should method validation exception")
+	void methodValidationException() throws Exception {
+		final var ex = new MethodValidationException(createMethodValidationResult());
+
+		System.out.println(handler.handleException(ex, request));
+		assertThat(handler.handleException(ex, request))
+				.isNotNull()
+				.returns(HttpStatus.BAD_REQUEST, ResponseEntity::getStatusCode)
+				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
+				.extracting(HttpEntity::getBody)
+				.isInstanceOf(ProblemDetail.class)
+				.asInstanceOf(ProblemDetailAssert.factory())
+				.hasDefaultType()
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.hasTitle("Invalid request content")
+				.hasDetail("Your request contains invalid request data, please check the error response for more information.")
+				.hasPropertySatisfying("errors", errors -> assertThat(errors)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(ValidationError.class))
+						.containsExactlyInAnyOrder(
+								ValidationError.header("header", "Missing request header"),
+								ValidationError.parameter("request", "Missing request parameter"),
+								ValidationError.pointer("body", "Invalid request body")
+						)
+				);
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+				.isNull();
+	}
+
 	@MethodSource("authorization")
 	@DisplayName("should handle authorization denied exceptions")
 	@ParameterizedTest(name = "should create error response for exception {0} with status code {1}")
 	void shouldHandleAccessDeniedException(Class<? extends AccessDeniedException> type, HttpStatusCode status) {
 		final var ex = mock(type);
-		doReturn("default error message").when(ex).getMessage();
 
 		assertThat(handler.handleAccessDeniedException(ex, request))
 				.isNotNull()
@@ -56,7 +199,16 @@ class HateoasExceptionHandlerTest {
 				.asInstanceOf(ProblemDetailAssert.factory())
 				.hasDefaultType()
 				.hasStatus(status)
-				.hasDetailContaining("default error message");
+				.satisfies(it -> assertThat(it.getTitle())
+						.isNotBlank()
+				)
+				.satisfies(it -> assertThat(it.getDetail())
+						.isNotBlank()
+						.isNotEqualTo(ex.getMessage())
+				);
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+				.isNull();
 	}
 
 	static Stream<Arguments> authorization() {
@@ -131,7 +283,6 @@ class HateoasExceptionHandlerTest {
 	@ParameterizedTest(name = "should create error response for exception {0} with status code {1}")
 	void shouldHandleAuthenticationException(Class<? extends AuthenticationException> type, HttpStatusCode status) {
 		final var ex = mock(type);
-		doReturn("default error message").when(ex).getMessage();
 
 		assertThat(handler.handleAuthenticationException(ex, request))
 				.isNotNull()
@@ -142,7 +293,16 @@ class HateoasExceptionHandlerTest {
 				.asInstanceOf(ProblemDetailAssert.factory())
 				.hasDefaultType()
 				.hasStatus(status)
-				.hasDetailContaining("default error message");
+				.satisfies(it -> assertThat(it.getTitle())
+						.isNotBlank()
+				)
+				.satisfies(it -> assertThat(it.getDetail())
+						.isNotBlank()
+						.isNotEqualTo(ex.getMessage())
+				);
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+				.isNull();
 	}
 
 	static Stream<Arguments> authentication() {
@@ -154,6 +314,37 @@ class HateoasExceptionHandlerTest {
 				Arguments.of(AuthenticationCredentialsNotFoundException.class, HttpStatus.UNAUTHORIZED),
 				Arguments.of(BadCredentialsException.class, HttpStatus.UNAUTHORIZED)
 		);
+	}
+
+	static MethodValidationResult createMethodValidationResult() {
+		final var result = mock(MethodValidationResult.class);
+
+		doReturn(List.of(
+				createParameterValidationResult("header", "Missing request header"),
+				createParameterValidationResult("request", "Missing request parameter"),
+				createParameterValidationResult("body", "Invalid request body")
+		)).when(result).getParameterValidationResults();
+
+		return result;
+	}
+
+	static ParameterValidationResult createParameterValidationResult(String name, String errorMessage) {
+		final var parameter = mock(MethodParameter.class, withSettings().strictness(Strictness.LENIENT));
+		doReturn(name).when(parameter).getParameterName();
+
+		final var resolvable = new DefaultMessageSourceResolvable(new String[] {"error-code"}, errorMessage);
+
+		if (name.equalsIgnoreCase("header")) {
+			doReturn(true).when(parameter).hasParameterAnnotation(eq(RequestHeader.class));
+		} else if (name.equalsIgnoreCase("request")) {
+			doReturn(true).when(parameter).hasParameterAnnotation(eq(RequestParam.class));
+		}
+
+		final var result = mock(ParameterValidationResult.class);
+		doReturn(parameter).when(result).getMethodParameter();
+		doReturn(List.of(resolvable)).when(result).getResolvableErrors();
+
+		return result;
 	}
 
 	static HateoasExceptionHandler create() {
