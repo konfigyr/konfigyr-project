@@ -340,7 +340,7 @@ class HateoasExceptionHandlerTest {
 	static final class NonMappedErrorResponseException extends RuntimeException implements ErrorResponse {
 		final ProblemDetail body;
 
-		public NonMappedErrorResponseException(HttpStatusCode status, String detail) {
+		NonMappedErrorResponseException(HttpStatusCode status, String detail) {
 			super(detail);
 			body = ProblemDetail.forStatusAndDetail(status, detail);
 		}
