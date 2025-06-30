@@ -39,7 +39,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
-public class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements WebExceptionHandler {
+class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements WebExceptionHandler {
 
 	@NonNull
 	@Override
@@ -67,7 +67,7 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler impl
 	}
 
 	@ExceptionHandler(AuthenticationException.class)
-	public final ResponseEntity<Object> handleAuthenticationException(@NonNull AuthenticationException ex, @NonNull WebRequest request) {
+	final ResponseEntity<Object> handleAuthenticationException(@NonNull AuthenticationException ex, @NonNull WebRequest request) {
 		final HttpHeaders headers = new HttpHeaders();
 
 		return switch (ex) {
@@ -90,7 +90,7 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler impl
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
-	public final ResponseEntity<Object> handleAccessDeniedException(@NonNull AccessDeniedException ex, @NonNull WebRequest request) {
+	final ResponseEntity<Object> handleAccessDeniedException(@NonNull AccessDeniedException ex, @NonNull WebRequest request) {
 		return switch (ex) {
 			case AuthorizationDeniedException exception -> handleAuthorizationDeniedException(
 					exception, request
