@@ -51,6 +51,8 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 			result = handleAuthenticationException(authenticationException, request);
 		} else if (ex instanceof AccessDeniedException accessDeniedException) {
 			result = handleAccessDeniedException(accessDeniedException, request);
+		} else if (ex instanceof ErrorResponse errorResponse) {
+			result = handleErrorResponse(errorResponse, request);
 		} else {
 			try {
 				result = handleException(ex, request);
@@ -103,6 +105,11 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 				yield handleExceptionInternal(ex, body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
 			}
 		};
+	}
+
+	final ResponseEntity<Object> handleErrorResponse(@NonNull ErrorResponse errorResponse, @NonNull WebRequest request) {
+		final ProblemDetail body = errorResponse.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+		return createResponseEntity(body, errorResponse.getHeaders(), errorResponse.getStatusCode(), request);
 	}
 
 	protected ResponseEntity<Object> handleAuthorizationDeniedException(

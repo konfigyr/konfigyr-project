@@ -9,14 +9,11 @@ import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
-import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
-import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
@@ -25,7 +22,7 @@ import java.time.temporal.ChronoUnit;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-class MembersControllerTest extends AbstractControllerTest {
+class MembersControllerTest extends AbstractNamespaceControllerTest {
 
 	@Test
 	@DisplayName("should retrieve members for namespace")
@@ -146,10 +143,7 @@ class MembersControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-						.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-						.hasDetailContaining("Could not find a namespace")
-				));
+				.satisfies(namespaceNotFound("unknown"));
 	}
 
 	@Test
@@ -213,10 +207,7 @@ class MembersControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
-						.hasDetailContaining("Last administrator member cannot be updated to user")
-				));
+				.satisfies(operationNotSupported());
 	}
 
 	@Test
@@ -248,17 +239,14 @@ class MembersControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should fail to update member for unknown namespace")
 	void updateMemberForUnknownNamespace() {
-		mvc.put().uri("/namespaces/{slug}/members/{id}", "unknown", EntityId.from(1).serialize())
+		mvc.put().uri("/namespaces/{slug}/members/{id}", "unknown-namespace", EntityId.from(1).serialize())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"role\":\"USER\"}")
 				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-						.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-						.hasDetailContaining("Could not find a namespace")
-				));
+				.satisfies(namespaceNotFound("unknown-namespace"));
 	}
 
 	@Test
@@ -308,10 +296,7 @@ class MembersControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
-						.hasDetailContaining("Last administrator member cannot be removed")
-				));
+				.satisfies(operationNotSupported());
 	}
 
 	@Test
@@ -344,10 +329,7 @@ class MembersControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-						.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-						.hasDetailContaining("Could not find a namespace")
-				));
+				.satisfies(namespaceNotFound("unknown"));
 	}
 
 	@Test
@@ -370,14 +352,6 @@ class MembersControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
-	}
-
-	static ThrowingConsumer<MvcTestResult> memberNotFound(long id) {
-		return problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-				.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-				.hasDetailContaining("Could not find a member with the following identifier: %s"
-						.formatted(EntityId.from(id).serialize()))
-		);
 	}
 
 }

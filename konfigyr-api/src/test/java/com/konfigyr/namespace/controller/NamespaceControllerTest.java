@@ -6,7 +6,6 @@ import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.security.OAuthScope;
-import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +22,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-class NamespaceControllerTest extends AbstractControllerTest {
+class NamespaceControllerTest extends AbstractNamespaceControllerTest {
 
 	@Test
 	@DisplayName("should retrieve all available namespaces for logged in John Doe principal")
@@ -125,10 +124,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-						.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-						.hasDetailContaining("Could not find a namespace")
-				));
+				.satisfies(namespaceNotFound("unknown"));
 	}
 
 	@Test
@@ -218,8 +214,8 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
-						.hasDetailContaining("Could not create namespace as one already exists")
+						.hasTitle("Organization already exists")
+						.hasDetailContaining("An organization with the same name or identifier already exists")
 				));
 	}
 
@@ -299,8 +295,8 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
-						.hasDetailContaining("Could not create namespace as one already exists")
+						.hasTitle("Organization already exists")
+						.hasDetailContaining("An organization with the same name or identifier already exists")
 				));
 	}
 
@@ -314,10 +310,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-						.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-						.hasDetailContaining("Could not find a namespace")
-				));
+				.satisfies(namespaceNotFound("unknown"));
 	}
 
 	@Test
@@ -379,10 +372,7 @@ class NamespaceControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-						.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-						.hasDetailContaining("Could not find a namespace")
-				));
+				.satisfies(namespaceNotFound("unknown"));
 	}
 
 	@Test

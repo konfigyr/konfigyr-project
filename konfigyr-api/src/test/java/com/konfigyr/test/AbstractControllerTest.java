@@ -84,11 +84,11 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * with a matching type.
 	 *
 	 * @param expectedType expected exception type, can't be {@literal null}
-	 * @return the MVC resolved exception consumer
 	 * @param <T> expected exception type
+	 * @return the MVC resolved exception consumer
 	 */
 	protected static <T extends Throwable> ThrowingConsumer<MvcTestResult> hasFailedWithException(@NonNull Class<T> expectedType) {
-		return hasFailedWithException(expectedType, ignore -> {});
+		return hasFailedWithException(expectedType, ignore -> { /* noop */ });
 	}
 
 	/**
@@ -97,8 +97,8 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 *
 	 * @param expectedType expected exception type, can't be {@literal null}
 	 * @param consumer consumer function to assert resolved exception, can't be {@literal null}
-	 * @return the MVC resolved exception consumer
 	 * @param <T> expected exception type
+	 * @return the MVC resolved exception consumer
 	 */
 	@SuppressWarnings("unchecked")
 	protected static <T extends Throwable> ThrowingConsumer<MvcTestResult> hasFailedWithException(

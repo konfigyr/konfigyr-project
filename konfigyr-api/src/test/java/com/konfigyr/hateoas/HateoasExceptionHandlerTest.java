@@ -3,19 +3,21 @@ package com.konfigyr.hateoas;
 import com.konfigyr.security.access.AccessControlDecision;
 import com.konfigyr.test.assertions.ProblemDetailAssert;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.quality.Strictness;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.*;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.*;
@@ -37,7 +39,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.util.WebUtils;
 
@@ -46,7 +47,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatException;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -55,46 +55,48 @@ class HateoasExceptionHandlerTest {
 
 	final HateoasExceptionHandler handler = create();
 
-	@Mock
-	WebRequest request;
+	MockHttpServletRequest request;
+	MockHttpServletResponse response;
+
+	@BeforeEach
+	void setup() {
+		request = new MockHttpServletRequest();
+		response = new MockHttpServletResponse();
+	}
 
 	@Test
-	@DisplayName("should fail to handle non-mapped exceptions")
-	void nonMappedExceptions() {
-		final var ex = new IllegalArgumentException();
+	@DisplayName("should handle non-mapped exceptions")
+	void handleNonMappedExceptions() {
+		expectProblemDetail(new IllegalArgumentException(), HttpStatus.INTERNAL_SERVER_ERROR)
+				.hasTitle("Something went wrong")
+				.hasDetail("An unexpected error occurred while processing your request. " +
+						"Please try again later. If the issue persists, contact support.");
 
-		assertThatException()
-				.isThrownBy(() -> handler.handleException(ex, request))
-				.isEqualTo(ex);
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
+				.isNull();
 	}
 
 	@Test
 	@DisplayName("should handle missing servlet request parameter exception")
-	void missingServletRequestParameter() throws Exception {
+	void missingServletRequestParameter() {
 		final var ex = new MissingServletRequestParameterException("parameter", "string");
 
-		assertThat(handler.handleException(ex, request))
+		expectProblemDetail(ex, HttpStatus.BAD_REQUEST)
 				.isNotNull()
-				.returns(HttpStatus.BAD_REQUEST, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
 				.hasDefaultType()
-				.hasStatus(HttpStatus.BAD_REQUEST)
 				.hasTitle("Bad Request")
 				.hasDetail("Required parameter 'parameter' is not present.")
 				.hasProperty("errors", List.of(
 						ValidationError.parameter("parameter", ex.getLocalizedMessage())
 				));
 
-		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
 				.isNull();
 	}
 
 	@Test
 	@DisplayName("should handle method argument invalid exception")
-	void methodArgumentInvalid() throws Exception {
+	void methodArgumentInvalid() {
 		final var parameter = mock(MethodParameter.class);
 		final var errors = new MapBindingResult(Map.of(), "map");
 		errors.addError(new FieldError("map", "field_name", "required field"));
@@ -102,15 +104,8 @@ class HateoasExceptionHandlerTest {
 
 		final var ex = new MethodArgumentNotValidException(parameter, errors);
 
-		assertThat(handler.handleException(ex, request))
-				.isNotNull()
-				.returns(HttpStatus.BAD_REQUEST, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
+		expectProblemDetail(ex, HttpStatus.BAD_REQUEST)
 				.hasDefaultType()
-				.hasStatus(HttpStatus.BAD_REQUEST)
 				.hasTitle("Invalid request content")
 				.hasDetail("Your request contains invalid request data, please check the error response for more information.")
 				.hasPropertySatisfying("errors", it -> assertThat(it)
@@ -121,24 +116,17 @@ class HateoasExceptionHandlerTest {
 						)
 				);
 
-		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
 				.isNull();
 	}
 
 	@Test
 	@DisplayName("should handler method validation exception")
-	void handlerMethodValidationException() throws Exception {
+	void handlerMethodValidationException() {
 		final var ex = new HandlerMethodValidationException(createMethodValidationResult());
 
-		assertThat(handler.handleException(ex, request))
-				.isNotNull()
-				.returns(HttpStatus.BAD_REQUEST, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
+		expectProblemDetail(ex, HttpStatus.BAD_REQUEST)
 				.hasDefaultType()
-				.hasStatus(HttpStatus.BAD_REQUEST)
 				.hasTitle("Invalid request content")
 				.hasDetail("Your request contains invalid request data, please check the error response for more information.")
 				.hasPropertySatisfying("errors", errors -> assertThat(errors)
@@ -150,25 +138,17 @@ class HateoasExceptionHandlerTest {
 						)
 				);
 
-		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
 				.isNull();
 	}
 
 	@Test
 	@DisplayName("should method validation exception")
-	void methodValidationException() throws Exception {
+	void methodValidationException() {
 		final var ex = new MethodValidationException(createMethodValidationResult());
 
-		System.out.println(handler.handleException(ex, request));
-		assertThat(handler.handleException(ex, request))
-				.isNotNull()
-				.returns(HttpStatus.BAD_REQUEST, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
+		expectProblemDetail(ex, HttpStatus.BAD_REQUEST)
 				.hasDefaultType()
-				.hasStatus(HttpStatus.BAD_REQUEST)
 				.hasTitle("Invalid request content")
 				.hasDetail("Your request contains invalid request data, please check the error response for more information.")
 				.hasPropertySatisfying("errors", errors -> assertThat(errors)
@@ -180,7 +160,7 @@ class HateoasExceptionHandlerTest {
 						)
 				);
 
-		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
 				.isNull();
 	}
 
@@ -190,15 +170,8 @@ class HateoasExceptionHandlerTest {
 	void shouldHandleAccessDeniedException(Class<? extends AccessDeniedException> type, HttpStatusCode status) {
 		final var ex = mock(type);
 
-		assertThat(handler.handleAccessDeniedException(ex, request))
-				.isNotNull()
-				.returns(status, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
+		expectProblemDetail(ex, status)
 				.hasDefaultType()
-				.hasStatus(status)
 				.satisfies(it -> assertThat(it.getTitle())
 						.isNotBlank()
 				)
@@ -207,7 +180,7 @@ class HateoasExceptionHandlerTest {
 						.isNotEqualTo(ex.getMessage())
 				);
 
-		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
 				.isNull();
 	}
 
@@ -225,57 +198,42 @@ class HateoasExceptionHandlerTest {
 	@DisplayName("should handle authorization denied exception with expression decision")
 	void shouldHandleExpressionAuthorizationDecision() {
 		final var result = new ExpressionAuthorizationDecision(false, null);
-		final var ex = new AuthorizationDeniedException("default error message", result);
 
-		assertThat(handler.handleAccessDeniedException(ex, request))
-				.isNotNull()
-				.returns(HttpStatus.FORBIDDEN, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
+		expectProblemDetail(new AuthorizationDeniedException("default error message", result), HttpStatus.FORBIDDEN)
 				.hasDefaultType()
-				.hasStatus(HttpStatus.FORBIDDEN)
 				.hasTitle("Access Denied")
 				.hasDetailContaining("It looks like you do not have the necessary permissions to perform this operation");
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
+				.isNull();
 	}
 
 	@Test
 	@DisplayName("should handle authorization denied exception with authorities decision")
 	void shouldHandleAuthorityAuthorizationDecision() {
 		final var result = new AuthorityAuthorizationDecision(false, AuthorityUtils.createAuthorityList("permission"));
-		final var ex = new AuthorizationDeniedException("default error message", result);
 
-		assertThat(handler.handleAccessDeniedException(ex, request))
-				.isNotNull()
-				.returns(HttpStatus.FORBIDDEN, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
+		expectProblemDetail(new AuthorizationDeniedException("default error message", result), HttpStatus.FORBIDDEN)
 				.hasDefaultType()
-				.hasStatus(HttpStatus.FORBIDDEN)
 				.hasTitle("Access Denied")
 				.hasDetailContaining("The following OAuth scopes are required to perform this operation: permission");
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
+				.isNull();
 	}
 
 	@Test
 	@DisplayName("should handle authorization denied exception with access control decision")
 	void shouldHandleAccessControlDecision() {
 		final var result = new AccessControlDecision(false, null, "permission");
-		final var ex = new AuthorizationDeniedException("default error message", result);
 
-		assertThat(handler.handleAccessDeniedException(ex, request))
-				.isNotNull()
-				.returns(HttpStatus.FORBIDDEN, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
+		expectProblemDetail(new AuthorizationDeniedException("default error message", result), HttpStatus.FORBIDDEN)
 				.hasDefaultType()
-				.hasStatus(HttpStatus.FORBIDDEN)
 				.hasTitle("Access Denied")
 				.hasDetailContaining("It looks like you do not have the necessary roles or permissions to perform this operation");
+
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
+				.isNull();
 	}
 
 	@MethodSource("authentication")
@@ -284,15 +242,8 @@ class HateoasExceptionHandlerTest {
 	void shouldHandleAuthenticationException(Class<? extends AuthenticationException> type, HttpStatusCode status) {
 		final var ex = mock(type);
 
-		assertThat(handler.handleAuthenticationException(ex, request))
-				.isNotNull()
-				.returns(status, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
-				.extracting(HttpEntity::getBody)
-				.isInstanceOf(ProblemDetail.class)
-				.asInstanceOf(ProblemDetailAssert.factory())
+		expectProblemDetail(ex, status)
 				.hasDefaultType()
-				.hasStatus(status)
 				.satisfies(it -> assertThat(it.getTitle())
 						.isNotBlank()
 				)
@@ -301,7 +252,7 @@ class HateoasExceptionHandlerTest {
 						.isNotEqualTo(ex.getMessage())
 				);
 
-		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, WebRequest.SCOPE_REQUEST))
+		assertThat(request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE))
 				.isNull();
 	}
 
@@ -314,6 +265,17 @@ class HateoasExceptionHandlerTest {
 				Arguments.of(AuthenticationCredentialsNotFoundException.class, HttpStatus.UNAUTHORIZED),
 				Arguments.of(BadCredentialsException.class, HttpStatus.UNAUTHORIZED)
 		);
+	}
+
+	ProblemDetailAssert expectProblemDetail(Exception ex, HttpStatusCode status) {
+		return assertThat(handler.handle(request, response, ex))
+				.isNotNull()
+				.returns(status, ResponseEntity::getStatusCode)
+				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
+				.extracting(HttpEntity::getBody)
+				.isInstanceOf(ProblemDetail.class)
+				.asInstanceOf(ProblemDetailAssert.factory())
+				.hasStatus(status);
 	}
 
 	static MethodValidationResult createMethodValidationResult() {

@@ -10,10 +10,8 @@ import com.konfigyr.namespace.InvitationException;
 import com.konfigyr.namespace.NamespaceFeatures;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.security.OAuthScope;
-import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -26,13 +24,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-class InvitationsControllerTest extends AbstractControllerTest {
+class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 
 	@Test
 	@DisplayName("should retrieve invitations for namespace")
@@ -147,10 +145,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-						.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-						.hasDetailContaining("Could not find a namespace")
-				));
+				.satisfies(namespaceNotFound("unknown"));
 	}
 
 	@Test
@@ -227,8 +222,8 @@ class InvitationsControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.INTERNAL_SERVER_ERROR, problem -> problem
-						.hasTitle(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-						.hasDetailContaining("recipient is already a namespace member")
+						.hasTitle("User already a member")
+						.hasDetailContaining("This user is already a member of the namespace.")
 						.hasProperty("code", InvitationException.ErrorCode.ALREADY_INVITED.name())
 				));
 	}
@@ -246,8 +241,8 @@ class InvitationsControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
-						.hasDetailContaining("Please upgrade your plan to invite team members")
+						.hasTitle("Inviting members is not allowed")
+						.hasDetailContaining("This namespace does not support member invites at the moment")
 						.hasProperty("code", InvitationException.ErrorCode.NOT_ALLOWED.name())
 				));
 	}
@@ -265,8 +260,8 @@ class InvitationsControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
-						.hasDetailContaining("Can not create invitation as maximum number of members has been reached")
+						.hasTitle("Member limit reached")
+						.hasDetailContaining("This organization has reached its maximum allowed number of members")
 						.hasProperty("code", InvitationException.ErrorCode.MEMBER_LIMIT_REACHED.name())
 				));
 	}
@@ -281,10 +276,7 @@ class InvitationsControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-						.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-						.hasDetailContaining("Could not find a namespace")
-				));
+				.satisfies(namespaceNotFound("unknown"));
 	}
 
 	@Test
@@ -357,9 +349,14 @@ class InvitationsControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitle(HttpStatus.BAD_REQUEST.getReasonPhrase())
-						.hasDetailContaining("Can not accept expiring invitations")
+						.hasTitle("Invitation not found or expired")
+						.hasDetailContaining("This invitation link is no longer valid.")
+						.hasDetailContaining("It may have expired or was already used.")
 						.hasProperty("code", InvitationException.ErrorCode.INVITATION_EXPIRED.name())
+				))
+				.satisfies(hasFailedWithException(InvitationException.class, ex -> ex
+						.hasMessageContaining("Can not accept expiring invitations")
+						.returns(InvitationException.ErrorCode.INVITATION_EXPIRED, InvitationException::getCode)
 				));
 	}
 
@@ -431,12 +428,16 @@ class InvitationsControllerTest extends AbstractControllerTest {
 				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
 	}
 
-	static ThrowingConsumer<MvcTestResult> invitationNotFound(String key) {
+	static Consumer<MvcTestResult> invitationNotFound(String key) {
 		return problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-				.hasTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
-				.hasDetailContaining("Invitation with key \"%s\" not found".formatted(key))
+				.hasTitle("Invitation not found or expired")
+				.hasDetailContaining("This invitation link is no longer valid.")
+				.hasDetailContaining("It may have expired or was already used.")
 				.hasProperty("code", InvitationException.ErrorCode.INVITATION_NOT_FOUND.name())
-		);
+		).andThen(hasFailedWithException(InvitationException.class, ex -> ex
+				.returns(InvitationException.ErrorCode.INVITATION_NOT_FOUND, InvitationException::getCode)
+				.hasMessageContaining("Invitation with key \"%s\" not found".formatted(key))
+		));
 	}
 
 }

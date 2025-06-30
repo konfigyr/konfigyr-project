@@ -76,6 +76,22 @@ class ProblemDetailsAuthenticationExceptionHandlerTest {
 	}
 
 	@Test
+	@DisplayName("should handle authentication exception with unsupported response body")
+	void shouldHandleAuthenticationExceptionWithUnsupportedResponseBody() throws UnsupportedEncodingException {
+		final var ex = new BadCredentialsException("Bad Credentials");
+
+		doReturn(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized")).when(delegate).handle(request, response, ex);
+
+		assertThatNoException().isThrownBy(() -> handler.commence(request, response, ex));
+
+		assertThat(response.getStatus())
+				.isEqualTo(HttpStatus.UNAUTHORIZED.value());
+
+		assertThat(response.getContentAsString())
+				.isBlank();
+	}
+
+	@Test
 	@DisplayName("should handle access denied exception")
 	void shouldHandleAccessDeniedException() throws UnsupportedEncodingException {
 		final var ex = new AccessDeniedException("Access denied");
@@ -100,6 +116,22 @@ class ProblemDetailsAuthenticationExceptionHandlerTest {
 		final var ex = new AccessDeniedException("Access denied");
 
 		doReturn(ResponseEntity.status(HttpStatus.FORBIDDEN).build()).when(delegate).handle(request, response, ex);
+
+		assertThatNoException().isThrownBy(() -> handler.handle(request, response, ex));
+
+		assertThat(response.getStatus())
+				.isEqualTo(HttpStatus.FORBIDDEN.value());
+
+		assertThat(response.getContentAsString())
+				.isBlank();
+	}
+
+	@Test
+	@DisplayName("should handle access denied exception with unsupported response body")
+	void shouldHandleAccessDeniedExceptionWithUnsupportedResponseBody() throws UnsupportedEncodingException {
+		final var ex = new AccessDeniedException("Access denied");
+
+		doReturn(ResponseEntity.status(HttpStatus.FORBIDDEN).body("Denied")).when(delegate).handle(request, response, ex);
 
 		assertThatNoException().isThrownBy(() -> handler.handle(request, response, ex));
 

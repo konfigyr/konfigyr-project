@@ -25,9 +25,11 @@ public interface WebExceptionHandler {
 	 * @return HTTP response entity containing the handled exception body, never {@literal null}
 	 */
 	@NonNull
-	default ResponseEntity<Object> handle(@NonNull HttpServletRequest request,
-										  @NonNull HttpServletResponse response,
-										  @NonNull Exception ex) {
+	default ResponseEntity<Object> handle(
+			@NonNull HttpServletRequest request,
+			@NonNull HttpServletResponse response,
+			@NonNull Exception ex
+	) {
 		return handle(new ServletWebRequest(request, response), ex);
 	}
 

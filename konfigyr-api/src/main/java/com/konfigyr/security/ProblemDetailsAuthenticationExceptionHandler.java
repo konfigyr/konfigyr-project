@@ -23,11 +23,11 @@ final class ProblemDetailsAuthenticationExceptionHandler implements Authenticati
 	private final HttpMessageConverter<Object> httpMessageConverter;
 	private final WebExceptionHandler delegate;
 
-	public ProblemDetailsAuthenticationExceptionHandler(WebExceptionHandler delegate) {
+	ProblemDetailsAuthenticationExceptionHandler(WebExceptionHandler delegate) {
 		this(new ProblemDetailHttpMessageConverter(), delegate);
 	}
 
-	public ProblemDetailsAuthenticationExceptionHandler(ObjectMapper mapper, WebExceptionHandler delegate) {
+	ProblemDetailsAuthenticationExceptionHandler(ObjectMapper mapper, WebExceptionHandler delegate) {
 		this(new ProblemDetailHttpMessageConverter(mapper), delegate);
 	}
 
@@ -43,13 +43,14 @@ final class ProblemDetailsAuthenticationExceptionHandler implements Authenticati
 
 	private void write(HttpServletRequest request, HttpServletResponse response, Exception cause) throws IOException {
 		final ResponseEntity<Object> result = delegate.handle(request, response, cause);
+		final Object body = result.getBody();
 
-		try (final ServletServerHttpResponse output = new ServletServerHttpResponse(response)) {
+		try (ServletServerHttpResponse output = new ServletServerHttpResponse(response)) {
 			output.setStatusCode(result.getStatusCode());
 			output.getHeaders().putAll(result.getHeaders());
 
-			if (result.getBody() != null) {
-				httpMessageConverter.write(result.getBody(), MediaType.APPLICATION_PROBLEM_JSON, output);
+			if (body != null && httpMessageConverter.canWrite(body.getClass(), MediaType.APPLICATION_PROBLEM_JSON)) {
+				httpMessageConverter.write(body, MediaType.APPLICATION_PROBLEM_JSON, output);
 			}
 		}
 	}
