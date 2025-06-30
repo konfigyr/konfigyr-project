@@ -1,9 +1,10 @@
 package com.konfigyr.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
+import com.konfigyr.web.WebExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,9 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
-import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -34,7 +33,14 @@ import java.util.Collection;
 public class WebSecurityConfiguration {
 
 	@Bean
-	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http) throws Exception {
+	ProblemDetailsAuthenticationExceptionHandler problemDetailsAuthenticationExceptionHandler(
+			ObjectMapper mapper, WebExceptionHandler exceptionHandler
+	) {
+		return new ProblemDetailsAuthenticationExceptionHandler(mapper, exceptionHandler);
+	}
+
+	@Bean
+	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, ProblemDetailsAuthenticationExceptionHandler exceptionHandler) throws Exception {
 		final BearerTokenResolver bearerTokenResolver = new RequestAttributeBearerTokenResolver();
 
 		return http
@@ -54,6 +60,8 @@ public class WebSecurityConfiguration {
 								.jwtAuthenticationConverter(jwtAuthenticationConverter())
 						)
 						.bearerTokenResolver(bearerTokenResolver)
+						.authenticationEntryPoint(exceptionHandler)
+						.accessDeniedHandler(exceptionHandler)
 				)
 				.securityContext(context -> context
 						.securityContextRepository(securityContextRepository())
@@ -62,8 +70,8 @@ public class WebSecurityConfiguration {
 						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				)
 				.exceptionHandling(errors -> errors
-						.defaultAccessDeniedHandlerFor(new BearerTokenAccessDeniedHandler(), AnyRequestMatcher.INSTANCE)
-						.defaultAuthenticationEntryPointFor(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED), AnyRequestMatcher.INSTANCE)
+						.defaultAuthenticationEntryPointFor(exceptionHandler, AnyRequestMatcher.INSTANCE)
+						.defaultAccessDeniedHandlerFor(exceptionHandler, AnyRequestMatcher.INSTANCE)
 				)
 				.build();
 	}

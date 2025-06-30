@@ -30,7 +30,7 @@ class AccountEmailVerificationException extends NestedRuntimeException implement
 	AccountEmailVerificationException(ErrorCode code, String message, Throwable cause) {
 		super(message, cause);
 		this.code = code;
-		this.body = ProblemDetail.forStatusAndDetail(getStatusCode(), getMessage());
+		this.body = ProblemDetail.forStatusAndDetail(code.status, message);
 	}
 
 	@NonNull

@@ -39,6 +39,18 @@ public class InvitationException extends NamespaceException {
 		getBody().setProperty("code", code.name());
 	}
 
+	@NonNull
+	@Override
+	public String getDetailMessageCode() {
+		return "problemDetail." + getClass().getName() + "." + code.name();
+	}
+
+	@NonNull
+	@Override
+	public String getTitleMessageCode() {
+		return "problemDetail.title." + getClass().getName() + "." + code.name();
+	}
+
 	/**
 	 * Enumeration of possible error codes that better describe the {@link InvitationException}.
 	 */

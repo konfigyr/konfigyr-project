@@ -30,7 +30,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 public abstract class AbstractControllerTest extends AbstractIntegrationTest {
@@ -77,6 +76,38 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 				resolvableType.resolve(PagedModel.class),
 				resolvableType.resolveGenerics(),
 				Assertions::assertThat
+		);
+	}
+
+	/**
+	 * Creates a consumer that is used to assert if {@link MvcTestResult} contained a resolved exception
+	 * with a matching type.
+	 *
+	 * @param expectedType expected exception type, can't be {@literal null}
+	 * @param <T> expected exception type
+	 * @return the MVC resolved exception consumer
+	 */
+	protected static <T extends Throwable> ThrowingConsumer<MvcTestResult> hasFailedWithException(@NonNull Class<T> expectedType) {
+		return hasFailedWithException(expectedType, ignore -> { /* noop */ });
+	}
+
+	/**
+	 * Creates a consumer that is used to assert if {@link MvcTestResult} contained a resolved exception
+	 * with a matching type.
+	 *
+	 * @param expectedType expected exception type, can't be {@literal null}
+	 * @param consumer consumer function to assert resolved exception, can't be {@literal null}
+	 * @param <T> expected exception type
+	 * @return the MVC resolved exception consumer
+	 */
+	@SuppressWarnings("unchecked")
+	protected static <T extends Throwable> ThrowingConsumer<MvcTestResult> hasFailedWithException(
+			@NonNull Class<T> expectedType,
+			@NonNull ThrowingConsumer<ThrowableAssert<T>> consumer
+	) {
+		return result -> consumer.accept(
+				(ThrowableAssert<T>) Assertions.assertThat(result.getMvcResult().getResolvedException())
+						.isInstanceOf(expectedType)
 		);
 	}
 

@@ -1,6 +1,7 @@
 package com.konfigyr.hateoas;
 
 import com.konfigyr.security.access.AccessControlDecision;
+import com.konfigyr.web.WebExceptionHandler;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.MethodParameter;
@@ -38,7 +39,36 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
-public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
+class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements WebExceptionHandler {
+
+	@NonNull
+	@Override
+	@ExceptionHandler(Throwable.class)
+	public ResponseEntity<Object> handle(@NonNull WebRequest request, @NonNull Exception ex) {
+		ResponseEntity<Object> result;
+
+		if (ex instanceof AuthenticationException authenticationException) {
+			result = handleAuthenticationException(authenticationException, request);
+		} else if (ex instanceof AccessDeniedException accessDeniedException) {
+			result = handleAccessDeniedException(accessDeniedException, request);
+		} else {
+			try {
+				result = handleException(ex, request);
+			} catch (Exception ignored) {
+				result = null;
+			}
+		}
+
+		if (result == null && ex instanceof ErrorResponse errorResponse) {
+			result = handleErrorResponse(errorResponse, request);
+		}
+
+		if (result == null) {
+			result = handleInternalServerException(ex, HttpHeaders.EMPTY, request);
+		}
+
+		return result;
+	}
 
 	@ExceptionHandler(AuthenticationException.class)
 	final ResponseEntity<Object> handleAuthenticationException(@NonNull AuthenticationException ex, @NonNull WebRequest request) {
@@ -66,15 +96,22 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(AccessDeniedException.class)
 	final ResponseEntity<Object> handleAccessDeniedException(@NonNull AccessDeniedException ex, @NonNull WebRequest request) {
 		return switch (ex) {
-			case AuthorizationDeniedException exception -> handleAuthorizationDeniedException(exception, request);
+			case AuthorizationDeniedException exception -> handleAuthorizationDeniedException(
+					exception, request
+			);
 			case AuthorizationServiceException exception -> handleInternalServerException(
 					exception, HttpHeaders.EMPTY, request
 			);
 			default -> {
 				final ProblemDetail body = createProblemDetail(ex, HttpStatus.FORBIDDEN, ex.getMessage(), null, null, request);
-				yield createResponseEntity(body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
+				yield handleExceptionInternal(ex, body, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
 			}
 		};
+	}
+
+	final ResponseEntity<Object> handleErrorResponse(@NonNull ErrorResponse errorResponse, @NonNull WebRequest request) {
+		final ProblemDetail body = errorResponse.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+		return createResponseEntity(body, errorResponse.getHeaders(), errorResponse.getStatusCode(), request);
 	}
 
 	protected ResponseEntity<Object> handleAuthorizationDeniedException(
@@ -102,7 +139,7 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 					.build(getMessageSource(), LocaleContextHolder.getLocale());
 		};
 
-		return createResponseEntity(response.getBody(), HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
+		return handleExceptionInternal(ex, response.getBody(), HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
 	}
 
 	@Override
@@ -116,7 +153,7 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 				ex.getLocalizedMessage()
 		)));
 
-		return createResponseEntity(body, headers, status, request);
+		return handleExceptionInternal(ex, body, headers, status, request);
 	}
 
 	@Override
@@ -134,7 +171,7 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 		final ProblemDetail body = ex.updateAndGetBody(getMessageSource(), locale);
 		body.setProperty("errors", errors);
 
-		return createResponseEntity(body, headers, status, request);
+		return handleExceptionInternal(ex, body, headers, status, request);
 	}
 
 	@Override
@@ -143,7 +180,7 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 			@NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
 		return handleMethodValidationResult(ex.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale()),
-				ex.getParameterValidationResults(), headers, status, request);
+				ex.getParameterValidationResults(), headers, request);
 	}
 
 	@Override
@@ -151,13 +188,13 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 			@NonNull MethodValidationException ex, @NonNull HttpHeaders headers,
 			@NonNull HttpStatus status, @NonNull WebRequest request
 	) {
-		final ProblemDetail body = createProblemDetail(ex, status, "Validation failed", null, null, request);
-		return handleMethodValidationResult(body, ex.getParameterValidationResults(), headers, status, request);
+		final ProblemDetail body = createProblemDetail(ex, HttpStatus.BAD_REQUEST, "Validation failed", null, null, request);
+		return handleMethodValidationResult(body, ex.getParameterValidationResults(), headers, request);
 	}
 
 	protected ResponseEntity<Object> handleMethodValidationResult(
 			@NonNull ProblemDetail body, @NonNull Iterable<ParameterValidationResult> results,
-			@NonNull HttpHeaders headers, @NonNull HttpStatusCode status, @NonNull WebRequest request
+			@NonNull HttpHeaders headers, @NonNull WebRequest request
 	) {
 		final Locale locale = LocaleContextHolder.getLocale();
 		final List<ValidationError> errors = new ArrayList<>();
@@ -181,13 +218,20 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 		}
 
 		body.setProperty("errors", errors);
-		return createResponseEntity(body, headers, status, request);
+		return createResponseEntity(body, headers, HttpStatus.BAD_REQUEST, request);
 	}
 
 	protected ResponseEntity<Object> handleInternalServerException(
 			@NonNull Exception ex, @NonNull HttpHeaders headers, @NonNull WebRequest request
 	) {
-		return handleException(ex, HttpStatus.INTERNAL_SERVER_ERROR, headers, request);
+		final ProblemDetail body = ErrorResponse.builder(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage())
+				.typeMessageCode("problemDetail.type.com.konfigyr.InternalServerError")
+				.titleMessageCode("problemDetail.title.com.konfigyr.InternalServerError")
+				.detailMessageCode("problemDetail.com.konfigyr.InternalServerError")
+				.build()
+				.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+
+		return handleExceptionInternal(ex, body, headers, HttpStatus.INTERNAL_SERVER_ERROR, request);
 	}
 
 	protected ResponseEntity<Object> handleException(
@@ -195,7 +239,7 @@ public class HateoasExceptionHandler extends ResponseEntityExceptionHandler {
 			@NonNull HttpHeaders headers, @NonNull WebRequest request
 	) {
 		final ProblemDetail body = createProblemDetail(ex, statusCode, ex.getMessage(), null, null, request);
-		return createResponseEntity(body, headers, statusCode, request);
+		return handleExceptionInternal(ex, body, headers, statusCode, request);
 	}
 
 	private String messageFor(@NonNull MessageSourceResolvable resolvable, @NonNull Locale locale) {

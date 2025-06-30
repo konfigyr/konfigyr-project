@@ -151,6 +151,23 @@ class AccountControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to issue email address verification token when email address is the same")
+	void verifySameEmail() {
+		mvc.post().uri("/account/email")
+				.with(authentication(TestPrincipals.jane()))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"jane.doe@konfigyr.com\"}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+				.satisfies(hasFailedWithException(IllegalStateException.class, ex -> ex
+						.hasMessageContaining("email addresses are the same")
+						.hasNoCause()
+				));
+	}
+
+	@Test
 	@DisplayName("should fail to issue email address verification token for unknown account")
 	void verifyEmailUnknown() {
 		mvc.post().uri("/account/email")

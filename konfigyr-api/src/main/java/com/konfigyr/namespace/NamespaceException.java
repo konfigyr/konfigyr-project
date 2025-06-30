@@ -1,9 +1,12 @@
 package com.konfigyr.namespace;
 
+import org.springframework.core.NestedRuntimeException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.ErrorResponseException;
+import org.springframework.lang.NonNull;
+import org.springframework.web.ErrorResponse;
 
 import java.io.Serial;
 
@@ -13,10 +16,13 @@ import java.io.Serial;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-public class NamespaceException extends ErrorResponseException {
+public class NamespaceException extends NestedRuntimeException implements ErrorResponse {
 
 	@Serial
 	private static final long serialVersionUID = -5579152178839019368L;
+
+	private final HttpStatusCode statusCode;
+	private final ProblemDetail body;
 
 	/**
 	 * Create a new instance of {@link NamespaceException} with the specified error message.
@@ -34,16 +40,9 @@ public class NamespaceException extends ErrorResponseException {
 	 * @param message the error message
 	 */
 	public NamespaceException(HttpStatusCode statusCode, String message) {
-		this(statusCode, message, null);
-	}
-
-	/**
-	 * Create a new instance of {@link NamespaceException} with the specified {@link ProblemDetail}.
-	 *
-	 * @param body the problem detail body
-	 */
-	public NamespaceException(ProblemDetail body) {
-		super(HttpStatus.valueOf(body.getStatus()), body, null);
+		super(message);
+		this.statusCode = statusCode;
+		this.body = ProblemDetail.forStatusAndDetail(statusCode, message);
 	}
 
 	/**
@@ -66,17 +65,27 @@ public class NamespaceException extends ErrorResponseException {
 	 * @param cause the exception cause, or {@literal null} if none
 	 */
 	public NamespaceException(HttpStatusCode statusCode, String message, Throwable cause) {
-		super(statusCode, ProblemDetail.forStatusAndDetail(statusCode, message), cause);
+		super(message, cause);
+		this.statusCode = statusCode;
+		this.body = ProblemDetail.forStatusAndDetail(statusCode, message);
 	}
 
-	/**
-	 * Create a new instance of {@link NamespaceException} with the specified {@link ProblemDetail} and
-	 * the exception that caused it.
-	 *
-	 * @param body the problem detail body
-	 * @param cause the exception cause, or {@literal null} if none
-	 */
-	public NamespaceException(ProblemDetail body, Throwable cause) {
-		super(HttpStatus.valueOf(body.getStatus()), body, cause);
+	@NonNull
+	@Override
+	public HttpHeaders getHeaders() {
+		return HttpHeaders.EMPTY;
 	}
+
+	@NonNull
+	@Override
+	public HttpStatusCode getStatusCode() {
+		return statusCode;
+	}
+
+	@NonNull
+	@Override
+	public ProblemDetail getBody() {
+		return body;
+	}
+
 }
