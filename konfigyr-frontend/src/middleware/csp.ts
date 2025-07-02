@@ -12,7 +12,7 @@ const DEFAULT_DIRECTIVES = {
   'form-action': [`'self'`],
   'frame-src': [`'self'`],
   'connect-src': [`'self'`],
-  'img-src': [`'self'`, `https:`, `blob:`, `data:`],
+  'img-src': [`'self'`, `blob:`, `data:`, `https:`],
   'manifest-src': [`'self'`],
   'object-src': [`'none'`],
   'script-src': [`'strict-dynamic'`],

@@ -1,13 +1,20 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { ReactNode, Dispatch } from 'react';
 import type { Account } from 'konfigyr/services/authentication';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState } from 'react';
 
-export const AccountContext = createContext<Account | null>(null);
+export const AccountContext = createContext<{
+  account: Account | null | undefined,
+  setAccount: Dispatch<Account | null | undefined>
+}>({
+  account: null,
+  setAccount: () => {},
+});
 
-export function useAccount(): Account | null {
-  return useContext(AccountContext);
+export function useAccount(): [Account | null, Dispatch<Account | null>] {
+  const ctx = useContext(AccountContext);
+  return [ctx.account || null, ctx.setAccount];
 }
 
 export type AccountContextProviderProps = {
@@ -16,8 +23,11 @@ export type AccountContextProviderProps = {
 };
 
 export function AccountContextProvider({ account, children }: AccountContextProviderProps) {
+  const [value, setAccount] = useState(account);
+  const ctx = { account: account == null ? null : value, setAccount };
+
   return (
-    <AccountContext.Provider value={account || null}>
+    <AccountContext.Provider value={ctx}>
       {children}
     </AccountContext.Provider>
   );

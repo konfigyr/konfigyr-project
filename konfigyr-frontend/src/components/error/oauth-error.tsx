@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { SquareArrowOutUpRight, Headset } from 'lucide-react';
-import { Button } from 'konfigyr/components/ui';
 import { ErrorCodes, OAuthError } from 'konfigyr/services/openid';
+import { Button, Card, CardHeader, CardContent, CardFooter } from 'konfigyr/components/ui';
 
 /**
  * OAuth error card component used to display the details of the `OAuthError` to the end user.
@@ -15,12 +15,12 @@ export default function OAuthErrorCard(error: OAuthError & { code?: string }) {
   const code = error?.code || ErrorCodes.INTERNAL_SERVER_ERROR;
 
   return (
-    <div>
-      <div className="mb-4">
-        <h2 className="text-xl">{t('errors.oauth.title')}</h2>
-        <p className="text-sm">{t(`errors.oauth.code.${code}`)}</p>
-      </div>
-      <div>
+    <Card>
+      <CardHeader
+        title={t('errors.oauth.title')}
+        description={t(`errors.oauth.code.${code}`)}
+      />
+      <CardContent>
         {error.error && (
           <p className="text-sm">
             <span>Error code:</span> <code>{error.error}</code>
@@ -42,8 +42,8 @@ export default function OAuthErrorCard(error: OAuthError & { code?: string }) {
             </Button>
           </div>
         )}
-      </div>
-      <div className="flex justify-between mt-4">
+      </CardContent>
+      <CardFooter className="justify-between">
         <Button asChild>
           <Link href="/auth/authorize">
             {t('authentication.login')}
@@ -54,7 +54,7 @@ export default function OAuthErrorCard(error: OAuthError & { code?: string }) {
             <Headset /> {t('errors.contact-support')}
           </a>
         </Button>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }

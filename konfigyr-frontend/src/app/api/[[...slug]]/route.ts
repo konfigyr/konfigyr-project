@@ -77,7 +77,9 @@ async function execute(request: NextRequest): Promise<NextResponse> {
     });
   }
 
-  return new NextResponse(await response.text(), {
+  const body = await response.text();
+
+  return new NextResponse(body, {
     status: response.status,
     headers: response.headers,
   });

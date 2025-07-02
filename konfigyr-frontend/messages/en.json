@@ -4,6 +4,40 @@
     "logout": "Logout",
     "settings": "Account settings"
   },
+  "account": {
+    "form": {
+      "title": "Tweak your profile",
+      "email": {
+        "label": "Email address",
+        "help": "We will use this to send you important stuff — like password resets, not cat memes. Promise.",
+        "validation": "Please use 48 characters at maximum.",
+        "success": "Your email address was updated",
+        "submit": "Update",
+        "confirmation": {
+          "label": "Enter confirmation code",
+          "description": "We have sent you a confirmation code to your new email address, please paste it here to confirm your email address change."
+        }
+      },
+      "name": {
+        "label": "Display name",
+        "help": "This is how others will see you around the app. Keep it cool — or weird, we don’t judge.",
+        "validation": "Please use 32 characters at maximum.",
+        "success": "Your display name was updated",
+        "submit": "Update"
+      },
+      "delete": {
+        "label": "Delete account",
+        "help": "This will nuke your account and all your data—no going back. Only do this if you're 100% sure. Seriously.",
+        "submit": "Delete my account",
+        "confirmation": {
+          "title": "Are you sure?",
+          "description": "This action cannot be undone. This will permanently delete your account and remove your data from our servers.",
+          "action": "Yes, I am sure",
+          "cancel": "Nope, I have changed my mind"
+        }
+      }
+    }
+  },
   "errors": {
     "title": "Unexpected server error occurred",
     "detail": "We could not process your request due to a runtime error. Please try again and if the problem persists, please get in touch with our support team.",

@@ -16,15 +16,12 @@ describe('app/auth/error', () => {
       </NextIntlClientProvider>,
     );
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Authorization error' })).toBeDefined();
+    expect(screen.getByText('Authorization error')).toBeDefined();
 
-    const paragraphs = container.getAllByRole('paragraph');
-    expect(paragraphs).toHaveLength(1);
-
-    expect(paragraphs[0]).toHaveTextContent(
+    expect(screen.getByText(
       'Unexpected server error occurred while logging you in. ' +
       'Please try again and if the problem persists, please get in touch with our support team.',
-    );
+    )).toBeDefined();
 
     const links = container.getAllByRole('link');
     expect(links).toHaveLength(2);
@@ -50,20 +47,17 @@ describe('app/auth/error', () => {
       </NextIntlClientProvider>,
     );
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Authorization error' })).toBeDefined();
+    expect(screen.getByText('Authorization error')).toBeDefined();
+
+    expect(screen.getByText(
+      'Authorization server returned an error. Please checkout the details below.',
+    )).toBeDefined();
 
     const paragraphs = container.getAllByRole('paragraph');
-    expect(paragraphs).toHaveLength(3);
+    expect(paragraphs).toHaveLength(2);
 
-    expect(paragraphs[0]).toHaveTextContent(
-      'Authorization server returned an error. Please checkout the details below.',
-    );
-    expect(paragraphs[1]).toHaveTextContent(
-      'Error code: oauth-error-code',
-    );
-    expect(paragraphs[2]).toHaveTextContent(
-      'Error description: Some error description',
-    );
+    expect(paragraphs[0]).toHaveTextContent('Error code: oauth-error-code');
+    expect(paragraphs[1]).toHaveTextContent('Error description: Some error description');
 
     const links = container.getAllByRole('link');
     expect(links).toHaveLength(3);

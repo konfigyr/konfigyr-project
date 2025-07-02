@@ -68,6 +68,10 @@ export default async function request<T>(request: string | URL | Request, option
     return await response.json();
   }
 
+  if (response.status === 204) {
+    return null as T;
+  }
+
   throw new HttpResponseError(response, await response.json());
 }
 

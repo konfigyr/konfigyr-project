@@ -1,7 +1,7 @@
 'use server';
 
-import type { TokenEndpointResponse, IDToken} from 'openid-client';
-import type { Authentication, Account, Token } from 'konfigyr/services/authentication';
+import type { TokenEndpointResponse } from 'openid-client';
+import type { Authentication, Token } from 'konfigyr/services/authentication';
 import { NextRequest, NextResponse } from 'next/server';
 import * as oauth from 'oauth4webapi';
 import OpenidClient, { ErrorCodes, AuthorizationState, OAuthError } from 'konfigyr/services/openid';
@@ -83,7 +83,7 @@ async function exchange(request: NextRequest): Promise<NextResponse> {
   const attemptedRequestUri: string = await session.get(request.cookies, ATTEMPTED_REQUEST_KEY) || '/';
   const response = NextResponse.redirect(new URL(attemptedRequestUri, request.url));
 
-  await setAuthentication(response.cookies, createIdentity(claims, result));
+  await setAuthentication(response.cookies, createAuthentication(result));
   await session.remove(response.cookies, STATE_KEY);
 
   return response;
@@ -93,18 +93,10 @@ async function exchange(request: NextRequest): Promise<NextResponse> {
  * Creates the `Authentication` object that would be stored in the session from the OIDC Authorization Server
  * response.
  *
- * @param {IDToken} claims ID Token claims
  * @param {TokenEndpointResponse} response OAuth token response
  * @return {Authentication} Konfigyr authentication
  */
-function createIdentity(claims: IDToken, response: TokenEndpointResponse): Authentication {
-  const account: Account = {
-    oid: String(claims.oid),
-    name: String(claims.name),
-    email: String(claims.email),
-    picture: String(claims.picture),
-  };
-
+function createAuthentication(response: TokenEndpointResponse): Authentication {
   const token: Token = {
     access: response.access_token,
     refresh: response.refresh_token,
@@ -113,7 +105,7 @@ function createIdentity(claims: IDToken, response: TokenEndpointResponse): Authe
 
   const scopes = response.scope?.split(' ') || [];
 
-  return { account, token, scopes };
+  return { token, scopes };
 }
 
 /**
