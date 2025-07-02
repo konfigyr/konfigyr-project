@@ -3,12 +3,12 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { useAccount, AccountAvatar, AccountContextProvider } from 'konfigyr/components/account';
 
 function AccountInformation() {
-  const account = useAccount();
+  const [account] = useAccount();
 
   return (
     <AccountAvatar
-      picture={account?.picture}
-      name={account?.name || 'Unknown'}
+      picture={account?.avatar}
+      name={account?.fullName || 'Unknown'}
     />
   );
 }
@@ -27,7 +27,7 @@ describe('components/account', () => {
   });
 
   test('should render account name when account context is set', async () => {
-    const account = { oid: 'test-account', email: 'john.doe@konfigyr.com', name: 'John Doe', picture: '' };
+    const account = { id: 'test-account', email: 'john.doe@konfigyr.com', fullName: 'John Doe', picture: '' };
 
     render(
       <AccountContextProvider account={account}>

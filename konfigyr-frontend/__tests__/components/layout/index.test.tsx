@@ -45,14 +45,14 @@ describe('components/layout', () => {
   });
 
   test('should render account dropdown', async () => {
-    const account = { oid: 'test', email: 'john.doe@konfigyr.com', name: 'John Doe' };
+    const account = { id: 'test', email: 'john.doe@konfigyr.com', fullName: 'John Doe' };
     const container = render(<TestLayout account={account} />);
     const links = container.getAllByRole('link');
     expect(links).toHaveLength(1);
 
     const button = container.getByRole('button');
     expect(button).toBeDefined();
-    expect(button).toHaveTextContent(account.name);
+    expect(button).toHaveTextContent(account.fullName);
     expect(button).toHaveAttribute('data-state', 'closed');
 
     expect(container.queryByText(account.email)).not.toBeInTheDocument();

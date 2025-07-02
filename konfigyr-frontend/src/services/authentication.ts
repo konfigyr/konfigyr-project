@@ -1,14 +1,23 @@
+import request from './http';
 import { SessionService, CookieStore } from './session';
 
 const ACCESS_TOKEN_SESSION_KEY = 'access-token';
+const ACCESS_TOKEN_DEFAULT_TTL = 28800; // 8 hours in seconds
 
 const session = new SessionService('konfigyr.access', process.env.KONFIGYR_IDENTITY_SESSION_SECRET);
 
 export interface Account {
-  oid: string,
-  name: string,
+  id: string,
   email: string,
-  picture?: string,
+  firstName?: string,
+  lastName?: string,
+  fullName?: string,
+  avatar?: string,
+  memberships?: [],
+  deletable?: boolean,
+  lastLoginAt?: string,
+  createdAt?: string,
+  updatedAt?: string,
 }
 
 export interface Token {
@@ -18,9 +27,17 @@ export interface Token {
 }
 
 export interface Authentication {
-  account: Account,
   token: Token,
   scopes: string[],
+}
+
+/**
+ * Error type that is used when no `Authentication` is present in the cookie/session store.
+ */
+export class AuthenticationNotFoundError extends Error {
+  constructor() {
+    super('Authentication is not present in the session store');
+  }
 }
 
 /**
@@ -28,10 +45,23 @@ export interface Authentication {
  *
  * @param {CookieStore} store store that has access to HTTP cookies
  * @return {Promise<Account>} promise that once resolved would contain the account
+ * @throws AuthenticationNotFoundError when `Token` is not present in the cookie store
  */
-export async function getAccount(store: CookieStore): Promise<Account | undefined> {
-  const authentication = await getAuthentication(store);
-  return authentication?.account;
+export async function getAccount(store: CookieStore): Promise<Account> {
+  const token = await getToken(store);
+
+  if (!token) {
+    throw new AuthenticationNotFoundError();
+  }
+
+  const headers = new Headers();
+  headers.set('authorization', `Bearer ${token.access}`);
+  headers.set('content-type', 'application/json');
+
+  return request<Account>(
+    new URL('/account', process.env.KONFIGYR_API_URL || 'https://api.konfigyr.com'),
+    { headers },
+  );
 }
 
 /**
@@ -72,7 +102,8 @@ export async function isAuthenticated(store: CookieStore): Promise<boolean> {
  * @param {Authentication} authentication authentication to be stored
  */
 export async function setAuthentication(store: CookieStore, authentication: Authentication) {
-  await session.set(store, ACCESS_TOKEN_SESSION_KEY, authentication);
+  const ttl = authentication.token.expiry || ACCESS_TOKEN_DEFAULT_TTL;
+  await session.set(store, ACCESS_TOKEN_SESSION_KEY, authentication, ttl);
 }
 
 /**

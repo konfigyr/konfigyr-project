@@ -25,12 +25,12 @@ function AccountDropdown({ account }: { account: Account }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button type="button" className="inline-flex items-center justify-center whitespace-nowrap outline-none focus:outline-2">
-          <AccountAvatar picture={account.picture} name={account.name}/>
+          <AccountAvatar picture={account.avatar} name={account.fullName}/>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-68">
         <DropdownMenuLabel className="grid gap-0.5">
-          <p>{account.name}</p>
+          <p>{account.fullName}</p>
           <p className="text-muted-foreground">{account.email}</p>
         </DropdownMenuLabel>
         <DropdownMenuItem asChild>
@@ -49,7 +49,7 @@ function AccountDropdown({ account }: { account: Account }) {
 
 export default function Header() {
   const t = useTranslations('authentication');
-  const account = useAccount();
+  const [account] = useAccount();
 
   return (
     <header id="header" className="border-b">

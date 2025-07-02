@@ -49,8 +49,20 @@ export class SessionService {
    * @param {String} name name of the session value
    * @param {Object} value value to be stored in the session
    */
-  async set<T>(cookies: CookieStore, name: string, value: T) {
-    const session: Session = await getIronSession(cookies, this.#options);
+  async set<T>(cookies: CookieStore, name: string, value: T): Promise<void>;
+
+  /**
+   * Stores the session value in the HTTP cookie store by its name with a custom time-to-live value in seconds.
+   *
+   * @param {CookieStore} cookies HTTP cookies
+   * @param {String} name name of the session value
+   * @param {Object} value value to be stored in the session
+   * @param {Number} ttl set a custom time to live for the HTTP cookie
+   */
+  async set<T>(cookies: CookieStore, name: string, value: T, ttl: number): Promise<void>;
+
+  async set<T>(cookies: CookieStore, name: string, value: T, ttl?: number): Promise<void> {
+    const session: Session = await getIronSession(cookies, { ...this.#options, ttl });
     session[name] = JSON.stringify(value);
     await session.save();
   }
