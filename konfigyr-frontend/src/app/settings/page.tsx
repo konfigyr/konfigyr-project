@@ -10,8 +10,8 @@ import {
 } from 'konfigyr/components/account';
 import { deleteAccount } from './actions';
 
-export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
-  const { locale } = params;
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'account.form' });
 
   return {
