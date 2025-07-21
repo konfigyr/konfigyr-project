@@ -4,6 +4,66 @@
     "logout": "Logout",
     "settings": "Account settings"
   },
+  "landing-page": {
+    "hero": {
+      "title": "Configuration made easy",
+      "subtitle": "Secure secrets, zero headaches, and configs that actually work across all your environments.",
+      "lead": "Built by devs who've been there."
+    },
+    "cta": {
+      "join": "Signup for Beta",
+      "start": "Get Started",
+      "contact": "Get in touch"
+    },
+    "features": {
+      "title": "What if config management was actually... pleasant?",
+      "subtitle": "Secure by default, simple to use, and designed by developers who understand your pain.",
+      "security": {
+        "title": "Secure secrets",
+        "description": "Encrypted at rest, in transit, and in your dreams. Your secrets are actually secret."
+      },
+      "environments": {
+        "title": "Environments",
+        "description": "Dev, staging, prod - all in sync. No more \"works on my machine\" moments."
+      },
+      "integration": {
+        "title": "Developer First",
+        "description": "CLI tools, Git integration, and APIs that don't make you want to cry."
+      },
+      "audit": {
+        "title": "Audit Everything",
+        "description": "Who changed what, when, and why. Perfect for those compliance conversations."
+      }
+    },
+    "contact": {
+      "title": "Got questions? We've got answers.",
+      "subtitle": "Whether it's a technical question, feature request, or you just want to vent about config management - we're here for it.",
+      "direct": {
+        "title": "Prefer email?",
+        "instructions": "Shoot us a message at <link></link>. We usually respond within a few hours (unless we're debugging our own config issues \uD83D\uDE05)"
+      },
+      "faq": {
+        "title": "Quick answers to common questions",
+        "beta": {
+          "question": "When will the beta end?",
+          "answer": "We're aiming for Q4 2025, but honestly, it depends on feedback and how many bugs you help us squash."
+        },
+        "pricing": {
+          "question": "What about pricing after beta?",
+          "answer": "We're thinking developer-friendly pricing. Think GitHub/Vercel model, not enterprise nightmare pricing."
+        },
+        "config-migration": {
+          "question": "Can I migrate my existing configs?",
+          "answer": "Absolutely. We have migration tools and can help you move from any existing setup."
+        }
+      }
+    },
+    "signup": {
+      "title": "Ready to escape config hell?",
+      "subtitle": "Join the beta and help us build the config server you actually want to use. Early access is free, feedback is priceless.",
+      "footer": "No credit card required. No BS. Just better config management."
+    }
+  },
   "account": {
     "form": {
       "title": "Tweak your profile",
@@ -35,6 +95,36 @@
           "action": "Yes, I am sure",
           "cancel": "Nope, I have changed my mind"
         }
+      }
+    }
+  },
+  "contact": {
+    "title": "Drop us a line",
+    "subtitle": "Whether it's a technical question, feature request, or you just want to vent about config management, we're here for it.",
+    "form": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Your name"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "your.name@company.com"
+      },
+      "subject": {
+        "label": "Subject",
+        "placeholder": "What's on your mind?"
+      },
+      "message": {
+        "label": "Message",
+        "placeholder": "Tell us about your config nightmares, feature ideas, or just say hi..."
+      },
+      "success": {
+        "title": "We've got your message!",
+        "detail": "Thanks for getting in touch! We'll review your submission and connect with you as soon as possible."
+      },
+      "error": {
+        "title": "Could not send contact email",
+        "detail": "It seems that we are experiencing some technical issues. Please try again and if the problem persists, please get in touch with our support team."
       }
     }
   },
