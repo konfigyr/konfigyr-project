@@ -5,7 +5,7 @@ import type { ContactInformation } from 'konfigyr/components/contact';
 import { Resend, type CreateEmailOptions } from 'resend';
 import purify from 'isomorphic-dompurify';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(`${process.env.RESEND_API_KEY}`);
 
 function Template(information: ContactInformation) {
   const sanitized = purify.sanitize(information.message);
