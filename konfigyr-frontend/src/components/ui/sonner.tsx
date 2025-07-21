@@ -4,8 +4,8 @@ import { useTheme } from 'next-themes';
 import { Toaster as Sonner, ToasterProps } from 'sonner';
 
 const STYLES = {
-  '--normal-bg': 'var(--popover)',
-  '--normal-text': 'var(--popover-foreground)',
+  '--normal-bg': 'hsl(var(--popover))',
+  '--normal-text': 'hsl(var(--popover-foreground))',
   '--normal-border': 'var(--border)',
 } as React.CSSProperties;
 
