@@ -23,8 +23,8 @@ const FEATURES: FeatureSettings[] = [
   {
     type: 'audit',
     icon: Lock,
-  }
-]
+  },
+];
 
 function FeatureCard({ type, icon: FeatureIcon }: FeatureSettings) {
   const t = useTranslations(`landing-page.features.${type}`);

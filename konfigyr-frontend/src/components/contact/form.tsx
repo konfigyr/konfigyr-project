@@ -45,7 +45,6 @@ export default function ContactForm({ action }: { action: ContactInformationActi
       toast.error(t('error.title'), { description: t('error.detail') });
     } else {
       toast.success(t('success.title'), { description: t('success.detail') });
-      console.log(form)
     }
   };
 

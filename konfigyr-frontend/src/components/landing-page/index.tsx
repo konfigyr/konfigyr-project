@@ -18,12 +18,12 @@ export default function LandingPage({ onContact } : { onContact: ContactInformat
           <div className="flex items-center gap-4">
             <Button variant="secondary" className="h-14 px-12 text-lg" asChild>
               <Link href="/auth/authorize">
-                {t("cta.join")} <ArrowRight className="h-5"/>
+                {t('cta.join')} <ArrowRight className="h-5"/>
               </Link>
             </Button>
             <Button variant="ghost" className="h-14 px-12 text-lg" asChild>
               <Link href="#contact">
-                {t("cta.contact")} <Podcast className="h-5"/>
+                {t('cta.contact')} <Podcast className="h-5"/>
               </Link>
             </Button>
           </div>
@@ -51,7 +51,7 @@ export default function LandingPage({ onContact } : { onContact: ContactInformat
 
           <div className="flex flex-col items-center">
             <Button size="lg" asChild>
-            <Link href="/auth/authorize">
+              <Link href="/auth/authorize">
                 <Cloud/> Get started
               </Link>
             </Button>

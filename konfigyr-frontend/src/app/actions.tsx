@@ -28,7 +28,7 @@ async function send(information: ContactInformation) {
     to: 'contact@konfigyr.com',
     subject: 'Konfigyr - Contact form request',
     react: Template(information),
-  }
+  };
 
   const { data, error } = await resend.emails.send(mail);
 

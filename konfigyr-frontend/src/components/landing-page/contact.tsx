@@ -21,7 +21,7 @@ function Question({ type }: { type: string }) {
         {t('answer')}
       </p>
     </div>
-  )
+  );
 }
 
 function FormCard({ action }: React.ComponentProps<typeof ContactForm>) {
