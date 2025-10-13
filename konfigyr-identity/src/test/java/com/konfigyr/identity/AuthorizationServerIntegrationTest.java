@@ -255,7 +255,24 @@ class AuthorizationServerIntegrationTest {
 				.hasPathSatisfying("$.expires_in", it -> it.assertThat().isNotNull())
 				.hasPathSatisfying("$.access_token", it -> it.assertThat().isNotNull())
 				.hasPathSatisfying("$.refresh_token", it -> it.assertThat().isNotNull())
-				.hasPathSatisfying("$.id_token", it -> it.assertThat().isNotNull());
+				.hasPathSatisfying("$.id_token", it -> it.assertThat().isNotNull())
+				.hasPathSatisfying("$.access_token", it -> mvc.post()
+						.uri("/oauth/introspect")
+						.param("token", it.assertThat().actual().toString())
+						.with(httpBasic("konfigyr", "secret"))
+						.exchange()
+						.assertThat()
+						.hasStatus(HttpStatus.OK)
+				)
+				.hasPathSatisfying("$.refresh_token", it -> mvc.post()
+						.uri("/oauth/token")
+						.param(OAuth2ParameterNames.GRANT_TYPE, "refresh_token")
+						.param("refresh_token", it.assertThat().actual().toString())
+						.with(httpBasic("konfigyr", "secret"))
+						.exchange()
+						.assertThat()
+						.hasStatus(HttpStatus.OK)
+				);
 	}
 
 	static Consumer<MvcTestResult> assertOAuthError(String code) {
