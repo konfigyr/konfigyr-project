@@ -117,7 +117,7 @@ class NamespaceControllerTest extends AbstractNamespaceControllerTest {
 	@Test
 	@DisplayName("should perform a namespace check by slug on an unknown namespace")
 	void shouldCheckUnknownNamespace() {
-		mvc.head().uri("/namespaces/{slug}", "konfigyr")
+		mvc.head().uri("/namespaces/{slug}", "unknown")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -130,7 +130,7 @@ class NamespaceControllerTest extends AbstractNamespaceControllerTest {
 	@Test
 	@DisplayName("should retrieve namespace by slug")
 	void shouldRetrieveNamespace() {
-		mvc.get().uri("/namespaces/{slug}", "unknown")
+		mvc.get().uri("/namespaces/{slug}", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
