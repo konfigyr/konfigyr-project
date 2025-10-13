@@ -17,4 +17,9 @@ public interface NamespaceFeatures {
 	 */
 	FeatureDefinition<LimitedFeatureValue> MEMBERS_COUNT = FeatureDefinition.of("namespace.members_count", LimitedFeatureValue.class);
 
+	/**
+	 * Feature definition that is used to define how many {@link Service services} can one {@link Namespace} have.
+	 */
+	FeatureDefinition<LimitedFeatureValue> SERVICES_COUNT = FeatureDefinition.of("namespace.services_count", LimitedFeatureValue.class);
+
 }

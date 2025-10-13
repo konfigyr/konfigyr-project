@@ -50,6 +50,14 @@ public interface NamespaceManager {
 	Optional<Namespace> findBySlug(@NonNull String slug);
 
 	/**
+	 * Checks if a {@link Namespace} with the entity identifier exists.
+	 *
+	 * @param id namespace entity identifier, can't be {@literal null}
+	 * @return {@literal true} if there is namespace with this identifier, {@literal false} otherwise.
+	 */
+	boolean exists(@NonNull EntityId id);
+
+	/**
 	 * Checks if a {@link Namespace} with the given slug - (URL path) exists.
 	 *
 	 * @param slug namespace slug, can't be {@literal null}

@@ -9,6 +9,7 @@
     <changeSet id="test-data" author="vspasic">
         <sqlFile path="data/users.sql" />
         <sqlFile path="data/namespaces.sql" />
+		<sqlFile path="data/services.sql" />
         <sqlFile path="data/registry.sql" />
 		<sqlFile path="data/integrations.sql" />
     </changeSet>

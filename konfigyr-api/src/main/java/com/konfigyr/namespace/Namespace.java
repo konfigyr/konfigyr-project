@@ -19,7 +19,7 @@ import java.time.ZoneOffset;
  * Namespaces provide one single place to organize artifacts and vaults.
  *
  * @param id unique namespace identifier, can not be {@literal null}
- * @param slug unique namespace identifier derived from it's name, can not be {@literal null}
+ * @param slug unique namespace identifier derived from its name, can not be {@literal null}
  * @param name human friendly name of the namespace, can not be {@literal null}
  * @param description short description of the namespace, can be {@literal null}
  * @param avatar namespace avatar image resource, can be {@literal null}
