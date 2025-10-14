@@ -28,7 +28,7 @@ public interface Invitations {
 	Page<Invitation> find(@NonNull Namespace namespace, @NonNull Pageable pageable);
 
 	/**
-	 * Retrieve a single {@link Invitation invitations} by its key that is sent for the given {@link Namespace}.
+	 * Retrieve a single {@link Invitation} by its key that is sent for the given {@link Namespace}.
 	 *
 	 * @param namespace namespace for which invitation is sent, can't be {@literal null}
 	 * @param key       invitation key, can't be {@literal null}
@@ -56,7 +56,7 @@ public interface Invitations {
 	 * to the {@link Namespace} with the defined {@link NamespaceRole}.
 	 *
 	 * @param invitation invitation to be accepted, can't be {@literal null}
-	 * @param recipient  the entity identifier of the account that would be become a member, can't be {@literal null}
+	 * @param recipient  the entity identifier of the account that would become a member, can't be {@literal null}
 	 */
 	@DomainEventPublisher(publishes = "namespace.invitation-accepted")
 	void accept(@NonNull Invitation invitation, @NonNull EntityId recipient);

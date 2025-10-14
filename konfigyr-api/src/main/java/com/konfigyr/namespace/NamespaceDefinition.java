@@ -14,9 +14,9 @@ import java.io.Serializable;
  * Record used to define one {@link Namespace} that would be created via {@link NamespaceManager}.
  *
  * @param owner entity identifier of the {@link com.konfigyr.account.Account} used as the {@link Namespace} owner
- * @param slug unique namespace identifier derived from its name, can not be null
- * @param name human friendly name of the namespace, can not be null
- * @param description short description of the namespace, can be null
+ * @param slug a unique namespace identifier derived from its name, can't be null
+ * @param name human friendly name for the namespace; can't be null
+ * @param description a short description for the namespace; can be null
  * @author Vladimir Spasic
  * @since 1.0.0
  **/

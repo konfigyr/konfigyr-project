@@ -32,6 +32,7 @@ public class NamespaceManagementAutoConfiguration implements FeatureDefinitionCo
 	@Override
 	public void configure(@NonNull Collection<FeatureDefinition<?>> definitions) {
 		definitions.add(NamespaceFeatures.MEMBERS_COUNT);
+		definitions.add(NamespaceFeatures.SERVICES_COUNT);
 	}
 
 	@Bean
@@ -50,6 +51,12 @@ public class NamespaceManagementAutoConfiguration implements FeatureDefinitionCo
 	@ConditionalOnBean(Mailer.class)
 	InvitationSender invitationSender(Mailer mailer, DSLContext context) {
 		return new InvitationSender(mailer, context);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(Services.class)
+	Services defaultNamespaceServices(DSLContext context, NamespaceManager namespaces) {
+		return new DefaultServices(context, namespaces, applicationEventPublisher);
 	}
 
 }

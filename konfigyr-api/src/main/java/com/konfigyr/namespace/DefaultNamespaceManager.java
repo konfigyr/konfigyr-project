@@ -43,7 +43,7 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 @RequiredArgsConstructor
 class DefaultNamespaceManager implements NamespaceManager {
 
-	private final Marker CREATED = MarkerFactory.getMarker("NAMEPSPACE_CREATED");
+	private final Marker CREATED = MarkerFactory.getMarker("NAMESPACE_CREATED");
 
 	static final String CACHE_NAME = "namespaces";
 
@@ -117,7 +117,13 @@ class DefaultNamespaceManager implements NamespaceManager {
 	}
 
 	@Override
-	@Transactional(readOnly = true, label = "namespace-exists")
+	@Transactional(readOnly = true, label = "namespace-id-exists")
+	public boolean exists(@NonNull EntityId id) {
+		return context.fetchExists(NAMESPACES, NAMESPACES.ID.eq(id.get()));
+	}
+
+	@Override
+	@Transactional(readOnly = true, label = "namespace-slug-exists")
 	public boolean exists(@NonNull String slug) {
 		return context.fetchExists(NAMESPACES, NAMESPACES.SLUG.eq(slug));
 	}
