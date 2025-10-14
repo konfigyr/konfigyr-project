@@ -43,7 +43,7 @@ public class ServiceExistsException extends NamespaceException {
 	 */
 	public ServiceExistsException(@NonNull ServiceDefinition definition, Throwable cause) {
 		super(HttpStatus.BAD_REQUEST, "Could not create service as one already exists with the following slug: "
-				+ definition.slug() + " for Namespace: " + definition.namespace());
+				+ definition.slug() + " for Namespace: " + definition.namespace(), cause);
 		this.definition = definition;
 	}
 
