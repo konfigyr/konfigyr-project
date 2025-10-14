@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,6 +44,14 @@ class NamespaceController {
 				.build();
 
 		return assembler.assemble(namespaces.search(query));
+	}
+
+	@PreAuthorize("isMember(#slug)")
+	@RequiresScope(OAuthScope.READ_NAMESPACES)
+	@RequestMapping(path = "/{slug}", method = RequestMethod.HEAD)
+	ResponseEntity<Void> check(@PathVariable String slug) {
+		final HttpStatus status = namespaces.exists(slug) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+		return ResponseEntity.status(status).build();
 	}
 
 	@GetMapping("/{slug}")
