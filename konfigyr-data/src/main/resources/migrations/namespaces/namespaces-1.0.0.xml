@@ -235,7 +235,7 @@
 
 		<comment>Initial services table migration</comment>
 
-		<createTable tableName="services" remarks="The core domain aggregate representing a Spring Boot application">
+		<createTable tableName="services" remarks="The core domain aggregate representing a Spring Boot application.">
 			<column name="id" type="bigint" autoIncrement="true">
 				<constraints primaryKey="true" nullable="false" />
 			</column>

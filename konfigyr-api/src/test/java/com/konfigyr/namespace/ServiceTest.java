@@ -1,7 +1,6 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.support.Avatar;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,19 +50,19 @@ class ServiceTest {
 
 		assertThatThrownBy(builder::build)
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Service entity identifier can not be null");
+				.hasMessageContaining("Service entity identifier can't be null");
 
 		assertThatThrownBy(() -> builder.id("000000BKTH3TG").build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Namespace entity identifier can not be null");
+				.hasMessageContaining("Namespace entity identifier can't be null");
 
 		assertThatThrownBy(() -> builder.namespace("000000BKTH3TG").build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Service slug can not be blank");
+				.hasMessageContaining("Service slug can't be blank");
 
 		assertThatThrownBy(() -> builder.slug("test-service").build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Service name can not be blank");
+				.hasMessageContaining("Service name can't be blank");
 
 		assertThat(builder.name("Service name").build())
 				.returns(EntityId.from(12476518224L), Service::id)

@@ -28,9 +28,10 @@ import java.time.ZoneOffset;
  * In Domain-Driven Design terms, {@code Service} is an aggregate root within the {@code namespace} bounded
  * context. Other modules may reference this entity but do not own it.
  *
- * @param id unique identifier of this service, can not be {@literal null}
- * @param slug unique service identifier derived from its name, can not be {@literal null}
- * @param name human friendly name of the service, can not be {@literal null}
+ * @param id unique identifier of this service, can't be {@literal null}
+ * @param namespace unique identifier of the namespace, can't be {@literal null}
+ * @param slug unique service identifier derived from its name, can't be {@literal null}
+ * @param name human friendly name of the service, can't be {@literal null}
  * @param description short description of the service, can be {@literal null}
  * @param createdAt when was this service created, can be {@literal null}
  * @param updatedAt when was this service last updated, can be {@literal null}
@@ -224,10 +225,10 @@ public record Service(
 		 */
 		@NonNull
 		public Service build() {
-			Assert.notNull(id, "Service entity identifier can not be null");
-			Assert.notNull(namespace, "Namespace entity identifier can not be null");
-			Assert.hasText(slug, "Service slug can not be blank");
-			Assert.hasText(name, "Service name can not be blank");
+			Assert.notNull(id, "Service entity identifier can't be null");
+			Assert.notNull(namespace, "Namespace entity identifier can't be null");
+			Assert.hasText(slug, "Service slug can't be blank");
+			Assert.hasText(name, "Service name can't be blank");
 
 			return new Service(id, namespace, slug, name, description, createdAt, updatedAt);
 		}
