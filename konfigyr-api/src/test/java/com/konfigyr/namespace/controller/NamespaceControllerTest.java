@@ -102,6 +102,32 @@ class NamespaceControllerTest extends AbstractNamespaceControllerTest {
 	}
 
 	@Test
+	@DisplayName("should perform a namespace check by slug on an existing namespace")
+	void shouldCheckExistingNamespace() {
+		mvc.head().uri("/namespaces/{slug}", "konfigyr")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.body()
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should perform a namespace check by slug on an unknown namespace")
+	void shouldCheckUnknownNamespace() {
+		mvc.head().uri("/namespaces/{slug}", "unknown")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND)
+				.body()
+				.isEmpty();
+	}
+
+	@Test
 	@DisplayName("should retrieve namespace by slug")
 	void shouldRetrieveNamespace() {
 		mvc.get().uri("/namespaces/{slug}", "konfigyr")
