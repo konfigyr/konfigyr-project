@@ -1,3 +1,4 @@
 com.konfigyr.account.AccountManagementAutoConfiguration
+com.konfigyr.artifactory.ArtifactoryAutoConfiguration
 com.konfigyr.feature.FeaturesAutoConfiguration
 com.konfigyr.namespace.NamespaceManagementAutoConfiguration

@@ -6,6 +6,7 @@ import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.DirectoryResourceAccessor;
 import org.jooq.DSLContext;
@@ -120,7 +121,8 @@ public class KonfigyrDatabase extends PostgresDatabase {
 			liquibase = new Liquibase(
 					getChangelog(),
 					new CompositeResourceAccessor(
-							new DirectoryResourceAccessor(changelogs)
+							new DirectoryResourceAccessor(changelogs),
+							new ClassLoaderResourceAccessor()
 					),
 					database
 			);

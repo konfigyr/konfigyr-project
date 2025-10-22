@@ -237,7 +237,7 @@
 
 		<createTable tableName="services" remarks="The core domain aggregate representing a Spring Boot application.">
 			<column name="id" type="bigint" autoIncrement="true">
-				<constraints primaryKey="true" nullable="false" />
+				<constraints primaryKey="true" nullable="false" unique="true" />
 			</column>
 
 			<column name="namespace_id" type="bigint">

@@ -2,6 +2,12 @@ spring:
   application:
     name: konfigyr-api
 
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+
   cache:
     cache-names: access-control, crypto-keysets, namespaces
 

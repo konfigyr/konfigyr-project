@@ -1,0 +1,42 @@
+[
+  {
+    "name": "konfigyr.licencing.enabled",
+    "type": "BOOLEAN",
+    "data_type": "ATOMIC",
+    "type_name": "java.lang.Boolean",
+    "default_value": "true",
+    "description": "Is licencing enabled. Defaults to true."
+  },
+  {
+    "name": "konfigyr.licencing.types",
+    "type": "STRING",
+    "data_type": "COLLECTION",
+    "type_name": "java.util.Set",
+    "description": "Collection of supported licence types.",
+    "hints": ["FREE", "TEAM", "ENTERPRISE"]
+  },
+  {
+    "name": "konfigyr.licencing.licence-duration",
+    "type": "DURATION",
+    "data_type": "ATOMIC",
+    "type_name": "java.time.Duration",
+    "description": "Defines the default licence duration. Defaults to one year.",
+    "default_value": "1y"
+  },
+  {
+    "name": "konfigyr.licencing.cleanup.enabled",
+    "type": "BOOLEAN",
+    "data_type": "ATOMIC",
+    "type_name": "java.lang.Boolean",
+    "default_value": "true",
+    "description": "Enables the licence cleanup job. Defaults to true."
+  },
+  {
+    "name": "konfigyr.licencing.cleanup.cron",
+    "type": "STRING",
+    "data_type": "ATOMIC",
+    "type_name": "java.lang.String",
+    "default_value": "0 0 * * * *",
+    "description": "Specifies the interval of the licence cleanup job. Defaults to every hour."
+  }
+]
