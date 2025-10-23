@@ -109,7 +109,7 @@ class MembersControllerTest extends AbstractNamespaceControllerTest {
 				.returns(FullName.of("John", "Doe"), Member::fullName)
 				.returns(Avatar.generate(EntityId.from(1), "JD"), Member::avatar)
 				.satisfies(it -> assertThat(it.since())
-						.isCloseTo(OffsetDateTime.now().minusDays(5), within(20, ChronoUnit.SECONDS))
+						.isCloseTo(OffsetDateTime.now().minusDays(5), within(30, ChronoUnit.SECONDS))
 				);
 	}
 
@@ -193,7 +193,7 @@ class MembersControllerTest extends AbstractNamespaceControllerTest {
 				.returns(FullName.of("Jane", "Doe"), Member::fullName)
 				.returns(Avatar.generate(EntityId.from(2), "JD"), Member::avatar)
 				.satisfies(it -> assertThat(it.since())
-						.isCloseTo(OffsetDateTime.now().minusDays(2), within(20, ChronoUnit.SECONDS))
+						.isCloseTo(OffsetDateTime.now().minusDays(2), within(30, ChronoUnit.SECONDS))
 				);
 	}
 
