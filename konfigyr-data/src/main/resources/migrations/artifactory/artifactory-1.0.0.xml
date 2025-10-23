@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+		xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+	<changeSet author="vspasic" id="1.0.0-create-artifacts-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="artifacts" />
+			</not>
+		</preConditions>
+
+		<comment>Initial artifacts table migration</comment>
+
+		<createTable tableName="artifacts" remarks="Artifact can be any type of software that contains configuration properties.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="group_id" type="varchar" remarks="The Maven coordinate `groupId` field.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="artifact_id" type="varchar" remarks="The Maven coordinate `artifactId` field.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="name" type="text" remarks="The name of this artifact.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="description" type="text" remarks="The detailed description of the artifact.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="website" type="text" remarks="The URL to the website or documentation of the artifact.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="repository" type="text" remarks="The URL to the artifact SCM (Source Control Management) repository of the artifact.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addUniqueConstraint
+				tableName="artifacts"
+				columnNames="group_id,artifact_id"
+				constraintName="unique_artifact"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-artifact-versions-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="artifact_versions" />
+			</not>
+		</preConditions>
+
+		<comment>Initial artifact versions table migration</comment>
+
+		<createTable tableName="artifact_versions" remarks="Stores Artifact versions.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="artifact_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="version" type="text" remarks="The Maven coordinate `version` field.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="checksum" type="bytea" remarks="The checksum of this Artifact version or release.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="released_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addUniqueConstraint
+				tableName="artifact_versions"
+				columnNames="artifact_id,version"
+				constraintName="unique_artifact_version"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="artifact_versions"
+				baseColumnNames="artifact_id"
+				constraintName="fk_artifact_release_version"
+				referencedTableName="artifacts"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-property-definitions-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="property_definitions" />
+			</not>
+		</preConditions>
+
+		<comment>Initial property definitions table migration</comment>
+
+		<createTable tableName="property_definitions" remarks="Spring configuration metadata descriptors.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="artifact_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="checksum" type="bytea" remarks="The checksum of this configuration descriptor.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="name" type="text" remarks="The configuration property name.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="type" type="varchar(20)" remarks="The configuration property type descriptor.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="type_name" type="varchar(255)" remarks="The original configuration property type name.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="data_type" type="varchar(20)" remarks="The configuration property data type for the property value.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="default_value" type="text" remarks="The configuration property default value.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="description" type="text" remarks="The configuration property description.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="hints" type="text" remarks="The possible configuration property values.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="deprecation" type="text" remarks="The configuration property deprecation information.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="occurrences" type="integer" remarks="The count of artifact versions that are using this property." defaultValue="1">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="first_seen" type="varchar" remarks="The artifact version where this property was seen for the first time.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="last_seen" type="varchar" remarks="The artifact version where this property was seen for the last time.">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+
+		<addUniqueConstraint
+				tableName="property_definitions"
+				columnNames="artifact_id,checksum"
+				constraintName="unique_property_definition"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="property_definitions"
+				baseColumnNames="artifact_id"
+				constraintName="fk_property_definition_artifact"
+				referencedTableName="artifacts"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-artifact-version-properties-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="artifact_version_properties" />
+			</not>
+		</preConditions>
+
+		<comment>Initial Artifact version properties table migration</comment>
+
+		<createTable tableName="artifact_version_properties" remarks="Define which properties are used by which Artifact version.">
+			<column name="artifact_version_id" type="bigint">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="property_definition_id" type="bigint">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="artifact_version_properties"
+				baseColumnNames="artifact_version_id"
+				constraintName="fk_artifact_version_property"
+				referencedTableName="artifact_versions"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="artifact_version_properties"
+				baseColumnNames="property_definition_id"
+				constraintName="fk_property_definition_usage"
+				referencedTableName="property_definitions"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-artifact-services-table">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="artifact_version_services" />
+			</not>
+		</preConditions>
+
+		<comment>Initial Artifact version services table migration</comment>
+
+		<createTable tableName="artifact_version_services" remarks="Define which Artifact versions are used by Services.">
+			<column name="artifact_version_id" type="bigint">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="service_id" type="bigint">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="artifact_version_services"
+				baseColumnNames="artifact_version_id"
+				constraintName="fk_artifact_version_service"
+				referencedTableName="artifact_versions"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="artifact_version_services"
+				baseColumnNames="service_id"
+				constraintName="fk_service_artifact_usage"
+				referencedTableName="services"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
+</databaseChangeLog>

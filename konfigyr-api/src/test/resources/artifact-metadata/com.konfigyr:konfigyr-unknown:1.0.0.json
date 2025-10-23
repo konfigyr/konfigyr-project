@@ -1,0 +1,9 @@
+[
+  {
+    "name": "spring.application.name",
+    "type": "STRING",
+    "data_type": "ATOMIC",
+    "type_name": "java.lang.String",
+    "description": "Application name. Typically used with logging to help identify the application."
+  }
+]

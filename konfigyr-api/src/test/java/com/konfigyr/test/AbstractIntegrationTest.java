@@ -1,16 +1,24 @@
 package com.konfigyr.test;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.feature.Features;
 import com.konfigyr.mail.Mailer;
 import com.konfigyr.test.smtp.TestSmtpServer;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
+import org.springframework.lang.NonNull;
 import org.springframework.modulith.test.PublishedEventsExtension;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
+
+import java.nio.file.Path;
 
 /**
  * Abstract test class for integration tests that would start the application with the {@link TestProfile test}
@@ -34,17 +42,36 @@ public abstract class AbstractIntegrationTest {
 	protected static WireMockServer wiremock;
 
 	/**
-	 * The {@link Features} Bean that is being {@link org.mockito.Spy spied} upon by Mockito in order
+	 * The JUnit Temporary directory that can be used to mock the Java {@link java.nio.file.FileSystem}.
+	 */
+	@TempDir(factory = JimfsDirFactory.class, cleanup = CleanupMode.NEVER)
+	protected static Path tempDirectory;
+
+	/**
+	 * The {@link Features} Bean that is being {@link org.mockito.Spy spied} upon by Mockito
 	 * to mock various feature testing scenarios.
 	 */
 	@MockitoSpyBean
 	protected Features features;
 
 	/**
-	 * The {@link Mailer} Bean that is being {@link org.mockito.Spy spied} upon by Mockito in order
+	 * The {@link MetadataStore} Bean that is being {@link org.mockito.Spy spied} upon by Mockito
+	 * to mock various feature testing scenarios. The default Store Bean is using the in-memory file
+	 * system provided by JIMFS, see {@link #tempDirectory}.
+	 */
+	@MockitoSpyBean
+	protected MetadataStore metadataStore;
+
+	/**
+	 * The {@link Mailer} Bean that is being {@link org.mockito.Spy spied} upon by Mockito
 	 * to intercept and inspect {@link com.konfigyr.mail.Mail Mail messages}.
 	 */
 	@MockitoSpyBean
 	protected Mailer mailer;
+
+	@DynamicPropertySource
+	static void registerTestProperties(@NonNull DynamicPropertyRegistry registry) {
+		registry.add("konfigyr.artifactory.metadata-store.root", () -> tempDirectory.toUri());
+	}
 
 }

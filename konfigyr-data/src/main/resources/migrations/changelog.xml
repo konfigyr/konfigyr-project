@@ -12,6 +12,10 @@
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
 
+	<includeAll path="spring-batch"
+				relativeToChangelogFile="true"
+				errorIfMissingOrEmpty="false"/>
+
 	<includeAll path="accounts"
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
@@ -28,7 +32,7 @@
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
 
-	<includeAll path="registry"
+	<includeAll path="artifactory"
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
 
