@@ -125,7 +125,7 @@ public record PropertyDefinition(
 		public Builder id(String id) {
 			return id(EntityId.from(id));
 		}
-	
+
 		/**
 		 * Sets the entity identifier for the property definition.
 		 *

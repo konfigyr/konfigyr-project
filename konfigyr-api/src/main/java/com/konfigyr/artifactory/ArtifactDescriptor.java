@@ -32,13 +32,17 @@ public interface ArtifactDescriptor extends Serializable {
 	String artifactId();
 
 	/**
-	 * @return human-readable name of the artifact, can be {@literal null}.
+	 * The human-readable name of the artifact.
+	 *
+	 * @return artifact name, can be {@literal null}.
 	 */
 	@Nullable
 	String name();
 
 	/**
-	 * @return textual description of the artifact, can be {@literal null}.
+	 * The textual description of the artifact.
+	 *
+	 * @return artifact description, can be {@literal null}.
 	 */
 	@Nullable
 	String description();

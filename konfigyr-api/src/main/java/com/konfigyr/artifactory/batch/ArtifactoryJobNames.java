@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory.batch;
 
+@SuppressWarnings("InterfaceIsType")
 public interface ArtifactoryJobNames {
 
 	/**

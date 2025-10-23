@@ -32,7 +32,7 @@ class ProvenanceEvaluationWriter implements ItemWriter<EvaluationResult> {
 	private final Converter<String, List<String>> hintsConverter;
 	private final Converter<String, Deprecation> deprecationConverter;
 
-	public ProvenanceEvaluationWriter(ObjectMapper mapper, DSLContext context) {
+	ProvenanceEvaluationWriter(ObjectMapper mapper, DSLContext context) {
 		this.context = context;
 		this.hintsConverter = new HintsConverter();
 		this.deprecationConverter = new DeprecationConverter(mapper);

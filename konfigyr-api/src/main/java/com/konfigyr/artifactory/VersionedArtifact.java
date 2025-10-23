@@ -41,7 +41,7 @@ import java.time.ZoneOffset;
  * @since 1.0.0
  */
 @AggregateRoot
-public record VersionedArtifact (
+public record VersionedArtifact(
 		@NonNull @Identity EntityId id,
 		@NonNull @Association(aggregateType = Artifact.class) EntityId artifact,
 		@NonNull String groupId,
@@ -104,7 +104,9 @@ public record VersionedArtifact (
 		private URI repository;
 		private OffsetDateTime releasedAt;
 
-		private Builder() {}
+		private Builder() {
+			// use the builder static method
+		}
 
 		/**
 		 * Specify the internal {@link EntityId} for this {@link VersionedArtifact}.
@@ -345,5 +347,5 @@ public record VersionedArtifact (
 					description, website, repository, releasedAt);
 		}
 	}
-	
+
 }

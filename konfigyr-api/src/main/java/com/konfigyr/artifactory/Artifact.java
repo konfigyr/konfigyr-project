@@ -101,7 +101,9 @@ public record Artifact(
 		private OffsetDateTime createdAt;
 		private OffsetDateTime updatedAt;
 
-		private Builder() {}
+		private Builder() {
+			// use the static build method...
+		}
 
 		/**
 		 * Specify the internal {@link EntityId} for this {@link Artifact}.

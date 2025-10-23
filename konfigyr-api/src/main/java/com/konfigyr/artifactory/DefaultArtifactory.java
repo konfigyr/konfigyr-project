@@ -39,7 +39,7 @@ class DefaultArtifactory implements Artifactory {
 
 	@NonNull
 	@Override
-	@Cacheable(value = "artifactory.versioned-artifact")
+	@Cacheable("artifactory.versioned-artifact")
 	@Transactional(readOnly = true, label = "artifactory.get-versioned-artifact")
 	public Optional<VersionedArtifact> get(@NonNull ArtifactCoordinates coordinates) {
 		return context.select(

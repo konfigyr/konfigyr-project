@@ -4,6 +4,9 @@ import com.konfigyr.artifactory.PropertyMetadata;
 import com.konfigyr.artifactory.VersionedArtifact;
 import org.springframework.lang.NonNull;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * Interface that represents the result of a {@link com.konfigyr.artifactory.PropertyMetadata} provenance evaluation
  * for a specific {@link VersionedArtifact artifact version}.
@@ -33,7 +36,8 @@ import org.springframework.lang.NonNull;
  * @since 1.0.0
  * @see ProvenanceEvaluator
  */
-public sealed interface EvaluationResult permits EvaluationResult.New, EvaluationResult.Unused, EvaluationResult.Used {
+public sealed interface EvaluationResult extends Serializable
+		permits EvaluationResult.New, EvaluationResult.Unused, EvaluationResult.Used {
 
 	/**
 	 * The version of the {@link com.konfigyr.artifactory.Artifact} that owns the {@link PropertyMetadata} that
@@ -68,7 +72,10 @@ public sealed interface EvaluationResult permits EvaluationResult.New, Evaluatio
 	 * @param metadata evaluated property metadata, can't be {@literal null}
 	 * @param provenance The initial provenance record for the new property, can't be {@literal null}.
 	 */
-	record New(VersionedArtifact version, PropertyMetadata metadata, Provenance provenance) implements EvaluationResult {}
+	record New(VersionedArtifact version, PropertyMetadata metadata, Provenance provenance) implements EvaluationResult {
+		@Serial
+		private static final long serialVersionUID = 5582579202930940434L;
+	}
 
 	/**
 	 * A record representing the evaluation result when an existing property is currently not used by
@@ -79,7 +86,10 @@ public sealed interface EvaluationResult permits EvaluationResult.New, Evaluatio
 	 * @param metadata evaluated property metadata, can't be {@literal null}
 	 * @param provenance The provenance record that should replace the old one, can't be {@literal null}.
 	 */
-	record Unused(VersionedArtifact version, PropertyMetadata metadata, Provenance provenance) implements EvaluationResult {}
+	record Unused(VersionedArtifact version, PropertyMetadata metadata, Provenance provenance) implements EvaluationResult {
+		@Serial
+		private static final long serialVersionUID = 4853856795235686402L;
+	}
 
 	/**
 	 * A record representing the evaluation result when an existing property that does not require any updates,
@@ -90,6 +100,9 @@ public sealed interface EvaluationResult permits EvaluationResult.New, Evaluatio
 	 * @param metadata evaluated property metadata, can't be {@literal null}
 	 * @param provenance The provenance record that should stay the same, can't be {@literal null}.
 	 */
-	record Used(VersionedArtifact version, PropertyMetadata metadata, Provenance provenance) implements EvaluationResult {}
+	record Used(VersionedArtifact version, PropertyMetadata metadata, Provenance provenance) implements EvaluationResult {
+		@Serial
+		private static final long serialVersionUID = 8988138899110174470L;
+	}
 
 }

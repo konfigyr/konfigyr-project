@@ -54,6 +54,8 @@ import static com.konfigyr.data.tables.ArtifactVersionProperties.ARTIFACT_VERSIO
  *     </li>
  * </ol>
  *
+ * @author Vladimir Spasic
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor
