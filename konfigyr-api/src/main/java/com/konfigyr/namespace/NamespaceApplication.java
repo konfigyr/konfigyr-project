@@ -43,6 +43,18 @@ import java.time.ZoneOffset;
  *   <li>Supports confidential and public client types, depending on deployment context.</li>
  * </ul>
  *
+ * @param id unique identifier of this application, can't be {@literal null}.
+ * @param namespace unique identifier of the {@link Namespace} that owns this application, can't be {@literal null}.
+ * @param name Human-readable name of the application, can't be {@literal null}.
+ * @param clientId public identifier of the OAuth2 client associated with this application, can't be {@literal null}.
+ * @param clientSecret confidential secret associated with the OAuth2 client. This value is only returned upon
+ *                     creation or when the client secret is rotated. Can be {@literal null}.
+ * @param scopes set of OAuth2 scopes granted to this application, can't be {@literal null}.
+ * @param expiresAt expiration timestamp for this application’s credentials. When defined, the client credentials
+ *                  automatically become invalid after the specified point in time. May be {@code null} for
+ *                  non-expiring applications.
+ * @param createdAt timestamp when this application was created, can't be {@literal null}.
+ * @param updatedAt timestamp when this application was last updated, can't be {@literal null}.
  * @author Vladimir Spasic
  * @since 1.0.0
  */
