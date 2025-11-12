@@ -1,5 +1,7 @@
 package com.konfigyr.security;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +86,7 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 	 * @param scopes scopes to be parsed and wrapped inside the scope set, can be {@literal null}
 	 * @return OAuth scope set, never {@literal null}
 	 */
+	@JsonCreator
 	public static OAuthScopes parse(@Nullable String scopes) {
 		return StringUtils.hasText(scopes) ? of(OAuthScope.parse(scopes)) : EMPTY;
 	}
@@ -274,6 +277,7 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 	}
 
 	@Override
+	@JsonValue
 	public String toString() {
 		return stream().map(OAuthScope::getAuthority).collect(Collectors.joining(" "));
 	}

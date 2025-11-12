@@ -95,7 +95,7 @@ class ServiceControllerTest extends AbstractNamespaceControllerTest {
 	}
 
 	@Test
-	@DisplayName("should not retrieve namespace services when namespaces:read scope is not present")
+	@DisplayName("should retrieve namespace service by slug")
 	void retrieveService() {
 		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
@@ -309,7 +309,7 @@ class ServiceControllerTest extends AbstractNamespaceControllerTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should create namespace service")
+	@DisplayName("should update namespace service")
 	void updateService() {
 		mvc.put().uri("/namespaces/konfigyr/services/konfigyr-id")
 				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))

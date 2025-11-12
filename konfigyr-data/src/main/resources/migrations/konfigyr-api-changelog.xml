@@ -20,6 +20,10 @@
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
 
+	<includeAll path="oauth-applications"
+				relativeToChangelogFile="true"
+				errorIfMissingOrEmpty="false"/>
+
 	<includeAll path="artifactory"
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>

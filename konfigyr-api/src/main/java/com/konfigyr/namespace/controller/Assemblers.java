@@ -1,10 +1,7 @@
 package com.konfigyr.namespace.controller;
 
 import com.konfigyr.hateoas.*;
-import com.konfigyr.namespace.Invitation;
-import com.konfigyr.namespace.Member;
-import com.konfigyr.namespace.Namespace;
-import com.konfigyr.namespace.Service;
+import com.konfigyr.namespace.*;
 import org.springframework.http.HttpMethod;
 
 interface Assemblers {
@@ -28,6 +25,12 @@ interface Assemblers {
 		return invitation -> EntityModel.of(invitation, linkBuilder(invitation).selfRel())
 				.add(linkBuilder(invitation).method(HttpMethod.DELETE).rel("cancel"))
 				.add(linkBuilder(invitation).method(HttpMethod.POST).rel("accept"));
+	}
+
+	static RepresentationModelAssembler<NamespaceApplication, EntityModel<NamespaceApplication>> application(Namespace namespace) {
+		return application -> EntityModel.of(application, linkBuilder(namespace, application).selfRel())
+				.add(linkBuilder(namespace, application).method(HttpMethod.PUT).rel("reset-secret"))
+				.add(linkBuilder(namespace, application).method(HttpMethod.DELETE).rel("delete"));
 	}
 
 	static RepresentationModelAssembler<Service, EntityModel<Service>> service(Namespace namespace) {
@@ -59,5 +62,11 @@ interface Assemblers {
 		return linkBuilder(namespace)
 				.path("services")
 				.path(service.slug());
+	}
+
+	static LinkBuilder linkBuilder(Namespace namespace, NamespaceApplication application) {
+		return linkBuilder(namespace)
+				.path("applications")
+				.path(application.id().serialize());
 	}
 }

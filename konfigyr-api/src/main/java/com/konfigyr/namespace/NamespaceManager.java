@@ -23,7 +23,7 @@ public interface NamespaceManager {
 	 * Performs a lookup of available {@link Namespace namespaces} that are matching the
 	 * filter {@link SearchQuery} filter criteria.
 	 *
-	 * @param query search query, can not be {@literal null}
+	 * @param query search query, can't be {@literal null}
 	 * @return matching namespaces page, never {@literal null}
 	 */
 	@NonNull
@@ -227,5 +227,65 @@ public interface NamespaceManager {
 	 * @param member entity identifier of the {@link Member} to be removed, can't be {@literal null}
 	 */
 	void removeMember(@NonNull EntityId member);
+
+	/**
+	 * Retrieves a page of {@link NamespaceApplication namespace applications} that are matching the
+	 * criteria specified by the {@link SearchQuery}.
+	 *
+	 * @param query search query to be executed when searching for applications, can't be {@literal null}
+	 * @return namespace applications, never {@literal null}
+	 */
+	@NonNull
+	Page<NamespaceApplication> findApplications(@NonNull SearchQuery query);
+
+	/**
+	 * Retrieves the {@link NamespaceApplication} with given entity identifier in the {@link Namespace}.
+	 *
+	 * @param application entity identifier of the {@link NamespaceApplication} to be retrieved, can't be {@literal null}
+	 * @return the matching application or an empty {@link Optional}, never {@literal null}
+	 */
+	@NonNull
+	Optional<NamespaceApplication> getApplication(@NonNull EntityId application);
+
+	/**
+	 * Creates a new {@link NamespaceApplication} using the given definition.
+	 *
+	 * @param definition definition used to create the application for a namespace, can't be {@literal null}
+	 * @return created namespace application, never {@literal null}
+	 */
+	@NonNull
+	NamespaceApplication createApplication(@NonNull NamespaceApplicationDefinition definition);
+
+	/**
+	 * Updates the {@link NamespaceApplication} with given entity identifier in the {@link Namespace} with
+	 * the data specified in the {@link NamespaceApplicationDefinition}.
+	 * <p>
+	 * Generates a new {@code client_secret} for the {@link NamespaceApplication} with the given entity identifier.
+	 *
+	 * @param application identifier of the {@link NamespaceApplication} to be updated, can't be {@literal null}
+	 * @param definition the new definition to be applied to the application, can't be {@literal null}
+	 * @return updated namespace application, never {@literal null}
+	 * @throws NamespaceApplicationNotFoundException when an application does not exist
+	 */
+	@NonNull
+	NamespaceApplication updateApplication(@NonNull EntityId application, @NonNull NamespaceApplicationDefinition definition);
+
+	/**
+	 * Generates a new {@code client_secret} for the {@link NamespaceApplication} with the given entity identifier.
+	 *
+	 * @param application identifier of the {@link NamespaceApplication} to be reset, can't be {@literal null}
+	 * @return updated namespace application, never {@literal null}
+	 * @throws NamespaceApplicationNotFoundException when an application does not exist
+	 */
+	@NonNull
+	NamespaceApplication resetApplication(@NonNull EntityId application);
+
+	/**
+	 * Removes the {@link NamespaceApplication} with given entity identifier from the {@link Namespace}.
+	 *
+	 * @param application entity identifier of the {@link NamespaceApplication} to be removed, can't be {@literal null}
+	 * @throws NamespaceApplicationNotFoundException when an application does not exist
+	 */
+	void removeApplication(@NonNull EntityId application);
 
 }
