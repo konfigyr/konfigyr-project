@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    
+    <changeSet author="vspasic" id="1.0.0-oauth-applications-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="oauth_applications"/>
+            </not>
+        </preConditions>
+
+        <comment>Initial OAuth2 applications table migration</comment>
+
+		<createTable tableName="oauth_applications" remarks="Stores OAuth2 client registrations that namespaces can use to access the REST API.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="varchar(100)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="client_id" type="varchar(100)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="client_secret" type="text">
+				<constraints nullable="false"/>
+			</column>
+			<column name="scopes" type="varchar(1000)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="expires_at" type="timestamptz">
+				<constraints nullable="true"/>
+			</column>
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="oauth_applications"
+				baseColumnNames="namespace_id"
+				constraintName="fk_namespace_application"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addUniqueConstraint
+				tableName="oauth_applications"
+				columnNames="client_id"
+				constraintName="unique_application"
+		/>
+    </changeSet>
+</databaseChangeLog>

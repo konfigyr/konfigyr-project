@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 /**
  * Implementation of the {@link StringKeyGenerator} that would use the {@link TSID} to generate
- * unique time sorted keys that are Base 16 encoded.
+ * unique time-sorted keys that are Base 16 encoded.
  *
  * @author Vladimir Spasic
  * @since 1.0.0

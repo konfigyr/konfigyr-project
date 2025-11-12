@@ -3,6 +3,8 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
@@ -14,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -400,7 +404,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 		final var definition = NamespaceDefinition.builder()
 				.owner(1L)
 				.slug("name-too-long")
-				.name(RandomStringUtils.randomAlphanumeric(512))
+				.name(RandomStringUtils.secure().nextAlphabetic(512))
 				.build();
 
 		assertThatThrownBy(() -> manager.create(definition))
@@ -537,6 +541,254 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(events.ofType(NamespaceEvent.class))
 				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should retrieve all namespace applications")
+	void shouldSearchApplications() {
+		final var query = SearchQuery.builder()
+				.pageable(PageRequest.of(0, 10, Sort.by("name").ascending()))
+				.build();
+
+		assertThat(manager.findApplications(query))
+				.isNotNull()
+				.hasSize(3)
+				.extracting(NamespaceApplication::id, NamespaceApplication::name)
+				.containsExactly(
+						tuple(EntityId.from(2), "Konfigyr active app"),
+						tuple(EntityId.from(1), "Konfigyr expired app"),
+						tuple(EntityId.from(3), "Personal app")
+				);
+	}
+
+	@Test
+	@DisplayName("should search namespace applications by term")
+	void shouldSearchApplicationsByTerm() {
+		final var query = SearchQuery.builder()
+				.term("active")
+				.build();
+
+		assertThat(manager.findApplications(query))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(NamespaceApplication::id)
+				.containsExactlyInAnyOrder(EntityId.from(2));
+	}
+
+	@Test
+	@DisplayName("should search namespace applications by namespace and identifier")
+	void shouldSearchApplicationsByNamespaceAndIdentifier() {
+		final var query = SearchQuery.builder()
+				.criteria(SearchQuery.NAMESPACE, "konfigyr")
+				.criteria(NamespaceApplication.ID_CRITERIA, EntityId.from(2))
+				.build();
+
+		assertThat(manager.findApplications(query))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(NamespaceApplication::id)
+				.containsExactlyInAnyOrder(EntityId.from(2));
+	}
+
+	@Test
+	@DisplayName("should search namespace applications that are no longer active")
+	void shouldSearchExpiredApplications() {
+		final var query = SearchQuery.builder()
+				.criteria(NamespaceApplication.ACTIVE_CRITERIA, false)
+				.build();
+
+		assertThat(manager.findApplications(query))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(NamespaceApplication::id)
+				.containsExactlyInAnyOrder(EntityId.from(1));
+	}
+
+	@Test
+	@DisplayName("should search namespace applications that are currently active")
+	void shouldSearchActiveApplications() {
+		final var query = SearchQuery.builder()
+				.criteria(NamespaceApplication.ACTIVE_CRITERIA, true)
+				.build();
+
+		assertThat(manager.findApplications(query))
+				.isNotNull()
+				.hasSize(2)
+				.extracting(NamespaceApplication::id)
+				.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3));
+	}
+
+	@Test
+	@DisplayName("should retrieve namespace application")
+	void shouldRetrieveApplication() {
+		assertThat(manager.getApplication(EntityId.from(1)))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(NamespaceApplication.class))
+				.returns(EntityId.from(1), NamespaceApplication::id)
+				.returns(EntityId.from(2), NamespaceApplication::namespace)
+				.returns("kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD", NamespaceApplication::clientId)
+				.returns(null, NamespaceApplication::clientSecret)
+				.returns(OAuthScopes.of(OAuthScope.NAMESPACES), NamespaceApplication::scopes)
+				.satisfies(it -> assertThat(it.expiresAt())
+						.isNotNull()
+						.isCloseTo(OffsetDateTime.now().minusDays(3), within(1, ChronoUnit.HOURS))
+				)
+				.satisfies(it -> assertThat(it.createdAt())
+						.isNotNull()
+						.isCloseTo(OffsetDateTime.now().minusDays(30), within(1, ChronoUnit.HOURS))
+				)
+				.satisfies(it -> assertThat(it.updatedAt())
+						.isNotNull()
+						.isCloseTo(OffsetDateTime.now().minusDays(14), within(1, ChronoUnit.HOURS))
+				);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve unknown namespace application")
+	void shouldRetrieveUnknownNamespaceApplication() {
+		assertThat(manager.getApplication(EntityId.from(9999)))
+				.isNotNull()
+				.isEmpty();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should create namespace application without expiration")
+	void shouldCreateApplicationWithoutExpiration() {
+		final var definition = NamespaceApplicationDefinition.builder()
+				.namespace(EntityId.from(2))
+				.name("Test expiring OAuth application")
+				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
+				.build();
+
+		final var application = manager.createApplication(definition);
+
+		assertThat(application.id())
+				.isNotNull();
+
+		assertThat(application.clientId())
+				.isNotBlank()
+				.startsWith(NamespaceApplicationDefinition.CLIENT_ID_PREFIX)
+				.hasSize(36);
+
+		assertThat(application.clientSecret())
+				.isNotBlank()
+				.hasSize(43);
+
+		assertThat(application)
+				.returns(definition.namespace(), NamespaceApplication::namespace)
+				.returns(definition.name(), NamespaceApplication::name)
+				.returns(definition.scopes(), NamespaceApplication::scopes)
+				.returns(null, NamespaceApplication::expiresAt);
+
+		assertThat(application.createdAt())
+				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		assertThat(application.updatedAt())
+				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should create namespace application with expiration")
+	void shouldCreateApplicationWithExpiration() {
+		final var definition = NamespaceApplicationDefinition.builder()
+				.namespace(EntityId.from(2))
+				.name("Test OAuth application")
+				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
+				.expiration(OffsetDateTime.now().plusDays(1))
+				.build();
+
+		final var application = manager.createApplication(definition);
+
+		assertThat(application.id())
+				.isNotNull();
+
+		assertThat(application.clientId())
+				.isNotBlank()
+				.startsWith(NamespaceApplicationDefinition.CLIENT_ID_PREFIX)
+				.hasSize(36);
+
+		assertThat(application.clientSecret())
+				.isNotBlank()
+				.hasSize(43);
+
+		assertThat(application)
+				.returns(definition.namespace(), NamespaceApplication::namespace)
+				.returns(definition.name(), NamespaceApplication::name)
+				.returns(definition.scopes(), NamespaceApplication::scopes);
+
+		assertThat(application.expiresAt())
+				.isCloseTo(definition.expiration(), within(10, ChronoUnit.SECONDS));
+
+		assertThat(application.createdAt())
+				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		assertThat(application.updatedAt())
+				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+	}
+
+	@Test
+	@DisplayName("should fail to create an application for unknown namespace")
+	void shouldCreateApplicationForUnknownNamespace() {
+		final var definition = NamespaceApplicationDefinition.builder()
+				.namespace(EntityId.from(9999))
+				.name("Test OAuth application")
+				.scopes("namespaces")
+				.build();
+
+		assertThatExceptionOfType(NamespaceNotFoundException.class)
+				.isThrownBy(() -> manager.createApplication(definition))
+				.withNoCause();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should reset namespace application")
+	void shouldResetApplication() {
+		final var application = manager.resetApplication(EntityId.from(3));
+
+		assertThat(application)
+				.returns(EntityId.from(3), NamespaceApplication::id)
+				.returns(EntityId.from(1), NamespaceApplication::namespace)
+				.returns("Personal app", NamespaceApplication::name)
+				.returns("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG", NamespaceApplication::clientId)
+				.returns(OAuthScopes.of(OAuthScope.NAMESPACES), NamespaceApplication::scopes)
+				.returns(null, NamespaceApplication::expiresAt);
+
+		assertThat(application.clientSecret())
+				.isNotBlank()
+				.hasSize(43);
+
+		assertThat(application.createdAt())
+				.isCloseTo(OffsetDateTime.now().minusDays(2), within(1, ChronoUnit.MINUTES));
+
+		assertThat(application.updatedAt())
+				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+	}
+
+	@Test
+	@DisplayName("should fail to reset unknown namespace application")
+	void shouldResetUnknownApplication() {
+		assertThatExceptionOfType(NamespaceApplicationNotFoundException.class)
+				.isThrownBy(() -> manager.resetApplication(EntityId.from(999)));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should delete namespace application")
+	void shouldRemoveApplication() {
+		assertThatNoException().isThrownBy(() -> manager.removeApplication(EntityId.from(1)));
+
+		assertThat(manager.getApplication(EntityId.from(1)))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should delete an unknown namespace application")
+	void shouldRemoveUnknownApplication() {
+		assertThatExceptionOfType(NamespaceApplicationNotFoundException.class)
+				.isThrownBy(() -> manager.removeApplication(EntityId.from(999)));
 	}
 
 }

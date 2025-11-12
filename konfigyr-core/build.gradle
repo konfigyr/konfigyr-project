@@ -37,4 +37,7 @@ dependencies {
     /* Database Test support */
     testImplementation 'org.liquibase:liquibase-core'
     testImplementation 'org.postgresql:postgresql'
+
+    /* BCrypt Test support */
+    testImplementation 'org.bouncycastle:bcpkix-jdk18on:1.80'
 }

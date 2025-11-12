@@ -4,8 +4,10 @@ import com.konfigyr.feature.FeatureDefinition;
 import com.konfigyr.feature.FeatureDefinitionConfigurer;
 import com.konfigyr.feature.Features;
 import com.konfigyr.mail.Mailer;
+import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -14,6 +16,7 @@ import org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.lang.NonNull;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collection;
 
@@ -43,8 +46,9 @@ public class NamespaceManagementAutoConfiguration implements FeatureDefinitionCo
 
 	@Bean
 	@ConditionalOnMissingBean(NamespaceManager.class)
-	NamespaceManager defaultNamespaceManager(DSLContext context) {
-		return new DefaultNamespaceManager(context, applicationEventPublisher);
+	NamespaceManager defaultNamespaceManager(DSLContext context, ObjectProvider<PasswordEncoder> passwordEncoder) {
+		final PasswordEncoder encoder = passwordEncoder.getIfAvailable(PasswordEncoders::get);
+		return new DefaultNamespaceManager(context, encoder, applicationEventPublisher);
 	}
 
 	@Bean
