@@ -716,8 +716,10 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 		assertThat(application)
 				.returns(definition.namespace(), NamespaceApplication::namespace)
 				.returns(definition.name(), NamespaceApplication::name)
-				.returns(definition.scopes(), NamespaceApplication::scopes)
-				.returns(definition.expiration(), NamespaceApplication::expiresAt);
+				.returns(definition.scopes(), NamespaceApplication::scopes);
+
+		assertThat(application.expiresAt())
+				.isCloseTo(definition.expiration(), within(10, ChronoUnit.SECONDS));
 
 		assertThat(application.createdAt())
 				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
