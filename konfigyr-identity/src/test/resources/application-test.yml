@@ -28,18 +28,16 @@ spring:
             user-info-uri: https://login-demo.curity.io/oauth/v2/oauth-userinfo
             user-name-attribute: email
 
-      authorizationserver:
-        client:
-          konfigyr:
-            registration:
-              client-secret: "{noop}secret"
-              redirect-uris:
-                - http://localhost/oauth/client/code
-
 konfigyr:
   authorization:
     cleanup:
       cron: "-"
+
+  identity:
+    authorization:
+      client-secret: "{argon2}$argon2id$v=19$m=19456,t=2,p=1$MN+nT8rqZSJ9kEc0u0ZQow$DaofvT9uMeu2Hmx4hAdITjnSTUK3H9u2fnaCoudxDvw"
+      redirect-uris:
+        - http://localhost/oauth/client/code
 
   crypto:
     master-key:

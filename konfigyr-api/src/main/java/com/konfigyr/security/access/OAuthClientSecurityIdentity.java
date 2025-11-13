@@ -1,6 +1,5 @@
 package com.konfigyr.security.access;
 
-import com.konfigyr.entity.EntityId;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
@@ -9,21 +8,21 @@ import java.io.Serial;
 
 @EqualsAndHashCode
 @RequiredArgsConstructor
-final class SecurityEntityIdentity implements SecurityIdentity {
+final class OAuthClientSecurityIdentity implements SecurityIdentity {
 
 	@Serial
-	private static final long serialVersionUID = 8676029914780480258L;
+	private static final long serialVersionUID = 8025684936297221441L;
 
-	private final EntityId id;
+	private final String clientId;
 
 	@NonNull
 	@Override
 	public String get() {
-		return id.serialize();
+		return clientId;
 	}
 
 	@Override
 	public String toString() {
-		return "SecurityIdentity(account=" + id + ")";
+		return "SecurityIdentity(client_id=" + clientId + ")";
 	}
 }

@@ -4,6 +4,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.NoOpCache;
 import org.springframework.lang.NonNull;
@@ -93,15 +94,25 @@ class KonfigyrAccessService implements AccessService {
 
 	@Nullable
 	private static SecurityIdentity resolveSecurityIdentity(@NonNull Authentication authentication) {
+		final String principal = authentication.getName();
+
+		if (StringUtils.isBlank(principal)) {
+			return null;
+		}
+
+		if (principal.startsWith("kfg-")) {
+			return SecurityIdentity.oauthClient(principal);
+		}
+
 		final EntityId id;
 
 		try {
-			id = EntityId.from(authentication.getName());
+			id = EntityId.from(principal);
 		} catch (IllegalArgumentException ex) {
 			return null;
 		}
 
-		return SecurityIdentity.of(id);
+		return SecurityIdentity.account(id);
 	}
 
 	private static Set<Serializable> normalizePermissions(Serializable... permissions) {

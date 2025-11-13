@@ -1,5 +1,6 @@
 package com.konfigyr.namespace.controller;
 
+import com.google.crypto.tink.subtle.Base64;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
@@ -11,6 +12,8 @@ import com.konfigyr.support.SearchQuery;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +24,10 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -37,13 +44,30 @@ class NamespaceController {
 			@NonNull Authentication authentication,
 			@NonNull Pageable pageable
 	) {
-		final SearchQuery query = SearchQuery.builder()
-				.criteria(SearchQuery.ACCOUNT, retrieveAccountIdentifier(authentication))
-				.pageable(pageable)
-				.term(term)
-				.build();
+		final Page<Namespace> result;
+		final Optional<EntityId> account = retrieveAccountIdentifier(authentication);
+		final Optional<EntityId> namespace = retrieveNamespaceIdentifier(authentication);
 
-		return assembler.assemble(namespaces.search(query));
+		// TODO: Improve how we retrieve namespaces based on the current authentication
+		if (account.isPresent()) {
+			final SearchQuery query = SearchQuery.builder()
+					.criteria(SearchQuery.ACCOUNT, account.get())
+					.pageable(pageable)
+					.term(term)
+					.build();
+
+			result = namespaces.search(query);
+		} else if (namespace.isPresent()) {
+			result = namespaces.findById(namespace.get())
+							.map(it -> (Page<Namespace>) new PageImpl<>(List.of(it), pageable, 1))
+							.orElseGet(() -> Page.empty(pageable));
+		} else {
+			throw new AuthenticationCredentialsNotFoundException(
+					"Failed to retrieve account identifier from authentication principal"
+			);
+		}
+
+		return assembler.assemble(result);
 	}
 
 	@PreAuthorize("isMember(#slug)")
@@ -57,9 +81,8 @@ class NamespaceController {
 	@GetMapping("/{slug}")
 	@PreAuthorize("isMember(#slug)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
-	EntityModel<Namespace> get(@PathVariable String slug, @NonNull Authentication authentication) {
+	EntityModel<Namespace> get(@PathVariable String slug) {
 		final SearchQuery query = SearchQuery.builder()
-				.criteria(SearchQuery.ACCOUNT, retrieveAccountIdentifier(authentication))
 				.criteria(SearchQuery.NAMESPACE, slug)
 				.pageable(Pageable.ofSize(1))
 				.build();
@@ -99,13 +122,26 @@ class NamespaceController {
 		namespaces.delete(slug);
 	}
 
-	static EntityId retrieveAccountIdentifier(@NonNull Authentication authentication) {
+	static Optional<EntityId> retrieveAccountIdentifier(@NonNull Authentication authentication) {
 		try {
-			return EntityId.from(authentication.getName());
+			return Optional.of(EntityId.from(authentication.getName()));
 		} catch (IllegalArgumentException ex) {
-			throw new AuthenticationCredentialsNotFoundException(
-					"Failed to retrieve account identifier from authentication principal", ex
-			);
+			return Optional.empty();
+		}
+	}
+
+	static Optional<EntityId> retrieveNamespaceIdentifier(@NonNull Authentication authentication) {
+		if (!authentication.getName().startsWith("kfg-")) {
+			return Optional.empty();
+		}
+
+		try {
+			final byte[] decoded = Base64.urlSafeDecode(authentication.getName().replace("kfg-", ""));
+			final ByteBuffer buffer = ByteBuffer.wrap(decoded);
+
+			return Optional.of(EntityId.from(buffer.getLong()));
+		} catch (Exception ex) {
+			return Optional.empty();
 		}
 	}
 
@@ -115,12 +151,18 @@ class NamespaceController {
 			@Length(max = 255) String description
 	) {
 		NamespaceDefinition definition(@NonNull Authentication authentication) {
+			final EntityId owner = retrieveAccountIdentifier(authentication).orElseThrow(
+					() -> new AuthenticationCredentialsNotFoundException(
+							"Failed to retrieve account identifier from authentication principal"
+					)
+			);
+
 			return NamespaceDefinition.builder()
 					.owner(1L)
 					.slug(slug)
 					.name(name)
 					.description(description)
-					.owner(retrieveAccountIdentifier(authentication))
+					.owner(owner)
 					.build();
 		}
 	}

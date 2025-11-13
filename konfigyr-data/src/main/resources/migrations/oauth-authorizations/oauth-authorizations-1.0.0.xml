@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     
-    <changeSet author="vspasic" id="1.0.0-oauth-authorizations-table">
+    <changeSet author="vspasic" id="1.0.0-oauth-authorizations-table" context="identity">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="oauth_authorizations"/>
@@ -52,7 +52,7 @@
 		</createTable>
     </changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-oauth-keys">
+	<changeSet author="vspasic" id="1.0.0-oauth-keys" context="identity">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="oauth_keys"/>

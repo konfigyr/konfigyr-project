@@ -22,6 +22,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -112,6 +113,27 @@ class AuthorizationServerIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should fail to authorize request for OAuth client that does not support authorization_code")
+	void authorizationForUnsupportedClient() {
+		mvc.get().uri("/oauth/authorize")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
+				.queryParam(OAuth2ParameterNames.CLIENT_SECRET, "4b6dHEXXnAEMM1AD4b6RhqamjFwMdhIRgpyBVJRu-Zk")
+				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "namespaces")
+				.queryParam(OAuth2ParameterNames.STATE, "state")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(assertRedirect(uri -> assertThat(uri)
+						.hasPath("/oauth/client/code")
+						.hasParameter(OAuth2ParameterNames.ERROR, OAuth2ErrorCodes.UNAUTHORIZED_CLIENT)
+						.hasParameter(OAuth2ParameterNames.ERROR_DESCRIPTION, "OAuth 2.0 Parameter: client_id")
+						.hasParameter(OAuth2ParameterNames.STATE, "state")
+				));
+	}
+
+	@Test
 	@DisplayName("should fail to obtain token for unknown client")
 	void tokenForUnknownClient() {
 		mvc.post().uri("/oauth/token")
@@ -119,6 +141,23 @@ class AuthorizationServerIntegrationTest {
 				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
 				.param(OAuth2ParameterNames.CODE, "some authorization code")
 				.with(httpBasic("unknown", "secret"))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.satisfies(assertOAuthErrorResponse(OAuth2ErrorCodes.INVALID_CLIENT));
+	}
+
+	@Test
+	@DisplayName("should fail to obtain token for client that had expired")
+	void tokenForExpiringClient() {
+		mvc.post().uri("/oauth/token")
+				.param(OAuth2ParameterNames.GRANT_TYPE, "client_credentials")
+				.param(OAuth2ParameterNames.SCOPE, "namespaces")
+				.with(httpBasic(
+						"kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD",
+						"10S6cd0JgdO6WCLmOLB46d-Enx7K20hKSF1qicfev5g"
+				))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -172,6 +211,47 @@ class AuthorizationServerIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should fail to authorize request without code_challenge request parameter")
+	void requireCodeChallenge()  {
+		mvc.get().uri("/oauth/authorize")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
+				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "openid")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus3xxRedirection()
+				.satisfies(assertRedirect(uri -> assertThat(uri)
+						.hasPath("/oauth/client/code")
+						.hasParameter(OAuth2ParameterNames.ERROR, OAuth2ErrorCodes.INVALID_REQUEST)
+						.hasParameter(OAuth2ParameterNames.ERROR_DESCRIPTION, "OAuth 2.0 Parameter: code_challenge")
+						.hasParameter(OAuth2ParameterNames.ERROR_URI, "https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1")
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to authorize request without code_challenge request parameter")
+	void requireCodeChallengeMethod()  {
+		mvc.get().uri("/oauth/authorize")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
+				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "openid")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.queryParam(PkceParameterNames.CODE_CHALLENGE, "a challenge")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus3xxRedirection()
+				.satisfies(assertRedirect(uri -> assertThat(uri)
+						.hasPath("/oauth/client/code")
+						.hasParameter(OAuth2ParameterNames.ERROR, OAuth2ErrorCodes.INVALID_REQUEST)
+						.hasParameter(OAuth2ParameterNames.ERROR_DESCRIPTION, "OAuth 2.0 Parameter: code_challenge_method")
+						.hasParameter(OAuth2ParameterNames.ERROR_URI, "https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1")
+				));
+	}
+
+	@Test
 	@DisplayName("should authorize request and redirect to login page when principal is not authenticated")
 	void redirectToLoginWhenNotAuthenticated()  {
 		mvc.get().uri("/oauth/authorize")
@@ -179,6 +259,8 @@ class AuthorizationServerIntegrationTest {
 				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
 				.queryParam(OAuth2ParameterNames.SCOPE, "openid")
 				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.queryParam(PkceParameterNames.CODE_CHALLENGE, "pkce-challenge")
+				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -205,13 +287,17 @@ class AuthorizationServerIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should issue OAuth Access Token")
-	void issueAccessTokens()  {
+	@DisplayName("should issue OAuth Access Token for authorization_code grant type")
+	void issueAccessTokenForAuthorizationCode()  {
+		final var verifier = PkceGenerator.generateCodeVerifier();
+
 		final var result = mvc.get().uri("/oauth/authorize")
 				.queryParam(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
 				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
 				.queryParam(OAuth2ParameterNames.SCOPE, "openid")
 				.queryParam(OAuth2ParameterNames.STATE, "state")
+				.queryParam(PkceParameterNames.CODE_CHALLENGE, PkceGenerator.generateCodeChallenge(verifier))
+				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
 				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.with(rememberMe(identityService, 1))
 				.exchange();
@@ -239,6 +325,8 @@ class AuthorizationServerIntegrationTest {
 		mvc.post().uri("/oauth/token")
 				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
+				.param(PkceParameterNames.CODE_VERIFIER, verifier)
+				.param(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
 				.param(OAuth2ParameterNames.CODE, code)
 				.with(httpBasic("konfigyr", "secret"))
 				.exchange()
@@ -269,6 +357,94 @@ class AuthorizationServerIntegrationTest {
 						.param(OAuth2ParameterNames.GRANT_TYPE, "refresh_token")
 						.param("refresh_token", it.assertThat().actual().toString())
 						.with(httpBasic("konfigyr", "secret"))
+						.exchange()
+						.assertThat()
+						.hasStatus(HttpStatus.OK)
+				);
+	}
+
+	@Test
+	@DisplayName("should fail to issue OAuth Access Token when invalid PKCE verifier is sent")
+	void tokenForInvalidCodeVerifier()  {
+		final var verifier = PkceGenerator.generateCodeVerifier();
+
+		final var result = mvc.get().uri("/oauth/authorize")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
+				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "openid")
+				.queryParam(OAuth2ParameterNames.STATE, "state")
+				.queryParam(PkceParameterNames.CODE_CHALLENGE, PkceGenerator.generateCodeChallenge(verifier))
+				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.with(rememberMe(identityService, 1))
+				.exchange();
+
+		result.assertThat()
+				.apply(log())
+				.satisfies(it -> it.assertThat()
+						.cookies()
+						.doesNotContainCookie("konfigyr.account")
+				)
+				.satisfies(assertRedirect(uri -> assertThat(uri)
+						.hasPath("/oauth/client/code")
+						.hasParameter(OAuth2ParameterNames.STATE, "state")
+						.hasParameter(OAuth2ParameterNames.CODE)
+				));
+
+		assertThat(result.getResponse().getRedirectedUrl())
+				.isNotNull();
+
+		final String code = UriComponentsBuilder.fromUriString(result.getResponse().getRedirectedUrl())
+				.build()
+				.getQueryParams()
+				.getFirst(OAuth2ParameterNames.CODE);
+
+		mvc.post().uri("/oauth/token")
+				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
+				.param(PkceParameterNames.CODE_VERIFIER, "invalid verifier")
+				.param(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
+				.param(OAuth2ParameterNames.CODE, code)
+				.with(httpBasic("konfigyr", "secret"))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.satisfies(assertOAuthErrorResponse(OAuth2ErrorCodes.INVALID_GRANT));
+	}
+
+	@Test
+	@DisplayName("should issue OAuth Access Token for client_credentials grant type")
+	void issueAccessTokenForClientCredentials()  {
+		mvc.post().uri("/oauth/token")
+				.param(OAuth2ParameterNames.GRANT_TYPE, "client_credentials")
+				.param(OAuth2ParameterNames.SCOPE, "namespaces")
+				.with(httpBasic(
+						"kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG",
+						"n0obEPw2_5DoDNkxyXhW5Ul1TgC-t2r3H8_wj7PDqFc"
+				))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.hasPathSatisfying("$.token_type", it -> it.assertThat()
+						.isEqualTo(OAuth2AccessToken.TokenType.BEARER.getValue())
+				)
+				.hasPathSatisfying("$.scope", it -> it.assertThat()
+						.isEqualTo("namespaces")
+				)
+				.hasPathSatisfying("$.expires_in", it -> it.assertThat().isNotNull())
+				.hasPathSatisfying("$.access_token", it -> it.assertThat().isNotNull())
+				.doesNotHavePath("$.id_token")
+				.doesNotHavePath("$.refresh_token")
+				.hasPathSatisfying("$.access_token", it -> mvc.post()
+						.uri("/oauth/introspect")
+						.param("token", it.assertThat().actual().toString())
+						.with(httpBasic(
+								"kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG",
+								"n0obEPw2_5DoDNkxyXhW5Ul1TgC-t2r3H8_wj7PDqFc"
+						))
 						.exchange()
 						.assertThat()
 						.hasStatus(HttpStatus.OK)

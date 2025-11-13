@@ -22,10 +22,23 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 
 	@Test
 	@DisplayName("should validate the OAuth Access token")
-	void validate() {
+	void validateMember() {
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
 				.subject(TestPrincipals.john().getName())
+				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
+		);
+
+		assertThatRequest(token)
+				.hasStatusOk();
+	}
+
+	@Test
+	@DisplayName("should validate the OAuth Access token")
+	void validateApplication() {
+		final String token = generateAccessToken(claims -> claims
+				.issuer(wiremock.baseUrl())
+				.subject("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
 				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
 		);
 

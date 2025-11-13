@@ -9,6 +9,8 @@
     <changeSet id="test-data" author="vspasic">
         <sqlFile path="data/users.sql" />
         <sqlFile path="data/namespaces.sql" />
+		<sqlFile path="data/namespace-members.sql" />
+		<sqlFile path="data/oauth-applications.sql" />
 		<sqlFile path="data/services.sql" />
         <sqlFile path="data/artifactory.sql" />
 		<sqlFile path="data/integrations.sql" />

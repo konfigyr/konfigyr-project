@@ -81,7 +81,7 @@ class AuthorizationConsentControllerTest {
 						.asInstanceOf(InstanceOfAssertFactories.type(RegisteredClient.class))
 						.returns("konfigyr", RegisteredClient::getId)
 						.returns("konfigyr", RegisteredClient::getClientId)
-						.returns("konfigyr", RegisteredClient::getClientName)
+						.returns("Konfigyr OAuth Client", RegisteredClient::getClientName)
 				)
 				.hasEntrySatisfying("scopes", it -> assertThat(it)
 						.isInstanceOf(Iterable.class)

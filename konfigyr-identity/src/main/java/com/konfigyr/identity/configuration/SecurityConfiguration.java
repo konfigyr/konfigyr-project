@@ -4,6 +4,7 @@ import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
 import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
+import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -40,6 +42,11 @@ public class SecurityConfiguration {
 
 	public SecurityConfiguration(AccountIdentityService accountIdentityService) {
 		this.rememberMeServices = new AccountRememberMeServices(accountIdentityService::get);
+	}
+
+	@Bean
+	PasswordEncoder authorizationServerPasswordEncoder() {
+		return PasswordEncoders.get();
 	}
 
 	@Bean

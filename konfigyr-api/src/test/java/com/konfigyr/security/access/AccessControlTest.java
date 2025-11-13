@@ -94,7 +94,7 @@ class AccessControlTest {
 	}
 
 	static SecurityIdentity securityIdentityFor(long id) {
-		return SecurityIdentity.of(EntityId.from(id));
+		return SecurityIdentity.account(EntityId.from(id));
 	}
 
 }
