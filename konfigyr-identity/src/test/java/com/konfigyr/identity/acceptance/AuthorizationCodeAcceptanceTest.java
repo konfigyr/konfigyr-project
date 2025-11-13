@@ -1,6 +1,7 @@
 package com.konfigyr.identity.acceptance;
 
 import com.konfigyr.identity.AccountIdentities;
+import com.konfigyr.identity.PkceGenerator;
 import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
@@ -23,6 +24,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -83,7 +85,9 @@ class AuthorizationCodeAcceptanceTest {
 	@Test
 	@DisplayName("should process authorization request with `code` response type")
 	void processAuthorizationRequest() {
-		final UriComponents uri = authorizationUri().build();
+		final String verifier = PkceGenerator.generateCodeVerifier();
+
+		final UriComponents uri = authorizationUri(verifier).build();
 		final Cookie cookie = generateRememberMeCookie(AccountIdentities.jane().build());
 
 		driver.get(uri.toUriString());
@@ -134,21 +138,23 @@ class AuthorizationCodeAcceptanceTest {
 				.hasParameter(OAuth2ParameterNames.CODE)
 				.extracting(UriComponentsBuilder::fromUri)
 				.extracting(UriComponentsBuilder::build)
-				.satisfies(obtainToken(mvc));
+				.satisfies(obtainToken(mvc, verifier));
 	}
 
 	static UriComponentsBuilder uri() {
 		return UriComponentsBuilder.newInstance().uriComponents(host);
 	}
 
-	static UriComponentsBuilder authorizationUri() {
+	static UriComponentsBuilder authorizationUri(String verifier) {
 		return uri()
 				.path("/oauth/authorize")
 				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
 				.queryParam(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
 				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.queryParam(OAuth2ParameterNames.SCOPE, "openid namespaces")
-				.queryParam(OAuth2ParameterNames.STATE, "test-state");
+				.queryParam(OAuth2ParameterNames.STATE, "test-state")
+				.queryParam(PkceParameterNames.CODE_CHALLENGE, PkceGenerator.generateCodeChallenge(verifier))
+				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256");
 	}
 
 	static Cookie generateRememberMeCookie(AccountIdentity identity) {
@@ -187,7 +193,7 @@ class AuthorizationCodeAcceptanceTest {
 				.isEqualTo(value);
 	}
 
-	static ThrowingConsumer<UriComponents> obtainToken(MockMvcTester mvc) {
+	static ThrowingConsumer<UriComponents> obtainToken(MockMvcTester mvc, String verifier) {
 		final var headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		headers.setBasicAuth("konfigyr", "secret");
@@ -197,6 +203,8 @@ class AuthorizationCodeAcceptanceTest {
 				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
 				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.param(OAuth2ParameterNames.CODE, uri.getQueryParams().getFirst("code"))
+				.param(PkceParameterNames.CODE_VERIFIER, verifier)
+				.param(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
 				.headers(headers)
 				.exchange()
 				.assertThat()

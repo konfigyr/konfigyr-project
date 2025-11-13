@@ -29,7 +29,8 @@ spring:
      basename: messages/email, messages/problem-detail
 
   liquibase:
-    change-log: classpath:migrations/konfigyr-api-changelog.xml
+    change-log: migrations/changelog.xml
+    contexts: api
 
   security:
     oauth2:

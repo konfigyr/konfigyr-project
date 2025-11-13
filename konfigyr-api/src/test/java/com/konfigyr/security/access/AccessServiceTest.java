@@ -124,6 +124,23 @@ class AccessServiceTest {
 	}
 
 	@Test
+	@DisplayName("should grant access for namespace application")
+	void accessControlGrantedForApplication() {
+		final var authentication = TestPrincipals.application("kfg-client-application");
+		final var control = accessControlFor(accessGrantFor("kfg-client-application"));
+		doReturn(control).when(repository).get(objectIdentity);
+
+		check(authentication, "konfigyr", NamespaceRole.ADMIN)
+				.returns(true, AuthorizationDecision::isGranted)
+				.returns(objectIdentity, AccessControlDecision::getIdentity)
+				.returns(Set.of(NamespaceRole.ADMIN), AccessControlDecision::getPermissions);
+
+		verify(repository).get(objectIdentity);
+		verify(cache).get(objectIdentity);
+		verify(cache).put(objectIdentity, control);
+	}
+
+	@Test
 	@DisplayName("should not grant access for unsupported authentication")
 	void accessControlForUnsupportedAuthentication() {
 		final var authentication = new TestingAuthenticationToken("test", "test");
@@ -187,8 +204,12 @@ class AccessServiceTest {
 
 	static Collection<AccessGrant> accessGrantFor(Account account, NamespaceRole... roles) {
 		return Arrays.stream(roles)
-				.map(role -> AccessGrant.of(account.id(), role))
+				.map(role -> AccessGrant.forNamespaceMember(account.id(), role))
 				.collect(Collectors.toSet());
+	}
+
+	static Collection<AccessGrant> accessGrantFor(String clientId) {
+		return Set.of(AccessGrant.forNamespaceApplication(clientId));
 	}
 
 	static AccessControl accessControlFor(Collection<AccessGrant> grants) {

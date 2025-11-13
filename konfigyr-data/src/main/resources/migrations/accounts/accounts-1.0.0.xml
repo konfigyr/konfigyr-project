@@ -4,7 +4,7 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-	<changeSet author="vspasic" id="1.0.0-create-user-accounts-table">
+	<changeSet author="vspasic" id="1.0.0-create-user-accounts-table" context="identity or api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="accounts"/>
@@ -50,7 +50,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-account-access-tokens-table">
+	<changeSet author="vspasic" id="1.0.0-create-account-access-tokens-table" context="identity">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="account_access_tokens" />

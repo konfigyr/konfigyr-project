@@ -40,6 +40,7 @@ public record ObjectIdentity(@NonNull String type, @NonNull Serializable id) imp
 		return new ObjectIdentity(NAMESPACE_TYPE, namespace);
 	}
 
+	@NonNull
 	@Override
 	public String toString() {
 		return "ObjectIdentity(" + type + ":" + id + ")";

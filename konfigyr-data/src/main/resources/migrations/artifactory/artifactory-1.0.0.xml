@@ -4,7 +4,7 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-	<changeSet author="vspasic" id="1.0.0-create-artifacts-table">
+	<changeSet author="vspasic" id="1.0.0-create-artifacts-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="artifacts" />
@@ -58,7 +58,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-artifact-versions-table">
+	<changeSet author="vspasic" id="1.0.0-create-artifact-versions-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="artifact_versions" />
@@ -105,7 +105,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-property-definitions-table">
+	<changeSet author="vspasic" id="1.0.0-create-property-definitions-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="property_definitions" />
@@ -188,7 +188,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-artifact-version-properties-table">
+	<changeSet author="vspasic" id="1.0.0-create-artifact-version-properties-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="artifact_version_properties" />
@@ -225,7 +225,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-artifact-services-table">
+	<changeSet author="vspasic" id="1.0.0-create-artifact-services-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="artifact_version_services" />

@@ -4,10 +4,12 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-	<include file="migrations/konfigyr-identity-changelog.xml" />
+	<include file="migrations/changelog.xml" />
 
 	<changeSet id="test-data" author="vspasic">
 		<sqlFile path="data/users.sql" />
+		<sqlFile path="data/namespaces.sql" />
+		<sqlFile path="data/oauth-applications.sql" />
 	</changeSet>
 
 </databaseChangeLog>

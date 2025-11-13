@@ -3,6 +3,9 @@ package com.konfigyr.identity.authorization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.konfigyr.crypto.KeysetOperationsFactory;
 import com.konfigyr.identity.KonfigyrIdentityKeysets;
+import com.konfigyr.identity.authorization.client.DelegatingRegisteredClientRepository;
+import com.konfigyr.identity.authorization.client.KonfigyrRegisteredClientRepository;
+import com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository;
 import com.konfigyr.identity.authorization.jwk.KeyRepository;
 import com.konfigyr.identity.authorization.jwk.RepositoryKeySource;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -10,6 +13,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,14 +29,18 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.util.Assert;
 
 import java.security.Security;
+import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(AuthorizationProperties.class)
 public class AuthorizationConfiguration implements InitializingBean {
 
 	private final Lazy<ObjectMapper> mapper;
+	private final AuthorizationProperties properties;
 
-	public AuthorizationConfiguration(ResourceLoader resourceLoader) {
+	public AuthorizationConfiguration(ResourceLoader resourceLoader, AuthorizationProperties properties) {
 		this.mapper = Lazy.of(() -> createObjectMapper(resourceLoader.getClassLoader()));
+		this.properties = properties;
 	}
 
 	@Override
@@ -49,6 +57,14 @@ public class AuthorizationConfiguration implements InitializingBean {
 	}
 
 	@Bean
+	RegisteredClientRepository registeredClientRepository(DSLContext context) {
+		return new DelegatingRegisteredClientRepository(List.of(
+				new KonfigyrRegisteredClientRepository(properties),
+				new RegisteredNamespaceClientRepository(properties, context)
+		));
+	}
+
+	@Bean
 	AuthorizationServerSettings authorizationServerSettings() {
 		return AuthorizationServerSettings.builder()
 				.authorizationEndpoint("/oauth/authorize")
@@ -57,6 +73,7 @@ public class AuthorizationConfiguration implements InitializingBean {
 				.tokenIntrospectionEndpoint("/oauth/introspect")
 				.tokenRevocationEndpoint("/oauth/revoke")
 				.oidcUserInfoEndpoint("/oauth/userinfo")
+				.multipleIssuersAllowed(false)
 				.build();
 	}
 

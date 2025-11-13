@@ -5,7 +5,8 @@ spring:
       spec: expireAfterWrite=1h
 
   liquibase:
-    change-log: classpath:migrations/konfigyr-identity-changelog.xml
+    change-log: classpath:migrations/changelog.xml
+    contexts: identity
 
   messages:
     basename: messages/messages, messages/mail
@@ -28,37 +29,22 @@ spring:
           github:
             user-name-attribute: email
 
-      authorizationserver:
-        client:
-          konfigyr:
-            registration:
-              client-id: "konfigyr"
-              client-authentication-methods:
-                - "client_secret_basic"
-              authorization-grant-types:
-                - "authorization_code"
-                - "client_credentials"
-                - "refresh_token"
-              redirect-uris:
-                - "http://127.0.0.1:8080/login/oauth2/code/konfigyr"
-                - "https://oauth.pstmn.io/v1/callback"
-              post-logout-redirect-uris:
-                - "http://127.0.0.1:8080/"
-              scopes:
-                - "openid"
-                - "namespaces"
-                - 'namespaces:read'
-                - 'namespaces:write'
-                - 'namespaces:delete'
-                - 'namespaces:invite'
-            require-authorization-consent: true
-            token:
-              access-token-time-to-live: 8h
-              refresh-token-time-to-live: 7d
-
   web:
     resources:
       static-locations: classpath:/static/, classpath:/dist/
+
+konfigyr:
+  identity:
+    authorization:
+      client-id: konfigyr
+      redirect-uris:
+        - "http://127.0.0.1:8080/login/oauth2/code/konfigyr"
+        - "https://oauth.pstmn.io/v1/callback"
+      post-logout-redirect-uris:
+        - "http://127.0.0.1:8080/"
+      token:
+        access-token-time-to-live: 15m
+        refresh-token-time-to-live: 7d
 
 logging:
   pattern:

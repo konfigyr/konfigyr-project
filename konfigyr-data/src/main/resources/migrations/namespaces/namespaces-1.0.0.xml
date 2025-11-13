@@ -4,7 +4,7 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-	<changeSet author="vspasic" id="1.0.0-create-namespaces-table">
+	<changeSet author="vspasic" id="1.0.0-create-namespaces-table" context="identity or api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="namespaces" />
@@ -48,7 +48,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-namespace-members-table">
+	<changeSet author="vspasic" id="1.0.0-create-namespace-members-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="namespace_members" />
@@ -104,7 +104,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-namespace-integrations-table">
+	<changeSet author="vspasic" id="1.0.0-create-namespace-integrations-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="integrations" />
@@ -153,7 +153,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-invitations-table">
+	<changeSet author="vspasic" id="1.0.0-create-invitations-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="invitations" />
@@ -226,7 +226,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-services-table">
+	<changeSet author="vspasic" id="1.0.0-create-services-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="services" />

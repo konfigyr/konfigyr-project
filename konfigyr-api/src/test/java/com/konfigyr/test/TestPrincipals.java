@@ -33,6 +33,17 @@ public interface TestPrincipals {
 	}
 
 	/**
+	 * Creates an {@link Authentication} for a {@link com.konfigyr.namespace.NamespaceApplication}
+	 * that is identified by the given <code>client_id</code>.
+	 *
+	 * @param id the OAuth 2.0 {@code client_id}, can't be blank
+	 * @return OAuth 2.0 Client test authentication, never {@literal null}
+	 */
+	static @NonNull Authentication application(String id) {
+		return new TestingAuthenticationToken(id, "", AuthorityUtils.NO_AUTHORITIES);
+	}
+
+	/**
 	 * Creates an {@link Authentication} for the given {@link Account}.
 	 *
 	 * @param account account to be used in the authentication, never {@literal null}

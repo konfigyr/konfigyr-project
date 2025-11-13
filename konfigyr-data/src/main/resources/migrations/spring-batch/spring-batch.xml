@@ -3,7 +3,7 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-	<changeSet author="vspasic" id="spring-batch-5.2.3">
+	<changeSet author="vspasic" id="spring-batch-5.2.3" context="api">
 		<sqlFile dbms="postgresql" encoding="UTF-8"
 				 path="/org/springframework/batch/core/schema-postgresql.sql"
 				 relativeToChangelogFile="false" splitStatements="true"
