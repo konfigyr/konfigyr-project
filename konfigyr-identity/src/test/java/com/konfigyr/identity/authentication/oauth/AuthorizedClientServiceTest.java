@@ -3,6 +3,7 @@ package com.konfigyr.identity.authentication.oauth;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.AccountIdentities;
 import com.konfigyr.identity.authentication.AccountIdentity;
+import com.konfigyr.identity.authentication.OAuthAccountIdentityUser;
 import com.konfigyr.test.OAuth2AccessTokens;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
@@ -24,9 +25,12 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.*;
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -259,7 +263,14 @@ class AuthorizedClientServiceTest {
 	}
 
 	static @NonNull Authentication authentication(@NonNull AccountIdentity identity) {
-		return new OAuth2AuthenticationToken(identity, identity.getAuthorities(), CLIENT_REGISTRATION);
+		final var user = new DefaultOAuth2User(identity.getAuthorities(), Map.of(
+				StandardClaimNames.SUB, identity.getEmail(),
+				StandardClaimNames.EMAIL, identity.getEmail(),
+				StandardClaimNames.NAME, identity.getDisplayName()
+		), StandardClaimNames.EMAIL);
+
+		return new OAuth2AuthenticationToken(new OAuthAccountIdentityUser(identity, user),
+				identity.getAuthorities(), CLIENT_REGISTRATION);
 	}
 
 }

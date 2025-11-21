@@ -114,11 +114,11 @@ class AuthorizationCodeAcceptanceTest {
 				.hasParameter(OAuth2ParameterNames.STATE);
 
 		assertThatElement(driver, "#consents input[name=\"_csrf\"]")
-				.extracting(it -> it.getAttribute("value"), InstanceOfAssertFactories.STRING)
+				.extracting(it -> it.getDomAttribute("value"), InstanceOfAssertFactories.STRING)
 				.isNotBlank();
 
 		assertThatElement(driver, "#consents input[name=\"state\"]")
-				.extracting(it -> it.getAttribute("value"), InstanceOfAssertFactories.STRING)
+				.extracting(it -> it.getDomAttribute("value"), InstanceOfAssertFactories.STRING)
 				.isNotBlank();
 
 		assertThatElement(driver, "#consents input[name=\"client_id\"]")
@@ -188,7 +188,7 @@ class AuthorizationCodeAcceptanceTest {
 	}
 
 	static ThrowingConsumer<WebElement> elementHasValue(String value) {
-		return element -> assertThat(element.getAttribute("value"))
+		return element -> assertThat(element.getDomAttribute("value"))
 				.as("HTML element of %s, should contain a value: %s", element, value)
 				.isEqualTo(value);
 	}

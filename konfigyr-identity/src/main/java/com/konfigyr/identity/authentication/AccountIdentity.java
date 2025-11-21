@@ -10,26 +10,21 @@ import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jmolecules.ddd.types.Identifiable;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * Class that represents the {@link org.springframework.security.core.AuthenticatedPrincipal}
  * that retrieves the security attributes from the stored user accounts.
  * <p>
  * It is recommended that every {@link org.springframework.security.core.Authentication} type
- * that is created by Spring Security should contain this {@link AccountIdentity} as it's subject.
- * <p>
- * {@link AccountIdentity} implements both {@link OAuth2User} and {@link UserDetails} on order
- * to be compatible with Spring OAuth authentication types and authentication types that are
- * using the {@link org.springframework.security.core.userdetails.UserDetailsService} API.
+ * that is created by Spring Security should contain either {@link AccountIdentity} or
+ * {@link AccountIdentityUser} as it's subject.
  * <p>
  * Keep in mind that the <code>username</code> for this principal is the external representation
  * of the {@link EntityId account entity identifier} and that the <code>password</code> is intentionally
@@ -37,20 +32,19 @@ import java.util.Map;
  *
  * @author Vladimir Spasic
  * @since 1.0.0
- * @see OAuth2User
  * @see UserDetails
+ * @see AccountIdentityUser
  **/
 @Value
 @Builder
 @AggregateRoot
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AccountIdentity implements OAuth2User, UserDetails, Identifiable<EntityId>, Serializable {
+public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Identifiable<EntityId>, Serializable {
 
 	@Serial
 	private static final long serialVersionUID = -4208974779066630762L;
 
 	private static final String EMPTY_PASSWORD = "";
-	private static final Map<String, Object> EMPTY_ATTRIBUTES = Collections.emptyMap();
 
 	/**
 	 * Entity identifier of the user account behind this {@link AccountIdentity}.
@@ -171,10 +165,10 @@ public class AccountIdentity implements OAuth2User, UserDetails, Identifiable<En
 		return EMPTY_PASSWORD;
 	}
 
+	@NonNull
 	@Override
-	@JsonIgnore
-	public Map<String, Object> getAttributes() {
-		return EMPTY_ATTRIBUTES;
+	public String toString() {
+		return "AccountIdentity(id=" + id + ", status=" + status + ")";
 	}
 
 }

@@ -22,10 +22,13 @@ import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.client.RestOperations;
 
@@ -34,10 +37,10 @@ import java.util.concurrent.TimeUnit;
 @Configuration(proxyBeanMethods = false)
 public class AuthenticationConfiguration {
 
-	private final Lazy<RestOperations> operations;
+	private final Lazy<DefaultOAuth2UserService> oauthUserService;
 
 	public AuthenticationConfiguration(ObjectProvider<RestTemplateBuilder> builder) {
-		this.operations = Lazy.of(() -> createRestOperations(builder.getIfAvailable(RestTemplateBuilder::new)));
+		this.oauthUserService = Lazy.of(() -> createUserService(builder.getIfAvailable(RestTemplateBuilder::new)));
 	}
 
 	@Bean
@@ -63,10 +66,17 @@ public class AuthenticationConfiguration {
 
 	@Bean
 	OAuth2UserService<OAuth2UserRequest, OAuth2User> identityUserService(AccountIdentityService service) {
-		final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
-		delegate.setRestOperations(operations.get());
+		final DefaultOAuth2UserService delegate = oauthUserService.get();
 
-		return request -> service.get(delegate, request);
+		return request -> (OAuth2User) service.get(delegate, request);
+	}
+
+	@Bean
+	OAuth2UserService<OidcUserRequest, OidcUser> oidcIdentityUserService(AccountIdentityService service) {
+		final OidcUserService delegate = new OidcUserService();
+		delegate.setOauth2UserService(oauthUserService.get());
+
+		return request -> (OidcUser) service.get(delegate, request);
 	}
 
 	@Bean
@@ -83,8 +93,14 @@ public class AuthenticationConfiguration {
 		return new AccountIdentityListener(mailer);
 	}
 
-	static RestOperations createRestOperations(@NonNull RestTemplateBuilder builder) {
-		return builder.errorHandler(new OAuth2ErrorResponseErrorHandler()).build();
+	static DefaultOAuth2UserService createUserService(@NonNull RestTemplateBuilder builder) {
+		final RestOperations operations = builder.errorHandler(new OAuth2ErrorResponseErrorHandler())
+				.build();
+
+		final DefaultOAuth2UserService service = new DefaultOAuth2UserService();
+		service.setRestOperations(operations);
+
+		return service;
 	}
 
 }

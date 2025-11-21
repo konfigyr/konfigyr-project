@@ -323,3 +323,6 @@ svg-symbols.html
 application-local.yml
 application-local.yaml
 application-local.properties
+
+# do not ignore local example configuration files
+!application-local.example.yml

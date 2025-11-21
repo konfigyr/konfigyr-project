@@ -3,9 +3,11 @@ package com.konfigyr.test;
 import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,6 +44,33 @@ public interface OAuth2AccessTokens {
 		final Instant timestamp = Instant.now();
 		return new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, value, timestamp,
 				timestamp.plus(expiry), Set.of(scopes));
+	}
+
+	/**
+	 * Creates a new {@link OidcIdToken} with the given token value and JWT Claims. The expiration duration for
+	 * the created token is <code>60 seconds</code>.
+	 *
+	 * @param value the OIDC ID Token value, can't be {@literal null}
+	 * @param claims JWT claims to be added to the token, can't be {@literal null}
+	 * @return the OIDC ID Token, never {@literal null}
+	 */
+	@NonNull
+	static OidcIdToken createIdToken(@NonNull String value, @NonNull Map<String, Object> claims) {
+		return createIdToken(value, Duration.ofSeconds(60), claims);
+	}
+
+	/**
+	 * Creates a new {@link OidcIdToken} with the given token value, expiration duration and JWT claims.
+	 *
+	 * @param value the OIDC ID Token value, can't be {@literal null}
+	 * @param expiry expiration duration, can't be {@literal null}
+	 * @param claims JWT claims to be added to the token, can't be {@literal null}
+	 * @return the OIDC ID Token, never {@literal null}
+	 */
+	@NonNull
+	static OidcIdToken createIdToken(@NonNull String value, @NonNull Duration expiry, @NonNull Map<String, Object> claims) {
+		final Instant timestamp = Instant.now();
+		return new OidcIdToken(value, timestamp, timestamp.plus(expiry), claims);
 	}
 
 	/**

@@ -12,12 +12,6 @@ spring:
     basename: messages/messages, messages/mail
 
   mail:
-    host: smtp.resend.com
-    port: 587
-    username: resend
-    properties:
-      mail.smtp.starttls.required: true
-      mail.smtp.starttls.enable: true
     sender:
       name: Konfigyr
       email: noreply@konfigyr.com

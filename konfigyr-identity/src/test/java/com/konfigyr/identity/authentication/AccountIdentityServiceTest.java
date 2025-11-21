@@ -15,12 +15,17 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -163,18 +168,21 @@ class AccountIdentityServiceTest {
 	}
 
 	@Test
-	@DisplayName("should retrieve existing account identity for OAuth2 principal")
+	@DisplayName("should retrieve existing account identity for OIDC principal")
 	void shouldRetrieveExistingIdentity() {
-		final var user = mock(OAuth2User.class);
+		final var user = mock(OidcUser.class);
 		final var account = AccountIdentities.john().build();
-		final var request = createUserRequest(clientRegistration);
+		final var request = createOidcRequest(clientRegistration, account);
 
 		doReturn(user).when(delegate).loadUser(request);
 		doReturn(account.getEmail()).when(user).getName();
 		doReturn(Optional.of(account)).when(repository).findByEmail(account.getEmail());
 
 		assertThat(service.get(delegate, request))
-				.isEqualTo(account);
+				.isInstanceOf(OidcAccountIdentityUser.class)
+				.returns(account, AccountIdentityUser::getAccountIdentity)
+				.returns(account.getId(), AccountIdentityUser::getId)
+				.returns(account.getName(), AccountIdentityUser::getName);
 
 		verify(repository).findByEmail(account.getEmail());
 		verify(repository, never()).create(user, clientRegistration);
@@ -192,7 +200,10 @@ class AccountIdentityServiceTest {
 		doReturn(account).when(repository).create(user, clientRegistration);
 
 		assertThat(service.get(delegate, request))
-				.isEqualTo(account);
+				.isInstanceOf(OAuthAccountIdentityUser.class)
+				.returns(account, AccountIdentityUser::getAccountIdentity)
+				.returns(account.getId(), AccountIdentityUser::getId)
+				.returns(account.getName(), AccountIdentityUser::getName);
 
 		verify(repository).findByEmail(account.getEmail());
 		verify(repository).create(user, clientRegistration);
@@ -224,6 +235,15 @@ class AccountIdentityServiceTest {
 
 	static OAuth2UserRequest createUserRequest(ClientRegistration clientRegistration) {
 		return new OAuth2UserRequest(clientRegistration, OAuth2AccessTokens.createAccessToken("access-token"));
+	}
+
+	static OidcUserRequest createOidcRequest(ClientRegistration clientRegistration, AccountIdentity identity) {
+		return new OidcUserRequest(clientRegistration, OAuth2AccessTokens.createAccessToken("access-token"),
+				OAuth2AccessTokens.createIdToken("id-token", Map.of(
+						IdTokenClaimNames.SUB, identity.getEmail(),
+						StandardClaimNames.EMAIL, identity.getEmail(),
+						StandardClaimNames.NAME, identity.getDisplayName()
+				)));
 	}
 
 }
