@@ -5,6 +5,10 @@ spring:
   liquibase:
     change-log: classpath:changelog.xml
 
+  mail:
+    host: localhost
+    port: ${wiremock.server.port:25}
+
   security:
     oauth2:
       resourceserver:
