@@ -1,0 +1,45 @@
+# Local development configuration example file, please copy this file as `application-local.yml` if you are
+# running the Konfigyr API with a Spring Boot `local` profile, e.g. `spring.profiles.active=local`.
+
+spring:
+  datasource:
+    # Connect to the PostgreSQL database specified in the `docker-compose.dev.yml` file. If you want to use a
+    # different database, please update the JDBC URL, username and password accordingly.
+    url: jdbc:postgresql://localhost:5432/konfigyr
+    username: konfigyr-database
+    password: konfigyr-database
+
+  # Connect to the SMTP server specified in the `docker-compose.dev.yml` file. If you want to use a
+  # different SMTP server, please update the host, port, username and password accordingly.
+  mail:
+    host: localhost
+    port: 2525
+    username: konfigyr-smtp
+    password: konfigyr-smtp
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Connect to the Konfigyr Identity OpenID authorization server, if the server is running
+          # on a different host or port, update the issuer-uri property accordingly.
+          issuer-uri: http://localhost:8081
+
+konfigyr:
+  account:
+    email-verification:
+      # Private key used to sign the verification token when email verification is sent. Please feel free to
+      # change it if needed. You can use the following online tool to generate a new key: https://jwtsecrets.com
+      secret: base64:e771e7789118e8416c2a8b4e6cb2fc42d6feac47baadd0d966e51467b3f455d73e316eabb067a13a785e2922925a645b
+
+  artifactory:
+    metadata-store:
+      # Path to the directory where Spring Boot configuration metadata files are stored
+      root: specify-your-metadata-store-location
+
+  crypto:
+    master-key:
+      # The Key Encryption Key used to seal and unseal Konfigyr keysets. Please feel free to change it if needed.
+      # You can generate a new key here: http://konfigyr-web.app.dev.ebf.de/docs/development-guide/development
+      value: RrdmFi8AmHSXzalSmdxIxnCYQlfdPzEytzLcvX3STKU=
+

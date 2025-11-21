@@ -1,0 +1,42 @@
+name: konfigyr-local-services
+
+services:
+  database:
+    image: postgres:18-alpine
+    container_name: konfigyr-database
+    ports:
+      - '5432:5432'
+    volumes:
+      - database-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: konfigyr-database
+      POSTGRES_USER: konfigyr-database
+      POSTGRES_DB: konfigyr
+
+  smtp:
+    image: rnwood/smtp4dev:v3
+    container_name: konfigyr-smtp
+    ports:
+      - '8880:80'
+      - '2525:25'
+    volumes:
+      - smtp-data:/smtp4dev
+    environment:
+      RelayOptions__Login: konfigyr-smtp
+      RelayOptions__Password: konfigyr-smtp
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    container_name: konfigyr-keycloak
+    ports:
+      - '8881:8080'
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_PASSWORD: konfigyr-keycloak
+      KC_BOOTSTRAP_ADMIN_USERNAME: konfigyr-keycloak
+
+volumes:
+  database-data:
+    driver: local
+  smtp-data:
+    driver: local

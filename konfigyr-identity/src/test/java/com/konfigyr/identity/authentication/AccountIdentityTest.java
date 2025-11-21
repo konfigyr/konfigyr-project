@@ -7,6 +7,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -26,7 +30,6 @@ class AccountIdentityTest {
 				.returns("john.doe@konfigyr.com", AccountIdentity::getEmail)
 				.returns("John Doe", AccountIdentity::getDisplayName)
 				.returns(Avatar.generate(EntityId.from(1), "JD"), AccountIdentity::getAvatar)
-				.returns(Map.of(), AccountIdentity::getAttributes)
 				.returns("", UserDetails::getPassword)
 				.returns(true, UserDetails::isEnabled)
 				.returns(true, UserDetails::isAccountNonLocked)
@@ -53,7 +56,6 @@ class AccountIdentityTest {
 				.returns("jane.doe@konfigyr.com", AccountIdentity::getEmail)
 				.returns("Jane Doe", AccountIdentity::getDisplayName)
 				.returns(Avatar.generate(EntityId.from(2), "JD"), AccountIdentity::getAvatar)
-				.returns(Map.of(), AccountIdentity::getAttributes)
 				.returns("", UserDetails::getPassword)
 				.returns(false, UserDetails::isEnabled)
 				.returns(false, UserDetails::isAccountNonLocked)
@@ -78,7 +80,6 @@ class AccountIdentityTest {
 				.returns("jane.doe@konfigyr.com", AccountIdentity::getEmail)
 				.returns("Jane Doe", AccountIdentity::getDisplayName)
 				.returns(Avatar.generate(EntityId.from(2), "JD"), AccountIdentity::getAvatar)
-				.returns(Map.of(), AccountIdentity::getAttributes)
 				.returns("", UserDetails::getPassword)
 				.returns(false, UserDetails::isEnabled)
 				.returns(true, UserDetails::isAccountNonLocked)
@@ -88,6 +89,60 @@ class AccountIdentityTest {
 						.extracting(GrantedAuthority::getAuthority)
 						.containsExactlyInAnyOrder("jane")
 				);
+	}
+
+	@Test
+	@DisplayName("should create an OIDC identity user")
+	void createOidcUser() {
+		final var identity = AccountIdentities.jane()
+				.status(AccountIdentityStatus.DEACTIVATED)
+				.build();
+
+		final Map<String, Object> claims = Map.of(
+				IdTokenClaimNames.SUB, identity.getEmail(),
+				"email", identity.getEmail()
+		);
+
+		final var token = new OidcIdToken("id-token", Instant.now(), Instant.now(), claims);
+
+		assertThat(new OidcAccountIdentityUser(identity, new DefaultOidcUser(identity.getAuthorities(), token)))
+				.returns(identity, OidcAccountIdentityUser::getAccountIdentity)
+				.returns(identity.getId(), OidcAccountIdentityUser::getId)
+				.returns(identity.getName(), OidcAccountIdentityUser::getName)
+				.returns(identity.getAuthorities(), OidcAccountIdentityUser::getAuthorities)
+				.returns(token, OidcAccountIdentityUser::getIdToken)
+				.returns(claims, OidcAccountIdentityUser::getClaims)
+				.returns(claims, OidcAccountIdentityUser::getAttributes)
+				.returns(null, OidcAccountIdentityUser::getUserInfo);
+	}
+
+	@Test
+	@DisplayName("should create an OAuth2 identity user")
+	void createOAuthUser() {
+		final var identity = AccountIdentities.jane()
+				.status(AccountIdentityStatus.DEACTIVATED)
+				.build();
+
+		final Map<String, Object> claims = Map.of(
+				IdTokenClaimNames.SUB, identity.getEmail(),
+				"email", identity.getEmail()
+		);
+
+		assertThat(new OAuthAccountIdentityUser(identity, new DefaultOAuth2User(identity.getAuthorities(), claims, "email")))
+				.returns(identity, OAuthAccountIdentityUser::getAccountIdentity)
+				.returns(identity.getId(), OAuthAccountIdentityUser::getId)
+				.returns(identity.getName(), OAuthAccountIdentityUser::getName)
+				.returns(identity.getAuthorities(), OAuthAccountIdentityUser::getAuthorities)
+				.returns(claims, OAuthAccountIdentityUser::getAttributes);
+	}
+
+	@Test
+	@DisplayName("account identity should not expose personal data")
+	void hidePersonalData() {
+		final var identity = AccountIdentities.john().build();
+
+		assertThat(identity)
+				.hasToString("AccountIdentity(id=%s, status=%s)", identity.getId(), identity.getStatus());
 	}
 
 	@Test

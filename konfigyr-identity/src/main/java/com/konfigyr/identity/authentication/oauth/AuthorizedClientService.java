@@ -5,7 +5,7 @@ import com.konfigyr.data.SettableRecord;
 import com.konfigyr.data.converter.EncryptionConverter;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.KonfigyrIdentityKeysets;
-import com.konfigyr.identity.authentication.AccountIdentity;
+import com.konfigyr.identity.authentication.AccountIdentityUser;
 import com.konfigyr.io.ByteArray;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -224,7 +224,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 	}
 
 	private static EntityId lookupUserIdentifierForAuthentication(@NonNull Authentication authentication) {
-		if (authentication.getPrincipal() instanceof AccountIdentity identity) {
+		if (authentication.getPrincipal() instanceof AccountIdentityUser identity) {
 			return identity.getId();
 		}
 

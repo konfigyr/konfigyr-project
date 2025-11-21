@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.log.LogMessage;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -201,11 +202,16 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 		private String retrieveUserName(Authentication authentication) {
 			Assert.notNull(authentication, "Authentication can not be null");
 
-			if (authentication.getPrincipal() instanceof UserDetails user) {
-				return user.getUsername();
+			if (authentication.getPrincipal() == null) {
+				return null;
 			}
 
-			return Objects.toString(authentication.getPrincipal(), null);
+			return switch (authentication.getPrincipal()) {
+				case String username -> username;
+				case UserDetails user -> user.getUsername();
+				case AuthenticatedPrincipal principal -> principal.getName();
+				default -> Objects.toString(authentication.getPrincipal());
+			};
 		}
 
 	}

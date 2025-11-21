@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 /**
@@ -86,9 +87,9 @@ class DefaultAccountIdentityService implements AccountIdentityService {
 
 	@NonNull
 	@Override
-	public AccountIdentity get(
-			@NonNull OAuth2UserService<? super OAuth2UserRequest, ? extends OAuth2User> service,
-			@NonNull OAuth2UserRequest request
+	public <R extends OAuth2UserRequest, U extends OAuth2User> AccountIdentityUser get(
+			@NonNull OAuth2UserService<R, U> service,
+			@NonNull R request
 	) throws OAuth2AuthenticationException {
 		final OAuth2User user = service.loadUser(request);
 
@@ -104,8 +105,19 @@ class DefaultAccountIdentityService implements AccountIdentityService {
 			log.debug("Successfully loaded OAuth user: {}", user);
 		}
 
-		return repository.findByEmail(user.getName())
+		final AccountIdentity identity = repository.findByEmail(user.getName())
 				.orElseGet(() -> repository.create(user, request.getClientRegistration()));
+
+		if (log.isDebugEnabled()) {
+			log.debug("Successfully created or loaded account identity: [identity={}, user={}]", identity, user);
+		}
+
+		if (user instanceof OidcUser oidcUser) {
+			return new OidcAccountIdentityUser(identity, oidcUser);
+		}
+
+		return new OAuthAccountIdentityUser(identity, user);
+
 	}
 
 	@NonNull

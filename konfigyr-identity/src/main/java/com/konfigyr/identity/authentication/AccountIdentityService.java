@@ -51,24 +51,28 @@ public interface AccountIdentityService {
 	@NonNull AccountIdentity get(@NonNull String username) throws UsernameNotFoundException;
 
 	/**
-	 * Attempts to obtain the user attributes from the OAuth2 UserInfo Endpoint, or OpenID Token, using
+	 * Attempts to retrieve the user attributes from the OAuth2 UserInfo Endpoint, or OpenID Token, using
 	 * the Access Token granted to the {@link ClientRegistration} via given {@link OAuth2UserService}
-	 * and returning an {@link AccountIdentity}.
+	 * and returning an {@link AccountIdentityUser}.
 	 * <p>
-	 * The {@link AccountIdentity} that is returned would first be checked if one already exists for the
+	 * The {@link AccountIdentityUser} that is returned would first be checked if one already exists for the
 	 * resolved {@link OAuth2AuthenticatedPrincipal}. In case the {@link AccountIdentity} does not exist
 	 * for the given {@link OAuth2AuthenticatedPrincipal} user, this service would attempt to provision
 	 * a new identity using the retrieved user attributes.
 	 * <p>
 	 * The principal lookup is performed by matching the email address of the user account,
-	 * therefore it is important that the {@link OAuth2AuthenticatedPrincipal#getName()} returns a value of
+	 * therefore; it is important that the {@link OAuth2AuthenticatedPrincipal#getName()} returns a value of
 	 * the email attribute. Please configure your {@link ClientRegistration OAuth2 Clients accordingly}.
 	 *
 	 * @param service the OAuth 2.0 user to execute the request, can't be {@literal null}
 	 * @param request the OAuth 2.0 user request, can't be {@literal null}
-	 * @return located account identity or a new one, never {@literal null}
+	 * @param <R> the type of the OAuth 2.0 user request
+	 * @param <U> the type of the OAuth 2.0 user
+	 * @return located account identity user or a new one, never {@literal null}
 	 */
-	AccountIdentity get(@NonNull OAuth2UserService<? super OAuth2UserRequest, ? extends OAuth2User> service,
-						@NonNull OAuth2UserRequest request) throws OAuth2AuthenticationException;
+	<R extends OAuth2UserRequest, U extends OAuth2User> AccountIdentityUser get(
+			@NonNull OAuth2UserService<R, U> service,
+			@NonNull R request
+	) throws OAuth2AuthenticationException;
 
 }
