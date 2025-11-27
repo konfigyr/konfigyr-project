@@ -2,7 +2,7 @@ package com.konfigyr.identity.authentication;
 
 import com.konfigyr.entity.EntityId;
 import org.jmolecules.ddd.annotation.Service;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;

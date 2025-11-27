@@ -11,9 +11,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,10 +102,12 @@ class AccountController {
 
 	}
 
-	record AccountDetails(FullName name) {
+	record AccountDetails(@Length(min = 3) String name) {
 
 		@NonNull
 		Account apply(Account account) {
+			final FullName name = FullName.parse(this.name);
+
 			if (name == null) {
 				return account;
 			}

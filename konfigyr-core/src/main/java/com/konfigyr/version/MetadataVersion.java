@@ -1,6 +1,6 @@
 package com.konfigyr.version;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.StringUtils;
 
 import java.io.Serial;
@@ -51,8 +51,11 @@ record MetadataVersion(String[] identifiers) implements Comparable<MetadataVersi
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof MetadataVersion other) {
-			return this == other || Arrays.equals(this.identifiers, other.identifiers);
+		if (this == obj) {
+			return true;
+		}
+		if (obj instanceof MetadataVersion version) {
+			return Arrays.equals(this.identifiers, version.identifiers);
 		}
 		return false;
 	}

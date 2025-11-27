@@ -15,12 +15,12 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,8 +49,8 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 @RequiredArgsConstructor
 class DefaultInvitations implements Invitations {
 
-	static Accounts SENDER_ACCOUNTS = ACCOUNTS.as("sender");
-	static Accounts RECIPIENT_ACCOUNTS = ACCOUNTS.as("recipient");
+	static final Accounts SENDER_ACCOUNTS = ACCOUNTS.as("sender");
+	static final Accounts RECIPIENT_ACCOUNTS = ACCOUNTS.as("recipient");
 
 	static final Duration TTL = Duration.ofDays(7);
 
@@ -69,7 +69,7 @@ class DefaultInvitations implements Invitations {
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "invitations-find")
-	public Page<Invitation> find(@NonNull Namespace namespace, @NonNull Pageable pageable) {
+	public Page<@NonNull Invitation> find(@NonNull Namespace namespace, @NonNull Pageable pageable) {
 		final Condition condition = INVITATIONS.NAMESPACE_ID.eq(namespace.id().get());
 
 		return executor.execute(
@@ -315,7 +315,6 @@ class DefaultInvitations implements Invitations {
 		}
 	}
 
-	@Nullable
 	private static Invitation.Sender sender(Record record) {
 		if (record.get(SENDER_ACCOUNTS.ID) == null) {
 			return null;
@@ -329,7 +328,6 @@ class DefaultInvitations implements Invitations {
 		);
 	}
 
-	@NonNull
 	private static Invitation.Recipient recipient(Record record, String email) {
 		if (record.get(RECIPIENT_ACCOUNTS.ID) == null) {
 			return new Invitation.Recipient(email);
@@ -356,15 +354,16 @@ class DefaultInvitations implements Invitations {
 				.build();
 	}
 
+	@NullMarked
 	private record NamespaceInvitationContext(
-			@NonNull EntityId id,
-			@NonNull String slug,
-			@NonNull String name,
-			@NonNull Invitation.Sender sender,
-			@NonNull Invitation.Recipient recipient,
+			EntityId id,
+			String slug,
+			String name,
+			Invitation.Sender sender,
+			Invitation.Recipient recipient,
 			boolean isMember
 	) {
-		static NamespaceInvitationContext create(@NonNull Record record, @NonNull Invite invite) {
+		static NamespaceInvitationContext create(Record record, Invite invite) {
 			return new NamespaceInvitationContext(
 					record.get(NAMESPACES.ID, EntityId.class),
 					record.get(NAMESPACES.SLUG),

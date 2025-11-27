@@ -18,8 +18,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class EncryptionConverterTest {
 
-	static ByteArray encrypted = ByteArray.fromString("encrypted");
-	static ByteArray decrypted = ByteArray.fromString("decrypted");
+	static final ByteArray encrypted = ByteArray.fromString("encrypted");
+	static final ByteArray decrypted = ByteArray.fromString("decrypted");
 
 	@Mock
 	Keyset keyset;

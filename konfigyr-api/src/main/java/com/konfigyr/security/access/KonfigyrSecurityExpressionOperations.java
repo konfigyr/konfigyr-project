@@ -2,7 +2,7 @@ package com.konfigyr.security.access;
 
 import com.konfigyr.account.Memberships;
 import com.konfigyr.namespace.Namespace;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.expression.SecurityExpressionOperations;
 import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;

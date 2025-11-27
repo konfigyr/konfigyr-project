@@ -1,6 +1,5 @@
 package com.konfigyr.artifactory.provenance;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.konfigyr.artifactory.Deprecation;
 import com.konfigyr.artifactory.PropertyMetadata;
 import com.konfigyr.artifactory.VersionedArtifact;
@@ -11,12 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.Converter;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.lang.NonNull;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.util.function.ThrowingConsumer;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ import static com.konfigyr.data.tables.ArtifactVersionProperties.ARTIFACT_VERSIO
 import static com.konfigyr.data.tables.PropertyDefinitions.PROPERTY_DEFINITIONS;
 
 @Slf4j
-class ProvenanceEvaluationWriter implements ItemWriter<EvaluationResult> {
+class ProvenanceEvaluationWriter implements ItemWriter<@NonNull EvaluationResult> {
 
 	private static final Marker MARKER = MarkerFactory.getMarker("PROPERTY_PROVENANCE_WRITER");
 
@@ -39,7 +39,7 @@ class ProvenanceEvaluationWriter implements ItemWriter<EvaluationResult> {
 	}
 
 	@Override
-	public void write(@NonNull Chunk<? extends EvaluationResult> chunk) throws Exception {
+	public void write(@NonNull Chunk<? extends @NonNull EvaluationResult> chunk) throws Exception {
 		if (chunk.isEmpty()) {
 			return;
 		}
@@ -114,9 +114,9 @@ class ProvenanceEvaluationWriter implements ItemWriter<EvaluationResult> {
 
 	@SuppressWarnings("unchecked")
 	private static <T extends EvaluationResult> void aggregate(
-			Chunk<? extends EvaluationResult> chunk,
-			Class<? extends EvaluationResult> type,
-			ThrowingConsumer<T> consumer
+			Chunk<? extends @NonNull EvaluationResult> chunk,
+			Class<? extends @NonNull EvaluationResult> type,
+			ThrowingConsumer<@NonNull T> consumer
 	) throws Exception {
 		for (EvaluationResult result : chunk) {
 			if (type.isInstance(result)) {

@@ -3,7 +3,7 @@ package com.konfigyr.artifactory;
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import org.jmolecules.event.annotation.DomainEvent;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Abstract event type that should be used for all {@code Artifactory} Domain related events.

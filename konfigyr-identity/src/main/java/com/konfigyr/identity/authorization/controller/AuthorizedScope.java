@@ -1,8 +1,8 @@
 package com.konfigyr.identity.authorization.controller;
 
 import com.konfigyr.security.OAuthScope;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 
 import java.io.Serial;

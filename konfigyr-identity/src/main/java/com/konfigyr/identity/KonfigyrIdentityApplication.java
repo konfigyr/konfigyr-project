@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @Modulith(systemName = "Konfigyr Identity")
 public class KonfigyrIdentityApplication {
 
-	public static void main(String[] args) {
+	static void main(String[] args) {
 		SpringApplication.run(KonfigyrIdentityApplication.class, args);
 	}
 

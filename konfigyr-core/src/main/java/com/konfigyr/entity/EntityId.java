@@ -3,7 +3,7 @@ package com.konfigyr.entity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.jmolecules.ddd.types.Identifier;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serializable;
 import java.util.Optional;

@@ -1,8 +1,10 @@
 package com.konfigyr.hateoas;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.util.*;
@@ -14,6 +16,7 @@ import java.util.*;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
+@JsonPropertyOrder({ "data", "links" })
 public class CollectionModel<T> extends RepresentationModel<CollectionModel<T>> implements Iterable<T> {
 
 	private final Collection<T> content;
@@ -100,7 +103,11 @@ public class CollectionModel<T> extends RepresentationModel<CollectionModel<T>> 
 	 * @return the collection model, never {@literal null}
 	 */
 	@NonNull
-	public static <T> CollectionModel<T> of(Iterable<T> content, Iterable<Link> links) {
+	@JsonCreator
+	public static <T> CollectionModel<T> of(
+			@JsonProperty("data") Iterable<T> content,
+			@JsonProperty("links") Iterable<Link> links
+	) {
 		return new CollectionModel<>(content, links);
 	}
 

@@ -12,7 +12,7 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -50,7 +50,7 @@ class ServicesController {
 
 	@PreAuthorize("isMember(#namespace)")
 	@RequestMapping(path = "{slug}", method = RequestMethod.HEAD)
-	ResponseEntity<Void> check(@PathVariable @NonNull String namespace, @PathVariable @NonNull String slug) {
+	ResponseEntity<@NonNull Void> check(@PathVariable @NonNull String namespace, @PathVariable @NonNull String slug) {
 		final HttpStatus status = namespaces.findBySlug(namespace)
 				.map(it -> services.exists(it, slug))
 				.filter(Boolean.TRUE::equals)

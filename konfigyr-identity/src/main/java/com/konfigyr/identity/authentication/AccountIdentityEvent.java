@@ -2,7 +2,7 @@ package com.konfigyr.identity.authentication;
 
 import lombok.EqualsAndHashCode;
 import org.jmolecules.event.annotation.DomainEvent;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.Serializable;

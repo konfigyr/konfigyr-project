@@ -10,14 +10,14 @@ import com.konfigyr.identity.authentication.idenitity.AccountIdentityRepository;
 import com.konfigyr.identity.authentication.oauth.AuthorizedClientService;
 import com.konfigyr.mail.Mailer;
 import org.jooq.DSLContext;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -37,15 +37,15 @@ import java.util.concurrent.TimeUnit;
 @Configuration(proxyBeanMethods = false)
 public class AuthenticationConfiguration {
 
-	private final Lazy<DefaultOAuth2UserService> oauthUserService;
+	private final Lazy<@NonNull DefaultOAuth2UserService> oauthUserService;
 
-	public AuthenticationConfiguration(ObjectProvider<RestTemplateBuilder> builder) {
+	public AuthenticationConfiguration(ObjectProvider<@NonNull RestTemplateBuilder> builder) {
 		this.oauthUserService = Lazy.of(() -> createUserService(builder.getIfAvailable(RestTemplateBuilder::new)));
 	}
 
 	@Bean
 	UserCache userCache() {
-		final Cache<Object, Object> cache = Caffeine.newBuilder()
+		final Cache<@NonNull Object, Object> cache = Caffeine.newBuilder()
 				.expireAfterWrite(5, TimeUnit.MINUTES)
 				.build();
 

@@ -9,12 +9,13 @@ import com.nimbusds.jose.produce.JWSSignerFactory;
 import com.nimbusds.jwt.JWTClaimsSet;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.NonNull;
 import org.springframework.util.function.SingletonSupplier;
 
 import java.util.function.Supplier;
 
+@NullMarked
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class KeyGenerator implements Supplier<JWK> {
 
@@ -32,7 +33,6 @@ public class KeyGenerator implements Supplier<JWK> {
 	 *
 	 * @return the current RSA key, never {@literal null}
 	 */
-	@NonNull
 	@Override
 	public JWK get() {
 		return key.get();
@@ -44,7 +44,6 @@ public class KeyGenerator implements Supplier<JWK> {
 	 * @return the RSA key, never {@literal null}
 	 * @throws IllegalArgumentException when RSA key can not be generated
 	 */
-	@NonNull
 	public JWK generate() {
 		try {
 			return new RSAKeyGenerator(2048)
@@ -62,8 +61,7 @@ public class KeyGenerator implements Supplier<JWK> {
 	 * @param claims claims to be signed, never {@literal null}
 	 * @return the {@link JWSObject signed JWT}, never {@literal null}
 	 */
-	@NonNull
-	public JWSObject sign(@NonNull JWTClaimsSet claims) {
+	public JWSObject sign(JWTClaimsSet claims) {
 		return sign(get(), claims);
 	}
 
@@ -74,8 +72,7 @@ public class KeyGenerator implements Supplier<JWK> {
 	 * @param claims claims to be signed, never {@literal null}
 	 * @return the {@link JWSObject signed JWT}, never {@literal null}
 	 */
-	@NonNull
-	public JWSObject sign(@NonNull JWK key, @NonNull JWTClaimsSet claims) {
+	public JWSObject sign(JWK key, JWTClaimsSet claims) {
 		final JWSSigner signer;
 
 		try {

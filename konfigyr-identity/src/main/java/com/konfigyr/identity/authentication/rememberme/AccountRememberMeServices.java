@@ -3,6 +3,8 @@ package com.konfigyr.identity.authentication.rememberme;
 import com.konfigyr.entity.EntityId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.log.LogMessage;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticatedPrincipal;
@@ -46,6 +48,7 @@ import java.util.Objects;
  * @author Vladimir Spasic
  * @see org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices
  **/
+@NullMarked
 public class AccountRememberMeServices implements RememberMeServices, LogoutHandler {
 
 	/**
@@ -75,6 +78,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 		delegate.afterPropertiesSet();
 	}
 
+	@Nullable
 	@Override
 	public Authentication autoLogin(HttpServletRequest request, HttpServletResponse response) {
 		return delegate.autoLogin(request, response);
@@ -91,7 +95,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 	}
 
 	@Override
-	public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+	public void logout(HttpServletRequest request, HttpServletResponse response, @Nullable Authentication authentication) {
 		delegate.logout(request, response, authentication);
 	}
 
@@ -199,6 +203,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 			return userDetails;
 		}
 
+		@Nullable
 		private String retrieveUserName(Authentication authentication) {
 			Assert.notNull(authentication, "Authentication can not be null");
 

@@ -6,8 +6,8 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.security.OAuthScopes;
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.jmolecules.ddd.annotation.ValueObject;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.util.Assert;
 

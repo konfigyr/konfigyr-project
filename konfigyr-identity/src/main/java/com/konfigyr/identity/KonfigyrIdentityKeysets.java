@@ -1,6 +1,7 @@
 package com.konfigyr.identity;
 
 import com.konfigyr.crypto.KeysetDefinition;
+import com.konfigyr.crypto.jose.JoseAlgorithm;
 import com.konfigyr.crypto.tink.TinkAlgorithm;
 
 import java.time.Duration;
@@ -34,12 +35,12 @@ public interface KonfigyrIdentityKeysets {
 			TinkAlgorithm.AES128_CTR_HMAC_SHA256, Duration.ofDays(90));
 
 	/**
-	 * Keyset that uses the {@link TinkAlgorithm#AES128_CTR_HMAC_SHA256} algorithm to encrypt and decrypt
+	 * Keyset that uses the {@link JoseAlgorithm#RS256} algorithm to encrypt and decrypt
 	 * {@link com.nimbusds.jose.jwk.JWK JSON Web Keys}.
 	 * <p>
 	 * The keys within this {@link com.konfigyr.crypto.Keyset} should be rotated on a {@code 180 day} period.
 	 */
 	KeysetDefinition WEB_KEYS = KeysetDefinition.of("oauth-keys",
-			TinkAlgorithm.AES128_CTR_HMAC_SHA256, Duration.ofDays(180));
+			JoseAlgorithm.RS256, Duration.ofDays(180));
 
 }

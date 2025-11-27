@@ -2,7 +2,7 @@ package com.konfigyr.feature;
 
 import lombok.EqualsAndHashCode;
 import org.jmolecules.ddd.annotation.ValueObject;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -45,7 +45,7 @@ public final class FeatureValues implements Serializable {
 		return new Builder();
 	}
 
-	Map<String, FeatureValue> values;
+	final Map<String, FeatureValue> values;
 
 	private FeatureValues(Map<String, FeatureValue> values) {
 		Assert.notNull(values, "Feature values must not be null");

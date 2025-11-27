@@ -9,7 +9,7 @@ import lombok.Value;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jmolecules.ddd.types.Identifiable;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,6 +37,7 @@ import java.util.Collection;
  **/
 @Value
 @Builder
+@NullMarked
 @AggregateRoot
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Identifiable<EntityId>, Serializable {
@@ -49,34 +50,28 @@ public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Ide
 	/**
 	 * Entity identifier of the user account behind this {@link AccountIdentity}.
 	 */
-	@NonNull
 	EntityId id;
 
 	/**
 	 * The current status of the account that is used to check if this {@link AccountIdentity} can be used.
 	 */
-	@NonNull
 	AccountIdentityStatus status;
 
 	/**
 	 * E-Mail address of the {@link AccountIdentity}.
 	 */
-	@NonNull
 	String email;
 
 	/**
 	 * Display name, or an email address, of this {@link AccountIdentity}.
 	 */
-	@NonNull
 	String displayName;
 
 	/**
 	 * Avatar that points to the profile picture of this {@link AccountIdentity}.
 	 */
-	@NonNull
 	Avatar avatar;
 
-	@NonNull
 	Collection<? extends GrantedAuthority> authorities;
 
 	/**
@@ -85,7 +80,6 @@ public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Ide
 	 *
 	 * @return account entity identifier, never {@literal null}
 	 */
-	@NonNull
 	@Identity
 	public EntityId getId() {
 		return id;
@@ -97,7 +91,6 @@ public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Ide
 	 *
 	 * @return the authenticated principal name, never {@literal null}
 	 */
-	@NonNull
 	@Override
 	public String getName() {
 		return id.serialize();
@@ -107,36 +100,6 @@ public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Ide
 	@JsonIgnore
 	public String getUsername() {
 		return getName();
-	}
-
-	/**
-	 * The email address of the logged-in user account.
-	 *
-	 * @return account email address, never {@literal null}
-	 */
-	@NonNull
-	public String getEmail() {
-		return email;
-	}
-
-	/**
-	 * The display name for the logged-in user account, if present, or the email account.
-	 *
-	 * @return display name or email, never {@literal null}
-	 */
-	@NonNull
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Avatar for the {@link AccountIdentity}.
-	 *
-	 * @return account avatar, can't be {@literal null}
-	 */
-	@NonNull
-	public Avatar getAvatar() {
-		return avatar;
 	}
 
 	@Override
@@ -165,7 +128,6 @@ public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Ide
 		return EMPTY_PASSWORD;
 	}
 
-	@NonNull
 	@Override
 	public String toString() {
 		return "AccountIdentity(id=" + id + ", status=" + status + ")";

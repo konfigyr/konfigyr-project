@@ -11,7 +11,7 @@ import org.jooq.impl.DSL;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -34,7 +34,7 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 @RequiredArgsConstructor
 class DefaultAccountManager implements AccountManager {
 
-	static Name MEMBERSHIPS_ALIAS = DSL.name("memberships");
+	static final Name MEMBERSHIPS_ALIAS = DSL.name("memberships");
 
 	private static final Marker REGISTERED = MarkerFactory.getMarker("ACCOUNT_REGISTERED");
 	private static final Marker UPDATED = MarkerFactory.getMarker("ACCOUNT_UPDATED");

@@ -1,41 +1,47 @@
 package com.konfigyr.identity.authorization;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.konfigyr.crypto.KeysetOperationsFactory;
+import com.konfigyr.crypto.KeysetStore;
+import com.konfigyr.crypto.jose.JoseAutoConfiguration;
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.KonfigyrIdentityKeysets;
+import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authorization.client.DelegatingRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.KonfigyrRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository;
-import com.konfigyr.identity.authorization.jwk.KeyRepository;
-import com.konfigyr.identity.authorization.jwk.RepositoryKeySource;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
+import com.konfigyr.identity.authorization.jwk.KeysetSource;
+import com.konfigyr.identity.authorization.jwk.SigningJwkSelector;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jooq.DSLContext;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.NonNull;
-import org.springframework.security.jackson2.SecurityJackson2Modules;
+import org.springframework.security.jackson.SecurityJacksonModules;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.util.Assert;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 import java.security.Security;
 import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
+@ImportAutoConfiguration(JoseAutoConfiguration.class)
 @EnableConfigurationProperties(AuthorizationProperties.class)
 public class AuthorizationConfiguration implements InitializingBean {
 
-	private final Lazy<ObjectMapper> mapper;
+	private final Lazy<@NonNull ObjectMapper> mapper;
 	private final AuthorizationProperties properties;
 
 	public AuthorizationConfiguration(ResourceLoader resourceLoader, AuthorizationProperties properties) {
@@ -78,13 +84,15 @@ public class AuthorizationConfiguration implements InitializingBean {
 	}
 
 	@Bean
-	KeyRepository keyRepository(DSLContext context, KeysetOperationsFactory keysetOperationsFactory) {
-		return new KeyRepository(context, keysetOperationsFactory.create(KonfigyrIdentityKeysets.WEB_KEYS));
+	KeysetSource identityServerKeysetSource(KeysetStore store) {
+		return new KeysetSource(store, KonfigyrIdentityKeysets.WEB_KEYS);
 	}
 
 	@Bean
-	JWKSource<SecurityContext> repositoryKeySource(KeyRepository repository) {
-		return new RepositoryKeySource(repository);
+	NimbusJwtEncoder identityServerJwtEncoder(KeysetSource identityServerKeysetSource) {
+		final NimbusJwtEncoder encoder = new NimbusJwtEncoder(identityServerKeysetSource);
+		encoder.setJwkSelector(SigningJwkSelector.getInstance()::select);
+		return encoder;
 	}
 
 	@Bean
@@ -96,9 +104,13 @@ public class AuthorizationConfiguration implements InitializingBean {
 	static ObjectMapper createObjectMapper(ClassLoader classLoader) {
 		Assert.notNull(classLoader, "Class loader must not be null");
 
-		return new ObjectMapper()
-				.registerModules(SecurityJackson2Modules.getModules(classLoader))
-				.registerModule(new OAuth2AuthorizationServerJackson2Module());
+		final BasicPolymorphicTypeValidator.Builder validator = BasicPolymorphicTypeValidator.builder()
+				.allowIfSubType(AccountIdentity.class)
+				.allowIfSubType(EntityId.class);
+
+		return JsonMapper.builder()
+				.addModules(SecurityJacksonModules.getModules(classLoader, validator))
+				.build();
 	}
 
 }

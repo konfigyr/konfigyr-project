@@ -1,8 +1,8 @@
 package com.konfigyr.test;
 
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Utility class that is used to register {@link org.testcontainers.containers.Container test containers}
@@ -23,7 +23,7 @@ public interface TestContainers {
 	 */
 	@Container
 	@ServiceConnection
-	PostgreSQLContainer<?> postresql = new PostgreSQLContainer<>("postgres:16.2")
+	PostgreSQLContainer postresql = new PostgreSQLContainer("postgres:16.2")
 			.withDatabaseName("konfigyr");
 
 }

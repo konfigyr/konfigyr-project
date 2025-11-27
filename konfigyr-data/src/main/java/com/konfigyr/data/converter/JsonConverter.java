@@ -1,18 +1,17 @@
 package com.konfigyr.data.converter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.jooq.Converter;
 import org.jooq.exception.DataTypeException;
 import org.jooq.impl.AbstractConverter;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Implementation of the {@link Converter jOOQ Converter} that would convert String based
- * column values into desired Java types using {@link ObjectMapper}.
+ * column values into desired Java types using {@link tools.jackson.databind.json.JsonMapper}.
  *
  * @param <T> generic converter target type
  * @author Vladimir Spasic
@@ -34,11 +33,11 @@ public final class JsonConverter<T> extends AbstractConverter<String, T> {
 	public static <T> Converter<String, T> create(Class<T> type) {
 		Assert.notNull(type, "Target converter type must not be null");
 
-		return new JsonConverter<>(JsonMapper.builder().addModule(new JavaTimeModule()).build(), type);
+		return new JsonConverter<>(JsonMapper.builder().build(), type);
 	}
 
 	/**
-	 * Creates a new {@link JsonConverter} with an already customized {@link ObjectMapper} that would
+	 * Creates a new {@link JsonConverter} with an already customized {@link JsonMapper} that would
 	 * convert values to or from desired type.
 	 *
 	 * @param mapper object mapper instance to be used, can't be {@literal null}
@@ -67,7 +66,7 @@ public final class JsonConverter<T> extends AbstractConverter<String, T> {
 
 		try {
 			return mapper.readValue(value, toType());
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new DataTypeException("Error when converting JSON to " + toType(), e);
 		}
 	}
@@ -80,7 +79,7 @@ public final class JsonConverter<T> extends AbstractConverter<String, T> {
 
 		try {
 			return mapper.writeValueAsString(value);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new DataTypeException("Error when converting object of type " + toType() + " to JSON", e);
 		}
 	}

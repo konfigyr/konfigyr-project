@@ -1,8 +1,8 @@
 package com.konfigyr.entity;
 
 import org.springframework.core.Ordered;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Service provider interface that provides concrete implementations of the {@link EntityId}.

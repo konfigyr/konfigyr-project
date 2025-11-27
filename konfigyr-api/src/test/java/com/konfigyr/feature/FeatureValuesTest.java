@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class FeatureValuesTest {
 
-	static FeatureDefinition<LimitedFeatureValue> TESTING = FeatureDefinition.of("testing", LimitedFeatureValue.class);
+	static final FeatureDefinition<LimitedFeatureValue> TESTING = FeatureDefinition.of("testing", LimitedFeatureValue.class);
 
 	@Test
 	@DisplayName("should create an empty feature values instance")

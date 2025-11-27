@@ -6,8 +6,8 @@ import com.konfigyr.io.ByteArray;
 import org.jooq.Converter;
 import org.jooq.exception.DataTypeException;
 import org.jooq.impl.AbstractConverter;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 

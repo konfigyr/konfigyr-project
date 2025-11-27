@@ -1,8 +1,8 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
 
 import java.io.Serial;
 

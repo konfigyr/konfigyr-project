@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GreenMailConfigurationTest {
 
-	ApplicationContextRunner runner = new ApplicationContextRunner()
+	final ApplicationContextRunner runner = new ApplicationContextRunner()
 			.withUserConfiguration(GreenMailConfiguration.class);
 
 	@Test

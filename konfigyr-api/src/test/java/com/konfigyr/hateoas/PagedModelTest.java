@@ -1,5 +1,6 @@
 package com.konfigyr.hateoas;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,10 @@ class PagedModelTest {
 		assertThat(model.hasLinks())
 				.isTrue();
 
-		assertThat(model.getMetadata())
+		final var metadata = model.getMetadata();
+
+		assertThat(metadata)
+				.isNotNull()
 				.returns(2L, PagedModel.PageMetadata::size)
 				.returns(0L, PagedModel.PageMetadata::number)
 				.returns(5L, PagedModel.PageMetadata::totalElements)
@@ -143,12 +147,12 @@ class PagedModelTest {
 	}
 
 	@SafeVarargs
-	static Page<EntityModel<String>> createPage(EntityModel<String>... contents) {
+	static Page<@NonNull EntityModel<String>> createPage(EntityModel<String>... contents) {
 		return createPage(contents.length, contents);
 	}
 
 	@SafeVarargs
-	static Page<EntityModel<String>> createPage(long total, EntityModel<String>... contents) {
+	static Page<@NonNull EntityModel<String>> createPage(long total, EntityModel<String>... contents) {
 		return new PageImpl<>(List.of(contents), Pageable.ofSize(contents.length), total);
 	}
 

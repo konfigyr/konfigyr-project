@@ -6,7 +6,6 @@ import com.konfigyr.account.Membership;
 import com.konfigyr.account.Memberships;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
-import org.springframework.lang.NonNull;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -24,7 +23,7 @@ public interface TestAccounts {
 	 *
 	 * @return John Doe account builder, never {@literal null}
 	 */
-	static @NonNull Account.Builder john() {
+	static Account.Builder john() {
 		return Account.builder().id(1L)
 				.status(AccountStatus.ACTIVE)
 				.email("john.doe@konfigyr.com")
@@ -54,7 +53,7 @@ public interface TestAccounts {
 	 *
 	 * @return Jane Doe account builder, never {@literal null}
 	 */
-	static @NonNull Account.Builder jane() {
+	static Account.Builder jane() {
 		return Account.builder().id(2L)
 				.status(AccountStatus.ACTIVE)
 				.email("jane.doe@konfigyr.com")

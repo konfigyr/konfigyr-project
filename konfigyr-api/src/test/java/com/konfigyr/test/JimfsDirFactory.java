@@ -2,6 +2,7 @@ package com.konfigyr.test;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.extension.AnnotatedElementContext;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -37,6 +38,7 @@ public final class JimfsDirFactory implements TempDirFactory {
 	private CleanupMode cleanupMode = CleanupMode.DEFAULT;
 
 	/** {@inheritDoc} */
+	@NullMarked
 	@Override
 	public Path createTempDirectory(AnnotatedElementContext elementContext, ExtensionContext extensionContext)
 			throws IOException {

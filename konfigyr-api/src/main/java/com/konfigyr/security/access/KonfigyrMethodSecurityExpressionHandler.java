@@ -2,6 +2,8 @@ package com.konfigyr.security.access;
 
 import lombok.Setter;
 import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.InitializingBean;
@@ -36,21 +38,30 @@ public class KonfigyrMethodSecurityExpressionHandler extends DefaultMethodSecuri
 	}
 
 	@Override
-	public EvaluationContext createEvaluationContext(Supplier<Authentication> authentication, MethodInvocation mi) {
-		final KonfigyrMethodSecurityExpressionRoot root = new KonfigyrMethodSecurityExpressionRoot(accessService, authentication);
-		setupSecurityExpressionRoot(root, mi);
+	@NullMarked
+	public EvaluationContext createEvaluationContext(
+			Supplier<? extends @Nullable Authentication> authentication,
+			MethodInvocation invocation
+	) {
+		final KonfigyrMethodSecurityExpressionRoot root = new KonfigyrMethodSecurityExpressionRoot(
+				accessService, authentication, invocation
+		);
+		setupSecurityExpressionRoot(root, invocation);
 
-		final StandardEvaluationContext context = new MethodBasedEvaluationContext(root, getSpecificMethod(mi),
-				mi.getArguments(), getParameterNameDiscoverer());
+		final StandardEvaluationContext context = new MethodBasedEvaluationContext(root, getSpecificMethod(invocation),
+				invocation.getArguments(), getParameterNameDiscoverer());
 		context.setBeanResolver(getBeanResolver());
 
 		return context;
 	}
 
 	@Override
+	@NullMarked
 	protected MethodSecurityExpressionOperations createSecurityExpressionRoot(
-			Authentication authentication, MethodInvocation invocation) {
-		final KonfigyrMethodSecurityExpressionRoot root = new KonfigyrMethodSecurityExpressionRoot(accessService, authentication);
+			@Nullable Authentication authentication, MethodInvocation invocation) {
+		final KonfigyrMethodSecurityExpressionRoot root = new KonfigyrMethodSecurityExpressionRoot(
+				accessService, authentication, invocation
+		);
 		setupSecurityExpressionRoot(root, invocation);
 		return root;
 	}
@@ -58,9 +69,7 @@ public class KonfigyrMethodSecurityExpressionHandler extends DefaultMethodSecuri
 	private void setupSecurityExpressionRoot(KonfigyrMethodSecurityExpressionRoot root, MethodInvocation mi) {
 		root.setTarget(mi.getThis());
 		root.setPermissionEvaluator(getPermissionEvaluator());
-		root.setTrustResolver(getTrustResolver());
-		root.setRoleHierarchy(getRoleHierarchy());
-		root.setDefaultRolePrefix(getDefaultRolePrefix());
+		root.setAuthorizationManagerFactory(getAuthorizationManagerFactory());
 	}
 
 	private static Method getSpecificMethod(MethodInvocation mi) {

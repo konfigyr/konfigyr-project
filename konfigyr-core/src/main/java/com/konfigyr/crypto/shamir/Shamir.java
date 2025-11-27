@@ -1,7 +1,7 @@
 package com.konfigyr.crypto.shamir;
 
 import com.konfigyr.io.ByteArray;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.util.Assert;
 import org.springframework.util.function.SingletonSupplier;

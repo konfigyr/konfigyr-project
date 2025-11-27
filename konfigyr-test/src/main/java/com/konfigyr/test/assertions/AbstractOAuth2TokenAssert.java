@@ -4,7 +4,7 @@ import org.assertj.core.api.AbstractObjectAssert;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.data.TemporalOffset;
 import org.assertj.core.error.BasicErrorMessageFactory;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.OAuth2Token;
 
 import java.time.Instant;

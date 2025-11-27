@@ -17,7 +17,7 @@ import org.slf4j.MarkerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -47,7 +47,7 @@ public class DefaultServices implements Services {
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "service-search")
-	public Page<Service> find(@NonNull Namespace namespace, @NonNull SearchQuery query) {
+	public Page<@NonNull Service> find(@NonNull Namespace namespace, @NonNull SearchQuery query) {
 		final List<Condition> conditions = new ArrayList<>();
 		conditions.add(SERVICES.NAMESPACE_ID.eq(namespace.id().get()));
 

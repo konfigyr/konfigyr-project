@@ -15,8 +15,9 @@ import org.mockito.quality.Strictness;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.MethodParameter;
+import org.springframework.expression.Expression;
 import org.springframework.http.*;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
@@ -212,7 +213,7 @@ class HateoasExceptionHandlerTest {
 	@Test
 	@DisplayName("should handle authorization denied exception with expression decision")
 	void shouldHandleExpressionAuthorizationDecision() {
-		final var result = new ExpressionAuthorizationDecision(false, null);
+		final var result = new ExpressionAuthorizationDecision(false, mock(Expression.class));
 
 		expectProblemDetail(new AuthorizationDeniedException("default error message", result), HttpStatus.FORBIDDEN)
 				.hasDefaultType()

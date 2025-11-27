@@ -1,22 +1,24 @@
 package com.konfigyr.artifactory.provenance;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.konfigyr.artifactory.Artifactory;
 import com.konfigyr.artifactory.PropertyMetadata;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.artifactory.store.MetadataStoreReader;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.springframework.batch.core.Step;
+import org.jspecify.annotations.NullMarked;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.Step;
+import org.springframework.batch.core.step.builder.ChunkOrientedStepBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
+import tools.jackson.databind.ObjectMapper;
 
 @RequiredArgsConstructor
 @Configuration(proxyBeanMethods = false)
@@ -40,6 +42,8 @@ public class ProvenanceConfiguration {
 		return new DefaultProvenanceEvaluator(context);
 	}
 
+	@JobScope
+	@NullMarked
 	@Bean(name = PROVENANCE_STEP)
 	Step provenanceStep(
 			JobRepository repository,
@@ -48,8 +52,8 @@ public class ProvenanceConfiguration {
 			@Qualifier(PROVENANCE_STEP_PROCESSOR) ProvenanceProcessor processor,
 			@Qualifier(PROVENANCE_STEP_WRITER) ProvenanceEvaluationWriter writer
 	) {
-		return new StepBuilder(PROVENANCE_STEP, repository)
-				.<PropertyMetadata, EvaluationResult>chunk(20, transactionManager)
+		return new ChunkOrientedStepBuilder<PropertyMetadata, EvaluationResult>(PROVENANCE_STEP, repository, 20)
+				.transactionManager(transactionManager)
 				.reader(reader)
 				.processor(processor)
 				.writer(writer)

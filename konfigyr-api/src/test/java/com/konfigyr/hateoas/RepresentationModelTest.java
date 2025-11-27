@@ -7,8 +7,7 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatException;
+import static org.assertj.core.api.Assertions.*;
 
 class RepresentationModelTest {
 
@@ -70,17 +69,17 @@ class RepresentationModelTest {
 
 	@Test
 	@DisplayName("should not add null links to representation model")
-	void preventsNullLinksBeingAdded() {
+	void ignoreNullLinksBeingAdded() {
 		RepresentationModel<?> support = new RepresentationModel<>();
 
-		assertThatException().isThrownBy(() -> support.add((Link) null))
-				.isInstanceOf(IllegalArgumentException.class);
+		assertThatIllegalArgumentException().isThrownBy(() -> support.add((Link) null));
 
-		assertThatException().isThrownBy(() -> support.add((Link[]) null))
-				.isInstanceOf(IllegalArgumentException.class);
+		assertThatIllegalArgumentException().isThrownBy(() -> support.add((Link[]) null));
 
-		assertThatException().isThrownBy(() -> support.add((Iterable<Link>) null))
-				.isInstanceOf(IllegalArgumentException.class);
+		assertThatNoException().isThrownBy(() -> support.add((Iterable<Link>) null));
+
+		assertThat(support.getLinks())
+				.isEmpty();
 	}
 
 	@Test

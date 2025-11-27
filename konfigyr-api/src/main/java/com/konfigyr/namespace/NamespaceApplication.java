@@ -8,8 +8,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import java.io.Serial;
@@ -78,13 +78,13 @@ public record NamespaceApplication(
 	 * The {@link SearchQuery.Criteria} descriptor used to narrow down the search of
 	 * {@link NamespaceApplication applications} by their {@link EntityId entity identifier}.
 	 */
-	public static SearchQuery.Criteria<EntityId> ID_CRITERIA = SearchQuery.criteria("oauth-application.id", EntityId.class);
+	public static final SearchQuery.Criteria<EntityId> ID_CRITERIA = SearchQuery.criteria("oauth-application.id", EntityId.class);
 
 	/**
 	 * The {@link SearchQuery.Criteria} descriptor used to filter {@link NamespaceApplication applications}
 	 * by their expiration state.
 	 */
-	public static SearchQuery.Criteria<Boolean> ACTIVE_CRITERIA = SearchQuery.criteria("oauth-application.active", Boolean.class);
+	public static final SearchQuery.Criteria<Boolean> ACTIVE_CRITERIA = SearchQuery.criteria("oauth-application.active", Boolean.class);
 
 	/**
 	 * Creates a new {@link Builder fluent namespace application builder} instance used to create

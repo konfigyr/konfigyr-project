@@ -3,8 +3,8 @@ package com.konfigyr.web.error;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -87,7 +87,7 @@ public final class OAuth2ErrorResolver {
 	}
 
 	@Nullable
-	private OAuth2Error extract(@NonNull WebRequest request, @NonNull int scope) {
+	private OAuth2Error extract(@NonNull WebRequest request, int scope) {
 		final Object value = request.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION, scope);
 
 		if (value instanceof Throwable ex) {

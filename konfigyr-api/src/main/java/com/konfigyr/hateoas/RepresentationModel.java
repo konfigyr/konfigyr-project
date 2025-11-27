@@ -1,11 +1,12 @@
 package com.konfigyr.hateoas;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.domain.Page;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import java.util.*;
@@ -61,6 +62,7 @@ public class RepresentationModel<T extends RepresentationModel<? extends T>> {
 	 * @return representation model from the given content, never {@literal null}.
 	 * @see #of(Object, Iterable)
 	 */
+	@JsonCreator
 	public static <T> RepresentationModel<?> of(@Nullable T object, Link... links) {
 		return of(object, Arrays.asList(links));
 	}
@@ -102,14 +104,14 @@ public class RepresentationModel<T extends RepresentationModel<? extends T>> {
 	/**
 	 * Adds all given {@link Link}s to the resource.
 	 *
-	 * @param links must not be {@literal null}.
+	 * @param links may be {@literal null}.
 	 * @return the representation model, never {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
 	public T add(Iterable<Link> links) {
-		Assert.notNull(links, "Given links must not be null!");
-
-		links.forEach(this::add);
+		if (links != null) {
+			links.forEach(this::add);
+		}
 
 		return (T) this;
 	}

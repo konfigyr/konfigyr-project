@@ -1,10 +1,10 @@
 package com.konfigyr.artifactory.converter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.konfigyr.artifactory.Deprecation;
 import com.konfigyr.data.converter.JsonConverter;
 import org.jooq.Converter;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
+import tools.jackson.databind.ObjectMapper;
 
 public final class DeprecationConverter implements Converter<String, Deprecation> {
 

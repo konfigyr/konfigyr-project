@@ -15,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -127,7 +127,7 @@ class ApplicationsController {
 				.criteria(NamespaceApplication.ID_CRITERIA, id)
 				.build();
 
-		final Page<NamespaceApplication> applications = namespaces.findApplications(query);
+		final Page<@NonNull NamespaceApplication> applications = namespaces.findApplications(query);
 
 		if (applications.isEmpty()) {
 			throw new NamespaceApplicationNotFoundException(id);

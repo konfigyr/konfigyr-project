@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class RepresentationModelAssemblerTest {
 
-	RepresentationModelAssembler<String, EntityModel<String>> assembler = EntityModel::of;
+	final RepresentationModelAssembler<String, EntityModel<String>> assembler = EntityModel::of;
 
 	@Test
 	@DisplayName("should assemble entity into an entity model")

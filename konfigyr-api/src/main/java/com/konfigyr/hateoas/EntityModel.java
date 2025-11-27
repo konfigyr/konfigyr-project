@@ -3,10 +3,10 @@ package com.konfigyr.hateoas;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.EqualsAndHashCode;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 import java.util.Arrays;
 import java.util.Collection;

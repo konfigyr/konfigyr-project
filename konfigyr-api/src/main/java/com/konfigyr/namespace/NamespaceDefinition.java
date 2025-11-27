@@ -3,8 +3,8 @@ package com.konfigyr.namespace;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.Slug;
 import org.jmolecules.ddd.annotation.ValueObject;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import java.io.Serial;

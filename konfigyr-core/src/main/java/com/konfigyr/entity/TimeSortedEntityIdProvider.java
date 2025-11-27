@@ -1,7 +1,7 @@
 package com.konfigyr.entity;
 
 import io.hypersistence.tsid.TSID;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.function.SingletonSupplier;
 

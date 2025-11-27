@@ -1,7 +1,7 @@
 package com.konfigyr.security.access;
 
 import lombok.Getter;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 

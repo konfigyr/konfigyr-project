@@ -3,15 +3,15 @@ package com.konfigyr.security.oauth;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodClassKey;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.core.annotation.RepeatableContainers;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.security.authorization.AuthorityAuthorizationDecision;
-import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -31,13 +31,19 @@ import java.util.function.Supplier;
  * @see OAuthScopes
  * @see RequiresScope
  */
+@NullMarked
 class RequiresScopeAuthorizationManager implements AuthorizationManager<MethodInvocation> {
 
 	private final Map<MethodClassKey, OAuthScopes> cache = new ConcurrentHashMap<>();
 
 	@Override
+	@Nullable
 	@SuppressWarnings("unchecked")
-	public AuthorizationDecision check(Supplier<Authentication> authentication, MethodInvocation invocation) {
+	public AuthorizationResult authorize(Supplier<? extends @Nullable Authentication> authentication, @Nullable MethodInvocation invocation) {
+		if (invocation == null) {
+			return null;
+		}
+
 		final OAuthScopes scopes = resolveRequiredScopes(invocation);
 
 		if (scopes.isEmpty()) {
@@ -49,8 +55,7 @@ class RequiresScopeAuthorizationManager implements AuthorizationManager<MethodIn
 		return new AuthorityAuthorizationDecision(granted, (Collection<GrantedAuthority>) scopes.toAuthorities());
 	}
 
-	@NonNull
-	private OAuthScopes resolveRequiredScopes(@NonNull MethodInvocation invocation) {
+	private OAuthScopes resolveRequiredScopes(MethodInvocation invocation) {
 		final MethodClassKey key = createCacheKey(invocation);
 		OAuthScopes scopes = cache.get(key);
 
@@ -62,21 +67,20 @@ class RequiresScopeAuthorizationManager implements AuthorizationManager<MethodIn
 		return scopes;
 	}
 
-	private static boolean isAuthorized(Authentication authentication, OAuthScopes scopes) {
+	private static boolean isAuthorized(@Nullable Authentication authentication, OAuthScopes scopes) {
 		if (authentication == null) {
 			return false;
 		}
 
 		for (final GrantedAuthority authority : authentication.getAuthorities()) {
-			if (scopes.permits(authority)) {
+			if (authority instanceof OAuthScope scope && scopes.permits(scope)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	@NonNull
-	private static OAuthScopes createRequiredScopes(@NonNull MethodInvocation invocation) {
+	private static OAuthScopes createRequiredScopes(MethodInvocation invocation) {
 		MergedAnnotation<RequiresScope> annotation = lookupAnnotation(invocation.getMethod());
 
 		if (annotation == null) {
@@ -90,15 +94,14 @@ class RequiresScopeAuthorizationManager implements AuthorizationManager<MethodIn
 		return OAuthScopes.of(annotation.getEnumArray("value", OAuthScope.class));
 	}
 
-	@NonNull
-	private static MethodClassKey createCacheKey(@NonNull MethodInvocation invocation) {
+	private static MethodClassKey createCacheKey(MethodInvocation invocation) {
 		final Object target = invocation.getThis();
 		final Class<?> targetClass = (target != null) ? target.getClass() : null;
 		return new MethodClassKey(invocation.getMethod(), targetClass);
 	}
 
 	@Nullable
-	private static MergedAnnotation<RequiresScope> lookupAnnotation(@NonNull AnnotatedElement element) {
+	private static MergedAnnotation<RequiresScope> lookupAnnotation(AnnotatedElement element) {
 		final MergedAnnotations annotations = MergedAnnotations.from(element,
 				MergedAnnotations.SearchStrategy.DIRECT, RepeatableContainers.none());
 

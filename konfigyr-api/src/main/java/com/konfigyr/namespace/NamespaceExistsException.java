@@ -1,7 +1,7 @@
 package com.konfigyr.namespace;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 

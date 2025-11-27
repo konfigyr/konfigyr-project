@@ -7,8 +7,8 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.jmolecules.ddd.annotation.ValueObject;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -18,7 +18,7 @@ import java.util.StringTokenizer;
 import java.util.function.Supplier;
 
 /**
- * Immutable value objects that represents the persons full name. This class is also capable of parsing name
+ * Immutable value objects that represent the persons full name. This class is also capable of parsing name
  * parts out of a single string to create this instance.
  * <p>
  * Please do not expect wonders from this parser as it is a very simple one, it does not detect any salutations,

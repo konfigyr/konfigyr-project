@@ -4,7 +4,8 @@ import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.NamespaceRole;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.lang.NonNull;
+import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.expression.SecurityExpressionRoot;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;
 import org.springframework.security.authorization.AuthorizationResult;
@@ -23,7 +24,7 @@ import java.util.function.Supplier;
  **/
 @Getter
 @Setter
-class KonfigyrMethodSecurityExpressionRoot extends SecurityExpressionRoot
+class KonfigyrMethodSecurityExpressionRoot extends SecurityExpressionRoot<MethodInvocation>
 		implements KonfigyrSecurityExpressionOperations, MethodSecurityExpressionOperations {
 
 	private final AccessService accessService;
@@ -32,12 +33,20 @@ class KonfigyrMethodSecurityExpressionRoot extends SecurityExpressionRoot
 	private Object returnObject;
 	private Object target;
 
-	KonfigyrMethodSecurityExpressionRoot(AccessService accessService, Authentication authentication) {
-		this(accessService, () -> authentication);
+	KonfigyrMethodSecurityExpressionRoot(
+			AccessService accessService,
+			Authentication authentication,
+			MethodInvocation invocation
+	) {
+		this(accessService, () -> authentication, invocation);
 	}
 
-	KonfigyrMethodSecurityExpressionRoot(AccessService accessService, Supplier<Authentication> authentication) {
-		super(authentication);
+	KonfigyrMethodSecurityExpressionRoot(
+			AccessService accessService,
+			Supplier<? extends Authentication> authentication,
+			MethodInvocation invocation
+	) {
+		super(authentication, invocation);
 		this.accessService = accessService;
 	}
 

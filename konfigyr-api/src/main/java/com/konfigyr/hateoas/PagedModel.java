@@ -2,9 +2,11 @@ package com.konfigyr.hateoas;
 
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.springframework.data.domain.Page;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
+@JsonPropertyOrder({ "data", "metadata", "links" })
 public class PagedModel<T> extends CollectionModel<T> {
 
 	private static final PagedModel<?> EMPTY = new PagedModel<>();
@@ -31,7 +34,12 @@ public class PagedModel<T> extends CollectionModel<T> {
 		this(content, metadata, Collections.emptyList());
 	}
 
-	protected PagedModel(Collection<T> content, @Nullable PageMetadata metadata, Iterable<Link> links) {
+	@JsonCreator
+	protected PagedModel(
+			@JsonProperty("data") Collection<T> content,
+			@JsonProperty("metadata") @Nullable PageMetadata metadata,
+			@JsonProperty("links") Iterable<Link> links
+	) {
 		super(content, links);
 
 		this.metadata = metadata;
@@ -81,7 +89,7 @@ public class PagedModel<T> extends CollectionModel<T> {
 	 * @return paged model representation, never {@literal null}.
 	 */
 	@NonNull
-	public static <T> PagedModel<T> of(Page<T> content) {
+	public static <T> PagedModel<T> of(Page<@NonNull T> content) {
 		return of(content, Collections.emptyList());
 	}
 
@@ -94,7 +102,7 @@ public class PagedModel<T> extends CollectionModel<T> {
 	 * @return paged model representation, never {@literal null}.
 	 */
 	@NonNull
-	public static <T> PagedModel<T> of(Page<T> content, Link... links) {
+	public static <T> PagedModel<T> of(Page<@NonNull T> content, Link... links) {
 		return of(content, Arrays.asList(links));
 	}
 
@@ -107,7 +115,7 @@ public class PagedModel<T> extends CollectionModel<T> {
 	 * @return paged model representation, never {@literal null}.
 	 */
 	@NonNull
-	public static <T> PagedModel<T> of(Page<T> content, Iterable<Link> links) {
+	public static <T> PagedModel<T> of(Page<@NonNull T> content, Iterable<Link> links) {
 		Assert.notNull(content, "Page content must not be null");
 		return new PagedModel<>(content.getContent(), new PageMetadata(content), links);
 	}

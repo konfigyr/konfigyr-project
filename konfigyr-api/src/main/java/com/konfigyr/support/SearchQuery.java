@@ -2,7 +2,7 @@ package com.konfigyr.support;
 
 import com.konfigyr.entity.EntityId;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.Serializable;

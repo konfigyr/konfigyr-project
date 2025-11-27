@@ -1,7 +1,5 @@
 package com.konfigyr.entity;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.StandardComparisonStrategy;
 import org.junit.jupiter.api.DisplayName;
@@ -10,8 +8,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.commons.util.ClassLoaderUtils;
 import org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder;
-import org.springframework.security.jackson2.SecurityJackson2Modules;
+import org.springframework.security.jackson.SecurityJacksonModules;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -63,7 +66,7 @@ class EntityIdTest {
 
 	@Test
 	@DisplayName("should be serializable into JSON via Jackson")
-	void toJSON() throws Exception {
+	void toJSON() {
 		final var id = EntityId.from(31854375494975544L);
 		final var mapper = new ObjectMapper();
 
@@ -89,15 +92,19 @@ class EntityIdTest {
 
 		assertThatThrownBy(() -> mapper.readValue("31854375494975544", EntityId.class))
 				.as("Should not generate entity identifier from internal form")
-				.isInstanceOf(JsonMappingException.class);
+				.isInstanceOf(JacksonException.class);
 	}
 
 	@Test
 	@DisplayName("should be serializable into JSON via Jackson using Spring Security default typing")
-	void assertSpringSecurityCompatibility() throws Exception {
+	void assertSpringSecurityCompatibility() {
 		final var id = EntityId.from(31854375494975544L);
-		final var mapper = new ObjectMapper();
-		SecurityJackson2Modules.enableDefaultTyping(mapper);
+		final var validator = BasicPolymorphicTypeValidator.builder()
+				.allowIfSubType(EntityId.class);
+
+		final var mapper = JsonMapper.builder()
+				.addModules(SecurityJacksonModules.getModules(ClassLoaderUtils.getDefaultClassLoader(), validator))
+				.build();
 
 		assertThat(mapper.writeValueAsString(id))
 				.as("Should write entity identifier using external form")

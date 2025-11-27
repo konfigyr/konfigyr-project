@@ -13,7 +13,7 @@ import org.jooq.DSLContext;
 import org.jooq.meta.postgres.PostgresDatabase;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.jdbc.JDBCUtils;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,7 +44,7 @@ public class KonfigyrDatabase extends PostgresDatabase {
 	private final JooqLogger logger = JooqLogger.getLogger(KonfigyrDatabase.class);
 	private final File changelogs;
 
-	private PostgreSQLContainer<?> container;
+	private PostgreSQLContainer container;
 	private Connection connection;
 
 	/**
@@ -86,7 +86,7 @@ public class KonfigyrDatabase extends PostgresDatabase {
 	private void startContainer() {
 		logger.info("Staring PostgreSQL container...");
 
-		container = new PostgreSQLContainer<>(POSTGRESQL_IMAGE)
+		container = new PostgreSQLContainer(POSTGRESQL_IMAGE)
 				.withDatabaseName("konfigyr");
 
 		container.start();

@@ -1,6 +1,6 @@
 package com.konfigyr.version;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 
@@ -17,7 +17,10 @@ record UnknownVersion(String original) implements Version {
 
 	@Override
 	public int compareTo(@NonNull Version o) {
-		return o instanceof UnknownVersion other ? original.compareTo(other.original) : 0;
+		if (o instanceof UnknownVersion version) {
+			return original.compareTo(version.original);
+		}
+		return 0;
 	}
 
 	@NonNull

@@ -1,6 +1,6 @@
 package com.konfigyr.security.access;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.Serial;

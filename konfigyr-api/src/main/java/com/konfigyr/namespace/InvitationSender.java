@@ -10,7 +10,7 @@ import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -41,7 +41,7 @@ class InvitationSender {
 	@Async
 	@Retryable(noRetryFor = InvitationException.class)
 	@TransactionalEventListener(id = "invitation-sender", classes = InvitationEvent.Created.class)
-	void send(@NonNull InvitationEvent.Created event) {
+	void send(InvitationEvent.Created event) {
 		log.debug("Attempting to send out invitation email for event: {}", event);
 
 		final Record invitation = lookupInvitation(event);

@@ -1,6 +1,6 @@
 package com.konfigyr.security.access;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -18,7 +18,8 @@ interface AccessControl extends Iterable<AccessGrant>, Serializable {
 	 *
 	 * @return the object identity, never {@literal null}
 	 */
-	@NonNull ObjectIdentity objectIdentity();
+	@NonNull
+	ObjectIdentity objectIdentity();
 
 	/**
 	 * This is the actual authorization logic method that checks if the underlying domain object has

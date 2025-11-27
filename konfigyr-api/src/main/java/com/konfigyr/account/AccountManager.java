@@ -3,7 +3,7 @@ package com.konfigyr.account;
 import com.konfigyr.entity.EntityId;
 import org.jmolecules.ddd.annotation.Repository;
 import org.jmolecules.event.annotation.DomainEventPublisher;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 

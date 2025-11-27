@@ -3,16 +3,18 @@ package com.konfigyr.test.smtp;
 import com.icegreen.greenmail.store.FolderException;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.test.context.DynamicPropertyRegistrar;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
 
-final class GreenMailConfiguration implements SmartLifecycle, InitializingBean {
+@Slf4j
+final class GreenMailConfiguration implements InitializingBean, DisposableBean {
 
 	private final GreenMail server = new GreenMail(
 			new ServerSetup(0, null, ServerSetup.PROTOCOL_SMTP)
@@ -37,27 +39,24 @@ final class GreenMailConfiguration implements SmartLifecycle, InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() {
-		start();
-	}
+		if (server.isRunning()) {
+			return;
+		}
 
-	@Override
-	public void start() {
 		server.start();
+
+		log.info("Started GreenMail SMTP server on: {}:{}", server.getSmtp().getBindTo(), server.getSmtp().getPort());
 	}
 
 	@Override
-	public boolean isRunning() {
-		return server.isRunning();
-	}
+	public void destroy() {
+		if (!server.isRunning()) {
+			return;
+		}
 
-	@Override
-	public int getPhase() {
-		return 0;
-	}
-
-	@Override
-	public void stop() {
 		server.stop();
+
+		log.info("GreenMail SMTP server has been stopped.");
 	}
 
 	static class GreenMailTestExecutionListener implements TestExecutionListener {

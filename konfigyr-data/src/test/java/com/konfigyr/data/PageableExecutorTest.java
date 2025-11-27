@@ -3,6 +3,7 @@ package com.konfigyr.data;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
 import org.jooq.*;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -156,7 +157,7 @@ class PageableExecutorTest {
 				.containsExactly(1L, 2L);
 	}
 
-	private Page<Long> execute(Pageable pageable) {
+	private Page<@NonNull Long> execute(Pageable pageable) {
 		return executor.execute(
 				context.select(TESTING_TABLE.fields()).from(TESTING_TABLE),
 				record -> record.get(TESTING_TABLE.ID),

@@ -106,7 +106,7 @@ class KeysetOperationsFactoryTest {
 
 		assertThatNoException().isThrownBy(() -> operations.encrypt(DATA));
 
-		verify(store, times(2)).read(definition.getName());
+		verify(store).read(definition.getName());
 		verify(keyset, times(2)).encrypt(DATA);
 	}
 }

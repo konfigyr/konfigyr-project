@@ -2,7 +2,7 @@ package com.konfigyr.artifactory;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.konfigyr.version.Version;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.Serial;

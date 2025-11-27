@@ -1,5 +1,6 @@
 package com.konfigyr.security;
 
+import com.konfigyr.test.assertions.ProblemDetailAssert;
 import com.konfigyr.web.WebExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -8,12 +9,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.ProblemDetailJacksonMixin;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.ErrorResponse;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.UnsupportedEncodingException;
 
@@ -23,6 +28,10 @@ import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
 class ProblemDetailsAuthenticationExceptionHandlerTest {
+
+	static final ObjectMapper mapper = JsonMapper.builder()
+			.addMixIn(ProblemDetail.class, ProblemDetailJacksonMixin.class)
+			.build();
 
 	@Mock
 	WebExceptionHandler delegate;
@@ -42,7 +51,7 @@ class ProblemDetailsAuthenticationExceptionHandlerTest {
 
 	@Test
 	@DisplayName("should handle authentication exception")
-	void shouldHandleAuthenticationException() throws UnsupportedEncodingException {
+	void shouldHandleAuthenticationException() {
 		final var ex = new BadCredentialsException("Bad Credentials");
 		final var problem = ErrorResponse.builder(ex, HttpStatus.UNAUTHORIZED, "Unauthorized")
 				.build()
@@ -55,8 +64,11 @@ class ProblemDetailsAuthenticationExceptionHandlerTest {
 		assertThat(response.getStatus())
 				.isEqualTo(problem.getStatus());
 
-		assertThat(response.getContentAsString())
-				.isEqualTo("{\"type\":\"about:blank\",\"title\":\"Unauthorized\",\"status\":401,\"detail\":\"Unauthorized\"}");
+		assertProblemDetails(response)
+				.hasDefaultType()
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.hasTitle("Unauthorized")
+				.hasDetail("Unauthorized");
 	}
 
 	@Test
@@ -93,7 +105,7 @@ class ProblemDetailsAuthenticationExceptionHandlerTest {
 
 	@Test
 	@DisplayName("should handle access denied exception")
-	void shouldHandleAccessDeniedException() throws UnsupportedEncodingException {
+	void shouldHandleAccessDeniedException() {
 		final var ex = new AccessDeniedException("Access denied");
 		final var problem = ErrorResponse.builder(ex, HttpStatus.FORBIDDEN, "Denied")
 				.build()
@@ -106,8 +118,11 @@ class ProblemDetailsAuthenticationExceptionHandlerTest {
 		assertThat(response.getStatus())
 				.isEqualTo(problem.getStatus());
 
-		assertThat(response.getContentAsString())
-				.isEqualTo("{\"type\":\"about:blank\",\"title\":\"Forbidden\",\"status\":403,\"detail\":\"Denied\"}");
+		assertProblemDetails(response)
+				.hasDefaultType()
+				.hasStatus(HttpStatus.FORBIDDEN)
+				.hasTitle("Forbidden")
+				.hasDetail("Denied");
 	}
 
 	@Test
@@ -140,6 +155,10 @@ class ProblemDetailsAuthenticationExceptionHandlerTest {
 
 		assertThat(response.getContentAsString())
 				.isBlank();
+	}
+
+	static ProblemDetailAssert assertProblemDetails(MockHttpServletResponse response) {
+		return ProblemDetailAssert.assertThat(mapper.readValue(response.getContentAsByteArray(), ProblemDetail.class));
 	}
 
 }

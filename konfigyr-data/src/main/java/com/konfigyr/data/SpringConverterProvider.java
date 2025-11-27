@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.Converter;
 import org.jooq.ConverterProvider;
 import org.jooq.impl.DefaultConverterProvider;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.lang.Nullable;
 
 import java.util.function.Supplier;
 

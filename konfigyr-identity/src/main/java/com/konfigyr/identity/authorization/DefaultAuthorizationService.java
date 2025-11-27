@@ -1,6 +1,5 @@
 package com.konfigyr.identity.authorization;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.data.converter.EncryptionConverter;
@@ -13,9 +12,9 @@ import org.jmolecules.event.annotation.DomainEventHandler;
 import org.jooq.Record;
 import org.jooq.*;
 import org.jooq.impl.DSL;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -33,6 +32,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import tools.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -62,9 +62,9 @@ import static com.konfigyr.data.tables.OauthAuthorizationsConsents.OAUTH_AUTHORI
 @SuppressWarnings("rawtypes")
 public class DefaultAuthorizationService implements AuthorizationService {
 
-	static OAuth2TokenType AUTHORIZATION_STATE_TOKEN_TYPE = new OAuth2TokenType(OAuth2ParameterNames.STATE);
-	static OAuth2TokenType AUTHORIZATION_CODE_TOKEN_TYPE = new OAuth2TokenType(OAuth2ParameterNames.CODE);
-	static OAuth2TokenType OIDC_TOKEN_TYPE = new OAuth2TokenType(OidcParameterNames.ID_TOKEN);
+	static final OAuth2TokenType AUTHORIZATION_STATE_TOKEN_TYPE = new OAuth2TokenType(OAuth2ParameterNames.STATE);
+	static final OAuth2TokenType AUTHORIZATION_CODE_TOKEN_TYPE = new OAuth2TokenType(OAuth2ParameterNames.CODE);
+	static final OAuth2TokenType OIDC_TOKEN_TYPE = new OAuth2TokenType(OidcParameterNames.ID_TOKEN);
 
 	private final DSLContext context;
 	private final ApplicationEventPublisher publisher;
@@ -340,7 +340,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	@Async
 	@DomainEventHandler(name = "authorization-consent-revoked", namespace = "authorization")
 	@TransactionalEventListener(classes = AuthorizationConsentEvent.Revoked.class)
-	void onConsentRevoked(@NonNull AuthorizationConsentEvent.Revoked event) {
+	void onConsentRevoked(AuthorizationConsentEvent.Revoked event) {
 		final OAuth2AuthorizationConsent consent = event.consent();
 		remove(consent.getPrincipalName(), consent.getRegisteredClientId());
 	}

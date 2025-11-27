@@ -6,7 +6,7 @@ import org.assertj.core.api.InstanceOfAssertFactory;
 import org.assertj.core.api.ThrowingConsumer;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 /**

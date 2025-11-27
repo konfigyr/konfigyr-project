@@ -2,7 +2,7 @@ package com.konfigyr.artifactory.provenance;
 
 import com.konfigyr.artifactory.PropertyMetadata;
 import com.konfigyr.artifactory.VersionedArtifact;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Interface responsible for evaluating and generating the {@link Provenance} records based on incoming

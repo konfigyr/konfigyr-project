@@ -8,8 +8,7 @@ dependencies {
     compileOnly 'com.icegreen:greenmail'
 
     /* Spring WebMvc support */
-    compileOnly 'org.springframework:spring-webmvc'
-    compileOnly 'jakarta.servlet:jakarta.servlet-api'
+    compileOnly 'org.springframework.boot:spring-boot-starter-webmvc-test'
 
     /* Spring Validator support */
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -28,14 +27,15 @@ dependencies {
     api 'org.jmolecules.integrations:jmolecules-starter-test'
 
     /* Spring Boot Testcontainers support */
+    api 'org.springframework.boot:spring-boot-jdbc'
     api 'org.springframework.boot:spring-boot-testcontainers'
-    api 'org.testcontainers:junit-jupiter'
-    api 'org.testcontainers:postgresql'
+    api 'org.testcontainers:testcontainers-junit-jupiter'
+    api 'org.testcontainers:testcontainers-postgresql'
 
     testImplementation project(':konfigyr-core')
     testImplementation 'com.icegreen:greenmail'
     testImplementation 'com.konfigyr:konfigyr-mail-api'
-    testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.security:spring-security-oauth2-core'
 
 }

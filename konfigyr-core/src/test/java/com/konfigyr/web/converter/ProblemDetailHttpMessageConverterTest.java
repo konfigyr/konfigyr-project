@@ -1,7 +1,6 @@
 package com.konfigyr.web.converter;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +10,8 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.http.MockHttpOutputMessage;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,14 +22,14 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 class ProblemDetailHttpMessageConverterTest {
 
 	static final ObjectNode PROBLEM_DETAIL_JSON = JsonNodeFactory.instance.objectNode()
-				.put("type", "https://konfigyr.com/docs/errors/error-type")
-				.put("title", "Error title")
-				.put("status", 400)
-				.put("detail", "Oops")
-				.put("instance", "https://konfigyr.com/uri")
-				.put("error-code", "error-type");
+			.put("detail", "Oops")
+			.put("instance", "https://konfigyr.com/uri")
+			.put("status", 400)
+			.put("title", "Error title")
+			.put("type", "https://konfigyr.com/docs/errors/error-type")
+			.put("error-code", "error-type");
 
-	final HttpMessageConverter<Object> converter = new ProblemDetailHttpMessageConverter();
+	final HttpMessageConverter<@NonNull Object> converter = new ProblemDetailHttpMessageConverter();
 
 	ProblemDetail problemDetail;
 	MockHttpOutputMessage response;

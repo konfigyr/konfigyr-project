@@ -6,8 +6,8 @@ import com.github.slugify.Slugify;
 import com.google.errorprone.annotations.Immutable;
 import lombok.EqualsAndHashCode;
 import org.jmolecules.ddd.annotation.ValueObject;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 

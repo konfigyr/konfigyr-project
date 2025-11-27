@@ -1,6 +1,6 @@
 package com.konfigyr.crypto;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Factory interface that is used to create, or resolve any existing, {@link KeysetOperations} for

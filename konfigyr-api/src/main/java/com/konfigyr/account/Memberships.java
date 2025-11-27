@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.konfigyr.namespace.NamespaceRole;
 import lombok.EqualsAndHashCode;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.NonNull;
 import org.springframework.util.CollectionUtils;
 
 import java.io.Serial;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@NullMarked
 @EqualsAndHashCode
 public final class Memberships implements Streamable<Membership>, Serializable {
 
@@ -28,7 +30,6 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 
 	private static final Memberships EMPTY = new Memberships(Collections.emptyList());
 
-	@NonNull
 	private final List<Membership> memberships;
 
 	/**
@@ -46,9 +47,8 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 	 * @param memberships Membership arguments
 	 * @return the account memberships instance, never {@literal null}
 	 */
-	@NonNull
 	public static Memberships of(Membership... memberships) {
-		if (memberships == null || memberships.length == 0) {
+		if (memberships.length == 0) {
 			return empty();
 		}
 		return new Memberships(Arrays.asList(memberships));
@@ -60,19 +60,18 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 	 * @param memberships Membership collection, can be {@literal null} or empty
 	 * @return the account memberships instance, never {@literal null}
 	 */
-	@NonNull
 	@JsonCreator
-	public static Memberships of(Collection<Membership> memberships) {
+	public static Memberships of(@Nullable Collection<Membership> memberships) {
 		return CollectionUtils.isEmpty(memberships) ? empty() : new Memberships(memberships);
 	}
 
 	/**
-	 * Memberships constructor that would create a sorted list of {@link Membership memberships}
+	 * Membership constructor that would create a sorted list of {@link Membership memberships}
 	 * that can filtered, mapped or collected.
 	 *
-	 * @param memberships collection of memberships, can be empty but never {@literal null}
+	 * @param memberships collection of membership objects, can be empty but never {@literal null}
 	 */
-	private Memberships(@NonNull Collection<Membership> memberships) {
+	private Memberships(Collection<Membership> memberships) {
 		this.memberships = new ArrayList<>(memberships);
 		this.memberships.sort(Membership::compareTo);
 	}
@@ -84,8 +83,7 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 	 * @param role namespace role, can't be {@literal null}
 	 * @return filtered {@link Memberships} instance, never {@literal null}
 	 */
-	@NonNull
-	public Memberships ofRole(@NonNull NamespaceRole role) {
+	public Memberships ofRole(NamespaceRole role) {
 		return filter(membership -> role == membership.role());
 	}
 
@@ -100,13 +98,11 @@ public final class Memberships implements Streamable<Membership>, Serializable {
 				.collect(Collectors.joining(", "));
 	}
 
-	@NonNull
 	@Override
-	public Memberships filter(@NonNull Predicate<? super Membership> predicate) {
+	public Memberships filter(Predicate<? super Membership> predicate) {
 		return of(Streamable.super.filter(predicate).toList());
 	}
 
-	@NonNull
 	@Override
 	@JsonValue
 	public Iterator<Membership> iterator() {

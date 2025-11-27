@@ -6,7 +6,7 @@ import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -19,9 +19,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -51,9 +51,8 @@ public class SecurityConfiguration {
 
 	@Bean
 	@Order(1)
-	SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-		final OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
-				OAuth2AuthorizationServerConfigurer.authorizationServer();
+	SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) {
+		final OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
 		return http
 				.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
@@ -67,7 +66,6 @@ public class SecurityConfiguration {
 										.consentPage(KonfigyrIdentityRequestMatchers.CONSENTS_PAGE)
 										.errorResponseHandler(new AuthorizationFailureHandler())
 								)
-
 				)
 				.authorizeHttpRequests((authorize) -> authorize
 						.anyRequest().authenticated()
@@ -93,7 +91,7 @@ public class SecurityConfiguration {
 
 	@Bean
 	@Order(2)
-	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http) {
 		return http
 				.securityMatchers(requests -> requests
 						.requestMatchers(new NegatedRequestMatcher(
@@ -145,7 +143,7 @@ public class SecurityConfiguration {
 	 * current {@link org.springframework.security.core.context.SecurityContext}.
 	 */
 	@RequiredArgsConstructor
-	private static class RememberMeConfigurer extends AbstractHttpConfigurer<RememberMeConfigurer, HttpSecurity> {
+	private static final class RememberMeConfigurer extends AbstractHttpConfigurer<RememberMeConfigurer, HttpSecurity> {
 
 		private final RememberMeServices rememberMeServices;
 

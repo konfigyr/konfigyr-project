@@ -10,6 +10,7 @@ dependencies {
 
     /* Spring jOOQ and data dependencies */
     api 'org.springframework.boot:spring-boot-starter-jooq'
+    api 'org.springframework.boot:spring-boot-starter-liquibase'
     api 'org.springframework.data:spring-data-commons'
     compileOnly 'org.springframework.boot:spring-boot-starter-batch'
 
@@ -22,6 +23,7 @@ dependencies {
     jooqGenerator 'ch.qos.logback:logback-classic'
 
     testImplementation project(':konfigyr-test')
+    testImplementation 'org.springframework.boot:spring-boot-starter-liquibase'
 }
 
 jooq {

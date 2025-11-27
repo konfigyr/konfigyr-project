@@ -1,15 +1,14 @@
 package com.konfigyr.security.access;
 
 import lombok.Setter;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.access.expression.AbstractSecurityExpressionHandler;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.access.expression.SecurityExpressionOperations;
-import org.springframework.security.authentication.AuthenticationTrustResolver;
-import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.FilterInvocation;
-import org.springframework.security.web.access.expression.WebSecurityExpressionRoot;
 import org.springframework.util.Assert;
 
 /**
@@ -20,10 +19,9 @@ import org.springframework.util.Assert;
  * @since 1.0.0
  **/
 @Setter
+@NullMarked
 public class KonfigyrWebSecurityExpressionHandler extends AbstractSecurityExpressionHandler<FilterInvocation>
 		implements SecurityExpressionHandler<FilterInvocation>, InitializingBean {
-
-	private final AuthenticationTrustResolver trustResolver = new AuthenticationTrustResolverImpl();
 
 	private AccessService accessService;
 
@@ -34,11 +32,10 @@ public class KonfigyrWebSecurityExpressionHandler extends AbstractSecurityExpres
 
 	@Override
 	protected SecurityExpressionOperations createSecurityExpressionRoot(
-			Authentication authentication, FilterInvocation invocation) {
-		final WebSecurityExpressionRoot root = new KonfigyrWebSecurityExpressionRoot(accessService, authentication, invocation);
-		root.setRoleHierarchy(getRoleHierarchy());
+			@Nullable Authentication authentication, FilterInvocation invocation) {
+		final KonfigyrWebSecurityExpressionRoot root = new KonfigyrWebSecurityExpressionRoot(accessService, authentication, invocation);
 		root.setPermissionEvaluator(getPermissionEvaluator());
-		root.setTrustResolver(trustResolver);
+		root.setAuthorizationManagerFactory(getAuthorizationManagerFactory());
 		return root;
 	}
 

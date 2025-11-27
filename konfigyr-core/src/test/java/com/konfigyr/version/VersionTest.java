@@ -1,7 +1,5 @@
 package com.konfigyr.version;
 
-import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import tools.jackson.databind.exc.ValueInstantiationException;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Year;
 import java.util.stream.Stream;
@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class VersionTest {
 
-	static JsonMapper mapper = new JsonMapper();
+	final static JsonMapper mapper = new JsonMapper();
 
 	@Test
 	@DisplayName("should fail to null, empty or blank version representations")
@@ -232,7 +232,7 @@ class VersionTest {
 
 	@Test
 	@DisplayName("should serialize version to a JSON text node")
-	void serializeToJson() throws Exception {
+	void serializeToJson() {
 		final var version = Version.of("2025.01-dev");
 
 		assertThat(mapper.writeValueAsString(version))
@@ -241,7 +241,7 @@ class VersionTest {
 
 	@Test
 	@DisplayName("should deserialize version from a JSON text node")
-	void deserializeFromJson() throws Exception {
+	void deserializeFromJson() {
 		assertThat(mapper.readValue("\"2025.01-dev\"", Version.class))
 				.isEqualTo(Version.of("2025.01-dev"));
 	}
