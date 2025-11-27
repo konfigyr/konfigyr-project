@@ -284,9 +284,6 @@ class HateoasExceptionHandlerTest {
 	}
 
 	ProblemDetailAssert expectProblemDetail(Exception ex, HttpStatusCode status) {
-		System.out.println(
-				handler.handle(request, response, ex)
-		);
 		return assertThat(handler.handle(request, response, ex))
 				.isNotNull()
 				.returns(status, ResponseEntity::getStatusCode)

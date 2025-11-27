@@ -49,8 +49,6 @@ public class MetadataStoreReader implements ItemStreamReader<@NonNull PropertyMe
 
 	@Override
 	public void open(@NonNull ExecutionContext context) throws ItemStreamException {
-		System.out.println("Opening reader: " + context.toMap());
-		System.out.println("Opening reader: " + delegate.getCurrentItemCount());
 		this.delegate.open(context);
 	}
 
