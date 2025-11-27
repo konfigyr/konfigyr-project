@@ -1,9 +1,8 @@
-build
-coverage
-.dockerignore
-node_modules
-npm-debug.log
-README.md
-.next
-.git
+.idea
+.nitro
+.output
+.tanstack
 .env
+.editorconfig
+node_modules
+README.md
