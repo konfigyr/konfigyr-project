@@ -1,6 +1,6 @@
 package com.konfigyr.security.access;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Interface that represents a mutable {@link AccessControl} object that can be used to update

@@ -2,7 +2,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
 import org.jmolecules.ddd.annotation.ValueObject;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;

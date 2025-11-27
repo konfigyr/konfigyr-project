@@ -76,7 +76,7 @@
 				<constraints nullable="false" />
 			</column>
 
-			<column name="version" type="text" remarks="The Maven coordinate `version` field.">
+			<column name="version" type="varchar(255)" remarks="The Maven coordinate `version` field.">
 				<constraints nullable="false" />
 			</column>
 

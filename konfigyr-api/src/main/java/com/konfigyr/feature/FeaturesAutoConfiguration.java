@@ -1,10 +1,11 @@
 package com.konfigyr.feature;
 
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration;
+import org.springframework.boot.jooq.autoconfigure.JooqAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
  *
  * @author Vladimir Spasic
  **/
+@NullMarked
 @AutoConfiguration
 @RequiredArgsConstructor
 @AutoConfigureAfter(JooqAutoConfiguration.class)

@@ -1,10 +1,10 @@
 package com.konfigyr.hateoas;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 record SimpleLinkRelation(String value) implements LinkRelation {
 
-	@NonNull
 	@Override
 	public String get() {
 		return value;

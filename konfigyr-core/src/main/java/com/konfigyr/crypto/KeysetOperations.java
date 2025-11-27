@@ -1,8 +1,8 @@
 package com.konfigyr.crypto;
 
 import com.konfigyr.io.ByteArray;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Supplier;
 
@@ -17,6 +17,7 @@ import java.util.function.Supplier;
  * @see Keyset
  * @see KeysetOperationsFactory
  **/
+@NullMarked
 public sealed interface KeysetOperations permits KonfigyrKeysetOperations {
 
 	/**
@@ -26,7 +27,7 @@ public sealed interface KeysetOperations permits KonfigyrKeysetOperations {
 	 * @param keyset keyset that would perform cryptographic operations, can't be {@literal null}.
 	 * @return the keyset operations, never {@literal null}.
 	 */
-	static @NonNull KeysetOperations of(@NonNull Keyset keyset) {
+	static KeysetOperations of(Keyset keyset) {
 		return of(() -> keyset);
 	}
 
@@ -38,7 +39,7 @@ public sealed interface KeysetOperations permits KonfigyrKeysetOperations {
 	 *               can't be {@literal null}.
 	 * @return the keyset operations, never {@literal null}.
 	 */
-	static @NonNull KeysetOperations of(@NonNull Supplier<Keyset> keyset) {
+	static KeysetOperations of(Supplier<@Nullable Keyset> keyset) {
 		return new KonfigyrKeysetOperations(keyset);
 	}
 
@@ -47,32 +48,29 @@ public sealed interface KeysetOperations permits KonfigyrKeysetOperations {
 	 *
 	 * @param data Data wrapped as a byte buffer that should be encrypted, can't be {@literal null}.
 	 * @return Encrypted data wrapped inside a byte buffer, never {@literal null}.
-	 * @throws CryptoException in case encrypt operation can not be performed
+	 * @throws CryptoException in case the encrypt operation cannot be performed
 	 */
-	@NonNull
-	ByteArray encrypt(@NonNull ByteArray data);
+	ByteArray encrypt(ByteArray data);
 
 	/**
-	 * Encrypt the byte buffer with an additional data to be used as authentication
+	 * Encrypt the byte buffer with additional data to be used as authentication
 	 * context when performing encryption.
 	 *
 	 * @param data    Data wrapped as a byte buffer that should be encrypted, can't be {@literal null}.
 	 * @param context Authentication context byte bugger, can be {@literal null}.
 	 * @return Encrypted data wrapped inside a byte buffer, never {@literal null}.
-	 * @throws CryptoException in case encrypt operation can not be performed
+	 * @throws CryptoException in case the encrypt operation cannot be performed
 	 */
-	@NonNull
-	ByteArray encrypt(@NonNull ByteArray data, @Nullable ByteArray context);
+	ByteArray encrypt(ByteArray data, @Nullable ByteArray context);
 
 	/**
 	 * Decrypt the given byte buffer.
 	 *
 	 * @param cipher Data wrapped as a byte buffer that should be decrypted, can't be {@literal null}.
 	 * @return Decrypted data wrapped inside a byte buffer, never {@literal null}.
-	 * @throws CryptoException in case decrypt operation can not be performed
+	 * @throws CryptoException in case the decrypt operation cannot be performed
 	 */
-	@NonNull
-	ByteArray decrypt(@NonNull ByteArray cipher);
+	ByteArray decrypt(ByteArray cipher);
 
 	/**
 	 * Decrypt the byte buffer with an additional data was used during encryption as
@@ -81,10 +79,9 @@ public sealed interface KeysetOperations permits KonfigyrKeysetOperations {
 	 * @param cipher  Data wrapped as a byte buffer that should be decrypted, can't be {@literal null}.
 	 * @param context Authentication context byte bugger, can be {@literal null}.
 	 * @return Decrypted data wrapped inside a byte buffer, never {@literal null}.
-	 * @throws CryptoException in case decrypt operation can not be performed
+	 * @throws CryptoException in case the decrypt operation cannot be performed
 	 */
-	@NonNull
-	ByteArray decrypt(@NonNull ByteArray cipher, @Nullable ByteArray context);
+	ByteArray decrypt(ByteArray cipher, @Nullable ByteArray context);
 
 	/**
 	 * Signs the data wrapped inside a {@link ByteArray}. This method would return a
@@ -92,10 +89,9 @@ public sealed interface KeysetOperations permits KonfigyrKeysetOperations {
 	 *
 	 * @param data Data wrapped as a byte buffer that should be signed, can't be {@literal null}.
 	 * @return digital signature wrapped inside a byte buffer, never {@literal null}.
-	 * @throws CryptoException in case signing operation can not be performed
+	 * @throws CryptoException in case the signing operation cannot be performed
 	 */
-	@NonNull
-	ByteArray sign(@NonNull ByteArray data);
+	ByteArray sign(ByteArray data);
 
 	/**
 	 * Verifies if digital signature of the data wrapped inside a {@link ByteArray} is correct.
@@ -103,8 +99,8 @@ public sealed interface KeysetOperations permits KonfigyrKeysetOperations {
 	 * @param signature Signature wrapped as a byte buffer that should be verified, can't be {@literal null}.
 	 * @param data      Original data wrapped as a byte buffer from which the signature is created, can't be {@literal null}.
 	 * @return {@code true} if the signature is valid, {@code false} otherwise.
-	 * @throws CryptoException in case signature verification operation can not be performed
+	 * @throws CryptoException in case signature verification operation cannot be performed
 	 */
-	boolean verify(@NonNull ByteArray signature, @NonNull ByteArray data);
+	boolean verify(ByteArray signature, ByteArray data);
 
 }

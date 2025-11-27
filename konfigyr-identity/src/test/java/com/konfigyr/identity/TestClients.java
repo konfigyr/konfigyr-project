@@ -1,6 +1,6 @@
 package com.konfigyr.identity;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -14,7 +14,6 @@ public interface TestClients {
 	 * @param id client registration identifier, can't be {@literal null}
 	 * @return client registration builder, never {@literal null}
 	 */
-	@NonNull
 	static ClientRegistration.Builder clientRegistration(@NonNull String id) {
 		return ClientRegistration.withRegistrationId(id)
 				.clientId("konfigyr")

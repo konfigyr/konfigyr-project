@@ -1,15 +1,15 @@
 package com.konfigyr.feature;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
@@ -87,7 +87,7 @@ final class FeatureValueConverter {
 		}
 
 		@Override
-		public void serialize(FeatureValue value, JsonGenerator generator, SerializerProvider provider) throws IOException {
+		public void serialize(FeatureValue value, JsonGenerator generator, SerializationContext provider) {
 			generator.writeString(to(value));
 		}
 	}
@@ -99,8 +99,8 @@ final class FeatureValueConverter {
 		}
 
 		@Override
-		public FeatureValue deserialize(JsonParser p, DeserializationContext context) throws IOException {
-			return from(p.getText());
+		public FeatureValue deserialize(JsonParser p, DeserializationContext context) throws JacksonException {
+			return from(p.getString());
 		}
 	}
 

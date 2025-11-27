@@ -8,7 +8,7 @@ import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.context.annotation.Configurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import static org.assertj.core.api.Assertions.*;
 

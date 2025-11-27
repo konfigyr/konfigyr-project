@@ -3,12 +3,13 @@ package com.konfigyr.artifactory.batch;
 import com.konfigyr.artifactory.ArtifactoryEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.configuration.JobLocator;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.springframework.batch.core.configuration.JobRegistry;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -22,15 +23,16 @@ import java.util.function.Consumer;
  * @since 1.0.0
  */
 @Slf4j
+@NullMarked
 @RequiredArgsConstructor
 class ArtifactoryJobListener {
 
-	private final JobLocator locator;
-	private final JobLauncher launcher;
+	private final JobRegistry registry;
+	private final JobOperator operator;
 
 	@Async
 	@TransactionalEventListener(id = "artifactory.release-job-launcher", classes = ArtifactoryEvent.Release.class)
-	void released(@NonNull ArtifactoryEvent.Release event) throws Exception {
+	void released(ArtifactoryEvent.Release event) throws Exception {
 		launch(ArtifactoryJobNames.RELEASE_JOB, builder -> builder
 				.addString("artifact", event.coordinates().format(), true)
 		);
@@ -44,9 +46,13 @@ class ArtifactoryJobListener {
 
 		log.debug("Attempting to launch job [{}] with parameters: {}", name, parameters);
 
-		final Job job = locator.getJob(name);
+		final Job job = registry.getJob(name);
 
-		launcher.run(job, parameters);
+		if (job == null) {
+			throw new NoSuchJobException("Failed to find job with name: " + name);
+		}
+
+		operator.start(job, parameters);
 	}
 
 }

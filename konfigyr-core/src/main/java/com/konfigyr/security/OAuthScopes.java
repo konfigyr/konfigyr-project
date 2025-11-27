@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.ClaimAccessor;
 import org.springframework.util.CollectionUtils;
@@ -292,6 +292,10 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 		}
 
 		String value = authority.getAuthority();
+
+		if (value == null) {
+			return false;
+		}
 
 		if (value.startsWith("SCOPE_")) {
 			value = value.substring(6);

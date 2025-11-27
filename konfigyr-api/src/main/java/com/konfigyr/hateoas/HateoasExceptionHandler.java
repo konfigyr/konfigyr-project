@@ -6,7 +6,7 @@ import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.*;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -44,8 +44,8 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	@NonNull
 	@Override
 	@ExceptionHandler(Throwable.class)
-	public ResponseEntity<Object> handle(@NonNull WebRequest request, @NonNull Exception ex) {
-		ResponseEntity<Object> result;
+	public ResponseEntity<@NonNull Object> handle(@NonNull WebRequest request, @NonNull Exception ex) {
+		ResponseEntity<@NonNull Object> result;
 
 		if (ex instanceof AuthenticationException authenticationException) {
 			result = handleAuthenticationException(authenticationException, request);
@@ -71,7 +71,9 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	}
 
 	@ExceptionHandler(AuthenticationException.class)
-	final ResponseEntity<Object> handleAuthenticationException(@NonNull AuthenticationException ex, @NonNull WebRequest request) {
+	final ResponseEntity<@NonNull Object> handleAuthenticationException(
+			@NonNull AuthenticationException ex, @NonNull WebRequest request
+	) {
 		final HttpHeaders headers = new HttpHeaders();
 
 		return switch (ex) {
@@ -94,7 +96,9 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
-	final ResponseEntity<Object> handleAccessDeniedException(@NonNull AccessDeniedException ex, @NonNull WebRequest request) {
+	final ResponseEntity<@NonNull Object> handleAccessDeniedException(
+			@NonNull AccessDeniedException ex, @NonNull WebRequest request
+	) {
 		return switch (ex) {
 			case AuthorizationDeniedException exception -> handleAuthorizationDeniedException(
 					exception, request
@@ -109,12 +113,14 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 		};
 	}
 
-	final ResponseEntity<Object> handleErrorResponse(@NonNull ErrorResponse errorResponse, @NonNull WebRequest request) {
+	final ResponseEntity<@NonNull Object> handleErrorResponse(
+			@NonNull ErrorResponse errorResponse, @NonNull WebRequest request
+	) {
 		final ProblemDetail body = errorResponse.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
 		return createResponseEntity(body, errorResponse.getHeaders(), errorResponse.getStatusCode(), request);
 	}
 
-	protected ResponseEntity<Object> handleAuthorizationDeniedException(
+	protected ResponseEntity<@NonNull Object> handleAuthorizationDeniedException(
 			@NonNull AuthorizationDeniedException ex, @NonNull WebRequest request
 	) {
 		final AuthorizationResult result = ex.getAuthorizationResult();
@@ -143,7 +149,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	}
 
 	@Override
-	protected ResponseEntity<Object> handleMissingServletRequestParameter(
+	protected ResponseEntity<@NonNull Object> handleMissingServletRequestParameter(
 			@NonNull MissingServletRequestParameterException ex, @NonNull HttpHeaders headers,
 			@NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
@@ -157,7 +163,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	}
 
 	@Override
-	protected ResponseEntity<Object> handleMethodArgumentNotValid(
+	protected ResponseEntity<@NonNull Object> handleMethodArgumentNotValid(
 			@NonNull MethodArgumentNotValidException ex, @NonNull HttpHeaders headers,
 			@NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
@@ -175,7 +181,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	}
 
 	@Override
-	protected ResponseEntity<Object> handleHandlerMethodValidationException(
+	protected ResponseEntity<@NonNull Object> handleHandlerMethodValidationException(
 			@NonNull HandlerMethodValidationException ex, @NonNull HttpHeaders headers,
 			@NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
@@ -184,7 +190,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	}
 
 	@Override
-	protected ResponseEntity<Object> handleMethodValidationException(
+	protected ResponseEntity<@NonNull Object> handleMethodValidationException(
 			@NonNull MethodValidationException ex, @NonNull HttpHeaders headers,
 			@NonNull HttpStatus status, @NonNull WebRequest request
 	) {
@@ -192,7 +198,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 		return handleMethodValidationResult(body, ex.getParameterValidationResults(), headers, request);
 	}
 
-	protected ResponseEntity<Object> handleMethodValidationResult(
+	protected ResponseEntity<@NonNull Object> handleMethodValidationResult(
 			@NonNull ProblemDetail body, @NonNull Iterable<ParameterValidationResult> results,
 			@NonNull HttpHeaders headers, @NonNull WebRequest request
 	) {
@@ -221,7 +227,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 		return createResponseEntity(body, headers, HttpStatus.BAD_REQUEST, request);
 	}
 
-	protected ResponseEntity<Object> handleInternalServerException(
+	protected ResponseEntity<@NonNull Object> handleInternalServerException(
 			@NonNull Exception ex, @NonNull HttpHeaders headers, @NonNull WebRequest request
 	) {
 		final ProblemDetail body = ErrorResponse.builder(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage())
@@ -234,7 +240,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 		return handleExceptionInternal(ex, body, headers, HttpStatus.INTERNAL_SERVER_ERROR, request);
 	}
 
-	protected ResponseEntity<Object> handleException(
+	protected ResponseEntity<@NonNull Object> handleException(
 			@NonNull Exception ex, @NonNull HttpStatusCode statusCode,
 			@NonNull HttpHeaders headers, @NonNull WebRequest request
 	) {

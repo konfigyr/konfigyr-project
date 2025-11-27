@@ -1,10 +1,10 @@
 package com.konfigyr.namespace;
 
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 

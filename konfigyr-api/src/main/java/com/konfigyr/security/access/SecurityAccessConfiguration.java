@@ -1,6 +1,7 @@
 package com.konfigyr.security.access;
 
 import org.jooq.DSLContext;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import org.springframework.security.access.expression.method.MethodSecurityExpre
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.web.FilterInvocation;
 
+@NullMarked
 @Configuration(proxyBeanMethods = false)
 public class SecurityAccessConfiguration {
 

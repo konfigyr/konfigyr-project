@@ -3,7 +3,7 @@ package com.konfigyr.identity.authorization.client;
 import com.konfigyr.identity.authorization.AuthorizationProperties;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 

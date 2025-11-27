@@ -1,7 +1,7 @@
 package com.konfigyr.support;
 
 import io.hypersistence.tsid.TSID;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.util.function.SingletonSupplier;
 

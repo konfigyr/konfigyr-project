@@ -1,6 +1,6 @@
 plugins {
-    id 'io.freefair.lombok' version '9.0.0' apply false
-    id 'org.springframework.boot' version '3.5.6' apply false
+    id 'io.freefair.lombok' version '9.1.0' apply false
+    id 'org.springframework.boot' version '4.0.0' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
@@ -22,13 +22,15 @@ subprojects {
     group = 'com.konfigyr'
     version = '1.0.0'
 
+    checkstyle {
+        toolVersion = "12.1.2"
+    }
+
     dependencies {
         annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
         implementation 'com.github.spotbugs:spotbugs-annotations:4.9.3'
-
-        checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.47'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -43,34 +45,39 @@ subprojects {
         }
 
         dependencies {
-            /* Konfigyr Libraries */
+            /* Konfigyr Artifactory Library */
             dependency('com.konfigyr:konfigyr-artifactory:1.0.0-RC1')
-            dependency('com.konfigyr:konfigyr-mail-api:1.0.0-RC1')
-            dependency('com.konfigyr:konfigyr-mail-smtp:1.0.0-RC1')
-            dependency('com.konfigyr:konfigyr-mail-thymeleaf:1.0.0-RC1')
-            dependency('com.konfigyr:konfigyr-crypto-api:1.0.0-RC2')
-            dependency('com.konfigyr:konfigyr-crypto-tink:1.0.0-RC2')
-            dependency('com.konfigyr:konfigyr-crypto-jdbc:1.0.0-RC2')
+
+            /* Konfigyr Mail Libraries */
+            dependency('com.konfigyr:konfigyr-mail-api:1.0.0')
+            dependency('com.konfigyr:konfigyr-mail-smtp:1.0.0')
+            dependency('com.konfigyr:konfigyr-mail-thymeleaf:1.0.0')
+
+            /* Konfigyr Crypto Libraries */
+            dependency('com.konfigyr:konfigyr-crypto-api:1.0.0-RC4')
+            dependency('com.konfigyr:konfigyr-crypto-jdbc:1.0.0-RC4')
+            dependency('com.konfigyr:konfigyr-crypto-jose:1.0.0-RC4')
+            dependency('com.konfigyr:konfigyr-crypto-tink:1.0.0-RC4')
 
             /* Bouncy Castle provider */
-            dependency('org.bouncycastle:bcprov-jdk18on:1.80')
+            dependency('org.bouncycastle:bcprov-jdk18on:1.82')
 
             /* Thymeleaf layout dialect */
             dependency('nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.4.0')
 
             /* Fix Dependabot alerts */
-            dependency('org.apache.commons:commons-compress:1.27.1') // used by testcontainers
-            dependency('com.google.guava:guava:33.4.8-jre') // used by checkstyle
+            dependency('org.apache.commons:commons-compress:1.28.0') // used by testcontainers
+            dependency('com.google.guava:guava:33.5.0-jre') // used by checkstyle
 
             /* JSoup HTML test support */
             dependency('org.jsoup:jsoup:1.21.1')
-            dependency('com.icegreen:greenmail:2.1.3')
+            dependency('com.icegreen:greenmail:2.1.7')
 
             /* Mock FileSystem library */
             dependency('com.google.jimfs:jimfs:1.3.1')
 
             /* Wiremock Spring Boot integration */
-            dependency('org.wiremock.integrations:wiremock-spring-boot:3.10.0')
+            dependency('org.wiremock.integrations:wiremock-spring-boot:4.0.8')
         }
     }
 

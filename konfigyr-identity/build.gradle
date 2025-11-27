@@ -12,6 +12,7 @@ dependencies {
 
     /* Spring Boot starter */
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation "org.springframework.boot:spring-boot-starter-oauth2-authorization-server"
 
@@ -34,6 +35,9 @@ dependencies {
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
 
+    /* Konfigyr crypto support for JOSE */
+    implementation 'com.konfigyr:konfigyr-crypto-jose'
+
     implementation 'org.bouncycastle:bcprov-jdk18on'
 
     /* Liquibase - migrations runtime  */
@@ -46,6 +50,7 @@ dependencies {
 
     testImplementation project(':konfigyr-test')
     testImplementation 'org.seleniumhq.selenium:htmlunit3-driver'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 }
 
 node {

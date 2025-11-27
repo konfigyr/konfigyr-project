@@ -4,7 +4,7 @@ import jakarta.servlet.RequestDispatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.web.servlet.error.ErrorAttributes;
+import org.springframework.boot.webmvc.error.ErrorAttributes;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.WebAttributes;
@@ -16,9 +16,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class KonfigyrErrorAttributesTest {
 
-	WebRequest request;
+	final ErrorAttributes attributes = new KonfigyrErrorAttributes();
 
-	ErrorAttributes attributes = new KonfigyrErrorAttributes();
+	WebRequest request;
 
 	@BeforeEach
 	void setup() {

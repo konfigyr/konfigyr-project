@@ -6,7 +6,6 @@ import com.konfigyr.mail.Mail;
 import com.konfigyr.mail.Mailer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.NonNull;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -26,7 +25,7 @@ public class AccountIdentityListener {
 	@Async
 	@Retryable
 	@TransactionalEventListener(id = "welcome-mail", classes = AccountIdentityEvent.Created.class)
-	void sendWelcomeMail(@NonNull AccountIdentityEvent.Created event) {
+	void sendWelcomeMail(AccountIdentityEvent.Created event) {
 		final AccountIdentity account = event.identity();
 
 		log.debug("Attempting to send out account welcome mail to account: {}", event.identity());

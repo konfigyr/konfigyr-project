@@ -1,6 +1,6 @@
 package com.konfigyr.feature;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serializable;
 import java.util.Optional;

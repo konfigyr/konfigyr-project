@@ -3,8 +3,8 @@ package com.konfigyr.namespace;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.SearchQuery;
 import org.jmolecules.event.annotation.DomainEventPublisher;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -15,6 +15,7 @@ import java.util.Optional;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@NullMarked
 @Repository
 public interface Services {
 
@@ -25,8 +26,7 @@ public interface Services {
 	 * @param query search query to be executed when searching for {@link Service services}, can't be {@literal null}.
 	 * @return paged collections of services, never {@literal null}.
 	 */
-	@NonNull
-	Page<Service> find(@NonNull Namespace namespace, @NonNull SearchQuery query);
+	Page<Service> find(Namespace namespace, SearchQuery query);
 
 	/**
 	 * Retrieve a single {@link Service} by its entity identifier.
@@ -34,8 +34,7 @@ public interface Services {
 	 * @param id service entity identifier, can't be {@literal null}.
 	 * @return found service or an empty {@link Optional}, never {@literal null}.
 	 */
-	@NonNull
-	Optional<Service> get(@NonNull EntityId id);
+	Optional<Service> get(EntityId id);
 
 	/**
 	 * Retrieve a single {@link Service} by its slug that is managed by the given {@link Namespace}.
@@ -44,8 +43,7 @@ public interface Services {
 	 * @param slug      service slug, can't be {@literal null}
 	 * @return found service or an empty {@link Optional}, never {@literal null}
 	 */
-	@NonNull
-	Optional<Service> get(@NonNull Namespace namespace, @NonNull String slug);
+	Optional<Service> get(Namespace namespace, String slug);
 
 	/**
 	 * Checks if a {@link Service} by its slug that is managed by the given {@link Namespace} exists.
@@ -54,7 +52,7 @@ public interface Services {
 	 * @param slug      service slug, can't be {@literal null}
 	 * @return {@literal true} if there is a service with this slug, {@literal false} otherwise.
 	 */
-	boolean exists(@NonNull Namespace namespace, @NonNull String slug);
+	boolean exists(Namespace namespace, String slug);
 
 	/**
 	 * Creates a new {@link Service} using the given definition.
@@ -67,9 +65,8 @@ public interface Services {
 	 * @throws ServiceExistsException when there is already a {@link Service} with the same slug
 	 * @throws NamespaceNotFoundException when a {@link Namespace} does not exist
 	 */
-	@NonNull
 	@DomainEventPublisher(publishes = "namespaces.service-created")
-	Service create(@NonNull ServiceDefinition definition);
+	Service create(ServiceDefinition definition);
 
 	/**
 	 * Updates an existing {@link Service} using the given definition.
@@ -85,7 +82,7 @@ public interface Services {
 	 * @throws NamespaceNotFoundException when a {@link Namespace} does not exist
 	 */
 	@DomainEventPublisher(publishes = "namespaces.service-renamed")
-	Service update(@NonNull EntityId id, @NonNull ServiceDefinition definition);
+	Service update(EntityId id, ServiceDefinition definition);
 
 	/**
 	 * Deletes a single {@link Service} by its entity identifier.
@@ -94,7 +91,7 @@ public interface Services {
 	 * @throws ServiceNotFoundException when a {@link Service} with the given entity identifier does not exist.
 	 */
 	@DomainEventPublisher(publishes = "namespace.service-deleted")
-	void delete(@NonNull EntityId id);
+	void delete(EntityId id);
 
 	/**
 	 * Deletes a single {@link Service} by its slug that is managed by the given {@link Namespace}.
@@ -105,6 +102,6 @@ public interface Services {
 	 * within the given {@link Namespace}.
 	 */
 	@DomainEventPublisher(publishes = "namespace.service-deleted")
-	void delete(@NonNull Namespace namespace, @NonNull String slug);
+	void delete(Namespace namespace, String slug);
 
 }

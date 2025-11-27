@@ -7,7 +7,7 @@ import com.konfigyr.identity.authentication.AccountIdentityStatus;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
 import org.jooq.Record;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -23,6 +23,9 @@ import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
 @SuppressWarnings("checkstyle:InterfaceIsType")
 interface AccountIdentityMapper {
 
+	/**
+	 * The default authorities assigned to all {@link AccountIdentity}s.
+	 */
 	List<GrantedAuthority> AUTHORITIES = AuthorityUtils.createAuthorityList("konfigyr-identity");
 
 	/**

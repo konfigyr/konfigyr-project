@@ -11,10 +11,16 @@ import java.util.regex.Pattern;
 
 interface VersionParser {
 
+	/**
+	 * The pattern used to detect semantic versions.
+	 */
 	Pattern SEMVER_PATTERN = Pattern.compile(
 			"^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:-([0-9a-zA-Z.-]+))?(?:\\+([0-9a-zA-Z.-]+))?$"
 	);
 
+	/**
+	 * The pattern used to detect calendar versions.
+	 */
 	Pattern CALVER_PATTERN = Pattern.compile(
 			"^(\\d{1,4})[.\\-_](\\d{1,4})(?:[.\\-_](\\d{1,4}))?(?:[.\\-_]?([a-zA-Z0-9]+))?$"
 	);

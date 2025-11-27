@@ -2,8 +2,8 @@ package com.konfigyr.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
@@ -14,6 +14,7 @@ import org.springframework.web.context.request.WebRequest;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
+@NullMarked
 public interface WebExceptionHandler {
 
 	/**
@@ -24,12 +25,7 @@ public interface WebExceptionHandler {
 	 * @param ex the exception to handle, can't be {@literal null}
 	 * @return HTTP response entity containing the handled exception body, never {@literal null}
 	 */
-	@NonNull
-	default ResponseEntity<Object> handle(
-			@NonNull HttpServletRequest request,
-			@NonNull HttpServletResponse response,
-			@NonNull Exception ex
-	) {
+	default ResponseEntity<Object> handle(HttpServletRequest request, HttpServletResponse response, Exception ex) {
 		return handle(new ServletWebRequest(request, response), ex);
 	}
 
@@ -40,7 +36,6 @@ public interface WebExceptionHandler {
 	 * @param ex the exception to handle, can't be {@literal null}
 	 * @return HTTP response entity containing the handled exception body, never {@literal null}
 	 */
-	@NonNull
-	ResponseEntity<Object> handle(@NonNull WebRequest request, @NonNull Exception ex);
+	ResponseEntity<Object> handle(WebRequest request, Exception ex);
 
 }

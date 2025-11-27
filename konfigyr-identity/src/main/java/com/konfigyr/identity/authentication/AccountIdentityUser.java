@@ -1,7 +1,7 @@
 package com.konfigyr.identity.authentication;
 
 import com.konfigyr.entity.EntityId;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.AuthenticatedPrincipal;
 
 /**

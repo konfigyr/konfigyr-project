@@ -1,8 +1,8 @@
 package com.konfigyr.hateoas;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Record that represents a validation error detail on the {@link org.springframework.http.ProblemDetail} error

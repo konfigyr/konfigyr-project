@@ -17,8 +17,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
@@ -44,7 +44,7 @@ class NamespaceController {
 			@NonNull Authentication authentication,
 			@NonNull Pageable pageable
 	) {
-		final Page<Namespace> result;
+		final Page<@NonNull Namespace> result;
 		final Optional<EntityId> account = retrieveAccountIdentifier(authentication);
 		final Optional<EntityId> namespace = retrieveNamespaceIdentifier(authentication);
 
@@ -59,7 +59,7 @@ class NamespaceController {
 			result = namespaces.search(query);
 		} else if (namespace.isPresent()) {
 			result = namespaces.findById(namespace.get())
-							.map(it -> (Page<Namespace>) new PageImpl<>(List.of(it), pageable, 1))
+							.map(it -> (Page<@NonNull Namespace>) new PageImpl<>(List.of(it), pageable, 1))
 							.orElseGet(() -> Page.empty(pageable));
 		} else {
 			throw new AuthenticationCredentialsNotFoundException(
@@ -73,7 +73,7 @@ class NamespaceController {
 	@PreAuthorize("isMember(#slug)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
 	@RequestMapping(path = "/{slug}", method = RequestMethod.HEAD)
-	ResponseEntity<Void> check(@PathVariable String slug) {
+	ResponseEntity<@NonNull Void> check(@PathVariable String slug) {
 		final HttpStatus status = namespaces.exists(slug) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 		return ResponseEntity.status(status).build();
 	}

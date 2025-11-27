@@ -1,19 +1,22 @@
 package com.konfigyr.identity;
 
+import com.konfigyr.crypto.KeysetStore;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
+import com.konfigyr.identity.authorization.jwk.KeysetSource;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +26,10 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationServerMetadata;
+import org.springframework.security.oauth2.server.authorization.http.converter.OAuth2AuthorizationServerMetadataHttpMessageConverter;
+import org.springframework.security.oauth2.server.authorization.oidc.OidcProviderConfiguration;
+import org.springframework.security.oauth2.server.authorization.oidc.http.converter.OidcProviderConfigurationHttpMessageConverter;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -31,7 +38,11 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.net.URL;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
@@ -49,6 +60,106 @@ class AuthorizationServerIntegrationTest {
 
 	@Autowired
 	AccountIdentityService identityService;
+
+	@Autowired
+	KeysetStore keysets;
+
+	@Autowired
+	KeysetSource keysetSource;
+
+	@BeforeEach
+	void rotate() {
+		// rotate the JWK keyset that signs the tokens and reload the configured JWK source
+		// Why, you ask? To make sure the OIDC server works when a new key is generated
+		final var keyset = keysets.read(KonfigyrIdentityKeysets.WEB_KEYS.getName());
+		keysets.rotate(keyset);
+		keysetSource.afterPropertiesSet();
+	}
+
+	@Test
+	@DisplayName("should retrieve OIDC metadata")
+	void authorizationServerOidcMetadata() {
+		mvc.withHttpMessageConverters(List.of(new OidcProviderConfigurationHttpMessageConverter()))
+				.get()
+				.uri("/.well-known/openid-configuration")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "unknown")
+				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "openid")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/redirect_uri")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(OidcProviderConfiguration.class)
+				.satisfies(assertUri("", OidcProviderConfiguration::getIssuer))
+				.satisfies(assertUri("/oauth/authorize", OidcProviderConfiguration::getAuthorizationEndpoint))
+				.satisfies(assertUri("/oauth/token", OidcProviderConfiguration::getTokenEndpoint))
+				.satisfies(assertUri("/oauth/jwks", OidcProviderConfiguration::getJwkSetUrl))
+				.satisfies(assertUri("/oauth/userinfo", OidcProviderConfiguration::getUserInfoEndpoint))
+				.satisfies(assertUri("/oauth/revoke", OidcProviderConfiguration::getTokenRevocationEndpoint))
+				.satisfies(assertUri("/oauth/introspect", OidcProviderConfiguration::getTokenIntrospectionEndpoint))
+				.satisfies(assertUri("/connect/logout", OidcProviderConfiguration::getEndSessionEndpoint))
+				.satisfies(assertElements(
+						OidcProviderConfiguration::getGrantTypes,
+						"authorization_code", "client_credentials", "refresh_token",
+						"urn:ietf:params:oauth:grant-type:token-exchange"
+				))
+				.satisfies(assertElements(OidcProviderConfiguration::getResponseTypes, "code"))
+				.satisfies(assertElements(OidcProviderConfiguration::getCodeChallengeMethods, "S256"))
+				.satisfies(assertElements(
+						OidcProviderConfiguration::getTokenEndpointAuthenticationMethods,
+						"client_secret_basic", "client_secret_post", "client_secret_jwt",
+						"private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"
+				))
+				.satisfies(assertElements(OidcProviderConfiguration::getScopes, "openid"))
+				.satisfies(assertElements(OidcProviderConfiguration::getIdTokenSigningAlgorithms, "RS256"))
+				.satisfies(assertElements(
+						OidcProviderConfiguration::getDPoPSigningAlgorithms,
+						"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"
+				));
+	}
+
+	@Test
+	@DisplayName("should retrieve OAuth2 metadata")
+	void authorizationServerOAuthMetadata() {
+		mvc.withHttpMessageConverters(List.of(new OAuth2AuthorizationServerMetadataHttpMessageConverter()))
+				.get()
+				.uri("/.well-known/oauth-authorization-server")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "unknown")
+				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "openid")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/redirect_uri")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(OAuth2AuthorizationServerMetadata.class)
+				.satisfies(assertUri("", OAuth2AuthorizationServerMetadata::getIssuer))
+				.satisfies(assertUri("/oauth/authorize", OAuth2AuthorizationServerMetadata::getAuthorizationEndpoint))
+				.satisfies(assertUri("/oauth/token", OAuth2AuthorizationServerMetadata::getTokenEndpoint))
+				.satisfies(assertUri("/oauth/jwks", OAuth2AuthorizationServerMetadata::getJwkSetUrl))
+				.satisfies(assertUri("/oauth/revoke", OAuth2AuthorizationServerMetadata::getTokenRevocationEndpoint))
+				.satisfies(assertUri("/oauth/introspect", OAuth2AuthorizationServerMetadata::getTokenIntrospectionEndpoint))
+				.satisfies(assertElements(
+						OAuth2AuthorizationServerMetadata::getGrantTypes,
+						"authorization_code", "client_credentials", "refresh_token",
+						"urn:ietf:params:oauth:grant-type:token-exchange"
+				))
+				.satisfies(assertElements(OAuth2AuthorizationServerMetadata::getResponseTypes, "code"))
+				.satisfies(assertElements(OAuth2AuthorizationServerMetadata::getCodeChallengeMethods, "S256"))
+				.satisfies(assertElements(
+						OAuth2AuthorizationServerMetadata::getTokenEndpointAuthenticationMethods,
+						"client_secret_basic", "client_secret_post", "client_secret_jwt",
+						"private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"
+				))
+				.satisfies(assertElements(
+						OAuth2AuthorizationServerMetadata::getDPoPSigningAlgorithms,
+						"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"
+				))
+				.returns(null, OAuth2AuthorizationServerMetadata::getScopes);
+	}
 
 	@Test
 	@DisplayName("should fail to authorize request for unknown client")
@@ -265,7 +376,7 @@ class AuthorizationServerIntegrationTest {
 				.assertThat()
 				.apply(log())
 				.hasStatus3xxRedirection()
-				.hasRedirectedUrl("http://localhost/login")
+				.hasRedirectedUrl("/login")
 				.request()
 				.sessionAttributes()
 				.hasEntrySatisfying("SPRING_SECURITY_SAVED_REQUEST", it -> assertThat(it)
@@ -487,6 +598,18 @@ class AuthorizationServerIntegrationTest {
 						.extracting(URI::create)
 						.satisfies(assertion)
 				);
+	}
+
+	static <T> Consumer<T> assertUri(String path, Function<T, URL> mapper) {
+		return metadata -> assertThat(mapper.apply(metadata))
+				.hasProtocol("http")
+				.hasHost("localhost")
+				.hasPath(path);
+	}
+
+	static <T> Consumer<T> assertElements(Function<T, Collection<String>> mapper, String... elements) {
+		return metadata -> assertThat(mapper.apply(metadata))
+				.containsExactlyInAnyOrder(elements);
 	}
 
 	static RequestPostProcessor rememberMe(AccountIdentityService service, long id) {

@@ -1,8 +1,10 @@
 package com.konfigyr.crypto;
 
 import com.konfigyr.io.ByteArray;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import java.util.function.Supplier;
@@ -14,47 +16,42 @@ import java.util.function.Supplier;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-@RequiredArgsConstructor
+@NullMarked
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 final class KonfigyrKeysetOperations implements KeysetOperations {
 
-	private final Supplier<Keyset> supplier;
+	private final Supplier<@Nullable Keyset> supplier;
 
-	@NonNull
 	@Override
-	public ByteArray encrypt(@NonNull ByteArray data) {
+	public ByteArray encrypt(ByteArray data) {
 		return get().encrypt(data);
 	}
 
-	@NonNull
 	@Override
-	public ByteArray encrypt(@NonNull ByteArray data, ByteArray context) {
+	public ByteArray encrypt(ByteArray data, @Nullable ByteArray context) {
 		return get().encrypt(data, context);
 	}
 
-	@NonNull
 	@Override
-	public ByteArray decrypt(@NonNull ByteArray cipher) {
+	public ByteArray decrypt(ByteArray cipher) {
 		return get().decrypt(cipher);
 	}
 
-	@NonNull
 	@Override
-	public ByteArray decrypt(@NonNull ByteArray cipher, ByteArray context) {
+	public ByteArray decrypt(ByteArray cipher, @Nullable ByteArray context) {
 		return get().decrypt(cipher, context);
 	}
 
-	@NonNull
 	@Override
-	public ByteArray sign(@NonNull ByteArray data) {
+	public ByteArray sign(ByteArray data) {
 		return get().sign(data);
 	}
 
 	@Override
-	public boolean verify(@NonNull ByteArray signature, @NonNull ByteArray data) {
+	public boolean verify(ByteArray signature, ByteArray data) {
 		return get().verify(signature, data);
 	}
 
-	@NonNull
 	private synchronized Keyset get() {
 		final Keyset keyset = supplier.get();
 		Assert.notNull(keyset, "Delegating keyset for operations can not be null");

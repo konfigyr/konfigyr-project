@@ -8,9 +8,9 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
@@ -41,7 +41,7 @@ class AuthorizationConsentControllerTest {
 		assertThat(mvc.perform(request))
 				.apply(log())
 				.hasStatus3xxRedirection()
-				.hasRedirectedUrl("http://localhost/login");
+				.hasRedirectedUrl("/login");
 	}
 
 	@Test
@@ -91,7 +91,9 @@ class AuthorizationConsentControllerTest {
 								AuthorizedScope.unauthorized(OAuthScope.READ_NAMESPACES)
 						)
 				)
-				.hasEntrySatisfying("consent", it -> assertThat(it).isNull());
+				.hasEntrySatisfying("consent", it -> assertThat(it)
+						.isNull()
+				);
 	}
 
 	static RequestPostProcessor authenticated() {

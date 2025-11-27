@@ -4,7 +4,7 @@ import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.Slug;
 import org.jmolecules.event.annotation.DomainEvent;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 /**

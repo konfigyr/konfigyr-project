@@ -2,7 +2,7 @@ package com.konfigyr.identity.authorization;
 
 import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authentication.AccountIdentityUser;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -29,7 +29,7 @@ final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext>
 		}
 	}
 
-	private void customize(@NonNull AccountIdentity identity, @NonNull JwtClaimsSet.Builder claims) {
+	private void customize(@NonNull AccountIdentity identity, JwtClaimsSet.Builder claims) {
 		claims.claim("oid", identity.getUsername())
 				.claim("email", identity.getEmail())
 				.claim("name", identity.getDisplayName())

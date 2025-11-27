@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.hypersistence.tsid.TSID;
 import lombok.EqualsAndHashCode;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 
@@ -20,7 +20,7 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
  **/
 @EqualsAndHashCode(of = "id")
 @JsonAutoDetect(creatorVisibility = ANY, fieldVisibility = ANY)
-final class TimeSortedEntityId implements EntityId {
+public final class TimeSortedEntityId implements EntityId {
 
 	@Serial
 	private static final long serialVersionUID = -6631425677891239174L;

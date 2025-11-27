@@ -1,7 +1,7 @@
 package com.konfigyr.artifactory;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
 
 import java.io.Serial;
 

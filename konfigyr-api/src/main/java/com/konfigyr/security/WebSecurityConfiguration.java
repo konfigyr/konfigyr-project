@@ -1,6 +1,5 @@
 package com.konfigyr.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
 import com.konfigyr.web.WebExceptionHandler;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +18,7 @@ import org.springframework.security.web.context.DelegatingSecurityContextReposit
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collection;
 
@@ -40,7 +40,7 @@ public class WebSecurityConfiguration {
 	}
 
 	@Bean
-	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, ProblemDetailsAuthenticationExceptionHandler exceptionHandler) throws Exception {
+	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, ProblemDetailsAuthenticationExceptionHandler exceptionHandler) {
 		final BearerTokenResolver bearerTokenResolver = new RequestAttributeBearerTokenResolver();
 
 		return http

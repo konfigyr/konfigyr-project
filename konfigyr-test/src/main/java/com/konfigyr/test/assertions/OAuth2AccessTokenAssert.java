@@ -3,7 +3,7 @@ package com.konfigyr.test.assertions;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactory;
 import org.assertj.core.error.BasicErrorMessageFactory;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 import java.util.Arrays;

@@ -1,7 +1,7 @@
 package com.konfigyr.hateoas;
 
 import org.springframework.data.domain.Page;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -46,7 +46,7 @@ public interface RepresentationModelAssembler<T, R extends RepresentationModel<?
 	 * @return the paged model, never {@literal null}.
 	 */
 	@NonNull
-	default PagedModel<R> assemble(@NonNull Page<? extends T> entities) {
+	default PagedModel<R> assemble(@NonNull Page<? extends @NonNull T> entities) {
 		final PagedModel<R> model = PagedModel.of(entities.map(this::assemble));
 		model.add(
 				Link.builder()

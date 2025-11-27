@@ -1,7 +1,7 @@
 package com.konfigyr.artifactory;
 
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
@@ -21,14 +21,16 @@ public interface PropertyMetadata extends Comparable<PropertyMetadata>, Serializ
 	 *
 	 * @return the property name, can't be {@literal null}.
 	 **/
-	@NonNull String name();
+	@NonNull
+	String name();
 
 	/**
 	 * The property logical type identifier that is derived from the original property type name.
 	 *
 	 * @return the property type, can't be {@literal null}.
 	 **/
-	@NonNull PropertyType type();
+	@NonNull
+	PropertyType type();
 
 	/**
 	 * Data type category used to define the actual data type of the value that can be assigned to
@@ -36,7 +38,8 @@ public interface PropertyMetadata extends Comparable<PropertyMetadata>, Serializ
 	 *
 	 * @return the property data type, can't be {@literal null}.
 	 **/
-	@NonNull DataType dataType();
+	@NonNull
+	DataType dataType();
 
 	/**
 	 * The fully qualified Java type name that is present in the Spring Boot configuration metadata source,
@@ -44,21 +47,24 @@ public interface PropertyMetadata extends Comparable<PropertyMetadata>, Serializ
 	 *
 	 * @return the property Java type name, can't be {@literal null}.
 	 **/
-	@NonNull String typeName();
+	@NonNull
+	String typeName();
 
 	/**
 	 * Default value of the configuration property, if defined.
 	 *
 	 * @return the default property value, can be {@literal null}.
 	 */
-	@NonNull String defaultValue();
+	@NonNull
+	String defaultValue();
 
 	/**
 	 * Human-readable description of the property purpose, if defined.
 	 *
 	 * @return the property description, can be {@literal null}.
 	 */
-	@NonNull String description();
+	@NonNull
+	String description();
 
 	/**
 	 * Sorted collection that contains hints or data describing allowed or example values that can
@@ -66,14 +72,16 @@ public interface PropertyMetadata extends Comparable<PropertyMetadata>, Serializ
 	 *
 	 * @return list of possible configuration property values, can't be {@literal null}.
 	 */
-	@NonNull List<String> hints();
+	@NonNull
+	List<String> hints();
 
 	/**
 	 * The deprecation information, if available.
 	 *
 	 * @return the deprecation metadata, may be {@literal null}.
 	 */
-	@Nullable Deprecation deprecation();
+	@Nullable
+	Deprecation deprecation();
 
 	@Override
 	default int compareTo(@Nonnull PropertyMetadata o) {

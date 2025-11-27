@@ -35,7 +35,7 @@ class ProblemDetailAssertTest {
 
 		assertThatThrownBy(() -> ProblemDetailAssert.assertThat(problem).hasType("invalid"))
 				.isInstanceOf(AssertionError.class)
-				.hasMessageContaining("Expected that Problem Details should have a type of \"invalid\" but was \"about:blank\"");
+				.hasMessageContaining("Expected that Problem Details should have a type of \"invalid\" but was \"null\"");
 
 		assertThatThrownBy(() -> ProblemDetailAssert.assertThat(problem).hasInstance("invalid"))
 				.isInstanceOf(AssertionError.class)

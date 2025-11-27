@@ -1,8 +1,8 @@
 package com.konfigyr.feature;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 import java.io.Serializable;
 import java.time.temporal.ChronoUnit;
@@ -34,7 +34,7 @@ public sealed interface FeatureValue extends Serializable permits LimitedFeature
 	 * {@link com.konfigyr.namespace.Namespace} can only have a certain amount of members or vaults
 	 * depending on the selected subscription plan.
 	 *
-	 * @param limit the limit, must be a positive number
+	 * @param limit the limit must be a positive number
 	 * @return limited feature value, never {@literal null}
 	 */
 	static LimitedFeatureValue limited(long limit) {
@@ -46,8 +46,8 @@ public sealed interface FeatureValue extends Serializable permits LimitedFeature
 	 * specified time range. One example of rate limiting could be how much API requests can be sent per
 	 * second or minute.
 	 *
-	 * @param value the limit, must be a positive number
-	 * @param unit the time unit, can not be {@literal null}
+	 * @param value the limit must be a positive number
+	 * @param unit the time unit, can't be {@literal null}
 	 * @return rate limited feature value, never {@literal null}
 	 */
 	static RateLimitFeatureValue rateLimit(long value, @NonNull TimeUnit unit) {
@@ -59,8 +59,8 @@ public sealed interface FeatureValue extends Serializable permits LimitedFeature
 	 * specified time range. One example of rate limiting could be how much API requests can be sent per
 	 * second or minute.
 	 *
-	 * @param value the limit, must be a positive number
-	 * @param unit the chrono unit, can not be {@literal null}
+	 * @param value the limit must be a positive number
+	 * @param unit the chrono-unit, can't be {@literal null}
 	 * @return rate limited feature value, never {@literal null}
 	 */
 	static RateLimitFeatureValue rateLimit(long value, @NonNull ChronoUnit unit) {
@@ -72,8 +72,8 @@ public sealed interface FeatureValue extends Serializable permits LimitedFeature
 	 * specified time range. One example of rate limiting could be how much API requests can be sent per
 	 * second or minute.
 	 *
-	 * @param value the limit, must be a positive number
-	 * @param unit the duration unit, can not be {@literal null}
+	 * @param value the limit must be a positive number
+	 * @param unit the duration unit, can't be {@literal null}
 	 * @return rate limited feature value, never {@literal null}
 	 */
 	static RateLimitFeatureValue rateLimit(long value, @NonNull DurationUnit unit) {

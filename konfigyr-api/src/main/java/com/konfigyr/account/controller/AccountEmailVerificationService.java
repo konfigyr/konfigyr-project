@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.mail.MailException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -114,8 +114,11 @@ class AccountEmailVerificationService {
 					.type(JOSEObjectType.JWT.getType())
 					.build();
 
+			final String id = passwordEncoder.encode(otp);
+			Assert.hasText(id, "Failed to generate JWT ID from one-time password");
+
 			final JwtClaimsSet claims = JwtClaimsSet.builder()
-					.id(passwordEncoder.encode(otp))
+					.id(id)
 					.subject(email.toLowerCase())
 					.issuedAt(timestamp)
 					.notBefore(timestamp)

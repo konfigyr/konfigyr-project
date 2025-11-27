@@ -222,8 +222,7 @@ class AccountTest {
 		assertThat(Memberships.empty())
 				.hasSize(0)
 				.isSameAs(Memberships.of())
-				.isSameAs(Memberships.of(List.of()))
-				.isSameAs(Memberships.of((Membership[]) null));
+				.isSameAs(Memberships.of(List.of()));
 	}
 
 	@Test

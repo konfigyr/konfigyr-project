@@ -5,12 +5,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.MDC;
 import org.springframework.context.i18n.LocaleContext;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.Ordered;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -41,7 +41,7 @@ public class ContextFilter extends OncePerRequestFilter {
 	/**
 	 * The default order for this filter in the filter chain.
 	 */
-	public static int DEFAULT_ORDER = Ordered.HIGHEST_PRECEDENCE + 90;
+	public static final int DEFAULT_ORDER = Ordered.HIGHEST_PRECEDENCE + 90;
 
 	static final String X_REQUEST_ID = "X-Request-ID";
 	static final String X_FORWARDED_FOR = "X-Forwarded-For";

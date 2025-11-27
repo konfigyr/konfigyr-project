@@ -2,7 +2,7 @@ package com.konfigyr.feature;
 
 import lombok.EqualsAndHashCode;
 import org.jmolecules.ddd.annotation.ValueObject;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.Serializable;

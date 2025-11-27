@@ -11,11 +11,10 @@ import org.assertj.core.groups.Tuple;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.*;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.JobParametersInvalidException;
-import org.springframework.batch.test.JobLauncherTestUtils;
-import org.springframework.batch.test.context.SpringBatchTest;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.parameters.InvalidJobParametersException;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -29,7 +28,6 @@ import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 
-@SpringBatchTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 
@@ -40,16 +38,11 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 	DSLContext context;
 
 	@Autowired
-	JobLauncherTestUtils utils;
+	JobOperator operator;
 
 	@Autowired
 	@Qualifier(ArtifactoryJobNames.RELEASE_JOB)
 	Job job;
-
-	@BeforeEach
-	void setup() {
-		utils.setJob(job);
-	}
 
 	@AfterAll
 	static void cleanup(ApplicationContext context) {
@@ -62,8 +55,8 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 	@Order(0)
 	@DisplayName("should validate if `artifact` job parameter is defined")
 	void validateMissingArtifact() {
-		assertThatExceptionOfType(JobParametersInvalidException.class)
-				.isThrownBy(() -> utils.launchJob())
+		assertThatExceptionOfType(InvalidJobParametersException.class)
+				.isThrownBy(() -> operator.start(job, jobParametersBuilder().toJobParameters()))
 				.withMessageContaining("do not contain required keys: [artifact]");
 	}
 
@@ -75,7 +68,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 
 		mockArtifactMetadata(metadataStore, coordinates);
 
-		final var execution = utils.launchJob(new JobParametersBuilder()
+		final var execution = operator.start(job, jobParametersBuilder()
 				.addString("artifact", coordinates.format(), true)
 				.toJobParameters()
 		);
@@ -90,7 +83,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 	@Order(2)
 	@DisplayName("should fail to execute when metadata resource does not exist")
 	void unknownResource() throws Exception {
-		final var execution = utils.launchJob(new JobParametersBuilder()
+		final var execution = operator.start(job, jobParametersBuilder()
 				.addString("artifact", "com.konfigyr:konfigyr-resource:1.0.0", true)
 				.toJobParameters()
 		);
@@ -110,7 +103,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		mockArtifactMetadata(metadataStore, coordinates);
 		createVersionedArtifact(context, coordinates.version().get());
 
-		final var execution = utils.launchJob(new JobParametersBuilder()
+		final var execution = operator.start(job, jobParametersBuilder()
 				.addString("artifact", coordinates.format(), true)
 				.toJobParameters()
 		);
@@ -138,7 +131,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		mockArtifactMetadata(metadataStore, coordinates);
 		createVersionedArtifact(context, coordinates.version().get());
 
-		final var execution = utils.launchJob(new JobParametersBuilder()
+		final var execution = operator.start(job, jobParametersBuilder()
 				.addString("artifact", coordinates.format(), true)
 				.toJobParameters()
 		);
@@ -166,7 +159,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		mockArtifactMetadata(metadataStore, coordinates);
 		createVersionedArtifact(context, coordinates.version().get());
 
-		final var execution = utils.launchJob(new JobParametersBuilder()
+		final var execution = operator.start(job, jobParametersBuilder()
 				.addString("artifact", coordinates.format(), true)
 				.toJobParameters()
 		);
@@ -210,6 +203,10 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 				.set(ARTIFACT_VERSIONS.ARTIFACT_ID, 4L)
 				.set(ARTIFACT_VERSIONS.VERSION, version)
 				.execute();
+	}
+
+	static JobParametersBuilder	jobParametersBuilder() {
+		return new JobParametersBuilder();
 	}
 
 }

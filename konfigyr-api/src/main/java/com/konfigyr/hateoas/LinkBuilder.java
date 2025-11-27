@@ -1,8 +1,8 @@
 package com.konfigyr.hateoas;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpMethod;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -23,22 +23,24 @@ public interface LinkBuilder {
 	 * @param object can be {@literal null}.
 	 * @return link builder, never {@literal null}.
 	 */
-	@NonNull LinkBuilder path(@Nullable Object object);
+	@NonNull
+	LinkBuilder path(@Nullable Object object);
 
 	/**
 	 * Adds the query parameter to the current URI, the value of the parameter would be the
 	 * object's {@link String} representation.
 	 *
-	 * @param name query parameter name, can't be {@literal null}
+	 * @param name  query parameter name, can't be {@literal null}
 	 * @param value query parameter value, can be {@literal null}.
 	 * @return link builder, never {@literal null}.
 	 */
-	@NonNull LinkBuilder query(@NonNull String name, @Nullable Object value);
+	@NonNull
+	LinkBuilder query(@NonNull String name, @Nullable Object value);
 
 	/**
 	 * Adds a list of query parameters to the current URI.
 	 *
-	 * @param name query parameter name, can't be {@literal null}
+	 * @param name   query parameter name, can't be {@literal null}
 	 * @param values query parameter values, can be {@literal null}.
 	 * @return link builder, never {@literal null}.
 	 */
@@ -50,18 +52,20 @@ public interface LinkBuilder {
 	/**
 	 * Adds a list of query parameters to the current URI.
 	 *
-	 * @param name query parameter name, can't be {@literal null}
+	 * @param name   query parameter name, can't be {@literal null}
 	 * @param values query parameter values, can be {@literal null}.
 	 * @return link builder, never {@literal null}.
 	 */
-	@NonNull LinkBuilder query(@NonNull String name, @Nullable List<Object> values);
+	@NonNull
+	LinkBuilder query(@NonNull String name, @Nullable List<Object> values);
 
 	/**
 	 * Creates a URI of the link built by the current builder instance.
 	 *
 	 * @return the link URI, never {@literal null}.
 	 */
-	@NonNull URI toUri();
+	@NonNull
+	URI toUri();
 
 	/**
 	 * Creates the {@link Link} built by the current builder instance with the given link relation.
@@ -80,7 +84,8 @@ public interface LinkBuilder {
 	 * @param rel must not be {@literal null} or empty.
 	 * @return the built {@link Link}, never {@literal null}.
 	 */
-	@NonNull Link rel(@NonNull LinkRelation rel);
+	@NonNull
+	Link rel(@NonNull LinkRelation rel);
 
 	/**
 	 * Creates the {@link Link} built by the current builder instance with the default self link relation.

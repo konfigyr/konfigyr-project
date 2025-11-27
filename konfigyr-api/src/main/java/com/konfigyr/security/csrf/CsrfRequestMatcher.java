@@ -2,6 +2,7 @@ package com.konfigyr.security.csrf;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.csrf.CsrfFilter;
@@ -35,7 +36,7 @@ public final class CsrfRequestMatcher implements RequestMatcher {
 	}
 
 	@Override
-	public boolean matches(HttpServletRequest request) {
+	public boolean matches(@NonNull HttpServletRequest request) {
 		if (containsBearerToken(request)) {
 			return false;
 		}

@@ -4,6 +4,7 @@ import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import com.konfigyr.web.error.OAuth2ErrorResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
 
+@NullMarked
 @Controller
 @RequestMapping(AuthorizationFailureHandler.OAUTH_ERROR_PAGE)
 class AuthorizationErrorController {

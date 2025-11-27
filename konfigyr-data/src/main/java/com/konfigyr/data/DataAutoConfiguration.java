@@ -1,11 +1,12 @@
 package com.konfigyr.data;
 
 import org.jooq.ConverterProvider;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.jooq.DefaultConfigurationCustomizer;
-import org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration;
 import org.springframework.boot.convert.ApplicationConversionService;
+import org.springframework.boot.jooq.autoconfigure.DefaultConfigurationCustomizer;
+import org.springframework.boot.jooq.autoconfigure.JooqAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 
@@ -28,7 +29,7 @@ class DataAutoConfiguration {
 	 */
 	@Bean
 	DefaultConfigurationCustomizer conversionServiceConverterConfigurationCustomizer(
-			final ObjectProvider<ConversionService> conversionService
+			final ObjectProvider<@NonNull ConversionService> conversionService
 	) {
 		final ConverterProvider converterProvider = new SpringConverterProvider(
 				() -> conversionService.getIfAvailable(ApplicationConversionService::getSharedInstance)

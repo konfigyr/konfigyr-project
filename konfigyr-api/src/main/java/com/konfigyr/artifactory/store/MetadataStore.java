@@ -3,7 +3,7 @@ package com.konfigyr.artifactory.store;
 import com.konfigyr.artifactory.ArtifactCoordinates;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.core.io.Resource;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 

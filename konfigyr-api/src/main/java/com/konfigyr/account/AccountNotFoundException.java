@@ -1,7 +1,7 @@
 package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 

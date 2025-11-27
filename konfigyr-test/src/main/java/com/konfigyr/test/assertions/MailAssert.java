@@ -5,7 +5,7 @@ import com.konfigyr.mail.Mail;
 import com.konfigyr.mail.Recipient;
 import org.assertj.core.api.*;
 import org.assertj.core.error.BasicErrorMessageFactory;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;

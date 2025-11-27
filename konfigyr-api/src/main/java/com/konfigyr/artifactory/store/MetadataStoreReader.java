@@ -1,26 +1,25 @@
 package com.konfigyr.artifactory.store;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.konfigyr.artifactory.*;
-import lombok.Builder;
-import lombok.extern.jackson.Jacksonized;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.json.JacksonJsonObjectReader;
-import org.springframework.batch.item.json.JsonItemReader;
-import org.springframework.batch.item.json.JsonObjectReader;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
+import org.springframework.batch.infrastructure.item.ItemStreamException;
+import org.springframework.batch.infrastructure.item.ItemStreamReader;
+import org.springframework.batch.infrastructure.item.json.JacksonJsonObjectReader;
+import org.springframework.batch.infrastructure.item.json.JsonItemReader;
+import org.springframework.batch.infrastructure.item.json.JsonObjectReader;
 import org.springframework.core.io.Resource;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.Serial;
 import java.util.List;
 
 /**
- * Implementation of the {@link org.springframework.batch.item.ItemReader} that would read the {@link PropertyMetadata}
- * from the uploaded Spring Boot configuration metadata file.
+ * Implementation of the {@link org.springframework.batch.infrastructure.item.ItemReader} that would read the
+ * {@link PropertyMetadata} from the uploaded Spring Boot configuration metadata file.
  * <p>
  * It is important to note that this reader implementation should be defined as a Spring Bean with a <code>step</code>
  * scope, via {@link org.springframework.batch.core.configuration.annotation.StepScope} annotation, as this reader
@@ -30,13 +29,15 @@ import java.util.List;
  * @since 1.0.0
  * @see JsonItemReader
  */
-public class MetadataStoreReader implements ItemStreamReader<PropertyMetadata> {
+public class MetadataStoreReader implements ItemStreamReader<@NonNull PropertyMetadata> {
 
 	private static final JsonMapper JSON_MAPPER = JsonMapper.builder()
 			.propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+			.disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+			.disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
 			.build();
 
-	private final JsonItemReader<PropertyMetadata> delegate;
+	private final JsonItemReader<@NonNull PropertyMetadata> delegate;
 
 	public MetadataStoreReader(final String coordinates, final MetadataStore store) {
 		this(ArtifactCoordinates.parse(coordinates), store);
@@ -66,7 +67,7 @@ public class MetadataStoreReader implements ItemStreamReader<PropertyMetadata> {
 		this.delegate.close();
 	}
 
-	static JsonItemReader<PropertyMetadata> createItemReader(
+	static JsonItemReader<@NonNull PropertyMetadata> createItemReader(
 			final ArtifactCoordinates coordinates,
 			final MetadataStore store
 	) {
@@ -74,15 +75,13 @@ public class MetadataStoreReader implements ItemStreamReader<PropertyMetadata> {
 				"Could not find uploaded artifact property metadata for coordinates: " + coordinates.format()
 		));
 
-		final JsonObjectReader<PropertyMetadata> reader = new JacksonJsonObjectReader<>(
+		final JsonObjectReader<@NonNull PropertyMetadata> reader = new JacksonJsonObjectReader<>(
 				JSON_MAPPER, UploadedPropertyMetadata.class
 		);
 
 		return new JsonItemReader<>(resource, reader);
 	}
 
-	@Builder
-	@Jacksonized
 	record UploadedPropertyMetadata(
 			@NonNull String name,
 			@NonNull DataType dataType,

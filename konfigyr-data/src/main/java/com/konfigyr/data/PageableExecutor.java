@@ -3,12 +3,13 @@ package com.konfigyr.data;
 import lombok.RequiredArgsConstructor;
 import org.jooq.*;
 import org.jooq.Record;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 import java.util.*;
@@ -27,6 +28,7 @@ import java.util.function.LongSupplier;
  * @since 1.0.0
  * @see PageableExecutionUtils
  **/
+@NullMarked
 @RequiredArgsConstructor
 public class PageableExecutor {
 
@@ -53,12 +55,11 @@ public class PageableExecutor {
 	 * @param <T> page content type that would be returned from the record converter
 	 * @return the {@link Page} for the retrieved and converted result set and a total size.
 	 */
-	@NonNull
 	public <T> Page<T> execute(
-			@NonNull SelectOrderByStep<? extends Record> query,
-			@NonNull Converter<Record, T> mapper,
-			@NonNull Pageable pageable,
-			@NonNull LongSupplier totalSupplier
+			SelectOrderByStep<? extends Record> query,
+			Converter<Record, T> mapper,
+			Pageable pageable,
+			LongSupplier totalSupplier
 	) {
 		final List<T> results = applyPageable(query, pageable)
 				.fetch(mapper::convert);
@@ -78,7 +79,7 @@ public class PageableExecutor {
 				.limit(pageable.getPageSize());
 	}
 
-	private Collection<OrderField<?>> createOrderBy(Sort sort) {
+	private Collection<OrderField<?>> createOrderBy(@Nullable Sort sort) {
 		if (sort == null || sort.isUnsorted() || sortFields.isEmpty()) {
 			return Collections.singleton(defaultSortField);
 		}
@@ -102,7 +103,7 @@ public class PageableExecutor {
 
 	public static final class Builder {
 		private final Map<String, Field<?>> sortFields = new LinkedHashMap<>();
-		private OrderField<?> defaultSortField;
+		private @Nullable OrderField<?> defaultSortField;
 
 		/**
 		 * Specify the default sortable {@link Field} that would be applied if the {@link Sort}

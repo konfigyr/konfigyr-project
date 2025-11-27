@@ -1,6 +1,6 @@
 package com.konfigyr.feature;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Feature values provider that provides Konfigyr Beta available features.

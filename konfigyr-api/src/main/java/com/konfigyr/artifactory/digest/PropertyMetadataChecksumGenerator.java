@@ -3,8 +3,8 @@ package com.konfigyr.artifactory.digest;
 import com.konfigyr.artifactory.*;
 import com.konfigyr.io.ByteArray;
 import org.apache.commons.lang3.ArrayUtils;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.function.SingletonSupplier;
@@ -189,7 +189,7 @@ public final class PropertyMetadataChecksumGenerator {
 		return EMPTY_BYTES;
 	}
 
-	private byte[] digest(@NonNull MessageDigest digest, @Nullable byte[] data) {
+	private byte[] digest(@NonNull MessageDigest digest, byte[] data) {
 		return ArrayUtils.isEmpty(data) ? EMPTY_BYTES : digest.digest(data);
 	}
 

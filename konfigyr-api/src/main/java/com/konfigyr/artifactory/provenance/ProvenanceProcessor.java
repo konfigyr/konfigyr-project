@@ -3,13 +3,13 @@ package com.konfigyr.artifactory.provenance;
 import com.konfigyr.artifactory.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 
 @Slf4j
 @RequiredArgsConstructor
-class ProvenanceProcessor implements ItemProcessor<PropertyMetadata, EvaluationResult> {
+class ProvenanceProcessor implements ItemProcessor<@NonNull PropertyMetadata, @NonNull EvaluationResult> {
 
 	private final VersionedArtifact version;
 	private final ProvenanceEvaluator evaluator;

@@ -3,12 +3,12 @@ package com.konfigyr.identity.authentication;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.AccountIdentities;
 import com.konfigyr.support.Avatar;
+import com.konfigyr.test.OAuth2AccessTokens;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 
@@ -103,7 +103,7 @@ class AccountIdentityTest {
 				"email", identity.getEmail()
 		);
 
-		final var token = new OidcIdToken("id-token", Instant.now(), Instant.now(), claims);
+		final var token = OAuth2AccessTokens.createIdToken("id-token", claims);
 
 		assertThat(new OidcAccountIdentityUser(identity, new DefaultOidcUser(identity.getAuthorities(), token)))
 				.returns(identity, OidcAccountIdentityUser::getAccountIdentity)

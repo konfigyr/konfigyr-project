@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSendException;
 import org.springframework.modulith.test.AssertablePublishedEvents;
@@ -31,7 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-@ExtendWith(PublishedEventsExtension.class)
+@ExtendWith({ MockitoExtension.class, PublishedEventsExtension.class })
 class AccountEmailVerificationServiceTest extends AbstractIntegrationTest {
 
 	final Account account = TestAccounts.john().build();

@@ -2,9 +2,9 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
 import org.jmolecules.event.annotation.DomainEventPublisher;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.NonNull;
 
 import java.util.Optional;
 
@@ -25,7 +25,7 @@ public interface Invitations {
 	 * @return paged collections of invitations, never {@literal null}
 	 */
 	@NonNull
-	Page<Invitation> find(@NonNull Namespace namespace, @NonNull Pageable pageable);
+	Page<@NonNull Invitation> find(@NonNull Namespace namespace, @NonNull Pageable pageable);
 
 	/**
 	 * Retrieve a single {@link Invitation} by its key that is sent for the given {@link Namespace}.

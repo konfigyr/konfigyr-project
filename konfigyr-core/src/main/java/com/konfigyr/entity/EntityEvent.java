@@ -1,7 +1,7 @@
 package com.konfigyr.entity;
 
 import lombok.EqualsAndHashCode;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.Serial;

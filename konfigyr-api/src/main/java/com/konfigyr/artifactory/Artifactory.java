@@ -1,8 +1,8 @@
 package com.konfigyr.artifactory;
 
 import org.jmolecules.event.annotation.DomainEventPublisher;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.io.Resource;
-import org.springframework.lang.NonNull;
 
 import java.util.List;
 import java.util.Optional;

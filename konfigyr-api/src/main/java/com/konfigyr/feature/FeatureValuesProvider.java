@@ -1,6 +1,6 @@
 package com.konfigyr.feature;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Provider interface used to resolve or extract {@link FeatureValues} that are assigned to

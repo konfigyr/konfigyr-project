@@ -3,7 +3,7 @@ package com.konfigyr.security.access;
 import com.konfigyr.entity.EntityId;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 

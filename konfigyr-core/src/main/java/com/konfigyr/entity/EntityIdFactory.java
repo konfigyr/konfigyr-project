@@ -2,7 +2,7 @@ package com.konfigyr.entity;
 
 import org.jmolecules.ddd.annotation.Factory;
 import org.springframework.core.OrderComparator;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.function.SingletonSupplier;
 

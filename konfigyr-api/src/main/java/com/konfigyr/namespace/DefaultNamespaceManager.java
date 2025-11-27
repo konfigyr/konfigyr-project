@@ -13,6 +13,7 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,8 +22,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -78,7 +78,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-search")
-	public Page<Namespace> search(@NonNull SearchQuery query) {
+	public Page<@NonNull Namespace> search(@NonNull SearchQuery query) {
 		final List<Condition> conditions = new ArrayList<>();
 
 		query.term().map(term -> "%" + term + "%").ifPresent(term -> conditions.add(DSL.or(
@@ -186,6 +186,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 		return namespace;
 	}
 
+	@NonNull
 	@Override
 	@CacheEvict(CACHE_NAME)
 	@Transactional(label = "namespace-update")
@@ -242,21 +243,21 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<Member> findMembers(@NonNull EntityId id, @NonNull SearchQuery query) {
+	public Page<@NonNull Member> findMembers(@NonNull EntityId id, @NonNull SearchQuery query) {
 		return findMembers(NAMESPACES.ID.eq(id.get()), query);
 	}
 
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<Member> findMembers(@NonNull String slug, @NonNull SearchQuery query) {
+	public Page<@NonNull Member> findMembers(@NonNull String slug, @NonNull SearchQuery query) {
 		return findMembers(NAMESPACES.SLUG.eq(slug), query);
 	}
 
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<Member> findMembers(@NonNull Namespace namespace, @NonNull SearchQuery query) {
+	public Page<@NonNull Member> findMembers(@NonNull Namespace namespace, @NonNull SearchQuery query) {
 		return findMembers(namespace.id(), query);
 	}
 
@@ -321,7 +322,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@NonNull
 	@Override
 	@Transactional(label = "namespace-find-applications", readOnly = true)
-	public Page<NamespaceApplication> findApplications(@NonNull SearchQuery query) {
+	public Page<@NonNull NamespaceApplication> findApplications(@NonNull SearchQuery query) {
 		final List<Condition> conditions = new ArrayList<>();
 
 		query.criteria(SearchQuery.NAMESPACE).ifPresent(slug -> conditions.add(NAMESPACES.SLUG.eq(slug)));
@@ -503,7 +504,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 	}
 
 	@NonNull
-	private Page<Member> findMembers(@NonNull Condition condition, @NonNull SearchQuery query) {
+	private Page<@NonNull Member> findMembers(@NonNull Condition condition, @NonNull SearchQuery query) {
 		final List<Condition> conditions = new ArrayList<>();
 		conditions.add(condition);
 

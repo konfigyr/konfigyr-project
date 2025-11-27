@@ -1,7 +1,7 @@
 package com.konfigyr.security.access;
 
 import com.konfigyr.entity.EntityId;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.Serializable;

@@ -3,7 +3,7 @@ package com.konfigyr.identity.authorization.controller;
 import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
 import com.konfigyr.identity.authorization.AuthorizationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;

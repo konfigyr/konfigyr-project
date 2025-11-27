@@ -10,8 +10,8 @@ import static org.assertj.core.api.Assertions.*;
 
 class CollectionModelTest {
 
-	Set<EntityModel<String>> foo = Collections.singleton(EntityModel.of("foo"));
-	Set<EntityModel<String>> bar = Collections.singleton(EntityModel.of("bar"));
+	final Set<EntityModel<String>> foo = Collections.singleton(EntityModel.of("foo"));
+	final Set<EntityModel<String>> bar = Collections.singleton(EntityModel.of("bar"));
 
 	@Test
 	@DisplayName("should create empty collection models")

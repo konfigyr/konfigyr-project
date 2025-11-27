@@ -1,9 +1,9 @@
 package com.konfigyr.feature;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +37,7 @@ class FeatureValueTest {
 
 	@Test
 	@DisplayName("should serialize and deserialize unlimited feature value")
-	void serializeUnlimitedFeatureValue() throws Exception {
+	void serializeUnlimitedFeatureValue() {
 		assertThat(mapper.writeValueAsString(FeatureValue.unlimited()))
 				.isEqualTo("\"unlimited\"");
 
@@ -70,7 +70,7 @@ class FeatureValueTest {
 
 	@Test
 	@DisplayName("should serialize and deserialize limited feature value")
-	void serializeLimitedFeatureValue() throws Exception {
+	void serializeLimitedFeatureValue() {
 		assertThat(mapper.writeValueAsString(FeatureValue.limited(100)))
 				.isEqualTo("\"100\"");
 
@@ -120,7 +120,7 @@ class FeatureValueTest {
 
 	@Test
 	@DisplayName("should serialize and deserialize rate limited feature value")
-	void serializeRateLimitedFeatureValue() throws Exception {
+	void serializeRateLimitedFeatureValue() {
 		assertThat(mapper.writeValueAsString(FeatureValue.rateLimit(100, TimeUnit.HOURS)))
 				.isEqualTo("\"100/h\"");
 

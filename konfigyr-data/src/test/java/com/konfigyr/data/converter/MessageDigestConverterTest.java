@@ -17,8 +17,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MessageDigestConverterTest {
 
-	static ByteArray value = ByteArray.fromString("value to be hashed");
-	static ByteArray digest = ByteArray.fromBase64String("lEsH5gLfsuHsl3Sl72uluKrNuPOHATczBn-JUc5chTg=");
+	static final ByteArray value = ByteArray.fromString("value to be hashed");
+	static final ByteArray digest = ByteArray.fromBase64String("lEsH5gLfsuHsl3Sl72uluKrNuPOHATczBn-JUc5chTg=");
 
 	Converter<ByteArray, ByteArray> converter;
 

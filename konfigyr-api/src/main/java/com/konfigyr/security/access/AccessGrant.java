@@ -2,7 +2,7 @@ package com.konfigyr.security.access;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;

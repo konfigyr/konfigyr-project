@@ -3,6 +3,7 @@ package com.konfigyr.test.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -16,6 +17,7 @@ import org.springframework.util.ReflectionUtils;
  *
  * @author Vladimir Spasic
  **/
+@NullMarked
 public class SpringTestContextExtension implements BeforeEachCallback, AfterEachCallback {
 
 	@Override
@@ -37,7 +39,9 @@ public class SpringTestContextExtension implements BeforeEachCallback, AfterEach
 			if (ClassUtils.isAssignable(SpringTestContext.class, field.getType())) {
 				ReflectionUtils.makeAccessible(field);
 				final SpringTestContext context = (SpringTestContext) ReflectionUtils.getField(field, test);
-				contexts.add(context);
+				if (context != null) {
+					contexts.add(context);
+				}
 			}
 		});
 

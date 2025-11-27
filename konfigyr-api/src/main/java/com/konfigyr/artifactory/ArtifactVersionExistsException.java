@@ -1,6 +1,6 @@
 package com.konfigyr.artifactory;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 

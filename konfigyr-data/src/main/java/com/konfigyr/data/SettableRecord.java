@@ -3,8 +3,8 @@ package com.konfigyr.data;
 import lombok.EqualsAndHashCode;
 import org.jooq.*;
 import org.jooq.Record;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.function.Consumer;

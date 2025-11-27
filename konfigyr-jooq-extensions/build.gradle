@@ -8,7 +8,7 @@ dependencies {
     implementation 'org.postgresql:postgresql'
 
     /* Postgresql container - target for migrations */
-    implementation 'org.testcontainers:postgresql'
+    implementation 'org.testcontainers:testcontainers-postgresql'
 
     /* JOOQ metadata generator runtime dependencies */
     compileOnly 'org.jooq:jooq-meta'

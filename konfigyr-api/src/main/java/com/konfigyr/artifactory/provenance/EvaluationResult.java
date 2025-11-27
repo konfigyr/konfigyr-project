@@ -2,7 +2,7 @@ package com.konfigyr.artifactory.provenance;
 
 import com.konfigyr.artifactory.PropertyMetadata;
 import com.konfigyr.artifactory.VersionedArtifact;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;

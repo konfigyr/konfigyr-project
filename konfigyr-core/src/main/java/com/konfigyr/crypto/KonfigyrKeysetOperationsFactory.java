@@ -2,8 +2,8 @@ package com.konfigyr.crypto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.lang.NonNull;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 1.0.0
  **/
 @Slf4j
+@NullMarked
 @RequiredArgsConstructor
 class KonfigyrKeysetOperationsFactory implements KeysetOperationsFactory, DisposableBean {
 
@@ -27,9 +28,8 @@ class KonfigyrKeysetOperationsFactory implements KeysetOperationsFactory, Dispos
 
 	private final KeysetStore store;
 
-	@NonNull
 	@Override
-	public KeysetOperations create(@NonNull KeysetDefinition definition) {
+	public KeysetOperations create(KeysetDefinition definition) {
 		return cache.computeIfAbsent(definition, this::createKeysetOperations);
 	}
 
@@ -38,7 +38,7 @@ class KonfigyrKeysetOperationsFactory implements KeysetOperationsFactory, Dispos
 		cache.clear();
 	}
 
-	private KeysetOperations createKeysetOperations(@NonNull KeysetDefinition definition) {
+	private KeysetOperations createKeysetOperations(KeysetDefinition definition) {
 		log.debug("Creating new Keyset operations instance for: {}", definition);
 
 		return KeysetOperations.of(() -> {
@@ -50,7 +50,7 @@ class KonfigyrKeysetOperationsFactory implements KeysetOperationsFactory, Dispos
 		});
 	}
 
-	protected Keyset createKeyset(@NonNull KeysetDefinition definition) {
+	protected Keyset createKeyset(KeysetDefinition definition) {
 		final KeyEncryptionKey kek = store.kek(CryptoProperties.PROVIDER_NAME, CryptoProperties.KEK_ID);
 
 		if (log.isDebugEnabled()) {

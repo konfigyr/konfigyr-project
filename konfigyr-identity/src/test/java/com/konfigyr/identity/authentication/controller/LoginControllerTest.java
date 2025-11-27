@@ -12,9 +12,9 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.test.web.servlet.MockMvc;
@@ -61,7 +61,7 @@ class LoginControllerTest {
 		assertThat(mvc.get().uri("/"))
 				.apply(log())
 				.hasStatus3xxRedirection()
-				.hasRedirectedUrl("http://localhost/login");
+				.hasRedirectedUrl("/login");
 	}
 
 	@Test

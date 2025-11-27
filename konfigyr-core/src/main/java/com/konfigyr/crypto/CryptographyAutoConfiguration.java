@@ -6,11 +6,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.cache.autoconfigure.CacheAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.support.NoOpCache;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -49,7 +51,8 @@ public class CryptographyAutoConfiguration {
 	@ConditionalOnBean(CacheManager.class)
 	@ConditionalOnProperty(name = "konfigyr.crypto.cache", havingValue = "true", matchIfMissing = true)
 	KeysetCache registryKeysetCache(CacheManager manager) {
-		return new SpringKeysetCache(manager.getCache("crypto-keysets"));
+		final Cache cache = manager.getCache("crypto-keysets");
+		return new SpringKeysetCache(cache == null ? new NoOpCache("crypto-keysets") : cache);
 	}
 
 }

@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.*;
 @ExtendWith(SpringTestContextExtension.class)
 class SpringTestContextTest {
 
-	SpringTestContext context = SpringTestContext.create();
+	final SpringTestContext context = SpringTestContext.create();
 
 	@Autowired
 	TestBean testBean;

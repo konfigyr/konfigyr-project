@@ -3,7 +3,7 @@ package com.konfigyr.data.converter;
 import com.konfigyr.io.ByteArray;
 import org.jooq.Converter;
 import org.jooq.impl.AbstractConverter;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
 import java.security.*;

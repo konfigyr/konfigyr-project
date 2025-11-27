@@ -1,11 +1,11 @@
 package com.konfigyr.namespace;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
-import org.springframework.lang.NonNull;
 import org.springframework.web.ErrorResponse;
 
 import java.io.Serial;

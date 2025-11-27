@@ -2,6 +2,7 @@ package com.konfigyr.crypto;
 
 import io.hypersistence.tsid.TSID;
 import org.apache.commons.codec.binary.Base16;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.crypto.keygen.BytesKeyGenerator;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
@@ -64,6 +65,7 @@ public final class TokenGenerator implements StringKeyGenerator {
 		this.generator = KeyGenerators.secureRandom(size);
 	}
 
+	@NonNull
 	@Override
 	public String generateKey() {
 		final byte[] id = TSID.fast().toBytes();

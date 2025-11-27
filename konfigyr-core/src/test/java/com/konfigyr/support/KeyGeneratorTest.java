@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class KeyGeneratorTest {
 
-	KeyGenerator generator = KeyGenerator.getInstance();
+	final KeyGenerator generator = KeyGenerator.getInstance();
 
 	@Test
 	@DisplayName("should generate Base16 encoded key and 16 characters long")

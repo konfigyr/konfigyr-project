@@ -3,11 +3,11 @@ package com.konfigyr.identity.authorization;
 import com.konfigyr.identity.AccountIdentities;
 import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authentication.OAuthAccountIdentityUser;
-import com.konfigyr.identity.authorization.jwk.KeyAlgorithm;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
@@ -86,7 +86,7 @@ class TokenCustomizerTest {
 		final var authentication = mock(Authentication.class);
 		doReturn(principal).when(authentication).getPrincipal();
 
-		return JwtEncodingContext.with(JwsHeader.with(KeyAlgorithm.RS256), claims)
+		return JwtEncodingContext.with(JwsHeader.with(SignatureAlgorithm.RS256), claims)
 				.principal(authentication)
 				.tokenType(type)
 				.build();

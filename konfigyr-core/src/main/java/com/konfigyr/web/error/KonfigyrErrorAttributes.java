@@ -1,13 +1,13 @@
 package com.konfigyr.web.error;
 
-import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
+import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 
 /**
- * Extend the default behaviour of {@link DefaultErrorAttributes} to include authentication errors
+ * Extend the default behavior of {@link DefaultErrorAttributes} to include authentication errors
  * when generating the error model.
  *
  * @author Vladimir Spasic

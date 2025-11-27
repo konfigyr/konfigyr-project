@@ -189,6 +189,7 @@ class OAuthScopesTest {
 		final var scopes = OAuthScopes.of(OAuthScope.OPENID);
 
 		assertThat(scopes.permits(OAuthScope.OPENID.getAuthority())).isTrue();
+		assertThat(scopes.permits(mock(GrantedAuthority.class))).isFalse();
 		assertThat(scopes.permits((GrantedAuthority) null)).isFalse();
 		assertThat(scopes.permits((OAuthScope) null)).isFalse();
 		assertThat(scopes.permits((String) null)).isFalse();

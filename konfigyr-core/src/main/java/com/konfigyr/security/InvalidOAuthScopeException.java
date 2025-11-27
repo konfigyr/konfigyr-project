@@ -1,7 +1,7 @@
 package com.konfigyr.security;
 
 import lombok.Getter;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
@@ -29,7 +29,7 @@ public class InvalidOAuthScopeException extends OAuth2AuthenticationException {
 	/**
 	 * Constructs an {@link InvalidOAuthScopeException} for the invalid scope that was detected.
 	 *
-	 * @param scope the invalid OAuth scope, can not be {@literal null}
+	 * @param scope the invalid OAuth scope, can't be {@literal null}
 	 */
 	public InvalidOAuthScopeException(@NonNull String scope) {
 		super(new OAuth2Error(OAuth2ErrorCodes.INVALID_SCOPE, "Invalid OAuth scope of: " + scope, null));

@@ -1,6 +1,6 @@
 package com.konfigyr.version;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 

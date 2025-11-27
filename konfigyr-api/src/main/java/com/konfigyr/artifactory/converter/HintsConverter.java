@@ -1,8 +1,8 @@
 package com.konfigyr.artifactory.converter;
 
 import org.jooq.Converter;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.ResolvableType;
-import org.springframework.lang.NonNull;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 

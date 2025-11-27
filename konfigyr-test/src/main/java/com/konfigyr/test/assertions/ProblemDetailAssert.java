@@ -5,9 +5,9 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactory;
 import org.assertj.core.api.ThrowingConsumer;
 import org.assertj.core.error.BasicErrorMessageFactory;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
-import org.springframework.lang.NonNull;
 
 import java.net.URI;
 import java.util.Objects;
@@ -50,7 +50,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a matching {@link HttpStatusCode}.
 	 *
 	 * @param status status code
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasStatus(HttpStatusCode status) {
 		return hasStatus(status.value());
@@ -60,7 +60,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a matching HTTP status code.
 	 *
 	 * @param status status code
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasStatus(int status) {
 		isNotNull();
@@ -76,19 +76,22 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	}
 
 	/**
-	 * Checks if the given {@link ProblemDetail} has a default type of {@code about:blank}.
+	 * Checks if the given {@link ProblemDetail} has a default type of {@code about:blank} or {@code null}.
 	 *
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasDefaultType() {
-		return hasType("about:blank");
+		return satisfiesAnyOf(
+				ignore -> hasType("about:blank"),
+				ignore -> hasType((URI) null)
+		);
 	}
 
 	/**
 	 * Checks if the given {@link ProblemDetail} has a matching type.
 	 *
 	 * @param type the type URI string
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasType(String type) {
 		return hasType(URI.create(type));
@@ -98,7 +101,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a matching type.
 	 *
 	 * @param type the type URI
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasType(URI type) {
 		isNotNull();
@@ -117,7 +120,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a matching instance.
 	 *
 	 * @param instance the instance URI string
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasInstance(String instance) {
 		return hasInstance(URI.create(instance));
@@ -127,7 +130,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a matching instance.
 	 *
 	 * @param instance the instance URI
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasInstance(URI instance) {
 		isNotNull();
@@ -146,7 +149,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a matching title.
 	 *
 	 * @param title the problem detail title
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasTitle(String title) {
 		isNotNull();
@@ -165,7 +168,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a title that contains the given char sequence.
 	 *
 	 * @param sequence the char sequence to be contained
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasTitleContaining(CharSequence sequence) {
 		isNotNull();
@@ -180,7 +183,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a matching detail.
 	 *
 	 * @param detail the problem detail value
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasDetail(String detail) {
 		isNotNull();
@@ -199,7 +202,7 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a detail that contains the given char sequence.
 	 *
 	 * @param sequence the char sequence to be contained
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasDetailContaining(CharSequence sequence) {
 		isNotNull();
@@ -213,9 +216,9 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	/**
 	 * Checks if the given {@link ProblemDetail} has a property with a matching name and value.
 	 *
-	 * @param name the property name
+	 * @param name  the property name
 	 * @param value expected property value
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasProperty(String name, Object value) {
 		return satisfies(it -> Assertions.assertThat(it.getProperties())
@@ -228,9 +231,9 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a property that satisfies the given requirements
 	 * expressed as a {@link ThrowingConsumer}.
 	 *
-	 * @param name the property name
+	 * @param name     the property name
 	 * @param consumer consumer used to evaluate the property value
-	 * @return the problem detail assert object, never {@literal null}
+	 * @return the problem detail assert instance, never {@literal null}
 	 */
 	public ProblemDetailAssert hasPropertySatisfying(String name, ThrowingConsumer<Object> consumer) {
 		return satisfies(it -> Assertions.assertThat(it.getProperties())
