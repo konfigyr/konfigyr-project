@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,13 +19,12 @@ import org.springframework.security.web.FilterInvocation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class WebSecurityExpressionHandlerTest {
 
-	@Mock
+	@Mock(strictness = Mock.Strictness.LENIENT)
 	Namespace namespace;
 
 	@Mock
@@ -92,6 +92,28 @@ public class WebSecurityExpressionHandlerTest {
 		verify(accessService).hasAccess(TestPrincipals.john(), "konfigyr", NamespaceRole.ADMIN);
 	}
 
+	@Test
+	@DisplayName("service should allow access to method for IP address")
+	void shouldAllowByIpAddress() {
+		doReturn(new MockHttpServletRequest()).when(ctx).getRequest();
+
+		// the default remote address in the MockHttpServletRequest is: 127.0.0.1
+		assertThat(evaluate(TestPrincipals.john(), "hasIpAddress(\"127.0.0.1\")", Boolean.class)).isTrue();
+
+		verifyNoInteractions(accessService);
+	}
+
+	@Test
+	@DisplayName("service should allow access to method for IP address")
+	void shouldDenyByIpAddress() {
+		doReturn(new MockHttpServletRequest()).when(ctx).getRequest();
+
+		// the default remote address in the MockHttpServletRequest is: 127.0.0.1
+		assertThat(evaluate(TestPrincipals.john(), "hasIpAddress(\"127.1.1.1\")", Boolean.class)).isFalse();
+
+		verifyNoInteractions(accessService);
+	}
+
 	private boolean members(Authentication authentication) {
 		return evaluate(authentication, "isMember(#namespace)");
 	}
@@ -101,15 +123,28 @@ public class WebSecurityExpressionHandlerTest {
 	}
 
 	private boolean evaluate(Authentication authentication, String template) {
+		return evaluate(authentication, template, AuthorizationResult.class);
+	}
+
+	private boolean evaluate(Authentication authentication, String template, Class<?> expectedType) {
 		doReturn("konfigyr").when(namespace).slug();
 
 		final var context = expressionHandler.createEvaluationContext(authentication, ctx);
 		context.setVariable("namespace", namespace);
 
-		final var expression =  expressionHandler.getExpressionParser().parseExpression(template);
-		final var result = expression.getValue(context, AuthorizationResult.class);
+		final var expression = expressionHandler.getExpressionParser().parseExpression(template);
 
-		return result != null && result.isGranted();
+		if (Boolean.class.equals(expectedType)) {
+			final var result = expression.getValue(context, Boolean.class);
+			return result != null && result;
+		}
+
+		if (AuthorizationResult.class.equals(expectedType)) {
+			final var result = expression.getValue(context, AuthorizationResult.class);
+			return result != null && result.isGranted();
+		}
+
+		throw new IllegalArgumentException("Unsupported expression return type: " + expectedType);
 	}
 
 }

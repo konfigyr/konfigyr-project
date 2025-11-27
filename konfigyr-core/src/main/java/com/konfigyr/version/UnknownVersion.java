@@ -17,10 +17,7 @@ record UnknownVersion(String original) implements Version {
 
 	@Override
 	public int compareTo(@NonNull Version o) {
-		if (o instanceof UnknownVersion version) {
-			return original.compareTo(version.original);
-		}
-		return 0;
+		return o instanceof UnknownVersion other ? original.compareTo(other.original) : 0;
 	}
 
 	@NonNull

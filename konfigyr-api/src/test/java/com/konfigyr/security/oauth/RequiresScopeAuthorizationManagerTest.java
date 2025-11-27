@@ -13,20 +13,20 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.util.SimpleMethodInvocation;
 import org.springframework.util.ReflectionUtils;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 
 @ExtendWith(MockitoExtension.class)
 class RequiresScopeAuthorizationManagerTest {
 
 	final AuthorizationManager<MethodInvocation> manager = new RequiresScopeAuthorizationManager();
-	final MethodInvocation invocation = createMethodInvocation();
+	final MethodInvocation invocation = createMethodInvocation("protect");
 
 	@Test
 	@DisplayName("should deny access when authentication is not present")
@@ -35,9 +35,26 @@ class RequiresScopeAuthorizationManagerTest {
 	}
 
 	@Test
+	@DisplayName("should grant access when method invocation is not resolved")
+	void missingInvocation() {
+		final var authentication = new TestingAuthenticationToken("john", "doe", List.of());
+
+		assertThatNoException().isThrownBy(() -> manager.verify(() -> authentication, null));
+	}
+
+	@Test
 	@DisplayName("should deny access when authentication has no authorities")
 	void emptyAuthorities() {
 		final var authentication = new TestingAuthenticationToken("john", "doe", List.of());
+
+		denied(authentication);
+	}
+
+	@Test
+	@DisplayName("should deny access when authentication has no scopes")
+	void nonScopedAuthorities() {
+		final var authentication = new TestingAuthenticationToken("john", "doe",
+				List.of(new SimpleGrantedAuthority("other-authority")));
 
 		denied(authentication);
 	}
@@ -61,6 +78,15 @@ class RequiresScopeAuthorizationManagerTest {
 	}
 
 	@Test
+	@DisplayName("should grant access when authentication contains mixed scope and other granted authorities")
+	void shouldGrantAccessToMixedAuthorities() {
+		final var authentication = new TestingAuthenticationToken("john", "doe",
+				List.of(OAuthScope.WRITE_NAMESPACES, new SimpleGrantedAuthority("other-authority")));
+
+		assertThatNoException().isThrownBy(() -> manager.verify(() -> authentication, invocation));
+	}
+
+	@Test
 	@DisplayName("should grant access when authentication contains inherited scope")
 	void shouldGrantIndirectAccess() {
 		final var authentication = new TestingAuthenticationToken("john", "doe",
@@ -72,8 +98,7 @@ class RequiresScopeAuthorizationManagerTest {
 	@Test
 	@DisplayName("should grant access when no required scopes can be found")
 	void shouldGrantAccessForMissingScopes() {
-		final var invocation = new SimpleMethodInvocation(new Protected(),
-				ReflectionUtils.findMethod(Protected.class, "missing"));
+		final var invocation = createMethodInvocation("missing");
 
 		final var authentication = new TestingAuthenticationToken("john", "doe",
 				List.of(OAuthScope.DELETE_NAMESPACES));
@@ -93,9 +118,15 @@ class RequiresScopeAuthorizationManagerTest {
 				.returns(List.of(OAuthScope.WRITE_NAMESPACES), AuthorityAuthorizationDecision::getAuthorities);
 	}
 
-	private static MethodInvocation createMethodInvocation() {
+	private static MethodInvocation createMethodInvocation(String methodName) {
 		final var target = new Protected();
-		return new SimpleMethodInvocation(target, ReflectionUtils.findMethod(Protected.class, "protect"));
+		final var method = ReflectionUtils.findMethod(Protected.class, methodName);
+
+		assertThat(method)
+				.as("Method with name '%s' on a Protected subject type is not found", methodName)
+				.isNotNull();
+
+		return new SimpleMethodInvocation(target, method);
 	}
 
 	private static final class Protected {
