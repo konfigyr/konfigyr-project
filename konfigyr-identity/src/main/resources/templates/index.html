@@ -16,7 +16,7 @@
                 </p>
 
                 <div class="grid gap-4 py-6" th:with="products = ${ { 'registry', 'vault' } }">
-                    <a th:each="product : ${products}" th:href="@{/}" class="transition-all rounded border bg-card text-card-foreground shadow hover:shadow-md p-6">
+                    <a th:each="product : ${products}" th:href="@{/}" class="transition-all rounded border bg-card text-card-foreground shadow-sm hover:shadow-md p-6">
                         <h2 class="text-2xl leading-none tracking-tight mb-2">
                             <span class="text-secondary">konfigyr</span>.<small class="font-mono" th:text="${product}">vault</small>
                         </h2>

@@ -31,7 +31,7 @@ describe('middleware | client', () => {
     });
 
     expect(logger).toHaveBeenCalledWith(
-      '%c12:11:09 PM %cINFO %c[test-logger] %ctest message',
+      '%c11:11:09 AM %cINFO %c[test-logger] %ctest message',
       'color: oklch(0.373 0.034 259.733);',
       'color: oklch(0.216 0.006 56.043); font-weight: bold;',
       'color: oklch(0.546 0.245 262.881); font-weight: bold;',
@@ -53,7 +53,7 @@ describe('middleware | client', () => {
     });
 
     expect(logger).toHaveBeenCalledWith(
-      '%c12:11:09 PM %cWARN %c[test-logger] %ctest message',
+      '%c11:11:09 AM %cWARN %c[test-logger] %ctest message',
       'color: oklch(0.373 0.034 259.733);',
       'color: oklch(0.216 0.006 56.043); font-weight: bold;',
       'color: oklch(0.546 0.245 262.881); font-weight: bold;',
