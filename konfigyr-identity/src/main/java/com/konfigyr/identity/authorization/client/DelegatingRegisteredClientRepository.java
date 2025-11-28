@@ -32,7 +32,7 @@ public final class DelegatingRegisteredClientRepository implements RegisteredCli
 
 	@Override
 	public void save(RegisteredClient registeredClient) {
-		throw new UnsupportedOperationException("Registering OAuth clients is not supported");
+		// this is a noop, since we don't support registering OAuth clients
 	}
 
 	@Override
