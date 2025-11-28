@@ -45,7 +45,7 @@ tasks.register('npmTest', NpmTask) {
 
     description = 'Runs the frontend application tests'
 
-    args = System.getenv('CI') ? ['run', 'ci'] : ['test']
+    args = System.getenv('CI') ? ['run', 'test:ci'] : ['run', 'test:coverage']
 
     /* define inputs for the test task in order to run only when the related files change */
     inputs.files('package.json', 'package-lock.json', 'eslint.config.mjs', 'vitest.config.mts')

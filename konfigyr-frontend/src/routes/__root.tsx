@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import styles from 'konfigyr/styles.css?url';
+import styles from '@konfigyr/styles.css?url';
 
 import type { ReactNode } from 'react';
 import type { QueryClient } from '@tanstack/react-query';
@@ -15,7 +15,6 @@ import type { QueryClient } from '@tanstack/react-query';
 export interface RouteContext {
   queryClient: QueryClient;
 }
-
 export const Route = createRootRouteWithContext<RouteContext>()({
   head: () => ({
     meta: [

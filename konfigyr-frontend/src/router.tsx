@@ -1,6 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 import { createRouter } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
+import { ErrorBoundary } from '@konfigyr/components/routing/error';
+import { NotFound } from '@konfigyr/components/routing/not-found';
 import { routeTree } from './routeTree.gen';
 
 export function getRouter() {
@@ -9,6 +11,8 @@ export function getRouter() {
   const router = createRouter({
     routeTree,
     context: { queryClient },
+    defaultErrorComponent: ErrorBoundary,
+    defaultNotFoundComponent: () => <NotFound />,
     defaultPreload: 'intent',
     defaultPendingMs: 100,
   });

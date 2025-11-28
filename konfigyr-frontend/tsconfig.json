@@ -16,8 +16,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "konfigyr/*": ["./src/*"],
-      "konfigyr-test/*": ["./test/*"]
+      "@konfigyr/*": ["./src/*"],
+      "@konfigyr/test/*": ["./test/*"]
     },
   }
 }
