@@ -12,13 +12,20 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
+# build
+/build/
+/api/
+/server/build
+/public/favicon.ico/build
+.vercel
+.output
+.nitro
+.tanstack
 
 # misc
 .DS_Store
@@ -30,12 +37,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files, keep the that is used by vitest
 .env*
-
-# vercel
-.vercel
+!.env.test
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts

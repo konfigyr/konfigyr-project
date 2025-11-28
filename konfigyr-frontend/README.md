@@ -1,4 +1,7 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Konfigyr UI application
+
+Konfigyr UI is a [TanStack Start](https://tanstack.com/start) application. For more information about TanStack,
+visit the [tanstack.com/start](https://tanstack.com/start).
 
 ## Getting Started
 
@@ -6,31 +9,44 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Testing
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To run the tests, run the following command:
 
-## Learn More
+```bash
+npm test
+```
 
-To learn more about Next.js, take a look at the following resources:
+The tests are executed via [vitest](https://vitest.dev) with support of the following plugins:
+* [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro/)
+* [@testing-library/jest-dom](https://testing-library.com/docs/ecosystem-jest-dom)
+* [msw](https://www.npmjs.com/package/msw)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Linting
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project uses ESLint for linting. To run the linter, run the following command:
+```bash
+npm run lint
+`````
 
-## Deploy on Vercel
+### Coverage
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Coverage is collected using [v8 coverage provider](https://vitest.dev/guide/coverage.html#v8-provider).
+To run tests with coverage, run the following command:
+```bash
+npm run test:coverage
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+The application is bundled with a Gradle Docker task. To build the Docker image, run the following command:
+```bash
+./gradlew konfigyr-frontend:dockerBuild
+```
+
+Visit the TanStack Start [hosting guide](https://tanstack.com/start/latest/docs/framework/react/guide/hosting#nodejs--railway--docker)
+for more information.

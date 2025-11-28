@@ -25,41 +25,41 @@ node {
 tasks.register('npmBuild', NpmTask) {
     dependsOn npmInstall
 
-    description = 'Builds the Next.js application'
+    description = 'Builds the frontend application'
 
     args = ['run', 'build']
 
     /* define inputs for the task in order to run only when the inputs change */
-    inputs.files('package.json', 'package-lock.json', 'next.config.ts', 'tsconfig.json')
+    inputs.files('package.json', 'package-lock.json', 'vite.config.ts', 'tsconfig.json')
     inputs.dir('src')
     inputs.dir('messages')
     inputs.dir('public')
     inputs.dir(fileTree('node_modules').exclude('.cache'))
 
     /* mark the dist as the output directory */
-    outputs.dir(project.layout.buildDirectory.dir('.next'))
+    outputs.dir(project.layout.buildDirectory.dir('.output'))
 }
 
 tasks.register('npmTest', NpmTask) {
     dependsOn npmInstall
 
-    description = 'Runs the Next.js application tests'
+    description = 'Runs the frontend application tests'
 
-    args = System.getenv('CI') ? ['run', 'ci'] : ['test']
+    args = System.getenv('CI') ? ['run', 'test:ci'] : ['run', 'test:coverage']
 
     /* define inputs for the test task in order to run only when the related files change */
     inputs.files('package.json', 'package-lock.json', 'eslint.config.mjs', 'vitest.config.mts')
     inputs.dir('src')
     inputs.dir('messages')
     inputs.dir('public')
-    inputs.dir('__tests__')
+    inputs.dir('test')
 }
 
 tasks.register('dockerBuild', DockerBuildImage) {
     dependsOn bootJar
 
     group = 'docker'
-    description = 'Builds the Docker image with a Next.js application'
+    description = 'Builds the Docker image with a frontend application'
 
     def tag = Boolean.valueOf(System.getenv('NIGHTLY')) ? 'latest' : project.version
 
@@ -71,7 +71,7 @@ tasks.register('dockerPublish', DockerPushImage) {
     dependsOn dockerBuild
 
     group = 'docker'
-    description = 'Builds and publishes the Docker image with a Next.js application'
+    description = 'Builds and publishes the Docker image with a frontend application'
 
     def tag = Boolean.valueOf(System.getenv('NIGHTLY')) ? 'latest' : project.version
 

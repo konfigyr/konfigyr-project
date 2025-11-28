@@ -1,28 +1,14 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { FlatCompat } from '@eslint/eslintrc';
 import stylistic from '@stylistic/eslint-plugin';
-import stylisticTs from '@stylistic/eslint-plugin-ts';
-import stylisticJsx from '@stylistic/eslint-plugin-jsx';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import { tanstackConfig } from '@tanstack/eslint-config';
 
 const eslintConfig = [
-  ...compat.extends(
-    'next/core-web-vitals',
-    'next/typescript',
-    'plugin:@next/next/recommended',
-  ),
+  ...tanstackConfig,
   {
+    files: [
+      '**/*.+(js|mjs|ts|tsx)',
+    ],
     plugins: {
       '@stylistic': stylistic,
-      '@stylistic/ts': stylisticTs,
-      '@stylistic/jsx': stylisticJsx,
     },
     rules: {
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
@@ -30,8 +16,17 @@ const eslintConfig = [
       '@stylistic/no-trailing-spaces': ['error'],
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/semi': ['error', 'always'],
-      '@stylistic/space-before-blocks': ['error', 'always']
+      '@stylistic/space-before-blocks': ['error', 'always'],
     },
+  },
+  {
+    ignores: [
+      'node_modules/',
+      '.nitro/',
+      '.output/',
+      '.tanstack/',
+      '**/*.gen.ts',
+    ],
   },
 ];
 

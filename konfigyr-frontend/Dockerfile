@@ -1,52 +1,31 @@
-# syntax=docker.io/docker/dockerfile:1
-
-FROM node:24-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+FROM node:24-alpine AS development-dependencies-env
+COPY . /app
 WORKDIR /app
+RUN npm ci
 
-# Install dependencies
-COPY package.json package-lock.json* .npmrc* ./
-RUN npm ci;
-
-
-# Rebuild the source code only when needed
-FROM base AS builder
+FROM node:24-alpine AS production-dependencies-env
+COPY ./package.json package-lock.json /app/
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+RUN npm ci --omit=dev
 
-ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN npm run build;
-
-# Production image, copy all the files and run next
-FROM base AS runner
+FROM node:24-alpine AS build-env
+COPY . /app/
+COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 WORKDIR /app
+RUN npm run build
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+FROM node:24-alpine
 
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN adduser --system --uid 1001 tanstack
+USER tanstack
 
-COPY --from=builder /app/public ./public
+COPY ./package.json package-lock.json /app/
+COPY --from=production-dependencies-env /app/node_modules /app/node_modules
+COPY --from=build-env /app/.output /app/
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
+WORKDIR /app
+ENV NODE_ENV=production
 ENV PORT=3000
-
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
-ENV HOSTNAME="0.0.0.0"
-CMD ["node", "server.js"]
+EXPOSE 3000
+CMD ["node", "./server/index.mjs"]
