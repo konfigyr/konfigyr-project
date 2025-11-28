@@ -5,10 +5,12 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
     plugins: [tsconfigPaths(), react()],
+
     test: {
         environment: 'jsdom',
         env: loadEnv('test', process.cwd(), ''),
         setupFiles: ['test/vitest-setup.ts'],
+        execArgv: ['--no-experimental-webstorage'],
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json'],
