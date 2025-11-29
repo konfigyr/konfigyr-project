@@ -29,7 +29,7 @@ export const Route = createFileRoute('/auth/code')({
   ssr: true,
 });
 
-export function OAuthError() {
+function OAuthError() {
   const state = Route.useLoaderData();
 
   return (

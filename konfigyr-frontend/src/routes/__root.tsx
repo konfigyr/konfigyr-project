@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
+import { AccountProvider } from '@konfigyr/components/account/context';
 import styles from '@konfigyr/styles.css?url';
 
 import type { ReactNode } from 'react';
@@ -15,6 +16,7 @@ import type { QueryClient } from '@tanstack/react-query';
 export interface RouteContext {
   queryClient: QueryClient;
 }
+
 export const Route = createRootRouteWithContext<RouteContext>()({
   head: () => ({
     meta: [
@@ -43,7 +45,9 @@ export const Route = createRootRouteWithContext<RouteContext>()({
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
+      <AccountProvider>
+        <Outlet />
+      </AccountProvider>
       <ReactQueryDevtools />
       <TanStackRouterDevtools />
     </RootDocument>

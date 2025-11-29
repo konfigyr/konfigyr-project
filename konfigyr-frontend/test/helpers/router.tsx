@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { routeTree } from '@konfigyr/routeTree.gen';
 import { ErrorBoundary } from '@konfigyr/components/routing/error';
 import { NotFound } from '@konfigyr/components/routing/not-found';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { createTestQueryClient } from './query-client';
 import type { ReactNode } from 'react';
 
@@ -19,8 +20,15 @@ export function renderComponentWithRouter(ui: ReactNode) {
     defaultPendingMinMs: 0,
   });
 
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
   return {
-    ...render((<RouterContextProvider router={router}>{ui}</RouterContextProvider>)),
+    ...render(
+      (<RouterContextProvider router={router}>{ui}</RouterContextProvider>),
+      { wrapper },
+    ),
     queryClient,
     router,
   };
@@ -39,8 +47,12 @@ export function renderWithRouter(path: string) {
     defaultPendingMinMs: 0,
   });
 
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
   return {
-    ...render(<RouterProvider router={router} />),
+    ...render(<RouterProvider router={router} />, { wrapper }),
     queryClient,
     router,
   };
