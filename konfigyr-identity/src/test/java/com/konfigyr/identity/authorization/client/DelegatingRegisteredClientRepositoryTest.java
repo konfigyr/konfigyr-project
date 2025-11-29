@@ -36,12 +36,11 @@ class DelegatingRegisteredClientRepositoryTest {
 	}
 
 	@Test
-	@DisplayName("should throw operation not supported when trying to save client")
+	@DisplayName("should not invoke delegates when storing clients")
 	void shouldNotStoreClients() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(() -> repository.save(client))
-				.withMessageContaining("Registering OAuth clients is not supported")
-				.withNoCause();
+		assertThatNoException().isThrownBy(() -> repository.save(client));
+
+		verifyNoInteractions(first, second);
 	}
 
 	@Test

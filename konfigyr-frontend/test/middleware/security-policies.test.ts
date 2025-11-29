@@ -24,7 +24,6 @@ describe('middleware | security-policies', () => {
     await middleware.options.server({
       context: vi.fn(),
       request: vi.fn(),
-      pathname: '/',
       next,
     } as any);
 

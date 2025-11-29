@@ -1,10 +1,12 @@
 import { setupServer } from 'msw/node';
-import { HttpResponse, http } from 'msw';
+import account from './server/account';
+import oidc from './server/oidc';
+import proxy from './server/proxy';
 
 export const handlers = [
-  http.get('https://api.konfigyr.com/data', () => {
-    return HttpResponse.json({ answer: 42 });
-  }),
+  ...account,
+  ...oidc,
+  ...proxy,
 ];
 
 export const server = setupServer(...handlers);
