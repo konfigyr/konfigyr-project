@@ -47,7 +47,7 @@ describe('services | http', () => {
       await request.get(new URL('https://api.konfigyr.com/proxy-test/problem-details')).json();
     } catch (error) {
       expect(error).toBeInstanceOf(HTTPError);
-      expect(error.problem).toStrictEqual({
+      expect((error as HTTPError).problem).toStrictEqual({
         status: 500,
         type: 'https://example.com/problem/out-of-credit',
         title: 'Problem detail title',
@@ -68,7 +68,7 @@ describe('services | http', () => {
       await request.get(new URL('https://api.konfigyr.com/proxy-test/text-error-response')).json();
     } catch (error) {
       expect(error).toBeInstanceOf(HTTPError);
-      expect(error.problem).toBeUndefined();
+      expect((error as HTTPError).problem).toBeUndefined();
     }
   });
 

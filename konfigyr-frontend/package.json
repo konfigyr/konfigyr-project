@@ -10,8 +10,8 @@
     "start": "vite start",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage",
-    "test:ci": "eslint && vitest run --coverage"
+    "test:coverage": "tsc --noEmit && vitest run --coverage",
+    "test:ci": "tsc --noEmit && eslint && vitest run --coverage"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.11",

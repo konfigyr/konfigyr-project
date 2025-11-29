@@ -1,6 +1,8 @@
 import ky from 'ky';
 import { createLogger } from '@konfigyr/logger';
 
+import type { HTTPError } from 'ky';
+
 export const PROBLEM_DETAIL_CONTENT_TYPE = 'application/problem+json';
 
 const logger = createLogger('services/http');
@@ -33,7 +35,7 @@ const adapt = async (error: HTTPError) => {
   const { response } = error;
 
   try {
-    error.problem = await response.json() as ProblemDetail;
+    error.problem = await response.json();
   } catch (e) {
     logger.warn(e, 'Failed to parse error response as JSON');
   }
