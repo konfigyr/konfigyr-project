@@ -70,7 +70,7 @@ subprojects {
             dependency('com.google.guava:guava:33.5.0-jre') // used by checkstyle
 
             /* JSoup HTML test support */
-            dependency('org.jsoup:jsoup:1.21.1')
+            dependency('org.jsoup:jsoup:1.21.2')
             dependency('com.icegreen:greenmail:2.1.7')
 
             /* Mock FileSystem library */
