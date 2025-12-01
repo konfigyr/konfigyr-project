@@ -60,7 +60,7 @@ subprojects {
             dependency('com.konfigyr:konfigyr-crypto-tink:1.0.0-RC4')
 
             /* Bouncy Castle provider */
-            dependency('org.bouncycastle:bcprov-jdk18on:1.82')
+            dependency('org.bouncycastle:bcprov-jdk18on:1.83')
 
             /* Thymeleaf layout dialect */
             dependency('nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.4.0')
