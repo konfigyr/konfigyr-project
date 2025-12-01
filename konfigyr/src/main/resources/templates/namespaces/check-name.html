@@ -1,5 +1,0 @@
-<th:block th:unless="${unavailable}" th:utext="${#messages.msg('namespace.form.help.slug', slug)}" />
-
-<th:block th:if="${unavailable}">
-    Namespace name <strong th:text="${slug}">konfigyr</strong> is already taken or unavailable.
-</th:block>
