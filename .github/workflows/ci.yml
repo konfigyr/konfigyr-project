@@ -33,6 +33,10 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: latest
+
       - name: Build
         env:
           CI: 'true'
