@@ -70,7 +70,6 @@ class NamespaceController {
 		return assembler.assemble(result);
 	}
 
-	@PreAuthorize("isMember(#slug)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
 	@RequestMapping(path = "/{slug}", method = RequestMethod.HEAD)
 	ResponseEntity<@NonNull Void> check(@PathVariable String slug) {

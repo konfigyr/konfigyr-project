@@ -9,14 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthCodeRouteImport } from './routes/auth/code'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
+import { Route as AuthenticatedNamespaceProvisionRouteImport } from './routes/_authenticated/namespace/provision'
+import { Route as AuthenticatedNamespaceNamespaceRouteRouteImport } from './routes/_authenticated/namespace/$namespace/route'
+import { Route as AuthenticatedNamespaceNamespaceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/index'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthCodeRoute = AuthCodeRouteImport.update({
   id: '/auth/code',
@@ -28,45 +36,98 @@ const ApiSplatRoute = ApiSplatRouteImport.update({
   path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNamespaceProvisionRoute =
+  AuthenticatedNamespaceProvisionRouteImport.update({
+    id: '/namespace/provision',
+    path: '/namespace/provision',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceRouteRoute =
+  AuthenticatedNamespaceNamespaceRouteRouteImport.update({
+    id: '/namespace/$namespace',
+    path: '/namespace/$namespace',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceIndexRoute =
+  AuthenticatedNamespaceNamespaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
+  '/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
+  '/namespace/$namespace/': typeof AuthenticatedNamespaceNamespaceIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
+  '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
+  '/_authenticated/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
+  '/_authenticated/namespace/$namespace/': typeof AuthenticatedNamespaceNamespaceIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/$' | '/auth/code'
+  fullPaths:
+    | '/api/$'
+    | '/auth/code'
+    | '/'
+    | '/namespace/$namespace'
+    | '/namespace/provision'
+    | '/namespace/$namespace/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/$' | '/auth/code'
-  id: '__root__' | '/' | '/api/$' | '/auth/code'
+  to:
+    | '/api/$'
+    | '/auth/code'
+    | '/'
+    | '/namespace/provision'
+    | '/namespace/$namespace'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/api/$'
+    | '/auth/code'
+    | '/_authenticated/'
+    | '/_authenticated/namespace/$namespace'
+    | '/_authenticated/namespace/provision'
+    | '/_authenticated/namespace/$namespace/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ApiSplatRoute: typeof ApiSplatRoute
   AuthCodeRoute: typeof AuthCodeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/auth/code': {
       id: '/auth/code'
@@ -82,11 +143,63 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/namespace/provision': {
+      id: '/_authenticated/namespace/provision'
+      path: '/namespace/provision'
+      fullPath: '/namespace/provision'
+      preLoaderRoute: typeof AuthenticatedNamespaceProvisionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/namespace/$namespace': {
+      id: '/_authenticated/namespace/$namespace'
+      path: '/namespace/$namespace'
+      fullPath: '/namespace/$namespace'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/': {
+      id: '/_authenticated/namespace/$namespace/'
+      path: '/'
+      fullPath: '/namespace/$namespace/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
+    }
   }
 }
 
+interface AuthenticatedNamespaceNamespaceRouteRouteChildren {
+  AuthenticatedNamespaceNamespaceIndexRoute: typeof AuthenticatedNamespaceNamespaceIndexRoute
+}
+
+const AuthenticatedNamespaceNamespaceRouteRouteChildren: AuthenticatedNamespaceNamespaceRouteRouteChildren =
+  {
+    AuthenticatedNamespaceNamespaceIndexRoute:
+      AuthenticatedNamespaceNamespaceIndexRoute,
+  }
+
+const AuthenticatedNamespaceNamespaceRouteRouteWithChildren =
+  AuthenticatedNamespaceNamespaceRouteRoute._addFileChildren(
+    AuthenticatedNamespaceNamespaceRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedNamespaceNamespaceRouteRoute: typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
+  AuthenticatedNamespaceProvisionRoute: typeof AuthenticatedNamespaceProvisionRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedNamespaceNamespaceRouteRoute:
+    AuthenticatedNamespaceNamespaceRouteRouteWithChildren,
+  AuthenticatedNamespaceProvisionRoute: AuthenticatedNamespaceProvisionRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ApiSplatRoute: ApiSplatRoute,
   AuthCodeRoute: AuthCodeRoute,
 }

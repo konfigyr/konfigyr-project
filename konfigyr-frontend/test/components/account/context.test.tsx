@@ -1,8 +1,8 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import { AccountProvider } from '@konfigyr/components/account/context';
 import { useAccount } from '@konfigyr/hooks';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client.js';
-import { waitFor } from '@testing-library/react';
+import { cleanup, waitFor } from '@testing-library/react';
 
 function AccountInformation() {
   const account = useAccount();
@@ -13,6 +13,8 @@ function AccountInformation() {
 }
 
 describe('components | account | <AccountProvider />', () => {
+  afterEach(() => cleanup());
+
   test('render the account provider', async () => {
     const { getByText } = renderWithQueryClient((
       <AccountProvider>
@@ -20,9 +22,9 @@ describe('components | account | <AccountProvider />', () => {
       </AccountProvider>
     ));
 
-    await waitFor(() => {
-      expect(getByText('Loading...')).toBeInTheDocument();
-    });
+    expect(getByText('Konfigyr')).toBeInTheDocument();
+    expect(getByText('Configuration made easy.')).toBeInTheDocument();
+    expect(getByText('Loading your account information...')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(getByText('John Doe')).toBeInTheDocument();

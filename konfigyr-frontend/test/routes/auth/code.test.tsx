@@ -1,34 +1,62 @@
 // @vitest-environment node
 
 import { describe, expect, test } from 'vitest';
-import { Route } from '@konfigyr/routes/auth/code';
+import completeAuthorizationHandler from '@konfigyr/routes/auth/-handler';
 import { updateAuthorizationState } from '@konfigyr/test/helpers/session';
-import { getRequestUrl } from '@tanstack/react-start/server';
 
-const invokeRouter = (path: string = '') => {
+const invokeRouter = async (path: string = '') => {
   const url = new URL(`http://localhost${path}`);
-
-  // @ts-expect-error: this is mocked by the @konfigyr/test/helpers/session helper
-  getRequestUrl.mockReturnValue(url);
-
-  // @ts-expect-error: have no better to invoke the loader function
-  return Route.options.loader();
+  return await completeAuthorizationHandler(url);
 };
 
 describe('routes | oauth | authorization-code', () => {
-  test('throw an error when no authorization state is present', async () => {
-    await expect(invokeRouter()).rejects.toThrow('Failed to exchange authorization code');
+  test('create an error when no authorization state is present', async () => {
+    const state = await invokeRouter();
+
+    expect(state).toMatchObject({
+      error: 'Authorization state is not present in the session',
+      error_description: null,
+      error_uri: null,
+      retry_uri: null,
+    });
   });
 
-  test('throw an error when authorization state does not match', async () => {
+  test('create an error when authorization state does not match', async () => {
     await updateAuthorizationState({
       id: 'invalid-authorization-state-id',
       uri: 'http://localhost/',
       verifier: 'test-verifier',
     });
 
-    await expect(invokeRouter('/auth/code?code=test-code&state=authorization-state-id'))
-      .rejects.toThrow('Failed to exchange authorization code');
+    const state = await invokeRouter(
+      '/auth/code?code=test-code&state=authorization-state-id',
+    );
+
+    expect(state).toMatchObject({
+      error: 'invalid response encountered',
+      error_description: null,
+      error_uri: null,
+      retry_uri: 'http://localhost/',
+    });
+  });
+
+  test('create an error when redirect URI contains OAuth error information', async () => {
+    await updateAuthorizationState({
+      id: 'error-state-id',
+      uri: 'http://localhost/',
+      verifier: 'test-verifier',
+    });
+
+    const state = await invokeRouter(
+      '/auth/code?state=error-state-id&error=OAuth+error+message&error_description=OAuth+error+description&error_uri=error-uri',
+    );
+
+    expect(state).toMatchObject({
+      error: 'OAuth error message',
+      error_description: 'OAuth error description',
+      error_uri: 'error-uri',
+      retry_uri: 'http://localhost/',
+    });
   });
 
   test('should consume authorization state and redirect to home page', async () => {

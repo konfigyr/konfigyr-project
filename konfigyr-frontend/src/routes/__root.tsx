@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+import { IntlProvider } from 'react-intl';
 import {
   HeadContent,
   Outlet,
@@ -7,8 +8,9 @@ import {
 } from '@tanstack/react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { AccountProvider } from '@konfigyr/components/account/context';
+import { Toaster } from '@konfigyr/components/ui/sonner';
 import styles from '@konfigyr/styles.css?url';
+import defaultMessages from '@konfigyr/translations/en.json';
 
 import type { ReactNode } from 'react';
 import type { QueryClient } from '@tanstack/react-query';
@@ -45,9 +47,10 @@ export const Route = createRootRouteWithContext<RouteContext>()({
 function RootComponent() {
   return (
     <RootDocument>
-      <AccountProvider>
+      <IntlProvider locale="en" messages={defaultMessages}>
         <Outlet />
-      </AccountProvider>
+        <Toaster />
+      </IntlProvider>
       <ReactQueryDevtools />
       <TanStackRouterDevtools />
     </RootDocument>
