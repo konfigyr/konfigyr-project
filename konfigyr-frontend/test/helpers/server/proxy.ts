@@ -42,7 +42,7 @@ export default [
   http.post('https://api.konfigyr.com/proxy-test/create-resource', async ({ request }) => {
     assertBearerToken(request);
 
-    const body = await request.json() as Record<string, unknown>;
+    const body = await request.clone().json() as Record<string, unknown>;
 
     if (body.name !== 'test-resource') {
       return HttpResponse.json({

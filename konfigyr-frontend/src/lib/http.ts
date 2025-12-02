@@ -47,8 +47,8 @@ export function resolvePrefixUrl(): string {
   if (typeof process.env.KONFIGYR_HTTP_HOST !== 'undefined') {
     return process.env.KONFIGYR_HTTP_HOST;
   }
-  if (typeof global.window !== 'undefined') {
-    return global.window.location.origin;
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
   }
   return '/';
 }
@@ -70,6 +70,6 @@ export default ky.extend({
 
 declare module 'ky' {
   interface HTTPError {
-    problem: ProblemDetail;
+    problem?: ProblemDetail;
   }
 }

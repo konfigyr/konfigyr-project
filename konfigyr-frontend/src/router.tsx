@@ -15,6 +15,7 @@ export function getRouter() {
     defaultNotFoundComponent: () => <NotFound />,
     defaultPreload: 'intent',
     defaultPendingMs: 100,
+    defaultViewTransition: true,
   });
 
   setupRouterSsrQueryIntegration({

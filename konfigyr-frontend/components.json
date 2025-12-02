@@ -5,17 +5,17 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/app/globals.css",
+    "css": "src/app/styles.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
   "aliases": {
-    "components": "konfigyr/components",
-    "utils": "konfigyr/components/utils",
-    "ui": "konfigyr/components/ui",
-    "lib": "konfigyr/lib",
-    "hooks": "konfigyr/hooks"
+    "components": "@konfigyr/components",
+    "utils": "@konfigyr/components/utils",
+    "ui": "@konfigyr/components/ui",
+    "lib": "@konfigyr/lib",
+    "hooks": "@konfigyr/hooks"
   },
   "iconLibrary": "lucide"
 }

@@ -1,5 +1,3 @@
-
-import process from 'node:process';
 import {
   ClientSecretBasic,
   allowInsecureRequests,
@@ -228,7 +226,7 @@ export default class Authentication {
     });
 
     const token: AccessToken = createAccessToken(response);
-    await this.#session.update({ state: undefined, token });
+    await this.#session.update({ state, token });
 
     logger.info(`Successfully completed the OAuth2 Access Token exchange, token expires at: ${new Date(token.expiresAt)}`);
 
