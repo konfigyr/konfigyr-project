@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import slugify from 'slugify';
+import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { FormattedMessage } from 'react-intl';
 import { useCreateNamespace } from '@konfigyr/hooks';
@@ -8,6 +9,7 @@ import { useForm } from '@konfigyr/components/ui/form';
 import { Separator } from '@konfigyr/components/ui/separator';
 import { SlugDescription, validateSlug } from './slug';
 
+import type { FormEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 const namespaceFormSchema = z.object({
@@ -58,14 +60,16 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
     });
   };
 
+  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    return form.handleSubmit(event);
+  }, [form.handleSubmit]);
+
   return (
     <form.AppForm>
-      <form className="grid gap-6" onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        return form.handleSubmit(event);
-      }}>
-
+      <form className="grid gap-6" onSubmit={onSubmit}>
         <form.AppField
           name="name"
           listeners={{
