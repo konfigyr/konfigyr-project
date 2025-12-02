@@ -226,7 +226,7 @@ export default class Authentication {
     });
 
     const token: AccessToken = createAccessToken(response);
-    await this.#session.update({ state, token });
+    await this.#session.update({ state: undefined, token });
 
     logger.info(`Successfully completed the OAuth2 Access Token exchange, token expires at: ${new Date(token.expiresAt)}`);
 
