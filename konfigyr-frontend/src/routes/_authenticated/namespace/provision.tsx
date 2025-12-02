@@ -18,6 +18,11 @@ import type { Namespace } from '@konfigyr/hooks/types';
  */
 export const Route = createFileRoute('/_authenticated/namespace/provision')({
   component: RouteComponent,
+  head: () => ({
+    meta: [{
+      title: 'Create namespace | Konfigyr',
+    }],
+  }),
   preload: false,
 });
 

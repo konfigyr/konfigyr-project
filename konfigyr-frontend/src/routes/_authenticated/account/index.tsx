@@ -13,6 +13,11 @@ const deleteAccount = createServerFn({ method: 'POST' })
 
 export const Route = createFileRoute('/_authenticated/account/')({
   component: RouteComponent,
+  head: () => ({
+    meta: [{
+      title: 'Account settings | Konfigyr',
+    }],
+  }),
 });
 
 function RouteComponent() {

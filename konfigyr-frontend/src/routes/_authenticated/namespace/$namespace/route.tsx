@@ -7,6 +7,11 @@ export const Route = createFileRoute('/_authenticated/namespace/$namespace')({
     return await context.queryClient.ensureQueryData(getNamespaceQuery(params.namespace));
   },
   component: RouteComponent,
+  head: ({ loaderData }) => ({
+    meta: [{
+      title: `${loaderData?.name ?? 'Pending'} | Konfigyr`,
+    }],
+  }),
 });
 
 function RouteComponent() {
