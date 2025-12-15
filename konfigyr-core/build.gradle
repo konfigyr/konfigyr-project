@@ -22,7 +22,7 @@ dependencies {
     /* Konfigyr Cryptography that uses Google Tink algorithms and JDBC as a repository */
     api 'com.konfigyr:konfigyr-crypto-api'
     api 'com.konfigyr:konfigyr-crypto-tink'
-    api 'com.google.crypto.tink:tink:1.19.0'
+    api 'com.google.crypto.tink:tink:1.20.0'
     implementation 'com.konfigyr:konfigyr-crypto-jdbc'
 
     /* Slugify library to generate slugs */
