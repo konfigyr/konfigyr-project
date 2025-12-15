@@ -71,7 +71,7 @@ subprojects {
 
             /* JSoup HTML test support */
             dependency('org.jsoup:jsoup:1.21.2')
-            dependency('com.icegreen:greenmail:2.1.7')
+            dependency('com.icegreen:greenmail:2.1.8')
 
             /* Mock FileSystem library */
             dependency('com.google.jimfs:jimfs:1.3.1')
