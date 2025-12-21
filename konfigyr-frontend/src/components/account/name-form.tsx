@@ -43,7 +43,6 @@ export function AccountNameForm({ account }: { account: Account }) {
 
         toast.success((
           <FormattedMessage
-            id="account.form.name.success"
             defaultMessage="Your display name was updated"
             description="Notification message that is shown when user account display name was successfully updated"
           />
@@ -64,23 +63,23 @@ export function AccountNameForm({ account }: { account: Account }) {
   return (
     <form.AppForm>
       <form name="account-name-form" onSubmit={onSubmit}>
-        <Card className="my-8 border">
+        <Card className="border">
           <CardHeader>
             <CardTitle id={`label-name-${id}`} className="flex items-center gap-2">
               <CardIcon>
                 <IdCardIcon size="1.25rem"/>
               </CardIcon>
               <FormattedMessage
-                id="account.form.name.label"
                 defaultMessage="Display name"
+                description="Account display name form field label"
               />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p id={`help-name-${id}`} className="mb-4">
               <FormattedMessage
-                id="account.form.name.help"
                 defaultMessage="This is how others will see you around the app. Keep it cool — or weird, we don’t judge."
+                description="Account display name form field help text"
               />
             </p>
 
@@ -98,15 +97,15 @@ export function AccountNameForm({ account }: { account: Account }) {
           <CardFooter className="justify-between border-t">
             <p className="text-muted-foreground text-sm">
               <FormattedMessage
-                id="account.form.name.validation"
                 defaultMessage="Please use 32 characters at maximum."
+                description="Account display name form field validation constraints"
               />
             </p>
             <CardAction>
               <form.Submit>
                 <FormattedMessage
-                  id="account.form.name.submit"
                   defaultMessage="Update"
+                  description="Account display name form submit button label"
                 />
               </form.Submit>
             </CardAction>

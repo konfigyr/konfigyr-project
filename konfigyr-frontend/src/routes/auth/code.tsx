@@ -2,6 +2,7 @@ import { Headset, SquareArrowOutUpRight } from 'lucide-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { getRequestUrl } from '@tanstack/react-start/server';
 import { createServerFn } from '@tanstack/react-start';
+import { LayoutContent } from '@konfigyr/components/layout';
 import {
   ContactSupport,
   GeneralErrorLink,
@@ -33,50 +34,48 @@ function OAuthError() {
   const error = Route.useLoaderData();
 
   return (
-    <div className="container my-12">
-      <div className="w-full lg:w-1/2 xl:w-2/5 mx-auto">
-        <Card className="border">
-          <CardHeader
-            title={<OAuthErrorTitle />}
-            description={<OAuthErrorDetail />}
-          />
-          <CardContent className="space-y-2">
-            {error.error && (
-              <p className="text-sm">
-                <span>Error code:</span> <code>{error.error}</code>
-              </p>
-            )}
+    <LayoutContent variant="fullscreen">
+      <Card className="border w-[32rem]">
+        <CardHeader
+          title={<OAuthErrorTitle />}
+          description={<OAuthErrorDetail />}
+        />
+        <CardContent className="space-y-2">
+          {error.error && (
+            <p className="text-sm">
+              <span>Error code:</span> <code>{error.error}</code>
+            </p>
+          )}
 
-            {error.error_description && (
-              <p className="text-sm text-muted-foreground">
-                <span>Error description:</span> {error.error_description}
-              </p>
-            )}
+          {error.error_description && (
+            <p className="text-sm text-muted-foreground">
+              <span>Error description:</span> {error.error_description}
+            </p>
+          )}
 
-            {error.error_uri && (
-              <Button variant="ghost" asChild>
-                <GeneralErrorLink>
-                  <SquareArrowOutUpRight size="1rem"/>
-                </GeneralErrorLink>
-              </Button>
-            )}
-          </CardContent>
-          <CardFooter className="justify-between">
-            {error.error_uri && (
-              <Button asChild>
-                <a href={error.retry_uri!}>
-                  Retry
-                </a>
-              </Button>
-            )}
-            <Button variant="outline" asChild>
-              <a href="mailto:support@konfigyr.com" target="_blank">
-                <Headset size="1rem"/> <ContactSupport />
+          {error.error_uri && (
+            <Button variant="ghost" asChild>
+              <GeneralErrorLink>
+                <SquareArrowOutUpRight size="1rem"/>
+              </GeneralErrorLink>
+            </Button>
+          )}
+        </CardContent>
+        <CardFooter className="justify-between">
+          {error.error_uri && (
+            <Button asChild>
+              <a href={error.retry_uri!}>
+                Retry
               </a>
             </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+          )}
+          <Button variant="outline" asChild>
+            <a href="mailto:support@konfigyr.com" target="_blank">
+              <Headset size="1rem"/> <ContactSupport />
+            </a>
+          </Button>
+        </CardFooter>
+      </Card>
+    </LayoutContent>
   );
 }

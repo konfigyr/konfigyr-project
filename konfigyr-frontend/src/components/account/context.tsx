@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ErrorState } from '@konfigyr/components/error';
 import { FormattedMessage, KonfigyrLeadMessage, KonfigyrTitleMessage } from '@konfigyr/components/messages';
 import { AccountContext, useGetAccount } from '@konfigyr/hooks';
 
@@ -47,14 +48,12 @@ function AccountLoader() {
       <div className="space-y-1">
         <p className="font-medium">
           <FormattedMessage
-            id="account.loader.message"
             defaultMessage="Loading your account information..."
             description="Message shown while the account is being retrieved from the Konfigyr API server"
           />
         </p>
         <p className="text-muted-foreground text-sm">
           <FormattedMessage
-            id="account.loader.description"
             defaultMessage="This may take only a moment, please be patient."
             description="Description of the account loading process"
           />
@@ -86,10 +85,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
 
   if (isError) {
     return (
-      <div>
-        <p>Failed to retrieve account</p>
-        <p>{error.message}</p>
-      </div>
+      <ErrorState error={error} />
     );
   }
 

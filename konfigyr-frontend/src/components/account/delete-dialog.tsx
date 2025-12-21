@@ -53,14 +53,13 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
   return (
     <>
       <AlertDialog>
-        <Card className="my-8 border">
+        <Card className="border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CardIcon>
                 <UserXIcon size="1.25rem"/>
               </CardIcon>
               <FormattedMessage
-                id="account.form.delete.label"
                 defaultMessage="Delete account"
                 description="Label for account delete form card"
               />
@@ -69,7 +68,6 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
           <CardContent>
             <p className="mb-4">
               <FormattedMessage
-                id="account.form.delete.help"
                 defaultMessage="This will nuke your account and all your data, there is no going back. Only do this if you're 100% sure. Seriously."
                 description="Help text that explains the consequences of deleting an account"
               />
@@ -80,7 +78,6 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">
                   <FormattedMessage
-                    id="account.form.delete.submit"
                     defaultMessage="Delete account"
                     description="Button label that triggers account delete confirmation dialog when clicked"
                   />
@@ -94,14 +91,13 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
           <AlertDialogHeader>
             <AlertDialogTitle>
               <FormattedMessage
-                id="account.form.delete.confirmation.title"
                 defaultMessage="Are you sure?"
+                description="Title of account delete confirmation dialog"
               />
             </AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogDescription>
             <FormattedMessage
-              id="account.form.delete.confirmation.description"
               defaultMessage="This action cannot be undone. This will permanently delete your account and remove your data from our servers."
               description="Confirmation text that explains the consequences of deleting an account"
             />
@@ -110,7 +106,6 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
           <AlertDialogFooter>
             <AlertDialogCancel>
               <FormattedMessage
-                id="account.form.delete.confirmation.cancel"
                 defaultMessage="Nope, I have changed my mind"
                 description="Button label that closes account delete confirmation dialog when clicked"
               />
@@ -119,7 +114,6 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
               <form onSubmit={onSubmit}>
                 <form.Submit>
                   <FormattedMessage
-                    id="account.form.delete.confirmation.confirm"
                     defaultMessage="Yes, I am sure"
                     description="Button label that deletes account when clicked"
                   />

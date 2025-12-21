@@ -8,6 +8,13 @@ import { useErrorNotification } from '@konfigyr/components/error';
 import { useForm } from '@konfigyr/components/ui/form';
 import { Separator } from '@konfigyr/components/ui/separator';
 import { SlugDescription, validateSlug } from './slug';
+import {
+  NamespaceDescriptionHelpText,
+  NamespaceDescriptionLabel,
+  NamespaceNameDescription,
+  NamespaceNameLabel,
+  NamespaceSlugLabel,
+} from './messages';
 
 import type { FormEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
@@ -77,14 +84,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
           }}
           children={(field) => (
             <field.Control
-              label={<FormattedMessage
-                id="namespaces.form.name.label"
-                defaultMessage="Name"
-              />}
-              description={<FormattedMessage
-                id="namespaces.form.name.description"
-                defaultMessage="The official name of your namespace. This is how your team, project, or organization will be identified. Keep it clear and recognizable!"
-              />}
+              label={<NamespaceNameLabel />}
+              description={<NamespaceNameDescription />}
             >
               <field.Input type="text" />
             </field.Control>
@@ -99,10 +100,7 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
           }}
           children={(field) => (
             <field.Control
-              label={<FormattedMessage
-                id="namespaces.form.slug.label"
-                defaultMessage="URL"
-              />}
+              label={<NamespaceSlugLabel />}
               description={<SlugDescription />}
             >
               <field.Input type="text" />
@@ -112,14 +110,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
 
         <form.AppField name="description" children={(field) => (
           <field.Control
-            label={<FormattedMessage
-              id="namespaces.form.description.label"
-              defaultMessage="Description"
-            />}
-            description={<FormattedMessage
-              id="namespaces.form.description.description"
-              defaultMessage="Tell the world (or just your team) what this namespace is all about. A short and sweet explanation of its purpose, goals, or mission. Or not..."
-            />}
+            label={<NamespaceDescriptionLabel />}
+            description={<NamespaceDescriptionHelpText />}
           >
             <field.Textarea rows={6} />
           </field.Control>
@@ -129,8 +121,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
 
         <form.Submit>
           <FormattedMessage
-            id="namespaces.form.submit.create"
             defaultMessage="Create namespace"
+            description="Namespace form submit button label"
           />
         </form.Submit>
       </form>

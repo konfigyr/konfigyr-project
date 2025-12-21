@@ -10,7 +10,7 @@ describe('routes | namespace | overview', () => {
     const { getByRole } = renderWithRouter('/namespace/konfigyr');
 
     await waitFor(() => {
-      expect(getByRole('heading', { name: 'Konfigyr namespace' })).toBeInTheDocument();
+      expect(getByRole('heading', { name: 'Overview' })).toBeInTheDocument();
     });
   });
 

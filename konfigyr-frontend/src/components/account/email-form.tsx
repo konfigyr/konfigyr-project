@@ -60,7 +60,6 @@ export function AccountEmailForm({ account }: { account: Account }) {
 
         toast.success((
           <FormattedMessage
-            id="account.form.email.success"
             defaultMessage="Your email address was updated"
             description="Notification message that is shown when user email address was successfully updated"
           />
@@ -83,23 +82,23 @@ export function AccountEmailForm({ account }: { account: Account }) {
   return (
     <form.AppForm>
       <form name="account-email-form" onSubmit={onSubmit}>
-        <Card className="my-8 border">
+        <Card className="border">
           <CardHeader>
             <CardTitle id={`label-email-${id}`} className="flex items-center gap-2">
               <CardIcon>
                 <AtSignIcon size="1.25rem"/>
               </CardIcon>
               <FormattedMessage
-                id="account.form.email.label"
                 defaultMessage="Email address"
+                description="Accont email address input field label"
               />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p id={`help-email-${id}`} className="mb-4">
               <FormattedMessage
-                id="account.form.email.help"
                 defaultMessage="We will use this to send you important stuff — like password resets, not cat memes. Promise."
+                description="Accont email address input field help text"
               />
             </p>
 
@@ -119,14 +118,14 @@ export function AccountEmailForm({ account }: { account: Account }) {
                   className="mt-4"
                   label={(
                     <FormattedMessage
-                      id="account.form.email.confirmation.label"
                       defaultMessage="Enter confirmation code"
+                      description="Label used for account email confirmation code input field"
                     />
                   )}
                   description={(
                     <FormattedMessage
-                      id="account.form.email.confirmation.description"
                       defaultMessage="We have sent you a confirmation code to your new email address, please paste it here to confirm your email address change."
+                      description="Help text describing that the email confirmation code email has been sent and it should be entered"
                     />
                   )}
                 >
@@ -139,15 +138,15 @@ export function AccountEmailForm({ account }: { account: Account }) {
           <CardFooter className="justify-between border-t">
             <p className="text-muted-foreground text-sm">
               <FormattedMessage
-                id="account.form.email.validation"
                 defaultMessage="Please use 48 characters at maximum."
+                description="Accont email address input field validation constraints"
               />
             </p>
             <CardAction>
               <form.Submit>
                 <FormattedMessage
-                  id="account.form.email.submit"
                   defaultMessage="Update"
+                  description="Accont email address form submit button label"
                 />
               </form.Submit>
             </CardAction>

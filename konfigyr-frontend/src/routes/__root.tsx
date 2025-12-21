@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import { IntlProvider } from 'react-intl';
+import { ThemeProvider } from 'next-themes';
 import {
   HeadContent,
   Outlet,
@@ -48,8 +49,15 @@ function RootComponent() {
   return (
     <RootDocument>
       <IntlProvider locale="en" messages={defaultMessages}>
-        <Outlet />
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Outlet />
+          <Toaster />
+        </ThemeProvider>
       </IntlProvider>
       <ReactQueryDevtools />
       <TanStackRouterDevtools />
@@ -59,7 +67,7 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html>
+    <html suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
