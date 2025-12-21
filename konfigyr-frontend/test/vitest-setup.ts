@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 
 import ResizeObserver from 'resize-observer-polyfill';
-import MatchMediaMock from 'vitest-matchmedia-mock';
 
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { server } from './helpers/server';
@@ -17,8 +16,17 @@ afterEach(async () => {
 afterAll(() => server.close());
 
 if (typeof window !== 'undefined') {
-  const matchMedia = new MatchMediaMock();
-
-  afterEach(() => matchMedia.clear());
-  afterAll(() => matchMedia.destroy());
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
 }

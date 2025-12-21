@@ -32,7 +32,11 @@ export interface ProblemDetail extends Record<string, unknown> {
 }
 
 const adapt = async (error: HTTPError) => {
-  const { response } = error;
+  const { response, request } = error;
+
+  if (request.method === 'HEAD') {
+    return error;
+  }
 
   try {
     error.problem = await response.json();
