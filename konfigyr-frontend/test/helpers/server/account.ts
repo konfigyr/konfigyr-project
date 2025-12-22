@@ -1,10 +1,18 @@
 import { HttpResponse, http } from 'msw';
+import { NamespaceRole } from '@konfigyr/hooks/namespace/types';
 import { janeDoe, johnDoe } from '../mocks/account';
+import { konfigyr } from '../mocks/namespace';
 
 const retrieve = http.get('http://localhost/api/account', () => {
   return HttpResponse.json({
     ...johnDoe,
-    memberships: [],
+    memberships: [{
+      id: konfigyr.id,
+      namespace: konfigyr.slug,
+      name: konfigyr.name,
+      role: NamespaceRole.ADMIN,
+      since: '2025-12-01',
+    }],
   });
 });
 

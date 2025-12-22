@@ -60,3 +60,17 @@ export const ContactSupport = () => (
     description="The label for a link that leads to the support page"
   />
 );
+
+export const CancelLabel = () => (
+  <FormattedMessage
+    defaultMessage="Cancel"
+    description="The label used for a cancel buttons or links"
+  />
+);
+
+export const DeleteLabel = () => (
+  <FormattedMessage
+    defaultMessage="Delete"
+    description="The label used for delete buttons or links"
+  />
+);

@@ -84,6 +84,20 @@ const put = http.put('http://localhost/api/namespaces/:slug', async ({ params, r
   return HttpResponse.json(namespaces.konfigyr);
 });
 
+const deleteNamespace = http.delete('https://api.konfigyr.com/namespaces/:slug', ({ params }) => {
+  const { slug } = params;
+
+  if (slug === namespaces.konfigyr.slug || slug === namespaces.johnDoe.slug) {
+    return new HttpResponse(null, { status: 204 });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace with slug '${slug}' not found.`,
+  }, { status: 404 });
+});
+
 const inviteMember = http.post('http://localhost/api/namespaces/:slug/invitations', async ({ params, request }) => {
   const { slug } = params;
   const { email, role } = await request.clone().json() as Record<string, unknown>;
@@ -181,6 +195,7 @@ export default [
   create,
   get,
   put,
+  deleteNamespace,
   getMembers,
   inviteMember,
   updateMember,
