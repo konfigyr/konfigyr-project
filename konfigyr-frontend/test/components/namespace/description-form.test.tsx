@@ -37,12 +37,19 @@ describe('components | namespace | <NamespaceDescriptionForm/>', () => {
   });
 
   test('should enter invalid namespace description', async () => {
+    const array = new Uint8Array(192);
+    crypto.getRandomValues(array);
+
+    const length = array.byteLength;
+    let description = '';
+
+    for (let i = 0; i < length; i++) {
+      description += String.fromCharCode(array[i]);
+    }
+
     await userEvents.type(
       result.getByRole('textbox'),
-      Array.of(1, 2, 3, 4).reduce(
-        (state) => state + '\n' + state,
-        'Namespace description that is too long and should trigger validation error',
-      ),
+      window.btoa(description),
     );
 
     expect(result.getByRole('textbox')).toBeInvalid();
