@@ -29,9 +29,6 @@ describe('components | account | <AccountNameForm/>', () => {
       expect(result.getByRole('textbox')).toHaveAccessibleDescription(
         'This is how others will see you around the app. Keep it cool — or weird, we don’t judge.',
       );
-    });
-
-    await waitFor(() => {
       expect(result.getByRole('button', { name: 'Update' })).toBeInTheDocument();
     });
   });

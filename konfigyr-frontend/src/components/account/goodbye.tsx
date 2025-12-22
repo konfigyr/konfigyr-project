@@ -14,7 +14,6 @@ export function Goodbye() {
             </CardIcon>
             <CardTitle>
               <FormattedMessage
-                id="account.goodbye.title"
                 defaultMessage="Account successfully deleted"
                 description="Title that is shown on the account goodbye page when user successfully deleted his account"
               />
@@ -22,7 +21,6 @@ export function Goodbye() {
           </CardHeader>
           <CardContent className="space-y-4">
             <FormattedMessage
-              id="account.goodbye.message"
               defaultMessage="Your account and its data have been securely removed. We really appreciate the time you spent building, testing, and shipping with us."
               description="Text that is shown on the account goodbye page when user successfully deleted his account"
               tagName="p"
@@ -31,7 +29,6 @@ export function Goodbye() {
             <Separator />
 
             <FormattedMessage
-              id="account.goodbye.cta"
               defaultMessage="If you ever feel like starting fresh, you can spin up a new account anytime. Until then, best of luck with your next project."
               description="Text that is shown on the account goodbye page when user successfully deleted his account"
               tagName="p"

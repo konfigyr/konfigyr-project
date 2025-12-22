@@ -46,7 +46,7 @@ export function CardIcon({ className, ...props }: React.ComponentProps<'i'>) {
   return (
     <i
       data-slot="card-icon"
-      className={cn('rounded p-2 bg-blue-50', className)}
+      className={cn('bg-muted text-foreground rounded p-2', className)}
       {...props}
     />
   );

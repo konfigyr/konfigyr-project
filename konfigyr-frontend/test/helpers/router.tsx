@@ -51,7 +51,9 @@ export function renderWithRouter(path: string) {
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <MessagesProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </MessagesProvider>
   );
 
   return {

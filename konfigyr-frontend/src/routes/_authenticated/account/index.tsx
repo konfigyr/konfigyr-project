@@ -3,6 +3,7 @@ import { AccountDeleteConfirmationDialog } from '@konfigyr/components/account/de
 import { AccountEmailForm } from '@konfigyr/components/account/email-form';
 import { Goodbye } from '@konfigyr/components/account/goodbye';
 import { AccountNameForm } from '@konfigyr/components/account/name-form';
+import { LayoutContent } from '@konfigyr/components/layout';
 import { useMutation } from '@tanstack/react-query';
 import { createServerFn, useServerFn } from '@tanstack/react-start';
 import { createFileRoute } from '@tanstack/react-router';
@@ -41,15 +42,13 @@ function RouteComponent() {
   }
 
   return (
-    <div className="container">
-      <div className="w-full lg:w-1/2 my-6 mx-auto">
-        <AccountEmailForm account={account} />
-        <AccountNameForm account={account} />
-        <AccountDeleteConfirmationDialog
-          account={account}
-          onDelete={mutateAsync}
-        />
-      </div>
-    </div>
+    <LayoutContent variant="centered" className="space-y-8">
+      <AccountEmailForm account={account} />
+      <AccountNameForm account={account} />
+      <AccountDeleteConfirmationDialog
+        account={account}
+        onDelete={mutateAsync}
+      />
+    </LayoutContent>
   );
 }
