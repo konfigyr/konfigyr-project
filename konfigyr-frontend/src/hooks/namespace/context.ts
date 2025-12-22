@@ -19,6 +19,10 @@ export const useNamespace = () => {
 
 export const generateLastUsedNamespaceKey = (account: Account) => `namespace.${account.id}`;
 
+const isMemberOfNamespace = (account: Account, namespace: string) => {
+  return account.memberships.some((membership) => membership.namespace === namespace);
+};
+
 /**
  * Method that would return the last used namespace slug for the currently authenticated user account
  * from the local storage. If there is no such value in the storage, it would return `null`.
@@ -27,7 +31,11 @@ export const getLastUsedNamespace = (account: Account): string | null => {
   const item = window.localStorage.getItem(generateLastUsedNamespaceKey(account));
 
   if (typeof item === 'string') {
-    return JSON.parse(item);
+    const slug = JSON.parse(item);
+
+    if (isMemberOfNamespace(account, slug)) {
+      return slug;
+    }
   }
 
   return null;
@@ -45,7 +53,7 @@ export const useLastUsedNamespace = (): LocalStorageState<string> => {
   const key = useMemo(() => generateLastUsedNamespaceKey(account), [account]);
   const [slug, setNamespace] = useLocalStorage<string>(key);
 
-  if (typeof slug === 'string') {
+  if (typeof slug === 'string' && isMemberOfNamespace(account, slug)) {
     return [slug, setNamespace];
   }
 

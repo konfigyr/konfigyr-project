@@ -17,9 +17,9 @@ import { Route as AuthenticatedAccountIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedNamespaceProvisionRouteImport } from './routes/_authenticated/namespace/provision'
 import { Route as AuthenticatedNamespaceNamespaceRouteRouteImport } from './routes/_authenticated/namespace/$namespace/route'
 import { Route as AuthenticatedNamespaceNamespaceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/index'
-import { Route as AuthenticatedNamespaceNamespaceSettingsRouteImport } from './routes/_authenticated/namespace/$namespace/settings'
 import { Route as AuthenticatedNamespaceNamespaceMembersRouteImport } from './routes/_authenticated/namespace/$namespace/members'
 import { Route as AuthenticatedNamespaceNamespaceInvitationsRouteImport } from './routes/_authenticated/namespace/$namespace/invitations'
+import { Route as AuthenticatedNamespaceNamespaceSettingsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/settings/index'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -64,12 +64,6 @@ const AuthenticatedNamespaceNamespaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
-const AuthenticatedNamespaceNamespaceSettingsRoute =
-  AuthenticatedNamespaceNamespaceSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-  } as any)
 const AuthenticatedNamespaceNamespaceMembersRoute =
   AuthenticatedNamespaceNamespaceMembersRouteImport.update({
     id: '/members',
@@ -82,6 +76,12 @@ const AuthenticatedNamespaceNamespaceInvitationsRoute =
     path: '/invitations',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
+const AuthenticatedNamespaceNamespaceSettingsIndexRoute =
+  AuthenticatedNamespaceNamespaceSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/api/$': typeof ApiSplatRoute
@@ -92,8 +92,8 @@ export interface FileRoutesByFullPath {
   '/account': typeof AuthenticatedAccountIndexRoute
   '/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
-  '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsRoute
   '/namespace/$namespace/': typeof AuthenticatedNamespaceNamespaceIndexRoute
+  '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/api/$': typeof ApiSplatRoute
@@ -103,8 +103,8 @@ export interface FileRoutesByTo {
   '/account': typeof AuthenticatedAccountIndexRoute
   '/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
-  '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsRoute
   '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceIndexRoute
+  '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,8 +117,8 @@ export interface FileRoutesById {
   '/_authenticated/account/': typeof AuthenticatedAccountIndexRoute
   '/_authenticated/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/_authenticated/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
-  '/_authenticated/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsRoute
   '/_authenticated/namespace/$namespace/': typeof AuthenticatedNamespaceNamespaceIndexRoute
+  '/_authenticated/namespace/$namespace/settings/': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,8 +131,8 @@ export interface FileRouteTypes {
     | '/account'
     | '/namespace/$namespace/invitations'
     | '/namespace/$namespace/members'
-    | '/namespace/$namespace/settings'
     | '/namespace/$namespace/'
+    | '/namespace/$namespace/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/api/$'
@@ -142,8 +142,8 @@ export interface FileRouteTypes {
     | '/account'
     | '/namespace/$namespace/invitations'
     | '/namespace/$namespace/members'
-    | '/namespace/$namespace/settings'
     | '/namespace/$namespace'
+    | '/namespace/$namespace/settings'
   id:
     | '__root__'
     | '/_authenticated'
@@ -155,8 +155,8 @@ export interface FileRouteTypes {
     | '/_authenticated/account/'
     | '/_authenticated/namespace/$namespace/invitations'
     | '/_authenticated/namespace/$namespace/members'
-    | '/_authenticated/namespace/$namespace/settings'
     | '/_authenticated/namespace/$namespace/'
+    | '/_authenticated/namespace/$namespace/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,13 +223,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/settings': {
-      id: '/_authenticated/namespace/$namespace/settings'
-      path: '/settings'
-      fullPath: '/namespace/$namespace/settings'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceSettingsRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
-    }
     '/_authenticated/namespace/$namespace/members': {
       id: '/_authenticated/namespace/$namespace/members'
       path: '/members'
@@ -244,14 +237,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceInvitationsRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
+    '/_authenticated/namespace/$namespace/settings/': {
+      id: '/_authenticated/namespace/$namespace/settings/'
+      path: '/settings'
+      fullPath: '/namespace/$namespace/settings'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
+    }
   }
 }
 
 interface AuthenticatedNamespaceNamespaceRouteRouteChildren {
   AuthenticatedNamespaceNamespaceInvitationsRoute: typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   AuthenticatedNamespaceNamespaceMembersRoute: typeof AuthenticatedNamespaceNamespaceMembersRoute
-  AuthenticatedNamespaceNamespaceSettingsRoute: typeof AuthenticatedNamespaceNamespaceSettingsRoute
   AuthenticatedNamespaceNamespaceIndexRoute: typeof AuthenticatedNamespaceNamespaceIndexRoute
+  AuthenticatedNamespaceNamespaceSettingsIndexRoute: typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
 }
 
 const AuthenticatedNamespaceNamespaceRouteRouteChildren: AuthenticatedNamespaceNamespaceRouteRouteChildren =
@@ -260,10 +260,10 @@ const AuthenticatedNamespaceNamespaceRouteRouteChildren: AuthenticatedNamespaceN
       AuthenticatedNamespaceNamespaceInvitationsRoute,
     AuthenticatedNamespaceNamespaceMembersRoute:
       AuthenticatedNamespaceNamespaceMembersRoute,
-    AuthenticatedNamespaceNamespaceSettingsRoute:
-      AuthenticatedNamespaceNamespaceSettingsRoute,
     AuthenticatedNamespaceNamespaceIndexRoute:
       AuthenticatedNamespaceNamespaceIndexRoute,
+    AuthenticatedNamespaceNamespaceSettingsIndexRoute:
+      AuthenticatedNamespaceNamespaceSettingsIndexRoute,
   }
 
 const AuthenticatedNamespaceNamespaceRouteRouteWithChildren =
