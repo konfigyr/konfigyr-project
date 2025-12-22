@@ -133,7 +133,7 @@ export function EmptyContent({ className, ...props }: ComponentProps<'div'>) {
   );
 }
 
-export function EmptyState({ title, description, icon, children, ...props }: ComponentProps<typeof Empty> & {
+export function EmptyState({ title, description, icon, children, ...props }: Omit<ComponentProps<typeof Empty>, 'title'> & {
   title: string | ReactNode;
   description?: string | ReactNode;
   icon?: ReactNode;

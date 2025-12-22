@@ -45,3 +45,19 @@ export interface Invitation {
   createdAt: string,
   expiryDate: string,
 }
+
+export interface Service {
+  id: string;
+  namespace: string;
+  name: string;
+  slug: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateService {
+  name?: string;
+  slug?: string;
+  description?: string;
+}

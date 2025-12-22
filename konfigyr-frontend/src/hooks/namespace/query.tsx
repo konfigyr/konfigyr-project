@@ -6,9 +6,11 @@ import { NamespaceRole } from './types';
 
 import type {
   CreateNamespace,
+  CreateService,
   Invitation,
   Member,
   Namespace,
+  Service,
 } from './types';
 
 export const namespaceKeys = {
@@ -17,6 +19,8 @@ export const namespaceKeys = {
   getCheckNamespace: (slug: string) => ['namespace', 'check', slug],
   getNamespaceMembers: (slug: string) => ['namespace', slug, 'members'],
   getNamespaceInvitations: (slug: string) => ['namespace', slug, 'invitations'],
+  getNamespaceServices: (slug: string) => ['namespace', slug, 'services'],
+  getNamespaceService: (slug: string, service: string) => ['namespace', slug, 'services', service],
 };
 
 export const getNamespacesQuery = () => {
@@ -147,8 +151,6 @@ export const useGetNamespaceMembers = (slug: string) => {
 };
 
 export const useInviteNamespaceMember = (slug: string) => {
-  const client = useQueryClient();
-
   return useMutation({
     mutationFn: async ({ email, administrator } : { email: string, administrator: boolean }) => {
       return await request.post(`api/namespaces/${slug}/invitations`, {
@@ -193,6 +195,55 @@ export const useRemoveNamespaceMember = (slug: string) => {
         }
         return members.filter(it => it.id !== member);
       });
+    },
+  });
+};
+
+/* Namespace service queries and mutations */
+
+export const getNamespaceServicesQuery = (slug: string) => {
+  return queryOptions({
+    queryKey: namespaceKeys.getNamespaceServices(slug),
+    queryFn: async ({ signal }): Promise<Array<Service>> => {
+      const response = await request.get(`api/namespaces/${slug}/services`, { signal })
+        .json<{ data: Array<Service> }>();
+
+      return response.data;
+    },
+  });
+};
+
+export const useNamespaceServicesQuery = (slug: string) => {
+  return useQuery(getNamespaceServicesQuery(slug));
+};
+
+export const getNamespaceServiceQuery = (slug: string, service: string) => {
+  return queryOptions({
+    queryKey: namespaceKeys.getNamespaceService(slug, service),
+    queryFn: ({ signal }): Promise<Service> => {
+      return request.get(`api/namespaces/${slug}/services/${service}`, { signal })
+        .json<Service>();
+    },
+  });
+};
+
+export const useNamespaceServiceQuery = (slug: string, service: string) => {
+  return useQuery(getNamespaceServiceQuery(slug, service));
+};
+
+export const useCreateNamespaceService = (slug: string) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateService): Promise<Service> => {
+      return request.post(`api/namespaces/${slug}/services`, { json: payload })
+        .json<Service>();
+    },
+    onSuccess(service: Service) {
+      client.setQueryData(namespaceKeys.getNamespaceService(slug, service.slug), service);
+      client.setQueryData(namespaceKeys.getNamespaceServices(slug), (services?: Array<Service>) =>
+        [...(services ?? []), service],
+      );
     },
   });
 };

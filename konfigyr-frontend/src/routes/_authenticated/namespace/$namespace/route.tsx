@@ -31,7 +31,7 @@ function RouteComponent() {
       <Layout>
         <LayoutSidebar account={account} namespace={namespace}>
           <NamespaceNavigationMenu namespace={namespace} />
-          <NamespaceServicesNavigationMenu />
+          <NamespaceServicesNavigationMenu namespace={namespace} />
           <NamespaceKmsNavigationMenu />
           <NamespacePkiNavigationMenu />
         </LayoutSidebar>
