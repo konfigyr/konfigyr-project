@@ -23,6 +23,7 @@ import org.springframework.security.config.annotation.web.configurers.oauth2.ser
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
+import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationServerMetadataEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
@@ -164,7 +165,7 @@ public class SecurityConfiguration {
 			filter.setSecurityContextHolderStrategy(getSecurityContextHolderStrategy());
 			postProcess(filter);
 
-			http.addFilterBefore(filter, OAuth2AuthorizationEndpointFilter.class);
+			http.addFilterBefore(filter, OAuth2AuthorizationServerMetadataEndpointFilter.class);
 		}
 	}
 

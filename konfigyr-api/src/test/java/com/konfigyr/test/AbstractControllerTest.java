@@ -13,8 +13,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.*;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.jspecify.annotations.NonNull;
+import org.springframework.http.converter.HttpMessageConverters;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
@@ -23,12 +24,12 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.RequestContextFilter;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -41,9 +42,13 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 
 	@BeforeAll
 	protected static void setup(@NonNull WebApplicationContext context) {
-		List<HttpMessageConverter<?>> converters = context.getBeanProvider(HttpMessageConverter.class).stream()
-				.map(converter -> (HttpMessageConverter<?>) converter)
-				.collect(Collectors.toUnmodifiableList());
+		final JsonMapper mapper = context.getBeanProvider(JsonMapper.class)
+				.getIfAvailable(JsonMapper::shared);
+
+		final HttpMessageConverters converters = HttpMessageConverters.forClient()
+				.registerDefaults()
+				.withJsonConverter(new JacksonJsonHttpMessageConverter(mapper))
+				.build();
 
 		mvc = MockMvcTester.create(
 				MockMvcBuilders.webAppContextSetup(context)
@@ -90,7 +95,7 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	}
 
 	/**
-	 * Creates a consumer that is used to assert if {@link MvcTestResult} contained a resolved exception
+	 * Creates a consumer used to assert if {@link MvcTestResult} contained a resolved exception
 	 * with a matching type.
 	 *
 	 * @param expectedType expected exception type, can't be {@literal null}

@@ -107,7 +107,7 @@ class AccountIdentityRepositoryTest {
 				);
 
 		events.ofType(AccountIdentityEvent.Created.class)
-				.matching(AccountIdentityEvent::identity, identity);
+				.matchingValue(AccountIdentityEvent::identity, identity);
 	}
 
 	@Test
@@ -136,7 +136,7 @@ class AccountIdentityRepositoryTest {
 				);
 
 		events.ofType(AccountIdentityEvent.Created.class)
-				.matching(AccountIdentityEvent::identity, identity);
+				.matchingValue(AccountIdentityEvent::identity, identity);
 	}
 
 	@Test
@@ -164,7 +164,7 @@ class AccountIdentityRepositoryTest {
 				);
 
 		events.ofType(AccountIdentityEvent.Created.class)
-				.matching(AccountIdentityEvent::identity, identity);
+				.matchingValue(AccountIdentityEvent::identity, identity);
 	}
 
 	@Test
