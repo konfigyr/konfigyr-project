@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { PlusIcon, ServerIcon, ServerOffIcon } from 'lucide-react';
 import { useNamespaceServicesQuery } from '@konfigyr/hooks';
 import { CreateServiceForm } from '@konfigyr/components/namespace/service/service-form';
@@ -80,8 +80,14 @@ function ServicesMenu({ namespace }: { namespace: Namespace}) {
 }
 
 function ServiceDialog({ namespace }: { namespace: Namespace }) {
+  const t = useIntl();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
+  const createServiceLabel = t.formatMessage({
+    defaultMessage: 'Create new service',
+    description: 'Label for the button that opens the modal that is shown when user tries to create a new service',
+  });
 
   const onCreate = useCallback(async (service: Service) => {
     setOpen(false);
@@ -95,16 +101,13 @@ function ServiceDialog({ namespace }: { namespace: Namespace }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button variant="ghost" size="sm" aria-label={createServiceLabel}>
           <PlusIcon size="1rem"/>
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>
-          <FormattedMessage
-            defaultMessage="Create new service"
-            description="Title of the modal that is shown when user tries to create a new service"
-          />
+          {createServiceLabel}
         </DialogTitle>
         <DialogDescription>
           <FormattedMessage
@@ -124,7 +127,12 @@ export function NamespaceServicesNavigationMenu({ namespace }: { namespace: Name
       <SidebarGroupContent>
         <SidebarGroupLabel className="flex items-center gap-2">
           <ServerIcon />
-          <span className="flex-grow">Services</span>
+          <span className="flex-grow">
+            <FormattedMessage
+              defaultMessage="Services"
+              description="The services navigation menu label."
+            />
+          </span>
           <ServiceDialog namespace={namespace} />
         </SidebarGroupLabel>
         <ServicesMenu namespace={namespace} />

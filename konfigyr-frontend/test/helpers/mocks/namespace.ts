@@ -13,3 +13,10 @@ export const konfigyr: Namespace = {
   name: 'Konfigyr',
   description: 'Konfigyr namespace',
 };
+
+export const unknown: Namespace = {
+  id: '3',
+  slug: 'unknown',
+  name: 'Unknown namespace',
+  description: 'Namespace that does not exist, used for testing purposes',
+};
