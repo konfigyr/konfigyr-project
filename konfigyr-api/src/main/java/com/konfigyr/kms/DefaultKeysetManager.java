@@ -31,7 +31,7 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 @Slf4j
 @NullMarked
 @RequiredArgsConstructor
-public class DefaultKeysetManager implements KeysetManager {
+class DefaultKeysetManager implements KeysetManager {
 
 	private static final Marker CREATED = MarkerFactory.getMarker("KMS_KEYSET_CREATED");
 	private static final Marker ROTATED = MarkerFactory.getMarker("KMS_KEYSET_ROTATED");

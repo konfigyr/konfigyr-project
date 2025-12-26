@@ -14,8 +14,16 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Interface that is responsible for the lifecycle of Data Encryption Keys (DEKs) used
- * by Projects and the Identity Provider.
+ * The primary entry point for the Key Management Service (KMS) Konfigyr domain. This service provides
+ * centralized lifecycle management, storage, and cryptographic execution for {@code Keysets}.
+ * <p>
+ * This domain builds upon the Konfigyr Crypto library and extends the {@link com.konfigyr.crypto.Keyset Keysets}
+ * concept by providing additional metadata, security and governance features. For more information see
+ * the <a href="https://github.com/konfigyr/konfigyr-crypto/">Konfigyr Crypto documentation</a>.
+ * <p>
+ * The Konfigyr KMS is designed for multi-tenant environments where security, auditability
+ * and logical isolation per {@link Namespace} are mandatory. Every operation is tied to a {@code Namespace}
+ * and automatically generates an audit log event for compliance (SOC2/HIPAA).
  *
  * @author Vladimir Spasic
  * @since 1.0.0
