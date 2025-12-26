@@ -2,6 +2,7 @@ package com.konfigyr.test;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.hateoas.PagedModel;
+import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.test.assertions.ProblemDetailAssert;
@@ -127,6 +128,22 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	}
 
 	/**
+	 * Creates a consumer that is used to assert if {@link MvcTestResult} contained a {@link ProblemDetail}
+	 * that indicates that the server returned a {@link NamespaceNotFoundException}.
+	 *
+	 * @param slug the namespace slug that was not found, can't be {@literal null}
+	 * @return the consumer function to assert the exception, never {@literal null}
+	 */
+	protected static Consumer<MvcTestResult> namespaceNotFound(String slug) {
+		return problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+				.hasTitle("Organization not found")
+				.hasDetailContaining("The namespace you're trying to access doesn't exist or is no longer available.")
+		).andThen(hasFailedWithException(NamespaceNotFoundException.class, ex -> ex
+				.hasMessageContaining("Could not find a namespace with the following name: " + slug)
+		));
+	}
+
+	/**
 	 * Creates consumer that can be used to assert the {@link ProblemDetail} that is extracted
 	 * from {@link MvcTestResult}.
 	 * <p>
@@ -152,6 +169,29 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 						.convertTo(ProblemDetailAssert.factory())
 						.hasStatus(statusCode)
 		);
+	}
+
+	/**
+	 * Creates consumer that can be used to assert that the {@link ProblemDetail} contains a
+	 * {@link HttpStatus#UNAUTHORIZED} response status.
+	 *
+	 * @return the problem detail consumer
+	 * @see #problemDetailFor(HttpStatusCode, ThrowingConsumer)
+	 */
+	protected static ThrowingConsumer<MvcTestResult> unauthorized() {
+		return unauthorized(ignore -> { /* noop */ });
+	}
+
+	/**
+	 * Creates consumer that can be used to assert that the {@link ProblemDetail} contains a
+	 * {@link HttpStatus#UNAUTHORIZED} response status.
+	 *
+	 * @param consumer consumer function to assert {@link ProblemDetail}
+	 * @return the problem detail consumer
+	 * @see #problemDetailFor(HttpStatusCode, ThrowingConsumer)
+	 */
+	protected static ThrowingConsumer<MvcTestResult> unauthorized(@NonNull ThrowingConsumer<ProblemDetailAssert> consumer) {
+		return problemDetailFor(HttpStatus.UNAUTHORIZED, consumer);
 	}
 
 	/**

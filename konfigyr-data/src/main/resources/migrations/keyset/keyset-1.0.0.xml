@@ -15,7 +15,7 @@
 
         <createTable tableName="KEYSETS">
             <column name="KEYSET_NAME" type="VARCHAR(64)">
-                <constraints nullable="false" primaryKey="true"/>
+                <constraints nullable="false" primaryKey="true" unique="true" />
             </column>
 
             <column name="KEYSET_ALGORITHM" type="VARCHAR(64)">

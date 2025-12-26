@@ -54,10 +54,10 @@ subprojects {
             dependency('com.konfigyr:konfigyr-mail-thymeleaf:1.0.0')
 
             /* Konfigyr Crypto Libraries */
-            dependency('com.konfigyr:konfigyr-crypto-api:1.0.0-RC4')
-            dependency('com.konfigyr:konfigyr-crypto-jdbc:1.0.0-RC4')
-            dependency('com.konfigyr:konfigyr-crypto-jose:1.0.0-RC4')
-            dependency('com.konfigyr:konfigyr-crypto-tink:1.0.0-RC4')
+            dependency('com.konfigyr:konfigyr-crypto-api:1.0.0-RC5')
+            dependency('com.konfigyr:konfigyr-crypto-jdbc:1.0.0-RC5')
+            dependency('com.konfigyr:konfigyr-crypto-jose:1.0.0-RC5')
+            dependency('com.konfigyr:konfigyr-crypto-tink:1.0.0-RC5')
 
             /* Bouncy Castle provider */
             dependency('org.bouncycastle:bcprov-jdk18on:1.83')

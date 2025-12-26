@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    
+    <changeSet author="vspasic" id="1.0.0-create-kms-keysets-table" context="api">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="kms_keyset_metadata"/>
+            </not>
+        </preConditions>
+
+        <comment>Table that stores Keyset metadata used by the KMS</comment>
+
+        <createTable tableName="kms_keyset_metadata">
+            <column name="id" type="bigint">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="keyset_id" type="varchar(64)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="state" type="varchar(64)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="name" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="description" type="varchar(255)">
+				<constraints nullable="true"/>
+			</column>
+
+			<column name="tags" type="text">
+				<constraints nullable="true"/>
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="destroyed_at" type="timestamptz">
+				<constraints nullable="true"/>
+			</column>
+        </createTable>
+
+		<addUniqueConstraint
+				tableName="kms_keyset_metadata"
+				columnNames="namespace_id,keyset_id"
+				constraintName="unique_namespace_keyset"
+		/>
+
+		<addUniqueConstraint
+				tableName="kms_keyset_metadata"
+				columnNames="namespace_id,name"
+				constraintName="unique_namespace_keyset_name"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="kms_keyset_metadata"
+				baseColumnNames="namespace_id"
+				constraintName="fk_kms_keyset_metadata_owner"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="kms_keyset_metadata"
+				baseColumnNames="keyset_id"
+				constraintName="fk_kms_keyset_metadata_keyset"
+				referencedTableName="KEYSETS"
+				referencedColumnNames="KEYSET_NAME"
+				onDelete="CASCADE"
+		/>
+    </changeSet>
+</databaseChangeLog>

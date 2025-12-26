@@ -1,5 +1,7 @@
 package com.konfigyr;
 
+import com.konfigyr.crypto.Algorithm;
+import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,13 +12,16 @@ class KonfigyrApplicationModuleTest {
 
 	private final ApplicationModules modules = ApplicationModules.of(
 			KonfigyrApplication.class,
-			JavaClass.Predicates.resideInAnyPackage(
-					"com.konfigyr.data..",
-					"com.konfigyr.io..",
-					"com.konfigyr.security..",
-					"com.konfigyr.support..",
-					"com.konfigyr.test..",
-					"com.konfigyr.web.."
+			DescribedPredicate.or(
+					JavaClass.Predicates.resideInAnyPackage(
+							"com.konfigyr.data..",
+							"com.konfigyr.io..",
+							"com.konfigyr.security..",
+							"com.konfigyr.support..",
+							"com.konfigyr.test..",
+							"com.konfigyr.web.."
+					),
+					JavaClass.Predicates.assignableTo(Algorithm.class)
 			)
 	);
 
