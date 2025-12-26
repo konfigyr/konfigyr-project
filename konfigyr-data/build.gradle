@@ -38,7 +38,7 @@ jooq {
                     database {
                         name = 'com.konfigyr.jooq.KonfigyrDatabase'
                         inputSchema = "public"
-                        excludes = 'databasechangelog.*|keysets'
+                        excludes = 'databasechangelog.*'
 
                         forcedTypes {
                             forcedType {

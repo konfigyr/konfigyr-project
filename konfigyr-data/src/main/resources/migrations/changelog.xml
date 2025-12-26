@@ -40,4 +40,8 @@
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
 
+	<includeAll path="kms"
+				relativeToChangelogFile="true"
+				errorIfMissingOrEmpty="false"/>
+
 </databaseChangeLog>

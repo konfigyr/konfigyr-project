@@ -2,7 +2,6 @@ package com.konfigyr.namespace.controller;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.MemberNotFoundException;
-import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.namespace.UnsupportedMembershipOperationException;
 import com.konfigyr.test.AbstractControllerTest;
 import org.springframework.http.HttpStatus;
@@ -17,15 +16,6 @@ abstract class AbstractNamespaceControllerTest extends AbstractControllerTest {
 				.hasTitle("Operation not allowed")
 				.hasDetailContaining("This action can't be completed because it would leave the organization without an administrator")
 		).andThen(hasFailedWithException(UnsupportedMembershipOperationException.class));
-	}
-
-	static Consumer<MvcTestResult> namespaceNotFound(String slug) {
-		return problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-				.hasTitle("Organization not found")
-				.hasDetailContaining("The namespace you're trying to access doesn't exist or is no longer available.")
-		).andThen(hasFailedWithException(NamespaceNotFoundException.class, ex -> ex
-				.hasMessageContaining("Could not find a namespace with the following name: " + slug)
-		));
 	}
 
 	static Consumer<MvcTestResult> memberNotFound(long id) {
