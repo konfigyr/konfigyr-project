@@ -89,6 +89,26 @@ class KmsController {
 		return assemble(ns).assemble(manager.update(keyset.id(), patch.description(), patch.tags()));
 	}
 
+	@PutMapping("{id}/rotate")
+	@PreAuthorize("isAdmin(#namespace)")
+	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
+	EntityModel<KeysetMetadata> rotate(@PathVariable @NonNull String namespace, @PathVariable @NonNull EntityId id) {
+		final Namespace ns = lookupNamespace(namespace);
+		final KeysetMetadata keyset = lookupKeysetMetadata(ns, id);
+
+		return assemble(ns).assemble(manager.rotate(keyset.id()));
+	}
+
+	@PutMapping("{id}/reactivate")
+	@PreAuthorize("isAdmin(#namespace)")
+	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
+	EntityModel<KeysetMetadata> reactivate(@PathVariable @NonNull String namespace, @PathVariable @NonNull EntityId id) {
+		final Namespace ns = lookupNamespace(namespace);
+		final KeysetMetadata keyset = lookupKeysetMetadata(ns, id);
+
+		return assemble(ns).assemble(manager.transition(keyset.id(), KeysetMetadataState.ACTIVE));
+	}
+
 	@PutMapping("{id}/deactivate")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)

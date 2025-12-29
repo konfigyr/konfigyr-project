@@ -1,4 +1,5 @@
 import { FolderKeyIcon } from 'lucide-react';
+import { FormattedMessage } from 'react-intl';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -7,8 +8,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@konfigyr/components/ui/sidebar';
+import { Link } from '@tanstack/react-router';
 
-export function NamespaceKmsNavigationMenu() {
+import type { Namespace } from '@konfigyr/hooks/types';
+
+export function NamespaceKmsNavigationMenu({ namespace }: { namespace: Namespace}) {
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -17,8 +21,18 @@ export function NamespaceKmsNavigationMenu() {
         </SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton disabled>
-              <span className="truncate">Key management</span>
+            <SidebarMenuButton asChild>
+              <Link
+                to="/namespace/$namespace/kms"
+                params={{ namespace: namespace.slug }}
+                className="truncate"
+                activeProps={{ 'data-active': true }}
+              >
+                <FormattedMessage
+                  defaultMessage="Key management"
+                  description="Label for the KMS key management page"
+                />
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

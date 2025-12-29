@@ -32,7 +32,7 @@ function RouteComponent() {
         <LayoutSidebar account={account} namespace={namespace}>
           <NamespaceNavigationMenu namespace={namespace} />
           <NamespaceServicesNavigationMenu namespace={namespace} />
-          <NamespaceKmsNavigationMenu />
+          <NamespaceKmsNavigationMenu namespace={namespace} />
           <NamespacePkiNavigationMenu />
         </LayoutSidebar>
         <Outlet />

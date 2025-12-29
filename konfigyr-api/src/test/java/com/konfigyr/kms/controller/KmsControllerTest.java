@@ -479,6 +479,69 @@ class KmsControllerTest extends AbstractControllerTest {
 
 	@Test
 	@Transactional
+	@DisplayName("should rotate keyset metadata")
+	void rotateKeyset() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/rotate", "konfigyr", EntityId.from(2).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(KeysetMetadata.class)
+				.returns(EntityId.from(2L), KeysetMetadata::id);
+	}
+
+	@Test
+	@DisplayName("should fail to rotate keyset metadata that is not active")
+	void rotateDestroyedKeyset() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/rotate", "konfigyr", EntityId.from(5).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(problemDetailFor(HttpStatus.CONFLICT, problem -> problem
+						.hasTitle("Keyset is not active")
+						.hasDetailContaining("You attempted an operation against a keyset that is no longer active")
+				).andThen(hasFailedWithException(InactiveKeysetException.class)));
+	}
+
+	@Test
+	@DisplayName("should fail to rotate keyset metadata for an unknown namespace")
+	void rotateKeysetUnknownNamespace() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/rotate", "unknown-namespace", EntityId.from(3).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(namespaceNotFound("unknown-namespace"));
+	}
+
+	@Test
+	@DisplayName("should fail to rotate keyset metadata for a different namespace")
+	void rotateKeysetDifferentNamespace() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/rotate", "konfigyr", EntityId.from(1).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(keysetMetadataNotFound(1));
+	}
+
+	@Test
+	@DisplayName("should fail to rotate keyset metadata when namespaces:write scope is not present")
+	void rotateKeysetWithoutScope() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/deactivate", "konfigyr", EntityId.from(3).serialize())
+				.with(authentication(TestPrincipals.john()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.WRITE_NAMESPACES));
+	}
+
+	@Test
+	@Transactional
 	@DisplayName("should deactivate keyset metadata")
 	void deactivateKeyset() {
 		mvc.put().uri("/namespaces/{slug}/kms/{id}/deactivate", "konfigyr", EntityId.from(2).serialize())
@@ -530,6 +593,66 @@ class KmsControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to deactivate keyset metadata when namespaces:write scope is not present")
 	void deactivateKeysetWithoutScope() {
 		mvc.put().uri("/namespaces/{slug}/kms/{id}/deactivate", "konfigyr", EntityId.from(2).serialize())
+				.with(authentication(TestPrincipals.john()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.WRITE_NAMESPACES));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should reactivate keyset metadata")
+	void reactivateKeyset() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/reactivate", "konfigyr", EntityId.from(3).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(KeysetMetadata.class)
+				.returns(EntityId.from(3L), KeysetMetadata::id)
+				.returns(KeysetMetadataState.ACTIVE, KeysetMetadata::state);
+
+		assertThat(manager.get(EntityId.from(3L)))
+				.isPresent()
+				.get()
+				.returns(KeysetMetadataState.ACTIVE, KeysetMetadata::state);
+	}
+
+	@Test
+	@DisplayName("should fail to reactivate keyset metadata that is already destroyed")
+	void reactivateDestroyedKeyset() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/reactivate", "konfigyr", EntityId.from(5).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
+						.hasTitle("Keyset transition error")
+						.hasDetailContaining("Failed to transition a keyset from DESTROYED to ACTIVE state")
+				).andThen(hasFailedWithException(KeysetTransitionException.class, ex -> ex
+						.hasMessageContaining("Failed to transition keyset %s from DESTROYED to ACTIVE", EntityId.from(5).serialize())
+				)));
+	}
+
+	@Test
+	@DisplayName("should fail to reactivate keyset metadata for an unknown namespace")
+	void reactivateKeysetUnknownNamespace() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/deactivate", "unknown-namespace", EntityId.from(3).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(namespaceNotFound("unknown-namespace"));
+	}
+
+	@Test
+	@DisplayName("should fail to reactivate keyset metadata when namespaces:write scope is not present")
+	void reactivateKeysetWithoutScope() {
+		mvc.put().uri("/namespaces/{slug}/kms/{id}/deactivate", "konfigyr", EntityId.from(3).serialize())
 				.with(authentication(TestPrincipals.john()))
 				.exchange()
 				.assertThat()
