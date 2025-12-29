@@ -46,7 +46,7 @@ subprojects {
 
         dependencies {
             /* Konfigyr Artifactory Library */
-            dependency('com.konfigyr:konfigyr-artifactory:1.0.0-RC1')
+            dependency('com.konfigyr:konfigyr-artifactory:1.0.0-RC2')
 
             /* Konfigyr Mail Libraries */
             dependency('com.konfigyr:konfigyr-mail-api:1.0.0')
