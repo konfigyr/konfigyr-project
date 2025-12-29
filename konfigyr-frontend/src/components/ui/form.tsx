@@ -84,6 +84,21 @@ function FormField<TData extends undefined | Primitive>({ children, label, descr
   children: React.ReactNode
 } & Omit<React.ComponentProps<'div'>, 'children'>) {
   const { formInputId, formDescriptionId, formErrorId, field } = useFormControl<TData>();
+  const ariaDescribedBy = React.useMemo(() => {
+    const ids = [];
+
+    if (description) {
+      ids.push(formDescriptionId);
+    }
+
+    if (!field.state.meta.isValid) {
+      ids.push(formErrorId);
+    }
+
+    if (ids.length > 0) {
+      return ids.join(' ');
+    }
+  }, [description, formDescriptionId, formErrorId, field.state.meta.isValid]);
 
   return (
     <div className={cn('grid gap-2', className)} {...props}>
@@ -100,7 +115,7 @@ function FormField<TData extends undefined | Primitive>({ children, label, descr
       <Slot
         data-slot="form-control"
         id={formInputId}
-        aria-describedby={field.state.meta.isValid ? `${formDescriptionId}` : `${formDescriptionId} ${formErrorId}`}
+        aria-describedby={ariaDescribedBy}
         aria-invalid={!field.state.meta.isValid}
       >
         {children}

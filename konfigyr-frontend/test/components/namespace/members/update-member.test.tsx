@@ -52,7 +52,7 @@ describe('components | namespace | members | <UpdateMemberForm/>', () => {
       expect(result.getByRole('radio', { checked: false })).toHaveValue(NamespaceRole.ADMIN);
       expect(result.getByRole('radio', { checked: true })).toBeInTheDocument();
       expect(result.getByRole('radio', { checked: true })).toHaveValue(NamespaceRole.USER);
-      expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+      expect(result.getByRole('button', { name: 'Close dialog' })).toBeInTheDocument();
       expect(result.getByRole('button', { name: 'Update role' })).toBeInTheDocument();
     });
   });
@@ -61,7 +61,7 @@ describe('components | namespace | members | <UpdateMemberForm/>', () => {
     const result = render(member, onClose);
 
     await userEvents.click(
-      result.getByRole('button', { name: 'Close' }),
+      result.getByRole('button', { name: 'Close dialog' }),
     );
 
     expect(onClose).toHaveBeenCalledOnce();

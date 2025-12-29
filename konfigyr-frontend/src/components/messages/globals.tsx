@@ -61,16 +61,48 @@ export const ContactSupport = () => (
   />
 );
 
+export function CreatedAtLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Created at"
+      description="Label used to describe a resource's creation date."
+    />
+  );
+}
+
+export function UpdatedAtLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Updated at"
+      description="Label used to describe a resource's last update date."
+    />
+  );
+}
+
 export const CancelLabel = () => (
   <FormattedMessage
     defaultMessage="Cancel"
-    description="The label used for a cancel buttons or links"
+    description="The label used for a cancel buttons or links."
+  />
+);
+
+export const CloseLabel = () => (
+  <FormattedMessage
+    defaultMessage="Close"
+    description="The label used for a close buttons."
   />
 );
 
 export const DeleteLabel = () => (
   <FormattedMessage
     defaultMessage="Delete"
-    description="The label used for delete buttons or links"
+    description="The label used for delete buttons or links."
+  />
+);
+
+export const SearchLabel = () => (
+  <FormattedMessage
+    defaultMessage="Search"
+    description="The label used for search inputs or buttons."
   />
 );

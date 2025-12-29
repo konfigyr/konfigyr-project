@@ -1,0 +1,7 @@
+export enum SupportedAlgorithm {
+  AES128_GCM = 'AES128_GCM',
+  AES256_GCM = 'AES256_GCM',
+  ECDSA_P256 = 'ECDSA_P256',
+  ECDSA_P384 = 'ECDSA_P384',
+  ECDSA_P521 = 'ECDSA_P521',
+}

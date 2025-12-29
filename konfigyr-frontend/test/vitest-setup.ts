@@ -29,4 +29,25 @@ if (typeof window !== 'undefined') {
       dispatchEvent: vi.fn(),
     })),
   });
+
+  Object.defineProperty(window, 'clipboardData', {
+    value: {
+      setData: vi.fn(),
+      clearData: vi.fn(),
+    },
+    configurable: true,
+  });
+
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+  window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+}
+
+declare global {
+  interface Window {
+    clipboardData: {
+      setData: (format: string, data: string) => void,
+      clearData: () => void,
+    },
+  }
 }
