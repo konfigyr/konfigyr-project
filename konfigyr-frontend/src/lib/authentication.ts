@@ -49,10 +49,10 @@ export interface AuthenticationSession {
 }
 
 const useAuthenticationSession = () => {
-  const password = process.env.SESSION_SECRET;
+  const password = process.env.KONFIGYR_SESSION_KEY;
 
   if (typeof password !== 'string') {
-    throw new Error('SESSION_SECRET environment variable is not set');
+    throw new Error('KONFIGYR_SESSION_KEY environment variable is not set');
   }
 
   return useSession<SessionData>({ name: 'konfigyr.sid', password }) as Promise<AuthenticationSession>;
