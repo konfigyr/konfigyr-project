@@ -14,9 +14,9 @@ describe('services | authentication', () => {
   });
 
   test('should fail to create an Authentication without secret', async () => {
-    vi.stubEnv('SESSION_SECRET', undefined);
+    vi.stubEnv('KONFIGYR_SESSION_KEY', undefined);
 
-    await expect(Authentication.get()).rejects.toThrow('SESSION_SECRET environment variable is not set');
+    await expect(Authentication.get()).rejects.toThrow('KONFIGYR_SESSION_KEY environment variable is not set');
   });
 
   test('should create an Authentication without session data', async () => {
