@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot } from 'radix-ui';
 import { createFormHook, createFormHookContexts } from '@tanstack/react-form';
 import { Button } from '@konfigyr/components/ui/button';
 import { Input } from '@konfigyr/components/ui/input';
@@ -112,14 +112,14 @@ function FormField<TData extends undefined | Primitive>({ children, label, descr
         </Label>
       )}
 
-      <Slot
+      <Slot.Root
         data-slot="form-control"
         id={formInputId}
         aria-describedby={ariaDescribedBy}
         aria-invalid={!field.state.meta.isValid}
       >
         {children}
-      </Slot>
+      </Slot.Root>
 
       {description && (
         <FormDescription>

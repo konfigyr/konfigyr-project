@@ -5,6 +5,11 @@ import { useCreateNamespaceService } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { useForm } from '@konfigyr/components/ui/form';
 import { Separator } from '@konfigyr/components/ui/separator';
+import {
+  ServiceDescriptionHelpText,
+  ServiceDescriptionLabel,
+  ServiceNameLabel,
+} from './messages';
 
 import type { FormEvent } from 'react';
 import type { Namespace, Service } from '@konfigyr/hooks/types';
@@ -79,10 +84,7 @@ export function CreateServiceForm({ namespace, onCreate }: { namespace: Namespac
           name="name"
           children={(field) => (
             <field.Control
-              label={<FormattedMessage
-                defaultMessage="Display name"
-                description="The form label used in the service forms to define the service display name input field"
-              />}
+              label={<ServiceNameLabel />}
             >
               <field.Input type="text"/>
             </field.Control>
@@ -91,14 +93,8 @@ export function CreateServiceForm({ namespace, onCreate }: { namespace: Namespac
 
         <form.AppField name="description" children={(field) => (
           <field.Control
-            label={<FormattedMessage
-              defaultMessage="Description"
-              description="The form label used in the service forms to define the service description input field"
-            />}
-            description={<FormattedMessage
-              defaultMessage="Add any internal notes about this service."
-              description="The form help text used in the service forms to define the service description input field"
-            />}
+            label={<ServiceDescriptionLabel />}
+            description={<ServiceDescriptionHelpText />}
           >
             <field.Textarea rows={6} />
           </field.Control>
