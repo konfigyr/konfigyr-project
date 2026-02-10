@@ -1,13 +1,7 @@
 import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from '@konfigyr/components/ui/navigation-menu';
+import { ServiceNavigationMenu } from '@konfigyr/components/namespace/navigation/service-menu';
 import { getNamespaceQuery, getNamespaceServiceQuery } from '@konfigyr/hooks';
-import { Link, Outlet, createFileRoute } from '@tanstack/react-router';
+import { Outlet, createFileRoute } from '@tanstack/react-router';
 
 const generatePageTitle = (namespace?: string, service?: string) => {
   if (namespace && service) {
@@ -31,63 +25,13 @@ export const Route = createFileRoute('/_authenticated/namespace/$namespace/servi
   }),
 });
 
-function Navigation({ namespace, service }: { namespace: string, service: string }) {
-  return (
-    <NavigationMenu>
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link
-              to="/namespace/$namespace/services/$service"
-              params={{ namespace, service }}
-              activeProps={{ 'data-active': true }}
-              activeOptions={{ exact: true }}
-              className={navigationMenuTriggerStyle()}
-            >
-              Overview
-            </Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link
-              to="/namespace/$namespace/services/$service/requests"
-              params={{ namespace, service }}
-              activeProps={{ 'data-active': true }}
-              activeOptions={{ exact: true }}
-              className={navigationMenuTriggerStyle()}
-            >
-              Change requests
-            </Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link
-              to="/namespace/$namespace/services/$service/settings"
-              params={{ namespace, service }}
-              activeProps={{ 'data-active': true }}
-              activeOptions={{ exact: true }}
-              className={navigationMenuTriggerStyle()}
-            >
-              Settings
-            </Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
-  );
-}
-
 function RouteComponent() {
   const { namespace, service } = Route.useLoaderData();
 
   return (
     <LayoutContent>
       <LayoutNavbar title={service.name}>
-        <Navigation namespace={namespace.slug} service={service.slug} />
+        <ServiceNavigationMenu namespace={namespace} service={service} />
       </LayoutNavbar>
 
       <Outlet />

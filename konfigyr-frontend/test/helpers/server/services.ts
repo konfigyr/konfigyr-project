@@ -70,8 +70,41 @@ const create = http.post('http://localhost/api/namespaces/:namespace/services', 
   }, { status: 201 });
 });
 
+const update = http.put('http://localhost/api/namespaces/:namespace/services/:service', async ({ params, request }) => {
+  const { namespace } = params;
+
+  if (namespace === namespaces.unknown.slug) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Namespace not found',
+      detail: `Namespace with identifier '${namespace}' not found.`,
+    }, { status: 404 });
+  }
+
+  const body = await request.clone().json() as Record<string, unknown>;
+
+  if (body.name === 'invalid service name') {
+    return HttpResponse.json({
+      status: 400,
+      title: 'Bad request',
+      detail: `Invalid service name: ${body.name}.`,
+      errors: [{
+        detail: 'Invalid service name.',
+        pointer: 'name',
+      }],
+    }, { status: 400 });
+  }
+
+  return HttpResponse.json({
+    id: body.slug,
+    namespace: namespaces.konfigyr.id,
+    ...body,
+  }, { status: 201 });
+});
+
 export default [
   list,
   get,
   create,
+  update,
 ];
