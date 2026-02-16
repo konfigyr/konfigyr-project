@@ -66,7 +66,7 @@ export function Button({
       {...props}
     >
       {loading && (
-        <Loader2Icon className={cn('text-muted absolute animate-spin', 'loading')} />
+        <Loader2Icon className="absolute animate-spin loading" />
       )}
 
       <Content className={cn(loading && 'invisible')}>
