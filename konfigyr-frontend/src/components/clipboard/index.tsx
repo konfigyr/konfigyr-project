@@ -1,27 +1,23 @@
-import { useEffect, useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { useCallback, useEffect, useState } from 'react';
 import { ClipboardCheckIcon, ClipboardCopyIcon } from 'lucide-react';
 import { useClipboard } from '@konfigyr/hooks/clipboard';
 import { Button } from '@konfigyr/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@konfigyr/components/ui/tooltip';
 import { cn } from '@konfigyr/components/utils';
+import { CopiedLabel, CopyLabel } from '@konfigyr/components/messages';
 
 import type { ComponentProps } from 'react';
 
-export function ClipboardButton({ text, className, children, ...props }: { text: string } & ComponentProps<typeof Button>) {
+function useClipboardButton(text: string): [boolean, () => void] {
   const [copied, setCopied] = useState(false);
+
   const clipboard = useClipboard({
     onCopy: () => setCopied(true),
   });
-
-  const body = children || (
-    <>
-      <ClipboardCopyIcon />
-      <FormattedMessage
-        defaultMessage="Copy"
-        description="Default label for the clipboard button, usually used to copy some text to the clipboard."
-      />
-    </>
-  );
 
   useEffect(() => {
     if (copied) {
@@ -30,21 +26,69 @@ export function ClipboardButton({ text, className, children, ...props }: { text:
     }
   }, [copied]);
 
+  const onCopy = useCallback(() => clipboard(text), [clipboard, text]);
+
+  return [copied, onCopy];
+}
+
+export type ClipboardButtonProps = { text: string } & ComponentProps<typeof Button>;
+
+export function ClipboardButton({ text, className, children, ...props }: ClipboardButtonProps) {
+  const [copied, onCopy] = useClipboardButton(text);
+
+  const body = children || (
+    <>
+      <ClipboardCopyIcon />
+      <CopyLabel />
+    </>
+  );
+
   return (
     <Button
       {...props}
       className={cn(copied && 'bg-primary-foreground! text-primary!', className)}
-      onClick={() => clipboard(text)}
+      onClick={onCopy}
     >
       {copied ? (
         <>
           <ClipboardCheckIcon />
-          <FormattedMessage
-            defaultMessage="Copied!"
-            description="Label for the clipboard button notifying the user that the text has been successfully added to the clipboard."
-          />
+          <CopiedLabel />
         </>
       ) : body}
     </Button>
+  );
+}
+
+export function ClipboardIconButton({
+  text,
+  delayDuration,
+  className,
+  children,
+  ...props
+}: { delayDuration?: number } & ClipboardButtonProps) {
+  const [copied, onCopy] = useClipboardButton(text);
+  const [open, setOpen] = useState(false);
+
+  const body = children || (<ClipboardCopyIcon />);
+
+  return (
+    <Tooltip
+      open={copied || open}
+      delayDuration={delayDuration}
+      onOpenChange={setOpen}
+    >
+      <TooltipTrigger asChild>
+        <Button
+          {...props}
+          className={cn(copied && 'bg-primary-foreground! text-primary!', className)}
+          onClick={onCopy}
+        >
+          {copied ? (<ClipboardCheckIcon />) : body}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        {copied ? (<CopiedLabel />) : (<CopyLabel />)}
+      </TooltipContent>
+    </Tooltip>
   );
 }
