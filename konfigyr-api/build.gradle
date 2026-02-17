@@ -14,7 +14,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-batch-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
 
-    implementation('com.konfigyr:konfigyr-artifactory:1.0.0-RC1')
+    implementation('com.konfigyr:konfigyr-artifactory:1.0.0-RC2')
 
     /* Spring Cache and Caffeine implementation */
     implementation 'org.springframework.boot:spring-boot-starter-cache'
