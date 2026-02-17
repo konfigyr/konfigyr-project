@@ -108,7 +108,7 @@ class OAuthScopeTest {
 				Arguments.of(OAuthScope.DELETE_PROFILES, "profiles:delete", Set.of(
 						OAuthScope.READ_PROFILES, OAuthScope.WRITE_PROFILES
 				)),
-				Arguments.of(OAuthScope.NAMESPACES, "profiles", Set.of(
+				Arguments.of(OAuthScope.PROFILES, "profiles", Set.of(
 						OAuthScope.READ_PROFILES, OAuthScope.WRITE_PROFILES, OAuthScope.DELETE_PROFILES
 				))
 		);
