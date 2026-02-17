@@ -43,7 +43,7 @@ export function ProfileMenu({ namespace, service, profiles }: {
       {profiles.sort((a, b) => a.position - b.position).map((profile) => (
         <ProfileMenuItem key={profile.id}>
           <Link
-            to="/namespace/$namespace/services/$service/$profile"
+            to="/namespace/$namespace/services/$service/profiles/$profile"
             params={{ namespace: namespace.slug, service: service.slug, profile: profile.slug }}
             activeProps={{ 'data-state': 'active' }}
             activeOptions={{ exact: true }}
@@ -56,9 +56,13 @@ export function ProfileMenu({ namespace, service, profiles }: {
       <ProfileMenuItem>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="px-2 rounded-sm hover:bg-accent [&_svg]:shrink-0 [&_svg]:size-4">
+            <Link
+              to="/namespace/$namespace/services/$service/create-profile"
+              params={{ namespace: namespace.slug, service: service.slug }}
+              className="inline-flex items-center px-2 rounded-sm hover:bg-accent [&_svg]:shrink-0 [&_svg]:size-4"
+            >
               <PlusIcon />
-            </button>
+            </Link>
           </TooltipTrigger>
           <TooltipContent>
             <FormattedMessage

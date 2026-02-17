@@ -1,6 +1,6 @@
 import type { JSONSchema7 } from 'json-schema';
 
-export type ProfilePolicy = 'UNPROTECTED' | 'PROTECTED' | 'LOCKED';
+export type ProfilePolicy = 'UNPROTECTED' | 'PROTECTED' | 'IMMUTABLE';
 
 export interface Profile {
   id: string;
@@ -8,6 +8,13 @@ export interface Profile {
   name: string;
   policy: ProfilePolicy;
   position: number;
+}
+
+export interface CreateProfile {
+  slug?: string;
+  name?: string;
+  policy?: string;
+  position?: number;
 }
 
 export interface PropertyDeprecation {

@@ -18,7 +18,11 @@ public class KonfigyrRegisteredClientRepository extends AbstractRegisteredClient
 			AuthorizationGrantType.REFRESH_TOKEN
 	);
 
-	private static final OAuthScopes SUPPORTED_SCOPES = OAuthScopes.of(OAuthScope.OPENID, OAuthScope.NAMESPACES);
+	private static final OAuthScopes SUPPORTED_SCOPES = OAuthScopes.of(
+			OAuthScope.OPENID,
+			OAuthScope.NAMESPACES,
+			OAuthScope.PROFILES
+	);
 
 	private final RegisteredClient client;
 

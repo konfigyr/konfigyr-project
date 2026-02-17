@@ -4,12 +4,19 @@ import * as React from 'react';
 import { Slot } from 'radix-ui';
 import { createFormHook, createFormHookContexts } from '@tanstack/react-form';
 import { Button } from '@konfigyr/components/ui/button';
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '@konfigyr/components/ui/field';
 import { Input } from '@konfigyr/components/ui/input';
 import { Label } from '@konfigyr/components/ui/label';
 import { Switch } from '@konfigyr/components/ui/switch';
 import { Textarea } from '@konfigyr/components/ui/textarea';
 import { cn } from '@konfigyr/components/utils';
 
+import type { ChangeEvent } from 'react';
 import type { FieldApi } from '@tanstack/react-form';
 import type { ButtonProps } from './button';
 
@@ -82,7 +89,7 @@ function FormField<TData extends undefined | Primitive>({ children, label, descr
   label?: string | React.ReactNode;
   description?: string | React.ReactNode;
   children: React.ReactNode
-} & Omit<React.ComponentProps<'div'>, 'children'>) {
+} & Omit<React.ComponentProps<typeof Field>, 'children'>) {
   const { formInputId, formDescriptionId, formErrorId, field } = useFormControl<TData>();
   const ariaDescribedBy = React.useMemo(() => {
     const ids = [];
@@ -101,15 +108,15 @@ function FormField<TData extends undefined | Primitive>({ children, label, descr
   }, [description, formDescriptionId, formErrorId, field.state.meta.isValid]);
 
   return (
-    <div className={cn('grid gap-2', className)} {...props}>
+    <Field {...props}>
       {label && (
-        <Label
+        <FieldLabel
           data-error={!field.state.meta.isValid}
           className={cn('data-[error=true]:text-destructive', className)}
           htmlFor={formInputId}
         >
           {label}
-        </Label>
+        </FieldLabel>
       )}
 
       <Slot.Root
@@ -128,50 +135,37 @@ function FormField<TData extends undefined | Primitive>({ children, label, descr
       )}
 
       <FormError />
-    </div>
+    </Field>
   );
 }
 
-export function FormDescription({ className, children, ...props }: React.ComponentProps<'p'>) {
+export function FormDescription({ children, ...props }: React.ComponentProps<typeof FieldDescription>) {
   const { formDescriptionId } = useFormControl();
 
   return (
-    <p id={formDescriptionId} className={cn('text-muted-foreground text-sm', className)} {...props}>
+    <FieldDescription id={formDescriptionId} {...props}>
       {children}
-    </p>
+    </FieldDescription>
   );
 }
 
-export function FormError({ className, children, ...props }: React.ComponentProps<'p'>) {
+export function FormError({ className, ...props }: React.ComponentProps<typeof FieldError>) {
   const { formErrorId, field } = useFormControl();
   const errors = field.state.meta.errors;
-  let body: React.ReactNode = null;
+
+  const normalized: Array<{ message?: string }> = [];
 
   if (errors.length > 0) {
-    body = errors.map((error, index) => {
+    errors.forEach(error => {
       if (error && typeof error === 'object' && 'message' in error) {
-        return (
-          <span key={error.message}>{error.message}</span>
-        );
+        normalized.push(error);
+      } else {
+        normalized.push({ message: error });
       }
-
-      return (
-        <span key={index}>{error}</span>
-      );
     });
-  } else if (children) {
-    body = children;
   }
 
-  if (body === null) {
-    return null;
-  }
-
-  return (
-    <p id={formErrorId} className={cn('text-destructive text-sm', className)} {...props}>
-      {body}
-    </p>
-  );
+  return <FieldError id={formErrorId} errors={normalized} {...props} />;
 }
 
 export function SubmitButton({ children, ...props }: ButtonProps) {
@@ -195,12 +189,20 @@ export function SubmitButton({ children, ...props }: ButtonProps) {
 }
 
 export function FormInput(props: React.ComponentProps<typeof Input>) {
-  const field = useFieldContext<string>();
+  const field = useFieldContext<string | number>();
+
+  const onChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.type === 'number') {
+      field.handleChange(event.target.valueAsNumber);
+    } else {
+      field.handleChange(event.target.value);
+    }
+  };
 
   return (
     <Input
       value={field.state.value}
-      onChange={event => field.handleChange(event.target.value)}
+      onChange={onChange}
       onBlur={() => field.handleBlur()}
       {...props}
     />

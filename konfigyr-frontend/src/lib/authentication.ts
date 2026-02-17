@@ -20,6 +20,8 @@ import type {
 
 const logger = createLogger('services/authentication');
 
+const DEFAULT_SCOPES = 'openid namespaces profiles';
+
 export class AuthenticationError extends Error {
 
 }
@@ -169,7 +171,7 @@ export default class Authentication {
     return request;
   }
 
-  async refresh(scope = 'openid namespaces'): Promise<void> {
+  async refresh(scope = DEFAULT_SCOPES): Promise<void> {
     const token = this.accessToken;
 
     if (token === null) {
@@ -186,7 +188,7 @@ export default class Authentication {
     logger.info(`Successfully completed the OAuth2 Access Token refresh, token expires at: ${new Date(accessToken.expiresAt)}`);
   }
 
-  async startAuthorization(uri: URL | string, scope = 'openid namespaces'): Promise<URL> {
+  async startAuthorization(uri: URL | string, scope = DEFAULT_SCOPES): Promise<URL> {
     const redirectUri = new URL('/auth/code', uri);
 
     logger.debug(`Attempting to start OAuth2 authorization with [callback_uri: ${uri}, scope: ${scope}, redirect_uri=${redirectUri}]`);

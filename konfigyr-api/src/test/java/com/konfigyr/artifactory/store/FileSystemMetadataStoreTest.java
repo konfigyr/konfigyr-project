@@ -1,7 +1,6 @@
 package com.konfigyr.artifactory.store;
 
 import com.konfigyr.artifactory.ArtifactCoordinates;
-import com.konfigyr.test.JimfsDirFactory;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +24,7 @@ class FileSystemMetadataStoreTest {
 
 	final ArtifactCoordinates coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "1.0.0");
 
-	@TempDir(factory = JimfsDirFactory.class)
+	@TempDir
 	Path directory;
 
 	MetadataStore store;
