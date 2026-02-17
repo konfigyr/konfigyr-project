@@ -1,28 +1,27 @@
-import { CounterStat, StatsCard } from '@konfigyr/components/reporting/stats';
-import { createFileRoute } from '@tanstack/react-router';
-import {
-  ActivityCard,
-  ActivityCardEmpty,
-  ActivityCardTitle,
-} from '@konfigyr/components/reporting/activity';
+import { createFileRoute, redirect } from '@tanstack/react-router';
+import { getProfilesQuery } from '@konfigyr/hooks';
 
-export const Route = createFileRoute('/_authenticated/namespace/$namespace/services/$service/')({
-  component: RouteComponent,
+import type { Namespace, Service } from '@konfigyr/hooks/types';
+
+export const Route = createFileRoute(
+  '/_authenticated/namespace/$namespace/services/$service/',
+)({
+  loader: async ({ context, parentMatchPromise }) => {
+    const match = await parentMatchPromise;
+    const { namespace, service } = match.loaderData as { namespace: Namespace, service: Service };
+
+    const profiles = await context.queryClient.ensureQueryData(getProfilesQuery(namespace, service));
+
+    if (profiles.length === 0) {
+      throw redirect({
+        to: '/namespace/$namespace/services/$service/create-profile',
+        params: { namespace: namespace.slug, service: service.slug },
+      });
+    }
+
+    throw redirect({
+      to: '/namespace/$namespace/services/$service/profiles/$profile',
+      params: { namespace: namespace.slug, service: service.slug, profile: profiles[0].slug },
+    });
+  },
 });
-
-function RouteComponent() {
-  return (
-    <div className="w-full lg:w-4/5 xl:w-2/3 space-y-6 px-4 mx-auto">
-      <StatsCard>
-        <CounterStat title="Environments" counter={1} />
-        <CounterStat title="Active configurations" counter={124} />
-        <CounterStat title="Active change requests" counter={4} />
-      </StatsCard>
-
-      <ActivityCard>
-        <ActivityCardTitle>Recent activity</ActivityCardTitle>
-        <ActivityCardEmpty title="No recent activity" />
-      </ActivityCard>
-    </div>
-  );
-}

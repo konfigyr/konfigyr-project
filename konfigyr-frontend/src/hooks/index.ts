@@ -4,6 +4,7 @@ export * from './kms/query';
 export * from './namespace/context';
 export * from './namespace/query';
 export * from './vault/changeset';
+export * from './vault/profiles';
 export * from './vault/properties';
 export * from './clipboard';
 export * from './local-storage';

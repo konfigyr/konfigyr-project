@@ -12,12 +12,10 @@ import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.modulith.test.AssertablePublishedEvents;
-import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -27,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-@ExtendWith(PublishedEventsExtension.class)
 class AccountControllerTest extends AbstractControllerTest {
 
 	@Test

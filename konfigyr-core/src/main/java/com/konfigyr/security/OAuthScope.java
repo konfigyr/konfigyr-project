@@ -43,7 +43,7 @@ public enum OAuthScope implements GrantedAuthority {
 	WRITE_NAMESPACES("namespaces:write", READ_NAMESPACES),
 
 	/**
-	 * Grants read, write and delete access to namespaces.
+	 * Grants read, write, and delete access to namespaces.
 	 */
 	DELETE_NAMESPACES("namespaces:delete", WRITE_NAMESPACES),
 
@@ -53,9 +53,29 @@ public enum OAuthScope implements GrantedAuthority {
 	INVITE_MEMBERS("namespaces:invite", READ_NAMESPACES),
 
 	/**
-	 * Grants full access to namespace operations like read, write, delete and invite.
+	 * Grants full access to namespace operations like read, write, delete, and invite.
 	 */
-	NAMESPACES("namespaces", READ_NAMESPACES, WRITE_NAMESPACES, DELETE_NAMESPACES, INVITE_MEMBERS);
+	NAMESPACES("namespaces", READ_NAMESPACES, WRITE_NAMESPACES, DELETE_NAMESPACES, INVITE_MEMBERS),
+
+	/**
+	 * Grants read-only access to service profiles.
+	 */
+	READ_PROFILES("profiles:read"),
+
+	/**
+	 * Grants read and write access to service profiles.
+	 */
+	WRITE_PROFILES("profiles:write", READ_PROFILES),
+
+	/**
+	 * Grants read, write, and delete access to service profiles.
+	 */
+	DELETE_PROFILES("profiles:delete", WRITE_PROFILES),
+
+	/**
+	 * Grants full access to profile operations like read, write, and delete.
+	 */
+	PROFILES("profiles", READ_PROFILES, WRITE_PROFILES, DELETE_PROFILES);
 
 	private final String value;
 	private final Set<OAuthScope> included;

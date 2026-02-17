@@ -6,7 +6,6 @@ import com.konfigyr.feature.Features;
 import com.konfigyr.mail.Mailer;
 import com.konfigyr.test.smtp.TestSmtpServer;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
@@ -44,7 +43,7 @@ public abstract class AbstractIntegrationTest {
 	/**
 	 * The JUnit Temporary directory that can be used to mock the Java {@link java.nio.file.FileSystem}.
 	 */
-	@TempDir(factory = JimfsDirFactory.class, cleanup = CleanupMode.NEVER)
+	@TempDir
 	protected static Path tempDirectory;
 
 	/**
@@ -71,7 +70,8 @@ public abstract class AbstractIntegrationTest {
 
 	@DynamicPropertySource
 	static void registerTestProperties(@NonNull DynamicPropertyRegistry registry) {
-		registry.add("konfigyr.artifactory.metadata-store.root", () -> tempDirectory.toUri());
+		registry.add("konfigyr.artifactory.metadata-store.root", () -> tempDirectory
+				.resolve("metadata-store").toUri());
 	}
 
 }

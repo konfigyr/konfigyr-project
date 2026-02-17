@@ -10,6 +10,13 @@ export interface Profile {
   position: number;
 }
 
+export interface CreateProfile {
+  slug?: string;
+  name?: string;
+  policy?: string;
+  position?: number;
+}
+
 export interface PropertyDeprecation {
   reason: string;
   replacement?: string;

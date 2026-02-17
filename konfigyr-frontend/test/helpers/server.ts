@@ -5,6 +5,7 @@ import namespaces from './server/namespaces';
 import oidc from './server/oidc';
 import proxy from './server/proxy';
 import services from './server/services';
+import vault from './server/vault';
 
 export const handlers = [
   ...account,
@@ -13,6 +14,7 @@ export const handlers = [
   ...oidc,
   ...proxy,
   ...services,
+  ...vault,
 ];
 
 export const server = setupServer(...handlers);

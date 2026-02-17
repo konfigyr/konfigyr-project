@@ -17,7 +17,7 @@ describe('components | vault | navigation | <ProfileMenu/>', () => {
     );
 
     expect(result.getByRole('tablist')).toBeInTheDocument();
-    expect(result.getByRole('button')).toBeInTheDocument();
+    expect(result.getByRole('link')).toBeInTheDocument();
     expect(result.getAllByRole('tab')).length(2);
 
     expect(result.getByRole('tab', { name: profiles.development.name }));

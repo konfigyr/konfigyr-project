@@ -98,6 +98,18 @@ class OAuthScopeTest {
 						OAuthScope.WRITE_NAMESPACES,
 						OAuthScope.DELETE_NAMESPACES,
 						OAuthScope.INVITE_MEMBERS
+				)),
+
+				/* Profile scope group */
+				Arguments.of(OAuthScope.READ_PROFILES, "profiles:read", Set.of()),
+				Arguments.of(OAuthScope.WRITE_PROFILES, "profiles:write", Set.of(
+						OAuthScope.READ_PROFILES
+				)),
+				Arguments.of(OAuthScope.DELETE_PROFILES, "profiles:delete", Set.of(
+						OAuthScope.READ_PROFILES, OAuthScope.WRITE_PROFILES
+				)),
+				Arguments.of(OAuthScope.NAMESPACES, "profiles", Set.of(
+						OAuthScope.READ_PROFILES, OAuthScope.WRITE_PROFILES, OAuthScope.DELETE_PROFILES
 				))
 		);
 	}
