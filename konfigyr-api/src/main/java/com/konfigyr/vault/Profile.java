@@ -1,8 +1,11 @@
 package com.konfigyr.vault;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.namespace.Service;
 import lombok.Builder;
+import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
+import org.jmolecules.ddd.annotation.Identity;
 import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
@@ -65,8 +68,8 @@ import java.time.OffsetDateTime;
 @Entity
 @Builder
 public record Profile(
-		EntityId id,
-		EntityId service,
+		@Identity EntityId id,
+		@Association(aggregateType = Service.class) EntityId service,
 		String slug,
 		String name,
 		ProfilePolicy policy,
