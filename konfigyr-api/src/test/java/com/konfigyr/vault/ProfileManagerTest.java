@@ -241,7 +241,7 @@ class ProfileManagerTest extends AbstractIntegrationTest {
 	void shouldUpdateUnknownProfile(AssertablePublishedEvents events) {
 		final var definition = ProfileDefinition.builder()
 				.service(2)
-				.slug( "development (ignored for updates)")
+				.slug("development (ignored for updates)")
 				.name("Dev")
 				.description("Development profile, unprotected")
 				.policy(ProfilePolicy.PROTECTED)

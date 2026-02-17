@@ -9,16 +9,18 @@ import type { Profile } from '@konfigyr/hooks/types';
 describe('components | vault | profile | <PolicyAlert/>', () => {
   afterEach(() => cleanup());
 
-  test('should render locked policy alert', () => {
-    const profile: Profile = { ...profiles.development, policy: 'LOCKED' };
+  test('should render immutable policy alert', () => {
+    const profile: Profile = { ...profiles.development, policy: 'IMMUTABLE' };
 
     const result = renderWithMessageProvider(
       <PolicyAlert profile={profile} />,
     );
 
     expect(result.getByRole('alert')).toBeInTheDocument();
-    expect(result.getByText('Profile is locked')).toBeInTheDocument();
-    expect(result.getByText('This profile is locked and cannot be edited.')).toBeInTheDocument();
+    expect(result.getByText('Profile is read-only')).toBeInTheDocument();
+    expect(result.getByText(
+      'No configuration changes may be applied to this profile. The existing configuration remains readable and auditable but cannot be modified.',
+    )).toBeInTheDocument();
   });
 
   test('should render protected policy alert', () => {
@@ -30,7 +32,9 @@ describe('components | vault | profile | <PolicyAlert/>', () => {
 
     expect(result.getByRole('alert')).toBeInTheDocument();
     expect(result.getByText('Protected profile')).toBeInTheDocument();
-    expect(result.getByText('Changes to this profile require review and approval before being applied.')).toBeInTheDocument();
+    expect(result.getByText(
+      'Changes to this profile require review and approval before being applied.',
+    )).toBeInTheDocument();
   });
 
   test('should render unprotected policy alert', () => {
@@ -42,6 +46,8 @@ describe('components | vault | profile | <PolicyAlert/>', () => {
 
     expect(result.getByRole('alert')).toBeInTheDocument();
     expect(result.getByText('Unprotected profile')).toBeInTheDocument();
-    expect(result.getByText('Changes to this profile will be directly applied without any review or approval.')).toBeInTheDocument();
+    expect(result.getByText(
+      'Changes to this profile will be directly applied without any review or approval.',
+    )).toBeInTheDocument();
   });
 });

@@ -61,6 +61,15 @@ import java.time.OffsetDateTime;
  * Profiles can be regarded as a governance boundary, not a version control abstraction. Users should
  * never be exposed to branches, commits, or merges.
  *
+ * @param id unique entity identifier of the profile, can't be {@literal null}.
+ * @param service unique identifier of the {@link Service} this profile belongs to, can't be {@literal null}.
+ * @param slug unique profile identifier derived from its name, can't be {@literal null}.
+ * @param name human-readable profile name, can't be {@literal null}.
+ * @param description short description of the profile, can be {@literal null}.
+ * @param policy access policy for this profile, can't be {@literal null}.
+ * @param position the display order of the profile within the UI. Can't be negative or zero.
+ * @param createdAt when was this profile created, can be {@literal null}.
+ * @param updatedAt when was this profile last updated, can be {@literal null}.
  * @author Vladimir Spasic
  * @since 1.0.0
  * @see ProfilePolicy

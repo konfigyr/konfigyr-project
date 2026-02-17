@@ -25,9 +25,9 @@ import {
 } from './messages';
 
 import type { FormEvent } from 'react';
-import type { Namespace, Profile, Service } from '@konfigyr/hooks/types';
+import type { Namespace, Profile, ProfilePolicy, Service } from '@konfigyr/hooks/types';
 
-const AVAILABLE_POLICIES: Array<Profile['policy']> = ['PROTECTED', 'UNPROTECTED'] as const;
+const AVAILABLE_POLICIES: Array<ProfilePolicy> = ['PROTECTED', 'UNPROTECTED'] as const;
 
 const profileFormSchema = z.object({
   name: z.string()

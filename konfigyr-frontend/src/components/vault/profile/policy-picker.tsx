@@ -25,9 +25,9 @@ export const usePolicyLabel = (policy: Profile['policy']) => {
       defaultMessage: 'Protected',
       description: 'Label for the protected profile policy in the profile policy picker.',
     });
-    case 'LOCKED': return intl.formatMessage({
-      defaultMessage: 'Locked',
-      description: 'Label for the locked profile policy in the profile policy picker.',
+    case 'IMMUTABLE': return intl.formatMessage({
+      defaultMessage: 'Read-only',
+      description: 'Label for the immutable read-only profile policy in the profile policy picker.',
     });
   }
 };
@@ -38,18 +38,18 @@ export const usePolicyDescription = (policy: Profile['policy']) => {
   switch (policy) {
     case 'UNPROTECTED':
       return intl.formatMessage({
-        defaultMessage: 'Changesets can be applied directly without approval. Suitable for development or non-critical environments.',
+        defaultMessage: 'Changes can be applied directly once a changeset is submitted, without requiring explicit approval. This policy is intended for non-critical environments where rapid iteration is prioritized over strict governance. Typical use cases would include local development or test environments.',
         description: 'Description for the unprotected profile policy in the profile policy picker.',
       });
     case 'PROTECTED':
       return intl.formatMessage({
-        defaultMessage: 'Changesets must be reviewed and approved before being applied. Recommended for staging or production environments.',
+        defaultMessage: 'Changesets targeting a protected profile must go through a review and approval process. Direct application of changes is not permitted. Recommended for staging or production environments.',
         description: 'Description for the protected profile policy in the profile policy picker.',
       });
-    case 'LOCKED':
+    case 'IMMUTABLE':
       return intl.formatMessage({
-        defaultMessage: 'Changeset in locked state are marked as read only.',
-        description: 'Description for the protected locked policy in the profile policy picker.',
+        defaultMessage: 'Changeset in locked state are marked as read only. This policy is intended for frozen, deprecated, or compliance-bound environments where configuration drift must be prevented entirely.',
+        description: 'Description for the immutable policy in the profile policy picker.',
       });
   }
 };
@@ -66,7 +66,7 @@ function PolicyOption({ value }: { value: Profile['policy'] }) {
         <FieldLabel htmlFor={id}>
           {label}
         </FieldLabel>
-        <FieldDescription>
+        <FieldDescription className="whitespace-pre-line">
           {description}
         </FieldDescription>
       </FieldContent>

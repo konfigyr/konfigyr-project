@@ -14,10 +14,12 @@ import java.io.Serializable;
 /**
  * Record used to define one {@link Profile} that would be created via {@link ProfileManager Vault manager}.
  *
- * @param service entity identifier of the {@link Service} that owns this profile, can't be null.
- * @param policy the profile access policy; can't be null.
- * @param name a unique profile name with one service; can't be null.
- * @param description short description for the profile; can be null.
+ * @param service entity identifier of the {@link Service} that owns this profile, can't be {@literal null}.
+ * @param policy the profile access policy; can't be {@literal null}.
+ * @param slug a unique profile identifier with a {@link Service}; can't be {@literal null}.
+ * @param name a unique profile name with one service; can't be {@literal null}.
+ * @param description short description for the profile; can be {@literal null}.
+ * @param position the display order of the profile within the UI. Can't be negative or zero.
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
@@ -176,7 +178,6 @@ public record ProfileDefinition(
 
 			return new ProfileDefinition(service, policy, slug, name, description, position);
 		}
-
 	}
-	
+
 }

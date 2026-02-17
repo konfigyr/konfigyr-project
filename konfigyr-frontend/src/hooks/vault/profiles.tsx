@@ -1,4 +1,4 @@
-import {queryOptions, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';

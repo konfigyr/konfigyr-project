@@ -13,20 +13,20 @@ import {
 import type { ComponentProps } from 'react';
 import type { Profile } from '@konfigyr/hooks/types';
 
-function LockedProfileAlert(props: ComponentProps<typeof Alert>) {
+function ImmutableProfileAlert(props: ComponentProps<typeof Alert>) {
   return (
     <Alert {...props}>
       <LockIcon />
       <AlertTitle>
         <FormattedMessage
-          defaultMessage="Profile is locked"
-          description="Alert title for locked profile"
+          defaultMessage="Profile is read-only"
+          description="Alert title for immutable profile"
         />
       </AlertTitle>
       <AlertDescription>
         <FormattedMessage
-          defaultMessage="This profile is locked and cannot be edited."
-          description="Alert description for locked profile, stating that profile is locked and cannot be edited."
+          defaultMessage="No configuration changes may be applied to this profile. The existing configuration remains readable and auditable but cannot be modified."
+          description="Alert description for immutable profile, stating that profile is locked and cannot be edited."
         />
       </AlertDescription>
     </Alert>
@@ -75,8 +75,8 @@ function UnprotectedProfileAlert(props: ComponentProps<typeof Alert>) {
 
 export function PolicyAlert({ profile, ...props }: { profile: Profile } & ComponentProps<typeof Alert>) {
   switch (profile.policy) {
-    case 'LOCKED':
-      return <LockedProfileAlert {...props}/>;
+    case 'IMMUTABLE':
+      return <ImmutableProfileAlert {...props}/>;
     case 'PROTECTED':
       return <ProtectedProfileAlert {...props}/>;
     case 'UNPROTECTED':
