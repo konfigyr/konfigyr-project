@@ -5,7 +5,6 @@ import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Service;
-import com.konfigyr.namespace.ServiceNotFoundException;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -13,14 +12,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -481,15 +478,6 @@ class ServiceControllerTest extends AbstractNamespaceControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(forbidden());
-	}
-
-	static Consumer<MvcTestResult> serviceNotFound(String slug) {
-		return problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
-				.hasTitle("Service not found")
-				.hasDetailContaining("The service you're trying to access doesn't exist or is no longer available.")
-		).andThen(hasFailedWithException(ServiceNotFoundException.class, ex -> ex
-				.hasMessageContaining("Could not find a service with the following name: " + slug)
-		));
 	}
 
 }

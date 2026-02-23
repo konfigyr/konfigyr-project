@@ -45,7 +45,7 @@ describe('services | authentication', () => {
     expect(authorizationUri.pathname).toEqual('/oauth/authorize');
     expect(authorizationUri.searchParams.get('client_id')).toEqual('konfigyr');
     expect(authorizationUri.searchParams.get('response_type')).toEqual('code');
-    expect(authorizationUri.searchParams.get('scope')).toEqual('openid namespaces');
+    expect(authorizationUri.searchParams.get('scope')).toEqual('openid namespaces profiles');
     expect(authorizationUri.searchParams.get('redirect_uri')).toEqual('http://localhost/auth/code');
     expect(authorizationUri.searchParams.get('code_challenge_method')).toEqual('S256');
     expect(authorizationUri.searchParams.get('state')).toEqual(state!.id);

@@ -9,6 +9,7 @@
     <changeSet id="namespace-test-data" author="vspasic">
         <sqlFile path="data/invitations.sql" />
 		<sqlFile path="data/kms.sql" />
+		<sqlFile path="data/vault.sql" />
     </changeSet>
 
 </databaseChangeLog>

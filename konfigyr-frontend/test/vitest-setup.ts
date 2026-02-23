@@ -16,6 +16,15 @@ afterEach(async () => {
 afterAll(() => server.close());
 
 if (typeof window !== 'undefined') {
+  const IntersectionObserverMock = vi.fn(class {
+    disconnect = vi.fn();
+    observe = vi.fn();
+    takeRecords = vi.fn();
+    unobserve = vi.fn();
+  });
+
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock);
+
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation(query => ({

@@ -1,7 +1,7 @@
 'use client';
 
 import { cva } from 'class-variance-authority';
-import * as AvatarPrimitive from '@radix-ui/react-avatar';
+import { Avatar as AvatarPrimitive } from 'radix-ui';
 import { cn } from '@konfigyr/components/utils';
 
 import type { ComponentProps } from 'react';

@@ -3,7 +3,7 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { Search } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Dialog as DialogPrimitive } from 'radix-ui';
 import { Button } from '@konfigyr/components/ui/button';
 import { Input } from '@konfigyr/components/ui/input';
 import { Kbd, KbdGroup } from '@konfigyr/components/ui/kbd';
@@ -103,7 +103,7 @@ export function SearchToggle({ className, ...props }: ComponentProps<'button'>) 
         size="sm"
         variant="ghost"
         className={cn(
-          'min-w-3xs bg-surface text-foreground dark:bg-card relative justify-start pl-3 font-medium md:border',
+          'min-w-7 md:min-w-3xs bg-surface text-foreground dark:bg-card relative justify-start pl-3 font-medium md:border',
           className,
         )}
         onClick={() => setOpen(true)}

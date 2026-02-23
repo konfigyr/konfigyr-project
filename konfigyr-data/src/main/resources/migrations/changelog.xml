@@ -44,4 +44,8 @@
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
 
+	<includeAll path="vault"
+				relativeToChangelogFile="true"
+				errorIfMissingOrEmpty="false"/>
+
 </databaseChangeLog>

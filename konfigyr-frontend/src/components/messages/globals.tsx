@@ -79,17 +79,66 @@ export function UpdatedAtLabel() {
   );
 }
 
+export const ActionsLabel = () => (
+  <FormattedMessage
+    defaultMessage="Actions"
+    description="The label used mainly for screen reader purposes. It is used mainly in table header cells where the action buttons are located."
+  />
+);
+
 export const CancelLabel = () => (
   <FormattedMessage
     defaultMessage="Cancel"
-    description="The label used for a cancel buttons or links."
+    description="The label used for cancel buttons or links."
+  />
+);
+
+export const HistoryLabel = () => (
+  <FormattedMessage
+    defaultMessage="History"
+    description="The label used for links that lead to the resource's history page. It can also be used as a heading for the history page itself."
+  />
+);
+
+export const CopyLabel = () => (
+  <FormattedMessage
+    defaultMessage="Copy"
+    description="Default label for the clipboard button, usually used to copy some text to the clipboard."
+  />
+);
+
+export const CopiedLabel = () => (
+  <FormattedMessage
+    defaultMessage="Copied!"
+    description="Label for the clipboard button notifying the user that the text has been successfully added to the clipboard."
   />
 );
 
 export const CloseLabel = () => (
   <FormattedMessage
     defaultMessage="Close"
-    description="The label used for a close buttons."
+    description="The label used for close buttons."
+  />
+);
+
+export const EditLabel = () => (
+  <FormattedMessage
+    defaultMessage="Edit"
+    description="The label used for edit buttons or links."
+  />
+);
+
+export const SaveLabel = () => (
+  <FormattedMessage
+    defaultMessage="Save"
+    description="The label used for save buttons."
+  />
+);
+
+export const UndoLabel = () => (
+  <FormattedMessage
+    defaultMessage="Undo"
+    description="The label used for undo buttons or links."
   />
 );
 

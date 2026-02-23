@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot } from 'radix-ui';
 import {
   Select,
   SelectContent,
@@ -19,7 +19,7 @@ function AlgorithmItem({ algorithm, description, asChild = false, className, ...
   description?: string | ReactNode,
   asChild?: boolean,
 } & ComponentProps<'div'>) {
-  const Comp = asChild ? Slot : 'div';
+  const Comp = asChild ? Slot.Root : 'div';
 
   return (
     <Comp {...props}>

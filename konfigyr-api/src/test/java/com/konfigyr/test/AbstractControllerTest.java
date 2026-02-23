@@ -3,6 +3,7 @@ package com.konfigyr.test;
 import com.konfigyr.account.Account;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.NamespaceNotFoundException;
+import com.konfigyr.namespace.ServiceNotFoundException;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.test.assertions.ProblemDetailAssert;
@@ -128,7 +129,7 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	}
 
 	/**
-	 * Creates a consumer that is used to assert if {@link MvcTestResult} contained a {@link ProblemDetail}
+	 * Creates a consumer used to assert if {@link MvcTestResult} contained a {@link ProblemDetail}
 	 * that indicates that the server returned a {@link NamespaceNotFoundException}.
 	 *
 	 * @param slug the namespace slug that was not found, can't be {@literal null}
@@ -140,6 +141,22 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 				.hasDetailContaining("The namespace you're trying to access doesn't exist or is no longer available.")
 		).andThen(hasFailedWithException(NamespaceNotFoundException.class, ex -> ex
 				.hasMessageContaining("Could not find a namespace with the following name: " + slug)
+		));
+	}
+
+	/**
+	 * Creates a consumer used to assert if {@link MvcTestResult} contained a {@link ProblemDetail}
+	 * that indicates that the server returned a {@link ServiceNotFoundException}.
+	 *
+	 * @param slug the service slug that was not found, can't be {@literal null}
+	 * @return the consumer function to assert the exception, never {@literal null}
+	 */
+	protected static Consumer<MvcTestResult> serviceNotFound(String slug) {
+		return problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+				.hasTitle("Service not found")
+				.hasDetailContaining("The service you're trying to access doesn't exist or is no longer available.")
+		).andThen(hasFailedWithException(ServiceNotFoundException.class, ex -> ex
+				.hasMessageContaining("Could not find a service with the following name: " + slug)
 		));
 	}
 

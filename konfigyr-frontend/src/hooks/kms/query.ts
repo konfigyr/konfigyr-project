@@ -28,8 +28,6 @@ export const getKeysetsQuery = (namespace: string, query: KeysetSearchQuery = {}
   return queryOptions({
     queryKey: kmsKeys.getKeysets(namespace, query),
     queryFn: async ({ signal }) => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       const response = await request.get(`api/namespaces/${namespace}/kms`, {
         signal, searchParams: query,
       }).json<{ data: Array<Keyset> }>();

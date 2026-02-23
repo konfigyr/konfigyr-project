@@ -115,7 +115,7 @@ describe('components | UI | <Input/>', () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
       name: 'John Doe',
-      age: '22',
+      age: 22,
       description: 'Test enthusiast.',
       enabled: false,
     }));

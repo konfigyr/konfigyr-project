@@ -324,3 +324,17 @@ export const useResetNamespaceApplication = (slug: string) => {
     },
   });
 };
+
+export const useUpdateNamespaceService = (slug: string, service: string) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateService): Promise<Service> => {
+      return request.put(`api/namespaces/${slug}/services/${service}`, { json: payload })
+        .json<Service>();
+    },
+    onSuccess(updated: Service) {
+      client.setQueryData(namespaceKeys.getNamespaceService(slug, service), updated);
+    },
+  });
+};

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Loader2Icon } from 'lucide-react';
 import { cva } from 'class-variance-authority';
-import { Slot, Slottable } from '@radix-ui/react-slot';
+import { Slot } from 'radix-ui';
 import { cn } from '@konfigyr/components/utils';
 
 import type { VariantProps } from 'class-variance-authority';
@@ -55,8 +55,8 @@ export function Button({
   asChild = false,
   ...props
 }: ButtonProps) {
-  const Comp = asChild ? Slot : 'button';
-  const Content = loading ? 'span' : Slottable;
+  const Comp = asChild ? Slot.Root : 'button';
+  const Content = loading ? 'span' : Slot.Slottable;
 
   return (
     <Comp
@@ -66,7 +66,7 @@ export function Button({
       {...props}
     >
       {loading && (
-        <Loader2Icon className={cn('text-muted absolute animate-spin', 'loading')} />
+        <Loader2Icon className="absolute animate-spin loading" />
       )}
 
       <Content className={cn(loading && 'invisible')}>

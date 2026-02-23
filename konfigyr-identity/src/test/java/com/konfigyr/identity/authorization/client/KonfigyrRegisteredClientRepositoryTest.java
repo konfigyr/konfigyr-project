@@ -84,7 +84,11 @@ class KonfigyrRegisteredClientRepositoryTest extends AbstractClientRepositoryTes
 						"namespaces:read",
 						"namespaces:delete",
 						"namespaces:write",
-						"namespaces:invite"
+						"namespaces:invite",
+						"profiles",
+						"profiles:read",
+						"profiles:write",
+						"profiles:delete"
 				))
 				.satisfies(assertAuthorizationGrantTypes(
 						AuthorizationGrantType.AUTHORIZATION_CODE,

@@ -1,0 +1,1488 @@
+{
+  "groupId": "org.springframework.boot",
+  "artifactId": "spring-boot",
+  "version": "3.5.7",
+  "name": null,
+  "description": null,
+  "website": null,
+  "repository": null,
+  "checksum": null,
+  "properties": [
+    {
+      "name": "debug",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Enable debug logs.",
+      "defaultValue": "false",
+      "deprecation": null
+    },
+    {
+      "name": "logging.charset.console",
+      "schema": {
+        "type": "string",
+        "format": "charset"
+      },
+      "typeName": "java.nio.charset.Charset",
+      "description": "Charset to use for console output.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.charset.file",
+      "schema": {
+        "type": "string",
+        "format": "charset"
+      },
+      "typeName": "java.nio.charset.Charset",
+      "description": "Charset to use for file output.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.config",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Location of the logging configuration file. For instance, `classpath:logback.xml` for Logback.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.exception-conversion-word",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Conversion word used when logging exceptions.",
+      "defaultValue": "%wEx",
+      "deprecation": null
+    },
+    {
+      "name": "logging.file",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Log file name (for instance, `myapp.log`). Names can be an exact location or relative to the current directory.",
+      "defaultValue": null,
+      "deprecation": {
+        "reason": null,
+        "replacement": "logging.file.name"
+      }
+    },
+    {
+      "name": "logging.file.clean-history-on-start",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to clean the archive log files on startup. Only supported with the default logback setup.",
+      "defaultValue": "false",
+      "deprecation": {
+        "reason": null,
+        "replacement": "logging.logback.rollingpolicy.clean-history-on-start"
+      }
+    },
+    {
+      "name": "logging.file.max-history",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": "Maximum number of archive log files to keep. Only supported with the default logback setup.",
+      "defaultValue": "7",
+      "deprecation": {
+        "reason": null,
+        "replacement": "logging.logback.rollingpolicy.max-history"
+      }
+    },
+    {
+      "name": "logging.file.max-size",
+      "schema": {
+        "type": "string",
+        "format": "data-size"
+      },
+      "typeName": "org.springframework.util.unit.DataSize",
+      "description": "Maximum log file size. Only supported with the default logback setup.",
+      "defaultValue": "10MB",
+      "deprecation": {
+        "reason": null,
+        "replacement": "logging.logback.rollingpolicy.max-file-size"
+      }
+    },
+    {
+      "name": "logging.file.name",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Log file name (for instance, `myapp.log`). Names can be an exact location or relative to the current directory.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.file.path",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Location of the log file. For instance, `/var/log`.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.file.total-size-cap",
+      "schema": {
+        "type": "string",
+        "format": "data-size"
+      },
+      "typeName": "org.springframework.util.unit.DataSize",
+      "description": "Total size of log backups to be kept. Only supported with the default logback setup.",
+      "defaultValue": "0B",
+      "deprecation": {
+        "reason": null,
+        "replacement": "logging.logback.rollingpolicy.total-size-cap"
+      }
+    },
+    {
+      "name": "logging.group",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "typeName": "java.util.Map<java.lang.String,java.util.List<java.lang.String>>",
+      "description": "Log groups to quickly change multiple loggers at the same time. For instance, `logging.group.db=org.hibernate,org.springframework.jdbc`.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.include-application-group",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to include the application group in the logs.",
+      "defaultValue": "true",
+      "deprecation": null
+    },
+    {
+      "name": "logging.include-application-name",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to include the application name in the logs.",
+      "defaultValue": "true",
+      "deprecation": null
+    },
+    {
+      "name": "logging.level",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "examples": [
+            "root",
+            "sql",
+            "web"
+          ]
+        },
+        "additionalProperties": {
+          "type": "string",
+          "examples": [
+            "debug",
+            "error",
+            "fatal",
+            "info",
+            "off",
+            "trace",
+            "warn"
+          ]
+        }
+      },
+      "typeName": "java.util.Map<java.lang.String,java.lang.String>",
+      "description": "Log levels severity mapping. For instance, `logging.level.org.springframework=DEBUG`.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.log4j2.config.override",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.List<java.lang.String>",
+      "description": "Overriding configuration files used to create a composite configuration. Can be prefixed with 'optional:' to only load the override if it exists.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.logback.rollingpolicy.clean-history-on-start",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to clean the archive log files on startup.",
+      "defaultValue": "false",
+      "deprecation": null
+    },
+    {
+      "name": "logging.logback.rollingpolicy.file-name-pattern",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Pattern for rolled-over log file names.",
+      "defaultValue": "${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz",
+      "deprecation": null
+    },
+    {
+      "name": "logging.logback.rollingpolicy.max-file-size",
+      "schema": {
+        "type": "string",
+        "format": "data-size"
+      },
+      "typeName": "org.springframework.util.unit.DataSize",
+      "description": "Maximum log file size.",
+      "defaultValue": "10MB",
+      "deprecation": null
+    },
+    {
+      "name": "logging.logback.rollingpolicy.max-history",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": "Maximum number of archive log files to keep.",
+      "defaultValue": "7",
+      "deprecation": null
+    },
+    {
+      "name": "logging.logback.rollingpolicy.total-size-cap",
+      "schema": {
+        "type": "string",
+        "format": "data-size"
+      },
+      "typeName": "org.springframework.util.unit.DataSize",
+      "description": "Total size of log backups to be kept.",
+      "defaultValue": "0B",
+      "deprecation": null
+    },
+    {
+      "name": "logging.path",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Location of the log file. For instance, `/var/log`.",
+      "defaultValue": null,
+      "deprecation": {
+        "reason": null,
+        "replacement": "logging.file.path"
+      }
+    },
+    {
+      "name": "logging.pattern.console",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Appender pattern for output to the console. Its default value varies according to the logging system.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.pattern.correlation",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Appender pattern for log correlation. Its default value varies according to the logging system.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.pattern.dateformat",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Appender pattern for log date format.",
+      "defaultValue": "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+      "deprecation": null
+    },
+    {
+      "name": "logging.pattern.file",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Appender pattern for output to a file. Its default value varies according to the logging system.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.pattern.level",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Appender pattern for log level.",
+      "defaultValue": "%5p",
+      "deprecation": null
+    },
+    {
+      "name": "logging.pattern.rolling-file-name",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Pattern for rolled-over log file names. Supported only with the default Logback setup.",
+      "defaultValue": "${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz",
+      "deprecation": {
+        "reason": null,
+        "replacement": "logging.logback.rollingpolicy.file-name-pattern"
+      }
+    },
+    {
+      "name": "logging.register-shutdown-hook",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Register a shutdown hook for the logging system when it is initialized. Disabled automatically when deployed as a war file.",
+      "defaultValue": "true",
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.ecs.service.environment",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Structured ECS service environment.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.ecs.service.name",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Structured ECS service name (defaults to 'spring.application.name').",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.ecs.service.node-name",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Structured ECS service node name.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.ecs.service.version",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Structured ECS service version (defaults to 'spring.application.version').",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.format.console",
+      "schema": {
+        "type": "string",
+        "examples": [
+          "ecs",
+          "gelf",
+          "logstash"
+        ]
+      },
+      "typeName": "java.lang.String",
+      "description": "Structured logging format for output to the console. Must be either a format id or a fully qualified class name.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.format.file",
+      "schema": {
+        "type": "string",
+        "examples": [
+          "ecs",
+          "gelf",
+          "logstash"
+        ]
+      },
+      "typeName": "java.lang.String",
+      "description": "Structured logging format for output to a file. Must be either a format id or a fully qualified class name.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.gelf.host",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Structured GELF host (defaults to 'spring.application.name').",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.gelf.service.version",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Structured GELF service version (defaults to 'spring.application.version').",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.add",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.Map<java.lang.String,java.lang.String>",
+      "description": "Additional members that should be added to structured logging JSON",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.context.include",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether context data should be included in the JSON.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.context.prefix",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "The prefix to use when inserting context data.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.customizer",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.Set<java.lang.Class<? extends org.springframework.boot.logging.structured.StructuredLoggingJsonMembersCustomizer<?>>>",
+      "description": "Fully qualified class names of StructuredLoggingJsonMembersCustomizer implementations",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.exclude",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.Set<java.lang.String>",
+      "description": "Member paths that should be excluded from structured logging JSON",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.include",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.Set<java.lang.String>",
+      "description": "Member paths that should be included in structured logging JSON",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.rename",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.Map<java.lang.String,java.lang.String>",
+      "description": "Mapping between member paths and an alternative name that should be used in structured logging JSON",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.stacktrace.include-common-frames",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether common frames should be included.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.stacktrace.include-hashes",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether stack trace hashes should be included.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.stacktrace.max-length",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": "Maximum length to print.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.stacktrace.max-throwable-depth",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": "Maximum throwable depth to print.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.stacktrace.printer",
+      "schema": {
+        "type": "string",
+        "examples": [
+          "logging-system",
+          "standard"
+        ]
+      },
+      "typeName": "java.lang.String",
+      "description": "Name of the printer to use. Can be 'standard', 'logging-system', or the fully-qualified class name of a StackTracePrinter. When not specified 'logging-system' or 'standard' will be used depending if other properties are set.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.structured.json.stacktrace.root",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "org.springframework.boot.logging.structured.StructuredLoggingJsonProperties.StackTrace.Root",
+      "description": "Root ordering (root first or root last).",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "logging.threshold.console",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Log level threshold for console output.",
+      "defaultValue": "TRACE",
+      "deprecation": null
+    },
+    {
+      "name": "logging.threshold.file",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Log level threshold for file output.",
+      "defaultValue": "TRACE",
+      "deprecation": null
+    },
+    {
+      "name": "spring.application.group",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Application group. Typically used with logging to help identify the application.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.application.index",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": "Application index.",
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Application context ids are now unique by default.",
+        "replacement": null
+      }
+    },
+    {
+      "name": "spring.application.name",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Application name. Typically used with logging to help identify the application.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.application.version",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Application version (defaults to 'Implementation-Version' from the manifest).",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.banner.charset",
+      "schema": {
+        "type": "string",
+        "format": "charset"
+      },
+      "typeName": "java.nio.charset.Charset",
+      "description": "Banner file encoding.",
+      "defaultValue": "UTF-8",
+      "deprecation": null
+    },
+    {
+      "name": "spring.banner.image.bitdepth",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": null,
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Support for image banners has been removed.",
+        "replacement": null
+      }
+    },
+    {
+      "name": "spring.banner.image.height",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": null,
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Support for image banners has been removed.",
+        "replacement": null
+      }
+    },
+    {
+      "name": "spring.banner.image.invert",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": null,
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Support for image banners has been removed.",
+        "replacement": null
+      }
+    },
+    {
+      "name": "spring.banner.image.location",
+      "schema": {
+        "type": "string",
+        "format": "resource"
+      },
+      "typeName": "org.springframework.core.io.Resource",
+      "description": null,
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Support for image banners has been removed.",
+        "replacement": null
+      }
+    },
+    {
+      "name": "spring.banner.image.margin",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": null,
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Support for image banners has been removed.",
+        "replacement": null
+      }
+    },
+    {
+      "name": "spring.banner.image.pixelmode",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "org.springframework.boot.ImageBanner$PixelMode",
+      "description": null,
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Support for image banners has been removed.",
+        "replacement": null
+      }
+    },
+    {
+      "name": "spring.banner.image.width",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": null,
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Support for image banners has been removed.",
+        "replacement": null
+      }
+    },
+    {
+      "name": "spring.banner.location",
+      "schema": {
+        "type": "string",
+        "format": "resource"
+      },
+      "typeName": "org.springframework.core.io.Resource",
+      "description": "Banner text resource location.",
+      "defaultValue": "classpath:banner.txt",
+      "deprecation": null
+    },
+    {
+      "name": "spring.beaninfo.ignore",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to skip search of BeanInfo classes.",
+      "defaultValue": "true",
+      "deprecation": null
+    },
+    {
+      "name": "spring.config.activate.on-cloud-platform",
+      "schema": {
+        "type": "string",
+        "enum": [
+          "AZURE_APP_SERVICE",
+          "CLOUD_FOUNDRY",
+          "HEROKU",
+          "KUBERNETES",
+          "NOMAD",
+          "NONE",
+          "SAP"
+        ]
+      },
+      "typeName": "org.springframework.boot.cloud.CloudPlatform",
+      "description": "Required cloud platform for the document to be included.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.config.activate.on-profile",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.lang.String[]",
+      "description": "Profile expressions that should match for the document to be included.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.config.additional-location",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Config file locations used in addition to the defaults.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.config.import",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "examples": [
+            "classpath:",
+            "configtree:",
+            "file:"
+          ]
+        }
+      },
+      "typeName": "java.util.List<java.lang.String>",
+      "description": "Import additional config data.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.config.location",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Config file locations that replace the defaults.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.config.name",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Config file name.",
+      "defaultValue": "application",
+      "deprecation": null
+    },
+    {
+      "name": "spring.jpa.defer-datasource-initialization",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to defer DataSource initialization until after any EntityManagerFactory beans have been created and initialized.",
+      "defaultValue": "false",
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.allow-bean-definition-overriding",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether bean definition overriding, by registering a definition with the same name as an existing definition, is allowed.",
+      "defaultValue": "false",
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.allow-circular-references",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to allow circular references between beans and automatically try to resolve them.",
+      "defaultValue": "false",
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.banner-mode",
+      "schema": {
+        "type": "string",
+        "enum": [
+          "CONSOLE",
+          "LOG",
+          "OFF"
+        ]
+      },
+      "typeName": "org.springframework.boot.Banner$Mode",
+      "description": "Mode used to display the banner when the application runs. Defaults to 'off' if structured logging is enabled or to 'console' otherwise",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.cloud-platform",
+      "schema": {
+        "type": "string",
+        "enum": [
+          "AZURE_APP_SERVICE",
+          "CLOUD_FOUNDRY",
+          "HEROKU",
+          "KUBERNETES",
+          "NOMAD",
+          "NONE",
+          "SAP"
+        ]
+      },
+      "typeName": "org.springframework.boot.cloud.CloudPlatform",
+      "description": "Override the Cloud Platform auto-detection.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.keep-alive",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to keep the application alive even if there are no more non-daemon threads.",
+      "defaultValue": "false",
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.lazy-initialization",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether initialization should be performed lazily.",
+      "defaultValue": "false",
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.log-startup-info",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether to log information about the application when it starts.",
+      "defaultValue": "true",
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.register-shutdown-hook",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether the application should have a shutdown hook registered.",
+      "defaultValue": "true",
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.show-banner",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Display the banner when the application runs.",
+      "defaultValue": "true",
+      "deprecation": {
+        "reason": null,
+        "replacement": "spring.main.banner-mode"
+      }
+    },
+    {
+      "name": "spring.main.sources",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.Set<java.lang.String>",
+      "description": "Sources (class names, package names, or XML resource locations) to include in the ApplicationContext.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.web-application-type",
+      "schema": {
+        "type": "string",
+        "enum": [
+          "NONE",
+          "REACTIVE",
+          "SERVLET"
+        ]
+      },
+      "typeName": "org.springframework.boot.WebApplicationType",
+      "description": "Flag to explicitly request a specific type of web application. If not set, auto-detected based on the classpath.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.main.web-environment",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Run the application in a web environment (auto-detected by default).",
+      "defaultValue": null,
+      "deprecation": {
+        "reason": null,
+        "replacement": "spring.main.web-application-type"
+      }
+    },
+    {
+      "name": "spring.mandatory-file-encoding",
+      "schema": {
+        "type": "string",
+        "format": "charset"
+      },
+      "typeName": "java.nio.charset.Charset",
+      "description": "Expected character encoding the application must use.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.output.ansi.enabled",
+      "schema": {
+        "type": "string",
+        "enum": [
+          "ALWAYS",
+          "DETECT",
+          "NEVER"
+        ]
+      },
+      "typeName": "org.springframework.boot.ansi.AnsiOutput$Enabled",
+      "description": "Configures the ANSI output.",
+      "defaultValue": "detect",
+      "deprecation": null
+    },
+    {
+      "name": "spring.pid.fail-on-write-error",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Fails if ApplicationPidFileWriter is used but it cannot write the PID file.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.pid.file",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Location of the PID file to write (if ApplicationPidFileWriter is used).",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.profiles.active",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of active profiles. Can be overridden by a command line switch.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.profiles.default",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Name of the profile to enable if no profile is active.",
+      "defaultValue": "default",
+      "deprecation": null
+    },
+    {
+      "name": "spring.profiles.group",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "typeName": "java.util.Map<java.lang.String,java.util.List<java.lang.String>>",
+      "description": "Profile groups to define a logical name for a related group of profiles.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.profiles.include",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "typeName": "java.util.List<java.lang.String>",
+      "description": "Unconditionally activate the specified comma-separated list of profiles (or list of profiles if using YAML).",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "spring.profiles.validate",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether profiles should be validated to ensure sensible names are used.",
+      "defaultValue": "true",
+      "deprecation": null
+    },
+    {
+      "name": "spring.reactor.debug-agent.enabled",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Whether the Reactor Debug Agent should be enabled when reactor-tools is present.",
+      "defaultValue": "true",
+      "deprecation": null
+    },
+    {
+      "name": "trace",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Enable trace logs.",
+      "defaultValue": "false",
+      "deprecation": null
+    },
+    {
+      "name": "acme.server.enumerated-map",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "enum": [
+            "VALUE_1",
+            "VALUE_2",
+            "VALUE_3"
+          ]
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "typeName": "java.util.Map<com.acme.AcmeProperties$EnumeratedKey,com.acme.AcmeProperties$EnumeratedValue>",
+      "description": "The map using enumeration as a map key. This should produce a property definition per enumeration.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "acme.server.enumerated-option",
+      "schema": {
+        "type": "string",
+        "enum": [
+          "OPTION_1",
+          "OPTION_2",
+          "OPTION_3"
+        ]
+      },
+      "typeName": "com.acme.AcmeProperties$EnumeratedOptions",
+      "description": "The value using the enumeration as a value. This should privide value hints for per enumeration value.",
+      "defaultValue": "option-1",
+      "deprecation": null
+    },
+    {
+      "name": "acme.server.enumerated-options",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "OPTION_1",
+            "OPTION_2",
+            "OPTION_3"
+          ]
+        }
+      },
+      "typeName": "java.util.List<com.acme.AcmeProperties$EnumeratedOptions>",
+      "description": "The value using the enumeration as a value in a collection. This should privide value hints for per enumeration value.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "acme.server.host",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "The host for the Acme server.",
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Deprecation reason",
+        "replacement": "acme.server.hostname"
+      }
+    },
+    {
+      "name": "acme.server.hostname",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "The hostname for the Acme server.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "acme.server.nested.name",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Name used by the nested property.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "acme.server.port",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": "The port number used by the Acme server. Defaults to 8080.",
+      "defaultValue": "8080",
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.asserting-parties",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "entityId": {
+              "type": "string"
+            },
+            "metadataUri": {
+              "type": "string"
+            },
+            "singlelogout": {
+              "type": "object",
+              "properties": {}
+            },
+            "singlesignon": {
+              "type": "object",
+              "properties": {}
+            },
+            "verification": {
+              "type": "object",
+              "properties": {
+                "credentials": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "typeName": "java.util.Map<java.lang.String,org.springframework.boot.autoconfigure.security.saml2.Saml2RelyingPartyProperties$AssertingParty>",
+      "description": "Property that would trigger {@code NoClassDefFoundError} for missing {@code Saml2MessageBinding} type.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.dynamic",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "dateTime": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "name": {
+              "type": "string"
+            },
+            "resource": {
+              "type": "string",
+              "format": "resource"
+            },
+            "size": {
+              "type": "string",
+              "format": "data-size"
+            },
+            "time": {
+              "type": "string",
+              "format": "time"
+            }
+          }
+        }
+      },
+      "typeName": "java.util.Map<java.lang.String,com.konfigyr.test.DynamicConfigurationType>",
+      "description": "Dynamic configuration properties.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.embedded-database-connection",
+      "schema": {
+        "type": "string",
+        "enum": [
+          "DERBY",
+          "H2",
+          "HSQLDB",
+          "NONE"
+        ]
+      },
+      "typeName": "org.springframework.boot.jdbc.EmbeddedDatabaseConnection",
+      "description": "Property that would trigger {@code NoClassDefFoundError} for missing {@code EmbeddedDatabaseType} type.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.enumerated-map",
+      "schema": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "enum": [
+            "VALUE_1",
+            "VALUE_2",
+            "VALUE_3"
+          ]
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "typeName": "java.util.Map<com.konfigyr.test.TestApplicationProperties$EnumeratedKey,com.konfigyr.test.TestApplicationProperties$EnumeratedValue>",
+      "description": "The map using enumeration as a map key. This should produce a property definition per enumeration.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.enumerated-option",
+      "schema": {
+        "type": "string",
+        "enum": [
+          "OPTION_1",
+          "OPTION_2",
+          "OPTION_3"
+        ]
+      },
+      "typeName": "com.konfigyr.test.TestApplicationProperties$EnumeratedOptions",
+      "description": "The value using the enumeration as a value. This should provide value hints for per enumeration value.",
+      "defaultValue": "option-1",
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.enumerated-options",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "OPTION_1",
+            "OPTION_2",
+            "OPTION_3"
+          ]
+        }
+      },
+      "typeName": "java.util.List<com.konfigyr.test.TestApplicationProperties$EnumeratedOptions>",
+      "description": "The value using the enumeration as a value in a collection. This should provide value hints for per enumeration value.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.host",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "The host for the Acme server.",
+      "defaultValue": null,
+      "deprecation": {
+        "reason": "Deprecation reason",
+        "replacement": "acme.server.hostname"
+      }
+    },
+    {
+      "name": "konfigyr.server.hostname",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "The hostname for the Acme server.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.nested.duration",
+      "schema": {
+        "type": "string",
+        "format": "duration"
+      },
+      "typeName": "java.time.Duration",
+      "description": "Duration used by the nested property.",
+      "defaultValue": "10s",
+      "deprecation": null
+    },
+    {
+      "name": "konfigyr.server.port",
+      "schema": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "typeName": "java.lang.Integer",
+      "description": "The port number used by the Acme server. Defaults to 8080.",
+      "defaultValue": "8080",
+      "deprecation": null
+    }
+  ]
+}

@@ -18,7 +18,7 @@ import java.util.Set;
  * centralized lifecycle management, storage, and cryptographic execution for {@code Keysets}.
  * <p>
  * This domain builds upon the Konfigyr Crypto library and extends the {@link com.konfigyr.crypto.Keyset Keysets}
- * concept by providing additional metadata, security and governance features. For more information see
+ * concept by providing additional metadata, security, and governance features. For more information see
  * the <a href="https://github.com/konfigyr/konfigyr-crypto/">Konfigyr Crypto documentation</a>.
  * <p>
  * The Konfigyr KMS is designed for multi-tenant environments where security, auditability

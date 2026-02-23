@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="vspasic" id="1.0.0-create-vault-profiles-table" context="api">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="vault_profiles" />
+            </not>
+        </preConditions>
+
+        <comment>Vault Service Profile table</comment>
+
+        <createTable tableName="vault_profiles" remarks="Stores service profile state.">
+			<column name="id" type="bigint">
+				<constraints nullable="false" primaryKey="true"/>
+			</column>
+
+			<column name="service_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="slug" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="name" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="description" type="varchar(255)">
+				<constraints nullable="true"/>
+			</column>
+
+			<column name="state" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="policy" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="position" type="integer" defaultValue="1">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<addUniqueConstraint
+				tableName="vault_profiles"
+				columnNames="service_id,slug"
+				constraintName="unique_service_profile"
+		/>
+    </changeSet>
+</databaseChangeLog>

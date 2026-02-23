@@ -39,7 +39,6 @@ dependencies {
 
     testImplementation project(':konfigyr-test')
     testImplementation 'com.icegreen:greenmail'
-    testImplementation 'com.google.jimfs:jimfs'
     testImplementation 'org.wiremock.integrations:wiremock-spring-boot'
     testImplementation 'org.springframework.boot:spring-boot-starter-batch-jdbc-test'
 }

@@ -29,6 +29,10 @@ import { Route as AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport }
 import { Route as AuthenticatedNamespaceNamespaceApplicationsIdRouteImport } from './routes/_authenticated/namespace/$namespace/applications/$id'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/route'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/index'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/settings'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/create-profile'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/requests/index'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -146,6 +150,40 @@ const AuthenticatedNamespaceNamespaceServicesServiceIndexRoute =
     getParentRoute: () =>
       AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
   } as any)
+const AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () =>
+      AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport.update(
+    {
+      id: '/create-profile',
+      path: '/create-profile',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport.update(
+    {
+      id: '/requests/',
+      path: '/requests/',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteImport.update(
+    {
+      id: '/profiles/$profile',
+      path: '/profiles/$profile',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+    } as any,
+  )
 
 export interface FileRoutesByFullPath {
   '/api/$': typeof ApiSplatRoute
@@ -166,7 +204,11 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
   '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
+  '/namespace/$namespace/services/$service/create-profile': typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
+  '/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/namespace/$namespace/services/$service/': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
+  '/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute
+  '/namespace/$namespace/services/$service/requests': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/api/$': typeof ApiSplatRoute
@@ -183,7 +225,11 @@ export interface FileRoutesByTo {
   '/namespace/$namespace/applications': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/namespace/$namespace/kms': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
   '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
+  '/namespace/$namespace/services/$service/create-profile': typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
+  '/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/namespace/$namespace/services/$service': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
+  '/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute
+  '/namespace/$namespace/services/$service/requests': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,7 +252,11 @@ export interface FileRoutesById {
   '/_authenticated/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/_authenticated/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
   '/_authenticated/namespace/$namespace/settings/': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
+  '/_authenticated/namespace/$namespace/services/$service/create-profile': typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
+  '/_authenticated/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/_authenticated/namespace/$namespace/services/$service/': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
+  '/_authenticated/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute
+  '/_authenticated/namespace/$namespace/services/$service/requests/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,7 +279,11 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/applications/'
     | '/namespace/$namespace/kms/'
     | '/namespace/$namespace/settings'
+    | '/namespace/$namespace/services/$service/create-profile'
+    | '/namespace/$namespace/services/$service/settings'
     | '/namespace/$namespace/services/$service/'
+    | '/namespace/$namespace/services/$service/profiles/$profile'
+    | '/namespace/$namespace/services/$service/requests'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/api/$'
@@ -246,7 +300,11 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/applications'
     | '/namespace/$namespace/kms'
     | '/namespace/$namespace/settings'
+    | '/namespace/$namespace/services/$service/create-profile'
+    | '/namespace/$namespace/services/$service/settings'
     | '/namespace/$namespace/services/$service'
+    | '/namespace/$namespace/services/$service/profiles/$profile'
+    | '/namespace/$namespace/services/$service/requests'
   id:
     | '__root__'
     | '/_authenticated'
@@ -268,7 +326,11 @@ export interface FileRouteTypes {
     | '/_authenticated/namespace/$namespace/applications/'
     | '/_authenticated/namespace/$namespace/kms/'
     | '/_authenticated/namespace/$namespace/settings/'
+    | '/_authenticated/namespace/$namespace/services/$service/create-profile'
+    | '/_authenticated/namespace/$namespace/services/$service/settings'
     | '/_authenticated/namespace/$namespace/services/$service/'
+    | '/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
+    | '/_authenticated/namespace/$namespace/services/$service/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -419,6 +481,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
+    '/_authenticated/namespace/$namespace/services/$service/settings': {
+      id: '/_authenticated/namespace/$namespace/services/$service/settings'
+      path: '/settings'
+      fullPath: '/namespace/$namespace/services/$service/settings'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/create-profile': {
+      id: '/_authenticated/namespace/$namespace/services/$service/create-profile'
+      path: '/create-profile'
+      fullPath: '/namespace/$namespace/services/$service/create-profile'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/requests/': {
+      id: '/_authenticated/namespace/$namespace/services/$service/requests/'
+      path: '/requests'
+      fullPath: '/namespace/$namespace/services/$service/requests'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/profiles/$profile': {
+      id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
+      path: '/profiles/$profile'
+      fullPath: '/namespace/$namespace/services/$service/profiles/$profile'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    }
   }
 }
 
@@ -462,13 +552,25 @@ const AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren =
   )
 
 interface AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren {
+  AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
+  AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   AuthenticatedNamespaceNamespaceServicesServiceIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
+  AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute
+  AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 
 const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren: AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren =
   {
+    AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute,
+    AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute,
     AuthenticatedNamespaceNamespaceServicesServiceIndexRoute:
       AuthenticatedNamespaceNamespaceServicesServiceIndexRoute,
+    AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute,
+    AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute,
   }
 
 const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteWithChildren =

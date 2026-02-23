@@ -1,6 +1,7 @@
 'use client';
 
 import { cva } from 'class-variance-authority';
+import { useIsMobile } from '@konfigyr/hooks/use-mobile';
 import { AccountDropdown } from '@konfigyr/components/account/dropdown';
 import { NamespaceDropDownMenu } from '@konfigyr/components/namespace/navigation/dropdown-menu';
 import {
@@ -9,6 +10,8 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
 } from '@konfigyr/components/ui/sidebar';
 import { cn } from '@konfigyr/components/utils';
 import { SearchToggle } from './search-toggle';
@@ -47,18 +50,42 @@ export function Layout({ children }: ComponentProps<'div'>) {
   );
 }
 
-export function LayoutNavbar({ title }: { title: string } & ComponentProps<'div'>) {
+export function LayoutNavbar({ title, children }: { title: string } & ComponentProps<'div'>) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <div className="px-4 py-2 mb-6 border-b">
+        <div className="flex items-center gap-2">
+          <SidebarTrigger />
+          <h1 className="text-2xl font-semibold grow">{title}</h1>
+          <SearchToggle />
+        </div>
+        {children && (
+          <div className="w-full overflow-auto">
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <nav className="h-14 flex items-center justify-between px-4 py-2 mb-6 border-b">
+    <div className="h-14 flex items-center gap-4 justify-between px-4 py-2 mb-6 border-b">
       <h1 className="text-2xl font-semibold">{title}</h1>
+      {children && (
+        <div className="grow">
+          {children}
+        </div>
+      )}
       <SearchToggle />
-    </nav>
+    </div>
   );
 }
 
 export function LayoutSidebar({ account, namespace, children }: { account: Account, namespace: Namespace } & ComponentProps<'div'>) {
   return (
-    <Sidebar collapsible="none" className="h-screen">
+    <Sidebar collapsible="offcanvas" className="h-screen">
       <SidebarHeader className="border-b">
         <NamespaceDropDownMenu namespace={namespace} />
       </SidebarHeader>
@@ -71,6 +98,7 @@ export function LayoutSidebar({ account, namespace, children }: { account: Accou
           <ThemeSwitcher />
         </div>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }
@@ -79,7 +107,7 @@ export function LayoutContent({ variant, className, children }: VariantProps<typ
   return (
     <main
       data-slot="layout-content-container"
-      className="container"
+      className="w-full"
     >
       <div
         data-slot="layout-content"
