@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Map;
@@ -308,10 +309,12 @@ public class ApplicationsControllerTest extends AbstractNamespaceControllerTest 
 	@Transactional
 	@DisplayName("should create namespace OAuth application with expiresAt")
 	void createApplicationWithExpiration() {
+		OffsetDateTime expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1);
+
 		mvc.post().uri("/namespaces/{slug}/applications", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces:read namespaces:invite\", \"expiresAt\":\"2030-01-01T00:00:00Z\"}")
+				.content("{\"name\":\"New app\", \"scopes\":\"namespaces:read namespaces:invite\", \"expiresAt\":\"" + expiresAt + "\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -321,7 +324,10 @@ public class ApplicationsControllerTest extends AbstractNamespaceControllerTest 
 				.returns(EntityId.from(2L), NamespaceApplication::namespace)
 				.returns("New app", NamespaceApplication::name)
 				.returns(OAuthScopes.of(OAuthScope.READ_NAMESPACES, OAuthScope.INVITE_MEMBERS), NamespaceApplication::scopes)
-				.returns(null, NamespaceApplication::expiresAt)
+				.satisfies(it -> assertThat(it.expiresAt())
+						.isNotNull()
+						.isCloseTo(expiresAt, within(1, ChronoUnit.SECONDS))
+				)
 				.satisfies(it -> assertThat(it.clientId())
 						.isNotBlank()
 				)
