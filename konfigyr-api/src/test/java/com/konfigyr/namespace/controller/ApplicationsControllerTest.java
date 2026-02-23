@@ -306,12 +306,12 @@ public class ApplicationsControllerTest extends AbstractNamespaceControllerTest 
 
 	@Test
 	@Transactional
-	@DisplayName("should create namespace OAuth application with expiration")
+	@DisplayName("should create namespace OAuth application with expiresAt")
 	void createApplicationWithExpiration() {
 		mvc.post().uri("/namespaces/{slug}/applications", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces:read namespaces:invite\", \"expiresAt\":\"2020-01-01T00:00:00Z\"}")
+				.content("{\"name\":\"New app\", \"scopes\":\"namespaces:read namespaces:invite\", \"expiresAt\":\"2030-01-01T00:00:00Z\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -429,14 +429,14 @@ public class ApplicationsControllerTest extends AbstractNamespaceControllerTest 
 
 	@Test
 	@Transactional
-	@DisplayName("should update namespace OAuth application with expiration")
+	@DisplayName("should update namespace OAuth application with expiresAt")
 	void updateApplicationWithExpiration() {
 		final var expiry = OffsetDateTime.now().plusDays(2);
 
 		mvc.put().uri("/namespaces/{slug}/applications/{id}", "john-doe", EntityId.from(3).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"Updated\", \"scopes\":\"namespaces:invite\", \"expiration\":\"" + expiry + "\"}")
+				.content("{\"name\":\"Updated\", \"scopes\":\"namespaces:invite\", \"expiresAt\":\"" + expiry + "\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())

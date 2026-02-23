@@ -20,9 +20,13 @@ import { Route as AuthenticatedNamespaceNamespaceIndexRouteImport } from './rout
 import { Route as AuthenticatedNamespaceNamespaceMembersRouteImport } from './routes/_authenticated/namespace/$namespace/members'
 import { Route as AuthenticatedNamespaceNamespaceInvitationsRouteImport } from './routes/_authenticated/namespace/$namespace/invitations'
 import { Route as AuthenticatedNamespaceNamespaceKmsRouteRouteImport } from './routes/_authenticated/namespace/$namespace/kms/route'
+import { Route as AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport } from './routes/_authenticated/namespace/$namespace/applications/route'
 import { Route as AuthenticatedNamespaceNamespaceSettingsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/settings/index'
 import { Route as AuthenticatedNamespaceNamespaceKmsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/kms/index'
+import { Route as AuthenticatedNamespaceNamespaceApplicationsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/applications/index'
 import { Route as AuthenticatedNamespaceNamespaceKmsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/kms/create'
+import { Route as AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/applications/create'
+import { Route as AuthenticatedNamespaceNamespaceApplicationsIdRouteImport } from './routes/_authenticated/namespace/$namespace/applications/$id'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/route'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/index'
 
@@ -87,6 +91,12 @@ const AuthenticatedNamespaceNamespaceKmsRouteRoute =
     path: '/kms',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
+const AuthenticatedNamespaceNamespaceApplicationsRouteRoute =
+  AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
 const AuthenticatedNamespaceNamespaceSettingsIndexRoute =
   AuthenticatedNamespaceNamespaceSettingsIndexRouteImport.update({
     id: '/settings/',
@@ -99,11 +109,29 @@ const AuthenticatedNamespaceNamespaceKmsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedNamespaceNamespaceKmsRouteRoute,
   } as any)
+const AuthenticatedNamespaceNamespaceApplicationsIndexRoute =
+  AuthenticatedNamespaceNamespaceApplicationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceApplicationsRouteRoute,
+  } as any)
 const AuthenticatedNamespaceNamespaceKmsCreateRoute =
   AuthenticatedNamespaceNamespaceKmsCreateRouteImport.update({
     id: '/create',
     path: '/create',
     getParentRoute: () => AuthenticatedNamespaceNamespaceKmsRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceApplicationsCreateRoute =
+  AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceApplicationsRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceApplicationsIdRoute =
+  AuthenticatedNamespaceNamespaceApplicationsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceApplicationsRouteRoute,
   } as any)
 const AuthenticatedNamespaceNamespaceServicesServiceRouteRoute =
   AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport.update({
@@ -126,12 +154,16 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
   '/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
   '/account': typeof AuthenticatedAccountIndexRoute
+  '/namespace/$namespace/applications': typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteWithChildren
   '/namespace/$namespace/kms': typeof AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren
   '/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
   '/namespace/$namespace/': typeof AuthenticatedNamespaceNamespaceIndexRoute
   '/namespace/$namespace/services/$service': typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRouteWithChildren
+  '/namespace/$namespace/applications/$id': typeof AuthenticatedNamespaceNamespaceApplicationsIdRoute
+  '/namespace/$namespace/applications/create': typeof AuthenticatedNamespaceNamespaceApplicationsCreateRoute
   '/namespace/$namespace/kms/create': typeof AuthenticatedNamespaceNamespaceKmsCreateRoute
+  '/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
   '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
   '/namespace/$namespace/services/$service/': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
@@ -145,7 +177,10 @@ export interface FileRoutesByTo {
   '/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
   '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceIndexRoute
+  '/namespace/$namespace/applications/$id': typeof AuthenticatedNamespaceNamespaceApplicationsIdRoute
+  '/namespace/$namespace/applications/create': typeof AuthenticatedNamespaceNamespaceApplicationsCreateRoute
   '/namespace/$namespace/kms/create': typeof AuthenticatedNamespaceNamespaceKmsCreateRoute
+  '/namespace/$namespace/applications': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/namespace/$namespace/kms': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
   '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
   '/namespace/$namespace/services/$service': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
@@ -159,12 +194,16 @@ export interface FileRoutesById {
   '/_authenticated/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
   '/_authenticated/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
   '/_authenticated/account/': typeof AuthenticatedAccountIndexRoute
+  '/_authenticated/namespace/$namespace/applications': typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteWithChildren
   '/_authenticated/namespace/$namespace/kms': typeof AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren
   '/_authenticated/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/_authenticated/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
   '/_authenticated/namespace/$namespace/': typeof AuthenticatedNamespaceNamespaceIndexRoute
   '/_authenticated/namespace/$namespace/services/$service': typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRouteWithChildren
+  '/_authenticated/namespace/$namespace/applications/$id': typeof AuthenticatedNamespaceNamespaceApplicationsIdRoute
+  '/_authenticated/namespace/$namespace/applications/create': typeof AuthenticatedNamespaceNamespaceApplicationsCreateRoute
   '/_authenticated/namespace/$namespace/kms/create': typeof AuthenticatedNamespaceNamespaceKmsCreateRoute
+  '/_authenticated/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/_authenticated/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
   '/_authenticated/namespace/$namespace/settings/': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
   '/_authenticated/namespace/$namespace/services/$service/': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
@@ -178,12 +217,16 @@ export interface FileRouteTypes {
     | '/namespace/$namespace'
     | '/namespace/provision'
     | '/account'
+    | '/namespace/$namespace/applications'
     | '/namespace/$namespace/kms'
     | '/namespace/$namespace/invitations'
     | '/namespace/$namespace/members'
     | '/namespace/$namespace/'
     | '/namespace/$namespace/services/$service'
+    | '/namespace/$namespace/applications/$id'
+    | '/namespace/$namespace/applications/create'
     | '/namespace/$namespace/kms/create'
+    | '/namespace/$namespace/applications/'
     | '/namespace/$namespace/kms/'
     | '/namespace/$namespace/settings'
     | '/namespace/$namespace/services/$service/'
@@ -197,7 +240,10 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/invitations'
     | '/namespace/$namespace/members'
     | '/namespace/$namespace'
+    | '/namespace/$namespace/applications/$id'
+    | '/namespace/$namespace/applications/create'
     | '/namespace/$namespace/kms/create'
+    | '/namespace/$namespace/applications'
     | '/namespace/$namespace/kms'
     | '/namespace/$namespace/settings'
     | '/namespace/$namespace/services/$service'
@@ -210,12 +256,16 @@ export interface FileRouteTypes {
     | '/_authenticated/namespace/$namespace'
     | '/_authenticated/namespace/provision'
     | '/_authenticated/account/'
+    | '/_authenticated/namespace/$namespace/applications'
     | '/_authenticated/namespace/$namespace/kms'
     | '/_authenticated/namespace/$namespace/invitations'
     | '/_authenticated/namespace/$namespace/members'
     | '/_authenticated/namespace/$namespace/'
     | '/_authenticated/namespace/$namespace/services/$service'
+    | '/_authenticated/namespace/$namespace/applications/$id'
+    | '/_authenticated/namespace/$namespace/applications/create'
     | '/_authenticated/namespace/$namespace/kms/create'
+    | '/_authenticated/namespace/$namespace/applications/'
     | '/_authenticated/namespace/$namespace/kms/'
     | '/_authenticated/namespace/$namespace/settings/'
     | '/_authenticated/namespace/$namespace/services/$service/'
@@ -306,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
+    '/_authenticated/namespace/$namespace/applications': {
+      id: '/_authenticated/namespace/$namespace/applications'
+      path: '/applications'
+      fullPath: '/namespace/$namespace/applications'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
+    }
     '/_authenticated/namespace/$namespace/settings/': {
       id: '/_authenticated/namespace/$namespace/settings/'
       path: '/settings'
@@ -320,12 +377,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRoute
     }
+    '/_authenticated/namespace/$namespace/applications/': {
+      id: '/_authenticated/namespace/$namespace/applications/'
+      path: '/'
+      fullPath: '/namespace/$namespace/applications/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRoute
+    }
     '/_authenticated/namespace/$namespace/kms/create': {
       id: '/_authenticated/namespace/$namespace/kms/create'
       path: '/create'
       fullPath: '/namespace/$namespace/kms/create'
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsCreateRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/applications/create': {
+      id: '/_authenticated/namespace/$namespace/applications/create'
+      path: '/create'
+      fullPath: '/namespace/$namespace/applications/create'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/applications/$id': {
+      id: '/_authenticated/namespace/$namespace/applications/$id'
+      path: '/$id'
+      fullPath: '/namespace/$namespace/applications/$id'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsIdRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRoute
     }
     '/_authenticated/namespace/$namespace/services/$service': {
       id: '/_authenticated/namespace/$namespace/services/$service'
@@ -343,6 +421,27 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedNamespaceNamespaceApplicationsRouteRouteChildren {
+  AuthenticatedNamespaceNamespaceApplicationsIdRoute: typeof AuthenticatedNamespaceNamespaceApplicationsIdRoute
+  AuthenticatedNamespaceNamespaceApplicationsCreateRoute: typeof AuthenticatedNamespaceNamespaceApplicationsCreateRoute
+  AuthenticatedNamespaceNamespaceApplicationsIndexRoute: typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
+}
+
+const AuthenticatedNamespaceNamespaceApplicationsRouteRouteChildren: AuthenticatedNamespaceNamespaceApplicationsRouteRouteChildren =
+  {
+    AuthenticatedNamespaceNamespaceApplicationsIdRoute:
+      AuthenticatedNamespaceNamespaceApplicationsIdRoute,
+    AuthenticatedNamespaceNamespaceApplicationsCreateRoute:
+      AuthenticatedNamespaceNamespaceApplicationsCreateRoute,
+    AuthenticatedNamespaceNamespaceApplicationsIndexRoute:
+      AuthenticatedNamespaceNamespaceApplicationsIndexRoute,
+  }
+
+const AuthenticatedNamespaceNamespaceApplicationsRouteRouteWithChildren =
+  AuthenticatedNamespaceNamespaceApplicationsRouteRoute._addFileChildren(
+    AuthenticatedNamespaceNamespaceApplicationsRouteRouteChildren,
+  )
 
 interface AuthenticatedNamespaceNamespaceKmsRouteRouteChildren {
   AuthenticatedNamespaceNamespaceKmsCreateRoute: typeof AuthenticatedNamespaceNamespaceKmsCreateRoute
@@ -378,6 +477,7 @@ const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteWithChildren =
   )
 
 interface AuthenticatedNamespaceNamespaceRouteRouteChildren {
+  AuthenticatedNamespaceNamespaceApplicationsRouteRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteWithChildren
   AuthenticatedNamespaceNamespaceKmsRouteRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren
   AuthenticatedNamespaceNamespaceInvitationsRoute: typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   AuthenticatedNamespaceNamespaceMembersRoute: typeof AuthenticatedNamespaceNamespaceMembersRoute
@@ -388,6 +488,8 @@ interface AuthenticatedNamespaceNamespaceRouteRouteChildren {
 
 const AuthenticatedNamespaceNamespaceRouteRouteChildren: AuthenticatedNamespaceNamespaceRouteRouteChildren =
   {
+    AuthenticatedNamespaceNamespaceApplicationsRouteRoute:
+      AuthenticatedNamespaceNamespaceApplicationsRouteRouteWithChildren,
     AuthenticatedNamespaceNamespaceKmsRouteRoute:
       AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren,
     AuthenticatedNamespaceNamespaceInvitationsRoute:

@@ -61,3 +61,18 @@ export interface CreateService {
   slug?: string;
   description?: string;
 }
+
+export interface NamespaceApplication {
+  id: string,
+  name: string;
+  clientId: string;
+  clientSecret: string;
+  scopes: string;
+  expiresAt?: string
+}
+
+export interface CreateNamespaceApplication {
+  name: string;
+  scopes?: string;
+  expiresAt?: string
+}
