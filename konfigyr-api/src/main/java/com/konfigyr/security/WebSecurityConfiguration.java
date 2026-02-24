@@ -1,5 +1,6 @@
 package com.konfigyr.security;
 
+import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
 import com.konfigyr.web.WebExceptionHandler;
 import org.springframework.context.annotation.Bean;
@@ -9,9 +10,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
@@ -19,8 +17,6 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.Collection;
 
 /**
  * Spring web security configuration class that would register the Spring Security OAuth2 Login flow.
@@ -57,7 +53,7 @@ public class WebSecurityConfiguration {
 				.rememberMe(AbstractHttpConfigurer::disable)
 				.oauth2ResourceServer(server -> server
 						.jwt(jwt -> jwt
-								.jwtAuthenticationConverter(jwtAuthenticationConverter())
+								.jwtAuthenticationConverter(AuthenticatedPrincipalAuthenticationToken::of)
 						)
 						.bearerTokenResolver(bearerTokenResolver)
 						.authenticationEntryPoint(exceptionHandler)
@@ -90,22 +86,6 @@ public class WebSecurityConfiguration {
 		return new DelegatingSecurityContextRepository(
 				new RequestAttributeSecurityContextRepository()
 		);
-	}
-
-	/**
-	 * Creates a customized {@link JwtAuthenticationConverter} that would use the {@link OAuthScopes}
-	 * to convert the {@link GrantedAuthority granted authorities} that would be assigned to the
-	 * {@link org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken}.
-	 *
-	 * @return the customized JWT authentication token
-	 */
-	@SuppressWarnings("unchecked")
-	private static JwtAuthenticationConverter jwtAuthenticationConverter() {
-		final JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-		converter.setPrincipalClaimName(JwtClaimNames.SUB);
-		converter.setJwtGrantedAuthoritiesConverter(
-				jwt -> (Collection<GrantedAuthority>) OAuthScopes.from(jwt).toAuthorities());
-		return converter;
 	}
 
 }

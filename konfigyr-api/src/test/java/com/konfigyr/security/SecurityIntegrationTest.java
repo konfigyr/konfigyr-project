@@ -1,15 +1,20 @@
 package com.konfigyr.security;
 
-import com.konfigyr.test.AbstractControllerTest;
-import com.konfigyr.test.KeyGenerator;
-import com.konfigyr.test.TestPrincipals;
+import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
+import com.konfigyr.test.*;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.jspecify.annotations.NonNull;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
+import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
 
 import java.time.Instant;
@@ -30,7 +35,14 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		);
 
 		assertThatRequest(token)
-				.hasStatusOk();
+				.hasStatusOk()
+				.matches(authorities(OAuthScope.NAMESPACES))
+				.matches(principal(principal -> principal
+						.isUserAccount()
+						.hasSubject(TestPrincipals.john().getName())
+						.hasNoDisplayName()
+						.hasNoEmail()
+				));
 	}
 
 	@Test
@@ -39,11 +51,19 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
 				.subject("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
-				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
+				.claim(StandardClaimNames.NAME, "OAuth application")
+				.claim("scp", OAuthScopes.of(OAuthScope.NAMESPACES, OAuthScope.PROFILES).toString())
 		);
 
 		assertThatRequest(token)
-				.hasStatusOk();
+				.hasStatusOk()
+				.matches(authorities(OAuthScope.NAMESPACES, OAuthScope.PROFILES))
+				.matches(principal(principal -> principal
+						.isClient()
+						.hasSubject("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
+						.hasDisplayName("OAuth application")
+						.hasNoEmail()
+				));
 	}
 
 	@Test
@@ -55,19 +75,31 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		);
 
 		assertThatRequest(token)
-				.hasStatus(HttpStatus.UNAUTHORIZED);
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.matches(SecurityMockMvcResultMatchers.unauthenticated());
 	}
 
 	@Test
 	@DisplayName("should fail to retrieve namespaces when claims are not set")
 	void missingRequiredClaims() {
+		final var account = TestAccounts.jane().build();
+
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
-				.subject(TestPrincipals.john().getName())
+				.subject(TestPrincipals.from(account).getName())
+				.claim(StandardClaimNames.EMAIL, account.email())
+				.claim(StandardClaimNames.NAME, account.displayName())
 		);
 
 		assertThatRequest(token)
-				.hasStatus(HttpStatus.FORBIDDEN);
+				.hasStatus(HttpStatus.FORBIDDEN)
+				.matches(authorities())
+				.matches(principal(principal -> principal
+						.isUserAccount()
+						.hasSubject(account.id().serialize())
+						.hasDisplayName(account.displayName())
+						.hasEmail(account.email())
+				));
 	}
 
 	@Test
@@ -80,7 +112,8 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		);
 
 		assertThatRequest(token)
-				.hasStatus(HttpStatus.UNAUTHORIZED);
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.matches(SecurityMockMvcResultMatchers.unauthenticated());
 	}
 
 	@Test
@@ -92,7 +125,8 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		);
 
 		assertThatRequest(token)
-				.hasStatus(HttpStatus.UNAUTHORIZED);
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.matches(SecurityMockMvcResultMatchers.unauthenticated());
 	}
 
 	@Test
@@ -108,7 +142,8 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		);
 
 		assertThatRequest(token)
-				.hasStatus(HttpStatus.UNAUTHORIZED);
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.matches(SecurityMockMvcResultMatchers.unauthenticated());
 	}
 
 	static MvcTestResultAssert assertThatRequest(String token) {
@@ -128,6 +163,28 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		customizer.accept(builder);
 
 		return KeyGenerator.getInstance().sign(key, builder.build()).serialize();
+	}
+
+	static ResultMatcher authorities(OAuthScope... scopes) {
+		final var aggregated = OAuthScopes.of(scopes);
+
+		return SecurityMockMvcResultMatchers.authenticated()
+				.withAuthentication(authentication -> Assertions.assertThat(authentication.getAuthorities())
+						.as("Should contain the following OAuth scopes: %s", aggregated.toString())
+						.asInstanceOf(InstanceOfAssertFactories.iterable(GrantedAuthority.class))
+						.containsAll(aggregated.toAuthorities())
+				);
+	}
+
+	static ResultMatcher principal(Consumer<AuthenticatedPrincipalAssert> assertAuthentication) {
+		return SecurityMockMvcResultMatchers.authenticated()
+				.withAuthentication(authentication -> assertAuthentication.accept(
+						Assertions.assertThat(authentication)
+								.isInstanceOf(AuthenticatedPrincipalAuthenticationToken.class)
+								.asInstanceOf(InstanceOfAssertFactories.type(AuthenticatedPrincipalAuthenticationToken.class))
+								.extracting(AuthenticatedPrincipalAuthenticationToken::getPrincipal)
+								.asInstanceOf(AuthenticatedPrincipalAssert.factory())
+				));
 	}
 
 }
