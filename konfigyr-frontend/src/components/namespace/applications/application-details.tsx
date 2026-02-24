@@ -3,8 +3,8 @@ import {EllipsisVerticalIcon, MonitorCloud, MonitorIcon, ScreenShareOff} from 'l
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
 import {
-  Card,
-  CardContent,
+  Card, CardAction,
+  CardContent, CardFooter,
   CardHeader,
   CardIcon,
   CardTitle,
@@ -13,12 +13,6 @@ import {
   DeleteNamespaceApplicationLabel,
 } from '@konfigyr/components/namespace/applications/messages';
 import { ClipboardIconButton } from '@konfigyr/components/clipboard';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@konfigyr/components/ui/dropdown-menu';
 import {useNavigate} from '@tanstack/react-router';
 import {ConfirmNamespaceApplicationAction} from '@konfigyr/components/namespace/applications/confirm-application-action';
 import {useRemoveNamespaceApplication, useResetNamespaceApplication} from '@konfigyr/hooks';
@@ -134,31 +128,28 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
                   ''
                 }
               </div>
-              { showActions &&
-                <div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" aria-label="More options">
-                        <EllipsisVerticalIcon />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => setResetting(namespaceApplication)}>
-                        <FormattedMessage
-                          defaultMessage="Reset application"
-                          description="Button label that triggers application reset confirmation dialog when clicked"
-                        />
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setRemoving(namespaceApplication)}>
-                        <DeleteNamespaceApplicationLabel/>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              }
             </article>
           </div>
         </CardContent>
+        <CardFooter className="justify-end border-t">
+          { showActions &&
+            <>
+              <CardAction className="pr-5">
+                <Button variant="secondary" onClick={() => setResetting(namespaceApplication)}>
+                  <FormattedMessage
+                    defaultMessage="Reset application"
+                    description="Button label that triggers application reset confirmation dialog when clicked"
+                  />
+                </Button>
+              </CardAction>
+              <CardAction>
+                <Button variant="destructive" onClick={() => setRemoving(namespaceApplication)}>
+                  <DeleteNamespaceApplicationLabel/>
+                </Button>
+              </CardAction>
+            </>
+          }
+        </CardFooter>
       </Card>
 
       <ConfirmNamespaceApplicationAction
