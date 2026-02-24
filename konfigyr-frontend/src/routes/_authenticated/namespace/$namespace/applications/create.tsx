@@ -3,7 +3,7 @@ import {
   CardContent,
 } from '@konfigyr/components/ui/card';
 import { useCreateNamespaceApplication, useNamespace } from '@konfigyr/hooks';
-import { createFileRoute } from '@tanstack/react-router';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
 import {useState} from 'react';
 import {NamespaceApplicationDetails} from '@konfigyr/components/namespace/applications/application-details';
@@ -20,6 +20,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const namespace = useNamespace();
+  const navigate = useNavigate();
   const [application, setApplication] = useState<NamespaceApplication>();
 
   const { mutateAsync: createNamespaceApplication } = useCreateNamespaceApplication(namespace.slug);
@@ -30,7 +31,14 @@ function RouteComponent() {
       scopes: value.scopes.join(' '),
       expiresAt: value.expiresAt ? new Date(value.expiresAt).toISOString() : undefined,
     });
-    setApplication(created);
+    await navigate({
+      to: '/namespace/$namespace/applications/$id',
+      params: { namespace: namespace.slug, id: created.id },
+      state: (prev) => ({
+        ...prev,
+        clientSecret: created.clientSecret,
+      }),
+    });
   };
 
   return (

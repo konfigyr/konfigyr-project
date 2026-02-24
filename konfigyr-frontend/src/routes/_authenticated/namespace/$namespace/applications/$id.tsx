@@ -7,7 +7,7 @@ import {
   useGetNamespaceApplication,
   useNamespace,
 } from '@konfigyr/hooks';
-import { createFileRoute } from '@tanstack/react-router';
+import {createFileRoute, useLocation} from '@tanstack/react-router';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
 import { NamespaceApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
 import { toast} from 'sonner';
@@ -15,6 +15,7 @@ import { FormattedMessage} from 'react-intl';
 import { ErrorState } from '@konfigyr/components/error';
 import {MonitorCloud, ScreenShareOff} from 'lucide-react';
 import {EmptyState} from '@konfigyr/components/ui/empty';
+import type { ClientSecret } from '@konfigyr/components/namespace/applications/application-details';
 import type { z } from 'zod';
 import type { namespaceApplicationSchema } from '@konfigyr/components/namespace/applications/application-form';
 
@@ -26,6 +27,9 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const namespace = useNamespace();
+
+  const location = useLocation();
+  const state = location.state as ClientSecret;
 
   const { id }  = Route.useParams();
 
@@ -67,7 +71,10 @@ function RouteComponent() {
         <>
           <NamespaceApplicationDetails
             namespace={namespace}
-            namespaceApplication={application}
+            namespaceApplication={{
+              ...application,
+              clientSecret: state.clientSecret,
+            }}
             showActions={true}
           />
 

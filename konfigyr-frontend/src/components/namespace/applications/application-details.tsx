@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import {EllipsisVerticalIcon, MonitorCloud, MonitorIcon, ScreenShareOff} from 'lucide-react';
+import { MonitorCloud } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -18,8 +18,12 @@ import {
   ConfirmNamespaceApplicationDeleteAction,
   ConfirmNamespaceApplicationResetAction,
 } from '@konfigyr/components/namespace/applications/confirm-application-action';
-import {useRemoveNamespaceApplication, useResetNamespaceApplication} from '@konfigyr/hooks';
+import { useRemoveNamespaceApplication, useResetNamespaceApplication } from '@konfigyr/hooks';
 import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
+
+export interface ClientSecret {
+  clientSecret?: string;
+}
 
 type ClientSecretProps = {
   clientSecret: string;
@@ -46,12 +50,12 @@ export function ClientSecret({ clientSecret }: ClientSecretProps) {
         <span className="pl-5">
           <ClipboardIconButton text={clientSecret} />
         </span>
-        <p className="pt-2 text-red-500">
-          <FormattedMessage
-            defaultMessage="Make sure to copy your client secret now as you will not be able to see this again."
-            description="Client secret warning message"
-          />
-        </p>
+      </p>
+      <p className="pt-2 text-red-500">
+        <FormattedMessage
+          defaultMessage="Make sure to copy your client secret now as you will not be able to see this again."
+          description="Client secret warning message"
+        />
       </p>
     </>)
   ;
@@ -60,7 +64,6 @@ export function ClientSecret({ clientSecret }: ClientSecretProps) {
 export function NamespaceApplicationDetails({namespace, namespaceApplication, showActions = false}: NamespaceApplicationDetailsProps) {
   const navigate = useNavigate();
 
-  const [clientSecret, setClientSecret] = useState<string | undefined>(namespaceApplication.clientSecret);
   const [removing, setRemoving] = useState<NamespaceApplication | undefined>();
   const [resetting, setResetting] = useState<NamespaceApplication | undefined>();
 
@@ -77,8 +80,15 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
   const onCloseResetting = useCallback(() => setResetting(undefined), []);
 
   const onConfirmResetting = async (id: string) => {
-    const app = await resetNamespaceApplication(id);
-    setClientSecret(app.clientSecret);
+    const updated = await resetNamespaceApplication(id);
+    await navigate({
+      to: '/namespace/$namespace/applications/$id',
+      params: { namespace: namespace.slug, id: updated.id },
+      state: (prev) => ({
+        ...prev,
+        clientSecret: updated.clientSecret,
+      }),
+    });
   };
 
   const onConfirmRemoving = async (id: string) => {
@@ -125,8 +135,8 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
                     <ClipboardIconButton text={namespaceApplication.clientId} />
                   </span>
                 </p>
-                { clientSecret ?
-                  <ClientSecret clientSecret={clientSecret} />
+                { namespaceApplication.clientSecret ?
+                  <ClientSecret clientSecret={namespaceApplication.clientSecret} />
                   :
                   ''
                 }
