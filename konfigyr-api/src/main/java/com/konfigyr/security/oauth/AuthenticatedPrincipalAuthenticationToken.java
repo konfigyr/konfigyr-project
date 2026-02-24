@@ -29,7 +29,7 @@ import java.util.HashSet;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
-public class AuthenticatedPrincipalAuthenticationToken extends JwtAuthenticationToken {
+public final class AuthenticatedPrincipalAuthenticationToken extends JwtAuthenticationToken {
 
 	private final AuthenticatedPrincipal principal;
 

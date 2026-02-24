@@ -15,7 +15,7 @@ import java.util.Objects;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
-public class AuthenticatedPrincipalAssert extends AbstractObjectAssert<AuthenticatedPrincipalAssert, AuthenticatedPrincipal> {
+public final class AuthenticatedPrincipalAssert extends AbstractObjectAssert<AuthenticatedPrincipalAssert, AuthenticatedPrincipal> {
 
 	/**
 	 * Creates a new {@link AuthenticatedPrincipalAssert} with the given principal value to check.
