@@ -66,7 +66,7 @@ export interface NamespaceApplication {
   id: string,
   name: string;
   clientId: string;
-  clientSecret: string;
+  clientSecret?: string;
   scopes: string;
   expiresAt?: string
 }

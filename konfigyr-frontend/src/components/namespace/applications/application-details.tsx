@@ -14,7 +14,10 @@ import {
 } from '@konfigyr/components/namespace/applications/messages';
 import { ClipboardIconButton } from '@konfigyr/components/clipboard';
 import {useNavigate} from '@tanstack/react-router';
-import {ConfirmNamespaceApplicationAction} from '@konfigyr/components/namespace/applications/confirm-application-action';
+import {
+  ConfirmNamespaceApplicationDeleteAction,
+  ConfirmNamespaceApplicationResetAction,
+} from '@konfigyr/components/namespace/applications/confirm-application-action';
 import {useRemoveNamespaceApplication, useResetNamespaceApplication} from '@konfigyr/hooks';
 import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
@@ -57,7 +60,7 @@ export function ClientSecret({ clientSecret }: ClientSecretProps) {
 export function NamespaceApplicationDetails({namespace, namespaceApplication, showActions = false}: NamespaceApplicationDetailsProps) {
   const navigate = useNavigate();
 
-  const [clientSecret, setClientSecret] = useState<string>(namespaceApplication.clientSecret);
+  const [clientSecret, setClientSecret] = useState<string | undefined>(namespaceApplication.clientSecret);
   const [removing, setRemoving] = useState<NamespaceApplication | undefined>();
   const [resetting, setResetting] = useState<NamespaceApplication | undefined>();
 
@@ -152,16 +155,14 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
         </CardFooter>
       </Card>
 
-      <ConfirmNamespaceApplicationAction
-        action={'reset'}
+      <ConfirmNamespaceApplicationResetAction
         isPending={isPendingResetting}
         application={resetting}
         onClose={onCloseResetting}
         onConfirm={onConfirmResetting}
       />
 
-      <ConfirmNamespaceApplicationAction
-        action={'remove'}
+      <ConfirmNamespaceApplicationDeleteAction
         isPending={isPendingRemoving}
         application={removing}
         onClose={onCloseRemoving}

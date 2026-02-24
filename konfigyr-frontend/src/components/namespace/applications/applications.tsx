@@ -19,7 +19,7 @@ import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { CreateExpirationDateLabel } from '@konfigyr/components/namespace/applications/messages';
 import {Link} from '@tanstack/react-router';
 import {
-  ConfirmNamespaceApplicationAction,
+  ConfirmNamespaceApplicationDeleteAction,
 } from '@konfigyr/components/namespace/applications/confirm-application-action';
 import type { Namespace, NamespaceApplication} from '@konfigyr/hooks/types';
 
@@ -129,10 +129,9 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
         </CardContent>
       </Card>
 
-      <ConfirmNamespaceApplicationAction
-        action={'remove'}
-        isPending={isPendingRemoving}
+      <ConfirmNamespaceApplicationDeleteAction
         application={removing}
+        isPending={isPendingRemoving}
         onClose={onCloseRemoving}
         onConfirm={onConfirmRemoving}
       />

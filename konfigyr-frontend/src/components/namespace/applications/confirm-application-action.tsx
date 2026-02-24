@@ -3,7 +3,6 @@
 import { toast } from 'sonner';
 import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import {useRemoveNamespaceApplication, useResetNamespaceApplication} from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -15,17 +14,16 @@ import {
   AlertDialogTitle,
 } from '@konfigyr/components/ui/alert-dialog';
 
-import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
+import type { NamespaceApplication } from '@konfigyr/hooks/types';
 
 type Props = {
-  action: string,
-  isPending: boolean,
   application?: NamespaceApplication | null
+  isPending: boolean,
   onClose: () => void
   onConfirm: (id: string) => void
 };
 
-export function ConfirmNamespaceApplicationAction({ application, isPending, action, onClose = () => {}, onConfirm = () => {} }: Props) {
+export function ConfirmNamespaceApplicationDeleteAction({ application, isPending,  onClose = () => {}, onConfirm = () => {} }: Props) {
   const open = useMemo(() => !!application , [application]);
   const errorNotification = useErrorNotification();
 
@@ -43,9 +41,9 @@ export function ConfirmNamespaceApplicationAction({ application, isPending, acti
     }
 
     toast.success(<FormattedMessage
-      defaultMessage="The {action} action completed successfully."
-      values={{ action: action }}
-      description="Success message"
+      defaultMessage="The {name} wassuccessfully deleted."
+      values={{ name: application?.name }}
+      description="Success message for deleting of an application"
     />);
 
     return onClose();
@@ -57,17 +55,86 @@ export function ConfirmNamespaceApplicationAction({ application, isPending, acti
         <AlertDialogHeader>
           <AlertDialogTitle>
             <FormattedMessage
-              defaultMessage="Confirm {action}"
-              values={{ action: action }}
-              description="Title of the modal that is shown when user tries to confirm action"
+              defaultMessage="Delete {name} application"
+              values={{ name: application?.name }}
+              description="Title of the modal that is shown when user tries todelete application"
             />
           </AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogDescription>
           <FormattedMessage
-            defaultMessage="Are you sure you want to {action} this application? This action cannot be undone."
-            values={{ action: action }}
-            description="Confirmation text in the modal that is shown when user tries to remove a namespace application"
+            defaultMessage="Are you sure you want to delete {name} application? This action cannot be undone."
+            values={{ name: application?.name }}
+            description="Confirmation text in the modal that is shown when user tries to delete a namespace application"
+          />
+        </AlertDialogDescription>
+        <AlertDialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <FormattedMessage
+              defaultMessage="Cancel"
+              description="Label for the cancel button in the modal"
+            />
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={isPending}
+            loading={isPending}
+            onClick={onClickConfirm}
+          >
+            <FormattedMessage
+              defaultMessage="Yes"
+              description="Label for the confirm button in the modal"
+            />
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+export function ConfirmNamespaceApplicationResetAction({ application, isPending, onClose = () => {}, onConfirm = () => {} }: Props) {
+  const open = useMemo(() => !!application , [application]);
+  const errorNotification = useErrorNotification();
+
+  const onOpenChange = useCallback((state: boolean) => {
+    if (!state) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const onClickConfirm = useCallback(async () => {
+    try {
+      await onConfirm(application!.id);
+    } catch (error) {
+      return errorNotification(error);
+    }
+
+    toast.success(<FormattedMessage
+      defaultMessage="The {name} application was successfully reset."
+      values={{ name: application?.name }}
+      description="Success message for resetting of an application"
+    />);
+
+    return onClose();
+  }, [application, onClose, errorNotification]);
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            <FormattedMessage
+              defaultMessage="Reset {name}"
+              values={{ name: application?.name }}
+              description="Title of the modal that is shown when user tries to reset application"
+            />
+          </AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogDescription>
+          <FormattedMessage
+            defaultMessage="Are you sure you want to rest {name} application? This action cannot be undone."
+            values={{ name: application?.name }}
+            description="Confirmation text in the modal that is shown when user tries to rest a namespace application"
           />
         </AlertDialogDescription>
         <AlertDialogFooter>
