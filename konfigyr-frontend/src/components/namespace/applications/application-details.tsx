@@ -12,6 +12,7 @@ import {
 import {
   DeleteNamespaceApplicationLabel,
 } from '@konfigyr/components/namespace/applications/messages';
+import { ClipboardIconButton } from '@konfigyr/components/clipboard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,15 +39,16 @@ export function ClientSecret({ clientSecret }: ClientSecretProps) {
   return (
     <>
       <p className="pb-1">
-        <FormattedMessage
-          defaultMessage="<b>Client Secret:</b> {clientSecret}"
-          description="Client secret value display"
-          values={{
-            clientSecret,
-            b: (chunks) => <strong>{chunks}</strong>,
-          }}
-        />
-
+        <span className="font-bold pr-1">
+          <FormattedMessage
+            defaultMessage="Client Secret:"
+            description="Client secret value display"
+          />
+        </span>
+        {clientSecret}
+        <span className="pl-5">
+          <ClipboardIconButton text={clientSecret} />
+        </span>
         <p className="pt-2 text-red-500">
           <FormattedMessage
             defaultMessage="Make sure to copy your client secret now as you will not be able to see this again."
@@ -122,6 +124,9 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
                     />
                   </span>
                   {namespaceApplication.clientId}
+                  <span className="pl-5">
+                    <ClipboardIconButton text={namespaceApplication.clientId} />
+                  </span>
                 </p>
                 { clientSecret ?
                   <ClientSecret clientSecret={clientSecret} />
