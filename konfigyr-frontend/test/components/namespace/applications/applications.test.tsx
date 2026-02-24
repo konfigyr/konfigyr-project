@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
-import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
+import { afterEach, describe, expect, test } from 'vitest';
+import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { namespaces } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import { NamespaceApplications } from '@konfigyr/components/namespace/applications/applications';
@@ -8,7 +8,7 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
   afterEach(() => cleanup());
 
   test('should render namespace applications with loading state', () => {
-    const result = renderWithQueryClient(
+    const result = renderComponentWithRouter(
       <NamespaceApplications namespace={namespaces.konfigyr} />,
     );
 
@@ -17,7 +17,7 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
   });
 
   test('should render an empty namespace applications component', async () => {
-    const result = renderWithQueryClient(
+    const result = renderComponentWithRouter(
       <NamespaceApplications namespace={namespaces.johnDoe} />,
     );
 
@@ -27,11 +27,7 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
   });
 
   test('should render namespace applications when loaded', async () => {
-    vi.mock('@tanstack/react-router', () => ({
-      Link: ({ children }: any) => <a>{children}</a>,
-    }));
-
-    const result = renderWithQueryClient(
+    const result = renderComponentWithRouter(
       <NamespaceApplications namespace={namespaces.konfigyr} />,
     );
 
