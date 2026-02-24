@@ -15,7 +15,6 @@ import {
   CardTitle,
 } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { CreateExpirationDateLabel } from '@konfigyr/components/namespace/applications/messages';
 import {Link} from '@tanstack/react-router';
 import {
@@ -27,19 +26,6 @@ export interface NamespaceApplicationArticleProps {
   namespace: Namespace,
   application: NamespaceApplication;
   onRemove: (member: NamespaceApplication) => void;
-}
-
-export function SkeletonArticle() {
-  return (
-    <article data-slot="namespace-applications-skeleton" className="flex justify-between items-center gap-4">
-      <Skeleton className="size-12 rounded-full" />
-      <div className="grow space-y-2">
-        <Skeleton className="w-48 h-4" />
-        <Skeleton className="w-64 h-3" />
-      </div>
-      <Skeleton className="w-18 h-4 mr-16" />
-    </article>
-  );
 }
 
 export function NamespaceApplicationArticle({ application, namespace, onRemove }: NamespaceApplicationArticleProps) {
@@ -107,7 +93,13 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
         <CardContent>
           <div className="flex flex-col gap-6">
             {isPending && (
-              <SkeletonArticle />
+              <article data-slot="namespace-applications-skeleton">
+                <EmptyState
+                  title="Namespage applications"
+                  description="Namespace applications are loading. Please wait"
+                  icon={<MonitorCloud />}
+                />
+              </article>
             )}
 
             {isError && (

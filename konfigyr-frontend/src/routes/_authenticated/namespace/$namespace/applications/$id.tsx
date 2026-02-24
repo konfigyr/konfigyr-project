@@ -7,14 +7,16 @@ import {
   useGetNamespaceApplication,
   useNamespace,
 } from '@konfigyr/hooks';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
 import { NamespaceApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
-import {toast} from 'sonner';
-import {FormattedMessage} from 'react-intl';
-import type {
-  namespaceApplicationSchema} from '@konfigyr/components/namespace/applications/application-form';
+import { toast} from 'sonner';
+import { FormattedMessage} from 'react-intl';
+import { ErrorState } from '@konfigyr/components/error';
+import {MonitorCloud, ScreenShareOff} from 'lucide-react';
+import {EmptyState} from '@konfigyr/components/ui/empty';
 import type { z } from 'zod';
+import type { namespaceApplicationSchema } from '@konfigyr/components/namespace/applications/application-form';
 
 export const Route = createFileRoute(
   '/_authenticated/namespace/$namespace/applications/$id',
@@ -24,11 +26,10 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const namespace = useNamespace();
-  const navigate = useNavigate();
 
   const { id }  = Route.useParams();
 
-  const { data: application } = useGetNamespaceApplication(namespace.slug, id);
+  const { data: application, error, isPending, isError } = useGetNamespaceApplication(namespace.slug, id);
 
   const { mutateAsync: editNamespaceApplication } = useEditNamespaceApplication(namespace.slug, id);
 
@@ -48,24 +49,39 @@ function RouteComponent() {
 
   return (
     <div className="w-full space-y-6 px-4 mx-auto">
-
-      { application && (
-        <NamespaceApplicationDetails
-          namespace={namespace}
-          namespaceApplication={application}
-          showActions={true}
-        />
+      {isPending && (
+        <article data-slot="namespace-application-skeleton">
+          <EmptyState
+            title="Namespase application"
+            description="Namespace application is loading. Please wait"
+            icon={<MonitorCloud />}
+          />
+        </article>
       )}
 
-      <Card className="border">
-        <CardContent>
-          <NamespaceApplicationForm
+      {isError && (
+        <ErrorState error={error} className="border-none" />
+      )}
+
+      { application && (
+        <>
+          <NamespaceApplicationDetails
             namespace={namespace}
             namespaceApplication={application}
-            handleSubmit={onNamespaceApplicationUpdate}
+            showActions={true}
           />
-        </CardContent>
-      </Card>
+
+          <Card className="border">
+            <CardContent>
+              <NamespaceApplicationForm
+                namespace={namespace}
+                namespaceApplication={application}
+                handleSubmit={onNamespaceApplicationUpdate}
+              />
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
