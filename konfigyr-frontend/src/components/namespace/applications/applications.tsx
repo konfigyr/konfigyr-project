@@ -16,7 +16,7 @@ import {
 } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { CreateExpirationDateLabel } from '@konfigyr/components/namespace/applications/messages';
-import {Link} from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import {
   ConfirmNamespaceApplicationDeleteAction,
 } from '@konfigyr/components/namespace/applications/confirm-application-action';
@@ -28,7 +28,7 @@ export interface NamespaceApplicationArticleProps {
   onRemove: (member: NamespaceApplication) => void;
 }
 
-export function NamespaceApplicationArticle({ application, namespace, onRemove }: NamespaceApplicationArticleProps) {
+function NamespaceApplicationArticle({ application, namespace, onRemove }: NamespaceApplicationArticleProps) {
   return (
     <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
 

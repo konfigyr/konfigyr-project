@@ -190,6 +190,24 @@ const removeMember = http.delete('http://localhost/api/namespaces/:slug/members/
   }, { status: 404 });
 });
 
+const getApplications = http.get('http://localhost/api/namespaces/:slug/applications', ({ params }) => {
+  const { slug } = params;
+  const applications = [];
+
+  if (slug === namespaces.konfigyr.slug) {
+    applications.push({
+      id: '07WVB2BA709FB',
+      name: 'Test application',
+      clientId: 'kfg-A9sB-6VYJWTQeJGPQsD06hfCulYfosod',
+      clientSecret: 'JMAm42MSA0I4_iwzH39Oex0N7qoqSb91z6jEp7LQwQ4',
+      scopes: 'namespaces:read namespaces:write',
+      expiresAt: null,
+    });
+  }
+
+  return HttpResponse.json({ data: applications });
+});
+
 export default [
   check,
   create,
@@ -200,4 +218,5 @@ export default [
   inviteMember,
   updateMember,
   removeMember,
+  getApplications,
 ];
