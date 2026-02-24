@@ -106,24 +106,22 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
             <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
               <div className="grow">
                 <p className="pb-1">
-                  <FormattedMessage
-                    defaultMessage="<b>Scopes:</b> {scopes}"
-                    description="Expiration date of the token for an application"
-                    values={{
-                      scopes: namespaceApplication.scopes,
-                      b: (chunks) => <strong>{chunks}</strong>,
-                    }}
-                  />
+                  <span className="font-bold pr-1">
+                    <FormattedMessage
+                      defaultMessage="Scopes:"
+                      description="Expiration date of the token for an application"
+                    />
+                  </span>
+                  {namespaceApplication.scopes}
                 </p>
                 <p className="pb-1">
-                  <FormattedMessage
-                    defaultMessage="<b>Client ID:</b> {clientId}"
-                    description="Expiration date of the token for an application"
-                    values={{
-                      clientId: namespaceApplication.clientId,
-                      b: (chunks) => <strong>{chunks}</strong>,
-                    }}
-                  />
+                  <span className="font-bold pr-1">
+                    <FormattedMessage
+                      defaultMessage="Client ID:"
+                      description="Expiration date of the token for an application"
+                    />
+                  </span>
+                  {namespaceApplication.clientId}
                 </p>
                 { clientSecret ?
                   <ClientSecret clientSecret={clientSecret} />

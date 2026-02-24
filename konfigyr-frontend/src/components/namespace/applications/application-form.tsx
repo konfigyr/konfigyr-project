@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { format } from 'date-fns';
-import {useCallback, useMemo} from 'react';
+import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { useForm } from '@konfigyr/components/ui/form';
@@ -8,6 +8,8 @@ import {
   CreateNamespaceApplicationLabel,
   UpdateNamespaceApplicationLabel,
 } from '@konfigyr/components/namespace/applications/messages';
+import { Checkbox} from '@konfigyr/components/ui/checkbox';
+import { Label } from '@konfigyr/components/ui/label';
 import type { FormEvent } from 'react';
 import type { Namespace, NamespaceApplication} from '@konfigyr/hooks/types';
 
@@ -92,45 +94,40 @@ export function NamespaceApplicationForm({ namespace, namespaceApplication, hand
           </field.Control>
         )} />
 
-        <form.AppField
-          name="scopes"
-          children={(field) => (
-            <>
-              <field.Control
-                label={<FormattedMessage
-                  defaultMessage="Select scopes"
-                  description="Label for the application scopes field"
-                />}
-                description={<FormattedMessage
-                  defaultMessage="List of scopes that the application has access to"
-                  description="Help text for the namespace application scopes field"
-                />}
-              >
-                <>
-                  {SCOPES.map((option) => {
-                    const checked = field.state.value.includes(option);
-                    return (
-                      <label key={option} className="flex items-center space-x-2 p-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            const newScopes = e.target.checked
-                              ? [...field.state.value, option]
-                              : field.state.value.filter((v) => v !== option);
-                            console.log(newScopes);
-                            field.setValue(newScopes);
-                          }}
-                        />
-                        <span>{option}</span>
-                      </label>
-                    );
-                  })}
-                </>
-              </field.Control>
-            </>
-          )}
-        />
+        <form.AppField name="scopes" children={(field) => (
+          <field.Control
+            label={<FormattedMessage
+              defaultMessage="Select scopes"
+              description="Label for the application scopes field"
+            />}
+            description={<FormattedMessage
+              defaultMessage="List of scopes that the application has access to"
+              description="Help text for the namespace application scopes field"
+            />}
+          >
+            <div className="space-y-2">
+              {SCOPES.map((scope) => {
+                const checked = field.state.value.includes(scope);
+                return (
+                  <div key={scope} className="flex items-center gap-2">
+                    <Checkbox
+                      key={scope}
+                      id={scope}
+                      checked={checked}
+                      onCheckedChange={(isChecked) => {
+                        const scopes = isChecked
+                          ? [...field.state.value, scope]
+                          : field.state.value.filter((s) => s !== scope);
+                        field.handleChange(scopes);
+                      }}
+                    />
+                    <Label htmlFor={scope}>{scope}</Label>
+                  </div>
+                );
+              })}
+            </div>
+          </field.Control>
+        )} />
 
         <form.Submit>
           { namespaceApplication?.id ? <UpdateNamespaceApplicationLabel /> : <CreateNamespaceApplicationLabel /> }
