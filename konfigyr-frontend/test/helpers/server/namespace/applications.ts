@@ -1,0 +1,65 @@
+import { HttpResponse, http } from 'msw';
+import { applications, namespaces } from '../../mocks';
+
+const getAll = http.get('http://localhost/api/namespaces/:slug/applications', ({ params }) => {
+  const { slug } = params;
+  const result = [];
+
+  if (slug === namespaces.konfigyr.slug) {
+    result.push(applications.konfigyr);
+  }
+
+  return HttpResponse.json({ data: result });
+});
+
+const get = http.get('http://localhost/api/namespaces/:slug/applications/:id', ({ params }) => {
+  const { slug, id } = params;
+
+  if (slug === namespaces.konfigyr.slug && id === applications.konfigyr.id ) {
+    return HttpResponse.json(applications.konfigyr);
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace member with identifier '${slug}' not found.`,
+  }, { status: 404 });
+});
+
+const remove = http.delete('http://localhost/api/namespaces/:slug/applications/:id', ({ params }) => {
+  const { slug, id } = params;
+
+  if (slug !== namespaces.konfigyr.slug && id === '18cVB2BA709FB') {
+    return new HttpResponse(null, { status: 204 });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace application with identifier '${id}' not found.`,
+  }, { status: 404 });
+});
+
+const reset = http.put('http://localhost/api/namespaces/:slug/applications/:id/reset', async ({ params }) => {
+  const { id, slug } = params;
+
+  if (slug !== namespaces.konfigyr.slug && id === '18cVB2BA709FB') {
+    return HttpResponse.json({
+      ...applications.konfigyr,
+      clientSecret: 'ie7_0_vVBFhULfkIZLrTIv9fHFx4aSe67lOyy5fZQTU',
+    });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace application with identifier '${id}' not found.`,
+  }, { status: 404 });
+});
+
+export default [
+  getAll,
+  get,
+  remove,
+  reset,
+];

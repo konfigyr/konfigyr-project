@@ -41,7 +41,7 @@ export function ConfirmNamespaceApplicationDeleteAction({ application, isPending
     }
 
     toast.success(<FormattedMessage
-      defaultMessage="The {name} wassuccessfully deleted."
+      defaultMessage="The &quot;{name}&quot; was successfully deleted."
       values={{ name: application?.name }}
       description="Success message for deleting of an application"
     />);
@@ -55,7 +55,7 @@ export function ConfirmNamespaceApplicationDeleteAction({ application, isPending
         <AlertDialogHeader>
           <AlertDialogTitle>
             <FormattedMessage
-              defaultMessage="Delete {name} application"
+              defaultMessage="Delete &quot;{name}&quot; application"
               values={{ name: application?.name }}
               description="Title of the modal that is shown when user tries todelete application"
             />
@@ -63,7 +63,7 @@ export function ConfirmNamespaceApplicationDeleteAction({ application, isPending
         </AlertDialogHeader>
         <AlertDialogDescription>
           <FormattedMessage
-            defaultMessage="Are you sure you want to delete {name} application? This action cannot be undone."
+            defaultMessage="Are you sure you want to delete &quot;{name}&quot; application? This action cannot be undone."
             values={{ name: application?.name }}
             description="Confirmation text in the modal that is shown when user tries to delete a namespace application"
           />
@@ -124,7 +124,7 @@ export function ConfirmNamespaceApplicationResetAction({ application, isPending,
         <AlertDialogHeader>
           <AlertDialogTitle>
             <FormattedMessage
-              defaultMessage="Reset {name}"
+              defaultMessage="Reset &quot;{name}&quot; application"
               values={{ name: application?.name }}
               description="Title of the modal that is shown when user tries to reset application"
             />
@@ -132,7 +132,7 @@ export function ConfirmNamespaceApplicationResetAction({ application, isPending,
         </AlertDialogHeader>
         <AlertDialogDescription>
           <FormattedMessage
-            defaultMessage="Are you sure you want to rest {name} application? This action cannot be undone."
+            defaultMessage="Are you sure you want to rest &quot;{name}&quot; application? This action cannot be undone."
             values={{ name: application?.name }}
             description="Confirmation text in the modal that is shown when user tries to rest a namespace application"
           />

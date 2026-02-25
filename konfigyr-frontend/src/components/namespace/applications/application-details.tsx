@@ -118,7 +118,7 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
                   <span className="font-bold pr-1">
                     <FormattedMessage
                       defaultMessage="Scopes:"
-                      description="Expiration date of the token for an application"
+                      description="Application scopes"
                     />
                   </span>
                   {namespaceApplication.scopes}
@@ -127,7 +127,7 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
                   <span className="font-bold pr-1">
                     <FormattedMessage
                       defaultMessage="Client ID:"
-                      description="Expiration date of the token for an application"
+                      description="Client identifier of the token for an application"
                     />
                   </span>
                   {namespaceApplication.clientId}
