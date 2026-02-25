@@ -1,6 +1,16 @@
 import { HttpResponse, http } from 'msw';
 import { applications, namespaces } from '../../mocks';
 
+const create = http.post('http://localhost/api/namespaces/:slug/applications', async ({ request }) => {
+  const body= await request.clone().json() as Record<string, unknown>;
+
+  return HttpResponse.json({
+    id: 'created-application',
+    clientSecret: 'created-secret',
+    ...body ,
+  }, { status: 201 });
+});
+
 const getAll = http.get('http://localhost/api/namespaces/:slug/applications', ({ params }) => {
   const { slug } = params;
   const result = [];
@@ -17,6 +27,10 @@ const get = http.get('http://localhost/api/namespaces/:slug/applications/:id', (
 
   if (slug === namespaces.konfigyr.slug && id === applications.konfigyr.id ) {
     return HttpResponse.json(applications.konfigyr);
+  }
+
+  if (slug === namespaces.konfigyr.slug && id === applications.createdApplication.id ) {
+    return HttpResponse.json(applications.createdApplication);
   }
 
   return HttpResponse.json({
@@ -46,7 +60,8 @@ const reset = http.put('http://localhost/api/namespaces/:slug/applications/:id/r
   if (slug !== namespaces.konfigyr.slug && id === '18cVB2BA709FB') {
     return HttpResponse.json({
       ...applications.konfigyr,
-      clientSecret: 'ie7_0_vVBFhULfkIZLrTIv9fHFx4aSe67lOyy5fZQTU',
+      clientId: 'created-id',
+      clientSecret: 'created-secret',
     });
   }
 
@@ -62,4 +77,5 @@ export default [
   get,
   remove,
   reset,
+  create,
 ];

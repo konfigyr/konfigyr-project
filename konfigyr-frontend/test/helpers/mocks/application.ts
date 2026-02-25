@@ -8,3 +8,12 @@ export const konfigyr: NamespaceApplication = {
   scopes: 'namespaces:read',
   expiresAt: undefined,
 };
+
+export const createdApplication: NamespaceApplication = {
+  id: 'created-application',
+  name: 'created app',
+  clientId: 'created-id',
+  clientSecret: 'created-secret',
+  scopes: 'namespaces:read namespaces:write',
+  expiresAt: undefined,
+};
