@@ -34,7 +34,7 @@ describe('routes | namespace | applications | create', () => {
     );
 
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/namespace/konfigyr/applications/created-application');
+      expect(router.state.location.pathname).toBe('/namespace/konfigyr/applications/created-application-id');
     });
 
     expect(getByText(/client id:/i).closest('p'), 'render client id').toHaveTextContent('Client ID:created-id');

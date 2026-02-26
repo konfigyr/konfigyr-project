@@ -5,7 +5,7 @@ const create = http.post('http://localhost/api/namespaces/:slug/applications', a
   const body= await request.clone().json() as Record<string, unknown>;
 
   return HttpResponse.json({
-    id: 'created-application',
+    id: 'created-application-id',
     clientSecret: 'created-secret',
     ...body ,
   }, { status: 201 });
@@ -43,7 +43,7 @@ const get = http.get('http://localhost/api/namespaces/:slug/applications/:id', (
 const remove = http.delete('http://localhost/api/namespaces/:slug/applications/:id', ({ params }) => {
   const { slug, id } = params;
 
-  if (slug !== namespaces.konfigyr.slug && id === '18cVB2BA709FB') {
+  if (slug !== namespaces.konfigyr.slug && id === 'existing-application-id') {
     return new HttpResponse(null, { status: 204 });
   }
 
@@ -57,7 +57,7 @@ const remove = http.delete('http://localhost/api/namespaces/:slug/applications/:
 const reset = http.put('http://localhost/api/namespaces/:slug/applications/:id/reset', async ({ params }) => {
   const { id, slug } = params;
 
-  if (slug !== namespaces.konfigyr.slug && id === '18cVB2BA709FB') {
+  if (slug !== namespaces.konfigyr.slug && id === 'existing-application-id') {
     return HttpResponse.json({
       ...applications.konfigyr,
       clientId: 'created-id',
