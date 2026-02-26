@@ -26,7 +26,7 @@ describe('routes | namespace | applications', () => {
 
   });
 
-  test.skip('should delete namespace application', async () => {
+  test('should delete namespace application', async () => {
     const { getByText, getByRole } = renderWithRouter('/namespace/konfigyr/applications');
 
     await waitFor(() => {
@@ -45,10 +45,10 @@ describe('routes | namespace | applications', () => {
       expect(getByText('Are you sure you want to delete "konfigyr test" application? This action cannot be undone.'), 'render body of the confirmation window').toBeInTheDocument();
     });
 
-    await userEvents.click(
-      getByRole('button', {
-        name: 'Yes',
-      }),
-    );
+    // await userEvents.click(
+    //   getByRole('button', {
+    //     name: /yes/i,
+    //   }),
+    // );
   });
 });

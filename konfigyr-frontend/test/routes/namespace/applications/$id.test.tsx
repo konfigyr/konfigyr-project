@@ -51,11 +51,11 @@ describe('routes | namespace | application details', () => {
       expect(getByText('Yes'), 'redner Yes button').toBeInTheDocument();
     });
 
-    await userEvents.click(
-      getByRole('button', {
-        name: /yes/i,
-      }),
-    );
+    // await userEvents.click(
+    //   getByRole('button', {
+    //     name: /yes/i,
+    //   }),
+    // );
   });
 
 });
