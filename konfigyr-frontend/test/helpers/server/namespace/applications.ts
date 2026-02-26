@@ -43,7 +43,7 @@ const get = http.get('http://localhost/api/namespaces/:slug/applications/:id', (
 const remove = http.delete('http://localhost/api/namespaces/:slug/applications/:id', ({ params }) => {
   const { slug, id } = params;
 
-  if (slug !== namespaces.konfigyr.slug && id === 'existing-application-id') {
+  if (slug === namespaces.konfigyr.slug && id === 'existing-application-id') {
     return new HttpResponse(null, { status: 204 });
   }
 
@@ -57,7 +57,7 @@ const remove = http.delete('http://localhost/api/namespaces/:slug/applications/:
 const reset = http.put('http://localhost/api/namespaces/:slug/applications/:id/reset', async ({ params }) => {
   const { id, slug } = params;
 
-  if (slug !== namespaces.konfigyr.slug && id === 'existing-application-id') {
+  if (slug === namespaces.konfigyr.slug && id === 'existing-application-id') {
     return HttpResponse.json({
       ...applications.konfigyr,
       clientId: 'created-id',

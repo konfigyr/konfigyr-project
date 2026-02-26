@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { applications, namespaces } from '@konfigyr/test/helpers/mocks';
-import { cleanup } from '@testing-library/react';
+import {cleanup, waitFor} from '@testing-library/react';
 import {NamespaceApplicationDetails} from '@konfigyr/components/namespace/applications/application-details';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
+import userEvents from '@testing-library/user-event/dist/cjs/index.js';
 
 describe('components | namespace | applications | <NamespaceApplicationDetails/>', () => {
   afterEach(() => cleanup());
@@ -52,6 +53,52 @@ describe('components | namespace | applications | <NamespaceApplicationDetails/>
 
     expect(queryByText('Reset application')).not.toBeInTheDocument();
     expect(queryByText('Delete application')).not.toBeInTheDocument();
+  });
+
+  test('should click on the Delete application button', async () => {
+    const { queryByText, getByRole, getByText } = renderComponentWithRouter(
+      <NamespaceApplicationDetails namespace={namespaces.konfigyr} namespaceApplication={applications.konfigyr} showActions={true} />,
+    );
+
+    await waitFor(() => {
+      expect(queryByText('Delete application')).toBeInTheDocument();
+    });
+
+    await userEvents.click(
+      getByRole('button', { name: /delete application/i }),
+    );
+
+    await waitFor(() => {
+      expect(getByText('Delete "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
+      expect(getByRole('button', { name: /yes/i })).toBeInTheDocument();
+    });
+
+    await userEvents.click(
+      getByRole('button', { name: /yes/i }),
+    );
+  });
+
+  test('should click on the Reset application button', async () => {
+    const { queryByText, getByRole, getByText } = renderComponentWithRouter(
+      <NamespaceApplicationDetails namespace={namespaces.konfigyr} namespaceApplication={applications.konfigyr} showActions={true} />,
+    );
+
+    await waitFor(() => {
+      expect(getByRole('button', { name: /reset application/i })).toBeInTheDocument();
+    });
+
+    await userEvents.click(
+      getByRole('button', { name: /reset application/i }),
+    );
+
+    await waitFor(() => {
+      expect(getByText('Reset "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
+      expect(getByRole('button', { name: /yes/i })).toBeInTheDocument();
+    });
+
+    await userEvents.click(
+      getByRole('button', { name: /yes/i }),
+    );
   });
 
 });
