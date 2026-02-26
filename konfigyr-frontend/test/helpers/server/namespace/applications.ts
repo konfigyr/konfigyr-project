@@ -54,7 +54,7 @@ const remove = http.delete('http://localhost/api/namespaces/:slug/applications/:
   }, { status: 404 });
 });
 
-const reset = http.put('http://localhost/api/namespaces/:slug/applications/:id/reset', async ({ params }) => {
+const reset = http.put('http://localhost/api/namespaces/:slug/applications/:id/reset', ({ params }) => {
   const { id, slug } = params;
 
   if (slug === namespaces.konfigyr.slug && id === 'existing-application-id') {
