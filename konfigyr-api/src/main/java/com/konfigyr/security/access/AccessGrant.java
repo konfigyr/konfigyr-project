@@ -24,6 +24,16 @@ public record AccessGrant(@NonNull SecurityIdentity identity, @NonNull Serializa
 	private static final long serialVersionUID = 6179810569647384554L;
 
 	/**
+	 * Checks if the given {@link SecurityIdentity} can be granted access.
+	 *
+	 * @param identity the identity to check, cannot be {@literal null}.
+	 * @return {@literal true} if the given identity is the same as the one used to create this grant, {@literal false} otherwise.
+	 */
+	public boolean isGrantedTo(@NonNull SecurityIdentity identity) {
+		return this.identity.get().equals(identity.get());
+	}
+
+	/**
 	 * Creates an {@link AccessGrant} for a {@link com.konfigyr.namespace.Member} that would use
 	 * {@link SecurityIdentity} that is based on the entity identifier of the {@link com.konfigyr.account.Account}
 	 * associated with the membership with the given {@link NamespaceRole role}.

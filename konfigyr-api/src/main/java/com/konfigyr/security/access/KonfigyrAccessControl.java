@@ -41,7 +41,7 @@ record KonfigyrAccessControl(
 	@Override
 	public boolean isGranted(SecurityIdentity identity, Collection<Serializable> permissions) {
 		for (final AccessGrant grant : this) {
-			if (identity.equals(grant.identity()) && permissions.contains(grant.permission())) {
+			if (grant.isGrantedTo(identity) && permissions.contains(grant.permission())) {
 				return true;
 			}
 		}

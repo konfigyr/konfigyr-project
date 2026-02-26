@@ -2,6 +2,7 @@ package com.konfigyr.security.access;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
+import com.konfigyr.security.AuthenticatedPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -43,7 +44,10 @@ class KonfigyrAccessService implements AccessService {
 
 	@Nullable
 	private AuthorizationResult check(@NonNull Authentication authentication, @NonNull String namespace, @NonNull Serializable... permissions) {
-		final SecurityIdentity securityIdentity = resolveSecurityIdentity(authentication);
+		final SecurityIdentity securityIdentity = AuthenticatedPrincipal.fromAuthentication(authentication)
+				.map(SecurityIdentity.class::cast)
+				.orElseGet(() -> resolveSecurityIdentity(authentication));
+
 		final ObjectIdentity objectIdentity = ObjectIdentity.namespace(namespace);
 
 		if (securityIdentity == null) {
