@@ -37,7 +37,7 @@ export function NamespaceApplicationForm({ namespace, namespaceApplication, hand
   const errorNotification = useErrorNotification();
   const defaultValues: z.infer<typeof namespaceApplicationSchema> = useMemo(() => ({
     name: namespaceApplication?.name ?? '',
-    scopes: namespaceApplication?.scopes?.split(' ') ?? [],
+    scopes: namespaceApplication?.scopes?.trim() ? namespaceApplication.scopes.split(' ') : [],
     expiresAt: namespaceApplication?.expiresAt ? format(new Date(namespaceApplication.expiresAt), 'yyyy-MM-dd') : '',
   }), [namespaceApplication]);
   const form = useForm({
