@@ -28,7 +28,7 @@ export interface NamespaceApplicationArticleProps {
   onRemove: (member: NamespaceApplication) => void;
 }
 
-function NamespaceApplicationArticle({ application, namespace, onRemove }: NamespaceApplicationArticleProps) {
+export function NamespaceApplicationArticle({ application, namespace, onRemove }: NamespaceApplicationArticleProps) {
   return (
     <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
 
