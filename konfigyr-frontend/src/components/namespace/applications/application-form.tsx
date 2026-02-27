@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { format } from 'date-fns';
 import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -38,7 +37,7 @@ export function NamespaceApplicationForm({ namespace, namespaceApplication, hand
   const defaultValues: z.infer<typeof namespaceApplicationSchema> = useMemo(() => ({
     name: namespaceApplication?.name ?? '',
     scopes: namespaceApplication?.scopes?.trim() ? namespaceApplication.scopes.split(' ') : [],
-    expiresAt: namespaceApplication?.expiresAt ? format(new Date(namespaceApplication.expiresAt), 'yyyy-MM-dd') : '',
+    expiresAt: namespaceApplication?.expiresAt ? new Date(namespaceApplication.expiresAt).toISOString().slice(0, 10) : '',
   }), [namespaceApplication]);
   const form = useForm({
     defaultValues: defaultValues,
