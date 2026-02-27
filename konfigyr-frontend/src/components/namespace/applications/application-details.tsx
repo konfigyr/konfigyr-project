@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import {createContext, useCallback, useContext, useState} from 'react';
 import { MonitorCloud } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
@@ -25,43 +25,63 @@ export interface ClientSecret {
   clientSecret?: string;
 }
 
-type ClientSecretProps = {
-  clientSecret: string;
-};
-
-type NamespaceApplicationDetailsProps = {
+type ApplicationDetailsProps = {
   namespace: Namespace,
-  namespaceApplication: NamespaceApplication,
-  showActions?:boolean,
+  application: NamespaceApplication,
 };
 
+const useApplicationDetails = () => {
+  const context = useContext(ApplicationDetailsContext);
 
-export function ClientSecret({ clientSecret }: ClientSecretProps) {
+  if (!context) {
+    throw new Error('useApplicationDetails must be used within ApplicationDetailsProvider');
+  }
+
+  return context;
+};
+
+const ApplicationDetailsContext = createContext<ApplicationDetailsProps | undefined>(undefined);
+
+export function ApplicationDetails ({ namespace, application } : ApplicationDetailsProps) {
   return (
-    <>
-      <p className="pb-1">
-        <span className="font-bold pr-1">
-          <FormattedMessage
-            defaultMessage="Client Secret:"
-            description="Client secret value display"
-          />
-        </span>
-        {clientSecret}
-        <span className="pl-5">
-          <ClipboardIconButton text={clientSecret} />
-        </span>
-      </p>
-      <p className="pt-2 text-red-500">
-        <FormattedMessage
-          defaultMessage="Make sure to copy your client secret now as you will not be able to see this again."
-          description="Client secret warning message"
-        />
-      </p>
-    </>)
-  ;
+    <ApplicationDetailsContext.Provider value={{ namespace, application }} >
+      <Card className="border">
+        <CardHeader>
+          <ApplicationDetails.Title />
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-6">
+            <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
+              <div className="grow">
+                <ApplicationDetails.Scopes />
+                <ApplicationDetails.ClientId />
+                <ApplicationDetails.ClientSecret />
+              </div>
+            </article>
+          </div>
+        </CardContent>
+        <CardFooter className="justify-end border-t">
+          <ApplicationDetails.Actions />
+        </CardFooter>
+      </Card>
+    </ApplicationDetailsContext.Provider>
+  );
 }
 
-export function NamespaceApplicationDetails({namespace, namespaceApplication, showActions = false}: NamespaceApplicationDetailsProps) {
+ApplicationDetails.Title = function Title() {
+  const { application } = useApplicationDetails();
+  return (
+    <CardTitle className="flex items-center gap-2">
+      <CardIcon>
+        <MonitorCloud size="1.25rem"/>
+      </CardIcon>
+      {application.name}
+    </CardTitle>
+  );
+};
+
+ApplicationDetails.Actions = function Actions() {
+  const { application, namespace } = useApplicationDetails();
   const navigate = useNavigate();
 
   const [removing, setRemoving] = useState<NamespaceApplication | undefined>();
@@ -101,69 +121,19 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
 
   return (
     <>
-      <Card className="border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CardIcon>
-              <MonitorCloud size="1.25rem"/>
-            </CardIcon>
-            {namespaceApplication.name}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-6">
-            <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
-              <div className="grow">
-                <p className="pb-1">
-                  <span className="font-bold pr-1">
-                    <FormattedMessage
-                      defaultMessage="Scopes:"
-                      description="Application scopes"
-                    />
-                  </span>
-                  {namespaceApplication.scopes}
-                </p>
-                <p className="pb-1">
-                  <span className="font-bold pr-1">
-                    <FormattedMessage
-                      defaultMessage="Client ID:"
-                      description="Client identifier of the token for an application"
-                    />
-                  </span>
-                  {namespaceApplication.clientId}
-                  <span className="pl-5">
-                    <ClipboardIconButton text={namespaceApplication.clientId} />
-                  </span>
-                </p>
-                { namespaceApplication.clientSecret ?
-                  <ClientSecret clientSecret={namespaceApplication.clientSecret} />
-                  :
-                  ''
-                }
-              </div>
-            </article>
-          </div>
-        </CardContent>
-        <CardFooter className="justify-end border-t">
-          { showActions &&
-            <>
-              <CardAction className="pr-5">
-                <Button variant="secondary" onClick={() => setResetting(namespaceApplication)}>
-                  <FormattedMessage
-                    defaultMessage="Reset application"
-                    description="Button label that triggers application reset confirmation dialog when clicked"
-                  />
-                </Button>
-              </CardAction>
-              <CardAction>
-                <Button variant="destructive" onClick={() => setRemoving(namespaceApplication)}>
-                  <DeleteNamespaceApplicationLabel/>
-                </Button>
-              </CardAction>
-            </>
-          }
-        </CardFooter>
-      </Card>
+      <CardAction className="pr-5">
+        <Button variant="secondary" onClick={() => setResetting(application)}>
+          <FormattedMessage
+            defaultMessage="Reset application"
+            description="Button label that triggers application reset confirmation dialog when clicked"
+          />
+        </Button>
+      </CardAction>
+      <CardAction>
+        <Button variant="destructive" onClick={() => setRemoving(application)}>
+          <DeleteNamespaceApplicationLabel/>
+        </Button>
+      </CardAction>
 
       <ConfirmNamespaceApplicationResetAction
         isPending={isPendingResetting}
@@ -180,4 +150,72 @@ export function NamespaceApplicationDetails({namespace, namespaceApplication, sh
       />
     </>
   );
-}
+};
+
+ApplicationDetails.ClientId = function ClientId() {
+  const { application } = useApplicationDetails();
+  return (
+    <>
+      <p className="pb-1">
+        <span className="font-bold pr-1">
+          <FormattedMessage
+            defaultMessage="Client ID:"
+            description="Client identifier of the token for an application"
+          />
+        </span>
+        {application.clientId}
+        <span className="pl-5">
+          <ClipboardIconButton text={application.clientId} />
+        </span>
+      </p>
+    </>
+  );
+};
+
+ApplicationDetails.Scopes = function Scopes() {
+  const { application } = useApplicationDetails();
+  return (
+    <>
+      <p className="pb-1">
+        <span className="font-bold pr-1">
+          <FormattedMessage
+            defaultMessage="Scopes:"
+            description="Application scopes"
+          />
+        </span>
+        {application.scopes}
+      </p>
+    </>
+  );
+};
+
+ApplicationDetails.ClientSecret = function ClientSecret() {
+  const { application } = useApplicationDetails();
+
+  if (!application.clientSecret) {
+    return null;
+  }
+
+  return (
+    <>
+      <p className="pb-1">
+        <span className="font-bold pr-1">
+          <FormattedMessage
+            defaultMessage="Client Secret:"
+            description="Client secret value display"
+          />
+        </span>
+        {application.clientSecret}
+        <span className="pl-5">
+          <ClipboardIconButton text={application.clientSecret}/>
+        </span>
+      </p>
+      <p className="pt-2 text-red-500">
+        <FormattedMessage
+          defaultMessage="Make sure to copy your client secret now as you will not be able to see this again."
+          description="Client secret warning message"
+        />
+      </p>
+    </>
+  );
+};

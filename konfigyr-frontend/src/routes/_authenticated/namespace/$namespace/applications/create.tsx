@@ -5,9 +5,6 @@ import {
 import { useCreateNamespaceApplication, useNamespace } from '@konfigyr/hooks';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
-import {useState} from 'react';
-import {NamespaceApplicationDetails} from '@konfigyr/components/namespace/applications/application-details';
-import type {NamespaceApplication} from '@konfigyr/hooks/namespace/types';
 import type { z } from 'zod';
 import type {namespaceApplicationSchema } from '@konfigyr/components/namespace/applications/application-form';
 
@@ -21,7 +18,6 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const namespace = useNamespace();
   const navigate = useNavigate();
-  const [application, setApplication] = useState<NamespaceApplication>();
 
   const { mutateAsync: createNamespaceApplication } = useCreateNamespaceApplication(namespace.slug);
 
@@ -45,11 +41,7 @@ function RouteComponent() {
     <div className="w-full space-y-6 px-4 mx-auto">
       <Card className="border">
         <CardContent>
-          { application ?
-            <NamespaceApplicationDetails namespace={namespace} namespaceApplication={application} />
-            :
-            <NamespaceApplicationForm namespace={namespace} handleSubmit={onNamespaceApplicationCreate} />
-          }
+          <NamespaceApplicationForm namespace={namespace} handleSubmit={onNamespaceApplicationCreate} />
         </CardContent>
       </Card>
     </div>

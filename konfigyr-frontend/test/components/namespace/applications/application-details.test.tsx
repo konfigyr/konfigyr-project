@@ -1,25 +1,16 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { applications, namespaces } from '@konfigyr/test/helpers/mocks';
-import {cleanup, waitFor} from '@testing-library/react';
-import {NamespaceApplicationDetails} from '@konfigyr/components/namespace/applications/application-details';
+import { cleanup, waitFor } from '@testing-library/react';
+import { ApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import userEvents from '@testing-library/user-event/dist/cjs/index.js';
 
-describe('components | namespace | applications | <NamespaceApplicationDetails/>', () => {
+describe('components | namespace | applications | <ApplicationDetails/>', () => {
   afterEach(() => cleanup());
-
-  test('should render namespace applications details without action buttons', () => {
-    const { queryByText } = renderComponentWithRouter(
-      <NamespaceApplicationDetails namespace={namespaces.konfigyr} namespaceApplication={applications.konfigyr} showActions={false} />,
-    );
-
-    expect(queryByText('Reset application')).not.toBeInTheDocument();
-    expect(queryByText('Delete application')).not.toBeInTheDocument();
-  });
 
   test('should render namespace applications details without client secret', () => {
     const { getByText, queryByText } = renderComponentWithRouter(
-      <NamespaceApplicationDetails namespace={namespaces.konfigyr} namespaceApplication={applications.konfigyr} showActions={true} />,
+      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
 
     expect(getByText('Client ID:'), 'render client id').toBeInTheDocument();
@@ -32,8 +23,8 @@ describe('components | namespace | applications | <NamespaceApplicationDetails/>
 
   test('should render namespace applications details with client secret', () => {
     const { getByText } = renderComponentWithRouter(
-      <NamespaceApplicationDetails namespace={namespaces.konfigyr}
-        namespaceApplication={{
+      <ApplicationDetails namespace={namespaces.konfigyr}
+        application={{
           ...applications.konfigyr,
           clientSecret: 'JMAm42MSA0I4_iwzH39Oex0N7qoqSb91z6jEp7LQwQ4',
         }}
@@ -45,19 +36,9 @@ describe('components | namespace | applications | <NamespaceApplicationDetails/>
     expect(getByText('Make sure to copy your client secret now as you will not be able to see this again.')).toBeInTheDocument();
   });
 
-
-  test('should render namespace applications details without action buttons', () => {
-    const { queryByText } = renderComponentWithRouter(
-      <NamespaceApplicationDetails namespace={namespaces.konfigyr} namespaceApplication={applications.konfigyr} showActions={false} />,
-    );
-
-    expect(queryByText('Reset application')).not.toBeInTheDocument();
-    expect(queryByText('Delete application')).not.toBeInTheDocument();
-  });
-
   test('should click on the Delete application button', async () => {
     const { queryByText, getByRole, getByText } = renderComponentWithRouter(
-      <NamespaceApplicationDetails namespace={namespaces.konfigyr} namespaceApplication={applications.konfigyr} showActions={true} />,
+      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
 
     await waitFor(() => {
@@ -80,7 +61,7 @@ describe('components | namespace | applications | <NamespaceApplicationDetails/>
 
   test('should click on the Reset application button', async () => {
     const { queryByText, getByRole, getByText } = renderComponentWithRouter(
-      <NamespaceApplicationDetails namespace={namespaces.konfigyr} namespaceApplication={applications.konfigyr} showActions={true} />,
+      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
 
     await waitFor(() => {

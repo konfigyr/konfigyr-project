@@ -9,7 +9,7 @@ import {
 } from '@konfigyr/hooks';
 import {createFileRoute, useLocation} from '@tanstack/react-router';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
-import { NamespaceApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
+import { ApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
 import { toast} from 'sonner';
 import { FormattedMessage} from 'react-intl';
 import { ErrorState } from '@konfigyr/components/error';
@@ -69,13 +69,12 @@ function RouteComponent() {
 
       { application && (
         <>
-          <NamespaceApplicationDetails
+          <ApplicationDetails
             namespace={namespace}
-            namespaceApplication={{
+            application={{
               ...application,
               clientSecret: state.clientSecret,
             }}
-            showActions={true}
           />
 
           <Card className="border">
