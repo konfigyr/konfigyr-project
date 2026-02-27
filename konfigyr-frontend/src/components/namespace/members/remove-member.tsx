@@ -15,8 +15,8 @@ import {
   AlertDialogTitle,
 } from '@konfigyr/components/ui/alert-dialog';
 
+import { CancelLabel } from '@konfigyr/components/messages';
 import type { Member, Namespace } from '@konfigyr/hooks/types';
-import {CancelLabel} from "@konfigyr/components/messages";
 
 export function RemoveMemberForm({ namespace, member, onClose }: { namespace: Namespace, member?: Member | null, onClose: () => void }) {
   const open = useMemo(() => !!member , [member]);
