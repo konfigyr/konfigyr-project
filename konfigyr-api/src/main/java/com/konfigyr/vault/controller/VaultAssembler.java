@@ -14,7 +14,13 @@ record VaultAssembler(Namespace namespace, Service service) {
 	RepresentationModelAssembler<Profile, EntityModel<Profile>> profile() {
 		return profile -> EntityModel.of(profile, linkBuilder(profile).selfRel())
 				.add(linkBuilder(profile).method(HttpMethod.PUT).rel("update"))
-				.add(linkBuilder(profile).method(HttpMethod.DELETE).rel("delete"));
+				.add(linkBuilder(profile).method(HttpMethod.DELETE).rel("delete"))
+				.add(linkBuilder(profile).path("properties").method(HttpMethod.GET).rel("state"))
+				.add(linkBuilder(profile).path("apply").method(HttpMethod.POST).rel("apply"));
+	}
+
+	<T> RepresentationModelAssembler<T, EntityModel<T>> properties() {
+		return EntityModel::of;
 	}
 
 	private LinkBuilder linkBuilder() {

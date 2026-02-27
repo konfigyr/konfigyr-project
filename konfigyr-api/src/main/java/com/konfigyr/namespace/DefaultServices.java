@@ -134,7 +134,7 @@ public class DefaultServices implements Services {
 		log.info(CREATED, "Successfully created new service {} in namespace {} from {}",
 				service.id(), service.namespace(), definition);
 
-		publisher.publishEvent(new ServiceEvent.Created(service.id()));
+		publisher.publishEvent(new ServiceEvent.Created(service));
 
 		return service;
 	}
@@ -163,28 +163,31 @@ public class DefaultServices implements Services {
 		} catch (DuplicateKeyException e) {
 			throw new ServiceExistsException(definition, e);
 		} catch (Exception e) {
-			throw new NamespaceException("Unexpected exception occurred while updating namespace", e);
+			throw new NamespaceException("Unexpected exception occurred while updating service", e);
 		}
+
+		final Service service = fetch(SERVICES.ID.eq(id.get()))
+				.orElseThrow(() -> new ServiceNotFoundException(id));
 
 		if (!slug.equals(definition.slug())) {
-			publisher.publishEvent(new ServiceEvent.Renamed(id, slug, definition.slug()));
+			publisher.publishEvent(new ServiceEvent.Renamed(service, slug, definition.slug()));
 		}
 
-		return fetch(SERVICES.ID.eq(id.get())).orElseThrow(() -> new ServiceNotFoundException(id));
+		return service;
 	}
 
 	@Override
 	@Transactional(label = "service-delete")
 	public void delete(@NonNull EntityId id) {
+		final Service service = get(id).orElseThrow(() -> new ServiceNotFoundException(id));
+
 		final long count = context.delete(SERVICES)
 				.where(SERVICES.ID.eq(id.get()))
 				.execute();
 
-		if (count == 0) {
-			throw new ServiceNotFoundException(id);
-		}
+		Assert.state(count != 0, "Failed to delete Service with identifier: " + id);
 
-		publisher.publishEvent(new ServiceEvent.Deleted(id));
+		publisher.publishEvent(new ServiceEvent.Deleted(service));
 	}
 
 	@Override

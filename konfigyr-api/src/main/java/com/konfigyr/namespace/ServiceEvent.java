@@ -6,17 +6,33 @@ import com.konfigyr.support.Slug;
 import org.jmolecules.event.annotation.DomainEvent;
 import org.jspecify.annotations.NonNull;
 
+import java.util.function.Supplier;
+
 /**
  * Abstract event type that should be used for all {@link Service} related events.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-public sealed abstract class ServiceEvent extends EntityEvent
+public sealed abstract class ServiceEvent extends EntityEvent implements Supplier<Service>
 		permits ServiceEvent.Created, ServiceEvent.Renamed, ServiceEvent.Deleted {
 
-	protected ServiceEvent(EntityId id) {
-		super(id);
+	protected final Service service;
+
+	protected ServiceEvent(Service service) {
+		super(service.id());
+		this.service = service;
+	}
+
+	/**
+	 * Returns the {@link Service} that was affected by this event.
+	 *
+	 * @return the affected service, never {@literal null}.
+	 */
+	@NonNull
+	@Override
+	public Service get() {
+		return service;
 	}
 
 	/**
@@ -29,10 +45,10 @@ public sealed abstract class ServiceEvent extends EntityEvent
 		 * Create a new {@link Created} event with the {@link EntityId entity identifier} of the
 		 * {@link Service} that was just created by the {@link Services service manager}.
 		 *
-		 * @param id entity identifier of the created service
+		 * @param service the created service.
 		 */
-		public Created(EntityId id) {
-			super(id);
+		public Created(Service service) {
+			super(service);
 		}
 	}
 
@@ -50,12 +66,12 @@ public sealed abstract class ServiceEvent extends EntityEvent
 		 * Create a new {@link Renamed} event with the {@link EntityId entity identifier} of the
 		 * {@link Service} that was just updated and the URL slug values.
 		 *
-		 * @param id entity identifier of the update service
+		 * @param service the updated service containing the new URL slug.
 		 * @param from the previous service URL slug
 		 * @param to the new service URL slug
 		 */
-		public Renamed(EntityId id, Slug from, Slug to) {
-			super(id);
+		public Renamed(Service service, Slug from, Slug to) {
+			super(service);
 			this.from = from;
 			this.to = to;
 		}
@@ -90,10 +106,10 @@ public sealed abstract class ServiceEvent extends EntityEvent
 		 * Create a new {@link Deleted} event with the {@link EntityId entity identifier} of the
 		 * {@link Service} that was just deleted by the {@link Services service manager}.
 		 *
-		 * @param id entity identifier of the deleted service.
+		 * @param service the deleted service.
 		 */
-		public Deleted(EntityId id) {
-			super(id);
+		public Deleted(Service service) {
+			super(service);
 		}
 	}
 

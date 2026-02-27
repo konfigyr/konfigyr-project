@@ -168,14 +168,15 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a title that contains the given char sequence.
 	 *
 	 * @param sequence the char sequence to be contained
+	 * @param args     the arguments to be used for formatting the sequence
 	 * @return the problem detail assert instance, never {@literal null}
 	 */
-	public ProblemDetailAssert hasTitleContaining(CharSequence sequence) {
+	public ProblemDetailAssert hasTitleContaining(CharSequence sequence, Object... args) {
 		isNotNull();
 
 		return satisfies(it -> Assertions.assertThat(it.getTitle())
 				.as("Problem Details should have a title containing \"%s\"", sequence)
-				.contains(sequence)
+				.contains(String.format(sequence.toString(), args))
 		);
 	}
 
@@ -202,14 +203,15 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	 * Checks if the given {@link ProblemDetail} has a detail that contains the given char sequence.
 	 *
 	 * @param sequence the char sequence to be contained
+	 * @param args     the arguments to be used for formatting the sequence
 	 * @return the problem detail assert instance, never {@literal null}
 	 */
-	public ProblemDetailAssert hasDetailContaining(CharSequence sequence) {
+	public ProblemDetailAssert hasDetailContaining(CharSequence sequence, Object... args) {
 		isNotNull();
 
 		return satisfies(it -> Assertions.assertThat(it.getDetail())
 				.as("Problem Details should have a detail containing \"%s\"", sequence)
-				.contains(sequence)
+				.contains(String.format(sequence.toString(), args))
 		);
 	}
 
