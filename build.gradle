@@ -1,6 +1,6 @@
 plugins {
     id 'io.freefair.lombok' version '9.2.0' apply false
-    id 'org.springframework.boot' version '4.0.2' apply false
+    id 'org.springframework.boot' version '4.0.3' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
@@ -25,6 +25,10 @@ subprojects {
     checkstyle {
         toolVersion = "12.1.2"
     }
+
+    // Addresses an issue with Thymeleaf layout dialect due to Groovy 5.0.4 version. For more
+    // information please take a look at the following ticket: https://github.com/ultraq/thymeleaf-layout-dialect/issues/253
+    ext['groovy.version'] = '5.0.3'
 
     dependencies {
         annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
@@ -61,6 +65,7 @@ subprojects {
 
             /* Bouncy Castle provider */
             dependency('org.bouncycastle:bcprov-jdk18on:1.83')
+            dependency('org.bouncycastle:bcpkix-jdk18on:1.83')
 
             /* Thymeleaf layout dialect */
             dependency('nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.4.0')
