@@ -1,6 +1,5 @@
 package com.konfigyr.vault;
 
-import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
@@ -39,7 +38,6 @@ import java.util.Set;
  * @since 1.0.0
  */
 @NullMarked
-@ValueObject
 public record PropertyChanges(
 		Profile profile,
 		String subject,
