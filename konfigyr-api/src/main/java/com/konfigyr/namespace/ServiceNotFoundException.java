@@ -26,8 +26,7 @@ public class ServiceNotFoundException extends NamespaceException {
 	 * @param slug service name slug, can't be {@code null}
 	 */
 	public ServiceNotFoundException(@NonNull String namespace, @NonNull String slug) {
-		super(HttpStatus.NOT_FOUND, "Could not find a service with the following name: %s within a %s Namespace"
-				.formatted(slug, namespace));
+		this("Could not find a service with the following name: %s within a %s Namespace".formatted(slug, namespace));
 	}
 
 	/**
@@ -37,7 +36,16 @@ public class ServiceNotFoundException extends NamespaceException {
 	 * @param id service entity identifier, can't be {@code null}
 	 */
 	public ServiceNotFoundException(@NonNull EntityId id) {
-		super(HttpStatus.NOT_FOUND, "Could not find a service with the following identifier: " + id.serialize());
+		this("Could not find a service with the following identifier: " + id.serialize());
+	}
+
+	/**
+	 * Create new instance of the {@link ServiceNotFoundException} with a custom error message.
+	 *
+	 * @param message custom error message
+	 */
+	public ServiceNotFoundException(@NonNull String message) {
+		super(HttpStatus.NOT_FOUND, message);
 	}
 
 }

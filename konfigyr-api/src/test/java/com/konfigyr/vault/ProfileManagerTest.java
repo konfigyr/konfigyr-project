@@ -37,12 +37,13 @@ class ProfileManagerTest extends AbstractIntegrationTest {
 
 		assertThat(profiles.find(service, query))
 				.isNotNull()
-				.hasSize(3)
+				.hasSize(4)
 				.extracting(Profile::id, Profile::slug, Profile::name)
 				.containsExactlyInAnyOrder(
 						tuple(EntityId.from(1), "development", "Development"),
 						tuple(EntityId.from(2), "staging", "Staging"),
-						tuple(EntityId.from(3), "production", "Prod")
+						tuple(EntityId.from(3), "production", "Prod"),
+						tuple(EntityId.from(4), "locked", "QA")
 				);
 	}
 
@@ -295,7 +296,7 @@ class ProfileManagerTest extends AbstractIntegrationTest {
 
 		events.assertThat()
 				.contains(ProfileEvent.Deleted.class)
-				.matching(EntityEvent::id, EntityId.from(4));
+				.matching(EntityEvent::id, EntityId.from(5));
 	}
 
 	@Test

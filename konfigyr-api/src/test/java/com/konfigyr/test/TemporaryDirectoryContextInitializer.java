@@ -31,8 +31,11 @@ final class TemporaryDirectoryContextInitializer implements ApplicationContextIn
 
 		applicationContext.addApplicationListener(new TemporaryDirectoryCleaner(temporaryDirectory));
 
-		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-					"konfigyr.artifactory.metadata-store.root=" + temporaryDirectory.toURI());
+		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(
+				applicationContext,
+				"konfigyr.artifactory.metadata-store.root=" + temporaryDirectory.toURI(),
+				"konfigyr.vault.repository-directory=" + temporaryDirectory.toURI()
+		);
 	}
 
 	@RequiredArgsConstructor

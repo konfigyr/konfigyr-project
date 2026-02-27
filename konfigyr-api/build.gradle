@@ -29,6 +29,9 @@ dependencies {
 
     implementation 'org.bouncycastle:bcprov-jdk18on'
 
+    /* Java Git client */
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.5.0.202512021534-r")
+
     /* Liquibase - migrations runtime  */
     implementation 'org.liquibase:liquibase-core'
 

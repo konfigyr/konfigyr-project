@@ -1,6 +1,7 @@
 package com.konfigyr.test;
 
 import com.konfigyr.account.Account;
+import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.namespace.ServiceNotFoundException;
@@ -91,6 +92,25 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 
 		return new InstanceOfAssertFactory(
 				resolvableType.resolve(PagedModel.class),
+				resolvableType.resolveGenerics(),
+				Assertions::assertThat
+		);
+	}
+
+	/**
+	 * Constructs an {@link AssertFactory} for {@link CollectionModel} with the given contents type.
+	 *
+	 * @param type the content type of the collection model, can't be {@literal null}
+	 * @param <T> content type
+	 * @param <A> assert type
+	 * @return the collection model assert factory, never {@literal null}
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected static <T, A extends AbstractAssert<?, CollectionModel<T>>> AssertFactory<PagedModel<T>, A> collectionModel(@NonNull Class<T> type) {
+		final ResolvableType resolvableType = ResolvableType.forClassWithGenerics(CollectionModel.class, type);
+
+		return new InstanceOfAssertFactory(
+				resolvableType.resolve(CollectionModel.class),
 				resolvableType.resolveGenerics(),
 				Assertions::assertThat
 		);
