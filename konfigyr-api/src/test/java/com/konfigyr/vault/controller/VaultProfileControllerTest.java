@@ -44,7 +44,7 @@ class VaultProfileControllerTest extends AbstractControllerTest {
 				.bodyJson()
 				.convertTo(pagedModel(Profile.class))
 				.satisfies(it -> assertThat(it.getContent())
-						.hasSize(3)
+						.hasSize(4)
 						.satisfiesExactly(
 								app -> assertThat(app)
 										.returns(EntityId.from(1L), Profile::id)
@@ -61,6 +61,13 @@ class VaultProfileControllerTest extends AbstractControllerTest {
 										.returns(3, Profile::position)
 										.returns(ProfilePolicy.PROTECTED, Profile::policy),
 								app -> assertThat(app)
+										.returns(EntityId.from(4L), Profile::id)
+										.returns("locked", Profile::slug)
+										.returns("QA", Profile::name)
+										.returns("Locked profile", Profile::description)
+										.returns(4, Profile::position)
+										.returns(ProfilePolicy.IMMUTABLE, Profile::policy),
+								app -> assertThat(app)
 										.returns(EntityId.from(2L), Profile::id)
 										.returns("staging", Profile::slug)
 										.returns("Staging", Profile::name)
@@ -72,7 +79,7 @@ class VaultProfileControllerTest extends AbstractControllerTest {
 				.satisfies(it -> assertThat(it.getMetadata())
 						.returns(20L, PagedModel.PageMetadata::size)
 						.returns(0L, PagedModel.PageMetadata::number)
-						.returns(3L, PagedModel.PageMetadata::totalElements)
+						.returns(4L, PagedModel.PageMetadata::totalElements)
 						.returns(1L, PagedModel.PageMetadata::totalPages)
 				)
 				.satisfies(it -> assertThat(it.getLinks())

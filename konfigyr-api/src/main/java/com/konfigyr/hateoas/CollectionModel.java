@@ -108,7 +108,7 @@ public class CollectionModel<T> extends RepresentationModel<CollectionModel<T>> 
 			@JsonProperty("data") Iterable<T> content,
 			@JsonProperty("links") Iterable<Link> links
 	) {
-		return new CollectionModel<>(content, links);
+		return new CollectionModel<>(content, links == null ? Collections.emptyList() : links);
 	}
 
 	/**
