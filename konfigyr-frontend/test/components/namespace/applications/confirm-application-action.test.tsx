@@ -25,8 +25,8 @@ describe('components | namespace | applications | confirm application actions', 
       expect(getByText('Delete "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
       expect(getByText('Are you sure you want to delete "konfigyr test" application? This action cannot be undone.'), 'render body of the confirmation window').toBeInTheDocument();
 
-      expect(getByRole('button', { name: /cancel/i }), 'redner Cancel button').toBeInTheDocument();
-      expect(getByRole('button', { name: /yes/i }), 'redner Yes button').toBeInTheDocument();
+      expect(getByRole('button', { name: 'Cancel' }), 'redner Cancel button').toBeInTheDocument();
+      expect(getByRole('button', { name: 'Yes, I am sure' }), 'redner Yes button').toBeInTheDocument();
     });
   });
 
@@ -44,7 +44,7 @@ describe('components | namespace | applications | confirm application actions', 
     );
 
     await userEvents.click(
-      getByRole('button', { name: /yes/i }),
+      getByRole('button', { name: 'Yes, I am sure' }),
     );
 
     expect(onConfirm).toHaveBeenCalled();
@@ -84,10 +84,10 @@ describe('components | namespace | applications | confirm application actions', 
 
     await waitFor(() => {
       expect(getByText('Reset "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
-      expect(getByText('Are you sure you want to rest "konfigyr test" application? This action cannot be undone.'), 'render body of the confirmation window').toBeInTheDocument();
+      expect(getByText('Are you sure you want to reset "konfigyr test" application? This action cannot be undone.'), 'render body of the confirmation window').toBeInTheDocument();
 
-      expect(getByRole('button', { name: /cancel/i }), 'redner Cancel button').toBeInTheDocument();
-      expect(getByRole('button', { name: /yes/i }), 'redner Yes button').toBeInTheDocument();
+      expect(getByRole('button', { name: 'Cancel' }), 'redner Cancel button').toBeInTheDocument();
+      expect(getByRole('button', { name: 'Yes, I am sure' }), 'redner Yes button').toBeInTheDocument();
     });
   });
 
@@ -105,7 +105,7 @@ describe('components | namespace | applications | confirm application actions', 
     );
 
     await userEvents.click(
-      getByRole('button', { name: /yes/i }),
+      getByRole('button', { name: 'Yes, I am sure' }),
     );
 
     expect(onConfirm).toHaveBeenCalled();

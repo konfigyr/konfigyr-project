@@ -93,6 +93,13 @@ export const CancelLabel = () => (
   />
 );
 
+export const YesLabel = () => (
+  <FormattedMessage
+    defaultMessage="Yes, I am sure"
+    description="Label for the button that confirms the action."
+  />
+);
+
 export const HistoryLabel = () => (
   <FormattedMessage
     defaultMessage="History"

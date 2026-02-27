@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from '@konfigyr/components/ui/alert-dialog';
 
+import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
 import type { NamespaceApplication } from '@konfigyr/hooks/types';
 
 type Props = {
@@ -70,10 +71,7 @@ export function ConfirmNamespaceApplicationDeleteAction({ application, isPending
         </AlertDialogDescription>
         <AlertDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <FormattedMessage
-              defaultMessage="Cancel"
-              description="Label for the cancel button in the modal"
-            />
+            <CancelLabel />
           </Button>
           <Button
             variant="destructive"
@@ -81,10 +79,7 @@ export function ConfirmNamespaceApplicationDeleteAction({ application, isPending
             loading={isPending}
             onClick={onClickConfirm}
           >
-            <FormattedMessage
-              defaultMessage="Yes"
-              description="Label for the confirm button in the modal"
-            />
+            <YesLabel />
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -132,17 +127,14 @@ export function ConfirmNamespaceApplicationResetAction({ application, isPending,
         </AlertDialogHeader>
         <AlertDialogDescription>
           <FormattedMessage
-            defaultMessage="Are you sure you want to rest &quot;{name}&quot; application? This action cannot be undone."
+            defaultMessage="Are you sure you want to reset &quot;{name}&quot; application? This action cannot be undone."
             values={{ name: application?.name }}
             description="Confirmation text in the modal that is shown when user tries to rest a namespace application"
           />
         </AlertDialogDescription>
         <AlertDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <FormattedMessage
-              defaultMessage="Cancel"
-              description="Label for the cancel button in the modal"
-            />
+            <CancelLabel />
           </Button>
           <Button
             variant="destructive"
@@ -150,10 +142,7 @@ export function ConfirmNamespaceApplicationResetAction({ application, isPending,
             loading={isPending}
             onClick={onClickConfirm}
           >
-            <FormattedMessage
-              defaultMessage="Yes"
-              description="Label for the confirm button in the modal"
-            />
+            <YesLabel />
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

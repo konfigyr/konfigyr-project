@@ -70,11 +70,11 @@ describe('components | namespace | applications | <NamespaceApplicationDetails/>
 
     await waitFor(() => {
       expect(getByText('Delete "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
-      expect(getByRole('button', { name: /yes/i })).toBeInTheDocument();
+      expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 
     await userEvents.click(
-      getByRole('button', { name: /yes/i }),
+      getByRole('button', { name: 'Yes, I am sure' }),
     );
   });
 
@@ -93,11 +93,11 @@ describe('components | namespace | applications | <NamespaceApplicationDetails/>
 
     await waitFor(() => {
       expect(getByText('Reset "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
-      expect(getByRole('button', { name: /yes/i })).toBeInTheDocument();
+      expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 
     await userEvents.click(
-      getByRole('button', { name: /yes/i }),
+      getByRole('button', { name: 'Yes, I am sure' }),
     );
   });
 
