@@ -1,7 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
-import { useCallback, useMemo } from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { Button } from '@konfigyr/components/ui/button';
@@ -13,20 +13,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@konfigyr/components/ui/alert-dialog';
-
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
-import type { NamespaceApplication } from '@konfigyr/hooks/types';
+import { useRemoveNamespaceApplication, useResetNamespaceApplication } from '@konfigyr/hooks';
+import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
 type Props = {
-  application?: NamespaceApplication | null
-  isPending: boolean,
-  onClose: () => void
-  onConfirm: (id: string) => void
+  namespace: Namespace,
+  application?: NamespaceApplication | null,
+  onClose: () => void,
+  onSuccess: () => void
 };
 
-export function ConfirmNamespaceApplicationDeleteAction({ application, isPending,  onClose = () => {}, onConfirm = () => {} }: Props) {
+export function ConfirmNamespaceApplicationDeleteAction({ namespace, application, onClose = () => {}, onSuccess = () => {} }: Props) {
   const open = useMemo(() => !!application , [application]);
   const errorNotification = useErrorNotification();
+
+  const {
+    isPending: isPending,
+    mutateAsync: removeNamespaceApplication,
+  } = useRemoveNamespaceApplication(namespace.slug);
 
   const onOpenChange = useCallback((state: boolean) => {
     if (!state) {
@@ -36,7 +41,8 @@ export function ConfirmNamespaceApplicationDeleteAction({ application, isPending
 
   const onClickConfirm = useCallback(async () => {
     try {
-      await onConfirm(application!.id);
+      await removeNamespaceApplication(application!.id);
+      onSuccess();
     } catch (error) {
       return errorNotification(error);
     }
@@ -87,9 +93,15 @@ export function ConfirmNamespaceApplicationDeleteAction({ application, isPending
   );
 }
 
-export function ConfirmNamespaceApplicationResetAction({ application, isPending, onClose = () => {}, onConfirm = () => {} }: Props) {
+export function ConfirmNamespaceApplicationResetAction({ namespace, application, onClose = () => {}, onSuccess = () => {} }: Props) {
   const open = useMemo(() => !!application , [application]);
   const errorNotification = useErrorNotification();
+
+  const {
+    isPending,
+    mutateAsync: resetApplication,
+  } = useResetNamespaceApplication(namespace.slug);
+
 
   const onOpenChange = useCallback((state: boolean) => {
     if (!state) {
@@ -99,7 +111,8 @@ export function ConfirmNamespaceApplicationResetAction({ application, isPending,
 
   const onClickConfirm = useCallback(async () => {
     try {
-      await onConfirm(application!.id);
+      await resetApplication(application!.id);
+      onSuccess();
     } catch (error) {
       return errorNotification(error);
     }

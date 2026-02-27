@@ -18,7 +18,6 @@ import {
   ConfirmNamespaceApplicationDeleteAction,
   ConfirmNamespaceApplicationResetAction,
 } from '@konfigyr/components/namespace/applications/confirm-application-action';
-import { useRemoveNamespaceApplication, useResetNamespaceApplication } from '@konfigyr/hooks';
 import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
 export interface ClientSecret {
@@ -36,7 +35,6 @@ const useApplicationDetails = () => {
   if (!context) {
     throw new Error('useApplicationDetails must be used within ApplicationDetailsProvider');
   }
-
   return context;
 };
 
@@ -82,42 +80,21 @@ ApplicationDetails.Title = function Title() {
 
 ApplicationDetails.Actions = function Actions() {
   const { application, namespace } = useApplicationDetails();
+
   const navigate = useNavigate();
 
   const [removing, setRemoving] = useState<NamespaceApplication | undefined>();
   const [resetting, setResetting] = useState<NamespaceApplication | undefined>();
 
-  const {
-    isPending: isPendingRemoving,
-    mutateAsync: removeNamespaceApplication,
-  } = useRemoveNamespaceApplication(namespace.slug);
-  const {
-    isPending: isPendingResetting,
-    mutateAsync: resetNamespaceApplication,
-  } = useResetNamespaceApplication(namespace.slug);
-
   const onCloseRemoving = useCallback(() => setRemoving(undefined), []);
   const onCloseResetting = useCallback(() => setResetting(undefined), []);
 
-  const onConfirmResetting = async (id: string) => {
-    const updated = await resetNamespaceApplication(id);
-    await navigate({
-      to: '/namespace/$namespace/applications/$id',
-      params: { namespace: namespace.slug, id: updated.id },
-      state: (prev) => ({
-        ...prev,
-        clientSecret: updated.clientSecret,
-      }),
-    });
-  };
+  const onDeleted = useCallback(() => navigate({
+    to: '/namespace/$namespace/applications',
+    params: { namespace: namespace.slug },
+  }), []);
 
-  const onConfirmRemoving = async (id: string) => {
-    await removeNamespaceApplication(id);
-    await navigate({
-      to: '/namespace/$namespace/applications',
-      params: { namespace: namespace.slug },
-    });
-  };
+  const onReset = useCallback(() => {}, []);
 
   return (
     <>
@@ -136,17 +113,17 @@ ApplicationDetails.Actions = function Actions() {
       </CardAction>
 
       <ConfirmNamespaceApplicationResetAction
-        isPending={isPendingResetting}
+        namespace={namespace}
         application={resetting}
         onClose={onCloseResetting}
-        onConfirm={onConfirmResetting}
+        onSuccess={onDeleted}
       />
 
       <ConfirmNamespaceApplicationDeleteAction
-        isPending={isPendingRemoving}
+        namespace={namespace}
         application={removing}
         onClose={onCloseRemoving}
-        onConfirm={onConfirmRemoving}
+        onSuccess={onReset}
       />
     </>
   );

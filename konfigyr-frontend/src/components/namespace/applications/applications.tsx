@@ -65,16 +65,8 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
 
   const [removing, setRemoving] = useState<NamespaceApplication | undefined>();
 
-  const {
-    isPending: isPendingRemoving,
-    mutateAsync: removeNamespaceApplication,
-  } = useRemoveNamespaceApplication(namespace.slug);
-
-  const onCloseRemoving = useCallback(() => setRemoving(undefined), []);
-
-  const onConfirmRemoving = async (id: string) => {
-    await removeNamespaceApplication(id);
-  };
+  const onClose = useCallback(() => setRemoving(undefined), []);
+  const onDeleted = useCallback(() => {}, []);
 
   return (
     <>
@@ -122,10 +114,10 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
       </Card>
 
       <ConfirmNamespaceApplicationDeleteAction
+        namespace={namespace}
         application={removing}
-        isPending={isPendingRemoving}
-        onClose={onCloseRemoving}
-        onConfirm={onConfirmRemoving}
+        onClose={onClose}
+        onSuccess={onDeleted}
       />
     </>
   );

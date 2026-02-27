@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
-import { applications } from '@konfigyr/test/helpers/mocks';
+import { applications, namespaces } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import {
   ConfirmNamespaceApplicationDeleteAction, ConfirmNamespaceApplicationResetAction,
@@ -14,10 +14,10 @@ describe('components | namespace | applications | confirm application actions', 
   test('should render <ConfirmNamespaceApplicationDeleteAction /> component', async () => {
     const { getByText, getByRole } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationDeleteAction
-        isPending={false}
+        namespace={namespaces.konfigyr}
         application={applications.konfigyr}
         onClose={vi.fn()}
-        onConfirm={vi.fn()}
+        onSuccess={vi.fn()}
       />,
     );
 
@@ -32,14 +32,14 @@ describe('components | namespace | applications | confirm application actions', 
 
   test('should render <ConfirmNamespaceApplicationDeleteAction /> component and confirm delete action', async () => {
     const onClose = vi.fn();
-    const onConfirm = vi.fn();
+    const onSuccess = vi.fn();
 
     const { getByRole } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationDeleteAction
-        isPending={false}
+        namespace={namespaces.konfigyr}
         application={applications.konfigyr}
         onClose={onClose}
-        onConfirm={onConfirm}
+        onSuccess={onSuccess}
       />,
     );
 
@@ -47,20 +47,20 @@ describe('components | namespace | applications | confirm application actions', 
       getByRole('button', { name: 'Yes, I am sure' }),
     );
 
-    expect(onConfirm).toHaveBeenCalled();
+    expect(onSuccess).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
   });
 
   test('should render <ConfirmNamespaceApplicationDeleteAction /> component and cancel delete action', async () => {
     const onClose = vi.fn();
-    const onConfirm = vi.fn();
+    const onSuccess = vi.fn();
 
     const { getByRole } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationDeleteAction
-        isPending={false}
+        namespace={namespaces.konfigyr}
         application={applications.konfigyr}
         onClose={onClose}
-        onConfirm={onConfirm}
+        onSuccess={onSuccess}
       />,
     );
 
@@ -68,17 +68,17 @@ describe('components | namespace | applications | confirm application actions', 
       getByRole('button', { name: /cancel/i }),
     );
 
-    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onSuccess).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
   });
 
   test('should render <ConfirmNamespaceApplicationResetAction /> component', async () => {
     const { getByText, getByRole } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationResetAction
-        isPending={false}
+        namespace={namespaces.konfigyr}
         application={applications.konfigyr}
         onClose={vi.fn()}
-        onConfirm={vi.fn()}
+        onSuccess={vi.fn()}
       />,
     );
 
@@ -93,14 +93,14 @@ describe('components | namespace | applications | confirm application actions', 
 
   test('should render <ConfirmNamespaceApplicationResetAction /> component and confirm reset action', async () => {
     const onClose = vi.fn();
-    const onConfirm = vi.fn();
+    const onSuccess = vi.fn();
 
     const { getByRole } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationResetAction
-        isPending={false}
+        namespace={namespaces.konfigyr}
         application={applications.konfigyr}
         onClose={onClose}
-        onConfirm={onConfirm}
+        onSuccess={onSuccess}
       />,
     );
 
@@ -108,20 +108,20 @@ describe('components | namespace | applications | confirm application actions', 
       getByRole('button', { name: 'Yes, I am sure' }),
     );
 
-    expect(onConfirm).toHaveBeenCalled();
+    expect(onSuccess).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
   });
 
   test('should render <ConfirmNamespaceApplicationResetAction /> component and cancel reset action', async () => {
     const onClose = vi.fn();
-    const onConfirm = vi.fn();
+    const onSuccess = vi.fn();
 
     const { getByRole } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationResetAction
-        isPending={false}
+        namespace={namespaces.konfigyr}
         application={applications.konfigyr}
         onClose={onClose}
-        onConfirm={onConfirm}
+        onSuccess={onSuccess}
       />,
     );
 
@@ -129,7 +129,7 @@ describe('components | namespace | applications | confirm application actions', 
       getByRole('button', { name: /cancel/i }),
     );
 
-    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onSuccess).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
   });
 
