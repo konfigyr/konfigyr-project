@@ -68,7 +68,7 @@ subprojects {
             dependency('org.bouncycastle:bcpkix-jdk18on:1.83')
 
             /* Thymeleaf layout dialect */
-            dependency('nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.4.0')
+            dependency('nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:4.0.0')
 
             /* Fix Dependabot alerts */
             dependency('org.apache.commons:commons-compress:1.28.0') // used by testcontainers
