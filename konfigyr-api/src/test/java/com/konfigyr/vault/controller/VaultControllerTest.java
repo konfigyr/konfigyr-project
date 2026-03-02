@@ -151,6 +151,7 @@ class VaultControllerTest extends AbstractControllerTest {
 				.extracting(ApplyResult::changes, InstanceOfAssertFactories.map(String.class, PropertyHistory.class))
 				.hasEntrySatisfying("server.port", it -> assertThat(it)
 						.returns(PropertyHistory.Action.ADDED, PropertyHistory::action)
+						.returns("John Doe <john.doe@konfigyr.com>", PropertyHistory::author)
 						.returns("8080", PropertyHistory::newValue)
 				);
 
