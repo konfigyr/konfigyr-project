@@ -54,7 +54,11 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
     });
 
     await userEvents.click(
-      getByRole('button', { name: /delete application/i }),
+      getByText('Delete application'),
+    );
+
+    await userEvents.click(
+      getByRole('button', { name: 'Yes, I am sure' }),
     );
 
     expect(onRemove).toHaveBeenCalled();

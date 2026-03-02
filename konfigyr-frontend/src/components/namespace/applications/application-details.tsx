@@ -1,7 +1,6 @@
 import { useCallback, useState} from 'react';
 import { MonitorCloud } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from '@konfigyr/components/ui/button';
 import {
   Card, CardAction,
   CardContent, CardFooter,
@@ -9,9 +8,6 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import {
-  DeleteNamespaceApplicationLabel,
-} from '@konfigyr/components/namespace/applications/messages';
 import { ClipboardIconButton } from '@konfigyr/components/clipboard';
 import {useNavigate} from '@tanstack/react-router';
 import {
@@ -24,7 +20,7 @@ export interface ClientSecret {
   clientSecret?: string;
 }
 
-type ApplicationDetailsProps = {
+export type ApplicationDetailsProps = {
   namespace: Namespace,
   application: NamespaceApplication,
 };
@@ -44,7 +40,7 @@ export function ApplicationDetails ({ namespace, application } : ApplicationDeta
         <div className="flex flex-col gap-6">
           <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
             <div className="grow">
-              <ApplicationDetails.Scopes value={application.name} />
+              <ApplicationDetails.Scopes value={application.scopes} />
               <ApplicationDetails.ClientId value={application.clientId} />
               <ApplicationDetails.ClientSecret value={application.clientSecret} />
             </div>
@@ -70,51 +66,38 @@ ApplicationDetails.Title = function Title({ value } : TextProps) {
 };
 
 ApplicationDetails.Actions = function Actions({ namespace, application } : ApplicationDetailsProps) {
-
   const navigate = useNavigate();
 
-  const [removing, setRemoving] = useState<NamespaceApplication | undefined>();
-  const [resetting, setResetting] = useState<NamespaceApplication | undefined>();
-
-  const onCloseRemoving = useCallback(() => setRemoving(undefined), []);
-  const onCloseResetting = useCallback(() => setResetting(undefined), []);
-
-  const onDeleted = useCallback(() => navigate({
+  const onDeleted = useCallback(async (app: NamespaceApplication) => await navigate({
     to: '/namespace/$namespace/applications',
     params: { namespace: namespace.slug },
   }), []);
 
-  const onReset = useCallback(() => {}, []);
+  const onReset = useCallback((app : NamespaceApplication) => navigate({
+    to: '/namespace/$namespace/applications/$id',
+    params: { namespace: namespace.slug, id: app.id },
+    state: (prev) => ({
+      ...prev,
+      clientSecret: app.clientSecret,
+    }),
+  }), []);
 
   return (
     <>
       <CardAction className="pr-5">
-        <Button variant="secondary" onClick={() => setResetting(application)}>
-          <FormattedMessage
-            defaultMessage="Reset application"
-            description="Button label that triggers application reset confirmation dialog when clicked"
-          />
-        </Button>
+        <ConfirmNamespaceApplicationResetAction
+          namespace={namespace}
+          application={application}
+          onConfirm={onReset}
+        />
       </CardAction>
       <CardAction>
-        <Button variant="destructive" onClick={() => setRemoving(application)}>
-          <DeleteNamespaceApplicationLabel/>
-        </Button>
+        <ConfirmNamespaceApplicationDeleteAction
+          namespace={namespace}
+          application={application}
+          onConfirm={onDeleted}
+        />
       </CardAction>
-
-      <ConfirmNamespaceApplicationResetAction
-        namespace={namespace}
-        application={resetting}
-        onClose={onCloseResetting}
-        onSuccess={onDeleted}
-      />
-
-      <ConfirmNamespaceApplicationDeleteAction
-        namespace={namespace}
-        application={removing}
-        onClose={onCloseRemoving}
-        onSuccess={onReset}
-      />
     </>
   );
 };

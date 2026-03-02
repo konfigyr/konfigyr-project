@@ -25,7 +25,7 @@ import type { Namespace, NamespaceApplication} from '@konfigyr/hooks/types';
 export interface NamespaceApplicationArticleProps {
   namespace: Namespace,
   application: NamespaceApplication;
-  onRemove: (member: NamespaceApplication) => void;
+  onRemove: () => void;
 }
 
 export function NamespaceApplicationArticle({ application, namespace, onRemove }: NamespaceApplicationArticleProps) {
@@ -49,12 +49,11 @@ export function NamespaceApplicationArticle({ application, namespace, onRemove }
       </div>
 
       <div>
-        <Button variant="destructive" onClick={() => onRemove(application)}>
-          <FormattedMessage
-            defaultMessage="Delete application"
-            description="Button label that triggers application delete confirmation dialog when clicked"
-          />
-        </Button>
+        <ConfirmNamespaceApplicationDeleteAction
+          namespace={namespace}
+          application={application}
+          onConfirm={onRemove}
+        />
       </div>
     </article>
   );
@@ -62,11 +61,6 @@ export function NamespaceApplicationArticle({ application, namespace, onRemove }
 
 export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
   const { data: applications, error, isPending, isError } = useGetNamespaceApplications(namespace.slug);
-
-  const [removing, setRemoving] = useState<NamespaceApplication | undefined>();
-
-  const onClose = useCallback(() => setRemoving(undefined), []);
-  const onDeleted = useCallback(() => {}, []);
 
   return (
     <>
@@ -107,18 +101,11 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
             )}
 
             {applications?.map(app => (
-              <NamespaceApplicationArticle key={app.id} application={app} onRemove={setRemoving} namespace={namespace} />
+              <NamespaceApplicationArticle key={app.id} application={app} onRemove={() => {}} namespace={namespace} />
             ))}
           </div>
         </CardContent>
       </Card>
-
-      <ConfirmNamespaceApplicationDeleteAction
-        namespace={namespace}
-        application={removing}
-        onClose={onClose}
-        onSuccess={onDeleted}
-      />
     </>
   );
 }
