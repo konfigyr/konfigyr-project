@@ -3,21 +3,22 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { useGetAccount } from '@konfigyr/hooks/account/query';
 import request from '@konfigyr/lib/http';
 import { NamespaceRole } from './types';
-
 import type {
   CreateNamespace,
+  CreateNamespaceApplication,
   CreateService,
   Invitation,
   Member,
   Namespace,
-  Service,
-} from './types';
+  NamespaceApplication, Service} from './types';
 
 export const namespaceKeys = {
   getNamespaces: () => ['namespace'],
   getNamespace: (slug: string) => ['namespace', slug],
   getCheckNamespace: (slug: string) => ['namespace', 'check', slug],
   getNamespaceMembers: (slug: string) => ['namespace', slug, 'members'],
+  getNamespaceApplications: (slug: string) => ['namespace', slug, 'applications'],
+  getNamespaceApplication: (slug: string, id: string) => ['namespace', slug, 'applications', id],
   getNamespaceInvitations: (slug: string) => ['namespace', slug, 'invitations'],
   getNamespaceServices: (slug: string) => ['namespace', slug, 'services'],
   getNamespaceService: (slug: string, service: string) => ['namespace', slug, 'services', service],
@@ -244,6 +245,82 @@ export const useCreateNamespaceService = (slug: string) => {
       client.setQueryData(namespaceKeys.getNamespaceServices(slug), (services?: Array<Service>) =>
         [...(services ?? []), service],
       );
+    },
+  });
+};
+/**
+ * Hook that creates a new application in the Konfigyr API server for the given namespace.
+ */
+export const useGetNamespaceApplication = (slug: string, id: string) => {
+  return useQuery(
+    queryOptions({
+      queryKey: namespaceKeys.getNamespaceApplication(slug, id),
+      queryFn: () => request.get(`api/namespaces/${slug}/applications/${id}`).json<NamespaceApplication>(),
+    }),
+  );
+};
+
+export const useGetNamespaceApplications = (slug: string) => {
+  return useQuery(
+    queryOptions({
+      queryKey: namespaceKeys.getNamespaceApplications(slug),
+      queryFn: async (): Promise<Array<NamespaceApplication>> => {
+        const response = await request.get(`api/namespaces/${slug}/applications`)
+          .json<{ data: Array<NamespaceApplication> }>();
+        return response.data;
+      },
+    }),
+  );
+};
+
+export const useCreateNamespaceApplication = (namespace: string) => {
+  return useMutation({
+    mutationFn: (payload: CreateNamespaceApplication): Promise<NamespaceApplication> => {
+      return request.post(`api/namespaces/${namespace}/applications`, {
+        json: payload,
+      }).json<NamespaceApplication>();
+    },
+  });
+};
+
+export const useEditNamespaceApplication = (namespace: string, applicationId: string) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateNamespaceApplication): Promise<NamespaceApplication> => {
+      return request.put(`api/namespaces/${namespace}/applications/${applicationId}`, {
+        json: payload,
+      }).json<NamespaceApplication>();
+    },
+    onSuccess(result: NamespaceApplication) {
+      client.setQueryData(namespaceKeys.getNamespaceApplication(namespace, result.id), result);
+    },
+  });
+};
+
+export const useRemoveNamespaceApplication = (slug: string) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return await request.delete(`api/namespaces/${slug}/applications/${id}`)
+        .then(() => id);
+    },
+    onSuccess(application: string) {
+      client.setQueryData(namespaceKeys.getNamespaceApplications(slug), (applications?: Array<NamespaceApplication>) => {
+        if (typeof applications === 'undefined' || applications.length === 0) {
+          return [];
+        }
+        return applications.filter(it => it.id !== application);
+      });
+    },
+  });
+};
+
+export const useResetNamespaceApplication = (slug: string) => {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return await request.put(`api/namespaces/${slug}/applications/${id}/reset`).json<NamespaceApplication>();
     },
   });
 };

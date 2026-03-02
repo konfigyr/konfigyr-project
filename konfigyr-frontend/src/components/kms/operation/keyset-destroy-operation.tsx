@@ -2,7 +2,7 @@ import { CheckCircle2Icon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { useDestroyKeyset } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { CancelLabel } from '@konfigyr/components/messages';
+import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
 import { Alert, AlertTitle } from '@konfigyr/components/ui/alert';
 import { Button } from '@konfigyr/components/ui/button';
 
@@ -36,10 +36,7 @@ export function KeysetDestroyOperation({ namespace, keyset, onCancel }: { namesp
           <CancelLabel />
         </Button>
         <Button variant="destructive" onClick={() => destroy()}>
-          <FormattedMessage
-            defaultMessage="Yes, I am sure"
-            description="Label for the button that confirms the destruction of a keyset."
-          />
+          <YesLabel />
         </Button>
       </div>
     </>

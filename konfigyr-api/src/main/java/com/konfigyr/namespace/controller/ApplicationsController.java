@@ -143,7 +143,7 @@ class ApplicationsController {
 	record CreateApplicationAttributes(
 			@NotBlank String name,
 			@NotNull OAuthScopes scopes,
-			@Future OffsetDateTime expiration
+			@Future OffsetDateTime expiresAt
 	) {
 
 		NamespaceApplicationDefinition create(Namespace namespace) {
@@ -151,7 +151,7 @@ class ApplicationsController {
 					.namespace(namespace.id())
 					.name(name())
 					.scopes(scopes())
-					.expiration(expiration)
+					.expiration(expiresAt)
 					.build();
 		}
 

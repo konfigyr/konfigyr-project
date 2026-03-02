@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from '@konfigyr/components/ui/alert-dialog';
 
+import { CancelLabel } from '@konfigyr/components/messages';
 import type { Member, Namespace } from '@konfigyr/hooks/types';
 
 export function RemoveMemberForm({ namespace, member, onClose }: { namespace: Namespace, member?: Member | null, onClose: () => void }) {
@@ -65,10 +66,7 @@ export function RemoveMemberForm({ namespace, member, onClose }: { namespace: Na
         </AlertDialogDescription>
         <AlertDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <FormattedMessage
-              defaultMessage="Cancel"
-              description="Label for the cancel button in the modal that is shown when user tries to remove a namespace member"
-            />
+            <CancelLabel />
           </Button>
           <Button
             variant="destructive"

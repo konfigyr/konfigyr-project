@@ -26,6 +26,7 @@ import {
 } from '@konfigyr/components/ui/card';
 import { useForm } from '@konfigyr/components/ui/form';
 
+import { YesLabel } from '@konfigyr/components/messages';
 import type { FormEvent } from 'react';
 import type { Account } from '@konfigyr/hooks/types';
 
@@ -113,10 +114,7 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
             <form.AppForm>
               <form onSubmit={onSubmit}>
                 <form.Submit>
-                  <FormattedMessage
-                    defaultMessage="Yes, I am sure"
-                    description="Button label that deletes account when clicked"
-                  />
+                  <YesLabel />
                 </form.Submit>
               </form>
             </form.AppForm>
