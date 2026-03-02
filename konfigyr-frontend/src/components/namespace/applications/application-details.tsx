@@ -1,4 +1,4 @@
-import {createContext, useCallback, useContext, useState} from 'react';
+import { useCallback, useState} from 'react';
 import { MonitorCloud } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
@@ -29,57 +29,47 @@ type ApplicationDetailsProps = {
   application: NamespaceApplication,
 };
 
-const useApplicationDetails = () => {
-  const context = useContext(ApplicationDetailsContext);
-
-  if (!context) {
-    throw new Error('useApplicationDetails must be used within ApplicationDetailsProvider');
-  }
-  return context;
+type TextProps = {
+  value?: string,
 };
 
-const ApplicationDetailsContext = createContext<ApplicationDetailsProps | undefined>(undefined);
 
 export function ApplicationDetails ({ namespace, application } : ApplicationDetailsProps) {
   return (
-    <ApplicationDetailsContext.Provider value={{ namespace, application }} >
-      <Card className="border">
-        <CardHeader>
-          <ApplicationDetails.Title />
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-6">
-            <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
-              <div className="grow">
-                <ApplicationDetails.Scopes />
-                <ApplicationDetails.ClientId />
-                <ApplicationDetails.ClientSecret />
-              </div>
-            </article>
-          </div>
-        </CardContent>
-        <CardFooter className="justify-end border-t">
-          <ApplicationDetails.Actions />
-        </CardFooter>
-      </Card>
-    </ApplicationDetailsContext.Provider>
+    <Card className="border">
+      <CardHeader>
+        <ApplicationDetails.Title value={application.name} />
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col gap-6">
+          <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
+            <div className="grow">
+              <ApplicationDetails.Scopes value={application.name} />
+              <ApplicationDetails.ClientId value={application.clientId} />
+              <ApplicationDetails.ClientSecret value={application.clientSecret} />
+            </div>
+          </article>
+        </div>
+      </CardContent>
+      <CardFooter className="justify-end border-t">
+        <ApplicationDetails.Actions application={application} namespace={namespace} />
+      </CardFooter>
+    </Card>
   );
 }
 
-ApplicationDetails.Title = function Title() {
-  const { application } = useApplicationDetails();
+ApplicationDetails.Title = function Title({ value } : TextProps) {
   return (
     <CardTitle className="flex items-center gap-2">
       <CardIcon>
         <MonitorCloud size="1.25rem"/>
       </CardIcon>
-      {application.name}
+      {value}
     </CardTitle>
   );
 };
 
-ApplicationDetails.Actions = function Actions() {
-  const { application, namespace } = useApplicationDetails();
+ApplicationDetails.Actions = function Actions({ namespace, application } : ApplicationDetailsProps) {
 
   const navigate = useNavigate();
 
@@ -129,8 +119,7 @@ ApplicationDetails.Actions = function Actions() {
   );
 };
 
-ApplicationDetails.ClientId = function ClientId() {
-  const { application } = useApplicationDetails();
+ApplicationDetails.ClientId = function ClientId({ value } : TextProps) {
   return (
     <>
       <p className="pb-1">
@@ -140,17 +129,16 @@ ApplicationDetails.ClientId = function ClientId() {
             description="Client identifier of the token for an application"
           />
         </span>
-        {application.clientId}
+        {value}
         <span className="pl-5">
-          <ClipboardIconButton text={application.clientId} />
+          { value ? <ClipboardIconButton text={value} /> : '' }
         </span>
       </p>
     </>
   );
 };
 
-ApplicationDetails.Scopes = function Scopes() {
-  const { application } = useApplicationDetails();
+ApplicationDetails.Scopes = function Scopes({ value } : TextProps) {
   return (
     <>
       <p className="pb-1">
@@ -160,16 +148,14 @@ ApplicationDetails.Scopes = function Scopes() {
             description="Application scopes"
           />
         </span>
-        {application.scopes}
+        {value}
       </p>
     </>
   );
 };
 
-ApplicationDetails.ClientSecret = function ClientSecret() {
-  const { application } = useApplicationDetails();
-
-  if (!application.clientSecret) {
+ApplicationDetails.ClientSecret = function ClientSecret({ value } : TextProps) {
+  if (!value) {
     return null;
   }
 
@@ -182,9 +168,9 @@ ApplicationDetails.ClientSecret = function ClientSecret() {
             description="Client secret value display"
           />
         </span>
-        {application.clientSecret}
+        {value}
         <span className="pl-5">
-          <ClipboardIconButton text={application.clientSecret}/>
+          <ClipboardIconButton text={value} />
         </span>
       </p>
       <p className="pt-2 text-red-500">
