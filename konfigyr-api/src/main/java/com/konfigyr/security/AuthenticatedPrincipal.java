@@ -2,6 +2,7 @@ package com.konfigyr.security;
 
 import com.konfigyr.security.access.SecurityIdentity;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -60,7 +61,7 @@ public interface AuthenticatedPrincipal extends SecurityIdentity {
 	 *
 	 * @return the email address, may be {@code empty} if not provided by the identity provider.
 	 */
-	Optional<String> getEmail();
+	Optional<@Nullable String> getEmail();
 
 	/**
 	 * A human-friendly display name. Intended strictly for presentation purposes.
@@ -68,7 +69,7 @@ public interface AuthenticatedPrincipal extends SecurityIdentity {
 	 *
 	 * @return the display name of the actor, may be {@code empty} if not provided by the identity provider.
 	 */
-	Optional<String> getDisplayName();
+	Optional<@Nullable String> getDisplayName();
 
 	/**
 	 * Attempts to resolve the current {@link AuthenticatedPrincipal} from the current {@link SecurityContextHolder}.

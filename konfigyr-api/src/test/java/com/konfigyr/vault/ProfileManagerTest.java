@@ -17,7 +17,6 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.within;
 
 class ProfileManagerTest extends AbstractIntegrationTest {
 

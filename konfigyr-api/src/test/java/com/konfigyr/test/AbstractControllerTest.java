@@ -5,6 +5,7 @@ import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.namespace.ServiceNotFoundException;
+import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.test.assertions.ProblemDetailAssert;
@@ -20,6 +21,8 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -31,10 +34,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -282,16 +283,13 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * that uses the value extracted from the authentication name.
 	 *
 	 * @param subject subject claim for which access token is generated, can't be {@literal null}
-	 * @return the post processor, never {@literal null}
+	 * @return the Spring Authentication post-processor, never {@literal null}
 	 */
 	@NonNull
 	protected static RequestPostProcessor authentication(@NonNull String subject, OAuthScope... scopes) {
 		return authentication(claims -> claims
 				.subject(subject)
-				.claim("scope", Arrays.stream(scopes)
-						.map(OAuthScope::getAuthority)
-						.collect(Collectors.joining(" "))
-				)
+				.claim(OAuth2ParameterNames.SCOPE, OAuthScopes.of(scopes).toString())
 		);
 	}
 
@@ -303,11 +301,23 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * that uses the value extracted from the authentication name.
 	 *
 	 * @param authentication authentication for which access token is generated, can't be {@literal null}
-	 * @return the post processor, never {@literal null}
+	 * @return the Spring Authentication post-processor, never {@literal null}
 	 */
 	@NonNull
 	protected static RequestPostProcessor authentication(@NonNull Authentication authentication, OAuthScope... scopes) {
-		return authentication(authentication.getName(), scopes);
+		return authentication(claims -> {
+			final Object principal = authentication.getPrincipal();
+
+			if (principal instanceof AuthenticatedPrincipal ap) {
+				claims.subject(ap.get());
+				ap.getEmail().ifPresent(email -> claims.claim(StandardClaimNames.EMAIL, email));
+				ap.getDisplayName().ifPresent(name -> claims.claim(StandardClaimNames.NAME, name));
+			} else {
+				claims.subject(authentication.getName());
+			}
+
+			claims.claim(OAuth2ParameterNames.SCOPE, OAuthScopes.of(scopes).toString());
+		});
 	}
 
 	/**
@@ -318,7 +328,7 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * that uses the serialized account entity identifier value.
 	 *
 	 * @param account account for which access token is generated, can't be {@literal null}
-	 * @return the post processor, never {@literal null}
+	 * @return the Spring Authentication post-processor, never {@literal null}
 	 */
 	@NonNull
 	protected static RequestPostProcessor authentication(Account account, OAuthScope... scopes) {
@@ -329,11 +339,11 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * Creates a {@link RequestPostProcessor} that would generate a JWT OAuth2 Access Token and append
 	 * it as an {@link HttpHeaders#AUTHORIZATION} header to the mock request.
 	 * <p>
-	 * The JWT contains the {@code iss} claim that uses the current Wiremock Server URL. Use supplier function
-	 * append add claims to the JWT.
+	 * The JWT contains the {@code iss} claim that uses the current Wiremock Server URL. Use the supplier
+	 * function to append claims to the JWT.
 	 *
 	 * @param customizer supplier function that is used to customize JWT claims, can't be {@literal null}
-	 * @return the post processor, never {@literal null}
+	 * @return the Spring Authentication post-processor, never {@literal null}
 	 */
 	@NonNull
 	protected static RequestPostProcessor authentication(@NonNull Consumer<JWTClaimsSet.Builder> customizer) {

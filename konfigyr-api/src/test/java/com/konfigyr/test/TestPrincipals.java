@@ -1,6 +1,7 @@
 package com.konfigyr.test;
 
 import com.konfigyr.account.Account;
+import com.konfigyr.security.AuthenticatedPrincipal;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,7 +41,7 @@ public interface TestPrincipals {
 	 * @return OAuth 2.0 Client test authentication, never {@literal null}
 	 */
 	static @NonNull Authentication application(String id) {
-		return new TestingAuthenticationToken(id, "", AuthorityUtils.NO_AUTHORITIES);
+		return from(new TestAuthenticatedPrincipal(id));
 	}
 
 	/**
@@ -50,7 +51,17 @@ public interface TestPrincipals {
 	 * @return Account principal authentication, never {@literal null}
 	 */
 	static @NonNull Authentication from(@NonNull Account account) {
-		return new TestingAuthenticationToken(account.id().serialize(), "", AuthorityUtils.NO_AUTHORITIES);
+		return from(new TestAuthenticatedPrincipal(account));
+	}
+
+	/**
+	 * Creates an {@link Authentication} for the given {@link AuthenticatedPrincipal}.
+	 *
+	 * @param principal the authenticated principal to be used in the authentication, never {@literal null}
+	 * @return authenticated principal authentication, never {@literal null}
+	 */
+	static @NonNull Authentication from(@NonNull AuthenticatedPrincipal principal) {
+		return new TestingAuthenticationToken(principal, "", AuthorityUtils.NO_AUTHORITIES);
 	}
 
 }
