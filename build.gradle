@@ -26,10 +26,6 @@ subprojects {
         toolVersion = "12.1.2"
     }
 
-    // Addresses an issue with Thymeleaf layout dialect due to Groovy 5.0.4 version. For more
-    // information please take a look at the following ticket: https://github.com/ultraq/thymeleaf-layout-dialect/issues/253
-    ext['groovy.version'] = '5.0.3'
-
     dependencies {
         annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
@@ -68,7 +64,7 @@ subprojects {
             dependency('org.bouncycastle:bcpkix-jdk18on:1.83')
 
             /* Thymeleaf layout dialect */
-            dependency('nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.4.0')
+            dependency('nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:4.0.0')
 
             /* Fix Dependabot alerts */
             dependency('org.apache.commons:commons-compress:1.28.0') // used by testcontainers
