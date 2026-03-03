@@ -58,3 +58,32 @@ export interface ChangeHistoryRecord {
   newValue?: string;
   timestamp: string;
 }
+
+export enum Operation {
+  CREATE = 'CREATE',
+  MODIFY = 'MODIFY',
+  REMOVE = 'REMOVE',
+}
+
+export enum Action {
+  ADDED = 'ADDED',
+  UPDATED = 'UPDATED',
+  REMOVED = 'REMOVED',
+}
+
+export interface ApplyResult {
+  revision: string;
+  changes: Map<string, ChangeHistoryRecord >
+}
+
+export interface PropertyChange {
+  name: string,
+  operation: Operation,
+  value?: string,
+}
+
+export interface ApplyRequest {
+  name: string,
+  description?: string,
+  changes: Array<PropertyChange>
+}
