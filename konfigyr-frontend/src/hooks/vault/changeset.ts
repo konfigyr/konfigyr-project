@@ -120,7 +120,8 @@ export const useAddProperty = generatePropertyOperationMutation(
       ...state.properties,
     ];
 
-    return { ...state, properties, added: properties.length };
+    const added = properties.filter(p => p.state === 'added').length;
+    return { ...state, properties, added };
   },
 );
 
@@ -146,7 +147,8 @@ export const useModifyProperty = generatePropertyOperationMutation(
       return it;
     });
 
-    return { ...state, properties, modified: properties.length };
+    const modified = properties.filter(p => p.state === 'modified').length;
+    return { ...state, properties, modified };
   },
 );
 
@@ -164,6 +166,7 @@ export const useRemoveProperty = generatePropertyOperationMutation(
       return [ ...state, it];
     }, [] as Array<ConfigurationProperty>);
 
-    return { ...changeset, properties, deleted: properties.length };
+    const deleted = properties.filter(p => p.state === 'deleted').length;
+    return { ...changeset, properties, deleted };
   },
 );
