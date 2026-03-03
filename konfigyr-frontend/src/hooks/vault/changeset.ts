@@ -26,14 +26,13 @@ const generateCommitChangesetMutation = (payload: ChangesetState) : ApplyRequest
     (acc, property) => {
       const { name, value } = property;
       switch (property.state) {
-        case 'unchanged':
-          return acc;
         case 'modified':
           return [...acc, { name, value, operation: Operation.MODIFY}];
         case 'deleted':
           return [...acc, { name, value, operation: Operation.REMOVE}];
         case 'added':
           return [...acc, { name, value, operation: Operation.CREATE}];
+        case 'unchanged':
         default:
           return acc;
       }
