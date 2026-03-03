@@ -73,8 +73,9 @@ export const useDiscardChangeset = () => {
 
   return useMutation({
     mutationFn: async (state: ChangesetState): Promise<ChangesetState> => {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return generateStubChangesetState(state.profile);
+      const {namespace, service, profile} = state;
+      const response = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.name}/properties`).json<{ data: Array<ConfigurationProperty> }>();
+      return generateStubChangesetState(namespace, service, profile, response.data);
     },
     onSuccess(state: ChangesetState) {
       client.setQueryData(vaultKeys.getChangeset(state.profile), state);
