@@ -135,7 +135,7 @@ export const useDiscardChangeset = () => {
   });
 };
 
-export const useCommitChangeset = () => {
+export const useApplyChangeset = () => {
   const client = useQueryClient();
 
   return useMutation({
@@ -148,6 +148,20 @@ export const useCommitChangeset = () => {
       }).json<ApplyResult>();
 
       return parseCommitChangesetMutationResponse(payload, resp);
+    },
+    onSuccess(state: ChangesetState) {
+      client.setQueryData(vaultKeys.getChangeset(state.profile), state);
+    },
+  });
+};
+
+export const useSubmitChangeset = () => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (state: ChangesetState): Promise<ChangesetState> => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return generateStubChangesetState(state.namespace, state.service, state.profile, []);
     },
     onSuccess(state: ChangesetState) {
       client.setQueryData(vaultKeys.getChangeset(state.profile), state);
