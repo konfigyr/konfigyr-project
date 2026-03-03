@@ -1,84 +1,11 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
+import {queryOptions, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import request from '@konfigyr/lib/http';
 import type {
   ChangesetState,
   ConfigurationProperty,
   Profile,
-  PropertyDescriptor,
-} from '@konfigyr/hooks/vault/types';
-
-const PROPERTIES: Array<ConfigurationProperty> = [{
-  name: 'spring.datasource.url',
-  description: 'JDBC URL of the database. Auto-detected based on the classpath if not set.',
-  type: 'java.util.List<com.acme.AcmeProperties$EnumeratedOptions>',
-  value: 'jdbc:postgresql://db.configvault.io:5432/prod',
-  state: 'unchanged',
-}, {
-  name: 'spring.datasource.hikari.maximum-pool-size',
-  description: 'Maximum number of connections that HikariCP will keep in the pool, including both idle and in-use connections.',
-  type: 'java.lang.Integer',
-  value: '20',
-  state: 'modified',
-}, {
-  name: 'spring.datasource.password',
-  description: 'Login password of the database. Set using a vault-backed secret for production deployments.',
-  type: 'java.lang.String',
-  value: 'vault:secret/db#password',
-  state: 'unchanged',
-}, {
-  name: 'spring.http.encoding.charset',
-  description: 'Charset of HTTP requests and responses. Added to the Content-Type header if not set explicitly. Deprecated since Spring Boot 2.3.',
-  type: 'java.lang.String',
-  value: 'UTF-8',
-  deprecation: {
-    reason: 'This property is deprecated since Spring Boot 2.3.',
-  },
-  state: 'deleted',
-}, {
-  name: 'spring.flyway.enabled',
-  description: 'Whether to enable Flyway database migrations on startup.',
-  type: 'java.lang.Boolean',
-  value: 'true',
-  deprecation: {
-    reason: 'This property is deprecated since Spring Boot 2.3.',
-  },
-  state: 'unchanged',
-}, {
-  name: 'spring.kafka.bootstrap-servers',
-  description: 'Comma-delimited list of host:port pairs for establishing the initial Kafka cluster connection.',
-  type: 'java.lang.String',
-  value: 'kafka-01.configvault.io:9092,kafka-02.configvault.io:9092',
-  state: 'added',
-}, {
-  name: 'spring.jpa.hibernate.ddl-auto',
-  description: 'DDL mode. Embedded databases default to \'create-drop\'. Be careful in production -- you probably want \'validate\' or \'none\'.',
-  type: 'java.lang.String',
-  value: 'validate',
-  state: 'unchanged',
-}, {
-  name: 'spring.cache.type',
-  description: 'Cache type. By default, auto-detected according to the environment. Force a specific cache type by setting this.',
-  type: 'java.lang.String',
-  value: 'redis',
-  state: 'unchanged',
-}, {
-  name: 'logging.level.org.springframework.web',
-  description: 'Log level for the Spring Web framework package. Set to DEBUG for request/response tracing.',
-  type: 'java.lang.String',
-  value: 'INFO',
-  state: 'unchanged',
-}];
-
-const generateStubChangesetState = (profile: Profile): ChangesetState => ({
-  profile,
-  name: 'Changeset draft',
-  state: 'DRAFT',
-  properties: PROPERTIES,
-  added: PROPERTIES.filter(it => it.state === 'added').length,
-  modified: PROPERTIES.filter(it => it.state === 'modified').length,
-  deleted: PROPERTIES.filter(it => it.state === 'deleted').length,
-});
-
+  PropertyDescriptor} from '@konfigyr/hooks/vault/types';
+import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 /**
  * Keys used to store the Changeset states in the query client.
  */
@@ -86,28 +13,45 @@ export const vaultKeys = {
   getChangeset: (profile: Profile) => ['vault', profile.id, 'changeset'],
 };
 
+const generateStubChangesetState = (namespace: Namespace, service: Service, profile: Profile, properties: Array<ConfigurationProperty>): ChangesetState => ({
+  namespace,
+  service,
+  profile,
+  name: 'Changeset draft',
+  state: 'DRAFT',
+  properties: properties,
+  added: properties.filter(it => it.state === 'added').length,
+  modified: properties.filter(it => it.state === 'modified').length,
+  deleted: properties.filter(it => it.state === 'deleted').length,
+});
+
 /**
  * Attempts to resolve existing or create a new changeset state for the given profile and current user account.
  *
+ * @param namespace namespace that owns this service
+ * @param service single Spring Boot application or microservice that belongs to a given namesasce
  * @param profile profile for which the changeset state is being resolved
  * @returns TansStack query options to retrieve the keysets
  */
-export const getChangesetStateQuery = (profile: Profile) => {
+export const getChangesetStateQuery = (namespace: Namespace, service: Service, profile: Profile) => {
   return queryOptions({
     queryKey: vaultKeys.getChangeset(profile),
-    // TODO: resolve the state from the backend
-    queryFn: (): ChangesetState => generateStubChangesetState(profile),
-    staleTime: Infinity,
+    queryFn: async () => {
+      const response = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.name}/properties`).json<{ data: Array<ConfigurationProperty> }>();
+      return generateStubChangesetState(namespace, service, profile, response.data);
+    },
   });
 };
 
 /**
  * Hook that retrieves the current changeset state for the given profile and current user account.
  *
+ * @param namespace namespace that owns this service
+ * @param service single Spring Boot application or microservice that belongs to a given namesasce
  * @param profile profile for which the changeset state is being resolved
  */
-export const useChangesetState = (profile: Profile) => {
-  return useQuery(getChangesetStateQuery(profile));
+export const useChangesetState = (namespace: Namespace, service: Service, profile: Profile) => {
+  return useQuery(getChangesetStateQuery(namespace, service, profile));
 };
 
 export const useRenameChangeset = (state: ChangesetState) => {

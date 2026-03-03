@@ -40,7 +40,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { namespace, service, profiles, profile } = Route.useLoaderData();
-  const { data } = useChangesetState(profile);
+  const { data } = useChangesetState(namespace, service, profile);
 
   return (
     <div className="mx-4 space-y-6">

@@ -1,3 +1,4 @@
+import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { JSONSchema7 } from 'json-schema';
 
 export type ProfilePolicy = 'UNPROTECTED' | 'PROTECTED' | 'IMMUTABLE';
@@ -38,6 +39,8 @@ export interface ConfigurationProperty extends PropertyDescriptor {
 }
 
 export interface ChangesetState {
+  namespace: Namespace;
+  service: Service;
   profile: Profile;
   name: string;
   state: string;
