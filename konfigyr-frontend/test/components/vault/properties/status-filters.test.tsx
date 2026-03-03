@@ -3,9 +3,11 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { PropertyStatusFilters } from '@konfigyr/components/vault/properties/status-filters';
-import { profiles } from '@konfigyr/test/helpers/mocks';
+import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
 
 const changeset = {
+  namespace: namespaces.konfigyr,
+  service: services.konfigyrApi,
   profile: profiles.development,
   name: 'test changeset',
   state: 'DRAFT',
