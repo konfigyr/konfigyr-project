@@ -170,14 +170,21 @@ export const useSubmitChangeset = () => {
 };
 
 const generatePropertyOperationMutation = (
-  mutation: (state: ChangesetState, property: PropertyDescriptor, value?: string) => ChangesetState,
+  mutation: (state: ChangesetState, property: PropertyDescriptor, value?: string) => Array<ConfigurationProperty>,
 ) => (state: ChangesetState) => {
   const client = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ property, value }: { property: PropertyDescriptor, value?: string }): Promise<ChangesetState> => {
       await new Promise(resolve => setTimeout(resolve, 300));
-      return mutation(state, property, value);
+
+      const properties = mutation(state, property, value);
+
+      const deleted = properties.filter(p => p.state === 'deleted').length;
+      const modified = properties.filter(p => p.state === 'modified').length;
+      const added = properties.filter(p => p.state === 'added').length;
+
+      return { ...state, properties, deleted, modified, added };
     },
     onSuccess(result: ChangesetState) {
       client.setQueryData(vaultKeys.getChangeset(state.profile), result);
@@ -187,13 +194,10 @@ const generatePropertyOperationMutation = (
 
 export const useAddProperty = generatePropertyOperationMutation(
   (state, property, value) => {
-    const properties: Array<ConfigurationProperty> = [
+    return [
       { ...property, value, state: 'added' },
       ...state.properties,
     ];
-
-    const added = properties.filter(p => p.state === 'added').length;
-    return { ...state, properties, added };
   },
 );
 
@@ -206,7 +210,7 @@ export const useRestoreProperty = generatePropertyOperationMutation(
       return it;
     });
 
-    return { ...state, properties, modified: properties.length };
+    return properties;
   },
 );
 
@@ -219,8 +223,7 @@ export const useModifyProperty = generatePropertyOperationMutation(
       return it;
     });
 
-    const modified = properties.filter(p => p.state === 'modified').length;
-    return { ...state, properties, modified };
+    return properties;
   },
 );
 
@@ -238,7 +241,6 @@ export const useRemoveProperty = generatePropertyOperationMutation(
       return [ ...state, it];
     }, [] as Array<ConfigurationProperty>);
 
-    const deleted = properties.filter(p => p.state === 'deleted').length;
-    return { ...changeset, properties, deleted };
+    return properties;
   },
 );
