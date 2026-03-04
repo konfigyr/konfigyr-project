@@ -1,8 +1,7 @@
 package com.konfigyr.identity.authorization.client;
 
 import com.konfigyr.identity.authorization.AuthorizationProperties;
-import com.konfigyr.security.OAuthScope;
-import com.konfigyr.security.OAuthScopes;
+import com.konfigyr.identity.authorization.AuthorizationServerScopes;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -18,12 +17,6 @@ public class KonfigyrRegisteredClientRepository extends AbstractRegisteredClient
 			AuthorizationGrantType.REFRESH_TOKEN
 	);
 
-	private static final OAuthScopes SUPPORTED_SCOPES = OAuthScopes.of(
-			OAuthScope.OPENID,
-			OAuthScope.NAMESPACES,
-			OAuthScope.PROFILES
-	);
-
 	private final RegisteredClient client;
 
 	public KonfigyrRegisteredClientRepository(AuthorizationProperties properties) {
@@ -33,8 +26,8 @@ public class KonfigyrRegisteredClientRepository extends AbstractRegisteredClient
 				.clientName(properties.getClientName())
 				.clientId(properties.getClientId())
 				.clientSecret(properties.getClientSecret())
-				.scopes(scopes -> SUPPORTED_SCOPES.forEach(scope -> {
-					scopes.add(scope.getAuthority());
+				.scopes(scopes -> AuthorizationServerScopes.get().forEach(scope -> {
+					AuthorizationServerScopes.register(scopes);
 					scope.getIncluded().forEach(it -> scopes.add(it.getAuthority()));
 				}))
 				.clientSettings(createClientSettings().build())

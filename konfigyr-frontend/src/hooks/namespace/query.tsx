@@ -10,13 +10,17 @@ import type {
   Invitation,
   Member,
   Namespace,
-  NamespaceApplication, Service} from './types';
+  NamespaceApplication,
+  NamespaceOAuthScope,
+  Service,
+} from './types';
 
 export const namespaceKeys = {
   getNamespaces: () => ['namespace'],
   getNamespace: (slug: string) => ['namespace', slug],
   getCheckNamespace: (slug: string) => ['namespace', 'check', slug],
   getNamespaceMembers: (slug: string) => ['namespace', slug, 'members'],
+  getNamespaceScopes: (slug: string) => ['namespace', slug, 'scopes'],
   getNamespaceApplications: (slug: string) => ['namespace', slug, 'applications'],
   getNamespaceApplication: (slug: string, id: string) => ['namespace', slug, 'applications', id],
   getNamespaceInvitations: (slug: string) => ['namespace', slug, 'invitations'],
@@ -248,6 +252,21 @@ export const useCreateNamespaceService = (slug: string) => {
     },
   });
 };
+
+export const getNamespaceScopes = (slug: string) => {
+  return queryOptions({
+    queryKey: namespaceKeys.getNamespaceScopes(slug),
+    queryFn: async (): Promise<Array<NamespaceOAuthScope>> => {
+      return await request.get('auth/scopes').json<Array<NamespaceOAuthScope>>();
+    },
+    staleTime: Infinity,
+  });
+};
+
+export const useNamespaceScopes = (slug: string) => {
+  return useQuery(getNamespaceScopes(slug));
+};
+
 /**
  * Hook that creates a new application in the Konfigyr API server for the given namespace.
  */

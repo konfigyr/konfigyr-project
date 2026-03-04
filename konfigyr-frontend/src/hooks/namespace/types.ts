@@ -8,6 +8,11 @@ export interface Namespace {
   updatedAt?: string;
 }
 
+export interface NamespaceOAuthScope {
+  name: string;
+  description?: string;
+}
+
 export interface CreateNamespace {
   name?: string;
   slug?: string;

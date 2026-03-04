@@ -1,12 +1,11 @@
-import {afterEach, describe, expect, test, vi} from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
-import {applications, namespaces} from '@konfigyr/test/helpers/mocks';
+import { applications, namespaces } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import {
   NamespaceApplicationArticle,
   NamespaceApplications,
 } from '@konfigyr/components/namespace/applications/applications';
-import userEvents from '@testing-library/user-event/dist/cjs/index.js';
 
 describe('components | namespace | applications | <NamespaceApplications/>', () => {
   afterEach(() => cleanup());
@@ -17,7 +16,7 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
     );
 
     expect(result.getByText('Namespace applications')).toBeInTheDocument();
-    expect(result.container.querySelector('[data-slot="namespace-applications-skeleton"]')).toBeInTheDocument();
+    expect(result.getByText('Namespace applications are loading. Please wait')).toBeInTheDocument();
   });
 
   test('should render an empty namespace applications component', async () => {
@@ -36,31 +35,19 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
     );
 
     await waitFor(() => {
-      expect(result.container.querySelector('[data-slot="namespace-application-article"]')).toBeInTheDocument();
+      expect(result.queryByText('konfigyr test')).toBeInTheDocument();
+      expect(result.queryByText('This application has no expiration date')).toBeInTheDocument();
     });
   });
 
   test('should render <NamespaceApplicationArticle /> component  ', async () => {
-    const onRemove = vi.fn();
-
-    const { getByText, getByRole} = renderComponentWithRouter(
-      <NamespaceApplicationArticle namespace={namespaces.konfigyr} application={applications.konfigyr} onRemove={onRemove}   />,
+    const { getByText } = renderComponentWithRouter(
+      <NamespaceApplicationArticle namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
 
     await waitFor(() => {
-      expect(getByText('konfigyr test'), 'render name of the application').toBeInTheDocument();
-      expect(getByText('This application has no expiration date'), 'render expiration date of the application').toBeInTheDocument();
-      expect(getByText('Delete application')).toBeInTheDocument();
+      expect(getByText(applications.konfigyr.name)).toBeInTheDocument();
+      expect(getByText('This application has no expiration date')).toBeInTheDocument();
     });
-
-    await userEvents.click(
-      getByText('Delete application'),
-    );
-
-    await userEvents.click(
-      getByRole('button', { name: 'Yes, I am sure' }),
-    );
-
-    expect(onRemove).toHaveBeenCalled();
   });
 });

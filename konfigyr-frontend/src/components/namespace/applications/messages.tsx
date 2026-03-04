@@ -1,4 +1,4 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 export function CreateNamespaceApplicationLabel() {
   return (
@@ -27,34 +27,30 @@ export function DeleteNamespaceApplicationLabel() {
   );
 }
 
-type ExpirationDateLabelProps = {
-  expiresAt?: string | null;
-};
+export function CreateExpirationDateLabel({ expiresAt }: { expiresAt?: string | Date | number | null }) {
+  const intl = useIntl();
 
-export function CreateExpirationDateLabel({ expiresAt }: ExpirationDateLabelProps) {
-  const hasExpirationDate = !!expiresAt;
+  if (!expiresAt) {
+    return (
+      <FormattedMessage
+        defaultMessage="This application has no expiration date"
+        description="Indicates that the application does not expire"
+      />
+    );
+  }
+
   return (
-    <>
-      { hasExpirationDate ?
-        <FormattedMessage
-          defaultMessage="Expires on {date}"
-          description="Expiration date for the application"
-          values={{
-            date: new Intl.DateTimeFormat(navigator.language, {
-              weekday: 'short',
-              month: 'short',
-              day: '2-digit',
-              year: 'numeric',
-            }).format(new Date(expiresAt)),
-          }}
-        /> :
-        <span className="text-orange-500">
-          <FormattedMessage
-            defaultMessage="This application has no expiration date"
-            description="Indicates that the application does not expire"
-          />
-        </span>
-      }
-    </>
+    <FormattedMessage
+      defaultMessage="Expires on {date}"
+      description="Expiration date for the application"
+      values={{
+        date: intl.formatDate(expiresAt, {
+          weekday: 'short',
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric',
+        }),
+      }}
+    />
   );
 }
