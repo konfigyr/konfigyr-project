@@ -19,9 +19,22 @@ import {
   ItemGroup,
   ItemTitle,
 } from '@konfigyr/components/ui/item';
+import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { CreateExpirationDateLabel } from './messages';
 
 import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
+
+function SkeletonArticle() {
+  return (
+    <article data-slot="namespace-application-skeleton" className="flex justify-between items-center p-4 gap-4">
+      <div className="grow space-y-3">
+        <Skeleton className="w-48 h-4" />
+        <Skeleton className="w-64 h-4" />
+      </div>
+      <Skeleton className="w-2 h-4 mr-2" />
+    </article>
+  );
+}
 
 export function NamespaceApplicationArticle({ application, namespace }: {
   namespace: Namespace,
@@ -70,11 +83,7 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
         </CardHeader>
         <CardContent>
           {isPending && (
-            <EmptyState
-              title="Namespage applications"
-              description="Namespace applications are loading. Please wait"
-              icon={<MonitorCloud />}
-            />
+            <SkeletonArticle />
           )}
 
           {isError && (
@@ -83,8 +92,18 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
 
           {applications?.length === 0 && (
             <EmptyState
-              title="Your namespace has no applications yet."
-              description="Create an application in this namespace to get started."
+              title={
+                <FormattedMessage
+                  defaultMessage="Your namespace has no applications yet."
+                  description="Title for the empty state component in the namespace applications page."
+                />
+              }
+              description={
+                <FormattedMessage
+                  defaultMessage="Create an application in this namespace to get started."
+                  description="Description for the empty state component in the namespace applications page."
+                />
+              }
               icon={<ScreenShareOff />}
             />
           )}

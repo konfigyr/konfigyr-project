@@ -34,7 +34,7 @@ export function ApplicationScopesField({ namespace, value, onChange }: {
     return (
       <div className="flex items-center justify-center my-4">
         <FormattedMessage
-          defaultMessage="Loading scopes, pleas be patient..."
+          defaultMessage="Loading the scopes for your application, please be patient..."
           description="Loading message for the application scopes field"
         />
       </div>

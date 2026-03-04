@@ -16,7 +16,7 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
     );
 
     expect(result.getByText('Namespace applications')).toBeInTheDocument();
-    expect(result.getByText('Namespace applications are loading. Please wait')).toBeInTheDocument();
+    expect(result.container.querySelector('[data-slot="namespace-application-skeleton"]')).toBeInTheDocument();
   });
 
   test('should render an empty namespace applications component', async () => {
