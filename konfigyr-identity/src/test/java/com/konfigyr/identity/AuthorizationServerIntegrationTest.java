@@ -6,6 +6,7 @@ import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
+import com.konfigyr.identity.authorization.AuthorizationServerScopes;
 import com.konfigyr.identity.authorization.jwk.KeysetSource;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
@@ -39,6 +40,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -112,7 +114,7 @@ class AuthorizationServerIntegrationTest {
 						"client_secret_basic", "client_secret_post", "client_secret_jwt",
 						"private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"
 				))
-				.satisfies(assertElements(OidcProviderConfiguration::getScopes, "openid"))
+				.satisfies(assertOAuthScopes(OidcProviderConfiguration::getScopes))
 				.satisfies(assertElements(OidcProviderConfiguration::getIdTokenSigningAlgorithms, "RS256"))
 				.satisfies(assertElements(
 						OidcProviderConfiguration::getDPoPSigningAlgorithms,
@@ -158,7 +160,7 @@ class AuthorizationServerIntegrationTest {
 						OAuth2AuthorizationServerMetadata::getDPoPSigningAlgorithms,
 						"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"
 				))
-				.returns(null, OAuth2AuthorizationServerMetadata::getScopes);
+				.satisfies(assertOAuthScopes(OAuth2AuthorizationServerMetadata::getScopes));
 	}
 
 	@Test
@@ -610,6 +612,14 @@ class AuthorizationServerIntegrationTest {
 	static <T> Consumer<T> assertElements(Function<T, Collection<String>> mapper, String... elements) {
 		return metadata -> assertThat(mapper.apply(metadata))
 				.containsExactlyInAnyOrder(elements);
+	}
+
+	static <T> Consumer<T> assertOAuthScopes(Function<T, Collection<String>> mapper) {
+		final var scopes = new ArrayList<String>();
+		AuthorizationServerScopes.register(scopes);
+
+		return metadata -> assertThat(mapper.apply(metadata))
+				.containsExactlyInAnyOrderElementsOf(scopes);
 	}
 
 	static RequestPostProcessor rememberMe(AccountIdentityService service, long id) {

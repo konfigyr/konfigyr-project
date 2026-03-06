@@ -49,7 +49,7 @@ function isProxyUnavailable(response: Response): boolean {
   }
 }
 
-const renderErrorResponse = (problem: ProblemDetail) => {
+export const renderErrorResponse = (problem: ProblemDetail) => {
   return new Response(JSON.stringify({
     type: 'about:blank',
     status: 500,

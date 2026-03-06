@@ -51,8 +51,45 @@ const token = http.post('https://id.konfigyr.com/oauth/token', async () => {
   });
 });
 
+const scopes = http.get('http://localhost/auth/scopes', () => {
+  return HttpResponse.json([
+    {
+      name: 'openid',
+      description: 'Scope used to indicate that the application intends to use OIDC to verify the user\'s identity.',
+    }, {
+      name: 'namespaces',
+      description: 'Grants full access to namespace management that includes read, write and delete access to namespaces and managing invitations and collaborators.',
+    }, {
+      name: 'namespaces:read',
+      description: 'Grants read-only access to namespaces.',
+    }, {
+      name: 'namespaces:write',
+      description: 'Grants read and write access to namespaces.',
+    }, {
+      name: 'namespaces:invite',
+      description: 'Grants read access to namespaces and the possibility to manage invitations and collaborators.',
+    }, {
+      name: 'namespaces:delete',
+      description: 'Grants read, write and delete access to namespaces.',
+    }, {
+      name: 'profiles',
+      description: 'Grants full access to service profile configuration management that includes read,write and delete access to profiles.',
+    }, {
+      name: 'profiles:read',
+      description: 'Grants read-only access to profile.',
+    }, {
+      name: 'profiles:delete',
+      description: 'Grants read, write and delete access to profile.',
+    }, {
+      name: 'profiles:write',
+      description: 'Grants read and write access to profile.',
+    },
+  ]);
+});
+
 export default [
   metadata,
   jwks,
   token,
+  scopes,
 ];

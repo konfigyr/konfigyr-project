@@ -19,6 +19,15 @@ import {
   DropdownMenuTrigger,
 } from '@konfigyr/components/ui/dropdown-menu';
 import { EmptyState } from '@konfigyr/components/ui/empty';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from '@konfigyr/components/ui/item';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { NamespaceRoleBadge } from '../role';
 import { RemoveMemberForm } from './remove-member';
@@ -47,22 +56,27 @@ export function SkeletonArticle() {
 
 export function MemberArticle({ member, onEdit, onRemove }: MemberArticleProps) {
   return (
-    <article data-slot="member-article" className="flex justify-between items-center gap-4">
-      <Avatar size="lg">
-        <AvatarImage src={member.avatar} />
-        <AvatarFallback title={member.fullName} />
-      </Avatar>
-
-      <div className="grow">
-        <p className="font-medium">{member.fullName}</p>
-        <p className="text-sm text-muted-foreground font-mono">{member.email}</p>
-      </div>
+    <Item>
+      <ItemMedia>
+        <Avatar size="lg">
+          <AvatarImage src={member.avatar} />
+          <AvatarFallback title={member.fullName} />
+        </Avatar>
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>
+          {member.fullName}
+        </ItemTitle>
+        <ItemDescription>
+          {member.email}
+        </ItemDescription>
+      </ItemContent>
 
       <div>
         <NamespaceRoleBadge role={member.role} variant="outline" />
       </div>
 
-      <div>
+      <ItemActions>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" aria-label="More options">
@@ -84,8 +98,8 @@ export function MemberArticle({ member, onEdit, onRemove }: MemberArticleProps) 
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-    </article>
+      </ItemActions>
+    </Item>
   );
 }
 
@@ -129,14 +143,18 @@ export function Members({ namespace }: { namespace: Namespace }) {
               />
             )}
 
-            {members?.map(member => (
-              <MemberArticle
-                key={member.id}
-                member={member}
-                onEdit={setUpdating}
-                onRemove={setRemoving}
-              />
-            ))}
+            {members && (
+              <ItemGroup className="-mx-4">
+                {members.map(member => (
+                  <MemberArticle
+                    key={member.id}
+                    member={member}
+                    onEdit={setUpdating}
+                    onRemove={setRemoving}
+                  />
+                ))}
+              </ItemGroup>
+            )}
           </div>
         </CardContent>
       </Card>

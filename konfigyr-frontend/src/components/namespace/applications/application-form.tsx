@@ -7,12 +7,10 @@ import {
   CreateNamespaceApplicationLabel,
   UpdateNamespaceApplicationLabel,
 } from '@konfigyr/components/namespace/applications/messages';
-import { Checkbox} from '@konfigyr/components/ui/checkbox';
-import { Label } from '@konfigyr/components/ui/label';
-import type { FormEvent } from 'react';
-import type { Namespace, NamespaceApplication} from '@konfigyr/hooks/types';
+import { ApplicationScopesField } from './application-scopes-field';
 
-const SCOPES : Array<string> = ['namespaces:read', 'namespaces:write', 'namespaces:delete', 'namespaces:invite', 'namespaces'];
+import type { FormEvent } from 'react';
+import type { CreateNamespaceApplication, Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
 export const namespaceApplicationSchema = z.object({
   name: z.string()
@@ -24,21 +22,51 @@ export const namespaceApplicationSchema = z.object({
     .refine((val) => !val || !isNaN(Date.parse(val)), {
       message: 'Expiration date must be a valid date',
     }),
-  scopes:  z
-    .array(z.string())
-    .refine(
-      (values) => values.every((v) => SCOPES.includes(v)),
-      'Invalid scope selected',
-    ),
+  scopes: z.array(z.string()),
 });
 
-export function NamespaceApplicationForm({ namespace, namespaceApplication, handleSubmit }: { namespace: Namespace, namespaceApplication?: Partial<NamespaceApplication>, handleSubmit: (namespaceApplication: z.infer<typeof namespaceApplicationSchema>) => void }) {
+const extractApplicationScopes = (scopes?: string): Array<string> => {
+  if (typeof scopes === 'string') {
+    return scopes.split(' ').filter(scope => scope !== '');
+  }
+  return [];
+};
+
+const extractApplicationExpiryDate = (value?: string | number | Date): string => {
+  let date;
+
+  if (typeof value === 'string') {
+    date = new Date(value);
+  }
+  if (typeof value === 'number') {
+    date = new Date(value);
+  }
+  if (value instanceof Date) {
+    date = value;
+  }
+
+  if (date) {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  return '';
+};
+
+export function NamespaceApplicationForm({ namespace, namespaceApplication, handleSubmit }: {
+  namespace: Namespace,
+  namespaceApplication?: NamespaceApplication,
+  handleSubmit: (namespaceApplication: CreateNamespaceApplication) => void | Promise<void>
+}) {
   const errorNotification = useErrorNotification();
+
   const defaultValues: z.infer<typeof namespaceApplicationSchema> = useMemo(() => ({
     name: namespaceApplication?.name ?? '',
-    scopes: namespaceApplication?.scopes?.trim() ? namespaceApplication.scopes.split(' ') : [],
-    expiresAt: namespaceApplication?.expiresAt ? new Date(namespaceApplication.expiresAt).toISOString().slice(0, 10) : '',
+    scopes: extractApplicationScopes(namespaceApplication?.scopes),
+    expiresAt: extractApplicationExpiryDate(namespaceApplication?.expiresAt),
   }), [namespaceApplication]);
+
   const form = useForm({
     defaultValues: defaultValues,
     validators: {
@@ -46,7 +74,11 @@ export function NamespaceApplicationForm({ namespace, namespaceApplication, hand
     },
     onSubmit: async ({ value }) => {
       try {
-        await handleSubmit(value);
+        await handleSubmit({
+          name: value.name,
+          scopes: value.scopes.join(' '),
+          expiresAt: value.expiresAt ? new Date(value.expiresAt).toISOString() : undefined,
+        });
       } catch (error) {
         return errorNotification(error);
       }
@@ -94,37 +126,12 @@ export function NamespaceApplicationForm({ namespace, namespaceApplication, hand
         )} />
 
         <form.AppField name="scopes" children={(field) => (
-          <field.Control
-            label={<FormattedMessage
-              defaultMessage="Select scopes"
-              description="Label for the application scopes field"
-            />}
-            description={<FormattedMessage
-              defaultMessage="List of scopes that the application has access to"
-              description="Help text for the namespace application scopes field"
-            />}
-          >
-            <div className="space-y-2">
-              {SCOPES.map((scope) => {
-                const checked = field.state.value.includes(scope);
-                return (
-                  <div key={scope} className="flex items-center gap-2">
-                    <Checkbox
-                      key={scope}
-                      id={scope}
-                      checked={checked}
-                      onCheckedChange={(isChecked) => {
-                        const scopes = isChecked
-                          ? [...field.state.value, scope]
-                          : field.state.value.filter((s) => s !== scope);
-                        field.handleChange(scopes);
-                      }}
-                    />
-                    <Label htmlFor={scope}>{scope}</Label>
-                  </div>
-                );
-              })}
-            </div>
+          <field.Control>
+            <ApplicationScopesField
+              namespace={namespace}
+              value={field.state.value}
+              onChange={field.handleChange}
+            />
           </field.Control>
         )} />
 
