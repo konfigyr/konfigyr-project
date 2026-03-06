@@ -1,7 +1,6 @@
 import {queryOptions, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 
 import {
-  Action,
   Operation,
 } from '@konfigyr/hooks/vault/types';
 import request from '@konfigyr/lib/http';
@@ -42,26 +41,6 @@ const generateCommitChangesetMutation = (payload: ChangesetState) : ApplyRequest
     name: payload.name,
     changes,
   };
-};
-
-const parseCommitChangesetMutationResponse = (state: ChangesetState, response: ApplyResult) : ChangesetState => {
-  const { namespace, service, profile } = state;
-
-  const changes = new Map(Object.entries(response.changes));
-  const properties = state.properties.reduce<Array<ConfigurationProperty>>(
-    (acc, property) => {
-      const history = changes.get(property.name);
-      switch (history?.action) {
-        case Action.REMOVED:
-          return [...acc];
-        case Action.ADDED:
-        case Action.UPDATED:
-          return [...acc, { ...property, state: 'unchanged' }];
-        default:
-          return [...acc, property];
-      }
-    }, []);
-  return generateStubChangesetState(namespace, service, profile, properties);
 };
 
 const generateStubChangesetState = (namespace: Namespace, service: Service, profile: Profile, properties: Array<ConfigurationProperty>): ChangesetState => ({
@@ -125,11 +104,7 @@ export const useDiscardChangeset = () => {
   return useMutation({
     mutationFn: async (state: ChangesetState): Promise<ChangesetState> => {
       const {namespace, service, profile} = state;
-      const response = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.name}/properties`).json<{ data: Array<ConfigurationProperty> }>();
-      return generateStubChangesetState(namespace, service, profile, response.data);
-    },
-    onSuccess(state: ChangesetState) {
-      client.setQueryData(vaultKeys.getChangeset(state.profile), state);
+      return client.fetchQuery(getChangesetStateQuery(namespace, service, profile));
     },
   });
 };
@@ -142,14 +117,11 @@ export const useApplyChangeset = () => {
       const { namespace, service, profile } = payload;
       const req = generateCommitChangesetMutation(payload);
 
-      const resp = await request.post(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/apply`, {
+      await request.post(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/apply`, {
         json: req,
       }).json<ApplyResult>();
 
-      return parseCommitChangesetMutationResponse(payload, resp);
-    },
-    onSuccess(state: ChangesetState) {
-      client.setQueryData(vaultKeys.getChangeset(state.profile), state);
+      return client.fetchQuery(getChangesetStateQuery(namespace, service, profile));
     },
   });
 };

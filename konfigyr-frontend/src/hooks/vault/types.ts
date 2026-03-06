@@ -65,12 +65,6 @@ export enum Operation {
   REMOVE = 'REMOVE',
 }
 
-export enum Action {
-  ADDED = 'ADDED',
-  UPDATED = 'UPDATED',
-  REMOVED = 'REMOVED',
-}
-
 export interface ApplyResult {
   revision: string;
   changes: Map<string, ChangeHistoryRecord >
