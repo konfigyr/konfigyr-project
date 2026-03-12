@@ -27,7 +27,7 @@ type Props = {
   onConfirm: (app: NamespaceApplication) => void
 };
 
-export function ConfirmNamespaceApplicationDeleteAction({ namespace, application,  onConfirm }: Props) {
+export function ConfirmNamespaceApplicationDeleteAction({ namespace, application, onConfirm }: Props) {
   const errorNotification = useErrorNotification();
 
   const {

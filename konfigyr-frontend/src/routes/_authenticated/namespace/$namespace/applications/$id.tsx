@@ -25,7 +25,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { id }  = Route.useParams();
+  const { id } = Route.useParams();
   const namespace = useNamespace();
 
   const location = useLocation();

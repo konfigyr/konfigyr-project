@@ -47,7 +47,7 @@ describe('components | namespace | <NamespaceProvider />', () => {
           <NamespaceInformation/>
         </NamespaceProvider>
       </AccountProvider>
-    ),  { queryClient });
+    ), { queryClient });
 
     await waitFor(() => {
       expect(getByText(namespaces.konfigyr.slug)).toBeInTheDocument();

@@ -5,7 +5,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from '@konfigyr/components/ui/navigation-menu';
-import { Link  } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
 import type { Namespace, Service } from '@konfigyr/hooks/types';
 

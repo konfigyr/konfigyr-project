@@ -1,7 +1,7 @@
 import { Slot } from 'radix-ui';
 import { PlusIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
-import { Link  } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import {
   Tooltip,
   TooltipContent,
