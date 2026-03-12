@@ -1,5 +1,11 @@
 import { HttpResponse, http } from 'msw';
-import { namespaces, services } from '../mocks';
+import {
+  isValidService,
+  namespaces,
+  services,
+} from '../mocks';
+
+import type { Artifact } from '@konfigyr/hooks/types';
 
 const list = http.get('http://localhost/api/namespaces/:namespace/services', ({ params }) => {
   const { namespace } = params;
@@ -102,9 +108,58 @@ const update = http.put('http://localhost/api/namespaces/:namespace/services/:se
   }, { status: 201 });
 });
 
+const manifest = http.get('http://localhost/api/namespaces/:namespace/services/:service/manifest', ({ params }) => {
+  const { namespace, service } = params;
+
+  if (namespace !== namespaces.konfigyr.slug) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Not found',
+      detail: `Namespace with identifier '${namespace}' not found.`,
+    });
+  }
+
+  if (!isValidService(service)) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Not found',
+      detail: `Service with identifier '${service}' not found.`,
+    }, { status: 404 });
+  }
+
+  let artifacts: Array<Artifact> = [];
+
+  // only konfigyr-api service should have artifacts...
+  if (service === services.konfigyrApi.slug) {
+    artifacts = [{
+      id: 'com.konfigyr:konfigyr-crypto-jdbc:1.0.0-RC5',
+      groupId: 'com.konfigyr',
+      artifactId: 'konfigyr-crypto-jdbc',
+      version: '1.0.0-RC5',
+    }, {
+      id: 'org.springframework.boot:spring-boot:4.0.3',
+      groupId: 'org.springframework.boot',
+      artifactId: 'spring-boot',
+      version: '4.0.3',
+    }, {
+      id: 'org.springframework.boot:spring-boot-autoconfigure:4.0.3',
+      groupId: 'org.springframework.boot',
+      artifactId: 'spring-boot-autoconfigure',
+      version: '4.0.3',
+    }];
+  }
+
+  return HttpResponse.json({
+    id: `${service}-manifest`,
+    name: `Manifest for: ${service}`,
+    artifacts,
+  });
+});
+
 export default [
   list,
   get,
   create,
   update,
+  manifest,
 ];

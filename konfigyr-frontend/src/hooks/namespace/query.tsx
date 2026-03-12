@@ -8,6 +8,7 @@ import type {
   CreateNamespaceApplication,
   CreateService,
   Invitation,
+  Manifest,
   Member,
   Namespace,
   NamespaceApplication,
@@ -26,6 +27,7 @@ export const namespaceKeys = {
   getNamespaceInvitations: (slug: string) => ['namespace', slug, 'invitations'],
   getNamespaceServices: (slug: string) => ['namespace', slug, 'services'],
   getNamespaceService: (slug: string, service: string) => ['namespace', slug, 'services', service],
+  getNamespaceServiceManifest: (slug: string, service: string) => ['namespace', slug, 'services', service, 'manifest'],
 };
 
 export const getNamespacesQuery = () => {
@@ -234,6 +236,20 @@ export const getNamespaceServiceQuery = (slug: string, service: string) => {
 
 export const useNamespaceServiceQuery = (slug: string, service: string) => {
   return useQuery(getNamespaceServiceQuery(slug, service));
+};
+
+export const getServiceManifestQuery = (slug: string, service: string) => {
+  return queryOptions({
+    queryKey: namespaceKeys.getNamespaceServiceManifest(slug, service),
+    queryFn: ({ signal }): Promise<Manifest> => {
+      return request.get(`api/namespaces/${slug}/services/${service}/manifest`, { signal })
+        .json<Manifest>();
+    },
+  });
+};
+
+export const useServiceManifestQuery = (slug: string, service: string) => {
+  return useQuery(getServiceManifestQuery(slug, service));
 };
 
 export const useCreateNamespaceService = (slug: string) => {
