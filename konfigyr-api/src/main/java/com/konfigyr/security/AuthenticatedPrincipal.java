@@ -121,4 +121,25 @@ public interface AuthenticatedPrincipal extends SecurityIdentity {
 		));
 	}
 
+	/**
+	 * Resolves the currently {@link AuthenticatedPrincipal} from the security context and ensures
+	 * that it is of the expected type.
+	 * <p>
+	 * This method is a type-safe alternative to {@link #resolve()} that avoids manual
+	 * {@code instanceof} checks and casting in application code.
+	 *
+	 * @return the authenticated principal, never {@literal null}
+	 * @throws AuthenticationCredentialsNotFoundException if no authenticated principal is available or misconfigured
+	 */
+	static <T extends AuthenticatedPrincipal> T resolve(Class<T> type) {
+		final AuthenticatedPrincipal principal = resolve();
+
+		if (!type.isInstance(principal)) {
+			throw new AuthenticationCredentialsNotFoundException(
+					"Expected principal of type " + type.getSimpleName() + " but got " + principal.getClass().getSimpleName()
+			);
+		}
+
+		return type.cast(principal);
+	}
 }

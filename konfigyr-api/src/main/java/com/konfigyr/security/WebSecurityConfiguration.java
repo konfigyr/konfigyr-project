@@ -2,14 +2,21 @@ package com.konfigyr.security;
 
 import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
+import com.konfigyr.security.provider.ConfigClientAuthenticationProvider;
 import com.konfigyr.web.WebExceptionHandler;
+import org.jooq.DSLContext;
+import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
@@ -36,6 +43,36 @@ public class WebSecurityConfiguration {
 	}
 
 	@Bean
+	ConfigClientAuthenticationProvider configClientAuthenticationProvider(DSLContext context,
+																		  ObjectProvider<@NonNull PasswordEncoder> passwordEncoder) {
+		final PasswordEncoder encoder = passwordEncoder.getIfAvailable(PasswordEncoders::get);
+		return new ConfigClientAuthenticationProvider(context, encoder);
+	}
+
+	@Bean
+	@Order(1)
+	SecurityFilterChain konfigyrConfigClientSecurityFilterChain(HttpSecurity http, AuthenticationProvider configClientAuthenticationProvider) {
+		return http
+				.securityMatcher("/configs/**")
+				.authorizeHttpRequests(requests -> requests
+						.anyRequest().hasAuthority(OAuthScope.READ_PROFILES.getAuthority())
+				)
+				.cors(Customizer.withDefaults())
+				.csrf(AbstractHttpConfigurer::disable)
+				.logout(AbstractHttpConfigurer::disable)
+				.httpBasic(Customizer.withDefaults())
+				.formLogin(AbstractHttpConfigurer::disable)
+				.anonymous(AbstractHttpConfigurer::disable)
+				.rememberMe(AbstractHttpConfigurer::disable)
+				.sessionManagement(sessions -> sessions
+						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				)
+				.authenticationProvider(configClientAuthenticationProvider)
+				.build();
+	}
+
+	@Bean
+	@Order(2)
 	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, ProblemDetailsAuthenticationExceptionHandler exceptionHandler) {
 		final BearerTokenResolver bearerTokenResolver = new RequestAttributeBearerTokenResolver();
 
