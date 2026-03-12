@@ -271,4 +271,88 @@
 				constraintName="unique_namespace_service"
 		/>
 	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-service-releases-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="service_releases" />
+			</not>
+		</preConditions>
+
+		<comment>Initial service releases table migration</comment>
+
+		<createTable tableName="service_releases" remarks="Table that stores release versions for a service.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" unique="true" />
+			</column>
+
+			<column name="service_id" type="bigint" remarks="The services foreign key field.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="version" type="text" remarks="The service version field.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="state" type="varchar(32)" remarks="Stores the state of this release.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="service_releases"
+				baseColumnNames="service_id"
+				constraintName="fk_service_release"
+				referencedTableName="services"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addUniqueConstraint
+				tableName="service_releases"
+				columnNames="service_id,version"
+				constraintName="unique_namespace_service_version"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-service-artifacts-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="service_artifacts" />
+			</not>
+		</preConditions>
+
+		<comment>Initial service artifacts table migration used to build service manifests</comment>
+
+		<createTable tableName="service_artifacts" remarks="Table that stores which artifacts are used by specific service version.">
+			<column name="release_id" type="bigint" remarks="The service releases foreign key field.">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="group_id" type="varchar" remarks="The Maven coordinate `groupId` field.">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="artifact_id" type="varchar" remarks="The Maven coordinate `artifactId` field.">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="version" type="text" remarks="The Maven coordinate `version` field.">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="service_artifacts"
+				baseColumnNames="release_id"
+				constraintName="fk_service_artifact"
+				referencedTableName="service_releases"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
 </databaseChangeLog>

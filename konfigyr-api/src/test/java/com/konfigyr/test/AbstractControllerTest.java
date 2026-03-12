@@ -43,15 +43,16 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 
 	protected static MockMvcTester mvc;
+	protected static JsonMapper jsonMapper;
 
 	@BeforeAll
 	protected static void setup(@NonNull WebApplicationContext context) {
-		final JsonMapper mapper = context.getBeanProvider(JsonMapper.class)
+		jsonMapper = context.getBeanProvider(JsonMapper.class)
 				.getIfAvailable(JsonMapper::shared);
 
 		final HttpMessageConverters converters = HttpMessageConverters.forClient()
 				.registerDefaults()
-				.withJsonConverter(new JacksonJsonHttpMessageConverter(mapper))
+				.withJsonConverter(new JacksonJsonHttpMessageConverter(jsonMapper))
 				.build();
 
 		mvc = MockMvcTester.create(

@@ -1,13 +1,11 @@
 package com.konfigyr.artifactory.provenance;
 
-import com.konfigyr.artifactory.Deprecation;
-import com.konfigyr.artifactory.PropertyMetadata;
+import com.konfigyr.artifactory.PropertyDescriptor;
 import com.konfigyr.artifactory.VersionedArtifact;
-import com.konfigyr.artifactory.converter.DeprecationConverter;
-import com.konfigyr.artifactory.converter.HintsConverter;
+import com.konfigyr.artifactory.converter.ArtifactoryConverters;
 import com.konfigyr.entity.EntityId;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.Converter;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NonNull;
@@ -16,27 +14,18 @@ import org.slf4j.MarkerFactory;
 import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.util.function.ThrowingConsumer;
-import tools.jackson.databind.ObjectMapper;
-
-import java.util.List;
 
 import static com.konfigyr.data.tables.ArtifactVersionProperties.ARTIFACT_VERSION_PROPERTIES;
 import static com.konfigyr.data.tables.PropertyDefinitions.PROPERTY_DEFINITIONS;
 
 @Slf4j
+@RequiredArgsConstructor
 class ProvenanceEvaluationWriter implements ItemWriter<@NonNull EvaluationResult> {
 
 	private static final Marker MARKER = MarkerFactory.getMarker("PROPERTY_PROVENANCE_WRITER");
 
 	private final DSLContext context;
-	private final Converter<String, List<String>> hintsConverter;
-	private final Converter<String, Deprecation> deprecationConverter;
-
-	ProvenanceEvaluationWriter(ObjectMapper mapper, DSLContext context) {
-		this.context = context;
-		this.hintsConverter = new HintsConverter();
-		this.deprecationConverter = new DeprecationConverter(mapper);
-	}
+	private final ArtifactoryConverters converters;
 
 	@Override
 	public void write(@NonNull Chunk<? extends @NonNull EvaluationResult> chunk) throws Exception {
@@ -50,21 +39,19 @@ class ProvenanceEvaluationWriter implements ItemWriter<@NonNull EvaluationResult
 
 	private void insert(EvaluationResult.New result) {
 		final Provenance provenance = result.provenance();
-		final VersionedArtifact version = result.version();
-		final PropertyMetadata metadata = result.metadata();
+		final VersionedArtifact version = result.artifact();
+		final PropertyDescriptor property = result.property();
 
 		final Long identifier = context.insertInto(PROPERTY_DEFINITIONS)
 				.set(PROPERTY_DEFINITIONS.ID, EntityId.generate().orElseThrow().get())
 				.set(PROPERTY_DEFINITIONS.ARTIFACT_ID, version.artifact().get())
 				.set(PROPERTY_DEFINITIONS.CHECKSUM, provenance.checksum())
-				.set(PROPERTY_DEFINITIONS.NAME, metadata.name())
-				.set(PROPERTY_DEFINITIONS.TYPE, metadata.type().name())
-				.set(PROPERTY_DEFINITIONS.DATA_TYPE, metadata.dataType().name())
-				.set(PROPERTY_DEFINITIONS.TYPE_NAME, metadata.typeName())
-				.set(PROPERTY_DEFINITIONS.DEFAULT_VALUE, metadata.defaultValue())
-				.set(PROPERTY_DEFINITIONS.DESCRIPTION, metadata.typeName())
-				.set(PROPERTY_DEFINITIONS.DEPRECATION, deprecationConverter.to(metadata.deprecation()))
-				.set(PROPERTY_DEFINITIONS.HINTS, hintsConverter.to(metadata.hints()))
+				.set(PROPERTY_DEFINITIONS.NAME, property.name())
+				.set(PROPERTY_DEFINITIONS.TYPE_NAME, property.typeName())
+				.set(PROPERTY_DEFINITIONS.SCHEMA, converters.schema().to(property.schema()))
+				.set(PROPERTY_DEFINITIONS.DEFAULT_VALUE, property.defaultValue())
+				.set(PROPERTY_DEFINITIONS.DESCRIPTION, property.description())
+				.set(PROPERTY_DEFINITIONS.DEPRECATION, converters.deprecation().to(property.deprecation()))
 				.set(PROPERTY_DEFINITIONS.FIRST_SEEN, provenance.firstSeen().get())
 				.set(PROPERTY_DEFINITIONS.LAST_SEEN, provenance.lastSeen().get())
 				.set(PROPERTY_DEFINITIONS.OCCURRENCES, provenance.occurrences())
@@ -81,11 +68,11 @@ class ProvenanceEvaluationWriter implements ItemWriter<@NonNull EvaluationResult
 				.execute();
 
 		log.info(MARKER, "Inserted new property definition for: [artifact={}, property={}, checksum={}]",
-				version.format(), metadata.name(), provenance.checksum().encode());
+				version.coordinates().format(), property.name(), provenance.checksum().encode());
 	}
 
 	private void update(EvaluationResult.Unused result) {
-		final VersionedArtifact version = result.version();
+		final VersionedArtifact version = result.artifact();
 		final Provenance provenance = result.provenance();
 
 		final Long identifier = context.update(PROPERTY_DEFINITIONS)
@@ -109,7 +96,7 @@ class ProvenanceEvaluationWriter implements ItemWriter<@NonNull EvaluationResult
 				.execute();
 
 		log.info(MARKER, "Updated property definition for: [artifact={}, property={}, checksum={}]",
-				version.format(), result.metadata().name(), provenance.checksum().encode());
+				version.coordinates().format(), result.property().name(), provenance.checksum().encode());
 	}
 
 	@SuppressWarnings("unchecked")

@@ -23,6 +23,10 @@ public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Se
 		return SimpleArtifactCoordinates.parse(coordinates);
 	}
 
+	static ArtifactCoordinates of(Artifact artifact) {
+		return new SimpleArtifactCoordinates(artifact.groupId(), artifact.artifactId(), artifact.version());
+	}
+
 	static ArtifactCoordinates of(String groupId, String artifactId, String version) {
 		return new SimpleArtifactCoordinates(groupId, artifactId, version);
 	}

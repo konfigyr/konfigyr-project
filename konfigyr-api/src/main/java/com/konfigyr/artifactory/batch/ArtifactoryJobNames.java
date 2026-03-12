@@ -5,7 +5,7 @@ public interface ArtifactoryJobNames {
 
 	/**
 	 * The name of the Artifactory release {@link org.springframework.batch.core.job.Job} that
-	 * is executed when a new {@link com.konfigyr.artifactory.Component} is uploaded.
+	 * is executed when a new {@link com.konfigyr.artifactory.Release} is uploaded.
 	 */
 	String RELEASE_JOB = "konfigyr.artifactory.release-component";
 

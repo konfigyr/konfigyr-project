@@ -1,5 +1,9 @@
 package com.konfigyr.namespace;
 
+import com.konfigyr.artifactory.Artifact;
+import com.konfigyr.artifactory.ArtifactCoordinates;
+import com.konfigyr.artifactory.Manifest;
+import com.konfigyr.data.Keys;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
@@ -7,10 +11,8 @@ import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -21,18 +23,27 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
+import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
 import static com.konfigyr.data.tables.Services.SERVICES;
+import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
+import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 
 @Slf4j
 @RequiredArgsConstructor
 public class DefaultServices implements Services {
 
+	private static final Name SERVICE_ARTIFACTS_ALIAS = DSL.name("artifacts");
+
 	private final Marker CREATED = MarkerFactory.getMarker("SERVICE_CREATED");
+	private final Marker PUBLISHED = MarkerFactory.getMarker("MANIFEST_PUBLISHED");
 
 	static final PageableExecutor servicesExecutor = PageableExecutor.builder()
 			.defaultSortField(SERVICES.NAME.desc())
@@ -176,6 +187,66 @@ public class DefaultServices implements Services {
 		return service;
 	}
 
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "retrieve-service-manifest")
+	public Manifest manifest(@NonNull Service service) {
+		return createManifestQuery(SERVICE_RELEASES.SERVICE_ID.eq(service.id().get()))
+			.fetchOptional(DefaultServices::toManifest)
+			.orElseGet(() -> Manifest.builder()
+					.id(service.id().serialize())
+					.name(service.name())
+					.build()
+			);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(label = "service-release")
+	public Manifest publish(@NonNull Service service, @NonNull Collection<? extends ArtifactCoordinates> artifacts) {
+		final Long releaseId = context.insertInto(SERVICE_RELEASES)
+				.set(
+						SettableRecord.of(context, SERVICE_RELEASES)
+								.set(SERVICE_RELEASES.ID, EntityId.generate().map(EntityId::get))
+								.set(SERVICE_RELEASES.SERVICE_ID, service.id().get())
+								.set(SERVICE_RELEASES.VERSION, "latest")
+								.set(SERVICE_RELEASES.STATE, "PENDING")
+								.set(SERVICE_RELEASES.CREATED_AT, OffsetDateTime.now())
+								.get()
+				)
+				.onConflictOnConstraint(Keys.UNIQUE_NAMESPACE_SERVICE_VERSION)
+				.doUpdate()
+				.set(SERVICE_RELEASES.STATE, "PENDING")
+				.set(SERVICE_RELEASES.CREATED_AT, OffsetDateTime.now())
+				.returning(SERVICE_RELEASES.ID)
+				.fetchOne(SERVICE_RELEASES.ID);
+
+		Assert.state(releaseId != null, "Failed to resolve the release identifier for: " + service);
+
+		// clear the previous artifact manifest state...
+		context.deleteFrom(SERVICE_ARTIFACTS)
+				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(releaseId))
+				.execute();
+
+		// insert the defined artifact coordinates now that we have a clear state...
+		final long count = context.insertInto(SERVICE_ARTIFACTS)
+				.set(artifacts.stream().map(coordinate -> SettableRecord.of(context, SERVICE_ARTIFACTS)
+						.set(SERVICE_ARTIFACTS.RELEASE_ID, releaseId)
+						.set(SERVICE_ARTIFACTS.GROUP_ID, coordinate.groupId())
+						.set(SERVICE_ARTIFACTS.ARTIFACT_ID, coordinate.artifactId())
+						.set(SERVICE_ARTIFACTS.VERSION, coordinate.version().get())
+						.get()
+				).toList())
+				.execute();
+
+		Assert.state(count == artifacts.size(), "Failed to insert all artifacts for: " + service);
+
+		log.info(PUBLISHED, "Successfully published manifest for service {} in namespace {} with: {}",
+				service.id(), service.namespace(), artifacts);
+
+		return manifest(service);
+	}
+
 	@Override
 	@Transactional(label = "service-delete")
 	public void delete(@NonNull EntityId id) {
@@ -214,8 +285,43 @@ public class DefaultServices implements Services {
 	}
 
 	@NonNull
+	private SelectConditionStep<? extends Record> createManifestQuery(@NonNull Condition condition) {
+		return context.select(SERVICE_RELEASES.ID, SERVICES.NAME, SERVICE_RELEASES.CREATED_AT, createServiceArtifactMultiselectField())
+				.from(SERVICE_RELEASES)
+				.innerJoin(SERVICES)
+				.on(SERVICES.ID.eq(SERVICE_RELEASES.SERVICE_ID))
+				.where(condition);
+	}
+
+	@NonNull
 	private Optional<Service> fetch(@NonNull Condition condition) {
 		return createServicesQuery(condition).fetchOptional(DefaultServices::toService);
+	}
+
+	private Field<List<Artifact>> createServiceArtifactMultiselectField() {
+		return DSL.multiset(
+				DSL.select(
+						ARTIFACTS.GROUP_ID,
+						ARTIFACTS.ARTIFACT_ID,
+						ARTIFACT_VERSIONS.VERSION,
+						ARTIFACTS.NAME,
+						ARTIFACTS.DESCRIPTION,
+						ARTIFACTS.WEBSITE,
+						ARTIFACTS.REPOSITORY
+				)
+				.from(SERVICE_ARTIFACTS)
+				.innerJoin(ARTIFACTS)
+				.on(DSL.and(
+						ARTIFACTS.GROUP_ID.eq(SERVICE_ARTIFACTS.GROUP_ID),
+						ARTIFACTS.ARTIFACT_ID.eq(SERVICE_ARTIFACTS.ARTIFACT_ID)
+				))
+				.innerJoin(ARTIFACT_VERSIONS)
+				.on(DSL.and(
+						ARTIFACT_VERSIONS.ARTIFACT_ID.eq(ARTIFACTS.ID),
+						ARTIFACT_VERSIONS.VERSION.eq(SERVICE_ARTIFACTS.VERSION)
+				))
+				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(SERVICE_RELEASES.ID))
+		).as(SERVICE_ARTIFACTS_ALIAS).convertFrom(results -> results.map(DefaultServices::toArtifact));
 	}
 
 	@NonNull
@@ -228,6 +334,30 @@ public class DefaultServices implements Services {
 				.description(record.get(SERVICES.DESCRIPTION))
 				.createdAt(record.get(SERVICES.CREATED_AT))
 				.updatedAt(record.get(SERVICES.UPDATED_AT))
+				.build();
+	}
+
+	@NonNull
+	@SuppressWarnings("unchecked")
+	private static Manifest toManifest(@NonNull Record record) {
+		return Manifest.builder()
+				.id(record.get(SERVICE_RELEASES.ID, EntityId.class).serialize())
+				.name(record.get(SERVICES.NAME))
+				.artifacts((Iterable<? extends Artifact>) record.get(SERVICE_ARTIFACTS_ALIAS))
+				.createdAt(record.get(SERVICE_RELEASES.CREATED_AT, Instant.class))
+				.build();
+	}
+
+	@NonNull
+	private static Artifact toArtifact(@NonNull Record record) {
+		return Artifact.builder()
+				.groupId(record.get(ARTIFACTS.GROUP_ID))
+				.artifactId(record.get(ARTIFACTS.ARTIFACT_ID))
+				.version(record.get(ARTIFACT_VERSIONS.VERSION))
+				.name(record.get(ARTIFACTS.NAME))
+				.description(record.get(ARTIFACTS.DESCRIPTION))
+				.website(record.get(ARTIFACTS.WEBSITE))
+				.repository(record.get(ARTIFACTS.REPOSITORY))
 				.build();
 	}
 

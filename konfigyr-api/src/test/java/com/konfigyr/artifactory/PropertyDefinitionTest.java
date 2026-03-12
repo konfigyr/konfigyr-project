@@ -19,14 +19,15 @@ class PropertyDefinitionTest {
 		final var property = PropertyDefinition.builder()
 				.id(1236L)
 				.artifact(1453L)
-				.type("STRING")
-				.dataType("ATOMIC")
 				.typeName("java.lang.String")
+				.schema(StringSchema.builder()
+						.example("super-app")
+						.examples(List.of("awesome-app", "super-app"))
+						.build()
+				)
 				.name("spring.application.name")
 				.description("The name of the Spring application")
 				.checksum(ByteArray.fromString("checksum"))
-				.hint("super-app")
-				.hints(List.of("awesome-app", "super-app"))
 				.defaultValue("default-value")
 				.deprecation(new Deprecation("Some reason", null))
 				.occurrences(13)
@@ -38,8 +39,6 @@ class PropertyDefinitionTest {
 				.isNotNull()
 				.returns(EntityId.from(1236L), PropertyDefinition::id)
 				.returns(EntityId.from(1453L), PropertyDefinition::artifact)
-				.returns(PropertyType.STRING, PropertyDefinition::type)
-				.returns(DataType.ATOMIC, PropertyDefinition::dataType)
 				.returns("java.lang.String", PropertyDefinition::typeName)
 				.returns("spring.application.name", PropertyDefinition::name)
 				.returns("The name of the Spring application", PropertyDefinition::description)
@@ -47,9 +46,15 @@ class PropertyDefinitionTest {
 				.returns(Version.of("1.0.0"), PropertyDefinition::firstSeen)
 				.returns(Version.of("1.1.0"), PropertyDefinition::lastSeen)
 				.returns(13, PropertyDefinition::occurrences)
-				.returns(List.of("super-app", "awesome-app"), PropertyDefinition::hints)
 				.returns("default-value", PropertyDefinition::defaultValue)
-				.returns(new Deprecation("Some reason", null), PropertyDefinition::deprecation);
+				.returns(new Deprecation("Some reason", null), PropertyDefinition::deprecation)
+				.returns(
+						StringSchema.builder()
+								.example("super-app")
+								.examples(List.of("awesome-app", "super-app"))
+								.build(),
+						PropertyDefinition::schema
+				);
 	}
 
 	@Test
@@ -58,9 +63,8 @@ class PropertyDefinitionTest {
 		final var builder = PropertyDefinition.builder()
 				.id("000013229FPVS")
 				.artifact("000005KK96ZZP")
-				.type("STRING")
-				.dataType("ATOMIC")
 				.typeName("java.lang.String")
+				.schema(StringSchema.instance())
 				.checksum(ByteArray.fromString("checksum"))
 				.occurrences(1)
 				.firstSeen("1.0.0")

@@ -1,17 +1,17 @@
 package com.konfigyr.artifactory.provenance;
 
-import com.konfigyr.artifactory.PropertyMetadata;
+import com.konfigyr.artifactory.PropertyDescriptor;
 import com.konfigyr.artifactory.VersionedArtifact;
 import org.jspecify.annotations.NonNull;
 
 /**
  * Interface responsible for evaluating and generating the {@link Provenance} records based on incoming
- * {@link PropertyMetadata property metadata}. This evaluator is designed to handle property data that arrives
- * out of chronological order.
+ * {@link PropertyDescriptor property descriptor}. This evaluator is designed to handle property data
+ * that arrives out of chronological order.
  * <p>
- * The core functionality revolves around comparing the {@link VersionedArtifact artifact versions} to determine
- * the earliest and latest versions a property has been observed in, as well as tracking the number of distinct
- * versions that use this property.
+ * The core functionality revolves around comparing the {@link VersionedArtifact artifact versions} to
+ * determine the earliest and latest versions a property has been observed in, as well as tracking the
+ * number of distinct versions that use this property.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
@@ -19,14 +19,14 @@ import org.jspecify.annotations.NonNull;
 public interface ProvenanceEvaluator {
 
 	/**
-	 * Evaluates the {@link Provenance} for the {@link PropertyMetadata} that was released under the
+	 * Evaluates the {@link Provenance} for the {@link PropertyDescriptor} that was released under the
 	 * given {@link VersionedArtifact artifact version}.
 	 *
 	 * @param version the artifact version that declared the property metadata, can't be {@literal null}.
-	 * @param metadata the Spring Boot configuration property metadata, can't be {@literal null}.
+	 * @param property the Spring Boot configuration property descriptor, can't be {@literal null}.
 	 * @return the evaluated provenance result for the Spring Boot configuration property metadata, never {@literal null}.
 	 */
 	@NonNull
-	EvaluationResult evaluate(@NonNull VersionedArtifact version, @NonNull PropertyMetadata metadata);
+	EvaluationResult evaluate(@NonNull VersionedArtifact version, @NonNull PropertyDescriptor property);
 
 }

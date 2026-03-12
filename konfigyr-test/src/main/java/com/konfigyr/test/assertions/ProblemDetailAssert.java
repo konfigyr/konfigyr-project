@@ -216,6 +216,19 @@ public class ProblemDetailAssert extends AbstractObjectAssert<ProblemDetailAsser
 	}
 
 	/**
+	 * Checks if the given {@link ProblemDetail} contains a property with a matching name.
+	 *
+	 * @param name  the property name
+	 * @return the problem detail assert instance, never {@literal null}
+	 */
+	public ProblemDetailAssert containsProperty(String name) {
+		return satisfies(it -> Assertions.assertThat(it.getProperties())
+				.as("Problem Details should have a \"%s\" property that", name)
+				.containsKey(name)
+		);
+	}
+
+	/**
 	 * Checks if the given {@link ProblemDetail} has a property with a matching name and value.
 	 *
 	 * @param name  the property name

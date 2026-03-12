@@ -1,9 +1,8 @@
 package com.konfigyr.artifactory.batch;
 
-import com.konfigyr.artifactory.ArtifactCoordinates;
-import com.konfigyr.artifactory.Artifactory;
-import com.konfigyr.artifactory.PropertyDefinition;
+import com.konfigyr.artifactory.*;
 import com.konfigyr.artifactory.store.MetadataStore;
+import com.konfigyr.io.ByteArray;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.ListAssert;
@@ -19,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.modulith.test.AssertablePublishedEvents;
 
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +63,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 	@Test
 	@Order(1)
 	@DisplayName("should fail to execute when versioned artifact does not exist")
-	void unknownArtifact() throws Exception {
+	void unknownArtifact(AssertablePublishedEvents events) throws Exception {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-unknown:1.0.0");
 
 		mockArtifactMetadata(metadataStore, coordinates);
@@ -77,27 +77,43 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 				.returns("FAILED", ExitStatus::getExitCode)
 				.extracting(ExitStatus::getExitDescription, InstanceOfAssertFactories.STRING)
 				.contains("Can not find artifact version with following coordinates: " + coordinates);
+
+		assertThat(events.eventOfTypeWasPublished(ArtifactoryEvent.class))
+				.isFalse();
 	}
 
 	@Test
 	@Order(2)
 	@DisplayName("should fail to execute when metadata resource does not exist")
-	void unknownResource() throws Exception {
+	void unknownResource(AssertablePublishedEvents events) throws Exception {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.0-RC1");
+
+		createVersionedArtifact(context, coordinates.version().get());
+
 		final var execution = operator.start(job, jobParametersBuilder()
-				.addString("artifact", "com.konfigyr:konfigyr-resource:1.0.0", true)
+				.addString("artifact", coordinates.format(), true)
 				.toJobParameters()
 		);
 
 		assertThat(execution.getExitStatus())
 				.returns("FAILED", ExitStatus::getExitCode)
 				.extracting(ExitStatus::getExitDescription, InstanceOfAssertFactories.STRING)
-				.contains("Could not find uploaded artifact property metadata for coordinates: com.konfigyr:konfigyr-resource:1.0.0");
+				.contains("Could not find uploaded artifact property metadata for coordinates: " + coordinates);
+
+		assertThat(artifactory.get(coordinates))
+				.isPresent()
+				.get()
+				.returns(ReleaseState.FAILED, VersionedArtifact::state);
+
+		events.assertThat()
+				.contains(ArtifactoryEvent.ReleaseFailed.class)
+				.matching(ArtifactoryEvent.ReleaseFailed::coordinates, coordinates);
 	}
 
 	@Test
 	@Order(3)
 	@DisplayName("should process the release job for 'com.konfigyr:konfigyr-licences:1.0.0'")
-	void first() throws Exception {
+	void first(AssertablePublishedEvents events) throws Exception {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.0");
 
 		mockArtifactMetadata(metadataStore, coordinates);
@@ -111,6 +127,11 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		assertThat(execution.getExitStatus())
 				.returns("COMPLETED", ExitStatus::getExitCode);
 
+		assertThat(artifactory.get(coordinates))
+				.isPresent()
+				.get()
+				.returns(ReleaseState.RELEASED, VersionedArtifact::state);
+
 		assertThatProperties(coordinates)
 				.hasSize(5)
 				.satisfies(containsProperties(
@@ -120,12 +141,16 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 						tuple("konfigyr.licencing.cleanup.enabled", 1, "1.0.0", "1.0.0"),
 						tuple("konfigyr.licencing.cleanup.cron", 1, "1.0.0", "1.0.0")
 				));
+
+		events.assertThat()
+				.contains(ArtifactoryEvent.ReleaseCompleted.class)
+				.matching(ArtifactoryEvent.ReleaseCompleted::coordinates, coordinates);
 	}
 
 	@Test
 	@Order(4)
 	@DisplayName("should process the release job for 'com.konfigyr:konfigyr-licences:1.0.1'")
-	void second() throws Exception {
+	void second(AssertablePublishedEvents events) throws Exception {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.1");
 
 		mockArtifactMetadata(metadataStore, coordinates);
@@ -139,6 +164,11 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		assertThat(execution.getExitStatus())
 				.returns("COMPLETED", ExitStatus::getExitCode);
 
+		assertThat(artifactory.get(coordinates))
+				.isPresent()
+				.get()
+				.returns(ReleaseState.RELEASED, VersionedArtifact::state);
+
 		assertThatProperties(coordinates)
 				.hasSize(5)
 				.satisfies(containsProperties(
@@ -148,12 +178,16 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 						tuple("konfigyr.licencing.cleanup.enabled", 2, "1.0.0", "1.0.1"),
 						tuple("konfigyr.licencing.cleanup.cron", 2, "1.0.0", "1.0.1")
 				));
+
+		events.assertThat()
+				.contains(ArtifactoryEvent.ReleaseCompleted.class)
+				.matching(ArtifactoryEvent.ReleaseCompleted::coordinates, coordinates);
 	}
 
 	@Test
 	@Order(4)
 	@DisplayName("should process the release job for 'com.konfigyr:konfigyr-licences:1.0.2'")
-	void third() throws Exception {
+	void third(AssertablePublishedEvents events) throws Exception {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.2");
 
 		mockArtifactMetadata(metadataStore, coordinates);
@@ -167,6 +201,11 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		assertThat(execution.getExitStatus())
 				.returns("COMPLETED", ExitStatus::getExitCode);
 
+		assertThat(artifactory.get(coordinates))
+				.isPresent()
+				.get()
+				.returns(ReleaseState.RELEASED, VersionedArtifact::state);
+
 		assertThatProperties(coordinates)
 				.hasSize(5)
 				.satisfies(containsProperties(
@@ -176,6 +215,10 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 						tuple("konfigyr.licencing.cleanup.enabled", 3, "1.0.0", "1.0.2"),
 						tuple("konfigyr.licencing.cleanup.cron", 3, "1.0.0", "1.0.2")
 				));
+
+		events.assertThat()
+				.contains(ArtifactoryEvent.ReleaseCompleted.class)
+				.matching(ArtifactoryEvent.ReleaseCompleted::coordinates, coordinates);
 	}
 
 	ListAssert<PropertyDefinition> assertThatProperties(ArtifactCoordinates coordinates) {
@@ -202,6 +245,8 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		context.insertInto(ARTIFACT_VERSIONS)
 				.set(ARTIFACT_VERSIONS.ARTIFACT_ID, 4L)
 				.set(ARTIFACT_VERSIONS.VERSION, version)
+				.set(ARTIFACT_VERSIONS.STATE, ReleaseState.PENDING.name())
+				.set(ARTIFACT_VERSIONS.CHECKSUM, ByteArray.fromString(version))
 				.execute();
 	}
 

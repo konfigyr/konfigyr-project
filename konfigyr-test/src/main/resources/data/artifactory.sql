@@ -5,16 +5,16 @@ INSERT INTO artifacts(id, group_id, artifact_id, name, description, website, rep
 (4, 'com.konfigyr', 'konfigyr-licences', 'Konfigyr Licences', 'Private repository', NULL, NULL, now() - interval '1 days', now() - interval '1 hours'),
 (5, 'com.konfigyr', 'konfigyr-api', 'Konfigyr API', 'Private REST API', 'konfigyr.api', 'https://github.com/konfigyr/konfigyr-project', now() - interval '1 days', now() - interval '1 hours');
 
-INSERT INTO artifact_versions(id, artifact_id, version, released_at) VALUES
-(1, 1, '1.0.0', now() - interval '1 days'),
-(2, 2, '1.0.0', now() - interval '7 days'),
-(3, 2, '1.0.1', now() - interval '3 days'),
-(4, 2, '1.0.2', now() - interval '1 days'),
-(5, 3, '1.0.0', now() - interval '2 days'),
-(6, 5, '1.0.0', now() - interval '1 hours');
+INSERT INTO artifact_versions(id, artifact_id, version, state, checksum, released_at) VALUES
+(1, 1, '1.0.0', 'RELEASED', decode('lmUgkxFN4ru/3vuoTkcrYdf2Z5IfcSnmmtfnZJh+Lwo=', 'base64'), now() - interval '1 days'),
+(2, 2, '1.0.0', 'RELEASED', decode('/dDqvCohLTXiFVbzK9EPgoFqx7LMj/PHtd/5ycpeV8s=', 'base64'), now() - interval '7 days'),
+(3, 2, '1.0.1', 'RELEASED', decode('tBFMF6xGmSUIYo1skF45tzoCCN9WN026PdxUUBb4P7c=', 'base64'), now() - interval '3 days'),
+(4, 2, '1.0.2', 'RELEASED', decode('Z4ZfvHMxf2DwgPPzOpWR/F19myuTCvYVVN7WSf3vxTs=', 'base64'), now() - interval '1 days'),
+(5, 3, '1.0.0', 'RELEASED', decode('xWl6bKMwnQ1ZVs/CVKuoFufZACtb7oh5uebZr0T6txA=', 'base64'), now() - interval '2 days'),
+(6, 5, '1.0.0', 'RELEASED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '1 hours');
 
-INSERT INTO property_definitions(id, artifact_id, checksum, name, data_type, type, type_name, default_value, description, hints, deprecation, occurrences, first_seen, last_seen) VALUES
-(1, 2, decode('8IiKOly5JR3uQJoeTBFU7BRkX7enEjgG+XwqPEv3lAo=', 'base64'), 'spring.application.name', 'ATOMIC', 'STRING', 'java.lang.String', NULL, 'Application name. Typically used with logging to help identify the application.', NULL, NULL, 1, '1.0.1', '1.0.1');
+INSERT INTO property_definitions(id, artifact_id, checksum, name, type_name, schema, default_value, description, deprecation, occurrences, first_seen, last_seen) VALUES
+(1, 2, decode('cRJ8jlPpTPmTJEoZEZNDSjvdqafG05QkzNJplXyu9J0=', 'base64'), 'spring.application.name', 'java.lang.String', convert_to('{"type":"string"}', 'UTF-8'), NULL, 'Application name. Typically used with logging to help identify the application.', NULL, 1, '1.0.1', '1.0.1');
 
 INSERT INTO artifact_version_properties(artifact_version_id, property_definition_id) VALUES
 (3, 1);
