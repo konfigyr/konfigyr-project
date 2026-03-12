@@ -1,4 +1,4 @@
-import { createMiddleware} from '@tanstack/react-start';
+import { createMiddleware } from '@tanstack/react-start';
 import { redirect } from '@tanstack/react-router';
 import { getRequestUrl } from '@tanstack/react-start/server';
 import Authentication from '@konfigyr/lib/authentication';

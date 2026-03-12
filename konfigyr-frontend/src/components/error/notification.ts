@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback} from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { createLogger } from '@konfigyr/logger';
 import { normalizeError } from './normalize';

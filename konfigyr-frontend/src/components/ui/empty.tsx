@@ -117,7 +117,7 @@ export function EmptyDescription({ size, className, ...props }: ComponentProps<'
   return (
     <div
       data-slot="empty-description"
-      className={emptyDescriptionVariants({ size, className})}
+      className={emptyDescriptionVariants({ size, className })}
       {...props}
     />
   );

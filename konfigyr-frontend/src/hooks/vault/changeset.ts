@@ -1,4 +1,4 @@
-import {queryOptions, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   Operation,
@@ -11,8 +11,11 @@ import type {
   ConfigurationProperty,
   Profile,
   PropertyChange,
-  PropertyDescriptor} from '@konfigyr/hooks/vault/types';
+  PropertyDescriptor,
+} from '@konfigyr/hooks/vault/types';
+
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
+
 /**
  * Keys used to store the Changeset states in the query client.
  */
@@ -20,22 +23,21 @@ export const vaultKeys = {
   getChangeset: (profile: Profile) => ['vault', profile.id, 'changeset'],
 };
 
-const generateCommitChangesetMutation = (payload: ChangesetState) : ApplyRequest => {
-  const changes = payload.properties.reduce(
-    (acc, property) => {
-      const { name, value } = property;
-      switch (property.state) {
-        case 'modified':
-          return [...acc, { name, value, operation: Operation.MODIFY}];
-        case 'deleted':
-          return [...acc, { name, value, operation: Operation.REMOVE}];
-        case 'added':
-          return [...acc, { name, value, operation: Operation.CREATE}];
-        case 'unchanged':
-        default:
-          return acc;
-      }
-    }, [] as Array<PropertyChange>);
+const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyRequest => {
+  const changes = payload.properties.reduce((acc, property) => {
+    const { name, value } = property;
+
+    switch (property.state) {
+      case 'modified':
+        return [...acc, { name, value, operation: Operation.MODIFY }];
+      case 'deleted':
+        return [...acc, { name, value, operation: Operation.REMOVE }];
+      case 'added':
+        return [...acc, { name, value, operation: Operation.CREATE }];
+      default:
+        return acc;
+    }
+  }, [] as Array<PropertyChange>);
 
   return {
     name: payload.name,
@@ -67,7 +69,9 @@ export const getChangesetStateQuery = (namespace: Namespace, service: Service, p
   return queryOptions({
     queryKey: vaultKeys.getChangeset(profile),
     queryFn: async () => {
-      const response = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.name}/properties`).json<{ data: Array<ConfigurationProperty> }>();
+      const response = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/properties`)
+        .json<{ data: Array<ConfigurationProperty> }>();
+
       return generateStubChangesetState(namespace, service, profile, response.data);
     },
   });
@@ -103,8 +107,7 @@ export const useDiscardChangeset = () => {
 
   return useMutation({
     mutationFn: async (state: ChangesetState): Promise<ChangesetState> => {
-      const {namespace, service, profile} = state;
-      return client.fetchQuery(getChangesetStateQuery(namespace, service, profile));
+      return client.fetchQuery(getChangesetStateQuery(state.namespace, state.service, state.profile));
     },
   });
 };
@@ -113,12 +116,11 @@ export const useApplyChangeset = () => {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: ChangesetState): Promise<ChangesetState> => {
-      const { namespace, service, profile } = payload;
-      const req = generateCommitChangesetMutation(payload);
+    mutationFn: async (changeset: ChangesetState): Promise<ChangesetState> => {
+      const { namespace, service, profile } = changeset;
 
       await request.post(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/apply`, {
-        json: req,
+        json: generateApplyRequestFromChangeset(changeset),
       }).json<ApplyResult>();
 
       return client.fetchQuery(getChangesetStateQuery(namespace, service, profile));

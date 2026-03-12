@@ -26,7 +26,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 
 import type { Namespace, Service } from '@konfigyr/hooks/types';
 
-function ServicesMenu({ namespace }: { namespace: Namespace}) {
+function ServicesMenu({ namespace }: { namespace: Namespace }) {
   const { data: services, isPending, isError, error } = useNamespaceServicesQuery(namespace.slug);
 
   if (isPending) {
@@ -121,13 +121,13 @@ function ServiceDialog({ namespace }: { namespace: Namespace }) {
   );
 }
 
-export function NamespaceServicesNavigationMenu({ namespace }: { namespace: Namespace}) {
+export function NamespaceServicesNavigationMenu({ namespace }: { namespace: Namespace }) {
   return (
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarGroupLabel className="flex items-center gap-2">
           <ServerIcon />
-          <span className="flex-grow">
+          <span className="grow">
             <FormattedMessage
               defaultMessage="Services"
               description="The services navigation menu label."

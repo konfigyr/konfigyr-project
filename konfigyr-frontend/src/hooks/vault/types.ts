@@ -67,7 +67,7 @@ export enum Operation {
 
 export interface ApplyResult {
   revision: string;
-  changes: Map<string, ChangeHistoryRecord >
+  changes: Map<string, ChangeHistoryRecord>
 }
 
 export interface PropertyChange {

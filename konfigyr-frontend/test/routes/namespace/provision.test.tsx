@@ -6,7 +6,7 @@ import { renderWithRouter } from '@konfigyr/test/helpers/router';
 import type { RenderResult } from '@testing-library/react';
 
 describe('routes | namespace | provision', () => {
-  let result: RenderResult & { router: { state: { location: { pathname: string }}} };
+  let result: RenderResult & { router: { state: { location: { pathname: string } } } };
 
   beforeAll(() => {
     result = renderWithRouter('/namespace/provision');

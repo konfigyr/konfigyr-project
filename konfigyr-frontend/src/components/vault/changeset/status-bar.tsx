@@ -14,7 +14,8 @@ import { useErrorNotification } from '@konfigyr/components/error';
 import {
   useApplyChangeset,
   useDiscardChangeset,
-  useRenameChangeset, useSubmitChangeset,
+  useRenameChangeset,
+  useSubmitChangeset,
 } from '@konfigyr/hooks';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -73,6 +74,7 @@ export function ChangesetStatusBar(props: ChangesetStatusBarProps) {
 export function StickyChangesetStatusBar({ isVisible, ...props }: ChangesetStatusBarProps & { isVisible: boolean }) {
   return (
     <div
+      aria-hidden={!isVisible}
       className={cn(
         'fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out',
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none',
@@ -260,18 +262,18 @@ function ChangesetStatusBarContents({
           changeset={changeset}
           onError={errorNotification}
         />
-        { changeset.profile.policy === 'PROTECTED'
-          ?
+        {changeset.profile.policy === 'PROTECTED' && (
           <SubmitButton
             changeset={changeset}
             onError={errorNotification}
           />
-          :
+        )}
+        {changeset.profile.policy === 'UNPROTECTED' && (
           <ApplyButton
             changeset={changeset}
             onError={errorNotification}
           />
-        }
+        )}
       </div>
     </div>
   );

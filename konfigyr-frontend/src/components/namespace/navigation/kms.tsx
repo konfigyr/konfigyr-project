@@ -12,7 +12,7 @@ import { Link } from '@tanstack/react-router';
 
 import type { Namespace } from '@konfigyr/hooks/types';
 
-export function NamespaceKmsNavigationMenu({ namespace }: { namespace: Namespace}) {
+export function NamespaceKmsNavigationMenu({ namespace }: { namespace: Namespace }) {
   return (
     <SidebarGroup>
       <SidebarGroupContent>

@@ -1,7 +1,7 @@
 'use client';
 
 import { z } from 'zod';
-import { useCallback, useId} from 'react';
+import { useCallback, useId } from 'react';
 import { toast } from 'sonner';
 import { IdCardIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';

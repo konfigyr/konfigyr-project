@@ -12,7 +12,7 @@ describe('components | layout | <SearchToggle/>', () => {
   afterAll(() => cleanup());
 
   test('should render search toggle button that would open the search dialog', async () => {
-    expect(result.getByRole('button', { name: 'Search...'})).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Search...' })).toBeInTheDocument();
 
     await userEvents.click(
       result.getByRole('button'),

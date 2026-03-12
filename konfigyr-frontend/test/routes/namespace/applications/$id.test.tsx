@@ -9,8 +9,8 @@ describe('routes | namespace | application details', () => {
     const { getByRole } = renderWithRouter('/namespace/konfigyr/applications/existing-application-id');
 
     await waitFor(() => {
-      expect(getByRole('textbox', { name: 'Client ID'})).toBeInTheDocument();
-      expect(getByRole('textbox', { name: 'Client ID'})).toHaveValue('kfg-A9sB-6VYJWTQeJGPQsD06hfCulYfosod');
+      expect(getByRole('textbox', { name: 'Client ID' })).toBeInTheDocument();
+      expect(getByRole('textbox', { name: 'Client ID' })).toHaveValue('kfg-A9sB-6VYJWTQeJGPQsD06hfCulYfosod');
 
       expect(getByRole('textbox', { name: 'Client secret' })).toBeInTheDocument();
       expect(getByRole('textbox', { name: 'Client secret' })).toHaveValue('***********');

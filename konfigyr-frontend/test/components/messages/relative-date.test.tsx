@@ -42,7 +42,7 @@ describe('components | messages | <RelativeDate/>', () => {
       <RelativeDate title="Accessible title" value={date}/>,
     );
 
-    expect(result.getByRole('time', { name: 'Accessible title'})).toBeInTheDocument();
+    expect(result.getByRole('time', { name: 'Accessible title' })).toBeInTheDocument();
     expect(result.getByRole('time')).toHaveTextContent('8 minutes ago');
     expect(result.getByRole('time')).toHaveAttribute('datetime', date.toISOString());
   });

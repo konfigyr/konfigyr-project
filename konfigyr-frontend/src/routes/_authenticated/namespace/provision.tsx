@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { useCallback  } from 'react';
+import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { CircuitBoardIcon } from 'lucide-react';
 import { LayoutContent } from '@konfigyr/components/layout';

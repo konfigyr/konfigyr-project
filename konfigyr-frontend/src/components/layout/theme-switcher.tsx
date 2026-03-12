@@ -14,7 +14,7 @@ export function ThemeSwitcher() {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   }, [resolvedTheme, setTheme]);
 
-  const Icon = resolvedTheme  ? SunIcon : MoonIcon;
+  const Icon = resolvedTheme ? SunIcon : MoonIcon;
 
   return (
     <Button
