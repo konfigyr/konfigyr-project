@@ -45,9 +45,9 @@ const useFilteredProperties = (
       return properties;
     }
 
-    return properties.filter(({ name, description, value }) =>
-      matches(term, name) || matches(term, description) || matches(term, value),
-    );
+    return properties.filter(({ name, description, value }) => (
+      matches(term, name) || matches(term, description) || matches(term, value)
+    ));
   }, [properties, termFilter]);
 };
 

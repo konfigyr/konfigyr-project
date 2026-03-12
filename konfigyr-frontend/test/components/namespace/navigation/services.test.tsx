@@ -66,9 +66,9 @@ describe('components | namespace | navigation | <NamespaceServicesNavigationMenu
         'Register your Spring Boot service within this namespace to begin managing its environment-specific configurations.',
       );
 
-      expect(result.getByRole('textbox', { name: 'Identifier'})).toBeInTheDocument();
-      expect(result.getByRole('textbox', { name: 'Display name'})).toBeInTheDocument();
-      expect(result.getByRole('textbox', { name: 'Description'})).toBeInTheDocument();
+      expect(result.getByRole('textbox', { name: 'Identifier' })).toBeInTheDocument();
+      expect(result.getByRole('textbox', { name: 'Display name' })).toBeInTheDocument();
+      expect(result.getByRole('textbox', { name: 'Description' })).toBeInTheDocument();
     });
   });
 });

@@ -60,7 +60,7 @@ const useTimeRange: UseTimeRange = (value) => useMemo(() => {
   return { date, value: mark * Math.ceil(diff / 12), unit: 'years' };
 }, [value]);
 
-export function RelativeDate({ value, title, ...props }: { value: string | number | Date | undefined | null} & ComponentProps<'time'>) {
+export function RelativeDate({ value, title, ...props }: { value: string | number | Date | undefined | null } & ComponentProps<'time'>) {
   const params = useTimeRange(value);
   const intl = useIntl();
 

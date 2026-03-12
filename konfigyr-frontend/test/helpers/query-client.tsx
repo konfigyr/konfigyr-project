@@ -12,7 +12,7 @@ export const createTestQueryClient = () => new QueryClient({
   },
 });
 
-export function renderWithQueryClient(ui: ReactNode, { queryClient }: { queryClient?: QueryClient} = {}) {
+export function renderWithQueryClient(ui: ReactNode, { queryClient }: { queryClient?: QueryClient } = {}) {
   const client = queryClient ?? createTestQueryClient();
 
   const wrapper = ({ children }: { children: ReactNode }) => (

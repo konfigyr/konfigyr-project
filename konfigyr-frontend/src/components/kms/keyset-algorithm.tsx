@@ -131,7 +131,7 @@ export function KeysetAlgorithmSelect({ value, reset = false, placeholder, detai
   );
 }
 
-export function KeysetAlgorithm({ algorithm, detailed = false }: { algorithm?: string | SupportedAlgorithm, detailed?: boolean}) {
+export function KeysetAlgorithm({ algorithm, detailed = false }: { algorithm?: string | SupportedAlgorithm, detailed?: boolean }) {
   return (
     <AlgorithmItem
       algorithm={<KeysetAlgorithmName algorithm={algorithm} />}

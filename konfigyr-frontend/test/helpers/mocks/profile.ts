@@ -15,3 +15,11 @@ export const staging: Profile = {
   policy: 'PROTECTED',
   position: 2,
 };
+
+export const deprecated: Profile = {
+  id: 'deprecated',
+  slug: 'deprecated',
+  name: 'Locked',
+  policy: 'IMMUTABLE',
+  position: 3,
+};

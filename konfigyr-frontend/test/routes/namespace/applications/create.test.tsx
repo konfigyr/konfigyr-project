@@ -39,8 +39,8 @@ describe('routes | namespace | applications | create', () => {
       expect(router.state.location.pathname).toBe('/namespace/konfigyr/applications/created-application-id');
     });
 
-    expect(getByRole('textbox', { name: 'Client ID'})).toBeInTheDocument();
-    expect(getByRole('textbox', { name: 'Client ID'})).toHaveValue('created-id');
+    expect(getByRole('textbox', { name: 'Client ID' })).toBeInTheDocument();
+    expect(getByRole('textbox', { name: 'Client ID' })).toHaveValue('created-id');
 
     expect(getByRole('textbox', { name: 'Client secret' })).toBeInTheDocument();
     expect(getByRole('textbox', { name: 'Client secret' })).toHaveValue('created-secret');

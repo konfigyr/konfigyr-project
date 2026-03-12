@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
-import {userEvent} from '@testing-library/user-event';
+import { userEvent } from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { ChangesetEditor } from '@konfigyr/components/vault/changeset/editor';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';

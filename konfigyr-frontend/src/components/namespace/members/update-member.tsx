@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useUpdateNamespaceMember } from '@konfigyr/hooks';
-import { NamespaceRole} from '@konfigyr/hooks/namespace/types';
+import { NamespaceRole } from '@konfigyr/hooks/namespace/types';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { NamespaceRoleDescription, NamespaceRoleLabel } from '@konfigyr/components/namespace/role';
 import { Button } from '@konfigyr/components/ui/button';
