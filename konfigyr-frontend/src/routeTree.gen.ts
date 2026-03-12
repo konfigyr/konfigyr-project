@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthScopesRouteImport } from './routes/auth/scopes'
 import { Route as AuthCodeRouteImport } from './routes/auth/code'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
 import { Route as AuthenticatedAccountIndexRouteImport } from './routes/_authenticated/account/index'
@@ -42,6 +43,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthScopesRoute = AuthScopesRouteImport.update({
+  id: '/auth/scopes',
+  path: '/auth/scopes',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCodeRoute = AuthCodeRouteImport.update({
   id: '/auth/code',
@@ -188,6 +194,7 @@ const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute =
 export interface FileRoutesByFullPath {
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
+  '/auth/scopes': typeof AuthScopesRoute
   '/': typeof AuthenticatedIndexRoute
   '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
   '/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
+  '/auth/scopes': typeof AuthScopesRoute
   '/': typeof AuthenticatedIndexRoute
   '/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
   '/account': typeof AuthenticatedAccountIndexRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
+  '/auth/scopes': typeof AuthScopesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
   '/_authenticated/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/api/$'
     | '/auth/code'
+    | '/auth/scopes'
     | '/'
     | '/namespace/$namespace'
     | '/namespace/provision'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
   to:
     | '/api/$'
     | '/auth/code'
+    | '/auth/scopes'
     | '/'
     | '/namespace/provision'
     | '/account'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/api/$'
     | '/auth/code'
+    | '/auth/scopes'
     | '/_authenticated/'
     | '/_authenticated/namespace/$namespace'
     | '/_authenticated/namespace/provision'
@@ -337,6 +349,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ApiSplatRoute: typeof ApiSplatRoute
   AuthCodeRoute: typeof AuthCodeRoute
+  AuthScopesRoute: typeof AuthScopesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -354,6 +367,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/auth/scopes': {
+      id: '/auth/scopes'
+      path: '/auth/scopes'
+      fullPath: '/auth/scopes'
+      preLoaderRoute: typeof AuthScopesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/code': {
       id: '/auth/code'
@@ -633,6 +653,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ApiSplatRoute: ApiSplatRoute,
   AuthCodeRoute: AuthCodeRoute,
+  AuthScopesRoute: AuthScopesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

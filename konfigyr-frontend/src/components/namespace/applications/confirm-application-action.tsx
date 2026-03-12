@@ -113,7 +113,7 @@ export function ConfirmNamespaceApplicationResetAction({ namespace, application,
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="secondary">
+        <Button variant="outline">
           <FormattedMessage
             defaultMessage="Reset application"
             description="Button label that triggers application reset confirmation dialog when clicked"

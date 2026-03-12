@@ -6,24 +6,31 @@ describe('routes | namespace | application details', () => {
   afterEach(() => cleanup());
 
   test('should render namespace application details', async () => {
-    const { getByText } = renderWithRouter('/namespace/konfigyr/applications/existing-application-id');
+    const { getByRole } = renderWithRouter('/namespace/konfigyr/applications/existing-application-id');
 
     await waitFor(() => {
-      expect(getByText(/client id:/i).closest('p'), 'render client id').toHaveTextContent('Client ID:kfg-A9sB-6VYJWTQeJGPQsD06hfCulYfosod');
-      expect(getByText(/scopes:/i).closest('p'), 'render scopes').toHaveTextContent('Scopes:namespaces:read');
+      expect(getByRole('textbox', { name: 'Client ID'})).toBeInTheDocument();
+      expect(getByRole('textbox', { name: 'Client ID'})).toHaveValue('kfg-A9sB-6VYJWTQeJGPQsD06hfCulYfosod');
 
-      expect(getByText('Delete application'), 'redner Delete button').toBeInTheDocument();
-      expect(getByText('Reset application'), 'redner Reset button').toBeInTheDocument();
+      expect(getByRole('textbox', { name: 'Client secret' })).toBeInTheDocument();
+      expect(getByRole('textbox', { name: 'Client secret' })).toHaveValue('***********');
+
+      expect(getByRole('textbox', { name: 'Scopes' })).toBeInTheDocument();
+      expect(getByRole('textbox', { name: 'Scopes' })).toHaveValue('namespaces:read');
+
+      expect(getByRole('button', { name: 'Reset application' })).toBeInTheDocument();
+      expect(getByRole('button', { name: 'Delete application' })).toBeInTheDocument();
     });
   });
 
   test('should render namespace application form with prefiled values', async () => {
-    const { getByLabelText, getByRole } = renderWithRouter('/namespace/konfigyr/applications/existing-application-id');
+    const { getByLabelText, getByRole, getAllByRole } = renderWithRouter('/namespace/konfigyr/applications/existing-application-id');
 
     await waitFor(() => {
       expect(getByLabelText('Application name')).toHaveValue('konfigyr test');
       expect(getByLabelText('Expiration date')).toHaveValue('');
 
+      expect(getAllByRole('checkbox')).toHaveLength(10);
       expect(getByRole('checkbox', { name: 'namespaces:read' })).toBeChecked();
     });
   });

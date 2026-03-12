@@ -23,6 +23,7 @@ describe('services | authentication', () => {
     const authentication = await Authentication.get();
 
     expect(authentication).toBeInstanceOf(Authentication);
+    expect(authentication.issuer).toBe('https://id.konfigyr.com');
     expect(authentication.authenticated).toBe(false);
     expect(authentication.expired).toBe(true);
     expect(authentication.accessToken).toEqual(null);

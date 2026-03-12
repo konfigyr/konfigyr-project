@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { cleanup, waitFor } from '@testing-library/react';
+import userEvents from '@testing-library/user-event';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { applications, namespaces } from '@konfigyr/test/helpers/mocks';
-import { cleanup, waitFor } from '@testing-library/react';
 import {
-  ConfirmNamespaceApplicationDeleteAction, ConfirmNamespaceApplicationResetAction,
+  ConfirmNamespaceApplicationDeleteAction,
+  ConfirmNamespaceApplicationResetAction,
 } from '@konfigyr/components/namespace/applications/confirm-application-action';
-import userEvents from '@testing-library/user-event/dist/cjs/index.js';
-import * as React from 'react';
 
-describe('components | namespace | applications | confirm application actions', async () => {
+describe('components | namespace | applications | confirm application actions', () => {
   afterEach(() => cleanup());
 
   test('should render <ConfirmNamespaceApplicationDeleteAction /> component', async () => {

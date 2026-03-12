@@ -4,6 +4,7 @@ import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
 import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
+import com.konfigyr.identity.authorization.AuthorizationServerScopes;
 import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
@@ -61,17 +62,28 @@ public class SecurityConfiguration {
 				.with(authorizationServerConfigurer, (authorizationServer) ->
 						authorizationServer
 								// Enable OpenID Connect 1.0
-								.oidc(Customizer.withDefaults())
+								.oidc(oidc -> oidc
+										.providerConfigurationEndpoint(endpoint -> endpoint
+												.providerConfigurationCustomizer(customizer -> customizer
+														.scopes(AuthorizationServerScopes::register)
+												)
+										)
+								)
 								// Specify a custom OAuth 2.0 client consent page
 								.authorizationEndpoint(endpoint -> endpoint
 										.consentPage(KonfigyrIdentityRequestMatchers.CONSENTS_PAGE)
 										.errorResponseHandler(new AuthorizationFailureHandler())
 								)
+								.authorizationServerMetadataEndpoint(metadata -> metadata
+										.authorizationServerMetadataCustomizer(customizer -> customizer
+												.scopes(AuthorizationServerScopes::register)
+										)
+								)
 				)
 				.authorizeHttpRequests((authorize) -> authorize
 						.anyRequest().authenticated()
 				)
-				// Disable default Spring Security configurer and replace it with our custom one
+				// Disable the default Spring Security configurer and replace it with our custom one
 				.rememberMe(AbstractHttpConfigurer::disable)
 				.with(new RememberMeConfigurer(rememberMeServices), Customizer.withDefaults())
 				.sessionManagement(session -> session
@@ -101,6 +113,7 @@ public class SecurityConfiguration {
 				)
 				.authorizeHttpRequests((authorize) -> authorize
 						.requestMatchers(KonfigyrIdentityRequestMatchers.LOGIN_PAGE).permitAll()
+						.requestMatchers(KonfigyrIdentityRequestMatchers.SCOPES_METADATA_PAGE).permitAll()
 						.anyRequest().authenticated()
 				)
 				.anonymous(AbstractHttpConfigurer::disable)
