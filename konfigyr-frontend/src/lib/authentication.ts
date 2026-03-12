@@ -117,12 +117,19 @@ export default class Authentication {
     this.#metadata = metadata;
   }
 
+  /**
+   * The Issuer URI of the OpenID Connect provider.
+   */
+  get issuer() {
+    return this.#metadata.serverMetadata().issuer;
+  }
+
   get authenticated(): boolean {
     return this.accessToken !== null;
   }
 
   /**
-   * Checks if this session present and that the obtain OAuth2 Access Token is not expired.
+   * Checks if this session is present and that the obtained OAuth2 Access Token is not expired.
    *
    * @returns {boolean} `true` if the session is expired, `false` otherwise.
    */

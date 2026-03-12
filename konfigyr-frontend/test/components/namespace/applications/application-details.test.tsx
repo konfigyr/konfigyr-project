@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import { applications, namespaces } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import { ApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
@@ -9,44 +9,48 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
   afterEach(() => cleanup());
 
   test('should render namespace applications details without client secret', () => {
-    const { getByText, queryByText } = renderComponentWithRouter(
+    const { getByRole } = renderComponentWithRouter(
       <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
 
-    expect(getByText('Client ID:'), 'render client id').toBeInTheDocument();
-    expect(getByText('Scopes:'), 'render scopes').toBeInTheDocument();
-    expect(queryByText('Client Secret:'), 'not render client secret').not.toBeInTheDocument();
+    expect(getByRole('textbox', { name: 'Client ID'})).toBeInTheDocument();
+    expect(getByRole('textbox', { name: 'Client secret' })).toBeInTheDocument();
+    expect(getByRole('textbox', { name: 'Client secret' })).toHaveValue('***********');
+    expect(getByRole('textbox', { name: 'Client secret' })).toHaveAccessibleDescription(
+      'For security reasons, the client secret is never persisted. It is shown only once upon creation or reset. If lost, you must reset the application to generate a new secret.',
+    );
+    expect(getByRole('textbox', { name: 'Scopes' })).toBeInTheDocument();
 
-    expect(getByText('Reset application')).toBeInTheDocument();
-    expect(getByText('Delete application')).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Reset application' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Delete application' })).toBeInTheDocument();
   });
 
   test('should render namespace applications details with client secret', () => {
-    const { getByText } = renderComponentWithRouter(
+    const { getByRole } = renderComponentWithRouter(
       <ApplicationDetails namespace={namespaces.konfigyr}
         application={{
           ...applications.konfigyr,
-          clientSecret: 'JMAm42MSA0I4_iwzH39Oex0N7qoqSb91z6jEp7LQwQ4',
+          clientSecret: 'shhh! secret',
         }}
       />,
     );
 
-    expect(getByText('Client Secret:'), 'render client secret label').toBeInTheDocument();
-    expect(getByText('JMAm42MSA0I4_iwzH39Oex0N7qoqSb91z6jEp7LQwQ4'), 'render client secret value').toBeInTheDocument();
-    expect(getByText('Make sure to copy your client secret now as you will not be able to see this again.')).toBeInTheDocument();
+    expect(getByRole('textbox', { name: 'Client secret' })).toBeInTheDocument();
+    expect(getByRole('textbox', { name: 'Client secret' })).toHaveValue('shhh! secret');
+    expect(getByRole('textbox', { name: 'Client secret' })).toHaveAccessibleDescription(
+      'Confidential credential used to authenticate this application with the Identity Provider. Store it securely. You can reset it at any time if compromised.',
+    );
   });
 
   test('should click on the Delete application button', async () => {
-    const { queryByText, getByRole, getByText } = renderComponentWithRouter(
+    const { getByRole, getByText } = renderComponentWithRouter(
       <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
 
-    await waitFor(() => {
-      expect(queryByText('Delete application')).toBeInTheDocument();
-    });
+    expect(getByRole('button', { name: 'Delete application' })).toBeInTheDocument();
 
     await userEvents.click(
-      getByRole('button', { name: /delete application/i }),
+      getByRole('button', { name: 'Delete application' }),
     );
 
     await waitFor(() => {
@@ -60,16 +64,14 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
   });
 
   test('should click on the Reset application button', async () => {
-    const { queryByText, getByRole, getByText } = renderComponentWithRouter(
+    const { getByRole, getByText } = renderComponentWithRouter(
       <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
 
-    await waitFor(() => {
-      expect(getByRole('button', { name: /reset application/i })).toBeInTheDocument();
-    });
+    expect(getByRole('button', { name: 'Reset application' })).toBeInTheDocument();
 
     await userEvents.click(
-      getByRole('button', { name: /reset application/i }),
+      getByRole('button', { name: 'Reset application' }),
     );
 
     await waitFor(() => {

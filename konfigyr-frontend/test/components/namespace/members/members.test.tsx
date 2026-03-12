@@ -32,7 +32,9 @@ describe('components | namespace | members | <Members/>', () => {
     );
 
     await waitFor(() => {
-      expect(result.container.querySelector('[data-slot="member-article"]')).toBeInTheDocument();
+      expect(result.queryByText('John Doe')).toBeInTheDocument();
+      expect(result.queryByText('john.doe@konfigyr.com')).toBeInTheDocument();
+      expect(result.queryByText('Administrator')).toBeInTheDocument();
     });
   });
 });

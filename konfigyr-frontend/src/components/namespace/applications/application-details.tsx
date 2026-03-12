@@ -1,51 +1,136 @@
-import { useCallback, useState} from 'react';
+import { useCallback, useId } from 'react';
 import { MonitorCloud } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
+import { useNavigate } from '@tanstack/react-router';
+import { ClipboardIconButton } from '@konfigyr/components/clipboard';
 import {
-  Card, CardAction,
-  CardContent, CardFooter,
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { ClipboardIconButton } from '@konfigyr/components/clipboard';
-import {useNavigate} from '@tanstack/react-router';
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+} from '@konfigyr/components/ui/field';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@konfigyr/components/ui/input-group';
 import {
   ConfirmNamespaceApplicationDeleteAction,
   ConfirmNamespaceApplicationResetAction,
-} from '@konfigyr/components/namespace/applications/confirm-application-action';
-import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
+} from './confirm-application-action';
 
-export interface ClientSecret {
-  clientSecret?: string;
-}
+import type { ReactNode} from 'react';
+import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
 export type ApplicationDetailsProps = {
   namespace: Namespace,
   application: NamespaceApplication,
 };
 
-type TextProps = {
+function FieldGroup({ label, value, description, copy = true }: {
+  label: string | ReactNode,
   value?: string,
-};
+  description: string | ReactNode,
+  copy?: boolean,
+}) {
+  const id = useId();
 
+  if (!value) {
+    return null;
+  }
+
+  const labelId = `${id}-label`;
+  const descriptionId = `${id}-description`;
+
+  return (
+    <Field>
+      <FieldLabel id={labelId}>
+        {label}
+      </FieldLabel>
+      <InputGroup>
+        <InputGroupInput
+          value={value}
+          aria-labelledby={labelId}
+          aria-describedby={descriptionId}
+          readOnly
+        />
+        {copy && (
+          <InputGroupAddon align="inline-end">
+            <ClipboardIconButton text={value} size="xs" variant="link" className="cursor-pointer" />
+          </InputGroupAddon>
+        )}
+      </InputGroup>
+      <FieldDescription id={descriptionId}>
+        {description}
+      </FieldDescription>
+    </Field>
+  );
+}
 
 export function ApplicationDetails ({ namespace, application } : ApplicationDetailsProps) {
   return (
     <Card className="border">
       <CardHeader>
-        <ApplicationDetails.Title value={application.name} />
+        <CardTitle className="flex items-center gap-2">
+          <CardIcon>
+            <MonitorCloud size="1.25rem"/>
+          </CardIcon>
+          {application.name}
+        </CardTitle>
+        <CardDescription>
+          <FormattedMessage
+            defaultMessage="Use the credentials below to authenticate this application against the Konfigyr Identity Provider and access the API according to its assigned scopes."
+            description="Description of the application details card"
+          />
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-6">
-          <article data-slot="namespace-application-article" className="flex justify-between items-center gap-4">
-            <div className="grow">
-              <ApplicationDetails.Scopes value={application.scopes} />
-              <ApplicationDetails.ClientId value={application.clientId} />
-              <ApplicationDetails.ClientSecret value={application.clientSecret} />
-            </div>
-          </article>
-        </div>
+      <CardContent className="grid gap-4">
+        <FieldGroup
+          value={application.clientId}
+          label={<FormattedMessage
+            defaultMessage="Client ID"
+            description="Label for OAuth application client identifier of the token for an application"
+          />}
+          description={<FormattedMessage
+            defaultMessage="Public identifier of this application. Use it in your OAuth2 client configuration when requesting access tokens."
+            description="Description for OAuth application client identifier of the token for an application"
+          />}
+        />
+        <FieldGroup
+          value={application.clientSecret ?? '***********'}
+          copy={!!application.clientSecret}
+          label={<FormattedMessage
+            defaultMessage="Client secret"
+            description="Label for OAuth application client secret for an application"
+          />}
+          description={application.clientSecret ? <FormattedMessage
+            defaultMessage="Confidential credential used to authenticate this application with the Identity Provider. Store it securely. You can reset it at any time if compromised."
+            description="Description for OAuth application client secret for an application"
+          /> : <FormattedMessage
+            defaultMessage="For security reasons, the client secret is never persisted. It is shown only once upon creation or reset. If lost, you must reset the application to generate a new secret."
+            description="Description for OAuth application client secret for an application when it is not available and should inform the user to reset the application"
+          />}
+        />
+        <FieldGroup
+          value={application.scopes}
+          label={<FormattedMessage
+            defaultMessage="Scopes"
+            description="Label for OAuth application scopes for an application"
+          />}
+          description={<FormattedMessage
+            defaultMessage="Granted OAuths scopes for your application"
+            description="Description for OAuth application scopes for an application"
+          />}
+        />
       </CardContent>
       <CardFooter className="justify-end border-t">
         <ApplicationDetails.Actions application={application} namespace={namespace} />
@@ -54,24 +139,13 @@ export function ApplicationDetails ({ namespace, application } : ApplicationDeta
   );
 }
 
-ApplicationDetails.Title = function Title({ value } : TextProps) {
-  return (
-    <CardTitle className="flex items-center gap-2">
-      <CardIcon>
-        <MonitorCloud size="1.25rem"/>
-      </CardIcon>
-      {value}
-    </CardTitle>
-  );
-};
-
 ApplicationDetails.Actions = function Actions({ namespace, application } : ApplicationDetailsProps) {
   const navigate = useNavigate();
 
-  const onDeleted = useCallback(async (app: NamespaceApplication) => await navigate({
+  const onDeleted = useCallback(async () => await navigate({
     to: '/namespace/$namespace/applications',
     params: { namespace: namespace.slug },
-  }), []);
+  }), [namespace.slug]);
 
   const onReset = useCallback((app : NamespaceApplication) => navigate({
     to: '/namespace/$namespace/applications/$id',
@@ -80,7 +154,7 @@ ApplicationDetails.Actions = function Actions({ namespace, application } : Appli
       ...prev,
       clientSecret: app.clientSecret,
     }),
-  }), []);
+  }), [namespace.slug]);
 
   return (
     <>
@@ -98,70 +172,6 @@ ApplicationDetails.Actions = function Actions({ namespace, application } : Appli
           onConfirm={onDeleted}
         />
       </CardAction>
-    </>
-  );
-};
-
-ApplicationDetails.ClientId = function ClientId({ value } : TextProps) {
-  return (
-    <>
-      <p className="pb-1">
-        <span className="font-bold pr-1">
-          <FormattedMessage
-            defaultMessage="Client ID:"
-            description="Client identifier of the token for an application"
-          />
-        </span>
-        {value}
-        <span className="pl-5">
-          { value ? <ClipboardIconButton text={value} /> : '' }
-        </span>
-      </p>
-    </>
-  );
-};
-
-ApplicationDetails.Scopes = function Scopes({ value } : TextProps) {
-  return (
-    <>
-      <p className="pb-1">
-        <span className="font-bold pr-1">
-          <FormattedMessage
-            defaultMessage="Scopes:"
-            description="Application scopes"
-          />
-        </span>
-        {value}
-      </p>
-    </>
-  );
-};
-
-ApplicationDetails.ClientSecret = function ClientSecret({ value } : TextProps) {
-  if (!value) {
-    return null;
-  }
-
-  return (
-    <>
-      <p className="pb-1">
-        <span className="font-bold pr-1">
-          <FormattedMessage
-            defaultMessage="Client Secret:"
-            description="Client secret value display"
-          />
-        </span>
-        {value}
-        <span className="pl-5">
-          <ClipboardIconButton text={value} />
-        </span>
-      </p>
-      <p className="pt-2 text-red-500">
-        <FormattedMessage
-          defaultMessage="Make sure to copy your client secret now as you will not be able to see this again."
-          description="Client secret warning message"
-        />
-      </p>
     </>
   );
 };

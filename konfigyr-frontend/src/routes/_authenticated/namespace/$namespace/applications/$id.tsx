@@ -1,3 +1,7 @@
+import { toast } from 'sonner';
+import { MonitorCloud } from 'lucide-react';
+import { FormattedMessage} from 'react-intl';
+import { createFileRoute, useLocation } from '@tanstack/react-router';
 import {
   Card,
   CardContent,
@@ -7,17 +11,12 @@ import {
   useGetNamespaceApplication,
   useNamespace,
 } from '@konfigyr/hooks';
-import {createFileRoute, useLocation} from '@tanstack/react-router';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
 import { ApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
-import { toast} from 'sonner';
-import { FormattedMessage} from 'react-intl';
 import { ErrorState } from '@konfigyr/components/error';
-import {MonitorCloud, ScreenShareOff} from 'lucide-react';
-import {EmptyState} from '@konfigyr/components/ui/empty';
-import type { ClientSecret } from '@konfigyr/components/namespace/applications/application-details';
-import type { z } from 'zod';
-import type { namespaceApplicationSchema } from '@konfigyr/components/namespace/applications/application-form';
+import { EmptyState } from '@konfigyr/components/ui/empty';
+
+import type { CreateNamespaceApplication } from '@konfigyr/hooks/types';
 
 export const Route = createFileRoute(
   '/_authenticated/namespace/$namespace/applications/$id',
@@ -26,23 +25,17 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
+  const { id }  = Route.useParams();
   const namespace = useNamespace();
 
   const location = useLocation();
-  const state = location.state as ClientSecret;
-
-  const { id }  = Route.useParams();
+  const state = location.state as { clientSecret?: string };
 
   const { data: application, error, isPending, isError } = useGetNamespaceApplication(namespace.slug, id);
-
   const { mutateAsync: editNamespaceApplication } = useEditNamespaceApplication(namespace.slug, id);
 
-  const onNamespaceApplicationUpdate = async (value: z.infer<typeof namespaceApplicationSchema> ) => {
-    await editNamespaceApplication({
-      ...value,
-      scopes: value.scopes.join(' '),
-      expiresAt: value.expiresAt ? new Date(value.expiresAt).toISOString() : undefined,
-    });
+  const onNamespaceApplicationUpdate = async (value: CreateNamespaceApplication) => {
+    await editNamespaceApplication(value);
 
     toast.success(<FormattedMessage
       defaultMessage="The {application} was successfully updated."
@@ -52,7 +45,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className="w-full space-y-6 px-4 mx-auto">
+    <div className="lg:w-2/3 xl:w-3/5 space-y-6  mx-auto">
       {isPending && (
         <article data-slot="namespace-application-skeleton">
           <EmptyState
@@ -67,7 +60,7 @@ function RouteComponent() {
         <ErrorState error={error} className="border-none" />
       )}
 
-      { application && (
+      {application && (
         <>
           <ApplicationDetails
             namespace={namespace}

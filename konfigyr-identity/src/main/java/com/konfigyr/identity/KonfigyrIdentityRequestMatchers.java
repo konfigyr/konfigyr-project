@@ -22,4 +22,9 @@ public interface KonfigyrIdentityRequestMatchers {
 	 */
 	String CONSENTS_PAGE = "/oauth/consents";
 
+	/**
+	 * Path that matches the OAuth 2.0 Scope metadata page: <code>/oauth/scope-metadata</code>.
+	 */
+	String SCOPES_METADATA_PAGE = "/oauth/scope-metadata";
+
 }
