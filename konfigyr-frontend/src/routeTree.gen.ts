@@ -33,6 +33,7 @@ import { Route as AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/settings'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/create-profile'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/requests/index'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -181,6 +182,15 @@ const AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute =
         AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
     } as any,
   )
+const AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport.update(
+    {
+      id: '/manifest/',
+      path: '/manifest/',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+    } as any,
+  )
 const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute =
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteImport.update(
     {
@@ -215,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/namespace/$namespace/services/$service/': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
   '/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute
+  '/namespace/$namespace/services/$service/manifest': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
   '/namespace/$namespace/services/$service/requests': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -237,6 +248,7 @@ export interface FileRoutesByTo {
   '/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/namespace/$namespace/services/$service': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
   '/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute
+  '/namespace/$namespace/services/$service/manifest': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
   '/namespace/$namespace/services/$service/requests': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 export interface FileRoutesById {
@@ -265,6 +277,7 @@ export interface FileRoutesById {
   '/_authenticated/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/_authenticated/namespace/$namespace/services/$service/': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
   '/_authenticated/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute
+  '/_authenticated/namespace/$namespace/services/$service/manifest/': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
   '/_authenticated/namespace/$namespace/services/$service/requests/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -293,6 +306,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/services/$service/settings'
     | '/namespace/$namespace/services/$service/'
     | '/namespace/$namespace/services/$service/profiles/$profile'
+    | '/namespace/$namespace/services/$service/manifest'
     | '/namespace/$namespace/services/$service/requests'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -315,6 +329,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/services/$service/settings'
     | '/namespace/$namespace/services/$service'
     | '/namespace/$namespace/services/$service/profiles/$profile'
+    | '/namespace/$namespace/services/$service/manifest'
     | '/namespace/$namespace/services/$service/requests'
   id:
     | '__root__'
@@ -342,6 +357,7 @@ export interface FileRouteTypes {
     | '/_authenticated/namespace/$namespace/services/$service/settings'
     | '/_authenticated/namespace/$namespace/services/$service/'
     | '/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
+    | '/_authenticated/namespace/$namespace/services/$service/manifest/'
     | '/_authenticated/namespace/$namespace/services/$service/requests/'
   fileRoutesById: FileRoutesById
 }
@@ -522,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
+    '/_authenticated/namespace/$namespace/services/$service/manifest/': {
+      id: '/_authenticated/namespace/$namespace/services/$service/manifest/'
+      path: '/manifest'
+      fullPath: '/namespace/$namespace/services/$service/manifest'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    }
     '/_authenticated/namespace/$namespace/services/$service/profiles/$profile': {
       id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
       path: '/profiles/$profile'
@@ -576,6 +599,7 @@ interface AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren {
   AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   AuthenticatedNamespaceNamespaceServicesServiceIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute
+  AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
   AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 
@@ -589,6 +613,8 @@ const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren: Authenti
       AuthenticatedNamespaceNamespaceServicesServiceIndexRoute,
     AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute:
       AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRoute,
+    AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute,
     AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute:
       AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute,
   }
