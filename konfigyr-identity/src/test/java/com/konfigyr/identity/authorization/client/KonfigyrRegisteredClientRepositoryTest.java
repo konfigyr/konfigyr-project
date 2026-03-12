@@ -84,6 +84,7 @@ class KonfigyrRegisteredClientRepositoryTest extends AbstractClientRepositoryTes
 						"namespaces:read",
 						"namespaces:delete",
 						"namespaces:write",
+						"namespaces:publish-manifests",
 						"namespaces:invite",
 						"profiles",
 						"profiles:read",
