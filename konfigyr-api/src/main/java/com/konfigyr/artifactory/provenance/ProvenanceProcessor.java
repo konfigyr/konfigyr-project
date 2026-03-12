@@ -9,7 +9,7 @@ import org.springframework.batch.infrastructure.item.ItemProcessor;
 
 @Slf4j
 @RequiredArgsConstructor
-class ProvenanceProcessor implements ItemProcessor<@NonNull PropertyMetadata, @NonNull EvaluationResult> {
+class ProvenanceProcessor implements ItemProcessor<@NonNull PropertyDescriptor, @NonNull EvaluationResult> {
 
 	private final VersionedArtifact version;
 	private final ProvenanceEvaluator evaluator;
@@ -24,12 +24,12 @@ class ProvenanceProcessor implements ItemProcessor<@NonNull PropertyMetadata, @N
 
 	@Nullable
 	@Override
-	public EvaluationResult process(@NonNull PropertyMetadata metadata) {
-		final EvaluationResult result = evaluator.evaluate(version, metadata);
+	public EvaluationResult process(@NonNull PropertyDescriptor property) {
+		final EvaluationResult result = evaluator.evaluate(version, property);
 
 		if (result instanceof EvaluationResult.Used) {
-			log.debug("Provenance evaluation result detected that PropertyMetadata({}) is already used by version: {}.",
-					metadata.name(), version.format());
+			log.debug("Provenance evaluation result detected that PropertyDescriptor({}) is already used by version: {}.",
+					property.name(), version.coordinates().format());
 
 			return null;
 		}

@@ -1,7 +1,8 @@
 package com.konfigyr.artifactory.provenance;
 
 import com.konfigyr.artifactory.Artifactory;
-import com.konfigyr.artifactory.PropertyMetadata;
+import com.konfigyr.artifactory.PropertyDescriptor;
+import com.konfigyr.artifactory.converter.ArtifactoryConverters;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.artifactory.store.MetadataStoreReader;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
-import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @RequiredArgsConstructor
 @Configuration(proxyBeanMethods = false)
@@ -52,7 +53,7 @@ public class ProvenanceConfiguration {
 			@Qualifier(PROVENANCE_STEP_PROCESSOR) ProvenanceProcessor processor,
 			@Qualifier(PROVENANCE_STEP_WRITER) ProvenanceEvaluationWriter writer
 	) {
-		return new ChunkOrientedStepBuilder<PropertyMetadata, EvaluationResult>(PROVENANCE_STEP, repository, 20)
+		return new ChunkOrientedStepBuilder<PropertyDescriptor, EvaluationResult>(PROVENANCE_STEP, repository, 20)
 				.transactionManager(transactionManager)
 				.reader(reader)
 				.processor(processor)
@@ -64,9 +65,10 @@ public class ProvenanceConfiguration {
 	@Bean(name = PROVENANCE_STEP_READER)
 	MetadataStoreReader provenanceStepReader(
 			@Value("#{jobParameters['artifact']}") String coordinates,
+			JsonMapper jsonMapper,
 			MetadataStore store
 	) {
-		return new MetadataStoreReader(coordinates, store);
+		return new MetadataStoreReader(coordinates, jsonMapper, store);
 	}
 
 	@StepScope
@@ -81,8 +83,8 @@ public class ProvenanceConfiguration {
 
 	@StepScope
 	@Bean(name = PROVENANCE_STEP_WRITER)
-	ProvenanceEvaluationWriter provenanceStepWriter(ObjectMapper mapper) {
-		return new ProvenanceEvaluationWriter(mapper, context);
+	ProvenanceEvaluationWriter provenanceStepWriter(ArtifactoryConverters converters) {
+		return new ProvenanceEvaluationWriter(context, converters);
 	}
 
 }

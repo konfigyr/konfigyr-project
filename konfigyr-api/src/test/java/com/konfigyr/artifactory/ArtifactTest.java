@@ -18,7 +18,7 @@ class ArtifactTest {
 	@Test
 	@DisplayName("should create artifact")
 	void createArtifact() {
-		final var artifact = Artifact.builder()
+		final var artifact = ArtifactDefinition.builder()
 				.id(93645L)
 				.groupId("com.konfigyr")
 				.artifactId("konfigyr-api")
@@ -31,13 +31,13 @@ class ArtifactTest {
 				.build();
 
 		assertThat(artifact)
-				.returns(EntityId.from(93645L), Artifact::id)
-				.returns("com.konfigyr", Artifact::groupId)
-				.returns("konfigyr-api", Artifact::artifactId)
-				.returns("Konfigyr API", Artifact::name)
-				.returns("Konfigyr REST API artifact", Artifact::description)
-				.returns(URI.create("https://api.konfigyr.com"), Artifact::website)
-				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), Artifact::repository);
+				.returns(EntityId.from(93645L), ArtifactDefinition::id)
+				.returns("com.konfigyr", ArtifactDefinition::groupId)
+				.returns("konfigyr-api", ArtifactDefinition::artifactId)
+				.returns("Konfigyr API", ArtifactDefinition::name)
+				.returns("Konfigyr REST API artifact", ArtifactDefinition::description)
+				.returns(URI.create("https://api.konfigyr.com"), ArtifactDefinition::website)
+				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), ArtifactDefinition::repository);
 
 		assertThat(artifact.createdAt())
 				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS));
@@ -57,23 +57,23 @@ class ArtifactTest {
 		doReturn(URI.create("https://api.konfigyr.com")).when(descriptor).website();
 		doReturn(URI.create("https://github.com/konfigyr/konfigyr-project")).when(descriptor).repository();
 
-		assertThat(Artifact.from(descriptor).id("000005KK96ZZP").build())
-				.returns(EntityId.from(192846987254L), Artifact::id)
-				.returns("com.konfigyr", Artifact::groupId)
-				.returns("konfigyr-api", Artifact::artifactId)
-				.returns("Konfigyr API", Artifact::name)
-				.returns("Konfigyr REST API artifact", Artifact::description)
-				.returns(URI.create("https://api.konfigyr.com"), Artifact::website)
-				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), Artifact::repository)
-				.returns(null, Artifact::createdAt)
-				.returns(null, Artifact::updatedAt);
+		assertThat(ArtifactDefinition.from(descriptor).id("000005KK96ZZP").build())
+				.returns(EntityId.from(192846987254L), ArtifactDefinition::id)
+				.returns("com.konfigyr", ArtifactDefinition::groupId)
+				.returns("konfigyr-api", ArtifactDefinition::artifactId)
+				.returns("Konfigyr API", ArtifactDefinition::name)
+				.returns("Konfigyr REST API artifact", ArtifactDefinition::description)
+				.returns(URI.create("https://api.konfigyr.com"), ArtifactDefinition::website)
+				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), ArtifactDefinition::repository)
+				.returns(null, ArtifactDefinition::createdAt)
+				.returns(null, ArtifactDefinition::updatedAt);
 
 	}
 
 	@Test
 	@DisplayName("should sort artifacts by groupId and artifactId")
 	void sortArtifacts() {
-		final var builder = Artifact.builder().id(93645L);
+		final var builder = ArtifactDefinition.builder().id(93645L);
 
 		final var springMail = builder.groupId("org.springframework.boot")
 				.artifactId("spring-boot-starter-mail")
@@ -95,7 +95,7 @@ class ArtifactTest {
 	@Test
 	@DisplayName("should create versioned artifact from artifact descriptor")
 	void createVersionedArtifactFromDescriptor() {
-		final var artifact = Artifact.builder()
+		final var artifact = ArtifactDefinition.builder()
 				.id(93645L)
 				.groupId("com.konfigyr")
 				.artifactId("konfigyr-api")
@@ -125,6 +125,6 @@ class ArtifactTest {
 				.returns("checksum", VersionedArtifact::checksum);
 
 		assertThat(version.releasedAt())
-				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS));
+				.isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
 	}
 }

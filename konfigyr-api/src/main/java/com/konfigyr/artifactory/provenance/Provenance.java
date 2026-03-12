@@ -9,7 +9,7 @@ import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * Represents the provenance metadata for a single, unique {@link com.konfigyr.artifactory.PropertyMetadata}
+ * Represents the provenance metadata for a single, unique {@link com.konfigyr.artifactory.PropertyDescriptor}
  * that defines a Spring Boot configuration property.
  * <p>
  * This record captures the lifecycle of a property's usage across different Spring Boot versions. The core

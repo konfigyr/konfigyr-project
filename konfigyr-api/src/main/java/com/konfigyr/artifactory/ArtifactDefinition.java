@@ -36,7 +36,7 @@ import java.util.Comparator;
  * @since 1.0.0
  */
 @AggregateRoot
-public record Artifact(
+public record ArtifactDefinition(
 	@NonNull @Identity EntityId id,
 	@NonNull String groupId,
 	@NonNull String artifactId,
@@ -46,13 +46,13 @@ public record Artifact(
 	@Nullable URI repository,
 	@Nullable OffsetDateTime createdAt,
 	@Nullable OffsetDateTime updatedAt
-) implements ArtifactDescriptor, Comparable<Artifact> {
+) implements ArtifactDescriptor, Comparable<ArtifactDefinition> {
 
 	@Serial
 	private static final long serialVersionUID = 8664247652890518668L;
 
 	@Override
-	public int compareTo(@NonNull Artifact other) {
+	public int compareTo(@NonNull ArtifactDefinition other) {
 		return Comparator.comparing(ArtifactDescriptor::groupId)
 				.thenComparing(ArtifactDescriptor::artifactId)
 				.compare(this, other);
@@ -85,7 +85,7 @@ public record Artifact(
 	}
 
 	/**
-	 * Builder for constructing immutable {@link Artifact} instances.
+	 * Builder for constructing immutable {@link ArtifactDefinition} instances.
 	 * <p>
 	 * The builder enforces explicit intent when creating new domain aggregates. Typically, only the {@code id},
 	 * {@code groupId} and {@code artifactId} are mandatory, with other fields being optional.
@@ -106,7 +106,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the internal {@link EntityId} for this {@link Artifact}.
+		 * Specify the internal {@link EntityId} for this {@link ArtifactDefinition}.
 		 *
 		 * @param id internal artifact identifier
 		 * @return artifact builder
@@ -117,7 +117,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the external {@link EntityId} for this {@link Artifact}.
+		 * Specify the external {@link EntityId} for this {@link ArtifactDefinition}.
 		 *
 		 * @param id external artifact identifier
 		 * @return artifact builder
@@ -128,7 +128,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the {@link EntityId} for this {@link Artifact}.
+		 * Specify the {@link EntityId} for this {@link ArtifactDefinition}.
 		 *
 		 * @param id artifact identifier
 		 * @return artifact builder
@@ -140,7 +140,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the {@code groupId} coordinate for this {@link Artifact}.
+		 * Specify the {@code groupId} coordinate for this {@link ArtifactDefinition}.
 		 *
 		 * @param groupId artifact {@code groupId} coordinate
 		 * @return artifact builder
@@ -152,7 +152,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the {@code artifactId} coordinate for this {@link Artifact}.
+		 * Specify the {@code artifactId} coordinate for this {@link ArtifactDefinition}.
 		 *
 		 * @param artifactId artifact {@code artifactId} coordinate
 		 * @return artifact builder
@@ -164,7 +164,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the human-readable name for this {@link Artifact}.
+		 * Specify the human-readable name for this {@link ArtifactDefinition}.
 		 *
 		 * @param name artifact name
 		 * @return artifact builder
@@ -176,7 +176,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the textual description for this {@link Artifact}.
+		 * Specify the textual description for this {@link ArtifactDefinition}.
 		 *
 		 * @param description artifact description
 		 * @return artifact builder
@@ -188,7 +188,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify an external URL for documentation or homepage for this {@link Artifact}.
+		 * Specify an external URL for documentation or homepage for this {@link ArtifactDefinition}.
 		 *
 		 * @param website artifact website URL
 		 * @return artifact builder
@@ -200,7 +200,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify an external URL for documentation or homepage for this {@link Artifact}.
+		 * Specify an external URL for documentation or homepage for this {@link ArtifactDefinition}.
 		 *
 		 * @param website artifact website URL
 		 * @return artifact builder
@@ -212,7 +212,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the source control repository location for this {@link Artifact}.
+		 * Specify the source control repository location for this {@link ArtifactDefinition}.
 		 *
 		 * @param repository artifact repository URL
 		 * @return artifact builder
@@ -223,7 +223,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify the source control repository location for this {@link Artifact}.
+		 * Specify the source control repository location for this {@link ArtifactDefinition}.
 		 *
 		 * @param repository artifact repository URL
 		 * @return artifact builder
@@ -235,7 +235,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify when this {@link Artifact} was created.
+		 * Specify when this {@link ArtifactDefinition} was created.
 		 *
 		 * @param createdAt created date
 		 * @return artifact builder
@@ -246,7 +246,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify when this {@link Artifact} was created.
+		 * Specify when this {@link ArtifactDefinition} was created.
 		 *
 		 * @param createdAt created date
 		 * @return artifact builder
@@ -258,7 +258,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify when this {@link Artifact} was last updated.
+		 * Specify when this {@link ArtifactDefinition} was last updated.
 		 *
 		 * @param updatedAt updated date
 		 * @return artifact builder
@@ -269,7 +269,7 @@ public record Artifact(
 		}
 
 		/**
-		 * Specify when this {@link Artifact} was last updated.
+		 * Specify when this {@link ArtifactDefinition} was last updated.
 		 *
 		 * @param updatedAt updated date
 		 * @return artifact builder
@@ -281,17 +281,17 @@ public record Artifact(
 		}
 
 		/**
-		 * Builds an immutable {@link Artifact} instance.
+		 * Builds an immutable {@link ArtifactDefinition} instance.
 		 *
-		 * @return a new {@link Artifact}, never {@literal null}
+		 * @return a new {@link ArtifactDefinition}, never {@literal null}
 		 * @throws IllegalArgumentException when required fields are missing or invalid
 		 */
-		public Artifact build() {
+		public ArtifactDefinition build() {
 			Assert.notNull(id, "Artifact entity identifier can not be null");
 			Assert.hasText(groupId, "Artifact groupId can not be null");
 			Assert.hasText(artifactId, "Artifact artifactId can not be null");
 
-			return new Artifact(
+			return new ArtifactDefinition(
 					id,
 					groupId,
 					artifactId,

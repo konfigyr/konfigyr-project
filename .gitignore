@@ -326,3 +326,7 @@ application-local.properties
 
 # do not ignore local example configuration files
 !application-local.example.yml
+
+### Local state repository or metadata stores ###
+metadata-store
+state-repositories

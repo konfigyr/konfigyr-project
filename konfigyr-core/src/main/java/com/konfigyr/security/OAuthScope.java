@@ -53,9 +53,14 @@ public enum OAuthScope implements GrantedAuthority {
 	INVITE_MEMBERS("namespaces:invite", READ_NAMESPACES),
 
 	/**
+	 * Grants permissions to create service releases by publishing manifests.
+	 */
+	PUBLISH_MANIFESTS("namespaces:publish-manifests", READ_NAMESPACES),
+
+	/**
 	 * Grants full access to namespace operations like read, write, delete, and invite.
 	 */
-	NAMESPACES("namespaces", READ_NAMESPACES, WRITE_NAMESPACES, DELETE_NAMESPACES, INVITE_MEMBERS),
+	NAMESPACES("namespaces", READ_NAMESPACES, WRITE_NAMESPACES, DELETE_NAMESPACES, INVITE_MEMBERS, PUBLISH_MANIFESTS),
 
 	/**
 	 * Grants read-only access to service profiles.

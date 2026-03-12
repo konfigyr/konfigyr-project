@@ -18,6 +18,8 @@ import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.rememberme.InvalidCookieException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.MethodValidationException;
 import org.springframework.validation.method.ParameterValidationResult;
@@ -32,10 +34,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -162,22 +161,36 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 		return handleExceptionInternal(ex, body, headers, status, request);
 	}
 
+	@ExceptionHandler(BindException.class)
+	final ResponseEntity<@NonNull Object> handleBindException(@NonNull BindException ex, @NonNull WebRequest request) {
+		final ProblemDetail body = ErrorResponse.create(ex, HttpStatus.BAD_REQUEST, ex.getMessage())
+				.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+
+		return handleErrors(body, ex.getBindingResult(), HttpHeaders.EMPTY, request);
+	}
+
 	@Override
 	protected ResponseEntity<@NonNull Object> handleMethodArgumentNotValid(
 			@NonNull MethodArgumentNotValidException ex, @NonNull HttpHeaders headers,
 			@NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
-		final Locale locale = LocaleContextHolder.getLocale();
-		final List<ValidationError> errors = new ArrayList<>();
+		final ProblemDetail body = ex.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+		return handleErrors(body, ex.getBindingResult(), headers, request);
+	}
 
-		for (FieldError error : ex.getFieldErrors()) {
-			errors.add(ValidationError.pointer(error.getField(), messageFor(error, locale)));
+	protected ResponseEntity<@NonNull Object> handleErrors(
+			@NonNull ProblemDetail body, @NonNull Errors errors,
+			@NonNull HttpHeaders headers, @NonNull WebRequest request
+	) {
+		final Locale locale = LocaleContextHolder.getLocale();
+		final List<ValidationError> validationErrors = new ArrayList<>();
+
+		for (FieldError error : errors.getFieldErrors()) {
+			validationErrors.add(ValidationError.pointer(error.getField(), messageFor(error, locale)));
 		}
 
-		final ProblemDetail body = ex.updateAndGetBody(getMessageSource(), locale);
-		body.setProperty("errors", errors);
-
-		return handleExceptionInternal(ex, body, headers, status, request);
+		body.setProperty("errors", Collections.unmodifiableList(validationErrors));
+		return createResponseEntity(body, headers, HttpStatus.BAD_REQUEST, request);
 	}
 
 	@Override
