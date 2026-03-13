@@ -7,14 +7,14 @@ import {
   getProfilesQuery,
   useCreateNamespaceApplication,
   useGetChangeHistory,
-  useNamespace
+  useNamespace,
 } from '@konfigyr/hooks';
-import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
+import { ChangeHistoryTimeline } from '@konfigyr/components/vault/change-history/change-history';
 import type { z } from 'zod';
-import type {namespaceApplicationSchema } from '@konfigyr/components/namespace/applications/application-form';
-import type {Namespace, Service} from "@konfigyr/hooks/namespace/types";
-import {ChangeHistoryTimeline} from "@konfigyr/components/vault/change-history/change-history";
+import type { namespaceApplicationSchema } from '@konfigyr/components/namespace/applications/application-form';
+import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
 
 export const Route = createFileRoute(
@@ -33,9 +33,9 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { namespace, service, profile } = Route.useLoaderData();
 
-  const { data: changeHistory  } = useGetChangeHistory(namespace, service, profile, undefined);
+  const { data: changeHistory } = useGetChangeHistory(namespace, service, profile, undefined);
 
-  console.log(changeHistory)
+  console.log(changeHistory);
   return (
     <div className="w-full space-y-6 px-4 mx-auto">
 
