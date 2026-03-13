@@ -54,7 +54,7 @@ public class ConfigClientAuthenticationProvider implements AuthenticationProvide
 		}
 
 		if (!passwordEncoder.matches(credentials.toString(), application.secret())) {
-			throw new BadCredentialsException("Invalid config client credentials");
+			throw new BadCredentialsException("Invalid config client credentials.");
 		}
 
 		return new UsernamePasswordAuthenticationToken(
@@ -97,7 +97,7 @@ public class ConfigClientAuthenticationProvider implements AuthenticationProvide
 		List<GrantedAuthority> authorities() {
 			final Set<String> scopesSet = OAuthScopes.parse(scopes)
 					.stream()
-					.map(OAuthScope::getIncluded)
+					.map(OAuthScope::aggregate)
 					.flatMap(Collection::stream)
 					.map(OAuthScope::getAuthority)
 					.collect(Collectors.toUnmodifiableSet());

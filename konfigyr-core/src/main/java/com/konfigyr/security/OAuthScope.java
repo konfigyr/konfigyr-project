@@ -145,7 +145,7 @@ public enum OAuthScope implements GrantedAuthority {
 				.collect(Collectors.toUnmodifiableSet());
 	}
 
-	static Set<OAuthScope> aggregate(OAuthScope... included) {
+	public static Set<OAuthScope> aggregate(OAuthScope... included) {
 		final Set<OAuthScope> state = new HashSet<>();
 
 		for (OAuthScope scope : included) {
