@@ -3,6 +3,8 @@ package com.konfigyr.vault;
 import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.namespace.Service;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
 
@@ -114,6 +116,13 @@ public interface Vault extends AutoCloseable {
 	 * @return this vault instance
 	 */
 	Vault submit(PropertyChanges changes);
+
+	/**
+	 * Retrieves the Git commit history for the specified profile.
+	 *
+	 * @param pageable paging and sorting instructions
+	 */
+	Page<ChangeHistory> history(Pageable pageable);
 
 	/**
 	 * Closes the vault and releases any underlying resources.

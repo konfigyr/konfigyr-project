@@ -8,6 +8,8 @@ import com.konfigyr.vault.*;
 import lombok.Builder;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
@@ -149,6 +151,12 @@ final class RepositoryVault implements Vault {
 			throw ProfilePolicyViolationException.immutableProfile(profile);
 		}
 		throw new UnsupportedOperationException("Submitting changes is not yet supported.");
+	}
+
+	@NonNull
+	@Override
+	public Page<ChangeHistory> history(@NonNull Pageable pageable) {
+		return repository.history(profile, pageable);
 	}
 
 	@Override
