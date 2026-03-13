@@ -7,6 +7,8 @@ import request from '@konfigyr/lib/http';
 import type {
   ApplyRequest,
   ApplyResult,
+  ChangeHistory,
+  ChangeHistoryQuery,
   ChangesetState,
   ConfigurationProperty,
   Profile,
@@ -21,6 +23,7 @@ import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
  */
 export const vaultKeys = {
   getChangeset: (profile: Profile) => ['vault', profile.id, 'changeset'],
+  getChangeHistory: (profile: Profile) => ['vault', profile.id, 'history'],
 };
 
 const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyRequest => {
@@ -122,8 +125,12 @@ export const useApplyChangeset = () => {
       await request.post(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/apply`, {
         json: generateApplyRequestFromChangeset(changeset),
       }).json<ApplyResult>();
-
       return client.fetchQuery(getChangesetStateQuery(namespace, service, profile));
+    },
+    onSuccess: (state: ChangesetState) => {
+      client.invalidateQueries({
+        queryKey: vaultKeys.getChangeHistory(state.profile),
+      });
     },
   });
 };
@@ -217,3 +224,28 @@ export const useRemoveProperty = generatePropertyOperationMutation(
     return properties;
   },
 );
+
+export const getChangeHistory = (namespace: Namespace, service: Service, profile: Profile, query?: ChangeHistoryQuery) => {
+  return queryOptions({
+    queryKey: vaultKeys.getChangeHistory(profile),
+    queryFn: async () => {
+      return await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.name}/history`, {
+        searchParams: query,
+      }).json<{
+        data: Array<ChangeHistory>;
+        metadata: {
+          size: number,
+          number: number,
+          total: number,
+          pages: number,
+        }
+      }>();
+    },
+  });
+};
+
+export const useGetChangeHistory = (namespace: Namespace, service: Service, profile: Profile, query?: ChangeHistoryQuery) => {
+  return useQuery(getChangeHistory(namespace, service, profile, query));
+};
+
+
