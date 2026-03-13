@@ -81,3 +81,16 @@ export interface ApplyRequest {
   description?: string,
   changes: Array<PropertyChange>
 }
+
+export interface ChangeHistory {
+  id: string;
+  subject: string;
+  description: string;
+  appliedBy: string;
+  appliedAt: string;
+}
+
+export interface ChangeHistoryQuery extends Record<string, string | number | boolean | undefined> {
+  size?: number;
+  page?: number;
+}

@@ -63,7 +63,8 @@ final class GitConverters {
 	static ChangeHistory convertToChangeHistory(RevCommit commit) {
 		return new ChangeHistory(
 				commit.name(),
-				commit.getFirstMessageLine(),
+				commit.getShortMessage(),
+				commit.getFullMessage(),
 				resolveAuthor(commit),
 				resolveTimestamp(commit)
 		);

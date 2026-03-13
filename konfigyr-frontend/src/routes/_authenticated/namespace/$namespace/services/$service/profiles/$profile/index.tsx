@@ -4,18 +4,11 @@ import { ChangesetEditor } from '@konfigyr/components/vault/changeset/editor';
 import { PolicyAlert } from '@konfigyr/components/vault/profile/policy-alert';
 import { getProfileQuery, getProfilesQuery, useChangesetState } from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
-
+import { ChangeHistoryAlert } from '@konfigyr/components/vault/change-history/change-history-alert';
 import type { Namespace, Service } from '@konfigyr/hooks/types';
 
-const generatePageTitle = (namespace?: string, service?: string, profile?: string) => {
-  if (profile && namespace && service) {
-    return `${profile} | ${service} | ${namespace} | Konfigyr`;
-  }
-  return 'Konfigyr';
-};
-
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/services/$service/profiles/$profile',
+  '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/',
 )({
   loader: async ({ context, params, parentMatchPromise }) => {
     const match = await parentMatchPromise;
@@ -26,15 +19,6 @@ export const Route = createFileRoute(
 
     return { namespace, service, profiles, profile };
   },
-  head: ({ loaderData }) => ({
-    meta: [{
-      title: generatePageTitle(
-        loaderData?.namespace.name,
-        loaderData?.service.name,
-        loaderData?.profile.name,
-      ),
-    }],
-  }),
   component: RouteComponent,
 });
 
@@ -68,6 +52,12 @@ function RouteComponent() {
       </aside>
 
       <PolicyAlert profile={profile} />
+
+      <ChangeHistoryAlert
+        namespace={namespace}
+        service={service}
+        profile={profile}
+      />
 
       <div>
         {data && (
