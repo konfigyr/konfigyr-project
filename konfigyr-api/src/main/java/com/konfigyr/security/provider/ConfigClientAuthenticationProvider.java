@@ -4,6 +4,7 @@ import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.security.basic.BasicAuthenticatedPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 import static com.konfigyr.data.tables.OauthApplications.OAUTH_APPLICATIONS;
 
+@Slf4j
 @RequiredArgsConstructor
 public class ConfigClientAuthenticationProvider implements AuthenticationProvider, InitializingBean {
 
@@ -56,6 +58,8 @@ public class ConfigClientAuthenticationProvider implements AuthenticationProvide
 		if (!passwordEncoder.matches(credentials.toString(), application.secret())) {
 			throw new BadCredentialsException("Invalid config client credentials.");
 		}
+
+		log.debug("Config client successfully authenticated for application {}", application.client());
 
 		return new UsernamePasswordAuthenticationToken(
 				new BasicAuthenticatedPrincipal(application.client(), application.namespace()), null, application.authorities()
