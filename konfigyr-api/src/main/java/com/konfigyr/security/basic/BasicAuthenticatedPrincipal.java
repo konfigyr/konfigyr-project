@@ -4,8 +4,6 @@ import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.PrincipalType;
 import lombok.*;
 import org.jspecify.annotations.NonNull;
-import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.io.Serial;
 import java.security.Principal;

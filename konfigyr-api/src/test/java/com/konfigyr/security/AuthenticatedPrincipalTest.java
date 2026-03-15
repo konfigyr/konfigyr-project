@@ -33,7 +33,7 @@ class AuthenticatedPrincipalTest {
 		doReturn(principal).when(authentication).getPrincipal();
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		assertThat(AuthenticatedPrincipal.resolve())
+		assertThat((AuthenticatedPrincipal) AuthenticatedPrincipal.resolve())
 				.isSameAs(principal);
 	}
 

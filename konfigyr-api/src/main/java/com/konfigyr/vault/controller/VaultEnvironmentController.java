@@ -37,7 +37,7 @@ public class VaultEnvironmentController extends AbstractVaultController {
 
 	@GetMapping("{service}/{profiles}/{label}")
 	ConfigEnvironment configs(@PathVariable String service, @PathVariable String profiles, @PathVariable(required = false) String label) {
-		final BasicAuthenticatedPrincipal principal = AuthenticatedPrincipal.resolve(BasicAuthenticatedPrincipal.class);
+		final BasicAuthenticatedPrincipal principal = AuthenticatedPrincipal.resolve();
 		final VaultAssembler assembler = createAssembler(principal.getNamespace(), service);
 		final String[] profilesArray = StringUtils.commaDelimitedListToStringArray(profiles);
 		final List<PropertySource> properties = new ArrayList<>();
