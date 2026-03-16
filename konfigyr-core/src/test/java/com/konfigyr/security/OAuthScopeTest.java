@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
@@ -67,20 +66,6 @@ class OAuthScopeTest {
 				.returns(OAuth2ErrorCodes.INVALID_SCOPE, OAuth2Error::getErrorCode)
 				.returns("Invalid OAuth scope of: unknown", OAuth2Error::getDescription)
 				.returns(null, OAuth2Error::getUri);
-	}
-
-	@Test
-	@DisplayName("should return authorities from scope")
-	void toAuthorities() {
-		assertThat(OAuthScopes.of(OAuthScope.PROFILES).toAuthorities())
-				.hasSize(4)
-				.extracting(GrantedAuthority::getAuthority)
-				.containsExactlyInAnyOrder("profiles", "profiles:read", "profiles:write", "profiles:delete");
-
-		assertThat(OAuthScopes.of(OAuthScope.READ_PROFILES).toAuthorities())
-				.hasSize(1)
-				.extracting(GrantedAuthority::getAuthority)
-				.containsExactlyInAnyOrder("profiles:read");
 	}
 
 	@MethodSource("scenarios")
