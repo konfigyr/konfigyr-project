@@ -62,7 +62,8 @@ class AccessControlRepositoryTest extends AbstractIntegrationTest {
 				.asInstanceOf(InstanceOfAssertFactories.iterable(AccessGrant.class))
 				.containsExactlyInAnyOrder(
 						AccessGrant.forNamespaceMember(EntityId.from(1), NamespaceRole.ADMIN),
-						AccessGrant.forNamespaceApplication("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG")
+						AccessGrant.forNamespaceApplication("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG"),
+						AccessGrant.forNamespaceApplication("kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq")
 				);
 	}
 
@@ -76,7 +77,8 @@ class AccessControlRepositoryTest extends AbstractIntegrationTest {
 				.asInstanceOf(InstanceOfAssertFactories.iterable(AccessGrant.class))
 				.containsExactlyInAnyOrder(
 						AccessGrant.forNamespaceMember(EntityId.from(1), NamespaceRole.ADMIN),
-						AccessGrant.forNamespaceApplication("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG")
+						AccessGrant.forNamespaceApplication("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG"),
+						AccessGrant.forNamespaceApplication("kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq")
 				);
 	}
 
