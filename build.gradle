@@ -75,7 +75,7 @@ subprojects {
             dependency('com.icegreen:greenmail:2.1.8')
 
             /* Wiremock Spring Boot integration */
-            dependency('org.wiremock.integrations:wiremock-spring-boot:4.2.0')
+            dependency('org.wiremock.integrations:wiremock-spring-boot:4.2.1')
         }
     }
 
