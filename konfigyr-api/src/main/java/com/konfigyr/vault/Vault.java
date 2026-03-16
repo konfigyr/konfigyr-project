@@ -121,6 +121,7 @@ public interface Vault extends AutoCloseable {
 	 * Retrieves the Git commit history for the specified profile.
 	 *
 	 * @param pageable paging and sorting instructions
+	 * @return paged collections of change history, never {@literal null}
 	 */
 	Page<ChangeHistory> history(Pageable pageable);
 

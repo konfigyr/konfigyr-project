@@ -1,7 +1,7 @@
 import { LayoutContent } from '@konfigyr/components/layout';
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 import { getProfileQuery } from '@konfigyr/hooks';
-import type {Namespace, Service} from '@konfigyr/hooks/namespace/types';
+import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
 const generatePageTitle = (namespace?: string, service?: string, profile?: string) => {
   if (profile && namespace && service) {

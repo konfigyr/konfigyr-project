@@ -172,6 +172,8 @@ public interface StateRepository extends AutoCloseable, DisposableBean {
 	 *
 	 * @param profile the profile for which the state would be destroyed, can't be {@literal null}
 	 * @param pageable paging and sorting instructions
+	 *
+	 * @return paged collections of change history, never {@literal null}
 	 */
 	Page<ChangeHistory> history(Profile profile, Pageable pageable);
 

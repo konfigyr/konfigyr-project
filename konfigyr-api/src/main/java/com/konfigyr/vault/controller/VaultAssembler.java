@@ -25,8 +25,7 @@ record VaultAssembler(Namespace namespace, Service service) {
 	<T> RepresentationModelAssembler<T, EntityModel<T>> properties() {
 		return EntityModel::of;
 	}
-
-	 RepresentationModelAssembler<ChangeHistory, EntityModel<ChangeHistory>> changeHistory(Profile profile) {
+	RepresentationModelAssembler<ChangeHistory, EntityModel<ChangeHistory>> changeHistory(Profile profile) {
 		return changeHistory -> EntityModel.of(changeHistory, linkBuilder(profile, changeHistory).selfRel());
 	}
 
