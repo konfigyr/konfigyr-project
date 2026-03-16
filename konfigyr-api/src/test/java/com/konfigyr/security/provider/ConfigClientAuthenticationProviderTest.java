@@ -39,7 +39,6 @@ class ConfigClientAuthenticationProviderTest {
 	@BeforeEach
 	void setup() {
 		provider = new ConfigClientAuthenticationProvider(context, passwordEncoder);
-		provider.afterPropertiesSet();
 	}
 
 	@Test

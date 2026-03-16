@@ -1,6 +1,5 @@
 package com.konfigyr.security.provider;
 
-import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.security.basic.BasicAuthenticatedPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
@@ -16,22 +14,18 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 import static com.konfigyr.data.tables.OauthApplications.OAUTH_APPLICATIONS;
 
 @Slf4j
 @RequiredArgsConstructor
-public class ConfigClientAuthenticationProvider implements AuthenticationProvider, InitializingBean {
+public class ConfigClientAuthenticationProvider implements AuthenticationProvider {
 
 	private final DSLContext context;
 	private final PasswordEncoder passwordEncoder;
@@ -73,12 +67,6 @@ public class ConfigClientAuthenticationProvider implements AuthenticationProvide
 	@Override
 	public boolean supports(@NonNull Class<?> authentication) {
 		return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
-	}
-
-	@Override
-	public void afterPropertiesSet() {
-		Assert.notNull(this.context, "DSL context must be set");
-		Assert.notNull(this.passwordEncoder, "Password encoder must be set");
 	}
 
 	private Application lookupApplication(String client) {
