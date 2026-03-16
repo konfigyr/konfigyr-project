@@ -51,12 +51,16 @@ public class ConfigClientAuthenticationProvider implements AuthenticationProvide
 
 		final Application application = lookupApplication(clientId);
 
+		if (application == null) {
+			throw new BadCredentialsException("Invalid credentials. Could not find application " + clientId);
+		}
+
 		if (application.isExpired()) {
 			throw new CredentialsExpiredException("Config client credentials expired.");
 		}
 
 		if (!passwordEncoder.matches(credentials.toString(), application.secret())) {
-			throw new BadCredentialsException("Invalid config client credentials.");
+			throw new BadCredentialsException("Invalid config client credentials. Passwords do not match.");
 		}
 
 		log.debug("Config client successfully authenticated for application {}", application.client());

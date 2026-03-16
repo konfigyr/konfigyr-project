@@ -21,7 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 import static com.konfigyr.data.tables.OauthApplications.OAUTH_APPLICATIONS;
@@ -47,7 +47,21 @@ class ConfigClientAuthenticationProviderTest {
 	void shouldFailToAuthenticateDueMissingCredentials() {
 		final Authentication authentication = new UsernamePasswordAuthenticationToken("client-1", null);
 
-		assertThrows(BadCredentialsException.class, () -> provider.authenticate(authentication));
+		assertThatThrownBy(() -> provider.authenticate(authentication))
+				.isInstanceOf(BadCredentialsException.class)
+				.hasMessage("Invalid credentials. Credentials can not be null.");
+	}
+
+	@Test
+	@DisplayName("should fail to authenticate due unknown application")
+	void shouldFailToAuthenticateForUnknownApplication() {
+		final Authentication authentication = new UsernamePasswordAuthenticationToken("app", "secret");
+
+		mockLookupApplication(null, null);
+
+		assertThatThrownBy(() -> provider.authenticate(authentication))
+				.isInstanceOf(BadCredentialsException.class)
+				.hasMessage("Invalid credentials. Could not find application app");
 	}
 
 	@Test
@@ -57,7 +71,9 @@ class ConfigClientAuthenticationProviderTest {
 
 		mockLookupApplication("secret", OffsetDateTime.now().minusDays(1));
 
-		assertThrows(CredentialsExpiredException.class, () -> provider.authenticate(authentication));
+		assertThatThrownBy(() -> provider.authenticate(authentication))
+				.isInstanceOf(CredentialsExpiredException.class)
+				.hasMessage("Config client credentials expired.");
 	}
 
 	@Test
@@ -67,7 +83,9 @@ class ConfigClientAuthenticationProviderTest {
 
 		mockLookupApplication(passwordEncoder.encode("incorrect secret"), OffsetDateTime.now().plusDays(1));
 
-		assertThrows(BadCredentialsException.class, () -> provider.authenticate(authentication));
+		assertThatThrownBy(() -> provider.authenticate(authentication))
+				.isInstanceOf(BadCredentialsException.class)
+				.hasMessage("Invalid config client credentials. Passwords do not match.");
 	}
 
 	@Test
@@ -88,7 +106,8 @@ class ConfigClientAuthenticationProviderTest {
 	}
 
 	void mockLookupApplication(String secret, OffsetDateTime expires) {
-		final var app = new ConfigClientAuthenticationProvider.Application(
+		final var app = secret == null & expires == null ?
+				null : new ConfigClientAuthenticationProvider.Application(
 				"app", secret, expires, "profiles namespaces:read", "n1"
 		);
 
