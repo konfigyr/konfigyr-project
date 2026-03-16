@@ -98,15 +98,8 @@ public class ConfigClientAuthenticationProvider implements AuthenticationProvide
 		}
 
 		@NonNull
-		List<GrantedAuthority> authorities() {
-			final Set<String> scopesSet = OAuthScopes.parse(scopes)
-					.stream()
-					.map(OAuthScope::aggregate)
-					.flatMap(Collection::stream)
-					.map(OAuthScope::getAuthority)
-					.collect(Collectors.toUnmodifiableSet());
-
-			return AuthorityUtils.createAuthorityList(scopesSet);
+		Collection<? extends GrantedAuthority> authorities() {
+			return OAuthScopes.parse(scopes).toAuthorities();
 		}
 	}
 }
