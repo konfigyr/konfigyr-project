@@ -3,17 +3,10 @@ import { History } from 'lucide-react';
 import { Button } from '@konfigyr/components/ui/button';
 import { FormattedMessage } from 'react-intl';
 import { RelativeDate } from '@konfigyr/components/messages';
-import { useCallback } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { useGetChangeHistory } from '@konfigyr/hooks';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { ChangeHistory, Profile } from '@konfigyr/hooks/vault/types';
-
-export type LatestChangeHistoryProps = {
-  changeHistory: ChangeHistory,
-  total: number,
-  onShowHistoryClick: () => void
-};
 
 export type ChangeHistoryAlertProps = {
   namespace: Namespace,
@@ -21,20 +14,15 @@ export type ChangeHistoryAlertProps = {
   service: Service
 };
 
+export type LatestChangeHistoryProps = {
+  changeHistory: ChangeHistory,
+  total: number,
+} & ChangeHistoryAlertProps;
+
 export function ChangeHistoryAlert({ namespace, service, profile }: ChangeHistoryAlertProps) {
-  const navigate = useNavigate();
   const { data: changeHistory } = useGetChangeHistory(namespace, service, profile, {
     size: 1,
   });
-
-  const onShowHistoryClick = useCallback( () => navigate({
-    to: '/namespace/$namespace/services/$service/profiles/$profile/history',
-    params: {
-      namespace: namespace.slug,
-      service: service.slug,
-      profile: profile.slug,
-    },
-  }), [namespace, service, profile]);
 
   return (
     <>
@@ -42,14 +30,16 @@ export function ChangeHistoryAlert({ namespace, service, profile }: ChangeHistor
         <LatestChangeHistory
           changeHistory={changeHistory.data[0]}
           total={changeHistory.metadata.total}
-          onShowHistoryClick={onShowHistoryClick}
+          namespace={namespace}
+          service={service}
+          profile={profile}
         />
       )}
     </>
   );
 }
 
-function LatestChangeHistory({ changeHistory, total, onShowHistoryClick }: LatestChangeHistoryProps) {
+function LatestChangeHistory({ changeHistory, total, namespace, service, profile }: LatestChangeHistoryProps) {
   return (
     <div className="flex gap-4 rounded-lg border py-2 px-4 text-sm">
       <div className="flex-1">
@@ -83,14 +73,24 @@ function LatestChangeHistory({ changeHistory, total, onShowHistoryClick }: Lates
         <Button
           size="sm"
           variant="outline"
-          onClick={onShowHistoryClick}
+          asChild
         >
-          <History />
-          <FormattedMessage
-            defaultMessage="{amount} Commits"
-            values={{ amount: total }}
-            description="Label for the buttom with amount of commints."
-          />
+          <Link
+            to="/namespace/$namespace/services/$service/profiles/$profile/history"
+            params={{
+              namespace: namespace.slug,
+              service: service.slug,
+              profile: profile.slug,
+            }}
+          >
+            <History />
+            <FormattedMessage
+              defaultMessage="{amount} Commits"
+              values={{ amount: total }}
+              description="Label for the buttom with amount of commints."
+            />
+          </Link>
+
         </Button>
       </div>
     </div>

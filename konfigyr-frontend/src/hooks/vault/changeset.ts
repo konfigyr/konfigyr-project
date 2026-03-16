@@ -229,7 +229,7 @@ export const getChangeHistory = (namespace: Namespace, service: Service, profile
   return queryOptions({
     queryKey: vaultKeys.getChangeHistory(profile),
     queryFn: async () => {
-      return await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.name}/history`, {
+      return await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/history`, {
         searchParams: query,
       }).json<{
         data: Array<ChangeHistory>;

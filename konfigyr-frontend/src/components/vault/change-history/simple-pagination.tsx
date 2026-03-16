@@ -45,6 +45,7 @@ export function SimplePagination({ page, pages, onClick }: SimplePaginationProps
         <PaginationItem>
           <PaginationPrevious
             onClick={handlePrevious}
+            isActive={page !== 0}
             className={page === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
           />
         </PaginationItem>
@@ -52,6 +53,7 @@ export function SimplePagination({ page, pages, onClick }: SimplePaginationProps
         <PaginationItem>
           <PaginationNext
             onClick={handleNext}
+            isActive={page + 1 !== pages}
             className={page + 1 === pages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
           />
         </PaginationItem>

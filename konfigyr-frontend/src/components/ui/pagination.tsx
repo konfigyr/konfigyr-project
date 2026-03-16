@@ -7,6 +7,7 @@ import {
 
 import { cn } from '@konfigyr/components/utils';
 import { buttonVariants } from '@konfigyr/components/ui/button';
+import { FormattedMessage } from 'react-intl';
 import type { Button } from '@konfigyr/components/ui/button';
 
 function Pagination({ className, ...props }: React.ComponentProps<'nav'>) {
@@ -78,7 +79,12 @@ function PaginationPrevious({
       {...props}
     >
       <ChevronLeftIcon />
-      <span className='hidden sm:block'>Previous</span>
+      <span className='hidden sm:block'>
+        <FormattedMessage
+          defaultMessage="Previous"
+          description="Previous page label"
+        />
+      </span>
     </PaginationLink>
   );
 }
@@ -94,7 +100,12 @@ function PaginationNext({
       className={cn('gap-1 px-2.5 sm:pr-2.5', className)}
       {...props}
     >
-      <span className='hidden sm:block'>Next</span>
+      <span className='hidden sm:block'>
+        <FormattedMessage
+          defaultMessage="Next"
+          description="Next page label"
+        />
+      </span>
       <ChevronRightIcon />
     </PaginationLink>
   );
@@ -112,7 +123,12 @@ function PaginationEllipsis({
       {...props}
     >
       <MoreHorizontalIcon className='size-4' />
-      <span className='sr-only'>More pages</span>
+      <span className='sr-only'>
+        <FormattedMessage
+          defaultMessage="More pages"
+          description="More pages label"
+        />
+      </span>
     </span>
   );
 }
