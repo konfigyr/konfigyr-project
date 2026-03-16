@@ -43,8 +43,9 @@ public class WebSecurityConfiguration {
 	}
 
 	@Bean
-	ConfigClientAuthenticationProvider configClientAuthenticationProvider(DSLContext context,
-																		  ObjectProvider<@NonNull PasswordEncoder> passwordEncoder) {
+	ConfigClientAuthenticationProvider configClientAuthenticationProvider(
+			DSLContext context, ObjectProvider<@NonNull PasswordEncoder> passwordEncoder
+	) {
 		final PasswordEncoder encoder = passwordEncoder.getIfAvailable(PasswordEncoders::get);
 		return new ConfigClientAuthenticationProvider(context, encoder);
 	}
@@ -58,7 +59,7 @@ public class WebSecurityConfiguration {
 						.anyRequest().hasAuthority(OAuthScope.READ_PROFILES.getAuthority())
 				)
 				.cors(Customizer.withDefaults())
-				.csrf(AbstractHttpConfigurer::disable)
+				.csrf(csrf -> csrf.ignoringRequestMatchers("/configs/**"))
 				.logout(AbstractHttpConfigurer::disable)
 				.httpBasic(Customizer.withDefaults())
 				.formLogin(AbstractHttpConfigurer::disable)

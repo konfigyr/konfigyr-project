@@ -11,6 +11,9 @@ import java.util.Map;
  * <p>
  * This is a simplified DTO equivalent to Spring Cloud Config's {@code PropertySource}.
  *
+ * @param name the name of the property source (for example a service name and profile-specific configuration)
+ * @param source the map containing configuration properties where keys represent property names and
+ *               values represent the resolved property values
  * @author Mila Zarkovic
  * @since 1.0.0
  */
