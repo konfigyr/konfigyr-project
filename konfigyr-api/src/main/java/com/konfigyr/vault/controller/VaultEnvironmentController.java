@@ -9,6 +9,7 @@ import com.konfigyr.vault.Vault;
 import com.konfigyr.vault.VaultAccessor;
 import com.konfigyr.vault.environment.ConfigEnvironment;
 import com.konfigyr.vault.environment.PropertySource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/configs")
 public class VaultEnvironmentController extends AbstractVaultController {
@@ -56,6 +58,8 @@ public class VaultEnvironmentController extends AbstractVaultController {
 					});
 
 		}
+
+		log.debug("Fetched {} for service={}, profiles={}", properties, service, profiles);
 
 		return new ConfigEnvironment(service, profilesArray, properties);
 	}
