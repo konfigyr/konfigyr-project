@@ -1,5 +1,6 @@
 package com.konfigyr.security;
 
+import com.konfigyr.security.basic.NamespaceApplicationDetailsService;
 import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
 import com.konfigyr.security.provider.ConfigClientAuthenticationProvider;
@@ -11,11 +12,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
@@ -43,16 +46,13 @@ public class WebSecurityConfiguration {
 	}
 
 	@Bean
-	ConfigClientAuthenticationProvider configClientAuthenticationProvider(
-			DSLContext context, ObjectProvider<@NonNull PasswordEncoder> passwordEncoder
-	) {
-		final PasswordEncoder encoder = passwordEncoder.getIfAvailable(PasswordEncoders::get);
-		return new ConfigClientAuthenticationProvider(context, encoder);
-	}
-
-	@Bean
 	@Order(1)
-	SecurityFilterChain konfigyrConfigClientSecurityFilterChain(HttpSecurity http, AuthenticationProvider configClientAuthenticationProvider) {
+	SecurityFilterChain konfigyrConfigClientSecurityFilterChain(
+			HttpSecurity http, DSLContext dslContext, ObjectProvider<@NonNull PasswordEncoder> passwordEncoder
+	) {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(new NamespaceApplicationDetailsService(dslContext));
+		provider.setPasswordEncoder(passwordEncoder.getIfAvailable(PasswordEncoders::get));
+
 		return http
 				.securityMatcher("/configs/**")
 				.authorizeHttpRequests(requests -> requests
@@ -68,7 +68,7 @@ public class WebSecurityConfiguration {
 				.sessionManagement(sessions -> sessions
 						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				)
-				.authenticationProvider(configClientAuthenticationProvider)
+				.authenticationProvider(provider)
 				.build();
 	}
 

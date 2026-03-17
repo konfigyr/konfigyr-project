@@ -3,7 +3,7 @@ package com.konfigyr.vault.controller;
 import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.security.AuthenticatedPrincipal;
-import com.konfigyr.security.basic.BasicAuthenticatedPrincipal;
+import com.konfigyr.security.basic.NamespaceApplicationPrincipal;
 import com.konfigyr.vault.ProfileManager;
 import com.konfigyr.vault.Vault;
 import com.konfigyr.vault.VaultAccessor;
@@ -37,7 +37,7 @@ public class VaultEnvironmentController extends AbstractVaultController {
 
 	@GetMapping("{service}/{profiles}/{label}")
 	ConfigEnvironment configs(@PathVariable String service, @PathVariable String profiles, @PathVariable(required = false) String label) {
-		final BasicAuthenticatedPrincipal principal = AuthenticatedPrincipal.resolve();
+		final NamespaceApplicationPrincipal principal = AuthenticatedPrincipal.resolve();
 		final VaultAssembler assembler = createAssembler(principal.getNamespace(), service);
 		final String[] profilesArray = StringUtils.commaDelimitedListToStringArray(profiles);
 		final List<PropertySource> properties = new ArrayList<>();

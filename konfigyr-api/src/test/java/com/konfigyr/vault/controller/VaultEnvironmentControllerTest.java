@@ -24,6 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 
 public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 
+	private static final String CLIENT = "kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq";
+	private static final String SECRET = "nryjshWX-PdDHdR8yqyu1u5A2KBFgH-O_ljxbQODo-Y";
+
 	@Autowired
 	VaultProperties properties;
 
@@ -35,6 +38,39 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 
 	@Autowired
 	VaultAccessor accessor;
+
+	@Test
+	@DisplayName("should not retrieve configs due incorrect application client id")
+	void retrieveConfigsWithIncorrectApplicationClientId() {
+		mvc.get().uri("/configs/{service}/{profiles}",  "john-doe-blog", "live")
+				.with(httpBasic("unknown-app", SECRET))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	@Test
+	@DisplayName("should not retrieve configs due incorrect application secret")
+	void retrieveConfigsWithIncorrectApplicationSecret() {
+		mvc.get().uri("/configs/{service}/{profiles}",  "john-doe-blog", "live")
+				.with(httpBasic(CLIENT, "incorrect"))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	@Test
+	@DisplayName("should not retrieve configs due expired application credentials")
+	void retrieveConfigsWithExpiredApplicationCredentials() {
+		mvc.get().uri("/configs/{service}/{profiles}",  "konfigyr", "development")
+				.with(httpBasic("kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD", "10S6cd0JgdO6WCLmOLB46d-Enx7K20hKSF1qicfev5g"))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.UNAUTHORIZED);
+	}
 
 	@Test
 	@DisplayName("should not retrieve configs due insufficient permissions")
@@ -51,7 +87,7 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 	@DisplayName("should not retrieve configs for an unknown service")
 	void retrieveConfigsForUnknownService() {
 		mvc.get().uri("/configs/{service}/{profiles}",  "unknown-service", "live")
-				.with(httpBasic("kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq", "nryjshWX-PdDHdR8yqyu1u5A2KBFgH-O_ljxbQODo-Y"))
+				.with(httpBasic(CLIENT, SECRET))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -63,7 +99,7 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 	@DisplayName("should retrieve configs for unknown profile")
 	void retrieveConfigsForUnknownProfile() {
 		mvc.get().uri("/configs/{service}/{profiles}",  "john-doe-blog", "dev")
-				.with(httpBasic("kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq", "nryjshWX-PdDHdR8yqyu1u5A2KBFgH-O_ljxbQODo-Y"))
+				.with(httpBasic(CLIENT, SECRET))
 				.exchange()
 				.assertThat()
 				.apply(log())
