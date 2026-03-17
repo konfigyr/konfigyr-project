@@ -43,27 +43,27 @@ public class NamespaceApplicationPrincipal implements UserDetails, Authenticated
 	private static final long serialVersionUID = 2390087892807966815L;
 
 	/**
-	 * Name of the {@link Namespace} that owns this application, can't be {@literal null}
+	 * Name of the {@link Namespace} that owns this application, can't be {@literal null}.
 	 */
 	String namespace;
 
 	/**
-	 * Public identifier of the client associated with this application, can't be {@literal null}
+	 * Public identifier of the client associated with this application, can't be {@literal null}.
 	 */
 	String clientId;
 
 	/**
-	 * Application's secret, can't be {@literal null}
+	 * Application's secret, can't be {@literal null}.
 	 */
 	String password;
 
 	/**
-	 * Expiration timestamp for this application’s credentials
+	 * Expiration timestamp for this application’s credentials.
 	 */
 	@Nullable OffsetDateTime expiresAt;
 
 	/**
-	 * Authorities which this application has, can't be {@literal null}
+	 * Authorities which this application has, can't be {@literal null}.
 	 */
 	@Default
 	Collection<? extends GrantedAuthority> authorities = Set.of();
