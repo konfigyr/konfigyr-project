@@ -23,7 +23,7 @@ import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
  */
 export const vaultKeys = {
   getChangeset: (profile: Profile) => ['vault', profile.id, 'changeset'],
-  getChangeHistory: (profile: Profile) => ['vault', profile.id, 'history'],
+  getChangeHistory: (profile: Profile, query?: ChangeHistoryQuery) => ['vault', profile.id, 'history', query],
 };
 
 const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyRequest => {
@@ -227,7 +227,7 @@ export const useRemoveProperty = generatePropertyOperationMutation(
 
 export const getChangeHistory = (namespace: Namespace, service: Service, profile: Profile, query?: ChangeHistoryQuery) => {
   return queryOptions({
-    queryKey: vaultKeys.getChangeHistory(profile),
+    queryKey: vaultKeys.getChangeHistory(profile, query),
     queryFn: async () => {
       return await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/history`, {
         searchParams: query,
