@@ -4,6 +4,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.support.Slug;
+import com.konfigyr.vault.ChangeHistory;
 import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfilePolicy;
 import com.konfigyr.vault.Properties;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.data.domain.Pageable;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -185,6 +187,12 @@ class GitStateRepositoryTest {
 				.returns(RepositoryStateException.ErrorCode.UNKNOWN_CHANGESET, RepositoryStateException::getErrorCode)
 				.withMessageContaining("Failed to retrieve state from profile '%s' and changeset '%s' as it does not exist",
 						profile.slug(), result.branch());
+
+		assertThat(repository.history(profile, Pageable.ofSize(5)))
+				.as("Git repository history should two expected commits in the correct order")
+				.hasSize(2)
+				.extracting(ChangeHistory::subject)
+				.containsExactly("First changes", "Repository initialized for Service(EntityId(123567, 0000000003RNF), test-service)");
 	}
 
 	@Test

@@ -185,6 +185,46 @@ const applyChangeset = http.post('http://localhost/api/namespaces/:namespace/ser
   });
 });
 
+const getHistory = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/history', ({ params }) => {
+  const { namespace, service, profile } = params;
+
+  if (namespace !== namespaces.konfigyr.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  if (service !== services.konfigyrApi.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  if (profile !== profiles.development.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  // five days ago
+  const appliedAt = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+  return HttpResponse.json({
+    data: [{
+      id: '9eadce4691d8fcd863aeeb07ef81d8146083d814',
+      subject: 'Changeset draft',
+      description: 'Changeset draft',
+      appliedBy: 'Test User <test.user@ebf.com>',
+      appliedAt,
+    }],
+    metadata: {
+      size: 1,
+      number: 0,
+      total: 2,
+      pages: 2,
+    },
+  });
+});
+
 export default [
   getProfiles,
   getProfile,
@@ -192,4 +232,5 @@ export default [
   history,
   getProperties,
   applyChangeset,
+  getHistory,
 ];

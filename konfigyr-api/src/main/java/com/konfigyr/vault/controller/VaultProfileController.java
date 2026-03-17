@@ -12,6 +12,7 @@ import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfileDefinition;
 import com.konfigyr.vault.ProfileManager;
 import com.konfigyr.vault.ProfilePolicy;
+import com.konfigyr.vault.VaultAccessor;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -28,8 +29,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/namespaces/{namespace}/services/{service}")
 class VaultProfileController extends AbstractVaultController {
 
-	VaultProfileController(NamespaceManager namespaces, Services services, ProfileManager profiles) {
+	VaultAccessor accessor;
+
+	VaultProfileController(NamespaceManager namespaces, Services services, ProfileManager profiles, VaultAccessor accessor) {
 		super(namespaces, profiles, services);
+		this.accessor = accessor;
 	}
 
 	@GetMapping("profiles")
@@ -82,20 +86,6 @@ class VaultProfileController extends AbstractVaultController {
 	@RequiresScope(OAuthScope.READ_PROFILES)
 	@GetMapping("profiles/{profileName}")
 	EntityModel<Profile> lookup(
-			@PathVariable String namespace,
-			@PathVariable String service,
-			@PathVariable String profileName
-	) {
-		final VaultAssembler assembler = createAssembler(namespace, service);
-		final Profile profile = lookupProfile(assembler.service(), profileName);
-
-		return assembler.profile().assemble(profile);
-	}
-
-	@PreAuthorize("isMember(#namespace)")
-	@RequiresScope(OAuthScope.WRITE_PROFILES)
-	@GetMapping("profiles/{profileName}/history")
-	EntityModel<Profile> history(
 			@PathVariable String namespace,
 			@PathVariable String service,
 			@PathVariable String profileName

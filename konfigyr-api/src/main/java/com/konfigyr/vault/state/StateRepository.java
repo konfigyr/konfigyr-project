@@ -1,9 +1,12 @@
 package com.konfigyr.vault.state;
 
 import com.konfigyr.namespace.Service;
+import com.konfigyr.vault.ChangeHistory;
 import com.konfigyr.vault.Profile;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.io.InputStream;
 
@@ -163,6 +166,16 @@ public interface StateRepository extends AutoCloseable, DisposableBean {
 	 * @param profile the profile for which the state would be destroyed, can't be {@literal null}
 	 */
 	void delete(Profile profile);
+
+	/**
+	 * Retrieves the Git commit history for the specified profile.
+	 *
+	 * @param profile the profile for which the state would be destroyed, can't be {@literal null}
+	 * @param pageable paging and sorting instructions
+	 *
+	 * @return paged collections of change history, never {@literal null}
+	 */
+	Page<ChangeHistory> history(Profile profile, Pageable pageable);
 
 	/**
 	 * Destroys the repository associated with the {@link Service} and all its contents.
