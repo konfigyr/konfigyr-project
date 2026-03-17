@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
 import { MonitorCloud } from 'lucide-react';
-import { FormattedMessage} from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { createFileRoute, useLocation } from '@tanstack/react-router';
 import {
   Card,
@@ -25,7 +25,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { id }  = Route.useParams();
+  const { id } = Route.useParams();
   const namespace = useNamespace();
 
   const location = useLocation();

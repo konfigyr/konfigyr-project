@@ -1,5 +1,6 @@
 package com.konfigyr.namespace.controller;
 
+import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.hateoas.*;
 import com.konfigyr.namespace.*;
 import org.springframework.http.HttpMethod;
@@ -35,7 +36,14 @@ interface Assemblers {
 
 	static RepresentationModelAssembler<Service, EntityModel<Service>> service(Namespace namespace) {
 		return service -> EntityModel.of(service, linkBuilder(namespace, service).selfRel())
+				.add(linkBuilder(namespace, service).path("manifest").rel("manifest"))
+				.add(linkBuilder(namespace, service).method(HttpMethod.POST).path("manifest").rel("release"))
 				.add(linkBuilder(namespace, service).method(HttpMethod.DELETE).rel("delete"));
+	}
+
+	static RepresentationModelAssembler<Manifest, EntityModel<Manifest>> manifest(Namespace namespace, Service service) {
+		return manifest -> EntityModel.of(manifest, linkBuilder(namespace, service).path("manifest").selfRel())
+				.add(linkBuilder(namespace, service).path("manifest").method(HttpMethod.POST).rel("release"));
 	}
 
 	static LinkBuilder linkBuilder() {

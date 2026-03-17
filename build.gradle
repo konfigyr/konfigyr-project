@@ -46,7 +46,7 @@ subprojects {
 
         dependencies {
             /* Konfigyr Artifactory Library */
-            dependency('com.konfigyr:konfigyr-artifactory:1.0.0-RC1')
+            dependency('com.konfigyr:konfigyr-artifactory:1.0.0-RC4')
 
             /* Konfigyr Mail Libraries */
             dependency('com.konfigyr:konfigyr-mail-api:1.0.0')
@@ -75,7 +75,7 @@ subprojects {
             dependency('com.icegreen:greenmail:2.1.8')
 
             /* Wiremock Spring Boot integration */
-            dependency('org.wiremock.integrations:wiremock-spring-boot:4.2.0')
+            dependency('org.wiremock.integrations:wiremock-spring-boot:4.2.1')
         }
     }
 

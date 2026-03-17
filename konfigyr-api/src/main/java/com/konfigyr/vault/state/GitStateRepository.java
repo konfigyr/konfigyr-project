@@ -1,6 +1,7 @@
 package com.konfigyr.vault.state;
 
 import com.konfigyr.namespace.Service;
+import com.konfigyr.vault.ChangeHistory;
 import com.konfigyr.vault.Profile;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.merge.ResolveMerger;
 import org.eclipse.jgit.merge.ThreeWayMerger;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -22,12 +24,17 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.FS;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.function.ThrowingSupplier;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -532,6 +539,42 @@ public final class GitStateRepository implements StateRepository {
 					service.id(), directory);
 
 			return Void.TYPE;
+		});
+	}
+
+	@Override
+	public Page<ChangeHistory> history(Profile profile, Pageable pageable) {
+		return executeRepositoryOperation(() -> {
+			final Ref branch = repository.findRef(formatProfileRefName(profile));
+
+			if (branch == null) {
+				throw new RepositoryStateException(UNKNOWN,
+						"Failed to retrieve history for profile '%s' of the Service(%s, %s)"
+								.formatted(profile.slug(), service.id(), service.slug()));
+			}
+
+			List<ChangeHistory> result = new ArrayList<>();
+			long total = 0;
+
+			try (RevWalk walk = new RevWalk(repository)) {
+				RevCommit head = walk.parseCommit(branch.getObjectId());
+				walk.sort(RevSort.COMMIT_TIME_DESC);
+				walk.markStart(head);
+
+				int pageSize = pageable.getPageSize();
+				int offset = (int) pageable.getOffset();
+				int index = 0;
+
+				for (RevCommit rev : walk) {
+					if (index >= offset && result.size() < pageSize) {
+						result.add(GitConverters.convertToChangeHistory(rev));
+					}
+					index++;
+					total++;
+				}
+			}
+
+			return new PageImpl<>(result, pageable, total);
 		});
 	}
 

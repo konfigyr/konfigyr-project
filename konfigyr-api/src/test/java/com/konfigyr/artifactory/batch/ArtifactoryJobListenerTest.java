@@ -45,7 +45,7 @@ class ArtifactoryJobListenerTest {
 	@Test
 	@DisplayName("should launch artifact release batch Job on 'artifactory.artifact-version.release' event")
 	void launchReleaseJob() throws Exception {
-		final var event = new ArtifactoryEvent.Release(
+		final var event = new ArtifactoryEvent.ReleaseCreated(
 				EntityId.from(1L),
 				ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.0")
 		);

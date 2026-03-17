@@ -13,7 +13,7 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
       <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
 
-    expect(getByRole('textbox', { name: 'Client ID'})).toBeInTheDocument();
+    expect(getByRole('textbox', { name: 'Client ID' })).toBeInTheDocument();
     expect(getByRole('textbox', { name: 'Client secret' })).toBeInTheDocument();
     expect(getByRole('textbox', { name: 'Client secret' })).toHaveValue('***********');
     expect(getByRole('textbox', { name: 'Client secret' })).toHaveAccessibleDescription(

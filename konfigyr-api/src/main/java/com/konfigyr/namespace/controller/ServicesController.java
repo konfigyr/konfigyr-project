@@ -1,5 +1,7 @@
 package com.konfigyr.namespace.controller;
 
+import com.konfigyr.artifactory.ArtifactCoordinates;
+import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.*;
@@ -7,6 +9,8 @@ import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +20,8 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -94,6 +100,34 @@ class ServicesController {
 		services.delete(lookupNamespace(namespace), slug);
 	}
 
+	@GetMapping("{slug}/manifest")
+	@PreAuthorize("isMember(#namespace)")
+	EntityModel<Manifest> manifest(@PathVariable @NonNull String namespace, @PathVariable @NonNull String slug) {
+		final Namespace ns = lookupNamespace(namespace);
+		final Service service = services.get(ns, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace, slug)
+		);
+
+		return Assemblers.manifest(ns, service).assemble(services.manifest(service));
+	}
+
+	@PostMapping("{slug}/manifest")
+	@PreAuthorize("isMember(#namespace)")
+	@ResponseStatus(HttpStatus.CREATED)
+	@RequiresScope(OAuthScope.PUBLISH_MANIFESTS)
+	EntityModel<Manifest> publish(
+			@PathVariable @NonNull String namespace,
+			@PathVariable @NonNull String slug,
+			@RequestBody @Validated PublishManifestRequest request
+	) {
+		final Namespace ns = lookupNamespace(namespace);
+		final Service service = services.get(ns, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace, slug)
+		);
+
+		return Assemblers.manifest(ns, service).assemble(services.publish(service, request.coordinates()));
+	}
+
 	@NonNull
 	Namespace lookupNamespace(@NonNull String slug) {
 		return namespaces.findBySlug(slug).orElseThrow(() -> new NamespaceNotFoundException(slug));
@@ -114,4 +148,13 @@ class ServicesController {
 		}
 	}
 
+	record PublishManifestRequest(@NotEmpty List<@NotBlank @Pattern(regexp = "^([^:]+):([^:]+):([^:]+)$") String> artifacts) {
+
+		List<ArtifactCoordinates> coordinates() {
+			return artifacts.stream()
+						.map(ArtifactCoordinates::parse)
+						.toList();
+		}
+
+	}
 }

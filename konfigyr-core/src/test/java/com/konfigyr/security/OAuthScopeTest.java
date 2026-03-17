@@ -93,11 +93,15 @@ class OAuthScopeTest {
 				Arguments.of(OAuthScope.INVITE_MEMBERS, "namespaces:invite", Set.of(
 						OAuthScope.READ_NAMESPACES
 				)),
+				Arguments.of(OAuthScope.PUBLISH_MANIFESTS, "namespaces:publish-manifests", Set.of(
+						OAuthScope.READ_NAMESPACES
+				)),
 				Arguments.of(OAuthScope.NAMESPACES, "namespaces", Set.of(
 						OAuthScope.READ_NAMESPACES,
 						OAuthScope.WRITE_NAMESPACES,
 						OAuthScope.DELETE_NAMESPACES,
-						OAuthScope.INVITE_MEMBERS
+						OAuthScope.INVITE_MEMBERS,
+						OAuthScope.PUBLISH_MANIFESTS
 				)),
 
 				/* Profile scope group */

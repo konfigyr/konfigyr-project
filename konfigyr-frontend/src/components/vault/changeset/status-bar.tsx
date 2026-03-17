@@ -12,9 +12,10 @@ import { CheckIcon, CircleXIcon, PencilIcon, SaveIcon } from 'lucide-react';
 import { cva } from 'class-variance-authority';
 import { useErrorNotification } from '@konfigyr/components/error';
 import {
-  useCommitChangeset,
+  useApplyChangeset,
   useDiscardChangeset,
   useRenameChangeset,
+  useSubmitChangeset,
 } from '@konfigyr/hooks';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -73,6 +74,7 @@ export function ChangesetStatusBar(props: ChangesetStatusBarProps) {
 export function StickyChangesetStatusBar({ isVisible, ...props }: ChangesetStatusBarProps & { isVisible: boolean }) {
   return (
     <div
+      aria-hidden={!isVisible}
       className={cn(
         'fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out',
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none',
@@ -116,20 +118,20 @@ function ChangesetName({ changeset, onError }: { changeset: ChangesetState, onEr
   );
 }
 
-function CommitButton({ changeset, onError }: { changeset: ChangesetState, onError: (error: unknown) => void }) {
-  const { mutateAsync: onCommitChangeset, isPending } = useCommitChangeset();
+function ApplyButton({ changeset, onError }: { changeset: ChangesetState, onError: (error: unknown) => void }) {
+  const { mutateAsync: onApplyChangeset, isPending } = useApplyChangeset();
 
-  const onCommit = useCallback(async () => {
+  const onApply = useCallback(async () => {
     try {
-      await onCommitChangeset(changeset);
+      await onApplyChangeset(changeset);
     } catch (error) {
       return onError(error);
     }
 
     return toast.success((
       <FormattedMessage
-        defaultMessage="Your changes were successfully commited"
-        description="Notification message that is shown when changeset state was commited."
+        defaultMessage="Your changes were successfully applied"
+        description="Notification message that is shown when changeset state was applied."
       />
     ));
   }, [changeset]);
@@ -139,12 +141,46 @@ function CommitButton({ changeset, onError }: { changeset: ChangesetState, onErr
       size="sm"
       loading={isPending}
       disabled={isPending}
-      onClick={onCommit}
+      onClick={onApply}
     >
       <CheckIcon />
       <FormattedMessage
-        defaultMessage="Commit"
-        description="Label for the commit button in the changeset status bar."
+        defaultMessage="Apply"
+        description="Label for the apply button in the changeset status bar."
+      />
+    </Button>
+  );
+}
+
+function SubmitButton({ changeset, onError }: { changeset: ChangesetState, onError: (error: unknown) => void }) {
+  const { mutateAsync: onSubmitChangeset, isPending } = useSubmitChangeset();
+
+  const onSubmit = useCallback(async () => {
+    try {
+      await onSubmitChangeset(changeset);
+    } catch (error) {
+      return onError(error);
+    }
+
+    return toast.success((
+      <FormattedMessage
+        defaultMessage="Your changes were successfully submitted"
+        description="Notification message that is shown when changeset state was submitted."
+      />
+    ));
+  }, [changeset]);
+
+  return (
+    <Button
+      size="sm"
+      loading={isPending}
+      disabled={isPending}
+      onClick={onSubmit}
+    >
+      <CheckIcon />
+      <FormattedMessage
+        defaultMessage="Submit"
+        description="Label for the submit button in the changeset status bar."
       />
     </Button>
   );
@@ -226,10 +262,18 @@ function ChangesetStatusBarContents({
           changeset={changeset}
           onError={errorNotification}
         />
-        <CommitButton
-          changeset={changeset}
-          onError={errorNotification}
-        />
+        {changeset.profile.policy === 'PROTECTED' && (
+          <SubmitButton
+            changeset={changeset}
+            onError={errorNotification}
+          />
+        )}
+        {changeset.profile.policy === 'UNPROTECTED' && (
+          <ApplyButton
+            changeset={changeset}
+            onError={errorNotification}
+          />
+        )}
       </div>
     </div>
   );

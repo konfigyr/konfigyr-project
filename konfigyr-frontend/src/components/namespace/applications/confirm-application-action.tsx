@@ -27,7 +27,7 @@ type Props = {
   onConfirm: (app: NamespaceApplication) => void
 };
 
-export function ConfirmNamespaceApplicationDeleteAction({ namespace, application,  onConfirm}: Props) {
+export function ConfirmNamespaceApplicationDeleteAction({ namespace, application, onConfirm }: Props) {
   const errorNotification = useErrorNotification();
 
   const {
@@ -65,7 +65,8 @@ export function ConfirmNamespaceApplicationDeleteAction({ namespace, application
               defaultMessage="Delete &quot;{name}&quot; application"
               values={{ name: application.name }}
               description="Title of the modal that is shown when user tries todelete application"
-            /></AlertDialogTitle>
+            />
+          </AlertDialogTitle>
           <AlertDialogDescription>
             <FormattedMessage
               defaultMessage="Are you sure you want to delete &quot;{name}&quot; application? This action cannot be undone."

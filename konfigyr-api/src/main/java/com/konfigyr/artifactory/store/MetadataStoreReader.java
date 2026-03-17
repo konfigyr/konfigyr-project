@@ -2,7 +2,6 @@ package com.konfigyr.artifactory.store;
 
 import com.konfigyr.artifactory.*;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.batch.infrastructure.item.ItemStreamException;
 import org.springframework.batch.infrastructure.item.ItemStreamReader;
@@ -14,12 +13,9 @@ import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.io.Serial;
-import java.util.List;
-
 /**
  * Implementation of the {@link org.springframework.batch.infrastructure.item.ItemReader} that would read the
- * {@link PropertyMetadata} from the uploaded Spring Boot configuration metadata file.
+ * {@link PropertyDescriptor property descriptors} from the uploaded Spring Boot configuration metadata file.
  * <p>
  * It is important to note that this reader implementation should be defined as a Spring Bean with a <code>step</code>
  * scope, via {@link org.springframework.batch.core.configuration.annotation.StepScope} annotation, as this reader
@@ -29,22 +25,16 @@ import java.util.List;
  * @since 1.0.0
  * @see JsonItemReader
  */
-public class MetadataStoreReader implements ItemStreamReader<@NonNull PropertyMetadata> {
+public class MetadataStoreReader implements ItemStreamReader<@NonNull PropertyDescriptor> {
 
-	private static final JsonMapper JSON_MAPPER = JsonMapper.builder()
-			.propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-			.disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-			.disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-			.build();
+	private final JsonItemReader<@NonNull PropertyDescriptor> delegate;
 
-	private final JsonItemReader<@NonNull PropertyMetadata> delegate;
-
-	public MetadataStoreReader(final String coordinates, final MetadataStore store) {
-		this(ArtifactCoordinates.parse(coordinates), store);
+	public MetadataStoreReader(final String coordinates, final JsonMapper jsonMapper, final MetadataStore store) {
+		this(ArtifactCoordinates.parse(coordinates), jsonMapper, store);
 	}
 
-	public MetadataStoreReader(final ArtifactCoordinates coordinates, final MetadataStore store) {
-		this.delegate = createItemReader(coordinates, store);
+	public MetadataStoreReader(final ArtifactCoordinates coordinates, final JsonMapper jsonMapper, final MetadataStore store) {
+		this.delegate = createItemReader(coordinates, jsonMapper, store);
 	}
 
 	@Override
@@ -58,7 +48,7 @@ public class MetadataStoreReader implements ItemStreamReader<@NonNull PropertyMe
 	}
 
 	@Override
-	public PropertyMetadata read() throws Exception {
+	public PropertyDescriptor read() throws Exception {
 		return this.delegate.read();
 	}
 
@@ -67,35 +57,26 @@ public class MetadataStoreReader implements ItemStreamReader<@NonNull PropertyMe
 		this.delegate.close();
 	}
 
-	static JsonItemReader<@NonNull PropertyMetadata> createItemReader(
+	static JsonItemReader<@NonNull PropertyDescriptor> createItemReader(
 			final ArtifactCoordinates coordinates,
+			final JsonMapper jsonMapper,
 			final MetadataStore store
 	) {
 		final Resource resource = store.get(coordinates).orElseThrow(() -> new IllegalStateException(
 				"Could not find uploaded artifact property metadata for coordinates: " + coordinates.format()
 		));
 
-		final JsonObjectReader<@NonNull PropertyMetadata> reader = new JacksonJsonObjectReader<>(
-				JSON_MAPPER, UploadedPropertyMetadata.class
+		final JsonMapper customizedJsonMapper = jsonMapper.rebuild()
+				.propertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
+				.disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+				.disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+				.build();
+
+		final JsonObjectReader<@NonNull PropertyDescriptor> reader = new JacksonJsonObjectReader<>(
+				customizedJsonMapper, DefaultPropertyDescriptor.class
 		);
 
 		return new JsonItemReader<>(resource, reader);
-	}
-
-	record UploadedPropertyMetadata(
-			@NonNull String name,
-			@NonNull DataType dataType,
-			@NonNull PropertyType type,
-			@NonNull String typeName,
-			@Nullable String defaultValue,
-			@Nullable String description,
-			@NonNull List<String> hints,
-			@NonNull Deprecation deprecation
-	) implements PropertyMetadata {
-
-		@Serial
-		private static final long serialVersionUID = 3702255252059270913L;
-
 	}
 
 }

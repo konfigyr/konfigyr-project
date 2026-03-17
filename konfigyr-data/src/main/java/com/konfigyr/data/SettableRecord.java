@@ -3,7 +3,7 @@ package com.konfigyr.data;
 import lombok.EqualsAndHashCode;
 import org.jooq.*;
 import org.jooq.Record;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
@@ -18,6 +18,7 @@ import java.util.function.UnaryOperator;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@NullMarked
 @EqualsAndHashCode
 public final class SettableRecord implements Supplier<Record> {
 
@@ -31,8 +32,7 @@ public final class SettableRecord implements Supplier<Record> {
 	 * @param table target table, can't be {@literal null}
 	 * @return the settable record, never {@literal null}
 	 */
-	@NonNull
-	public static SettableRecord of(@NonNull DSLContext context, @NonNull Table<?> table) {
+	public static SettableRecord of(DSLContext context, Table<?> table) {
 		return of(context.newRecord(table));
 	}
 
@@ -43,8 +43,7 @@ public final class SettableRecord implements Supplier<Record> {
 	 * @param table target table, can't be {@literal null}
 	 * @return the settable record, never {@literal null}
 	 */
-	@NonNull
-	public static SettableRecord of(@NonNull Table<?> table) {
+	public static SettableRecord of(Table<?> table) {
 		return of(table.newRecord());
 	}
 
@@ -54,12 +53,11 @@ public final class SettableRecord implements Supplier<Record> {
 	 * @param record target record, can't be {@literal null}
 	 * @return the settable record, never {@literal null}
 	 */
-	@NonNull
-	public static SettableRecord of(@NonNull Record record) {
+	public static SettableRecord of(Record record) {
 		return new SettableRecord(record);
 	}
 
-	private SettableRecord(@NonNull Record record) {
+	private SettableRecord(Record record) {
 		this.delegate = record;
 	}
 
@@ -72,8 +70,7 @@ public final class SettableRecord implements Supplier<Record> {
 	 * @return the settable record, never {@literal null}
 	 * @see Record#set(Field, Object) for more information
 	 */
-	@NonNull
-	public <T> SettableRecord set(@NonNull Field<T> field, @Nullable T value) {
+	public <T> SettableRecord set(Field<T> field, @Nullable T value) {
 		delegate.set(field, value);
 		return this;
 	}
@@ -88,9 +85,8 @@ public final class SettableRecord implements Supplier<Record> {
 	 * @return the settable record, never {@literal null}
 	 * @see Record#set(Field, Object) for more information
 	 */
-	@NonNull
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	public <T> SettableRecord set(@NonNull Field<T> field, @NonNull Optional<? extends T> value) {
+	public <T> SettableRecord set(Field<T> field, Optional<? extends @Nullable T> value) {
 		value.ifPresent(it -> delegate.set(field, it));
 		return this;
 	}
@@ -105,8 +101,7 @@ public final class SettableRecord implements Supplier<Record> {
 	 * @param converter The converter function used to convert <code>value</code> into the field type
 	 * @return the settable record, never {@literal null}
 	 */
-	@NonNull
-	public <T, U> SettableRecord set(@NonNull Field<T> field, @Nullable U value, @NonNull Function<? super U, ? extends T> converter) {
+	public <T, U> SettableRecord set(Field<T> field, @Nullable U value, Function<? super U, ? extends @Nullable T> converter) {
 		return set(field, Optional.ofNullable(value).map(converter));
 	}
 
@@ -121,20 +116,17 @@ public final class SettableRecord implements Supplier<Record> {
 	 * @return the settable record, never {@literal null}
 	 * @see Record#set(Field, Object, Converter) for more information
 	 */
-	@NonNull
-	public <T, U> SettableRecord set(@NonNull Field<T> field, @Nullable U value, @NonNull Converter<? extends T, ? super U> converter) {
+	public <T, U> SettableRecord set(Field<T> field, @Nullable U value, Converter<? extends T, ? super @Nullable U> converter) {
 		delegate.set(field, value, converter);
 		return this;
 	}
 
-	@NonNull
-	public SettableRecord with(@NonNull Consumer<SettableRecord> consumer) {
+	public SettableRecord with(Consumer<SettableRecord> consumer) {
 		consumer.accept(this);
 		return this;
 	}
 
-	@NonNull
-	public SettableRecord with(@NonNull UnaryOperator<SettableRecord> consumer) {
+	public SettableRecord with(UnaryOperator<SettableRecord> consumer) {
 		return consumer.apply(this);
 	}
 
@@ -143,7 +135,6 @@ public final class SettableRecord implements Supplier<Record> {
 	 *
 	 * @return the target record, never {@literal null}
 	 */
-	@NonNull
 	@Override
 	public Record get() {
 		return delegate;

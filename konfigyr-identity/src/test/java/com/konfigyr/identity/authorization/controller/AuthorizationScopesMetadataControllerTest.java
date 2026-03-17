@@ -59,6 +59,10 @@ class AuthorizationScopesMetadataControllerTest {
 								"Grants full access to namespace management that includes read, write and delete access to namespaces and managing invitations and collaborators."
 						),
 						new ScopeMetadata(
+								OAuthScope.PUBLISH_MANIFESTS.getAuthority(),
+								"Grants access to publish service manifests. This scope is usually granted to OAuth clients used by the Konfigyr build plugins."
+						),
+						new ScopeMetadata(
 								OAuthScope.INVITE_MEMBERS.getAuthority(),
 								"Grants read access to namespaces and the possibility to manage invitations and collaborators."
 						),

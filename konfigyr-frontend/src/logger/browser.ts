@@ -18,7 +18,7 @@ export interface LoggerEvent {
  *
  * @param label logger event label
  */
-export function resolveLoggerLevel(label: string | undefined | null = 'debug'):  { level: LogLevel } {
+export function resolveLoggerLevel(label: string | undefined | null = 'debug'): { level: LogLevel } {
   switch (label) {
     case 'info':
       return { level: LogLevel.INFO };

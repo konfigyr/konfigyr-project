@@ -3,6 +3,8 @@ package com.konfigyr.vault.extension;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.vault.*;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -157,6 +159,16 @@ public final class LockingVaultExtension implements VaultExtension {
 				return delegate.submit(changes);
 			} finally {
 				lock.writeLock().unlock();
+			}
+		}
+
+		@Override
+		public Page<ChangeHistory> history(Pageable pageable) {
+			lock.readLock().lock();
+			try {
+				return delegate.history(pageable);
+			} finally {
+				lock.readLock().unlock();
 			}
 		}
 

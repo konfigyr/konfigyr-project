@@ -68,7 +68,31 @@ class VaultControllerTest extends AbstractControllerTest {
 				);
 	}
 
+	@Test
+	@DisplayName("should retrieve a change history for a service profile")
+	void retrieveProfileChangeHistory() {
+		final var profile = prepareServiceProfile("staging");
 
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history", "konfigyr", service.slug(), profile.slug())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(collectionModel(ChangeHistory.class))
+				.satisfies(it -> assertThat(it.getContent())
+					.hasSize(1)
+					.singleElement()
+					.satisfies(ch -> {
+						assertThat(ch.id()).isNotNull();
+						assertThat(ch.appliedBy()).isNotNull();
+						assertThat(ch.appliedAt()).isNotNull();
+						assertThat(ch.subject()).isEqualTo("Repository initialized for Service(EntityId(2, 0000000000002), konfigyr-id)");
+						assertThat(ch.description()).isEqualTo("Repository initialized for Service(EntityId(2, 0000000000002), konfigyr-id)");
+					}));
+	}
 
 	@Test
 	@DisplayName("should fail to retrieve profile configuration state from an unknown profile")

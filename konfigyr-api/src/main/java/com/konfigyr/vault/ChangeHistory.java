@@ -20,7 +20,8 @@ import java.time.OffsetDateTime;
  * and each entry corresponds to exactly one applied changeset.
  *
  * @param id unique identifier of the change history entry, can't be {@literal null}.
- * @param summary human-readable summary of the change, can't be {@literal null}.
+ * @param subject human-readable subject of the change, can't be {@literal null}.
+ * @param description human-readable summary of the change, can't be {@literal null}.
  * @param appliedBy name of the user that applied the change, can't be {@literal null}.
  * @param appliedAt timestamp when the change was applied, can't be {@literal null}.
  * @author Vladimir Spasic
@@ -28,7 +29,7 @@ import java.time.OffsetDateTime;
  */
 @NullMarked
 @ValueObject
-public record ChangeHistory(String id, String summary, String appliedBy, OffsetDateTime appliedAt)
+public record ChangeHistory(String id, String subject, String description, String appliedBy, OffsetDateTime appliedAt)
 		implements Comparable<ChangeHistory>, Serializable {
 
 	@Override

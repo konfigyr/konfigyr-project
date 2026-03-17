@@ -1,6 +1,7 @@
 package com.konfigyr.artifactory;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 
 import java.io.Serial;
@@ -26,6 +27,12 @@ public class ArtifactVersionNotFoundException extends ArtifactoryException {
 	public ArtifactVersionNotFoundException(String message, ArtifactCoordinates coordinates) {
 		super(HttpStatus.NOT_FOUND, message);
 		this.coordinates = coordinates;
+		getBody().setProperty("coordinates", coordinates.format());
+	}
+
+	@Override
+	public Object @Nullable [] getDetailMessageArguments() {
+		return new Object[] { coordinates.format() };
 	}
 
 	@NonNull

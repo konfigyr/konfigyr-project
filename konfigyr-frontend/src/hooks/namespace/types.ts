@@ -1,3 +1,5 @@
+import type { Artifact } from '@konfigyr/hooks/artifactory/types';
+
 export interface Namespace {
   id: string;
   name: string;
@@ -65,6 +67,13 @@ export interface CreateService {
   name?: string;
   slug?: string;
   description?: string;
+}
+
+export interface Manifest {
+  id: string;
+  name: string;
+  checksum?: string;
+  artifacts: Array<Artifact>;
 }
 
 export interface NamespaceApplication {

@@ -28,7 +28,7 @@ import {
   ConfirmNamespaceApplicationResetAction,
 } from './confirm-application-action';
 
-import type { ReactNode} from 'react';
+import type { ReactNode } from 'react';
 import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
 export type ApplicationDetailsProps = {
@@ -76,7 +76,7 @@ function FieldGroup({ label, value, description, copy = true }: {
   );
 }
 
-export function ApplicationDetails ({ namespace, application } : ApplicationDetailsProps) {
+export function ApplicationDetails ({ namespace, application }: ApplicationDetailsProps) {
   return (
     <Card className="border">
       <CardHeader>
@@ -139,7 +139,7 @@ export function ApplicationDetails ({ namespace, application } : ApplicationDeta
   );
 }
 
-ApplicationDetails.Actions = function Actions({ namespace, application } : ApplicationDetailsProps) {
+ApplicationDetails.Actions = function Actions({ namespace, application }: ApplicationDetailsProps) {
   const navigate = useNavigate();
 
   const onDeleted = useCallback(async () => await navigate({
@@ -147,7 +147,7 @@ ApplicationDetails.Actions = function Actions({ namespace, application } : Appli
     params: { namespace: namespace.slug },
   }), [namespace.slug]);
 
-  const onReset = useCallback((app : NamespaceApplication) => navigate({
+  const onReset = useCallback((app: NamespaceApplication) => navigate({
     to: '/namespace/$namespace/applications/$id',
     params: { namespace: namespace.slug, id: app.id },
     state: (prev) => ({

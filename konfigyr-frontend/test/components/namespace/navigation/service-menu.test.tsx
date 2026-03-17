@@ -23,6 +23,10 @@ describe('components | namespace | navigation | <ServiceNavigationMenu/>', () =>
     expect(result.getByRole('link', { name: 'Change requests' }).getAttribute('href'))
       .toBe('/namespace/konfigyr/services/konfigyr-api/requests');
 
+    expect(result.getByRole('link', { name: 'Manifest' })).toBeInTheDocument();
+    expect(result.getByRole('link', { name: 'Manifest' }).getAttribute('href'))
+      .toBe('/namespace/konfigyr/services/konfigyr-api/manifest');
+
     expect(result.getByRole('link', { name: 'Settings' })).toBeInTheDocument();
     expect(result.getByRole('link', { name: 'Settings' }).getAttribute('href'))
       .toBe('/namespace/konfigyr/services/konfigyr-api/settings');

@@ -80,8 +80,12 @@
 				<constraints nullable="false" />
 			</column>
 
+			<column name="state" type="varchar(32)" remarks="The artifact release state field.">
+				<constraints nullable="false" />
+			</column>
+
 			<column name="checksum" type="bytea" remarks="The checksum of this Artifact version or release.">
-				<constraints nullable="true" />
+				<constraints nullable="false" />
 			</column>
 
 			<column name="released_at" type="timestamptz" defaultValue="NOW()">
@@ -131,15 +135,11 @@
 				<constraints nullable="false" />
 			</column>
 
-			<column name="type" type="varchar(20)" remarks="The configuration property type descriptor.">
-				<constraints nullable="false" />
-			</column>
-
 			<column name="type_name" type="varchar(255)" remarks="The original configuration property type name.">
 				<constraints nullable="false" />
 			</column>
 
-			<column name="data_type" type="varchar(20)" remarks="The configuration property data type for the property value.">
+			<column name="schema" type="bytea" remarks="The configuration property type JSON schema.">
 				<constraints nullable="false" />
 			</column>
 
@@ -151,11 +151,7 @@
 				<constraints nullable="true" />
 			</column>
 
-			<column name="hints" type="text" remarks="The possible configuration property values.">
-				<constraints nullable="true" />
-			</column>
-
-			<column name="deprecation" type="text" remarks="The configuration property deprecation information.">
+			<column name="deprecation" type="bytea" remarks="The configuration property deprecation information.">
 				<constraints nullable="true" />
 			</column>
 
@@ -220,43 +216,6 @@
 				baseColumnNames="property_definition_id"
 				constraintName="fk_property_definition_usage"
 				referencedTableName="property_definitions"
-				referencedColumnNames="id"
-				onDelete="CASCADE"
-		/>
-	</changeSet>
-
-	<changeSet author="vspasic" id="1.0.0-create-artifact-services-table" context="api">
-		<preConditions onFail="MARK_RAN">
-			<not>
-				<tableExists tableName="artifact_version_services" />
-			</not>
-		</preConditions>
-
-		<comment>Initial Artifact version services table migration</comment>
-
-		<createTable tableName="artifact_version_services" remarks="Define which Artifact versions are used by Services.">
-			<column name="artifact_version_id" type="bigint">
-				<constraints primaryKey="true" nullable="false" />
-			</column>
-			<column name="service_id" type="bigint">
-				<constraints primaryKey="true" nullable="false" />
-			</column>
-		</createTable>
-
-		<addForeignKeyConstraint
-				baseTableName="artifact_version_services"
-				baseColumnNames="artifact_version_id"
-				constraintName="fk_artifact_version_service"
-				referencedTableName="artifact_versions"
-				referencedColumnNames="id"
-				onDelete="CASCADE"
-		/>
-
-		<addForeignKeyConstraint
-				baseTableName="artifact_version_services"
-				baseColumnNames="service_id"
-				constraintName="fk_service_artifact_usage"
-				referencedTableName="services"
 				referencedColumnNames="id"
 				onDelete="CASCADE"
 		/>
