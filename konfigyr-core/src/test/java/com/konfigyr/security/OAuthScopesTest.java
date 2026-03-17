@@ -52,7 +52,7 @@ class OAuthScopesTest {
 				.returns(2, OAuthScopes::size)
 				.returns(false, OAuthScopes::isEmpty)
 				.returns(Set.of(
-								OAuthScope.OPENID, OAuthScope.NAMESPACES, OAuthScope.READ_NAMESPACES,
+								OAuthScope.PUBLISH_MANIFESTS, OAuthScope.OPENID, OAuthScope.NAMESPACES, OAuthScope.READ_NAMESPACES,
 								OAuthScope.WRITE_NAMESPACES, OAuthScope.DELETE_NAMESPACES, OAuthScope.INVITE_MEMBERS
 						),
 						OAuthScopes::toAuthorities
