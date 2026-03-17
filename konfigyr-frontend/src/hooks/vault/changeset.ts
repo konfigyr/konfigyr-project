@@ -23,7 +23,7 @@ import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
  */
 export const vaultKeys = {
   getChangeset: (profile: Profile) => ['vault', profile.id, 'changeset'],
-  getChangeHistory: (profile: Profile, query?: ChangeHistoryQuery) => ['vault', profile.id, 'history', query],
+  getChangeHistory: (profile: Profile, query?: ChangeHistoryQuery) => ['vault', profile.id, 'history', query?.page, query?.size],
 };
 
 const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyRequest => {
@@ -129,7 +129,7 @@ export const useApplyChangeset = () => {
     },
     onSuccess: (state: ChangesetState) => {
       client.invalidateQueries({
-        queryKey: vaultKeys.getChangeHistory(state.profile),
+        queryKey: vaultKeys.getChangeHistory(state.profile, { size: 1 }),
       });
     },
   });

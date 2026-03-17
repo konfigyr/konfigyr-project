@@ -1,7 +1,7 @@
 import { FileStackIcon, HistoryIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { RelativeDate } from '@konfigyr/components/messages';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useGetChangeHistory } from '@konfigyr/hooks';
 import * as React from 'react';
 import { ErrorState } from '@konfigyr/components/error';
@@ -34,11 +34,9 @@ export type DailyChangesetHistoryItemProps = {
 export function ChangeHistoryTimeline({ namespace, service, profile }: ChangeHistoryTimelineProps) {
   const [page, setPage] = useState(0);
 
-  const { data: history, error, isPending, isError, refetch } = useGetChangeHistory(namespace, service, profile, {
+  const { data: history, error, isPending, isError } = useGetChangeHistory(namespace, service, profile, {
     page,
   });
-
-  useEffect(() => { refetch(); }, [page]);
 
   const onPageChange = useCallback((p: number) => setPage(p), [page]);
 
