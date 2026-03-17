@@ -1,19 +1,8 @@
 import {
-  Card,
-  CardContent,
-} from '@konfigyr/components/ui/card';
-import {
   getProfileQuery,
-  getProfilesQuery,
-  useCreateNamespaceApplication,
-  useGetChangeHistory,
-  useNamespace,
 } from '@konfigyr/hooks';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
+import { createFileRoute } from '@tanstack/react-router';
 import { ChangeHistoryTimeline } from '@konfigyr/components/vault/change-history/change-history';
-import type { z } from 'zod';
-import type { namespaceApplicationSchema } from '@konfigyr/components/namespace/applications/application-form';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
 
@@ -32,13 +21,8 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { namespace, service, profile } = Route.useLoaderData();
-
-  const { data: changeHistory } = useGetChangeHistory(namespace, service, profile, undefined);
-
-  console.log(changeHistory);
   return (
     <div className="w-full space-y-6 px-4 mx-auto">
-
       <ChangeHistoryTimeline
         namespace={namespace}
         service={service}
