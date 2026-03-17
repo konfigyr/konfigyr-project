@@ -132,7 +132,7 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 			}
 
 			mvc.get().uri("/configs/{service}/{profiles}", service.slug(), "live,dev")
-					.with(httpBasic("kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq", "nryjshWX-PdDHdR8yqyu1u5A2KBFgH-O_ljxbQODo-Y"))
+					.with(httpBasic(CLIENT, SECRET))
 					.exchange()
 					.assertThat()
 					.apply(log())
