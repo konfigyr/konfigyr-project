@@ -119,7 +119,10 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 	 * @return granted authorities, never {@literal null}
 	 */
 	public Collection<? extends GrantedAuthority> toAuthorities() {
-		return scopes;
+		return scopes.stream()
+				.map(OAuthScope::aggregate)
+				.flatMap(Collection::stream)
+				.collect(Collectors.toUnmodifiableSet());
 	}
 
 	/**

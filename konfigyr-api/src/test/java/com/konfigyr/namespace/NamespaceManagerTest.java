@@ -552,12 +552,13 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.findApplications(query))
 				.isNotNull()
-				.hasSize(3)
+				.hasSize(4)
 				.extracting(NamespaceApplication::id, NamespaceApplication::name)
 				.containsExactly(
 						tuple(EntityId.from(2), "Konfigyr active app"),
 						tuple(EntityId.from(1), "Konfigyr expired app"),
-						tuple(EntityId.from(3), "Personal app")
+						tuple(EntityId.from(3), "Personal app"),
+						tuple(EntityId.from(4), "Shop app")
 				);
 	}
 
@@ -613,9 +614,9 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.findApplications(query))
 				.isNotNull()
-				.hasSize(2)
+				.hasSize(3)
 				.extracting(NamespaceApplication::id)
-				.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3));
+				.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3), EntityId.from(4));
 	}
 
 	@Test

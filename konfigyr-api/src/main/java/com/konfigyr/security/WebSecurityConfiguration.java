@@ -1,15 +1,26 @@
 package com.konfigyr.security;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.konfigyr.security.basic.NamespaceApplicationDetailsService;
 import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
 import com.konfigyr.web.WebExceptionHandler;
+import org.jooq.DSLContext;
+import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.CachingUserDetailsService;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
@@ -17,6 +28,8 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Spring web security configuration class that would register the Spring Security OAuth2 Login flow.
@@ -36,6 +49,42 @@ public class WebSecurityConfiguration {
 	}
 
 	@Bean
+	@Order(1)
+	SecurityFilterChain konfigyrConfigClientSecurityFilterChain(
+			HttpSecurity http, DSLContext dslContext, ObjectProvider<@NonNull PasswordEncoder> passwordEncoder
+	) {
+		final var applicationCashingDetailsService = new CachingUserDetailsService(new NamespaceApplicationDetailsService(dslContext));
+		applicationCashingDetailsService.setUserCache(new SpringCacheBasedUserCache(
+				new CaffeineCache("konfigyr.namespace-applications", Caffeine.newBuilder()
+								.expireAfterWrite(5, TimeUnit.MINUTES)
+								.maximumSize(1000)
+								.build())
+		));
+
+		final var provider = new DaoAuthenticationProvider(applicationCashingDetailsService);
+		provider.setPasswordEncoder(passwordEncoder.getIfAvailable(PasswordEncoders::get));
+
+		return http
+				.securityMatcher("/configs/**")
+				.authorizeHttpRequests(requests -> requests
+						.anyRequest().hasAuthority(OAuthScope.READ_PROFILES.getAuthority())
+				)
+				.cors(Customizer.withDefaults())
+				.csrf(csrf -> csrf.ignoringRequestMatchers("/configs/**"))
+				.logout(AbstractHttpConfigurer::disable)
+				.httpBasic(Customizer.withDefaults())
+				.formLogin(AbstractHttpConfigurer::disable)
+				.anonymous(AbstractHttpConfigurer::disable)
+				.rememberMe(AbstractHttpConfigurer::disable)
+				.sessionManagement(sessions -> sessions
+						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				)
+				.authenticationProvider(provider)
+				.build();
+	}
+
+	@Bean
+	@Order(2)
 	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, ProblemDetailsAuthenticationExceptionHandler exceptionHandler) {
 		final BearerTokenResolver bearerTokenResolver = new RequestAttributeBearerTokenResolver();
 

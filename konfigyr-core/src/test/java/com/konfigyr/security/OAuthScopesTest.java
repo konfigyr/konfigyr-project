@@ -33,7 +33,7 @@ class OAuthScopesTest {
 				.isNotNull()
 				.returns(0, OAuthScopes::size)
 				.returns(true, OAuthScopes::isEmpty)
-				.returns(List.of(), OAuthScopes::toAuthorities)
+				.returns(Set.of(), OAuthScopes::toAuthorities)
 				.isSameAs(OAuthScopes.empty())
 				.isSameAs(OAuthScopes.from(null))
 				.isSameAs(OAuthScopes.parse(null))
@@ -51,7 +51,12 @@ class OAuthScopesTest {
 				.isNotNull()
 				.returns(2, OAuthScopes::size)
 				.returns(false, OAuthScopes::isEmpty)
-				.returns(List.of(OAuthScope.OPENID, OAuthScope.NAMESPACES), OAuthScopes::toAuthorities);
+				.returns(Set.of(
+								OAuthScope.PUBLISH_MANIFESTS, OAuthScope.OPENID, OAuthScope.NAMESPACES, OAuthScope.READ_NAMESPACES,
+								OAuthScope.WRITE_NAMESPACES, OAuthScope.DELETE_NAMESPACES, OAuthScope.INVITE_MEMBERS
+						),
+						OAuthScopes::toAuthorities
+				);
 	}
 
 	@Test
@@ -63,7 +68,7 @@ class OAuthScopesTest {
 				.isNotNull()
 				.returns(0, OAuthScopes::size)
 				.returns(true, OAuthScopes::isEmpty)
-				.returns(List.of(), OAuthScopes::toAuthorities)
+				.returns(Set.of(), OAuthScopes::toAuthorities)
 				.isSameAs(OAuthScopes.empty())
 				.hasSameHashCodeAs(OAuthScopes.empty())
 				.hasToString("");
@@ -111,7 +116,7 @@ class OAuthScopesTest {
 
 		assertThatObject(scopes)
 				.returns(
-						List.of(OAuthScope.OPENID, OAuthScope.READ_NAMESPACES, OAuthScope.DELETE_NAMESPACES),
+						Set.of(OAuthScope.OPENID, OAuthScope.READ_NAMESPACES, OAuthScope.WRITE_NAMESPACES, OAuthScope.DELETE_NAMESPACES),
 						OAuthScopes::toAuthorities
 				)
 				.isEqualTo(

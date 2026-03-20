@@ -80,9 +80,10 @@ public interface AuthenticatedPrincipal extends SecurityIdentity {
 	 * <p>
 	 * No exception is thrown if authentication is missing or incompatible.
 	 *
+	 * @param <T> the authenticated principal type
 	 * @return the resolved principal, or {@code empty} if not available.
 	 */
-	static Optional<AuthenticatedPrincipal> fromSecurityContext() {
+	static <T extends AuthenticatedPrincipal> Optional<T> fromSecurityContext() {
 		return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
 				.flatMap(AuthenticatedPrincipal::fromAuthentication);
 	}
@@ -93,12 +94,14 @@ public interface AuthenticatedPrincipal extends SecurityIdentity {
 	 * If the authentication's principal is already of type {@link AuthenticatedPrincipal}, it is returned.
 	 * Otherwise, an empty {@link Optional} is returned.
 	 *
+	 * @param <T> the authenticated principal type
 	 * @param authentication the authentication object, may not be {@literal null}
 	 * @return the resolved principal, or {@code empty} if not available.
 	 */
-	static Optional<AuthenticatedPrincipal> fromAuthentication(Authentication authentication) {
+	@SuppressWarnings("unchecked")
+	static <T extends AuthenticatedPrincipal> Optional<T> fromAuthentication(Authentication authentication) {
 		if (authentication.getPrincipal() instanceof AuthenticatedPrincipal principal) {
-			return Optional.of(principal);
+			return Optional.of((T) principal);
 		}
 		return Optional.empty();
 	}
@@ -112,11 +115,13 @@ public interface AuthenticatedPrincipal extends SecurityIdentity {
 	 * This method is suitable for endpoints that require authentication and should fail fast if the security
 	 * context is missing or misconfigured.
 	 *
+	 * @param <T> the authenticated principal type
 	 * @return the authenticated principal, never {@literal null}
 	 * @throws AuthenticationCredentialsNotFoundException if no authenticated principal is available
 	 */
-	static AuthenticatedPrincipal resolve() {
-		return fromSecurityContext().orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
+	@SuppressWarnings("unchecked")
+	static <T extends AuthenticatedPrincipal> T resolve() {
+		return (T) fromSecurityContext().orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
 				"Could not find authenticated principal in the current security context."
 		));
 	}

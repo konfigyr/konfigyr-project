@@ -1,6 +1,7 @@
 package com.konfigyr.security.oauth;
 
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.OAuthScopes;
 import org.aopalliance.intercept.MethodInvocation;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -115,7 +116,7 @@ class RequiresScopeAuthorizationManagerTest {
 				.returns(false, AuthorizationResult::isGranted)
 				.isInstanceOf(AuthorityAuthorizationDecision.class)
 				.asInstanceOf(type(AuthorityAuthorizationDecision.class))
-				.returns(List.of(OAuthScope.WRITE_NAMESPACES), AuthorityAuthorizationDecision::getAuthorities);
+				.returns(OAuthScopes.of(OAuthScope.WRITE_NAMESPACES).toAuthorities(), AuthorityAuthorizationDecision::getAuthorities);
 	}
 
 	private static MethodInvocation createMethodInvocation(String methodName) {
