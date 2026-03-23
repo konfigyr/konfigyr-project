@@ -41,7 +41,7 @@ export function PropertyDialog({ changeset, onAdd }: {
         name,
         value,
         state: 'added',
-        type: 'java.lang.String',
+        typeName: 'java.lang.String',
         schema: { type: 'string' },
       });
 

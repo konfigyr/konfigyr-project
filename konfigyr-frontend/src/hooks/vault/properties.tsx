@@ -2,7 +2,8 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import metadata from './metadata.json';
 
-import type { ChangeHistoryRecord, Profile, PropertyDescriptor } from '@konfigyr/hooks/vault/types';
+import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
+import type { ChangeHistoryRecord, Profile } from '@konfigyr/hooks/vault/types';
 
 /* Default history of the property changes. Should be replaced with a real API call. */
 const history: Array<ChangeHistoryRecord> = [{

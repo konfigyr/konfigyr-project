@@ -215,7 +215,7 @@ export function PropertyHistorySidebar({
             {property.value}
           </div>
           <div className="text-xs text-muted-foreground/50 font-mono">
-            {property.type}
+            {property.typeName}
           </div>
         </div>
 

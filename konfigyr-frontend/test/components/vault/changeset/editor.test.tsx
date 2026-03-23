@@ -16,7 +16,7 @@ const changeset: ChangesetState = {
   properties: [{
     name: 'application.name',
     description: 'Application name property',
-    type: 'java.lang.String',
+    typeName: 'java.lang.String',
     state: 'modified',
     value: 'konfigyr-frontend',
     schema: {
@@ -25,7 +25,7 @@ const changeset: ChangesetState = {
   }, {
     name: 'application.profile',
     description: 'Application profile property',
-    type: 'java.lang.String',
+    typeName: 'java.lang.String',
     state: 'unchanged',
     value: 'staging',
     deprecation: {
@@ -62,9 +62,9 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       />,
     );
 
-    expect(result.getByRole('textbox')).toBeInTheDocument();
+    expect(result.getByRole('searchbox')).toBeInTheDocument();
 
-    await userEvent.type(result.getByRole('textbox'), 'name');
+    await userEvent.type(result.getByRole('searchbox'), 'name');
 
     await waitFor(() => {
       expect(result.getAllByRole('row')).length(2);
@@ -77,8 +77,6 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
         changeset={changeset}
       />,
     );
-
-    expect(result.getByRole('textbox')).toBeInTheDocument();
 
     await userEvent.click(result.getByRole('radio', { name: 'Modified' }));
 

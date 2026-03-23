@@ -1,9 +1,13 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getServiceCatalogQuery } from '@konfigyr/hooks/namespace/query';
 
 import {
   Operation,
 } from '@konfigyr/hooks/vault/types';
 import request from '@konfigyr/lib/http';
+
+import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
+import type { Namespace, Service, ServiceCatalog } from '@konfigyr/hooks/namespace/types';
 import type {
   ApplyRequest,
   ApplyResult,
@@ -13,10 +17,12 @@ import type {
   ConfigurationProperty,
   Profile,
   PropertyChange,
-  PropertyDescriptor,
 } from '@konfigyr/hooks/vault/types';
 
-import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
+const DEFAULT_PROPERTY_DESCRIPTOR: Omit<PropertyDescriptor, 'name'> = {
+  typeName: 'java.lang.String',
+  schema: { type: 'string' },
+};
 
 /**
  * Keys used to store the Changeset states in the query client.
@@ -48,17 +54,38 @@ const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyReques
   };
 };
 
-const generateStubChangesetState = (namespace: Namespace, service: Service, profile: Profile, properties: Array<ConfigurationProperty>): ChangesetState => ({
-  namespace,
-  service,
-  profile,
-  name: 'Changeset draft',
-  state: 'DRAFT',
-  properties: properties,
-  added: properties.filter(it => it.state === 'added').length,
-  modified: properties.filter(it => it.state === 'modified').length,
-  deleted: properties.filter(it => it.state === 'deleted').length,
-});
+const generateStubChangesetState = (
+  namespace: Namespace,
+  service: Service,
+  profile: Profile,
+  catalog: ServiceCatalog,
+  values: Record<string, string>,
+): ChangesetState => {
+  const properties = Object.keys(values).reduce((state, name) => {
+    const descriptor = catalog.properties.find(it => it.name === name);
+
+    const property: ConfigurationProperty = {
+      ...(descriptor || DEFAULT_PROPERTY_DESCRIPTOR),
+      name: name,
+      value: values[name],
+      state: 'unchanged',
+    };
+
+    return [...state, property];
+  }, [] as Array<ConfigurationProperty>);
+
+  return {
+    namespace,
+    service,
+    profile,
+    name: 'Changeset draft',
+    state: 'DRAFT',
+    properties,
+    added: properties.filter(it => it.state === 'added').length,
+    modified: properties.filter(it => it.state === 'modified').length,
+    deleted: properties.filter(it => it.state === 'deleted').length,
+  };
+};
 
 /**
  * Attempts to resolve existing or create a new changeset state for the given profile and current user account.
@@ -69,13 +96,17 @@ const generateStubChangesetState = (namespace: Namespace, service: Service, prof
  * @returns TansStack query options to retrieve the keysets
  */
 export const getChangesetStateQuery = (namespace: Namespace, service: Service, profile: Profile) => {
+  const queryClient = useQueryClient();
+
   return queryOptions({
     queryKey: vaultKeys.getChangeset(profile),
-    queryFn: async () => {
-      const response = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/properties`)
-        .json<{ data: Array<ConfigurationProperty> }>();
+    queryFn: async (): Promise<ChangesetState> => {
+      const catalog = await queryClient.ensureQueryData(getServiceCatalogQuery(namespace.slug, service.slug));
 
-      return generateStubChangesetState(namespace, service, profile, response.data);
+      const response = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/properties`)
+        .json<Record<string, string>>();
+
+      return generateStubChangesetState(namespace, service, profile, catalog, response);
     },
   });
 };
@@ -109,8 +140,11 @@ export const useDiscardChangeset = () => {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: async (state: ChangesetState): Promise<ChangesetState> => {
-      return client.fetchQuery(getChangesetStateQuery(state.namespace, state.service, state.profile));
+    mutationFn: (state: ChangesetState): Promise<ChangesetState> => Promise.resolve(state),
+    onSuccess: async (state: ChangesetState)=> {
+      await client.invalidateQueries({
+        queryKey: vaultKeys.getChangeset(state.profile),
+      });
     },
   });
 };
@@ -125,11 +159,17 @@ export const useApplyChangeset = () => {
       await request.post(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/apply`, {
         json: generateApplyRequestFromChangeset(changeset),
       }).json<ApplyResult>();
-      return client.fetchQuery(getChangesetStateQuery(namespace, service, profile));
+      return changeset;
     },
-    onSuccess: (state: ChangesetState) => {
-      client.invalidateQueries({
-        queryKey: vaultKeys.getChangeHistory(state.profile, { size: 1 }),
+    onSuccess: async (changeset: ChangesetState) => {
+      await client.invalidateQueries({
+        predicate: query => {
+          const key = query.queryKey;
+          if (key[0] === 'vault') {
+            return key[1] === changeset.profile.id;
+          }
+          return false;
+        },
       });
     },
   });
@@ -141,7 +181,7 @@ export const useSubmitChangeset = () => {
   return useMutation({
     mutationFn: async (state: ChangesetState): Promise<ChangesetState> => {
       await new Promise(resolve => setTimeout(resolve, 300));
-      return generateStubChangesetState(state.namespace, state.service, state.profile, []);
+      return client.fetchQuery(getChangesetStateQuery(state.namespace, state.service, state.profile));
     },
     onSuccess(state: ChangesetState) {
       client.setQueryData(vaultKeys.getChangeset(state.profile), state);
@@ -156,15 +196,13 @@ const generatePropertyOperationMutation = (
 
   return useMutation({
     mutationFn: async ({ property, value }: { property: PropertyDescriptor, value?: string }): Promise<ChangesetState> => {
-      await new Promise(resolve => setTimeout(resolve, 300));
-
       const properties = mutation(state, property, value);
 
       const deleted = properties.filter(p => p.state === 'deleted').length;
       const modified = properties.filter(p => p.state === 'modified').length;
       const added = properties.filter(p => p.state === 'added').length;
 
-      return { ...state, properties, deleted, modified, added };
+      return Promise.resolve({ ...state, properties, deleted, modified, added });
     },
     onSuccess(result: ChangesetState) {
       client.setQueryData(vaultKeys.getChangeset(state.profile), result);
@@ -175,8 +213,8 @@ const generatePropertyOperationMutation = (
 export const useAddProperty = generatePropertyOperationMutation(
   (state, property, value) => {
     return [
-      { ...property, value, state: 'added' },
       ...state.properties,
+      { ...property, value, state: 'added' },
     ];
   },
 );

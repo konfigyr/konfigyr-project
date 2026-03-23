@@ -1,14 +1,11 @@
 import { FormattedMessage } from 'react-intl';
-import { BoxesIcon, GroupIcon } from 'lucide-react';
+import { GroupIcon } from 'lucide-react';
 import { useServiceManifestQuery } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { Badge } from '@konfigyr/components/ui/badge';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardIcon,
-  CardTitle,
 } from '@konfigyr/components/ui/card';
 import {
   Item,
@@ -18,9 +15,12 @@ import {
 } from '@konfigyr/components/ui/item';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
+import {
+  MissingManifestsDescription,
+  ServiceManifestsInstructions,
+} from '../messages';
 
 import type { Artifact, Namespace, Service } from '@konfigyr/hooks/types';
-
 
 function SkeletonLoader() {
   return (
@@ -38,7 +38,7 @@ function ArtifactItem({ artifact }: { artifact: Artifact }) {
   return (
     <Item variant="list">
       <ItemContent>
-        <ItemTitle>
+        <ItemTitle className="font-mono">
           <span>{artifact.groupId}:{artifact.artifactId}</span>
           <Badge variant="outline">{artifact.version}</Badge>
         </ItemTitle>
@@ -47,22 +47,11 @@ function ArtifactItem({ artifact }: { artifact: Artifact }) {
   );
 }
 
-export function ServiceManifest({ namespace, service }: { namespace: Namespace, service: Service }) {
+export function ServiceArtifacts({ namespace, service }: { namespace: Namespace, service: Service }) {
   const { data: manifest, error, isPending, isError } = useServiceManifestQuery(namespace.slug, service.slug);
 
   return (
     <Card className="border">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CardIcon>
-            <BoxesIcon size="1.25rem"/>
-          </CardIcon>
-          <FormattedMessage
-            defaultMessage="Service artifacts"
-            description="Title used in the card that lists artifacts from the service manifest."
-          />
-        </CardTitle>
-      </CardHeader>
       <CardContent>
         {isPending && (
           <SkeletonLoader />
@@ -82,17 +71,11 @@ export function ServiceManifest({ namespace, service }: { namespace: Namespace, 
               />
             }
             description={
-              <FormattedMessage
-                defaultMessage="This usually means that the service has not yet published its dependency manifest to Konfigyr."
-                description="Empty state description used when no artifacts are present in the service manifest."
-              />
+              <MissingManifestsDescription />
             }
           >
             <p className="text-muted-foreground text-sm/relaxed">
-              <FormattedMessage
-                defaultMessage="To create the manifest, execute a release using the Konfigyr build plugin in the service repository. The plugin will upload the artifact dependency information required to generate the service manifest."
-                description="Help text describing how service manifests are created"
-              />
+              <ServiceManifestsInstructions />
             </p>
           </EmptyState>
         )}
@@ -100,7 +83,10 @@ export function ServiceManifest({ namespace, service }: { namespace: Namespace, 
         {manifest?.artifacts && (
           <ItemGroup className="-mx-4">
             {manifest.artifacts.map(artifact => (
-              <ArtifactItem key={artifact.id} artifact={artifact}/>
+              <ArtifactItem
+                key={`${artifact.groupId}:${artifact.artifactId}:${artifact.version}`}
+                artifact={artifact}
+              />
             ))}
           </ItemGroup>
         )}

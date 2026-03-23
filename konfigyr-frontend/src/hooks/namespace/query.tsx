@@ -14,6 +14,7 @@ import type {
   NamespaceApplication,
   NamespaceOAuthScope,
   Service,
+  ServiceCatalog,
 } from './types';
 
 export const namespaceKeys = {
@@ -27,6 +28,7 @@ export const namespaceKeys = {
   getNamespaceInvitations: (slug: string) => ['namespace', slug, 'invitations'],
   getNamespaceServices: (slug: string) => ['namespace', slug, 'services'],
   getNamespaceService: (slug: string, service: string) => ['namespace', slug, 'services', service],
+  getNamespaceServiceCatalog: (slug: string, service: string) => ['namespace', slug, 'services', service, 'catalog'],
   getNamespaceServiceManifest: (slug: string, service: string) => ['namespace', slug, 'services', service, 'manifest'],
 };
 
@@ -250,6 +252,20 @@ export const getServiceManifestQuery = (slug: string, service: string) => {
 
 export const useServiceManifestQuery = (slug: string, service: string) => {
   return useQuery(getServiceManifestQuery(slug, service));
+};
+
+export const getServiceCatalogQuery = (slug: string, service: string) => {
+  return queryOptions({
+    queryKey: namespaceKeys.getNamespaceServiceCatalog(slug, service),
+    queryFn: ({ signal }): Promise<ServiceCatalog> => {
+      return request.get(`api/namespaces/${slug}/services/${service}/catalog`, { signal })
+        .json<ServiceCatalog>();
+    },
+  });
+};
+
+export const useServiceCatalogQuery = (slug: string, service: string) => {
+  return useQuery(getServiceCatalogQuery(slug, service));
 };
 
 export const useCreateNamespaceService = (slug: string) => {

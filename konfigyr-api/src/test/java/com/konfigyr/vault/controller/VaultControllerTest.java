@@ -62,10 +62,8 @@ class VaultControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.convertTo(collectionModel(VaultController.ConfigurationProperty.class))
-				.satisfies(it -> assertThat(it.getContent())
-						.isEmpty()
-				);
+				.convertTo(InstanceOfAssertFactories.map(String.class, String.class))
+				.isEmpty();
 	}
 
 	@Test
@@ -187,15 +185,9 @@ class VaultControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.convertTo(collectionModel(VaultController.ConfigurationProperty.class))
-				.satisfies(it -> assertThat(it.getContent())
-						.hasSize(1)
-						.first()
-						.returns("server.port", VaultController.ConfigurationProperty::name)
-						.returns("8080", VaultController.ConfigurationProperty::value)
-						.returns("unchanged", VaultController.ConfigurationProperty::state)
-						.returns(Map.of("type", "string"), VaultController.ConfigurationProperty::schema)
-				);
+				.convertTo(InstanceOfAssertFactories.map(String.class, String.class))
+				.hasSize(1)
+				.containsEntry("server.port", "8080");
 	}
 
 	@Test

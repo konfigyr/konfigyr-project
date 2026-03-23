@@ -159,6 +159,6 @@ export const DeleteLabel = () => (
 export const SearchLabel = () => (
   <FormattedMessage
     defaultMessage="Search"
-    description="The label used for search inputs or buttons."
+    description="The search label used for search inputs or buttons."
   />
 );
