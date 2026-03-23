@@ -80,12 +80,16 @@ function useFilter(properties: Array<ServiceCatalogProperty>, filter: string = '
 
 function SkeletonLoader() {
   return (
-    <article data-slot="artifact-skeleton" className="flex justify-between items-center p-4 gap-4">
-      <div className="grow space-y-3">
+    <article data-slot="artifact-skeleton" className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
         <Skeleton className="w-48 h-4" />
-        <Skeleton className="w-64 h-4" />
+        <Skeleton className="w-32 h-4" />
       </div>
-      <Skeleton className="w-2 h-4 mr-2" />
+      <Skeleton className="w-64 h-4" />
+      <div className="flex items-center gap-2">
+        <Skeleton className="w-16 h-3" />
+        <Skeleton className="w-58 h-3" />
+      </div>
     </article>
   );
 }
