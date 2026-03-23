@@ -24,7 +24,7 @@ function TestHistorySidebar({ property, opened = false }: { property: Configurat
 const applicationNameProperty: ConfigurationProperty = {
   name: 'application.name',
   description: 'Application name property',
-  type: 'java.lang.String',
+  typeName: 'java.lang.String',
   state: 'unchanged',
   value: 'konfigyr-frontend',
   schema: {
@@ -35,7 +35,7 @@ const applicationNameProperty: ConfigurationProperty = {
 const applicationProfileProperty: ConfigurationProperty = {
   name: 'application.profile',
   description: 'Application profile property',
-  type: 'java.lang.String',
+  typeName: 'java.lang.String',
   state: 'unchanged',
   schema: {
     type: 'string',
@@ -65,7 +65,7 @@ describe('components | vault | properties | <HistorySidebar/>', () => {
     expect(result.getByText(applicationNameProperty.name)).toBeInTheDocument();
     expect(result.getByText(applicationNameProperty.description!)).toBeInTheDocument();
     expect(result.getByText(applicationNameProperty.value!)).toBeInTheDocument();
-    expect(result.getByText(applicationNameProperty.type)).toBeInTheDocument();
+    expect(result.getByText(applicationNameProperty.typeName)).toBeInTheDocument();
 
     await userEvents.click(result.getByRole('button', { name: 'Close' }));
 

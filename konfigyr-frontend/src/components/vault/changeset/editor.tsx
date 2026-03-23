@@ -1,17 +1,15 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { SearchIcon } from 'lucide-react';
-import { useDebouncedCallback } from 'use-debounce';
 import {
   useAddProperty,
   useModifyProperty,
   useRemoveProperty,
   useRestoreProperty,
 } from '@konfigyr/hooks';
-import { Input } from '@konfigyr/components/ui/input';
 import { ChangesetStatusBar } from '@konfigyr/components/vault/changeset/status-bar';
 import { PropertyDialog } from '@konfigyr/components/vault/properties/property-dialog';
+import { SearchInputGroup } from '@konfigyr/components/vault/properties/search-input-group';
 import { PropertyHistorySidebar } from '@konfigyr/components/vault/properties/history-sidebar';
 import { PropertyStatusFilters } from '@konfigyr/components/vault/properties/status-filters';
 import { PropertiesTable } from '@konfigyr/components/vault/properties/table';
@@ -50,26 +48,6 @@ const useFilteredProperties = (
     ));
   }, [properties, termFilter]);
 };
-
-function SearchFilter({ value, debounce = 200, onChange }: {
-  value: string,
-  debounce?: number,
-  onChange: (value: string) => void,
-}) {
-  const onDebouncedChange = useDebouncedCallback(onChange, debounce);
-
-  return (
-    <div className="relative flex-1 max-w-sm">
-      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      <Input
-        placeholder="Filter properties..."
-        defaultValue={value}
-        onChange={event => onDebouncedChange(event.target.value)}
-        className="pl-9 text-sm"
-      />
-    </div>
-  );
-}
 
 export function ChangesetEditor({ changeset }: { changeset: ChangesetState }) {
   const [propertyStatusFilter, onPropertyStatusFilterChanged] = useState<StatusFilter>('all');
@@ -125,7 +103,8 @@ export function ChangesetEditor({ changeset }: { changeset: ChangesetState }) {
 
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2 flex-1">
-          <SearchFilter
+          <SearchInputGroup
+            className="max-w-sm"
             value={propertyTermFilter}
             onChange={onPropertyTermFilterChanged}
           />

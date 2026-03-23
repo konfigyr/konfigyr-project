@@ -1,4 +1,4 @@
-import type { Artifact } from '@konfigyr/hooks/artifactory/types';
+import type { Artifact, PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
 
 export interface Namespace {
   id: string;
@@ -74,6 +74,16 @@ export interface Manifest {
   name: string;
   checksum?: string;
   artifacts: Array<Artifact>;
+}
+
+export interface ServiceCatalogProperty extends PropertyDescriptor {
+  artifact: string,
+}
+
+export interface ServiceCatalog {
+  service: Service,
+  version: string,
+  properties: Array<ServiceCatalogProperty>
 }
 
 export interface NamespaceApplication {

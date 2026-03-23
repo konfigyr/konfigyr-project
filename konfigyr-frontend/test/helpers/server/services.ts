@@ -5,7 +5,7 @@ import {
   services,
 } from '../mocks';
 
-import type { Artifact } from '@konfigyr/hooks/types';
+import type { Artifact, ServiceCatalogProperty } from '@konfigyr/hooks/types';
 
 const list = http.get('http://localhost/api/namespaces/:namespace/services', ({ params }) => {
   const { namespace } = params;
@@ -156,10 +156,70 @@ const manifest = http.get('http://localhost/api/namespaces/:namespace/services/:
   });
 });
 
+const catalog = http.get('http://localhost/api/namespaces/:namespace/services/:service/catalog', ({ params }) => {
+  const { namespace, service } = params;
+
+  if (namespace !== namespaces.konfigyr.slug) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Not found',
+      detail: `Namespace with identifier '${namespace}' not found.`,
+    });
+  }
+
+  if (!isValidService(service)) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Not found',
+      detail: `Service with identifier '${service}' not found.`,
+    }, { status: 404 });
+  }
+
+  let properties: Array<ServiceCatalogProperty> = [];
+
+  // only konfigyr-api service should have artifacts...
+  if (service === services.konfigyrApi.slug) {
+    properties = [{
+      artifact: 'org.springframework.boot:spring-boot-autoconfigure:4.0.3',
+      name:	'spring.aop.auto',
+      schema:	{ type: 'boolean' },
+      typeName:	'java.lang.Boolean',
+      description: 'Add @EnableAspectJAutoProxy.',
+      defaultValue: 'true',
+    }, {
+      artifact: 'org.springframework.boot:spring-boot-autoconfigure:4.0.3',
+      name:	'spring.aop.proxy-target-class',
+      schema:	{ type: 'boolean' },
+      typeName:	'java.lang.Boolean',
+      description: 'Whether subclass-based (CGLIB) proxies are to be created (true), as opposed to standard Java interface-based proxies (false).',
+      defaultValue: 'true',
+    }, {
+      artifact: 'org.springframework.boot:spring-boot-autoconfigure:4.0.3',
+      name:	'spring.web.resources.cache.period',
+      schema:	{ type: 'string', format: 'duration' },
+      typeName:	'java.time.Duration',
+      description: 'Cache period for the resources served by the resource handler. If a duration suffix is not specified, seconds will be used. Can be overridden by the \'spring.web.resources.cache.cachecontrol\' properties.',
+    }, {
+      artifact: 'org.springframework.boot:spring-boot-autoconfigure:4.0.3',
+      name:	'spring.web.resources.chain.strategy.content.paths',
+      schema:	{ type: 'array', items: { type: 'string' } },
+      typeName:	'java.lang.String[]',
+      description: 'List of patterns to apply to the content Version Strategy.',
+      defaultValue: '/**',
+    }];
+  }
+
+  return HttpResponse.json({
+    version: 'latest',
+    properties,
+  });
+});
+
 export default [
   list,
   get,
   create,
   update,
   manifest,
+  catalog,
 ];

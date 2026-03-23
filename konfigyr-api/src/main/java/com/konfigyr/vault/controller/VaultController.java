@@ -1,6 +1,5 @@
 package com.konfigyr.vault.controller;
 
-import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.NamespaceManager;
@@ -19,8 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,22 +35,17 @@ public class VaultController extends AbstractVaultController {
 	@PreAuthorize("isMember(#namespace)")
 	@RequiresScope(OAuthScope.READ_PROFILES)
 	@GetMapping("profiles/{profileName}/properties")
-	CollectionModel<EntityModel<ConfigurationProperty>> properties(
+	Map<String, String> properties(
 			@PathVariable String namespace,
 			@PathVariable String service,
 			@PathVariable String profileName
 	) throws Exception {
 		final VaultAssembler assembler = createAssembler(namespace, service);
 		final Profile profile = lookupProfile(assembler.service(), profileName);
-		final List<ConfigurationProperty> properties = new ArrayList<>();
 
 		try (Vault vault = accessor.open(AuthenticatedPrincipal.resolve(), assembler.service(), profile)) {
-			vault.unseal().forEach((name, value) -> properties.add(
-					new ConfigurationProperty(name, value)
-			));
+			return vault.unseal();
 		}
-
-		return assembler.<ConfigurationProperty>properties().assemble(properties);
 	}
 
 	@PreAuthorize("isMember(#namespace)")
@@ -94,16 +86,6 @@ public class VaultController extends AbstractVaultController {
 		}
 
 		return assembler.changeHistory(profile).assemble(result);
-	}
-
-	/*
-	 * Temporary record that maps to the UI structure, it should be replaced once the Kofigyr registry is
-	 * built and connected to the Vault to retrieve the configuration property metadata.
-	 */
-	record ConfigurationProperty(String name, String value, String state, Map<String, String> schema) {
-		ConfigurationProperty(String name, String value) {
-			this(name, value, "unchanged", Map.of("type", "string"));
-		}
 	}
 
 	record ChangesetRequest(@NotBlank String name, String description, @NotEmpty Set<PropertyChange> changes) {

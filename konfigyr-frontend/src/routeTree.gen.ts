@@ -32,8 +32,10 @@ import { Route as AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/settings'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/create-profile'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/route'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/requests/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/index'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/artifacts'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/route'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history'
@@ -175,6 +177,15 @@ const AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute =
         AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
     } as any,
   )
+const AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteImport.update(
+    {
+      id: '/manifest',
+      path: '/manifest',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+    } as any,
+  )
 const AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute =
   AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport.update(
     {
@@ -187,10 +198,19 @@ const AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute =
 const AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute =
   AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport.update(
     {
-      id: '/manifest/',
-      path: '/manifest/',
+      id: '/',
+      path: '/',
       getParentRoute: () =>
-        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+        AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport.update(
+    {
+      id: '/artifacts',
+      path: '/artifacts',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute,
     } as any,
   )
 const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute =
@@ -241,11 +261,13 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
   '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
+  '/namespace/$namespace/services/$service/manifest': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteWithChildren
   '/namespace/$namespace/services/$service/create-profile': typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
   '/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/namespace/$namespace/services/$service/': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
   '/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteWithChildren
-  '/namespace/$namespace/services/$service/manifest': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
+  '/namespace/$namespace/services/$service/manifest/artifacts': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute
+  '/namespace/$namespace/services/$service/manifest/': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
   '/namespace/$namespace/services/$service/requests': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
   '/namespace/$namespace/services/$service/profiles/$profile/history': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute
   '/namespace/$namespace/services/$service/profiles/$profile/': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute
@@ -269,6 +291,7 @@ export interface FileRoutesByTo {
   '/namespace/$namespace/services/$service/create-profile': typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
   '/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/namespace/$namespace/services/$service': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
+  '/namespace/$namespace/services/$service/manifest/artifacts': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute
   '/namespace/$namespace/services/$service/manifest': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
   '/namespace/$namespace/services/$service/requests': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
   '/namespace/$namespace/services/$service/profiles/$profile/history': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute
@@ -296,10 +319,12 @@ export interface FileRoutesById {
   '/_authenticated/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/_authenticated/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
   '/_authenticated/namespace/$namespace/settings/': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
+  '/_authenticated/namespace/$namespace/services/$service/manifest': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteWithChildren
   '/_authenticated/namespace/$namespace/services/$service/create-profile': typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
   '/_authenticated/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   '/_authenticated/namespace/$namespace/services/$service/': typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
   '/_authenticated/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteWithChildren
+  '/_authenticated/namespace/$namespace/services/$service/manifest/artifacts': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute
   '/_authenticated/namespace/$namespace/services/$service/manifest/': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
   '/_authenticated/namespace/$namespace/services/$service/requests/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
   '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute
@@ -327,11 +352,13 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/applications/'
     | '/namespace/$namespace/kms/'
     | '/namespace/$namespace/settings'
+    | '/namespace/$namespace/services/$service/manifest'
     | '/namespace/$namespace/services/$service/create-profile'
     | '/namespace/$namespace/services/$service/settings'
     | '/namespace/$namespace/services/$service/'
     | '/namespace/$namespace/services/$service/profiles/$profile'
-    | '/namespace/$namespace/services/$service/manifest'
+    | '/namespace/$namespace/services/$service/manifest/artifacts'
+    | '/namespace/$namespace/services/$service/manifest/'
     | '/namespace/$namespace/services/$service/requests'
     | '/namespace/$namespace/services/$service/profiles/$profile/history'
     | '/namespace/$namespace/services/$service/profiles/$profile/'
@@ -355,6 +382,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/services/$service/create-profile'
     | '/namespace/$namespace/services/$service/settings'
     | '/namespace/$namespace/services/$service'
+    | '/namespace/$namespace/services/$service/manifest/artifacts'
     | '/namespace/$namespace/services/$service/manifest'
     | '/namespace/$namespace/services/$service/requests'
     | '/namespace/$namespace/services/$service/profiles/$profile/history'
@@ -381,10 +409,12 @@ export interface FileRouteTypes {
     | '/_authenticated/namespace/$namespace/applications/'
     | '/_authenticated/namespace/$namespace/kms/'
     | '/_authenticated/namespace/$namespace/settings/'
+    | '/_authenticated/namespace/$namespace/services/$service/manifest'
     | '/_authenticated/namespace/$namespace/services/$service/create-profile'
     | '/_authenticated/namespace/$namespace/services/$service/settings'
     | '/_authenticated/namespace/$namespace/services/$service/'
     | '/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
+    | '/_authenticated/namespace/$namespace/services/$service/manifest/artifacts'
     | '/_authenticated/namespace/$namespace/services/$service/manifest/'
     | '/_authenticated/namespace/$namespace/services/$service/requests/'
     | '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history'
@@ -561,6 +591,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
+    '/_authenticated/namespace/$namespace/services/$service/manifest': {
+      id: '/_authenticated/namespace/$namespace/services/$service/manifest'
+      path: '/manifest'
+      fullPath: '/namespace/$namespace/services/$service/manifest'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    }
     '/_authenticated/namespace/$namespace/services/$service/requests/': {
       id: '/_authenticated/namespace/$namespace/services/$service/requests/'
       path: '/requests'
@@ -570,10 +607,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/namespace/$namespace/services/$service/manifest/': {
       id: '/_authenticated/namespace/$namespace/services/$service/manifest/'
-      path: '/manifest'
-      fullPath: '/namespace/$namespace/services/$service/manifest'
+      path: '/'
+      fullPath: '/namespace/$namespace/services/$service/manifest/'
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/manifest/artifacts': {
+      id: '/_authenticated/namespace/$namespace/services/$service/manifest/artifacts'
+      path: '/artifacts'
+      fullPath: '/namespace/$namespace/services/$service/manifest/artifacts'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute
     }
     '/_authenticated/namespace/$namespace/services/$service/profiles/$profile': {
       id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
@@ -638,6 +682,24 @@ const AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren =
     AuthenticatedNamespaceNamespaceKmsRouteRouteChildren,
   )
 
+interface AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteChildren {
+  AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute
+  AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
+}
+
+const AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteChildren: AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteChildren =
+  {
+    AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute,
+    AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute,
+  }
+
+const AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteWithChildren =
+  AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute._addFileChildren(
+    AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteChildren,
+  )
+
 interface AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteChildren {
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute
@@ -657,16 +719,18 @@ const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteWit
   )
 
 interface AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren {
+  AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteWithChildren
   AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
   AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
   AuthenticatedNamespaceNamespaceServicesServiceIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteWithChildren
-  AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
   AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
 }
 
 const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren: AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren =
   {
+    AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteWithChildren,
     AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute:
       AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute,
     AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute:
@@ -675,8 +739,6 @@ const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren: Authenti
       AuthenticatedNamespaceNamespaceServicesServiceIndexRoute,
     AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute:
       AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteWithChildren,
-    AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute:
-      AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute,
     AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute:
       AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute,
   }

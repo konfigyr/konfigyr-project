@@ -1,5 +1,5 @@
+import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
-import type { JSONSchema7 } from 'json-schema';
 
 export type ProfilePolicy = 'UNPROTECTED' | 'PROTECTED' | 'IMMUTABLE';
 
@@ -18,20 +18,7 @@ export interface CreateProfile {
   position?: number;
 }
 
-export interface PropertyDeprecation {
-  reason: string;
-  replacement?: string;
-}
-
 export type ConfigurationPropertyState = 'unchanged' | 'modified' | 'deleted' | 'added';
-
-export interface PropertyDescriptor {
-  name: string;
-  type: string;
-  description?: string;
-  schema?: JSONSchema7;
-  deprecation?: PropertyDeprecation;
-}
 
 export interface ConfigurationProperty extends PropertyDescriptor {
   value?: string
