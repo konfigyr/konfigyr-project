@@ -2,7 +2,7 @@ package com.konfigyr.artifactory.provenance;
 
 import com.konfigyr.artifactory.PropertyDescriptor;
 import com.konfigyr.artifactory.VersionedArtifact;
-import com.konfigyr.artifactory.converter.ArtifactoryConverters;
+import com.konfigyr.artifactory.ArtifactoryConverters;
 import com.konfigyr.entity.EntityId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

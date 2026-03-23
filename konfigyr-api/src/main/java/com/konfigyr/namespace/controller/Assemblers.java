@@ -1,6 +1,7 @@
 package com.konfigyr.namespace.controller;
 
 import com.konfigyr.artifactory.Manifest;
+import com.konfigyr.artifactory.PropertyDescriptor;
 import com.konfigyr.hateoas.*;
 import com.konfigyr.namespace.*;
 import org.springframework.http.HttpMethod;
@@ -46,6 +47,15 @@ interface Assemblers {
 				.add(linkBuilder(namespace, service).path("manifest").method(HttpMethod.POST).rel("release"));
 	}
 
+	static RepresentationModelAssembler<ServiceCatalog, EntityModel<ServiceCatalog>> catalog(Namespace namespace) {
+		return catalog -> EntityModel.of(catalog, linkBuilder(namespace, catalog).selfRel())
+				.add(linkBuilder(namespace, catalog).path("search").rel("search configuration catalog"));
+	}
+
+	static RepresentationModelAssembler<PropertyDescriptor, EntityModel<PropertyDescriptor>> property(Namespace namespace, Service service) {
+		return property -> EntityModel.of(property, linkBuilder(namespace, service, property).selfRel());
+	}
+
 	static LinkBuilder linkBuilder() {
 		return Link.builder().path("namespaces");
 	}
@@ -76,5 +86,16 @@ interface Assemblers {
 		return linkBuilder(namespace)
 				.path("applications")
 				.path(application.id().serialize());
+	}
+
+	static LinkBuilder linkBuilder(Namespace namespace, ServiceCatalog catalog) {
+		return linkBuilder(namespace, catalog.service())
+				.path("catalog");
+	}
+
+	static LinkBuilder linkBuilder(Namespace namespace, Service service, PropertyDescriptor descriptor) {
+		return linkBuilder(namespace, service)
+				.path("catalog")
+				.path(descriptor.name());
 	}
 }

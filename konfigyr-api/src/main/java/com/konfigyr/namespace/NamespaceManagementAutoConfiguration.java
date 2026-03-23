@@ -4,6 +4,7 @@ import com.konfigyr.feature.FeatureDefinition;
 import com.konfigyr.feature.FeatureDefinitionConfigurer;
 import com.konfigyr.feature.Features;
 import com.konfigyr.mail.Mailer;
+import com.konfigyr.namespace.catalog.ServiceCatalogSource;
 import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -30,6 +31,7 @@ import java.util.Collection;
 @AutoConfigureAfter(JooqAutoConfiguration.class)
 public class NamespaceManagementAutoConfiguration implements FeatureDefinitionConfigurer {
 
+	private final DSLContext context;
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Override
@@ -40,27 +42,27 @@ public class NamespaceManagementAutoConfiguration implements FeatureDefinitionCo
 
 	@Bean
 	@ConditionalOnMissingBean(Invitations.class)
-	Invitations defaultInvitations(DSLContext context, Features features) {
+	Invitations defaultInvitations(Features features) {
 		return new DefaultInvitations(context, features, applicationEventPublisher);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean(NamespaceManager.class)
-	NamespaceManager defaultNamespaceManager(DSLContext context, ObjectProvider<@NonNull PasswordEncoder> passwordEncoder) {
+	NamespaceManager defaultNamespaceManager(ObjectProvider<@NonNull PasswordEncoder> passwordEncoder) {
 		final PasswordEncoder encoder = passwordEncoder.getIfAvailable(PasswordEncoders::get);
 		return new DefaultNamespaceManager(context, encoder, applicationEventPublisher);
 	}
 
 	@Bean
 	@ConditionalOnBean(Mailer.class)
-	InvitationSender invitationSender(Mailer mailer, DSLContext context) {
+	InvitationSender invitationSender(Mailer mailer) {
 		return new InvitationSender(mailer, context);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean(Services.class)
-	Services defaultNamespaceServices(DSLContext context, NamespaceManager namespaces) {
-		return new DefaultServices(context, namespaces, applicationEventPublisher);
+	Services defaultNamespaceServices(NamespaceManager namespaces, ServiceCatalogSource catalogSource) {
+		return new DefaultServices(context, namespaces, catalogSource, applicationEventPublisher);
 	}
 
 }

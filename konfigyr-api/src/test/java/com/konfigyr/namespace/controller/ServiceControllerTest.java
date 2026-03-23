@@ -1,14 +1,15 @@
 package com.konfigyr.namespace.controller;
 
-import com.konfigyr.artifactory.Artifact;
-import com.konfigyr.artifactory.Manifest;
+import com.konfigyr.artifactory.*;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Service;
+import com.konfigyr.namespace.ServiceCatalog;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.TestPrincipals;
+import com.konfigyr.version.Version;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -712,6 +713,243 @@ class ServiceControllerTest extends AbstractNamespaceControllerTest {
 				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should retrieve the latest namespace service catalog")
+	void retrieveServiceCatalog() {
+		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/catalog")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ServiceCatalog.class)
+				.satisfies(it -> assertThat(it.service())
+						.returns(EntityId.from(2), Service::id)
+						.returns("konfigyr-id", Service::slug)
+				)
+				.satisfies(it -> assertThat(it.properties())
+						.hasSize(3)
+						.allSatisfy(property -> assertThat(property.artifact())
+								.returns("org.springframework.boot", ArtifactCoordinates::groupId)
+								.returns("spring-boot", ArtifactCoordinates::artifactId)
+								.returns(Version.of("4.0.3"), ArtifactCoordinates::version)
+						)
+						.satisfiesExactlyInAnyOrder(
+								property -> assertThat(property)
+										.returns("spring.application.name", ServiceCatalog.Property::name)
+										.returns("java.lang.String", ServiceCatalog.Property::typeName)
+										.returns(StringSchema.instance(), ServiceCatalog.Property::schema)
+										.returns("Application name. Typically used with logging to help identify the application.", ServiceCatalog.Property::description)
+										.returns(null, ServiceCatalog.Property::defaultValue)
+										.returns(null, ServiceCatalog.Property::deprecation),
+								property -> assertThat(property)
+										.returns("spring.application.index", ServiceCatalog.Property::name)
+										.returns("java.lang.Integer", ServiceCatalog.Property::typeName)
+										.returns(IntegerSchema.builder().format("int32").build(), ServiceCatalog.Property::schema)
+										.returns("Application index.", ServiceCatalog.Property::description)
+										.returns(null, ServiceCatalog.Property::defaultValue)
+										.returns(null, ServiceCatalog.Property::deprecation),
+								property -> assertThat(property)
+										.returns("spring.application.deprecated", ServiceCatalog.Property::name)
+										.returns("java.lang.Boolean", ServiceCatalog.Property::typeName)
+										.returns(BooleanSchema.instance(), ServiceCatalog.Property::schema)
+										.returns("Deprecated property that is no longer needed.", ServiceCatalog.Property::description)
+										.returns("true", ServiceCatalog.Property::defaultValue)
+										.returns(new Deprecation("No longer needed", null), ServiceCatalog.Property::deprecation)
+						)
+				);
+	}
+
+	@Test
+	@DisplayName("should retrieve an empty catalog for service that was not yet released")
+	void retrieveCatalogForUnreleasedService() {
+		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/catalog")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ServiceCatalog.class)
+				.satisfies(it -> assertThat(it.service())
+						.returns(EntityId.from(1), Service::id)
+						.returns("john-doe-blog", Service::slug)
+				)
+				.satisfies(it -> assertThat(it.properties())
+						.isEmpty()
+				);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve catalog for unknown service")
+	void retrieveCatalogForUnknownService() {
+		mvc.get().uri("/namespaces/konfigyr/services/unknown-service/catalog")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound("unknown-service"));
+	}
+
+	@Test
+	@DisplayName("should not retrieve a service catalog for an unknown namespace")
+	void retrieveCatalogForUnknownNamespace() {
+		mvc.get().uri("/namespaces/unknown-namespace/services/unknown-service/catalog")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND)
+				.satisfies(namespaceNotFound("unknown-namespace"));
+	}
+
+	@Test
+	@DisplayName("should not retrieve service catalog when namespaces:read scope is not present")
+	void retrieveCatalogWithoutScope() {
+		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/catalog")
+				.with(authentication(TestPrincipals.jane()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.READ_NAMESPACES));
+	}
+
+	@Test
+	@DisplayName("should not retrieve service catalog when user is not a member of a namespace")
+	void retrieveCatalogWithoutMembership() {
+		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/catalog")
+				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should search the latest namespace service catalog without search term")
+	void searchServiceCatalog() {
+		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/catalog/search")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(ServiceCatalog.Property.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.hasSize(3)
+						.allSatisfy(property -> assertThat(property.artifact())
+								.returns("org.springframework.boot", ArtifactCoordinates::groupId)
+								.returns("spring-boot", ArtifactCoordinates::artifactId)
+								.returns(Version.of("4.0.3"), ArtifactCoordinates::version)
+						)
+						.satisfiesExactlyInAnyOrder(
+								property -> assertThat(property)
+										.returns("spring.application.name", ServiceCatalog.Property::name)
+										.returns("java.lang.String", ServiceCatalog.Property::typeName)
+										.returns(StringSchema.instance(), ServiceCatalog.Property::schema)
+										.returns("Application name. Typically used with logging to help identify the application.", ServiceCatalog.Property::description)
+										.returns(null, ServiceCatalog.Property::defaultValue)
+										.returns(null, ServiceCatalog.Property::deprecation),
+								property -> assertThat(property)
+										.returns("spring.application.index", ServiceCatalog.Property::name)
+										.returns("java.lang.Integer", ServiceCatalog.Property::typeName)
+										.returns(IntegerSchema.builder().format("int32").build(), ServiceCatalog.Property::schema)
+										.returns("Application index.", ServiceCatalog.Property::description)
+										.returns(null, ServiceCatalog.Property::defaultValue)
+										.returns(null, ServiceCatalog.Property::deprecation),
+								property -> assertThat(property)
+										.returns("spring.application.deprecated", ServiceCatalog.Property::name)
+										.returns("java.lang.Boolean", ServiceCatalog.Property::typeName)
+										.returns(BooleanSchema.instance(), ServiceCatalog.Property::schema)
+										.returns("Deprecated property that is no longer needed.", ServiceCatalog.Property::description)
+										.returns("true", ServiceCatalog.Property::defaultValue)
+										.returns(new Deprecation("No longer needed", null), ServiceCatalog.Property::deprecation)
+						)
+				);
+	}
+
+	@Test
+	@DisplayName("should search the latest namespace service catalog with search term")
+	void searchServiceCatalogWithSearchTerm() {
+		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/catalog/search")
+				.queryParam("term", "deprecated")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(ServiceCatalog.Property.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.hasSize(1)
+						.extracting(ServiceCatalog.Property::name)
+						.contains("spring.application.deprecated")
+				);
+	}
+
+	@Test
+	@DisplayName("should search a catalog for service that was not yet released")
+	void searchCatalogForUnreleasedService() {
+		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/catalog/search")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(ServiceCatalog.Property.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.isEmpty()
+				);
+	}
+
+	@Test
+	@DisplayName("should fail to search catalog for unknown service")
+	void searchCatalogForUnknownService() {
+		mvc.get().uri("/namespaces/konfigyr/services/unknown-service/catalog/search")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound("unknown-service"));
+	}
+
+	@Test
+	@DisplayName("should not search a service catalog for an unknown namespace")
+	void searchCatalogForUnknownNamespace() {
+		mvc.get().uri("/namespaces/unknown-namespace/services/unknown-service/catalog/search")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND)
+				.satisfies(namespaceNotFound("unknown-namespace"));
+	}
+
+	@Test
+	@DisplayName("should not search service catalog when namespaces:read scope is not present")
+	void searchCatalogWithoutScope() {
+		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/catalog/search")
+				.with(authentication(TestPrincipals.jane()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.READ_NAMESPACES));
+	}
+
+	@Test
+	@DisplayName("should not search service catalog when user is not a member of a namespace")
+	void searchCatalogWithoutMembership() {
+		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/catalog/search")
+				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())

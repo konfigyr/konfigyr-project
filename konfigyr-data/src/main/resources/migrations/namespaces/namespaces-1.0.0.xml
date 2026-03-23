@@ -355,4 +355,116 @@
 				onDelete="CASCADE"
 		/>
 	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-service-configuration-catalog-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="service_configuration_catalog" />
+			</not>
+		</preConditions>
+
+		<comment>Initial service configuration catalog table migration used to contain property descriptor metadata</comment>
+
+		<createTable tableName="service_configuration_catalog">
+			<column name="service_id" type="bigint">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="group_id" type="varchar">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="artifact_id" type="varchar">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="version" type="text">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="name" type="text">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="type_name" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="schema" type="bytea">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="default_value" type="text">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="description" type="text">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="deprecation" type="bytea">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="search_vector" type="tsvector"/>
+		</createTable>
+		<modifySql applyToRollback="false">
+			<append value=" PARTITION BY LIST (service_id);"/>
+		</modifySql>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-service-configuration-catalog-indexes" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<foreignKeyConstraintExists foreignKeyName="fk_service_configuration_catalog" />
+			</not>
+		</preConditions>
+
+		<comment>
+			Creates a `generate_service_configuration_catalog_search_vector` function that would be used by the
+			`trg_service_configuration_catalog_search_vector` trigger to generate a `ts_vector` value for the
+			`search_vector` column. The trigger would be invoked for each insert event or when `name` or `description`
+			fields are updated. This migration would also create a default partition with name:
+			`service_configuration_catalog_default` that would be used as a fallback in case the service specific
+			partition can't be created.
+		</comment>
+
+		<addForeignKeyConstraint
+				baseTableName="service_configuration_catalog"
+				baseColumnNames="service_id"
+				constraintName="fk_service_configuration_catalog"
+				referencedTableName="services"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="service_configuration_catalog" indexName="idx_service_configuration_catalog_service">
+			<column name="service_id"/>
+		</createIndex>
+
+		<createIndex tableName="service_configuration_catalog" indexName="idx_service_configuration_catalog_search" using="gin">
+			<column name="search_vector"/>
+		</createIndex>
+
+		<sql>
+			CREATE OR REPLACE FUNCTION generate_service_configuration_catalog_search_vector() RETURNS trigger AS '
+				BEGIN
+					NEW.search_vector :=
+					                  setweight(to_tsvector(''simple'', NEW.name), ''A'') ||
+					                  setweight(to_tsvector(''simple'', coalesce(NEW.description,'''')), ''B'');
+					RETURN NEW;
+				END;
+			' LANGUAGE plpgsql;
+		</sql>
+
+		<sql>
+			CREATE OR REPLACE TRIGGER trg_service_configuration_catalog_search_vector
+				BEFORE INSERT OR UPDATE OF name, description
+				ON service_configuration_catalog FOR EACH ROW EXECUTE FUNCTION generate_service_configuration_catalog_search_vector();
+		</sql>
+
+		<sql>
+			CREATE TABLE service_configuration_catalog_default PARTITION OF service_configuration_catalog DEFAULT;
+		</sql>
+	</changeSet>
 </databaseChangeLog>

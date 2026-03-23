@@ -1,6 +1,5 @@
 package com.konfigyr.artifactory;
 
-import com.konfigyr.artifactory.converter.ArtifactoryConverters;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.data.Keys;
 import com.konfigyr.data.SettableRecord;

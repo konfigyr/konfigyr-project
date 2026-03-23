@@ -2,7 +2,7 @@ package com.konfigyr.artifactory.provenance;
 
 import com.konfigyr.artifactory.Artifactory;
 import com.konfigyr.artifactory.PropertyDescriptor;
-import com.konfigyr.artifactory.converter.ArtifactoryConverters;
+import com.konfigyr.artifactory.ArtifactoryConverters;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.artifactory.store.MetadataStoreReader;
 import lombok.RequiredArgsConstructor;
