@@ -8,12 +8,19 @@ INSERT INTO service_releases(id, service_id, version, state, created_at) VALUES
 (2, 3, 'latest', 'COMPLETE', now() - interval '2 days');
 
 INSERT INTO service_artifacts(release_id, group_id, artifact_id, version) VALUES
-(1, 'com.konfigyr', 'konfigyr-crypto-api', '1.0.1'),
-(1, 'com.konfigyr', 'konfigyr-crypto-tink', '1.0.0'),
-(1, 'com.konfigyr', 'konfigyr-api', '1.0.0'),
-(2, 'com.konfigyr', 'konfigyr-crypto-api', '1.0.1');
+(1, 'org.springframework.boot', 'spring-boot', '4.0.4'),
+(1, 'org.springframework.boot', 'spring-boot-autoconfigure', '4.0.4'),
+(1, 'org.springframework.boot', 'spring-boot-actuator', '4.0.4'),
+(1, 'org.springframework.boot', 'spring-boot-jooq', '4.0.4'),
+(1, 'org.springframework.boot', 'spring-boot-liquibase', '4.0.4'),
+(1, 'org.springframework.modulith', 'spring-modulith-core', '2.0.3'),
+(1, 'org.springframework.modulith', 'spring-modulith-moments', '2.0.3'),
+(2, 'com.konfigyr', 'konfigyr-crypto-api', '1.0.1'),
+(2, 'org.springframework.boot', 'spring-boot', '4.0.4'),
+(2, 'org.springframework.boot', 'spring-boot-jackson', '4.0.4'),
+(2, 'org.springframework.modulith', 'spring-modulith-core', '2.0.4');
 
-INSERT INTO service_configuration_catalog(service_id, group_id, artifact_id, version, name, type_name, schema, description, default_value, deprecation) VALUES
-(2, 'org.springframework.boot', 'spring-boot', '4.0.3', 'spring.application.name', 'java.lang.String', '{"type":"string"}', 'Application name. Typically used with logging to help identify the application.', NULL, NULL),
-(2, 'org.springframework.boot', 'spring-boot', '4.0.3', 'spring.application.index', 'java.lang.Integer', '{"type":"integer","format":"int32"}', 'Application index.', NULL, NULL),
-(2, 'org.springframework.boot', 'spring-boot', '4.0.3', 'spring.application.deprecated', 'java.lang.Boolean', '{"type":"boolean"}', 'Deprecated property that is no longer needed.', 'true', '{"reason":"No longer needed"}');
+INSERT INTO service_configuration_catalog(service_id, release_id, group_id, artifact_id, version, name, type_name, schema, description, default_value, deprecation) VALUES
+(2, 1, 'org.springframework.boot', 'spring-boot', '4.0.3', 'spring.application.name', 'java.lang.String', '{"type":"string"}', 'Application name. Typically used with logging to help identify the application.', NULL, NULL),
+(2, 1, 'org.springframework.boot', 'spring-boot', '4.0.3', 'spring.application.index', 'java.lang.Integer', '{"type":"integer","format":"int32"}', 'Application index.', NULL, NULL),
+(2, 1, 'org.springframework.boot', 'spring-boot', '4.0.3', 'spring.application.deprecated', 'java.lang.Boolean', '{"type":"boolean"}', 'Deprecated property that is no longer needed.', 'true', '{"reason":"No longer needed"}');

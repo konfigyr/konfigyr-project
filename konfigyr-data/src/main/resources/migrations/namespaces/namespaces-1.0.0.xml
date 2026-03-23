@@ -370,6 +370,10 @@
 				<constraints primaryKey="true" nullable="false" />
 			</column>
 
+			<column name="release_id" type="bigint">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
 			<column name="group_id" type="varchar">
 				<constraints primaryKey="true" nullable="false" />
 			</column>
@@ -438,8 +442,23 @@
 				onDelete="CASCADE"
 		/>
 
-		<createIndex tableName="service_configuration_catalog" indexName="idx_service_configuration_catalog_service">
-			<column name="service_id"/>
+		<addForeignKeyConstraint
+				baseTableName="service_configuration_catalog"
+				baseColumnNames="release_id"
+				constraintName="fk_release_configuration_catalog"
+				referencedTableName="service_releases"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="service_configuration_catalog" indexName="idx_service_configuration_catalog_release">
+			<column name="release_id"/>
+		</createIndex>
+
+		<createIndex tableName="service_configuration_catalog" indexName="idx_service_configuration_catalog_artifact">
+			<column name="group_id"/>
+			<column name="artifact_id"/>
+			<column name="version"/>
 		</createIndex>
 
 		<createIndex tableName="service_configuration_catalog" indexName="idx_service_configuration_catalog_search" using="gin">
@@ -466,5 +485,58 @@
 		<sql>
 			CREATE TABLE service_configuration_catalog_default PARTITION OF service_configuration_catalog DEFAULT;
 		</sql>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-service-release-build-queue-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="service_release_build_queue" />
+			</not>
+		</preConditions>
+
+		<comment>Initial service release build queue table migration</comment>
+
+		<createTable tableName="service_release_build_queue" remarks="Table that acts as a queue for building service catalogs.">
+			<column name="release_id" type="bigint" remarks="The service releases foreign and primary key field.">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="status" type="varchar(20)" remarks="Stores the state of the catalog build job in the queue.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="retry_count" type="integer" defaultValueNumeric="0" remarks="How many times was this job retried.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="needs_rebuild" type="boolean" defaultValueBoolean="false"
+					remarks="Flag when set to `true` should reschedule the job for execution when completed."/>
+
+			<column name="last_error" type="text" />
+
+			<column name="scheduled_at" type="timestamptz" remarks="Timestamp that is used by the scheduler to queue the job.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="started_at" type="timestamptz" remarks="Timestamp that tells the time when this job was started and locked." />
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()" remarks="Timestamp when this job was added to the catalog build queue.">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="service_release_build_queue"
+				baseColumnNames="release_id"
+				constraintName="fk_service_release_build"
+				referencedTableName="service_releases"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="service_release_build_queue" indexName="idx_consume_service_release_queue">
+			<column name="status"/>
+			<column name="scheduled_at"/>
+		</createIndex>
 	</changeSet>
 </databaseChangeLog>

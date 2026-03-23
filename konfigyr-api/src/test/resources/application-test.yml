@@ -28,6 +28,14 @@ konfigyr:
     jdbc:
       initialize-schema: never
 
+  namespace:
+    service-catalog:
+      ## disable the scheduler task for tests...
+      scheduler-cron-expression: '-'
+      build-debounce-period: 10s
+      build-timeout: 10s
+      parallel-builds: 5
+
 logging:
   level:
     com.konfigyr: DEBUG

@@ -27,6 +27,21 @@ import java.util.List;
 
 import static com.konfigyr.data.tables.ServiceConfigurationCatalog.SERVICE_CONFIGURATION_CATALOG;
 
+/**
+ * Service that is responsible for providing a default implementation of the {@link ServiceCatalogSource}
+ * interface. This implementation uses jOOQ to query the {@code service_configuration_catalog} table
+ * that is partitioned by {@code service_id}. This ensures that all database operations remain localized
+ * to a single partition, which keeps reads, deletes, or inserts efficient while still allowing multiple
+ * releases per service to coexist in the same partition.
+ * <p>
+ * This service provides listeners for {@link ServiceEvent.Created} and {@link ServiceEvent.Deleted} events
+ * that trigger the creation and deletion of service configiuration partitions in the database. The name
+ * of the partition is derived from the original table name and service identifier:
+ * <code>service_configuration_catalog_{service_id}</code>.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ */
 @Slf4j
 @NullMarked
 @RequiredArgsConstructor
