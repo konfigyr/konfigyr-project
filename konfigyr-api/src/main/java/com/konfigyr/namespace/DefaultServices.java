@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
-import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
 import static com.konfigyr.data.tables.Services.SERVICES;
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
 import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
@@ -265,10 +264,14 @@ public class DefaultServices implements Services {
 
 		Assert.state(count == artifacts.size(), "Failed to insert all artifacts for: " + service);
 
-		log.info(PUBLISHED, "Successfully published manifest for service {} in namespace {} with: {}",
-				service.id(), service.namespace(), artifacts);
+		final Manifest manifest = manifest(service);
 
-		return manifest(service);
+		log.info(PUBLISHED, "Successfully published manifest for service {} in namespace {}: {}",
+				service.id(), service.namespace(), manifest);
+
+		publisher.publishEvent(new ServiceEvent.Published(service, manifest));
+
+		return manifest;
 	}
 
 	@Override
@@ -325,24 +328,19 @@ public class DefaultServices implements Services {
 	private Field<List<Artifact>> createServiceArtifactMultiselectField() {
 		return DSL.multiset(
 				DSL.select(
-						ARTIFACTS.GROUP_ID,
-						ARTIFACTS.ARTIFACT_ID,
-						ARTIFACT_VERSIONS.VERSION,
+						SERVICE_ARTIFACTS.GROUP_ID,
+						SERVICE_ARTIFACTS.ARTIFACT_ID,
+						SERVICE_ARTIFACTS.VERSION,
 						ARTIFACTS.NAME,
 						ARTIFACTS.DESCRIPTION,
 						ARTIFACTS.WEBSITE,
 						ARTIFACTS.REPOSITORY
 				)
 				.from(SERVICE_ARTIFACTS)
-				.innerJoin(ARTIFACTS)
+				.leftJoin(ARTIFACTS)
 				.on(DSL.and(
 						ARTIFACTS.GROUP_ID.eq(SERVICE_ARTIFACTS.GROUP_ID),
 						ARTIFACTS.ARTIFACT_ID.eq(SERVICE_ARTIFACTS.ARTIFACT_ID)
-				))
-				.innerJoin(ARTIFACT_VERSIONS)
-				.on(DSL.and(
-						ARTIFACT_VERSIONS.ARTIFACT_ID.eq(ARTIFACTS.ID),
-						ARTIFACT_VERSIONS.VERSION.eq(SERVICE_ARTIFACTS.VERSION)
 				))
 				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(SERVICE_RELEASES.ID))
 		).as(SERVICE_ARTIFACTS_ALIAS).convertFrom(results -> results.map(DefaultServices::toArtifact));
@@ -375,9 +373,9 @@ public class DefaultServices implements Services {
 	@NonNull
 	private static Artifact toArtifact(@NonNull Record record) {
 		return Artifact.builder()
-				.groupId(record.get(ARTIFACTS.GROUP_ID))
-				.artifactId(record.get(ARTIFACTS.ARTIFACT_ID))
-				.version(record.get(ARTIFACT_VERSIONS.VERSION))
+				.groupId(record.get(SERVICE_ARTIFACTS.GROUP_ID))
+				.artifactId(record.get(SERVICE_ARTIFACTS.ARTIFACT_ID))
+				.version(record.get(SERVICE_ARTIFACTS.VERSION))
 				.name(record.get(ARTIFACTS.NAME))
 				.description(record.get(ARTIFACTS.DESCRIPTION))
 				.website(record.get(ARTIFACTS.WEBSITE))

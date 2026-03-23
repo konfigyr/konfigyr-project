@@ -13,6 +13,13 @@
       "defaultValue": "0 0 * * * *",
       "description": "Specifies the interval of the cleanup job that would remove expired namespace membership invitations. Defaults to every hour.",
       "sourceType": "com.konfigyr.namespace.Invitations"
+    },
+    {
+      "name": "konfigyr.namespace.service-catalog.scheduler-cron-expression",
+      "type": "java.lang.String",
+      "defaultValue": "0 * * * * *",
+      "description": "Specifies the interval of the Service Catalog scheduler that would schedule pending Service Catalog rebuild tasks. Defaults to every second.",
+      "sourceType": "com.konfigyr.namespace.catalog.ServiceCatalogScheduler"
     }
   ]
 }
