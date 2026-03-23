@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'nu.studer.jooq' version '10.2'
+    id 'nu.studer.jooq' version '10.2.1'
 }
 
 description = 'Konfigyr module that contains jOOQ generated classes and database migrations'
