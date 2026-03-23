@@ -1,8 +1,8 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
-import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Association;
+import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -31,14 +31,14 @@ import java.time.ZoneOffset;
  * @param id unique identifier of this service, can't be {@literal null}
  * @param namespace unique identifier of the namespace, can't be {@literal null}
  * @param slug unique service identifier derived from its name, can't be {@literal null}
- * @param name human friendly name of the service, can't be {@literal null}
+ * @param name human-friendly name of the service, can't be {@literal null}
  * @param description short description of the service, can be {@literal null}
  * @param createdAt when was this service created, can be {@literal null}
  * @param updatedAt when was this service last updated, can be {@literal null}
  * @author Vladimir Spasic
  * @since 1.0.0
  */
-@AggregateRoot
+@Entity
 public record Service(
 		@NonNull @Identity EntityId id,
 		@NonNull @Association(aggregateType = Namespace.class) EntityId namespace,

@@ -290,6 +290,59 @@ class ServicesTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should retrieve service catalog for service entity identifier")
+	void retrieveCatalogByIdentifier() {
+		final var catalog = services.catalog(EntityId.from(2));
+
+		assertThat(catalog)
+				.hasSize(3)
+				.extracting(ServiceCatalog.Property::name)
+				.containsExactly("spring.application.deprecated", "spring.application.index", "spring.application.name");
+
+		assertThatObject(catalog)
+				.returns(EntityId.from(2), ServiceCatalog::id)
+				.returns("latest", ServiceCatalog::version);
+
+		assertThat(services.get(EntityId.from(2)))
+				.hasValue(catalog.service());
+	}
+
+	@Test
+	@DisplayName("should retrieve an empty service catalog for namespace and service slug")
+	void retrieveCatalogByNamespaceAndSlug() {
+		final var namespace = namespaces.findById(EntityId.from(1)).orElseThrow();
+		final var catalog = services.catalog(namespace, "john-doe-blog");
+
+		assertThat(catalog)
+				.isEmpty();
+
+		assertThatObject(catalog)
+				.returns(EntityId.from(1), ServiceCatalog::id)
+				.returns("latest", ServiceCatalog::version);
+
+		assertThat(services.get(namespace, "john-doe-blog"))
+				.hasValue(catalog.service());
+	}
+
+	@Test
+	@DisplayName("should retrieve service catalog for an unknown service entity identifier")
+	void retrieveCatalogByUnknownIdentifier() {
+		assertThatExceptionOfType(ServiceNotFoundException.class)
+				.isThrownBy(() -> services.catalog(EntityId.from(9999)))
+				.withNoCause();
+	}
+
+	@Test
+	@DisplayName("should retrieve service catalog for an unknown service slug")
+	void retrieveCatalogByUnknownSlug() {
+		final var namespace = namespaces.findById(EntityId.from(1)).orElseThrow();
+
+		assertThatExceptionOfType(ServiceNotFoundException.class)
+				.isThrownBy(() -> services.catalog(namespace, "unknown"))
+				.withNoCause();
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should delete service by identifier")
 	void shouldDeleteServiceById(AssertablePublishedEvents events) {

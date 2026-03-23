@@ -1,12 +1,11 @@
 package com.konfigyr.namespace;
 
-import com.konfigyr.artifactory.Artifact;
-import com.konfigyr.artifactory.ArtifactCoordinates;
-import com.konfigyr.artifactory.Manifest;
+import com.konfigyr.artifactory.*;
 import com.konfigyr.data.Keys;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.namespace.catalog.ServiceCatalogSource;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +52,7 @@ public class DefaultServices implements Services {
 
 	private final DSLContext context;
 	private final NamespaceManager namespaces;
+	private final ServiceCatalogSource catalogSource;
 	private final ApplicationEventPublisher publisher;
 
 	@NonNull
@@ -198,6 +198,30 @@ public class DefaultServices implements Services {
 					.name(service.name())
 					.build()
 			);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "retrieve-service-catalog")
+	public ServiceCatalog catalog(@NonNull EntityId id) {
+		final Service service = get(id).orElseThrow(() -> new ServiceNotFoundException(id));
+		return catalogSource.get(service);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "retrieve-service-catalog")
+	public ServiceCatalog catalog(@NonNull Namespace namespace, @NonNull String slug) {
+		final Service service = get(namespace, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace.slug(), slug)
+		);
+		return catalogSource.get(service);
+	}
+
+	@NonNull
+	@Override
+	public Page<PropertyDescriptor> search(@NonNull Service service, @NonNull SearchQuery query) {
+		return catalogSource.query(service, query);
 	}
 
 	@NonNull

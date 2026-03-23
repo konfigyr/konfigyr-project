@@ -1,7 +1,5 @@
-package com.konfigyr.artifactory.converter;
+package com.konfigyr.artifactory;
 
-import com.konfigyr.artifactory.Deprecation;
-import com.konfigyr.artifactory.JsonSchema;
 import com.konfigyr.data.converter.JsonByteArrayConverter;
 import com.konfigyr.io.ByteArray;
 import org.jooq.Converter;
