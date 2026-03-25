@@ -23,9 +23,9 @@ import {
 
 import type { ChangesetState, ConfigurationProperty } from '@konfigyr/hooks/types';
 
-export function PropertyDialog({ changeset, onAdd }: {
+export function PropertyDialog<T>({ changeset, onAdd }: {
   changeset: ChangesetState,
-  onAdd: (property: ConfigurationProperty) => void | Promise<unknown>,
+  onAdd: (property: ConfigurationProperty<T>) => void | Promise<unknown>,
 }) {
   const [open, onOpenChange] = useState(false);
   const [name, onNameChange] = useState('');
@@ -39,7 +39,7 @@ export function PropertyDialog({ changeset, onAdd }: {
     if (canAdd && name && value) {
       onAdd({
         name,
-        value,
+        value: { encoded: value, decoded: value as T },
         state: 'added',
         typeName: 'java.lang.String',
         schema: { type: 'string' },

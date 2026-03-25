@@ -2,12 +2,13 @@ import { useCallback, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { GroupIcon } from 'lucide-react';
 import { useServiceCatalogQuery } from '@konfigyr/hooks';
+import { PropertyDeprecation } from '@konfigyr/components/artifactory/property-deprecation';
+import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
+import { PropertySchema } from '@konfigyr/components/artifactory/property-schema';
+import { PropertyTypeName } from '@konfigyr/components/artifactory/property-type-name';
+import { PropertyName } from '@konfigyr/components/artifactory/property-name';
 import { ErrorState } from '@konfigyr/components/error';
-import { PropertyName } from '@konfigyr/components/vault/properties/property-name';
-import { PropertyDescription } from '@konfigyr/components/vault/properties/property-description';
 import { SearchInputGroup } from '@konfigyr/components/vault/properties/search-input-group';
-import { StateBadge } from '@konfigyr/components/vault/properties/state-label';
-import { Badge } from '@konfigyr/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -31,11 +32,6 @@ import {
 } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
-import {
   ArtifactLabel,
   MissingManifestsDescription,
   ServiceManifestsInstructions,
@@ -44,7 +40,6 @@ import {
 import type { FormEvent, SyntheticEvent } from 'react';
 import type {
   Namespace,
-  PropertyDeprecation,
   Service,
   ServiceCatalogProperty,
 } from '@konfigyr/hooks/types';
@@ -94,62 +89,43 @@ function SkeletonLoader() {
   );
 }
 
-function DeprecatedBadge({ deprecation }: { deprecation: PropertyDeprecation }) {
-  if (deprecation.reason || deprecation.replacement) {
-    return (
-      <Tooltip>
-        <TooltipTrigger>
-          <StateBadge variant="deprecated" />
-        </TooltipTrigger>
-        <TooltipContent className="space-y-2">
-          {deprecation.reason && (
-            <p>
-              {deprecation.reason}
-            </p>
-          )}
-          {deprecation.replacement && (
-            <p className="">
-              <FormattedMessage
-                defaultMessage="Replaced by: <code>{replacement}</code>"
-                description="Property deprecation message that shows what would be the replacement property. Accepts the {replacement} argument."
-                values={{
-                  replacement: deprecation.replacement,
-                  code: (it) => <pre>{it}</pre>,
-                }}
-              />
-            </p>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-
-  return (
-    <StateBadge variant="deprecated" />
-  );
-}
-
 function PropertyItem({ property }: { property: ServiceCatalogProperty }) {
   return (
     <Item variant="list">
       <ItemContent>
         <ItemTitle>
           <PropertyName value={property.name} />
-          <Badge variant="outline" size="sm" className="font-normal">{property.typeName}</Badge>
-          {property.deprecation && (<DeprecatedBadge deprecation={property.deprecation} />)}
+          <PropertyTypeName value={property.typeName} />
+          <PropertyDeprecation deprecation={property.deprecation} />
         </ItemTitle>
         <ItemDescription>
           <PropertyDescription value={property.description} />
         </ItemDescription>
 
-        <p className="text-[10px] font-mono mt-2">
-          <span className="text-muted-foreground/90 mr-1">
-            <ArtifactLabel />:
-          </span>
-          <span className="text-muted-foreground/80">
-            {property.artifact}
-          </span>
-        </p>
+        <div className="text-xs mt-2 space-y-1">
+          <p>
+            <span className="text-muted-foreground mr-1">
+              Default value:
+            </span>
+            <span className="font-mono text-muted-foreground/120">
+              {property.defaultValue || 'N/A'}
+            </span>
+          </p>
+          <p>
+            <span className="text-muted-foreground mr-1">
+              JSON Schema type:
+            </span>
+            <PropertySchema value={property.schema} />
+          </p>
+          <p>
+            <span className="text-muted-foreground mr-1">
+              <ArtifactLabel />:
+            </span>
+            <span className="font-mono text-muted-foreground/120">
+              {property.artifact}
+            </span>
+          </p>
+        </div>
       </ItemContent>
     </Item>
   );

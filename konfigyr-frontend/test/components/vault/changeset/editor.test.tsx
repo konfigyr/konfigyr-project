@@ -18,7 +18,10 @@ const changeset: ChangesetState = {
     description: 'Application name property',
     typeName: 'java.lang.String',
     state: 'modified',
-    value: 'konfigyr-frontend',
+    value: {
+      encoded: 'konfigyr-frontend',
+      decoded: 'konfigyr-frontend',
+    },
     schema: {
       type: 'string',
     },
@@ -27,7 +30,10 @@ const changeset: ChangesetState = {
     description: 'Application profile property',
     typeName: 'java.lang.String',
     state: 'unchanged',
-    value: 'staging',
+    value: {
+      encoded: 'staging',
+      decoded: 'staging',
+    },
     deprecation: {
       reason: 'This property is deprecated',
     },

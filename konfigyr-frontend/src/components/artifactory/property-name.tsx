@@ -13,7 +13,7 @@ export function PropertyName({
 
   return (
     <Component
-      data-slot="vault-property-name"
+      data-slot="artifactory-property-name"
       className={cn('font-mono text-sm font-medium text-foreground', className)}
       {...props}
     >

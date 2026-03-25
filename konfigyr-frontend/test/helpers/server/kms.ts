@@ -2,6 +2,26 @@ import { HttpResponse, http } from 'msw';
 import { encryptingKeyset, signingKeyset } from '../mocks/kms';
 import { johnDoe, konfigyr } from '../mocks/namespace';
 
+const list = http.get('http://localhost/api/namespaces/:namespace/kms', ({ params }) => {
+  const { namespace } = params;
+
+  if (johnDoe.slug === namespace) {
+    return HttpResponse.json({ data: [] });
+  }
+
+  if (konfigyr.slug === namespace) {
+    return HttpResponse.json({
+      data: [encryptingKeyset, signingKeyset],
+    });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace with slug '${namespace}' not found.`,
+  }, { status: 404 });
+});
+
 const create = http.post('http://localhost/api/namespaces/:namespace/kms', async ({ params, request }) => {
   const { namespace } = params;
   const keyset = await request.clone().json() as Record<string, unknown>;
@@ -238,6 +258,7 @@ const destroy = http.delete('http://localhost/api/namespaces/:namespace/kms/:key
 });
 
 export default [
+  list,
   create,
   encrypt,
   decrypt,

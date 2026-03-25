@@ -14,7 +14,7 @@ export function PropertyDescription({
 
   return (
     <Component
-      data-slot="vault-property-descrption"
+      data-slot="artifactory-property-descrption"
       className={cn('text-xs text-muted-foreground leading-relaxed wrap-break-word whitespace-pre-wrap', className)}
       {...props}
     >

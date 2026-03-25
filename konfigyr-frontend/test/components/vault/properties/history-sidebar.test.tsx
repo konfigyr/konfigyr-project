@@ -8,7 +8,7 @@ import { profiles } from '@konfigyr/test/helpers/mocks';
 
 import type { ConfigurationProperty } from '@konfigyr/hooks/types';
 
-function TestHistorySidebar({ property, opened = false }: { property: ConfigurationProperty, opened?: boolean }) {
+function TestHistorySidebar({ property, opened = false }: { property: ConfigurationProperty<any>, opened?: boolean }) {
   const [open, setOpen] = useState(opened);
 
   return (
@@ -21,18 +21,21 @@ function TestHistorySidebar({ property, opened = false }: { property: Configurat
   );
 }
 
-const applicationNameProperty: ConfigurationProperty = {
+const applicationNameProperty: ConfigurationProperty<string> = {
   name: 'application.name',
   description: 'Application name property',
   typeName: 'java.lang.String',
   state: 'unchanged',
-  value: 'konfigyr-frontend',
+  value: {
+    encoded: 'konfigyr-frontend',
+    decoded: 'konfigyr-frontend',
+  },
   schema: {
     type: 'string',
   },
 };
 
-const applicationProfileProperty: ConfigurationProperty = {
+const applicationProfileProperty: ConfigurationProperty<string> = {
   name: 'application.profile',
   description: 'Application profile property',
   typeName: 'java.lang.String',
@@ -64,7 +67,7 @@ describe('components | vault | properties | <HistorySidebar/>', () => {
 
     expect(result.getByText(applicationNameProperty.name)).toBeInTheDocument();
     expect(result.getByText(applicationNameProperty.description!)).toBeInTheDocument();
-    expect(result.getByText(applicationNameProperty.value!)).toBeInTheDocument();
+    expect(result.getByText(applicationNameProperty.value!.encoded)).toBeInTheDocument();
     expect(result.getByText(applicationNameProperty.typeName)).toBeInTheDocument();
 
     await userEvents.click(result.getByRole('button', { name: 'Close' }));
