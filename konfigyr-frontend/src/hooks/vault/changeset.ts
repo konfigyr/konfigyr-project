@@ -1,10 +1,9 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getServiceCatalogQuery } from '@konfigyr/hooks/namespace/query';
 
-import {
-  Operation,
-} from '@konfigyr/hooks/vault/types';
 import request from '@konfigyr/lib/http';
+import { useJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
+import { Operation } from '@konfigyr/hooks/vault/types';
 
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
 import type { Namespace, Service, ServiceCatalog } from '@konfigyr/hooks/namespace/types';
@@ -15,6 +14,7 @@ import type {
   ChangeHistoryQuery,
   ChangesetState,
   ConfigurationProperty,
+  ConfigurationPropertyValue,
   Profile,
   PropertyChange,
 } from '@konfigyr/hooks/vault/types';
@@ -37,12 +37,12 @@ const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyReques
     const { name, value } = property;
 
     switch (property.state) {
-      case 'modified':
-        return [...acc, { name, value, operation: Operation.MODIFY }];
-      case 'deleted':
-        return [...acc, { name, value, operation: Operation.REMOVE }];
       case 'added':
-        return [...acc, { name, value, operation: Operation.CREATE }];
+        return [...acc, { name, value: value?.encoded, operation: Operation.CREATE }];
+      case 'modified':
+        return [...acc, { name, value: value?.encoded, operation: Operation.MODIFY }];
+      case 'deleted':
+        return [...acc, { name, operation: Operation.REMOVE }];
       default:
         return acc;
     }
@@ -64,15 +64,20 @@ const generateStubChangesetState = (
   const properties = Object.keys(values).reduce((state, name) => {
     const descriptor = catalog.properties.find(it => it.name === name);
 
-    const property: ConfigurationProperty = {
+    // resolve the transform function for the property descriptor and construct the property value
+    const transform = useJsonSchemeTransform<any>(descriptor?.schema ?? DEFAULT_PROPERTY_DESCRIPTOR.schema);
+    const encoded = values[name];
+    const decoded = transform.decode(encoded);
+
+    const property: ConfigurationProperty<any> = {
       ...(descriptor || DEFAULT_PROPERTY_DESCRIPTOR),
       name: name,
-      value: values[name],
+      value: { encoded, decoded },
       state: 'unchanged',
     };
 
     return [...state, property];
-  }, [] as Array<ConfigurationProperty>);
+  }, [] as Array<ConfigurationProperty<any>>);
 
   return {
     namespace,
@@ -190,12 +195,12 @@ export const useSubmitChangeset = () => {
 };
 
 const generatePropertyOperationMutation = (
-  mutation: (state: ChangesetState, property: PropertyDescriptor, value?: string) => Array<ConfigurationProperty>,
+  mutation: (state: ChangesetState, property: PropertyDescriptor, value?: ConfigurationPropertyValue<any>) => Array<ConfigurationProperty<any>>,
 ) => (state: ChangesetState) => {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ property, value }: { property: PropertyDescriptor, value?: string }): Promise<ChangesetState> => {
+    mutationFn: async ({ property, value }: { property: PropertyDescriptor, value?: ConfigurationPropertyValue<any> }): Promise<ChangesetState> => {
       const properties = mutation(state, property, value);
 
       const deleted = properties.filter(p => p.state === 'deleted').length;
@@ -221,7 +226,7 @@ export const useAddProperty = generatePropertyOperationMutation(
 
 export const useRestoreProperty = generatePropertyOperationMutation(
   (state, property) => {
-    const properties: Array<ConfigurationProperty> = state.properties.map(it => {
+    const properties: Array<ConfigurationProperty<any>> = state.properties.map(it => {
       if (property.name === it.name && it.state === 'deleted') {
         return { ...it, state: 'unchanged' };
       }
@@ -234,7 +239,7 @@ export const useRestoreProperty = generatePropertyOperationMutation(
 
 export const useModifyProperty = generatePropertyOperationMutation(
   (state, property, value) => {
-    const properties: Array<ConfigurationProperty> = state.properties.map(it => {
+    const properties: Array<ConfigurationProperty<any>> = state.properties.map(it => {
       if (property.name === it.name) {
         return { ...it, value, state: it.state === 'added' ? 'added' : 'modified' };
       }
@@ -247,7 +252,7 @@ export const useModifyProperty = generatePropertyOperationMutation(
 
 export const useRemoveProperty = generatePropertyOperationMutation(
   (changeset, property) => {
-    const properties: Array<ConfigurationProperty> = changeset.properties.reduce((state, it) => {
+    const properties: Array<ConfigurationProperty<any>> = changeset.properties.reduce((state, it) => {
       if (property.name === it.name) {
         // if the property was added, it should be removed from the changeset as well
         if (it.state === 'added') {
@@ -257,7 +262,7 @@ export const useRemoveProperty = generatePropertyOperationMutation(
         return [ ...state, { ...it, state: 'deleted' } ];
       }
       return [ ...state, it];
-    }, [] as Array<ConfigurationProperty>);
+    }, [] as Array<ConfigurationProperty<any>>);
 
     return properties;
   },

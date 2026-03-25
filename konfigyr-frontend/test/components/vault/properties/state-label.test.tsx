@@ -28,17 +28,6 @@ describe('components | vault | properties | <StateLabel/>', () => {
     expect(element).toHaveClass('[&>*:first-child]:bg-amber-600');
   });
 
-  test('should render deleted deprecated property state label', () => {
-    const result = renderWithMessageProvider(
-      <StateLabel variant="deprecated" />,
-    );
-
-    const element = result.getByRole('paragraph');
-    expect(element).toBeInTheDocument();
-    expect(element).toHaveTextContent('deprecated');
-    expect(element).toHaveClass('[&>*:first-child]:bg-destructive');
-  });
-
   test('should render deleted variant property state label with zero count', () => {
     const result = renderWithMessageProvider(
       <StateLabel variant="deleted" count={0} />,
@@ -74,17 +63,6 @@ describe('components | vault | properties | <StateBadge/>', () => {
     expect(element).toBeInTheDocument();
     expect(element).toHaveTextContent('modified');
     expect(element).toHaveClass('border-amber-400/40', 'text-amber-600', 'dark:text-amber-400');
-  });
-
-  test('should render deleted deprecated property state badge', () => {
-    const result = renderWithMessageProvider(
-      <StateBadge variant="deprecated" data-testid="badge" />,
-    );
-
-    const element = result.getByTestId('badge');
-    expect(element).toBeInTheDocument();
-    expect(element).toHaveTextContent('deprecated');
-    expect(element).toHaveClass('border-destructive/40', 'text-destructive');
   });
 
   test('should render deleted variant property state badge', () => {

@@ -9,17 +9,20 @@ import {
   TrashIcon,
   UndoIcon,
 } from 'lucide-react';
+import { PropertyDeprecation } from '@konfigyr/components/artifactory/property-deprecation';
+import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
+import { PropertyName } from '@konfigyr/components/artifactory/property-name';
 import {
   ActionsLabel,
   DeleteLabel,
   HistoryLabel,
   UndoLabel,
 } from '@konfigyr/components/messages';
+import { InlineInputField } from '@konfigyr/components/vault/input';
 import { Button } from '@konfigyr/components/ui/button';
 import { ClipboardIconButton } from '@konfigyr/components/clipboard';
 import {
   InlineEdit,
-  InlineEditInput,
   InlineEditPlaceholder,
 } from '@konfigyr//components/ui/inline-edit';
 import { EmptyState } from '@konfigyr/components/ui/empty';
@@ -37,8 +40,6 @@ import {
   TooltipTrigger,
 } from '@konfigyr/components/ui/tooltip';
 import { cn } from '@konfigyr/components/utils';
-import { PropertyDescription } from './property-description';
-import { PropertyName } from './property-name';
 import { StateBadge } from './state-label';
 import {
   PropertyNameLabel,
@@ -47,12 +48,16 @@ import {
 } from './messages';
 
 import type { ReactNode } from 'react';
-import type { ConfigurationProperty, ConfigurationPropertyState } from '@konfigyr/hooks/types';
+import type {
+  ConfigurationProperty,
+  ConfigurationPropertyState,
+  ConfigurationPropertyValue,
+} from '@konfigyr/hooks/types';
 
 interface PropertyActionProps {
-  onDelete?: (property: ConfigurationProperty) => void | Promise<void>
-  onRestore?: (property: ConfigurationProperty) => void | Promise<void>
-  onHistory?: (property: ConfigurationProperty) => void | Promise<void>
+  onDelete?: (property: ConfigurationProperty<any>) => void | Promise<void>
+  onRestore?: (property: ConfigurationProperty<any>) => void | Promise<void>
+  onHistory?: (property: ConfigurationProperty<any>) => void | Promise<void>
 }
 
 const statusBorderColors: Record<ConfigurationPropertyState, string> = {
@@ -62,7 +67,7 @@ const statusBorderColors: Record<ConfigurationPropertyState, string> = {
   added: 'border-l-emerald-500',
 };
 
-function PropertyNameCell({ property }: { property: ConfigurationProperty }) {
+function PropertyNameCell<T>({ property }: { property: ConfigurationProperty<T> }) {
   const isDeleted = property.state === 'deleted';
 
   return (
@@ -72,7 +77,7 @@ function PropertyNameCell({ property }: { property: ConfigurationProperty }) {
           value={property.name}
           className={cn(isDeleted && 'line-through text-muted-foreground')}
         />
-        {property.deprecation && (<StateBadge variant="deprecated" />)}
+        <PropertyDeprecation deprecation={property.deprecation} />
         {property.state === 'added' && (<StateBadge variant="added" />)}
         {property.state === 'modified' && (<StateBadge variant="modified" />)}
         {isDeleted && (<StateBadge variant="deleted" />)}
@@ -86,12 +91,12 @@ function PropertyNameCell({ property }: { property: ConfigurationProperty }) {
   );
 }
 
-function ValueCell({ property, onSave }: {
-  property: ConfigurationProperty,
-  onSave: (property: ConfigurationProperty, value: string) => void,
+function ValueCell<T>({ property, onSave }: {
+  property: ConfigurationProperty<T>,
+  onSave: (property: ConfigurationProperty<T>, value: ConfigurationPropertyValue<T>) => void,
 }) {
   return (
-    <InlineEdit value={property.value} onChange={value => onSave(property, value || '')}>
+    <InlineEdit value={property.value} onChange={value => onSave(property, value!)}>
       <InlineEditPlaceholder
         disabled={property.state === 'deleted'}
         className={cn(
@@ -100,16 +105,16 @@ function ValueCell({ property, onSave }: {
         )}
       >
         <div className="flex items-center gap-2">
-          {property.value && property.value.length > 40 ? (
+          {property.value?.encoded && property.value.encoded.length > 40 ? (
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <span className="truncate max-w-70 block">{property.value}</span>
+                <span className="truncate max-w-70 block">{property.value.encoded}</span>
               </TooltipTrigger>
               <TooltipContent side="top" className="font-mono text-xs max-w-sm break-all">
-                {property.value}
+                {property.value.encoded}
               </TooltipContent>
             </Tooltip>
-          ) : property.value}
+          ) : property.value?.encoded}
 
           {property.state !== 'deleted' && (
             <span className="opacity-0 group-hover/inline-edit-placeholder:opacity-50 transition-opacity">
@@ -119,10 +124,7 @@ function ValueCell({ property, onSave }: {
         </div>
       </InlineEditPlaceholder>
 
-      <InlineEditInput
-        className="h-7 text-sm font-mono px-2 py-1"
-        aria-label={property.name}
-      />
+      <InlineInputField property={property} />
     </InlineEdit>
   );
 }
@@ -170,12 +172,12 @@ function ActionButton({ tooltip, destructive = false, className, children, onCli
   );
 }
 
-function ActionsCell({
+function ActionsCell<T>({
   property,
   onDelete,
   onRestore,
   onHistory,
-}: { property: ConfigurationProperty } & PropertyActionProps) {
+}: { property: ConfigurationProperty<T> } & PropertyActionProps) {
   if (property.state === 'deleted') {
     return (
       <div className="flex items-center justify-end gap-0.5">
@@ -194,7 +196,7 @@ function ActionsCell({
         <ClipboardIconButton
           size="sm"
           variant="ghost"
-          text={property.value}
+          text={property.value.encoded}
           delayDuration={300}
           className="text-muted-foreground hover:text-foreground"
         />
@@ -222,8 +224,8 @@ export function PropertiesTable({
   onRestore,
   onUpdate,
 }: {
-  properties: Array<ConfigurationProperty>,
-  onUpdate: (property: ConfigurationProperty, value?: string) => void | Promise<void>,
+  properties: Array<ConfigurationProperty<any>>,
+  onUpdate: (property: ConfigurationProperty<any>, value?: ConfigurationPropertyValue<any>) => void | Promise<void>,
 } & PropertyActionProps) {
   return (
     <div className="rounded-lg border bg-card overflow-hidden">

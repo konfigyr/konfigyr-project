@@ -45,7 +45,7 @@ export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQue
 
   return (
     <form.AppForm>
-      <form name="keyset-filters" className="flex gap-4 flex-grow-1" onSubmit={onSubmit}>
+      <form name="keyset-filters" className="flex gap-4 grow" onSubmit={onSubmit}>
         <form.AppField
           name="term"
           listeners={{
@@ -53,7 +53,7 @@ export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQue
             onChangeDebounceMs: 200,
           }}
           children={(field) => (
-            <field.Control className="flex-grow-1">
+            <field.Control className="grow">
               <field.Input
                 type="search"
                 placeholder="Search keysets..."

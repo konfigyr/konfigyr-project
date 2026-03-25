@@ -10,6 +10,8 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { useGetHistory } from '@konfigyr/hooks';
+import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
+import { PropertyName } from '@konfigyr/components/artifactory/property-name';
 import { RelativeDate } from '@konfigyr/components/messages';
 import {
   Sheet,
@@ -22,8 +24,6 @@ import { EmptyState } from '@konfigyr/components/ui/empty';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { ErrorState } from '@konfigyr/components/error';
 import { cn } from '@konfigyr/components/utils';
-import { PropertyDescription } from './property-description';
-import { PropertyName } from './property-name';
 import { StateBadge } from './state-label';
 import { PropertyValueLabel } from './messages';
 
@@ -122,7 +122,7 @@ function TimelineItemSkeleton() {
   );
 }
 
-function Timeline({ profile, property }: { profile: Profile, property: ConfigurationProperty }) {
+function Timeline<T>({ profile, property }: { profile: Profile, property: ConfigurationProperty<T> }) {
   const { data: history, error, isLoading, isError } = useGetHistory(profile, property.name);
 
 
@@ -165,19 +165,19 @@ function Timeline({ profile, property }: { profile: Profile, property: Configura
   );
 }
 
-interface PropertyHistorySidebarProps {
+interface PropertyHistorySidebarProps<T> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  property: ConfigurationProperty | null;
+  property: ConfigurationProperty<T> | null;
   profile: Profile;
 }
 
-export function PropertyHistorySidebar({
+export function PropertyHistorySidebar<T>({
   open,
   onOpenChange,
   property,
   profile,
-}: PropertyHistorySidebarProps) {
+}: PropertyHistorySidebarProps<T>) {
   if (!property) {
     return null;
   }
@@ -212,7 +212,7 @@ export function PropertyHistorySidebar({
             <PropertyValueLabel />
           </div>
           <div className="font-mono text-sm text-foreground my-2">
-            {property.value}
+            {property.value?.encoded}
           </div>
           <div className="text-xs text-muted-foreground/50 font-mono">
             {property.typeName}

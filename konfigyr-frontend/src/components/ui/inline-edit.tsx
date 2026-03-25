@@ -17,7 +17,7 @@ import { Switch } from '@konfigyr/components/ui/switch';
 import { Textarea } from '@konfigyr/components/ui/textarea';
 import { cn } from '@konfigyr/components/utils';
 
-import type { ComponentProps, KeyboardEvent, ReactNode } from 'react';
+import type { ComponentProps, KeyboardEvent, ReactNode, RefObject } from 'react';
 
 type EditingContext<T> = {
   value?: T,
@@ -37,6 +37,10 @@ const InlineEditContext = createContext<EditingContext<any>>({
   onCancel: () => {},
   onSave: () => {},
 });
+
+export function useInlineEdit<T>() {
+  return useContext(InlineEditContext) as EditingContext<T>;
+}
 
 export function InlineEdit<T>({ value, children, onChange, onError }: {
   value: T, children: ReactNode,
@@ -115,6 +119,9 @@ export function InlineEditPlaceholder({ disabled = false, className, children }:
 
   const onKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+
       onEdit();
     }
   }, [onEdit]);
@@ -134,7 +141,23 @@ export function InlineEditPlaceholder({ disabled = false, className, children }:
   );
 }
 
-const useKeyboardEvents = (context: EditingContext<any>) => useCallback((event: KeyboardEvent) => {
+export function useFocusEffect<T extends HTMLElement>(context: EditingContext<any>): RefObject<T | null> {
+  const ref = useRef<T>(null);
+
+  useEffect(() => {
+    if (context.isEditing && ref.current) {
+      ref.current.focus();
+
+      if ('select' in ref.current && typeof ref.current.select === 'function') {
+        ref.current.select();
+      }
+    }
+  }, [context.isEditing]);
+
+  return ref;
+}
+
+export const useKeyboardEvents = (context: EditingContext<any>) => useCallback((event: KeyboardEvent) => {
   if (event.key === 'Enter') {
     context.onSave();
   }
@@ -143,7 +166,7 @@ const useKeyboardEvents = (context: EditingContext<any>) => useCallback((event: 
   }
 }, [context.onCancel, context.onSave]);
 
-function InlineEditContainer<T>({ className, children, ...props }: ComponentProps<'div'>) {
+export function InlineEditContainer<T>({ className, children, ...props }: ComponentProps<'div'>) {
   const { isEditing, isPending, onCancel, onSave }: EditingContext<T> = useContext(InlineEditContext);
 
   if (!isEditing) {
@@ -192,15 +215,7 @@ function InlineEditContainer<T>({ className, children, ...props }: ComponentProp
 
 export function InlineEditInput(props: ComponentProps<typeof Input>) {
   const context: EditingContext<string> = useContext(InlineEditContext);
-  const ref = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (context.isEditing && ref.current) {
-      ref.current.focus();
-      ref.current.select();
-    }
-  }, [context.isEditing]);
-
+  const ref = useFocusEffect<HTMLInputElement>(context);
   const onKeyDown = useKeyboardEvents(context);
 
   return (
@@ -219,15 +234,7 @@ export function InlineEditInput(props: ComponentProps<typeof Input>) {
 
 export function InlineEditTextarea(props: ComponentProps<typeof Textarea>) {
   const context: EditingContext<string> = useContext(InlineEditContext);
-  const ref = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (context.isEditing && ref.current) {
-      ref.current.focus();
-      ref.current.select();
-    }
-  }, [context.isEditing]);
-
+  const ref = useFocusEffect<HTMLTextAreaElement>(context);
   const onKeyDown = useKeyboardEvents(context);
 
   return (

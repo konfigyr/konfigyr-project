@@ -14,7 +14,11 @@ import { PropertyHistorySidebar } from '@konfigyr/components/vault/properties/hi
 import { PropertyStatusFilters } from '@konfigyr/components/vault/properties/status-filters';
 import { PropertiesTable } from '@konfigyr/components/vault/properties/table';
 
-import type { ChangesetState, ConfigurationProperty } from '@konfigyr/hooks/types';
+import type {
+  ChangesetState,
+  ConfigurationProperty,
+  ConfigurationPropertyValue,
+} from '@konfigyr/hooks/types';
 import type { StatusFilter } from '@konfigyr/components/vault/properties/status-filters';
 
 const matches = (term: string, value?: string | undefined | null) => {
@@ -44,7 +48,7 @@ const useFilteredProperties = (
     }
 
     return properties.filter(({ name, description, value }) => (
-      matches(term, name) || matches(term, description) || matches(term, value)
+      matches(term, name) || matches(term, description) || matches(term, value?.encoded)
     ));
   }, [properties, termFilter]);
 };
@@ -54,7 +58,7 @@ export function ChangesetEditor({ changeset }: { changeset: ChangesetState }) {
   const [propertyTermFilter, onPropertyTermFilterChanged] = useState<string>('');
 
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [historyProperty, setHistoryProperty] = useState<ConfigurationProperty | null>(null);
+  const [historyProperty, setHistoryProperty] = useState<ConfigurationProperty<any> | null>(null);
 
   const { mutateAsync: onAddProperty } = useAddProperty(changeset);
   const { mutateAsync: onUpdateProperty } = useModifyProperty(changeset);
@@ -67,24 +71,24 @@ export function ChangesetEditor({ changeset }: { changeset: ChangesetState }) {
     propertyStatusFilter,
   );
 
-  const onAdd = async (property: ConfigurationProperty) => {
+  const onAdd = async (property: ConfigurationProperty<any>) => {
     await onAddProperty({ property, value: property.value });
   };
 
-  const onDelete = async (property: ConfigurationProperty) => {
+  const onDelete = async (property: ConfigurationProperty<any>) => {
     await onDeleteProperty({ property });
   };
 
-  const onHistory = (property: ConfigurationProperty) => {
+  const onHistory = (property: ConfigurationProperty<any>) => {
     setHistoryProperty(property);
     setHistoryOpen(true);
   };
 
-  const onUpdate = async (property: ConfigurationProperty, value?: string) => {
+  const onUpdate = async (property: ConfigurationProperty<any>, value?: ConfigurationPropertyValue<any>) => {
     await onUpdateProperty({ property, value });
   };
 
-  const onRestore = async (property: ConfigurationProperty) => {
+  const onRestore = async (property: ConfigurationProperty<any>) => {
     await onRestoreProperty({ property });
   };
 

@@ -20,9 +20,24 @@ export interface CreateProfile {
 
 export type ConfigurationPropertyState = 'unchanged' | 'modified' | 'deleted' | 'added';
 
-export interface ConfigurationProperty extends PropertyDescriptor {
-  value?: string
-  state: ConfigurationPropertyState
+/**
+ * Interface that represents the value of a configuration property. The value contains two
+ * different states, the encoded and the decoded.
+ *
+ * The encoded value is the value managed by the Konfigyr Vault, and it is always represented
+ * by a string. The decoded value is the value * used by the UI presentation layer.
+ *
+ * For example, the decoded value could be a boolean value, a number, or a complex object like
+ * a duration, a date, or a list of strings.
+ */
+export interface ConfigurationPropertyValue<T> {
+  encoded: string;
+  decoded: T;
+}
+
+export interface ConfigurationProperty<T> extends PropertyDescriptor {
+  value?: ConfigurationPropertyValue<T>;
+  state: ConfigurationPropertyState;
 }
 
 export interface ChangesetState {
@@ -31,7 +46,7 @@ export interface ChangesetState {
   profile: Profile;
   name: string;
   state: string;
-  properties: Array<ConfigurationProperty>;
+  properties: Array<ConfigurationProperty<any>>;
   added: number;
   modified: number;
   deleted: number;

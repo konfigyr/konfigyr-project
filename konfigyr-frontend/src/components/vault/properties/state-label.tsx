@@ -13,7 +13,6 @@ export const stateLabelVariants = cva(
     variants: {
       variant: {
         added: '[&>*:first-child]:bg-emerald-600',
-        deprecated: '[&>*:first-child]:bg-destructive',
         deleted: '[&>*:first-child]:bg-destructive',
         modified: '[&>*:first-child]:bg-amber-600',
       },
@@ -22,12 +21,11 @@ export const stateLabelVariants = cva(
 );
 
 export const stateBadgeVariants = cva(
-  'text-xs px-1.5 py-0 h-4 font-normal shrink-0',
+  'font-normal',
   {
     variants: {
       variant: {
         added: 'border-emerald-400/40 text-emerald-600 dark:text-emerald-400',
-        deprecated: 'border-destructive/40 text-destructive',
         deleted: 'border-destructive/40 text-destructive',
         modified: 'border-amber-400/40 text-amber-600 dark:text-amber-400',
       },
@@ -39,8 +37,6 @@ const labelForVariant = (variant?: string | null) => {
   switch (variant) {
     case 'added':
       return <FormattedMessage defaultMessage="added" description="Label for added state badge" />;
-    case 'deprecated':
-      return <FormattedMessage defaultMessage="deprecated" description="Label for deprecated state badge" />;
     case 'deleted':
       return <FormattedMessage defaultMessage="deleted" description="Label for deleted state badge" />;
     case 'modified':
@@ -75,7 +71,7 @@ export function StateBadge({
   ...props
 }: Omit<BadgeProps, 'variant'> & VariantProps<typeof stateBadgeVariants>) {
   return (
-    <Badge className={cn(className, stateBadgeVariants({ variant }))} variant="outline" {...props}>
+    <Badge className={cn(className, stateBadgeVariants({ variant }))} size="sm" variant="outline" {...props}>
       {labelForVariant(variant)}
     </Badge>
   );

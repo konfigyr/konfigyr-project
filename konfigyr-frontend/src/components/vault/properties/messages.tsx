@@ -14,14 +14,6 @@ export const PropertyValueLabel = () => (
   />
 );
 
-export const MissingPropertyDescriptionLabel = () => (
-  <FormattedMessage
-    tagName="i"
-    defaultMessage="No description provided."
-    description="Label used to describe a configuration property that has no description."
-  />
-);
-
 export const AddPropertyLabel = () => (
   <FormattedMessage
     defaultMessage="Add property"
