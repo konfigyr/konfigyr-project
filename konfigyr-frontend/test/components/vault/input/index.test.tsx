@@ -24,11 +24,12 @@ const valueFor = (value: string): ConfigurationPropertyValue<string> => ({
 describe('components | vault | properties | <InputField/>', () => {
   afterEach(() => cleanup());
 
-  test('should render input field for a simple string JSON schema property type', () => {
+  test('should render input field for a simple string JSON schema property type', async () => {
     const property = propertyFor({ type: 'string' });
+    const onChange = vi.fn();
 
     const { getByRole } = renderWithMessageProvider(
-      <InputField property={property} value={valueFor('existing value')} />,
+      <InputField property={property} value={valueFor('existing value')} onChange={onChange} />,
     );
 
     const field = getByRole('textbox', { name: property.name });
@@ -36,6 +37,13 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(field).toHaveValue('existing value');
     expect(field).toHaveAccessibleDescription(property.description);
     expect(field).not.toHaveAttribute('list');
+
+    await userEvent.type(field, 's');
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalledWith({
+        encoded: 'existing values', decoded: 'existing values',
+      });
+    });
   });
 
   test('should render input field for a date JSON schema property type', () => {
@@ -297,6 +305,34 @@ describe('components | vault | properties | <InputField/>', () => {
     const field = getByRole('spinbutton', { name: property.name });
     expect(field).toBeInTheDocument();
     expect(field).toBeInvalid();
+  });
+
+  test('should render field for a JSON schema property type with enumeration', async () => {
+    const property = propertyFor({ type: 'string', enum: ['ON', 'OFF', 'MAYBE'] });
+    const onChange = vi.fn();
+
+    const { getByRole, getAllByRole } = renderWithMessageProvider(
+      <InputField property={property} value={valueFor('OFF')} onChange={onChange} />,
+    );
+
+    const field = getByRole('combobox', { name: property.name });
+    expect(field).toBeInTheDocument();
+
+    await userEvent.click(field);
+
+    await waitFor(() => {
+      expect(getAllByRole('option')).toHaveLength(3);
+    });
+
+    expect(getByRole('option', { name: 'ON' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'OFF' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'MAYBE' })).toBeInTheDocument();
+
+    await userEvent.click(getByRole('option', { name: 'ON' }));
+
+    await waitFor(() => {
+      expect(onChange).toBeCalledWith({ encoded: 'ON', decoded: 'ON' });
+    });
   });
 
   test('should render input field for a duration JSON schema property type', async () => {

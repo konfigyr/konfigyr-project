@@ -183,9 +183,18 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
     await waitFor(() => {
       expect(result.getByRole('textbox', { name: 'application.name' })).toBeInTheDocument();
     });
+
+    const input = result.getByRole('textbox', { name: 'application.name' });
+    await userEvent.clear(input);
+    await userEvent.type(input, 'konfigyr-backend');
+    await userEvent.keyboard('[Enter]');
+
+    await waitFor(() => {
+      expect(result.queryAllByText('modified')).toHaveLength(3);
+    });
   });
 
-  test('should delete changeset property history', async () => {
+  test('should delete changeset property', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
         changeset={changeset}

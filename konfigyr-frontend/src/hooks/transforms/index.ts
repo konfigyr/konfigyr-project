@@ -52,7 +52,10 @@ export const numberTransform: Transform<number> = {
  */
 export const dateTransform: Transform<Date> = {
   encode: (value) => value.toISOString(),
-  decode: (value) => new Date(value),
+  decode: (value) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? null : date;
+  },
 };
 
 /**

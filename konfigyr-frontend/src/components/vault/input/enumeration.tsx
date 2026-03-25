@@ -16,7 +16,11 @@ export type EnumerationFieldProps = InputFieldProps<HTMLElement, string>;
 export function EnumerationField({ property, value, onChange }: EnumerationFieldProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-7 text-sm font-mono w-full">
+      <SelectTrigger
+        className="h-7 text-sm font-mono w-full"
+        aria-label={property.schema.title || property.name}
+        aria-description={property.schema.description || property.description}
+      >
         <SelectValue placeholder={property.defaultValue} />
       </SelectTrigger>
       <SelectContent>
