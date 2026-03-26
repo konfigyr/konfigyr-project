@@ -32,6 +32,7 @@ describe('components | kms | operation | <KeysetDestroyOperation/>', () => {
     );
     expect(result.getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
   test('should successfully destroy keyset', async () => {

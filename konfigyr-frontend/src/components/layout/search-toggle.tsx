@@ -3,7 +3,7 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { Search } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Dialog as DialogPrimitive } from 'radix-ui';
+import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { Button } from '@konfigyr/components/ui/button';
 import { Input } from '@konfigyr/components/ui/input';
 import { Kbd, KbdGroup } from '@konfigyr/components/ui/kbd';
@@ -48,7 +48,7 @@ function SearchDialog(props: ComponentProps<typeof DialogPrimitive.Root>) {
   return (
     <DialogPrimitive.Root {...props}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.DialogOverlay
+        <DialogPrimitive.Backdrop
           data-slot="dialog-overlay"
           className={cn(
             'fixed inset-0 z-50 bg-black/50 backdrop-blur-xs',
@@ -56,7 +56,7 @@ function SearchDialog(props: ComponentProps<typeof DialogPrimitive.Root>) {
             'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
           )}
         />
-        <DialogPrimitive.Content
+        <DialogPrimitive.Popup
           data-slot="dialog-content"
           className={cn(
             'bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%]',
@@ -72,7 +72,7 @@ function SearchDialog(props: ComponentProps<typeof DialogPrimitive.Root>) {
             />
           </DialogPrimitive.Title>
           <SearchForm />
-        </DialogPrimitive.Content>
+        </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
   );
@@ -101,9 +101,9 @@ export function SearchToggle({ className, ...props }: ComponentProps<'button'>) 
       <Button
         {...props}
         size="sm"
-        variant="ghost"
+        variant="outline"
         className={cn(
-          'min-w-7 md:min-w-3xs bg-surface text-foreground dark:bg-card relative justify-start pl-3 font-medium md:border',
+          'min-w-7 md:min-w-3xs bg-surface text-foreground dark:bg-card relative items-center justify-start pl-3 font-medium',
           className,
         )}
         onClick={() => setOpen(true)}
@@ -115,7 +115,7 @@ export function SearchToggle({ className, ...props }: ComponentProps<'button'>) 
             description="Label for the search toggle button"
           />
         </span>
-        <div className="absolute top-1.5 right-1.5 hidden gap-1 md:flex">
+        <div className="absolute right-1.5 hidden gap-1 md:flex">
           <KbdGroup aria-hidden>
             <Kbd className="border">⌘</Kbd>
             <Kbd className="border">K</Kbd>

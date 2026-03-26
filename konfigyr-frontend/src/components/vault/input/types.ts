@@ -1,5 +1,10 @@
-import type { FocusEvent, KeyboardEvent, RefObject } from 'react';
+import type { FocusEvent, KeyboardEvent, ReactNode, RefObject } from 'react';
 import type { PropertyDescriptor } from '@konfigyr/hooks/types';
+
+export interface SchemaHint {
+  value: string;
+  label: ReactNode;
+}
 
 /**
  * Props for the input field component used to edit a configuration property value inside the
@@ -24,6 +29,11 @@ export interface InputFieldProps<TElement extends HTMLElement, TValue> {
    * @param value
    */
   onChange?: (value: TValue) => void,
+
+  /**
+   * The list of schema hints to be displayed in the input field.
+   */
+  hints?: Array<SchemaHint>,
 
   /**
    * The reference to the HTML element that the input field is rendered into.

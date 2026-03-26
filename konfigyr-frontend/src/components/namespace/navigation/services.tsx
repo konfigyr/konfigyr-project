@@ -65,14 +65,14 @@ function ServicesMenu({ namespace }: { namespace: Namespace }) {
     <SidebarMenu>
       {services.map(service => (
         <SidebarMenuItem key={service.id}>
-          <SidebarMenuButton asChild>
+          <SidebarMenuButton render={
             <Link
               to="/namespace/$namespace/services/$service"
               params={{ namespace: namespace.slug, service: service.slug }}
             >
               {service.slug}
             </Link>
-          </SidebarMenuButton>
+          } />
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
@@ -100,11 +100,13 @@ function ServiceDialog({ namespace }: { namespace: Namespace }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={createServiceLabel}>
-          <PlusIcon size="1rem"/>
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button variant="ghost" size="sm" aria-label={createServiceLabel}>
+            <PlusIcon size="1rem"/>
+          </Button>
+        }
+      />
       <DialogContent>
         <DialogTitle>
           {createServiceLabel}

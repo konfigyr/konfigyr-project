@@ -61,11 +61,11 @@ export function ClipboardButton({ text, className, children, ...props }: Clipboa
 
 export function ClipboardIconButton({
   text,
-  delayDuration,
+  delay,
   className,
   children,
   ...props
-}: { delayDuration?: number } & ClipboardButtonProps) {
+}: { delay?: number } & ClipboardButtonProps) {
   const [copied, onCopy] = useClipboardButton(text);
   const [open, setOpen] = useState(false);
 
@@ -74,10 +74,9 @@ export function ClipboardIconButton({
   return (
     <Tooltip
       open={copied || open}
-      delayDuration={delayDuration}
       onOpenChange={setOpen}
     >
-      <TooltipTrigger asChild>
+      <TooltipTrigger delay={delay} render={
         <Button
           {...props}
           className={cn(copied && 'bg-primary-foreground! text-primary!', className)}
@@ -85,7 +84,7 @@ export function ClipboardIconButton({
         >
           {copied ? (<ClipboardCheckIcon />) : body}
         </Button>
-      </TooltipTrigger>
+      }/>
       <TooltipContent>
         {copied ? (<CopiedLabel />) : (<CopyLabel />)}
       </TooltipContent>

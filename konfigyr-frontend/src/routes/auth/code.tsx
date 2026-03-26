@@ -9,7 +9,7 @@ import {
   OAuthErrorDetail,
   OAuthErrorTitle,
 } from '@konfigyr/components/messages/globals';
-import { Button } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/components/ui/button';
 import {
   Card,
   CardContent,
@@ -54,26 +54,20 @@ function OAuthError() {
           )}
 
           {error.error_uri && (
-            <Button variant="ghost" asChild>
-              <GeneralErrorLink>
-                <SquareArrowOutUpRight size="1rem"/>
-              </GeneralErrorLink>
-            </Button>
+            <GeneralErrorLink className={buttonVariants({ variant: 'ghost' })}>
+              <SquareArrowOutUpRight size="1rem"/>
+            </GeneralErrorLink>
           )}
         </CardContent>
         <CardFooter className="justify-between">
           {error.error_uri && (
-            <Button asChild>
-              <a href={error.retry_uri!}>
-                Retry
-              </a>
-            </Button>
-          )}
-          <Button variant="outline" asChild>
-            <a href="mailto:support@konfigyr.com" target="_blank">
-              <Headset size="1rem"/> <ContactSupport />
+            <a href={error.retry_uri!} className={buttonVariants()}>
+              Retry
             </a>
-          </Button>
+          )}
+          <a href="mailto:support@konfigyr.com" target="_blank" className={buttonVariants({ variant: 'outline' })}>
+            <Headset size="1rem"/> <ContactSupport />
+          </a>
         </CardFooter>
       </Card>
     </LayoutContent>

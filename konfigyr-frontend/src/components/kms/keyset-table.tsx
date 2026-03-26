@@ -72,11 +72,13 @@ function KeysetDropdownMenu({ keyset, onOperationSelected }: { keyset: Keyset, o
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="sm" variant="ghost">
-          <EllipsisVerticalIcon size="1rem" />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button size="sm" variant="ghost">
+            <EllipsisVerticalIcon size="1rem" />
+          </Button>
+        }
+      />
       <DropdownMenuContent className="w-68">
         <DropdownMenuGroup>
           <DropdownMenuItem>Edit</DropdownMenuItem>

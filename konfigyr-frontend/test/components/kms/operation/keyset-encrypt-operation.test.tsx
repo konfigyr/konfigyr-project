@@ -34,6 +34,7 @@ describe('components | kms | operation | <KeysetEncryptOperation/>', () => {
     expect(result.getByRole('textbox', { name: 'Additional authenticated data' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Encrypt data' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
   test('should validate form', async () => {
@@ -84,13 +85,15 @@ describe('components | kms | operation | <KeysetEncryptOperation/>', () => {
     await waitFor(() => {
       expect(result.getByRole('textbox', { name: 'Encrypted text' })).toBeInTheDocument();
       expect(result.getByRole('textbox', { name: 'Encrypted text' })).toHaveValue('encrypted-data');
-      expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
       expect(result.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
     });
   });
 
   test('should close the keyset operation dialog', async () => {
-    await userEvents.click(result.getByRole('button', { name: 'Close' }));
+    const closeButtons = result.getAllByRole('button', { name: 'Close' });
+    expect(closeButtons).toHaveLength(2);
+
+    await userEvents.click(closeButtons[1]);
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).not.toBeInTheDocument();

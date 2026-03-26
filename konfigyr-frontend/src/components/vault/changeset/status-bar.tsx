@@ -99,16 +99,18 @@ function ChangesetName({ changeset, onError }: { changeset: ChangesetState, onEr
         onChange={onRenameChangeset}
         onError={onError}
       >
-        <InlineEditPlaceholder>
-          <button
-            type="button"
-            className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-foreground/80 transition-colors group/name truncate max-w-50"
-          >
-            <SaveIcon className="size-3 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="truncate">{changeset.name}</span>
-            <PencilIcon className="size-2.5 text-muted-foreground/50 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
-          </button>
-        </InlineEditPlaceholder>
+        <InlineEditPlaceholder
+          render={
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-foreground/80 transition-colors group/name truncate max-w-50"
+            >
+              <SaveIcon className="size-3 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="truncate">{changeset.name}</span>
+              <PencilIcon className="size-2.5 text-muted-foreground/50 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
+            </button>
+          }
+        />
         <InlineEditInput
           placeholder="Changeset name..."
           className="h-6 text-xs w-48"

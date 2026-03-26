@@ -193,16 +193,14 @@ export function PropertyHistorySidebar<T>({
                 description="Title of the property history sheet"
               />
             </SheetTitle>
-            <SheetDescription asChild>
-              <div className="flex flex-col gap-1.5">
-                <PropertyName
-                  value={property.name}
-                  className="font-medium text-foreground bg-muted px-2 py-1 rounded-md inline-block w-fit"
-                />
-                <PropertyDescription
-                  value={property.description}
-                />
-              </div>
+            <SheetDescription className="flex flex-col gap-1.5">
+              <PropertyName
+                value={property.name}
+                className="font-medium text-foreground bg-muted px-2 py-1 rounded-md inline-block w-fit"
+              />
+              <PropertyDescription
+                value={property.description}
+              />
             </SheetDescription>
           </SheetHeader>
         </div>

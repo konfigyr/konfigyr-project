@@ -96,9 +96,8 @@ export function KeysetDecryptOperation({ namespace, keyset, onCancel, onError }:
               defaultMessage="Text to decrypt"
               description="Label for the textarea field that contains the cipher text to be decrypted."
             />}
-          >
-            <field.Textarea rows={6}/>
-          </field.Control>
+            render={<field.Textarea rows={6}/>}
+          />
         )} />
 
         <form.AppField name="aad" children={(field) => (
@@ -111,9 +110,8 @@ export function KeysetDecryptOperation({ namespace, keyset, onCancel, onError }:
               defaultMessage="Additional authenticated data is used as an integrity check and can help protect your data from a confused deputy attack."
               description="Helptext for the textarea field that explains how additional authenticated data is used when decrypting data."
             />}
-          >
-            <field.Textarea rows={4}/>
-          </field.Control>
+            render={<field.Textarea rows={4}/>}
+          />
         )} />
 
         <div className="flex justify-end gap-2">

@@ -72,7 +72,7 @@ export function LayoutNavbar({ title, children }: { title: string } & ComponentP
 
   return (
     <div className="h-14 flex items-center gap-4 justify-between px-4 py-2 mb-6 border-b">
-      <h1 className="text-2xl font-semibold">{title}</h1>
+      <h1 className="text-2xl font-heading font-semibold">{title}</h1>
       {children && (
         <div className="grow">
           {children}

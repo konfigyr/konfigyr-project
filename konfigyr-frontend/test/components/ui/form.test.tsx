@@ -38,30 +38,30 @@ function ExampleForm({ onSubmit }: { onSubmit: (value: z.infer<typeof schema>) =
           <field.Control
             label="Your name"
             description="Enter your first and last name"
-          >
-            <field.Input />
-          </field.Control>
+            render={<field.Input />}
+          />
         )} />
 
         <form.AppField name="age" children={(field) => (
           <field.Control
             label="Your age"
             description="How old are you?"
-          >
-            <field.Input type="number" />
-          </field.Control>
+            render={<field.Input type="number" />}
+          />
         )} />
 
         <form.AppField name="description" children={(field) => (
-          <field.Control label="Tell us more about yourself">
-            <field.Textarea />
-          </field.Control>
+          <field.Control
+            label="Tell us more about yourself"
+            render={<field.Textarea />}
+          />
         )} />
 
         <form.AppField name="enabled" children={(field) => (
-          <field.Control label="Do you wanna receive newsletters?">
-            <field.Switch />
-          </field.Control>
+          <field.Control
+            label="Do you wanna receive newsletters?"
+            render={<field.Switch />}
+          />
         )} />
 
         <form.Submit>Submit</form.Submit>

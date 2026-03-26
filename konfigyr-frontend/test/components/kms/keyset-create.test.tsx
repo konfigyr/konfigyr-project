@@ -52,8 +52,16 @@ describe('components | kms | <CreateKeysetForm/>', () => {
       'existing-keyset',
     );
 
-    await userEvents.selectOptions(
-      result.container.querySelector('select')!, 'AES128_GCM',
+    await userEvents.click(
+      result.getByRole('combobox', { name: 'Keyset algorithm' }),
+    );
+
+    await waitFor(() => {
+      expect(result.getAllByRole('option')).toHaveLength(5);
+    });
+
+    await userEvents.click(
+      result.getByRole('option', { name: /AES128-GCM/ }),
     );
 
     await userEvents.click(
@@ -75,8 +83,16 @@ describe('components | kms | <CreateKeysetForm/>', () => {
       'new-keyset',
     );
 
-    await userEvents.selectOptions(
-      result.container.querySelector('select')!, 'AES256_GCM',
+    await userEvents.click(
+      result.getByRole('combobox', { name: 'Keyset algorithm' }),
+    );
+
+    await waitFor(() => {
+      expect(result.getAllByRole('option')).toHaveLength(5);
+    });
+
+    await userEvents.click(
+      result.getByRole('option', { name: /AES256-GCM/ }),
     );
 
     await userEvents.click(

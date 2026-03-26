@@ -51,14 +51,14 @@ export function KeysetStateSelect({ value, reset = false, placeholder, className
   reset?: boolean,
   placeholder?: string | ReactNode,
   className?: string,
-  onChange?: (value: string | KeysetState) => void,
+  onChange?: (value: string | KeysetState | null) => void,
   onReset?: () => void
 }) {
   return (
     <Select name="keyset-state" value={value} onValueChange={onChange}>
       <SelectTrigger className={className}>
-        <SelectValue placeholder={placeholder}>
-          <KeysetState state={value} />
+        <SelectValue>
+          {value ? (<KeysetState state={value} />) : placeholder}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>

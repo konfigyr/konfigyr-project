@@ -108,9 +108,8 @@ export function KeysetEncryptOperation({ namespace, keyset, onCancel, onError }:
               defaultMessage="Text to encrypt"
               description="Label for the textarea field that contains the plain text to be encrypted."
             />}
-          >
-            <field.Textarea rows={6}/>
-          </field.Control>
+            render={<field.Textarea rows={6}/>}
+          />
         )} />
 
         <form.AppField name="aad" children={(field) => (
@@ -123,9 +122,8 @@ export function KeysetEncryptOperation({ namespace, keyset, onCancel, onError }:
               defaultMessage="Additional authenticated data is used as an integrity check and can help protect your data from a confused deputy attack."
               description="Helptext for the textarea field that explains how additional authenticated data is used when encrypting data."
             />}
-          >
-            <field.Textarea rows={4}/>
-          </field.Control>
+            render={<field.Textarea rows={4}/>}
+          />
         )} />
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

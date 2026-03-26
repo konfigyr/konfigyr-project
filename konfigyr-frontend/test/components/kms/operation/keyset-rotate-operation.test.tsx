@@ -32,6 +32,7 @@ describe('components | kms | operation | <KeysetRotateOperation/>', () => {
     );
     expect(result.getByRole('button', { name: 'Generate new key' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
   test('should successfully rotate keyset', async () => {

@@ -47,21 +47,20 @@ describe('components | namespace | members | <UpdateMemberForm/>', () => {
       expect(result.getByRole('dialog')).toBeInTheDocument();
       expect(result.getByRole('dialog')).toHaveAccessibleName('Change the role of Namespace Member?');
       expect(result.getByRole('dialog')).toHaveAccessibleDescription('Select a new role for this member.');
-      expect(result.getByRole('radiogroup')).toBeInTheDocument();
-      expect(result.getByRole('radio', { checked: false })).toBeInTheDocument();
-      expect(result.getByRole('radio', { checked: false })).toHaveValue(NamespaceRole.ADMIN);
-      expect(result.getByRole('radio', { checked: true })).toBeInTheDocument();
-      expect(result.getByRole('radio', { checked: true })).toHaveValue(NamespaceRole.USER);
-      expect(result.getByRole('button', { name: 'Close dialog' })).toBeInTheDocument();
-      expect(result.getByRole('button', { name: 'Update role' })).toBeInTheDocument();
     });
+
+    expect(result.getByRole('radiogroup')).toBeInTheDocument();
+    expect(result.getByRole('radio', { checked: false, name: 'Administrator' })).toBeInTheDocument();
+    expect(result.getByRole('radio', { checked: true, name: 'User' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Update role' })).toBeInTheDocument();
   });
 
   test('should invoke on close action when cancel button is clicked', async () => {
     const result = render(member, onClose);
 
     await userEvents.click(
-      result.getByRole('button', { name: 'Close dialog' }),
+      result.getByRole('button', { name: 'Close' }),
     );
 
     expect(onClose).toHaveBeenCalledOnce();

@@ -41,26 +41,29 @@ export function NamespaceApplicationArticle({ application, namespace }: {
   application: NamespaceApplication;
 }) {
   return (
-    <Item asChild>
-      <Link
-        to="/namespace/$namespace/applications/$id"
-        params={{
-          namespace: namespace.slug,
-          id: application.id,
-        }}>
-        <ItemContent>
-          <ItemTitle>
-            {application.name}
-          </ItemTitle>
-          <ItemDescription>
-            <CreateExpirationDateLabel expiresAt={application.expiresAt} />
-          </ItemDescription>
-        </ItemContent>
-        <ItemActions>
-          <ChevronRightIcon className="size-4" />
-        </ItemActions>
-      </Link>
-    </Item>
+    <Item
+      className="-mx-2"
+      render={
+        <Link
+          to="/namespace/$namespace/applications/$id"
+          params={{
+            namespace: namespace.slug,
+            id: application.id,
+          }}>
+          <ItemContent>
+            <ItemTitle>
+              {application.name}
+            </ItemTitle>
+            <ItemDescription>
+              <CreateExpirationDateLabel expiresAt={application.expiresAt} />
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <ChevronRightIcon className="size-4" />
+          </ItemActions>
+        </Link>
+      }
+    />
   );
 }
 
@@ -109,7 +112,7 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
           )}
 
           {applications && (
-            <ItemGroup className="-mx-2">
+            <ItemGroup>
               {applications.map(app => (
                 <NamespaceApplicationArticle
                   key={app.id}

@@ -25,10 +25,10 @@ export function PropertyDeprecation({ deprecation }: { deprecation?: PropertyDep
 export function PropertyDeprecationTooltip({ deprecation, children }: { deprecation: PropertyDeprecation, children: ReactNode }) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
+      <TooltipTrigger>
         {children}
       </TooltipTrigger>
-      <TooltipContent>
+      <TooltipContent className="grid max-w-full">
         <p className="leading-snug mb-1">
           {deprecation.reason ? deprecation.reason : (
             <FormattedMessage

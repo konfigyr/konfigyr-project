@@ -76,9 +76,8 @@ export function KeysetVerifySignatureOperation({ namespace, keyset, onCancel, on
               defaultMessage="Signature to verify"
               description="Label for the textarea field that contains the digital signature to be verified."
             />}
-          >
-            <field.Textarea rows={6}/>
-          </field.Control>
+            render={<field.Textarea rows={6}/>}
+          />
         )} />
 
         <form.AppField name="plaintext" children={(field) => (
@@ -87,9 +86,8 @@ export function KeysetVerifySignatureOperation({ namespace, keyset, onCancel, on
               defaultMessage="Text to verify"
               description="Label for the textarea field that contains the plain text to verify if the digital signature is valid."
             />}
-          >
-            <field.Textarea rows={6}/>
-          </field.Control>
+            render={<field.Textarea rows={6}/>}
+          />
         )} />
 
         <OperationResult valid={response?.valid} />

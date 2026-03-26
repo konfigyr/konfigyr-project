@@ -27,11 +27,9 @@ export function PropertyTypeName({ value, className, ...props }: { value: string
 
   if (truncated) {
     return (
-      <Tooltip delayDuration={200}>
-        <TooltipTrigger asChild>
-          <PropertyTypeNameBadge value={text} {...props} />
-        </TooltipTrigger>
-        <TooltipContent side="top" className="font-mono text-xs">
+      <Tooltip>
+        <TooltipTrigger delay={200} render={<PropertyTypeNameBadge value={text} {...props} />} />
+        <TooltipContent side="top" className="font-mono text-xs max-w-full">
           {value}
         </TooltipContent>
       </Tooltip>

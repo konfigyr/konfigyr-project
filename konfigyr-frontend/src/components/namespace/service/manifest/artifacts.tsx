@@ -81,7 +81,7 @@ export function ServiceArtifacts({ namespace, service }: { namespace: Namespace,
         )}
 
         {manifest?.artifacts && (
-          <ItemGroup className="-mx-4">
+          <ItemGroup>
             {manifest.artifacts.map(artifact => (
               <ArtifactItem
                 key={`${artifact.groupId}:${artifact.artifactId}:${artifact.version}`}

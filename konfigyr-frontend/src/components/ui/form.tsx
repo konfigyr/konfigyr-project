@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Slot } from 'radix-ui';
+import { useRender } from '@base-ui/react/use-render';
 import { createFormHook, createFormHookContexts } from '@tanstack/react-form';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import { Textarea } from '@konfigyr/components/ui/textarea';
 import { cn } from '@konfigyr/components/utils';
 
 import type { ChangeEvent } from 'react';
+import type { UseRenderRenderProp } from '@base-ui/react/use-render';
 import type { FieldApi } from '@tanstack/react-form';
 import type { ButtonProps } from './button';
 
@@ -57,13 +58,13 @@ function useFormControl<TData extends Primitive>(): FormControlContextValue<TDat
 export function FormControl<TData extends undefined | Primitive>({
   label,
   description,
-  children,
+  render,
   ...props
 }: {
   label?: string | React.ReactNode;
   description?: string | React.ReactNode;
-  children?: React.ReactNode
-} & Omit<React.ComponentProps<'div'>, 'children'>) {
+  render: UseRenderRenderProp;
+} & useRender.ComponentProps<'input'> & Omit<React.ComponentProps<'div'>, 'children'>) {
   const field = useFieldContext<TData>();
   const id = React.useId();
 
@@ -77,19 +78,18 @@ export function FormControl<TData extends undefined | Primitive>({
       <FormField
         label={label}
         description={description}
+        render={render}
         {...props}
-      >
-        {children}
-      </FormField>
+      />
     </FormControlContext.Provider>
   );
 }
 
-function FormField<TData extends undefined | Primitive>({ children, label, description, className, ...props }: {
+function FormField<TData extends undefined | Primitive>({ render, label, description, className, ...props }: {
   label?: string | React.ReactNode;
   description?: string | React.ReactNode;
-  children: React.ReactNode
-} & Omit<React.ComponentProps<typeof Field>, 'children'>) {
+  render: UseRenderRenderProp;
+} & useRender.ComponentProps<'input'> & Omit<React.ComponentProps<typeof Field>, 'children'>) {
   const { formInputId, formDescriptionId, formErrorId, field } = useFormControl<TData>();
   const ariaDescribedBy = React.useMemo(() => {
     const ids = [];
@@ -107,6 +107,19 @@ function FormField<TData extends undefined | Primitive>({ children, label, descr
     }
   }, [description, formDescriptionId, formErrorId, field.state.meta.isValid]);
 
+  const input = useRender({
+    defaultTagName: 'input',
+    props: {
+      id: formInputId,
+      'aria-describedby': ariaDescribedBy,
+      'aria-invalid': !field.state.meta.isValid,
+    },
+    render,
+    state: {
+      slot: 'form-control',
+    },
+  });
+
   return (
     <Field {...props}>
       {label && (
@@ -119,14 +132,7 @@ function FormField<TData extends undefined | Primitive>({ children, label, descr
         </FieldLabel>
       )}
 
-      <Slot.Root
-        data-slot="form-control"
-        id={formInputId}
-        aria-describedby={ariaDescribedBy}
-        aria-invalid={!field.state.meta.isValid}
-      >
-        {children}
-      </Slot.Root>
+      {input}
 
       {description && (
         <FormDescription>

@@ -86,9 +86,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
             <field.Control
               label={<NamespaceNameLabel />}
               description={<NamespaceNameDescription />}
-            >
-              <field.Input type="text" />
-            </field.Control>
+              render={<field.Input type="text" />}
+            />
           )}
         />
 
@@ -102,9 +101,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
             <field.Control
               label={<NamespaceSlugLabel />}
               description={<SlugDescription />}
-            >
-              <field.Input type="text" />
-            </field.Control>
+              render={<field.Input type="text" />}
+            />
           )}
         />
 
@@ -112,9 +110,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
           <field.Control
             label={<NamespaceDescriptionLabel />}
             description={<NamespaceDescriptionHelpText />}
-          >
-            <field.Textarea rows={6} />
-          </field.Control>
+            render={<field.Textarea rows={6} />}
+          />
         )} />
 
         <Separator />

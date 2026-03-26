@@ -18,37 +18,42 @@ export function ProfileMenu({ namespace, service, profiles }: {
   return (
     <Tabs>
       {profiles.sort((a, b) => a.position - b.position).map((profile) => (
-        <TabItem key={profile.id}>
-          <Link
-            to="/namespace/$namespace/services/$service/profiles/$profile"
-            params={{ namespace: namespace.slug, service: service.slug, profile: profile.slug }}
-            activeProps={{ 'data-state': 'active' }}
-            activeOptions={{ exact: true }}
-          >
-            {profile.name}
-          </Link>
-        </TabItem>
+        <TabItem
+          key={profile.id}
+          render={
+            <Link
+              to="/namespace/$namespace/services/$service/profiles/$profile"
+              params={{ namespace: namespace.slug, service: service.slug, profile: profile.slug }}
+              activeProps={{ 'data-state': 'active' }}
+              activeOptions={{ exact: true }}
+            >
+              {profile.name}
+            </Link>
+          }
+        />
       ))}
 
-      <TabItem>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              to="/namespace/$namespace/services/$service/create-profile"
-              params={{ namespace: namespace.slug, service: service.slug }}
-              className="inline-flex items-center px-2 rounded-sm hover:bg-accent [&_svg]:shrink-0 [&_svg]:size-4"
-            >
-              <PlusIcon />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <FormattedMessage
-              defaultMessage="Create new configuration profile"
-              description="Tooltip content for creating a new configuration profile."
-            />
-          </TooltipContent>
-        </Tooltip>
-      </TabItem>
+      <TabItem
+        render={
+          <Tooltip>
+            <TooltipTrigger render={
+              <Link
+                to="/namespace/$namespace/services/$service/create-profile"
+                params={{ namespace: namespace.slug, service: service.slug }}
+                className="inline-flex items-center px-2 rounded-sm hover:bg-accent [&_svg]:shrink-0 [&_svg]:size-4"
+              >
+                <PlusIcon />
+              </Link>
+            } />
+            <TooltipContent>
+              <FormattedMessage
+                defaultMessage="Create new configuration profile"
+                description="Tooltip content for creating a new configuration profile."
+              />
+            </TooltipContent>
+          </Tooltip>
+        }
+      />
     </Tabs>
   );
 }

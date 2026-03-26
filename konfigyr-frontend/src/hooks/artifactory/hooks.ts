@@ -10,8 +10,24 @@ import {
 import type { PropertyJsonSchema } from './types';
 import type { Transform } from '../transforms';
 
+class ArrayTransform<T> implements Transform<Array<T>> {
+  constructor(private readonly delegate: Transform<T>) {}
+
+  decode(value: string): Array<T> | null {
+    return value.split(',').map(this.delegate.decode).filter(Boolean) as Array<T>;
+  }
+
+  encode(value: Array<T>): string {
+    return value.map(this.delegate.encode).join(',');
+  }
+}
+
 export function useJsonSchemeTransform<T>(schema: PropertyJsonSchema): Transform<T> {
   switch (schema.type) {
+    case 'array':
+      return new ArrayTransform(
+        useJsonSchemeTransform<any>(schema.items || { type: 'string' }),
+      ) as unknown as Transform<T>;
     case 'boolean':
       return booleanTransform as unknown as Transform<T>;
     case 'number':

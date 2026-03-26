@@ -2,11 +2,7 @@ import { useId } from 'react';
 
 import type { ComponentProps } from 'react';
 import type { PropertyJsonSchema } from '@konfigyr/hooks/artifactory/types';
-
-export interface SchemaHint {
-  value: string;
-  label: string;
-}
+import type { SchemaHint } from './types';
 
 export interface SchemaHintProps {
   id: string;

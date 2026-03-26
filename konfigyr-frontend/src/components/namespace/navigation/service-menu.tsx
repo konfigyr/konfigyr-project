@@ -14,7 +14,7 @@ export function ServiceNavigationMenu({ namespace, service }: { namespace: Names
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink render={
             <Link
               to="/namespace/$namespace/services/$service"
               params={{ namespace: namespace.slug, service: service.slug }}
@@ -24,11 +24,11 @@ export function ServiceNavigationMenu({ namespace, service }: { namespace: Names
             >
               Overview
             </Link>
-          </NavigationMenuLink>
+          } />
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink render={
             <Link
               to="/namespace/$namespace/services/$service/requests"
               params={{ namespace: namespace.slug, service: service.slug }}
@@ -38,11 +38,11 @@ export function ServiceNavigationMenu({ namespace, service }: { namespace: Names
             >
               Change requests
             </Link>
-          </NavigationMenuLink>
+          } />
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink render={
             <Link
               to="/namespace/$namespace/services/$service/manifest"
               params={{ namespace: namespace.slug, service: service.slug }}
@@ -52,11 +52,11 @@ export function ServiceNavigationMenu({ namespace, service }: { namespace: Names
             >
               Manifest
             </Link>
-          </NavigationMenuLink>
+          } />
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink render={
             <Link
               to="/namespace/$namespace/services/$service/settings"
               params={{ namespace: namespace.slug, service: service.slug }}
@@ -66,7 +66,8 @@ export function ServiceNavigationMenu({ namespace, service }: { namespace: Names
             >
               Settings
             </Link>
-          </NavigationMenuLink>
+          } />
+
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>

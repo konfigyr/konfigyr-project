@@ -2,7 +2,7 @@ import { useInsertionEffect, useMemo } from 'react';
 import { Headset } from 'lucide-react';
 import { normalizeError } from '@konfigyr/components/error/normalize';
 import { ContactSupport } from '@konfigyr/components/messages';
-import { Button } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/components/ui/button';
 import {
   Card,
   CardContent,
@@ -41,16 +41,12 @@ export function ErrorBoundary({ error, reset }: ErrorComponentProps) {
             </CardContent>
           )}
           <CardFooter className="justify-between">
-            <Button asChild onClick={reset}>
-              <Link to="/">
-                Home
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="mailto:support@konfigyr.com" target="_blank">
-                <Headset size="1rem"/> <ContactSupport />
-              </a>
-            </Button>
+            <Link to="/" className={buttonVariants()} onClick={reset}>
+              Home
+            </Link>
+            <a href="mailto:support@konfigyr.com" target="_blank" className={buttonVariants({ variant: 'outline' })}>
+              <Headset size="1rem"/> <ContactSupport />
+            </a>
           </CardFooter>
         </Card>
       </div>

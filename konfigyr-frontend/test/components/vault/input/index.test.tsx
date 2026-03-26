@@ -394,11 +394,13 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(trigger).toBeInTheDocument();
 
     await userEvent.click(trigger);
-    expect(getByRole('menuitemradio', { name: 'Bytes' } )).toBeInTheDocument();
-    expect(getByRole('menuitemradio', { name: 'Kilobytes' } )).toBeInTheDocument();
-    expect(getByRole('menuitemradio', { name: 'Megabytes' } )).toBeInTheDocument();
-    expect(getByRole('menuitemradio', { name: 'Gigabytes' } )).toBeInTheDocument();
-    expect(getByRole('menuitemradio', { name: 'Terabytes' } )).toBeInTheDocument();
+    await waitFor(() => {
+      expect(getByRole('menuitemradio', { name: 'Bytes' } )).toBeInTheDocument();
+      expect(getByRole('menuitemradio', { name: 'Kilobytes' } )).toBeInTheDocument();
+      expect(getByRole('menuitemradio', { name: 'Megabytes' } )).toBeInTheDocument();
+      expect(getByRole('menuitemradio', { name: 'Gigabytes' } )).toBeInTheDocument();
+      expect(getByRole('menuitemradio', { name: 'Terabytes' } )).toBeInTheDocument();
+    });
 
     await userEvent.click(getByRole('menuitemradio', { name: 'Bytes' } ));
     expect(onChange).toBeCalledWith({
@@ -406,4 +408,136 @@ describe('components | vault | properties | <InputField/>', () => {
     });
   });
 
+  test('should render input field for an array JSON schema property type', async () => {
+    const property = propertyFor({ type: 'array', items: { type: 'string' } });
+    const value = { encoded: 'foo, bar, baz', decoded: ['foo', 'bar', 'baz'] };
+    const onChange = vi.fn();
+
+    const { getByRole } = renderWithMessageProvider(
+      <InputField property={property} value={value} onChange={onChange} />,
+    );
+
+    expect(getByRole('toolbar')).toBeInTheDocument();
+    expect(getByRole('combobox')).toBeInTheDocument();
+    expect(getByRole('combobox')).toHaveAccessibleName(property.name);
+    expect(getByRole('combobox')).toHaveValue('');
+
+    const chips = Array.from(getByRole('toolbar').querySelectorAll('[data-slot="combobox-chip"]'))
+      .map((child) => child.textContent);
+
+    expect(chips).toStrictEqual(['foo', 'bar', 'baz']);
+
+    await userEvent.type(
+      getByRole('combobox'), 'new option',
+    );
+
+    await waitFor(() => {
+      expect(getByRole('option', { name: 'new option' })).toBeInTheDocument();
+    });
+
+    await userEvent.click(getByRole('option', { name: 'new option' }));
+
+    expect(onChange).toBeCalledWith({
+      encoded: 'foo,bar,baz,new option', decoded: ['foo', 'bar', 'baz', 'new option'],
+    });
+  });
+
+  test('should render input field for an array JSON schema property type with enumeration', async () => {
+    const property = propertyFor({
+      type: 'array', items: { type: 'string', enum: ['foo', 'bar', 'baz'] },
+    });
+    const value = { encoded: 'foo, bar', decoded: ['foo', 'bar'] };
+    const onChange = vi.fn();
+
+    const { getByRole, getByText } = renderWithMessageProvider(
+      <InputField property={property} value={value} onChange={onChange} />,
+    );
+
+    expect(getByRole('toolbar')).toBeInTheDocument();
+    expect(getByRole('combobox')).toBeInTheDocument();
+    expect(getByRole('combobox')).toHaveAccessibleName(property.name);
+    expect(getByRole('combobox')).toHaveValue('');
+
+    const chips = Array.from(getByRole('toolbar').querySelectorAll('[data-slot="combobox-chip"]'))
+      .map((child) => child.textContent);
+
+    expect(chips).toStrictEqual(['foo', 'bar']);
+
+    await userEvent.type(
+      getByRole('combobox'), 'ba',
+    );
+
+    await waitFor(() => {
+      expect(getByRole('combobox')).toHaveValue('ba');
+    });
+
+    expect(getByRole('option', { name: 'bar' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'bar' })).toHaveAttribute('aria-selected', 'true');
+    expect(getByRole('option', { name: 'baz' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'baz' })).toHaveAttribute('aria-selected', 'false');
+
+    await userEvent.type(
+      getByRole('combobox'), 'missing',
+    );
+
+    await waitFor(() => {
+      expect(getByText('No matching items found')).toBeInTheDocument();
+    });
+
+    await userEvent.clear(getByRole('combobox'));
+    await userEvent.click(getByRole('option', { name: 'bar' }));
+
+    expect(onChange).toBeCalledWith({
+      encoded: 'foo', decoded: ['foo'],
+    });
+  });
+
+  test('should render input field for an array JSON schema property type with examples', async () => {
+    const property = propertyFor({
+      type: 'array', items: { type: 'string', examples: ['foo', 'bar', 'baz'] },
+    });
+    const value = { encoded: 'foo, bar', decoded: ['foo', 'bar'] };
+    const onChange = vi.fn();
+
+    const { getByRole } = renderWithMessageProvider(
+      <InputField property={property} value={value} onChange={onChange} />,
+    );
+
+    expect(getByRole('toolbar')).toBeInTheDocument();
+    expect(getByRole('combobox')).toBeInTheDocument();
+    expect(getByRole('combobox')).toHaveAccessibleName(property.name);
+    expect(getByRole('combobox')).toHaveValue('');
+
+    const chips = Array.from(getByRole('toolbar').querySelectorAll('[data-slot="combobox-chip"]'))
+      .map((child) => child.textContent);
+
+    expect(chips).toStrictEqual(['foo', 'bar']);
+
+    await userEvent.type(
+      getByRole('combobox'), 'ba',
+    );
+
+    await waitFor(() => {
+      expect(getByRole('combobox')).toHaveValue('ba');
+    });
+
+    expect(getByRole('option', { name: 'bar' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'bar' })).toHaveAttribute('aria-selected', 'true');
+    expect(getByRole('option', { name: 'baz' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'baz' })).toHaveAttribute('aria-selected', 'false');
+
+    await userEvent.type(
+      getByRole('combobox'), 'zz',
+    );
+
+    await waitFor(() => {
+      expect(getByRole('option', { name: 'bazz' })).toBeInTheDocument();
+    });
+
+    await userEvent.click(getByRole('option', { name: 'bazz' }));
+
+    expect(onChange).toBeCalledWith({
+      encoded: 'foo,bar,bazz', decoded: ['foo', 'bar', 'bazz'],
+    });
+  });
 });

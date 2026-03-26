@@ -21,7 +21,7 @@ export function NamespaceKmsNavigationMenu({ namespace }: { namespace: Namespace
         </SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/kms"
                 params={{ namespace: namespace.slug }}
@@ -33,7 +33,7 @@ export function NamespaceKmsNavigationMenu({ namespace }: { namespace: Namespace
                   description="Label for the KMS key management page"
                 />
               </Link>
-            </SidebarMenuButton>
+            } />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>

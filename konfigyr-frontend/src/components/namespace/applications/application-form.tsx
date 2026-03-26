@@ -105,9 +105,8 @@ export function NamespaceApplicationForm({ namespace, namespaceApplication, hand
               defaultMessage="Enter a name for the application."
               description="Help text for the namespace application name field"
             />}
-          >
-            <field.Input />
-          </field.Control>
+            render={<field.Input />}
+          />
         )} />
 
         <form.AppField name="expiresAt" children={(field) => (
@@ -120,19 +119,20 @@ export function NamespaceApplicationForm({ namespace, namespaceApplication, hand
               defaultMessage="Select the date when this application should expire."
               description="Help text for the namespace application expiration date field"
             />}
-          >
-            <field.Input type="date" />
-          </field.Control>
+            render={<field.Input type="date" />}
+          />
         )} />
 
         <form.AppField name="scopes" children={(field) => (
-          <field.Control>
-            <ApplicationScopesField
-              namespace={namespace}
-              value={field.state.value}
-              onChange={field.handleChange}
-            />
-          </field.Control>
+          <field.Control
+            render={
+              <ApplicationScopesField
+                namespace={namespace}
+                value={field.state.value}
+                onChange={field.handleChange}
+              />
+            }
+          />
         )} />
 
         <form.Submit>

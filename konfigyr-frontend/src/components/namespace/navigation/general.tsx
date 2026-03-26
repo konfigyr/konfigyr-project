@@ -22,7 +22,7 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace"
                 params={{ namespace: namespace.slug }}
@@ -32,8 +32,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
               >
                 <MonitorIcon /> Overview
               </Link>
-            </SidebarMenuButton>
-            <SidebarMenuButton asChild>
+            } />
+            <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/members"
                 params={{ namespace: namespace.slug }}
@@ -42,8 +42,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
               >
                 <UsersIcon /> Members
               </Link>
-            </SidebarMenuButton>
-            <SidebarMenuButton asChild>
+            } />
+            <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/invitations"
                 params={{ namespace: namespace.slug }}
@@ -52,8 +52,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
               >
                 <SendIcon /> Invitations
               </Link>
-            </SidebarMenuButton>
-            <SidebarMenuButton asChild>
+            } />
+            <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/settings"
                 params={{ namespace: namespace.slug }}
@@ -62,8 +62,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
               >
                 <Settings2Icon /> Settings
               </Link>
-            </SidebarMenuButton>
-            <SidebarMenuButton asChild>
+            } />
+            <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/applications"
                 params={{ namespace: namespace.slug }}
@@ -72,7 +72,7 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
               >
                 <MonitorCloud /> Applications
               </Link>
-            </SidebarMenuButton>
+            } />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>

@@ -5,7 +5,6 @@ import {
   ChevronRightIcon,
   MoreHorizontalIcon,
 } from 'lucide-react';
-import { Slot } from 'radix-ui';
 import { cn } from '@konfigyr/components/utils';
 import { buttonVariants } from '@konfigyr/components/ui/button';
 
@@ -133,28 +132,22 @@ function PaginationItem({ ...props }: ComponentProps<'li'>) {
   return <li data-slot='pagination-item' {...props} />;
 }
 
-type PaginationLinkProps = {
-  isActive?: boolean,
-  asChild?: boolean,
-} & Pick<ComponentProps<typeof Button>, 'size'> &
-  ComponentProps<'a'>;
+type PaginationLinkProps = { isActive?: boolean } & Pick<ComponentProps<typeof Button>, 'size'> & ComponentProps<'a'>;
 
 function PaginationLink({
   className,
   isActive,
   size = 'icon',
-  asChild = false,
   ...props
 }: PaginationLinkProps) {
-  const Comp = asChild ? Slot.Root : 'a';
-
   return (
-    <Comp
+    <a
       aria-current={isActive ? 'page' : undefined}
       data-slot='pagination-link'
       data-active={isActive}
       className={cn(
         'cursor-pointer',
+        isActive && 'w-128',
         buttonVariants({
           variant: isActive ? 'outline' : 'ghost',
           size,

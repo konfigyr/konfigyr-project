@@ -53,13 +53,16 @@ export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQue
             onChangeDebounceMs: 200,
           }}
           children={(field) => (
-            <field.Control className="grow">
-              <field.Input
-                type="search"
-                placeholder="Search keysets..."
-                aria-label="Search keysets"
-              />
-            </field.Control>
+            <field.Control
+              className="grow"
+              render={
+                <field.Input
+                  type="search"
+                  placeholder="Search keysets..."
+                  aria-label="Search keysets"
+                />
+              }
+            />
           )}
         />
 
@@ -73,7 +76,7 @@ export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQue
                 defaultMessage="Filter by state"
                 description="Placeholder for the keyset state sort field"
               />}
-              onChange={field.handleChange}
+              onChange={it => field.handleChange(it || '')}
               onReset={() => field.handleChange('')}
             />
           )}
@@ -89,7 +92,7 @@ export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQue
                 defaultMessage="Filter by algorithm"
                 description="Placeholder for the keyset algorithm sort field"
               />}
-              onChange={field.handleChange}
+              onChange={it => field.handleChange(it || '')}
               onReset={() => field.handleChange('')}
             />
           )}
@@ -98,7 +101,7 @@ export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQue
         <form.AppField
           name="sort"
           children={(field) => (
-            <Select value={field.state.value} onValueChange={field.handleChange}>
+            <Select value={field.state.value} onValueChange={it => field.handleChange(it || '')}>
               <SelectTrigger className="w-52">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
