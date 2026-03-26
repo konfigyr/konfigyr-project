@@ -16,7 +16,7 @@ export function TabItem({ render, className, ...props }: useRender.ComponentProp
           'data-[state=active]:text-foreground dark:data-[state=active]:text-foreground',
           'data-[state=active]:border-primary border-b-2 border-transparent',
           'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:outline-1',
-          '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*=\'size-\'])]:size-4',
+          '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4',
           className,
         ),
       },
