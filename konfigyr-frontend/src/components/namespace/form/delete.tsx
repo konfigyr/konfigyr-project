@@ -81,14 +81,16 @@ export function NamespaceDeleteForm({ namespace, onDelete }: NamespaceDeleteForm
           </CardContent>
           <CardFooter className="justify-end border-t">
             <CardAction>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <FormattedMessage
-                    defaultMessage="Delete namespace"
-                    description="Button label that triggers namespace delete confirmation dialog when clicked"
-                  />
-                </Button>
-              </AlertDialogTrigger>
+              <AlertDialogTrigger
+                render={
+                  <Button variant="destructive">
+                    <FormattedMessage
+                      defaultMessage="Delete namespace"
+                      description="Button label that triggers namespace delete confirmation dialog when clicked"
+                    />
+                  </Button>
+                }
+              />
             </CardAction>
           </CardFooter>
         </Card>

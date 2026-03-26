@@ -30,7 +30,7 @@ describe('components | UI | <InlineEdit/>', () => {
     expect(element).toHaveTextContent('my value');
   });
 
-  test('should render inline edit with custom placeholder', () => {
+  test('should render inline edit with custom placeholder children', () => {
     const result = renderWithMessageProvider(
       <InlineEdit value="my value" onChange={onChange}>
         <InlineEditPlaceholder>
@@ -42,6 +42,20 @@ describe('components | UI | <InlineEdit/>', () => {
     const element = result.getByRole('button');
     expect(element).toBeInTheDocument();
     expect(element).toHaveTextContent('Customized placeholder');
+  });
+
+  test('should render inline edit with custom placeholder element', () => {
+    const result = renderWithMessageProvider(
+      <InlineEdit value="my value" onChange={onChange}>
+        <InlineEditPlaceholder
+          render={<p>Customized placeholder element</p>}
+        />
+      </InlineEdit>,
+    );
+
+    const element = result.getByRole('button');
+    expect(element).toBeInTheDocument();
+    expect(element).toHaveTextContent('Customized placeholder element');
   });
 
   test('should open editing state when placeholder is clicked', async () => {

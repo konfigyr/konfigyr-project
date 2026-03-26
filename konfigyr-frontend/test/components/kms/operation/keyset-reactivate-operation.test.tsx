@@ -32,6 +32,7 @@ describe('components | kms | operation | <KeysetReactivateOperation/>', () => {
     );
     expect(result.getByRole('button', { name: 'Reactivate' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
   test('should successfully reactivate keyset', async () => {

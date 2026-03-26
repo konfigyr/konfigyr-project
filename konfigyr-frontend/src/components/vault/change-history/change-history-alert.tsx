@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@konfigyr/components/ui/avatar';
 import { History } from 'lucide-react';
-import { Button } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/components/ui/button';
 import { FormattedMessage } from 'react-intl';
 import { RelativeDate } from '@konfigyr/components/messages';
 import { Link } from '@tanstack/react-router';
@@ -70,28 +70,22 @@ function LatestChangeHistory({ changeHistory, total, namespace, service, profile
       </div>
 
       <div className="flex items-center text-right">
-        <Button
-          size="sm"
-          variant="outline"
-          asChild
+        <Link
+          to="/namespace/$namespace/services/$service/profiles/$profile/history"
+          className={buttonVariants({ variant: 'outline', size: 'sm' })}
+          params={{
+            namespace: namespace.slug,
+            service: service.slug,
+            profile: profile.slug,
+          }}
         >
-          <Link
-            to="/namespace/$namespace/services/$service/profiles/$profile/history"
-            params={{
-              namespace: namespace.slug,
-              service: service.slug,
-              profile: profile.slug,
-            }}
-          >
-            <History />
-            <FormattedMessage
-              defaultMessage="{amount} Commits"
-              values={{ amount: total }}
-              description="Label for the buttom with amount of commints."
-            />
-          </Link>
-
-        </Button>
+          <History />
+          <FormattedMessage
+            defaultMessage="{amount} Commits"
+            values={{ amount: total }}
+            description="Label for the buttom with amount of commints."
+          />
+        </Link>
       </div>
     </div>
   );

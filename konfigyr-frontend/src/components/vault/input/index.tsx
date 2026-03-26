@@ -7,6 +7,7 @@ import {
   useKeyboardEvents,
 } from '@konfigyr/components/ui/inline-edit';
 
+import { ArrayField } from './array';
 import { BooleanField } from './boolean';
 import { EnumerationField } from './enumeration';
 import { SchemaHints, useSchemaHints } from './hints';
@@ -25,6 +26,7 @@ import type { InputFieldProps } from './types';
 
 export {
   type InputFieldProps,
+  ArrayField,
   BooleanField,
   EnumerationField,
   DurationField,
@@ -35,6 +37,9 @@ export {
 
 const useSchemaInputComponent = (schema: PropertyJsonSchema): FunctionComponent<any> => {
   switch (schema.type) {
+    case 'array': {
+      return ArrayField;
+    }
     case 'number':
     case 'integer': {
       return NumericField;
@@ -72,6 +77,7 @@ export function InputField<T>({ property, ref, value, onChange, onBlur, onKeyDow
       <InputComponent
         ref={ref}
         list={hints?.id}
+        hints={hints?.hints}
         property={property}
         value={value?.decoded}
         onChange={onTransformChange}

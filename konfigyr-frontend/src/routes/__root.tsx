@@ -10,6 +10,7 @@ import {
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { Toaster } from '@konfigyr/components/ui/sonner';
+import { TooltipProvider } from '@konfigyr/components/ui/tooltip';
 import styles from '@konfigyr/styles.css?url';
 import defaultMessages from '@konfigyr/translations/en.json';
 
@@ -55,8 +56,10 @@ function RootComponent() {
           enableSystem
           disableTransitionOnChange
         >
-          <Outlet />
-          <Toaster />
+          <TooltipProvider>
+            <Outlet />
+            <Toaster />
+          </TooltipProvider>
         </ThemeProvider>
       </IntlProvider>
       <ReactQueryDevtools />

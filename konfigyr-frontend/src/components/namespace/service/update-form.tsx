@@ -77,9 +77,8 @@ export function ServiceUpdateForm({ namespace, service }: { namespace: Namespace
               children={(field) => (
                 <field.Control
                   label={<ServiceNameLabel />}
-                >
-                  <field.Input type="text"/>
-                </field.Control>
+                  render={<field.Input type="text"/>}
+                />
               )}
             />
 
@@ -87,9 +86,8 @@ export function ServiceUpdateForm({ namespace, service }: { namespace: Namespace
               <field.Control
                 label={<ServiceDescriptionLabel />}
                 description={<ServiceDescriptionHelpText />}
-              >
-                <field.Textarea rows={6} />
-              </field.Control>
+                render={<field.Textarea rows={6} />}
+              />
             )} />
           </CardContent>
           <CardFooter className="justify-between border-t">

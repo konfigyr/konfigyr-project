@@ -50,36 +50,42 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
 
   return (
     <form.AppForm>
-      <form name="invitiation-form" className="flex gap-6" onSubmit={onSubmit}>
+      <form name="invitiation-form" className="flex items-center gap-6" onSubmit={onSubmit}>
         <form.AppField
           name="email"
           children={(field) => (
-            <field.Control className="flex-1">
-              <field.Input
-                placeholder={t.formatMessage({
-                  defaultMessage: 'Type in email address',
-                  description: 'Placeholder for the email input field in the namespace members invite form',
-                })}
-                aria-label={t.formatMessage({
-                  defaultMessage: 'Invite members by email address',
-                  description: 'Label for the email input field in the namespace members invite form',
-                })}
-              />
-            </field.Control>
+            <field.Control
+              className="flex-1"
+              render={
+                <field.Input
+                  placeholder={t.formatMessage({
+                    defaultMessage: 'Type in email address',
+                    description: 'Placeholder for the email input field in the namespace members invite form',
+                  })}
+                  aria-label={t.formatMessage({
+                    defaultMessage: 'Invite members by email address',
+                    description: 'Label for the email input field in the namespace members invite form',
+                  })}
+                />
+              }
+            />
           )}
         />
 
         <form.AppField
           name="administrator"
           children={(field) => (
-            <field.Control className="flex min-w-34 items-start py-2">
-              <div className="flex items-center space-x-2">
-                <field.Switch aria-labelledby={`role-label-${id}`} />
-                <field.Label id={`role-label-${id}`}>
-                  <NamespaceRoleLabel role={field.state.value ? NamespaceRole.ADMIN : NamespaceRole.USER} />
-                </field.Label>
-              </div>
-            </field.Control>
+            <field.Control
+              className="flex min-w-34 items-start py-2"
+              render={
+                <div className="flex items-center space-x-2">
+                  <field.Switch aria-labelledby={`role-label-${id}`} />
+                  <field.Label id={`role-label-${id}`}>
+                    <NamespaceRoleLabel role={field.state.value ? NamespaceRole.ADMIN : NamespaceRole.USER} />
+                  </field.Label>
+                </div>
+              }
+            />
           )}
         />
 

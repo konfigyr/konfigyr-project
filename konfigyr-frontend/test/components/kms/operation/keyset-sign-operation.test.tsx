@@ -33,6 +33,7 @@ describe('components | kms | operation | <KeysetSigningOperation/>', () => {
     expect(result.getByRole('textbox', { name: 'Text to sign' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Create signature' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
   test('should validate form', async () => {
@@ -77,13 +78,15 @@ describe('components | kms | operation | <KeysetSigningOperation/>', () => {
     await waitFor(() => {
       expect(result.getByRole('textbox', { name: 'Signature' })).toBeInTheDocument();
       expect(result.getByRole('textbox', { name: 'Signature' })).toHaveValue('signed-data');
-      expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
       expect(result.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
     });
   });
 
   test('should close the keyset operation dialog', async () => {
-    await userEvents.click(result.getByRole('button', { name: 'Close' }));
+    const closeButtons = result.getAllByRole('button', { name: 'Close' });
+    expect(closeButtons).toHaveLength(2);
+
+    await userEvents.click(closeButtons[1]);
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).not.toBeInTheDocument();

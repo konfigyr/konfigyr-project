@@ -1,5 +1,4 @@
 import { FormattedMessage } from 'react-intl';
-import { Slot } from 'radix-ui';
 import {
   Select,
   SelectContent,
@@ -14,15 +13,12 @@ import { SupportedAlgorithm } from './supported-algorithms';
 
 import type { ComponentProps, ReactNode } from 'react';
 
-function AlgorithmItem({ algorithm, description, asChild = false, className, ...props }: {
+function AlgorithmItem({ algorithm, description, className, ...props }: {
   algorithm?: string | SupportedAlgorithm | ReactNode,
   description?: string | ReactNode,
-  asChild?: boolean,
 } & ComponentProps<'div'>) {
-  const Comp = asChild ? Slot.Root : 'div';
-
   return (
-    <Comp {...props}>
+    <div {...props}>
       {algorithm && (
         <p className={cn('text-sm leading-snug', className)}>
           {algorithm}
@@ -34,7 +30,7 @@ function AlgorithmItem({ algorithm, description, asChild = false, className, ...
           {description}
         </p>
       )}
-    </Comp>
+    </div>
   );
 }
 
@@ -102,14 +98,14 @@ export function KeysetAlgorithmSelect({ value, reset = false, placeholder, detai
   reset?: boolean,
   detailed?: boolean,
   placeholder?: string | ReactNode,
-  onChange?: (value: string | SupportedAlgorithm) => void,
+  onChange?: (value: string | SupportedAlgorithm | null) => void,
   onReset?: () => void,
 } & Omit<ComponentProps<typeof SelectTrigger>, 'onChange'>) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger {...props}>
-        <SelectValue placeholder={placeholder}>
-          <KeysetAlgorithmName algorithm={value} />
+        <SelectValue>
+          {value ? (<KeysetAlgorithmName algorithm={value} />) : placeholder}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>

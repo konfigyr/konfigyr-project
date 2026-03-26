@@ -84,13 +84,15 @@ export function AccountNameForm({ account }: { account: Account }) {
             </p>
 
             <form.AppField name="name" children={(field) => (
-              <field.Control>
-                <field.Input
-                  type="text"
-                  aria-labelledby={`label-name-${id}`}
-                  aria-describedby={`help-name-${id}`}
-                />
-              </field.Control>
+              <field.Control
+                render={
+                  <field.Input
+                    type="text"
+                    aria-labelledby={`label-name-${id}`}
+                    aria-describedby={`help-name-${id}`}
+                  />
+                }
+              />
             )} />
 
           </CardContent>

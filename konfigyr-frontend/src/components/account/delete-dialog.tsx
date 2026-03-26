@@ -76,14 +76,16 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
           </CardContent>
           <CardFooter className="justify-end border-t">
             <CardAction>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <FormattedMessage
-                    defaultMessage="Delete account"
-                    description="Button label that triggers account delete confirmation dialog when clicked"
-                  />
-                </Button>
-              </AlertDialogTrigger>
+              <AlertDialogTrigger
+                render={
+                  <Button variant="destructive">
+                    <FormattedMessage
+                      defaultMessage="Delete account"
+                      description="Button label that triggers account delete confirmation dialog when clicked"
+                    />
+                  </Button>
+                }
+              />
             </CardAction>
           </CardFooter>
         </Card>

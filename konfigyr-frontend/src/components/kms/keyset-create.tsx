@@ -61,9 +61,8 @@ export function CreateKeysetForm({ namespace, onCreate }: { namespace: Namespace
               defaultMessage="Enter a unique, recognizable name for this keyset, e.g., payment-service-prod."
               description="Help text for the keyset algorithm name field"
             />}
-          >
-            <field.Input />
-          </field.Control>
+            render={<field.Input />}
+          />
         )} />
 
         <form.AppField name="algorithm" children={(field) => (
@@ -76,18 +75,19 @@ export function CreateKeysetForm({ namespace, onCreate }: { namespace: Namespace
               defaultMessage="Select the underlying cipher used for operations."
               description="Help text for the keyset algorithm form field"
             />}
-          >
-            <KeysetAlgorithmSelect
-              className="w-full"
-              value={field.state.value}
-              detailed={true}
-              placeholder={<FormattedMessage
-                defaultMessage="Select algorithm..."
-                description="Placeholder for the keyset algorithm form select field"
-              />}
-              onChange={field.handleChange}
-            />
-          </field.Control>
+            render={
+              <KeysetAlgorithmSelect
+                className="w-full"
+                value={field.state.value}
+                detailed={true}
+                placeholder={<FormattedMessage
+                  defaultMessage="Select algorithm..."
+                  description="Placeholder for the keyset algorithm form select field"
+                />}
+                onChange={it => field.handleChange(it || '')}
+              />
+            }
+          />
         )} />
 
         <form.AppField name="description" children={(field) => (
@@ -100,9 +100,8 @@ export function CreateKeysetForm({ namespace, onCreate }: { namespace: Namespace
               defaultMessage="Briefly explain what data this keyset will protect. Use this to provide context for other administrators, you can leave it blank."
               description="Help text for the keyset algorithm description field"
             />}
-          >
-            <field.Textarea />
-          </field.Control>
+            render={<field.Textarea />}
+          />
         )} />
 
         <form.Submit>

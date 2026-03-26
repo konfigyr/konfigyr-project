@@ -1,5 +1,6 @@
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, waitFor } from '@testing-library/react';
+import userEvents from '@testing-library/user-event';
 import { Toaster } from '@konfigyr/components/ui/sonner';
 import { KeysetOperationDialog } from '@konfigyr/components/kms/operation/keyset-operation-dialog';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
@@ -31,16 +32,17 @@ describe('components | kms | operation | <KeysetDisableOperation/>', () => {
     );
     expect(result.getByRole('button', { name: 'I understand the risks' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
-  // test('should successfully disable keyset', async () => {
-  //   await userEvents.click(
-  //     result.getByRole('button', { name: 'I understand the risks' }),
-  //   );
-  //
-  //   await waitFor(() => {
-  //     expect(result.getByRole('alert')).toBeInTheDocument();
-  //     expect(result.getByRole('alert')).toHaveTextContent('Keyset has been successfully disabled');
-  //   });
-  // });
+  test('should successfully disable keyset', async () => {
+    await userEvents.click(
+      result.getByRole('button', { name: 'I understand the risks' }),
+    );
+
+    await waitFor(() => {
+      expect(result.getByRole('alert')).toBeInTheDocument();
+      expect(result.getByRole('alert')).toHaveTextContent('Keyset has been successfully disabled');
+    });
+  });
 });

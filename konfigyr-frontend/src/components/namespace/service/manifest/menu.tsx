@@ -8,28 +8,32 @@ import type { Namespace, Service } from '@konfigyr/hooks/types';
 export function ManifestMenu({ namespace, service }: { namespace: Namespace, service: Service }) {
   return (
     <Tabs>
-      <TabItem>
-        <Link
-          to="/namespace/$namespace/services/$service/manifest"
-          params={{ namespace: namespace.slug, service: service.slug }}
-          activeProps={{ 'data-state': 'active' }}
-          activeOptions={{ exact: true }}
-        >
-          <ListTreeIcon />
-          <ConfigurationPropertiesLabel />
-        </Link>
-      </TabItem>
-      <TabItem>
-        <Link
-          to="/namespace/$namespace/services/$service/manifest/artifacts"
-          params={{ namespace: namespace.slug, service: service.slug }}
-          activeProps={{ 'data-state': 'active' }}
-          activeOptions={{ exact: true }}
-        >
-          <BoxesIcon />
-          <ArtifactsLabel />
-        </Link>
-      </TabItem>
+      <TabItem
+        render={
+          <Link
+            to="/namespace/$namespace/services/$service/manifest"
+            params={{ namespace: namespace.slug, service: service.slug }}
+            activeProps={{ 'data-state': 'active' }}
+            activeOptions={{ exact: true }}
+          >
+            <ListTreeIcon />
+            <ConfigurationPropertiesLabel />
+          </Link>
+        }
+      />
+      <TabItem
+        render={
+          <Link
+            to="/namespace/$namespace/services/$service/manifest/artifacts"
+            params={{ namespace: namespace.slug, service: service.slug }}
+            activeProps={{ 'data-state': 'active' }}
+            activeOptions={{ exact: true }}
+          >
+            <BoxesIcon />
+            <ArtifactsLabel />
+          </Link>
+        }
+      />
     </Tabs>
   );
 }

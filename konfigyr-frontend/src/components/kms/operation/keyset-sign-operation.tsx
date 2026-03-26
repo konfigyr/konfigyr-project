@@ -95,9 +95,8 @@ export function KeysetSigningOperation({ namespace, keyset, onCancel, onError }:
               defaultMessage="Text to sign"
               description="Label for the textarea field that contains the plain text to be digitally signed."
             />}
-          >
-            <field.Textarea rows={6}/>
-          </field.Control>
+            render={<field.Textarea rows={6}/>}
+          />
         )} />
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

@@ -34,6 +34,7 @@ describe('components | kms | operation | <KeysetVerifySignatureOperation/>', () 
     expect(result.getByRole('textbox', { name: 'Text to verify' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Verify signature' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
   test('should validate form', async () => {

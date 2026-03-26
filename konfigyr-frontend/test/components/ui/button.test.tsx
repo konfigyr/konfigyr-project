@@ -10,7 +10,7 @@ describe('components | UI | <Button/>', () => {
 
     expect(getByRole('button')).toBeDefined();
     expect(getByRole('button')).toHaveTextContent('Default button');
-    expect(getByRole('button')).toHaveClass('bg-primary text-primary-foreground h-9 px-4 py-2');
+    expect(getByRole('button')).toHaveClass('bg-primary text-primary-foreground h-9');
   });
 
   test('should render ghost button with click action handler', () => {
@@ -19,15 +19,15 @@ describe('components | UI | <Button/>', () => {
     const { getByRole } = render(<Button variant="ghost" onClick={handler}>Ghost button</Button>);
 
     expect(getByRole('button')).toBeDefined();
-    expect(getByRole('button')).toHaveClass('hover:bg-accent hover:text-accent-foreground');
+    expect(getByRole('button')).toHaveClass('hover:bg-muted hover:text-foreground');
 
     fireEvent.click(getByRole('button'));
 
     expect(handler).toHaveBeenCalled();
   });
 
-  test('should render link button with an anchor tag', () => {
-    const { getByRole } = render(<Button variant="link" asChild><a href="https://example.com">Link</a></Button>);
+  test('should render button with custom element', () => {
+    const { getByRole } = render(<Button variant="link" render={<a href="https://example.com">Link</a>} />);
 
     expect(getByRole('link')).toBeDefined();
     expect(getByRole('link')).toHaveTextContent('Link');
@@ -38,20 +38,41 @@ describe('components | UI | <Button/>', () => {
     const { getByRole } = render(<Button variant="destructive" size="sm">Small</Button>);
 
     expect(getByRole('button')).toBeDefined();
-    expect(getByRole('button')).toHaveClass('bg-destructive text-white h-8 rounded-md gap-1.5 px-3');
+    expect(getByRole('button')).toHaveClass('bg-destructive/10 text-destructive h-7');
   });
 
   test('should render large outline button', () => {
     const { getByRole } = render(<Button variant="outline" size="lg">Large</Button>);
 
     expect(getByRole('button')).toBeDefined();
-    expect(getByRole('button')).toHaveClass('border bg-background h-10 rounded-md px-6');
+    expect(getByRole('button')).toHaveClass('bg-background h-9');
   });
 
   test('should render secondary icon button', () => {
     const { getByRole } = render(<Button variant="secondary" size="icon">Icon</Button>);
 
     expect(getByRole('button')).toBeDefined();
-    expect(getByRole('button')).toHaveClass('bg-secondary text-secondary-foreground size-9');
+    expect(getByRole('button')).toHaveClass('bg-secondary text-secondary-foreground size-8');
+  });
+
+  test('should render extra small icon button', () => {
+    const { getByRole } = render(<Button variant="secondary" size="icon-xs">Icon</Button>);
+
+    expect(getByRole('button')).toBeDefined();
+    expect(getByRole('button')).toHaveClass('size-6');
+  });
+
+  test('should render small icon button', () => {
+    const { getByRole } = render(<Button variant="secondary" size="icon-sm">Icon</Button>);
+
+    expect(getByRole('button')).toBeDefined();
+    expect(getByRole('button')).toHaveClass('size-7');
+  });
+
+  test('should render large icon button', () => {
+    const { getByRole } = render(<Button variant="secondary" size="icon-lg">Icon</Button>);
+
+    expect(getByRole('button')).toBeDefined();
+    expect(getByRole('button')).toHaveClass('size-9');
   });
 });

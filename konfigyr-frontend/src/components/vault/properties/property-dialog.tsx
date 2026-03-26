@@ -4,7 +4,6 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -12,9 +11,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@konfigyr/components/ui/dialog';
+import { Field, FieldGroup } from '@konfigyr/components/ui/field';
 import { Input } from '@konfigyr/components/ui/input';
 import { Label } from '@konfigyr/components/ui/label';
-import { CancelLabel } from '@konfigyr/components/messages';
 import {
   AddPropertyLabel,
   PropertyNameLabel,
@@ -53,14 +52,16 @@ export function PropertyDialog<T>({ changeset, onAdd }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <PlusIcon />
-          <AddPropertyLabel />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-140 gap-0 p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4">
+      <DialogTrigger
+        render={
+          <Button variant="outline">
+            <PlusIcon />
+            <AddPropertyLabel />
+          </Button>
+        }
+      />
+      <DialogContent className="sm:max-w-140">
+        <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <ListPlusIcon size="1rem" />
             <FormattedMessage
@@ -76,8 +77,8 @@ export function PropertyDialog<T>({ changeset, onAdd }: {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 space-y-4 pb-2">
-          <div className="space-y-2">
+        <FieldGroup>
+          <Field>
             <Label htmlFor="property.name">
               <PropertyNameLabel />
             </Label>
@@ -90,9 +91,8 @@ export function PropertyDialog<T>({ changeset, onAdd }: {
               onChange={event => onNameChange(event.target.value)}
               className="font-mono"
             />
-          </div>
-
-          <div className="space-y-2">
+          </Field>
+          <Field>
             <Label htmlFor="property.value">
               <PropertyValueLabel />
             </Label>
@@ -103,17 +103,11 @@ export function PropertyDialog<T>({ changeset, onAdd }: {
               value={value}
               onChange={event => onValueChange(event.target.value)}
             />
-          </div>
-        </div>
+          </Field>
+        </FieldGroup>
 
-        <DialogFooter className="px-6 py-4 border-t">
-          <DialogClose asChild>
-            <Button variant="outline" size="sm">
-              <CancelLabel />
-            </Button>
-          </DialogClose>
+        <DialogFooter showCloseButton={true}>
           <Button
-            size="sm"
             disabled={!canAdd}
             onClick={handleAdd}
           >

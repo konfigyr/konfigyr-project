@@ -6,7 +6,6 @@ import {
   TooltipTrigger,
 } from '@konfigyr/components/ui/tooltip';
 
-import type { ComponentProps } from 'react';
 import type { VariantProps } from 'class-variance-authority';
 import type { PropertyJsonSchema } from '@konfigyr/hooks/artifactory/types';
 
@@ -29,20 +28,18 @@ export const typeVariants = cva(
 
 export type TypeVariants = VariantProps<typeof typeVariants>;
 
-export function PropertySchema({ value, className, ...props }: { value?: PropertyJsonSchema } & ComponentProps<'span'>) {
+export function PropertySchema({ value, className }: { value?: PropertyJsonSchema, className?: string }) {
   const type = value?.type as TypeVariants['type'];
 
   return (
-    <Tooltip delayDuration={400}>
-      <TooltipTrigger asChild>
-        <span className={cn(className, typeVariants({ type }))} {...props}>
-          {type}
-        </span>
+    <Tooltip>
+      <TooltipTrigger delay={400} className={cn(className, typeVariants({ type }))}>
+        {type}
       </TooltipTrigger>
-      <TooltipContent className="max-h-60 overflow-y-auto">
-        <pre>
-          <code>{JSON.stringify(value, null, 2)}</code>
-        </pre>
+      <TooltipContent>
+        <div className="max-h-80 overflow-y-auto">
+          <pre>{JSON.stringify(value, null, 2)}</pre>
+        </div>
       </TooltipContent>
     </Tooltip>
   );

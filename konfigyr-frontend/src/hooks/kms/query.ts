@@ -111,7 +111,7 @@ export const useRotateKeyset = (namespace: string, keyset: Keyset) => {
  * Hook that disables the given Keyset in the Konfigyr API server for the given namespace.
  */
 export const useDisableKeyset = (namespace: string, keyset: Keyset) => {
-  return useKeysetLifecycleOperation(namespace, keyset, 'disable');
+  return useKeysetLifecycleOperation(namespace, keyset, 'deactivate');
 };
 
 /**

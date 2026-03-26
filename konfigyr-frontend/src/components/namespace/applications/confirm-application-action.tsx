@@ -53,11 +53,13 @@ export function ConfirmNamespaceApplicationDeleteAction({ namespace, application
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive">
-          <DeleteNamespaceApplicationLabel/>
-        </Button>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger
+        render={
+          <Button variant="destructive">
+            <DeleteNamespaceApplicationLabel/>
+          </Button>
+        }
+      />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -113,14 +115,16 @@ export function ConfirmNamespaceApplicationResetAction({ namespace, application,
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline">
-          <FormattedMessage
-            defaultMessage="Reset application"
-            description="Button label that triggers application reset confirmation dialog when clicked"
-          />
-        </Button>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger
+        render={
+          <Button variant="outline">
+            <FormattedMessage
+              defaultMessage="Reset application"
+              description="Button label that triggers application reset confirmation dialog when clicked"
+            />
+          </Button>
+        }
+      />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>

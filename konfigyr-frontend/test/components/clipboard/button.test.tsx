@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
+import { TooltipProvider } from '@konfigyr/components/ui/tooltip';
 import { ClipboardButton, ClipboardIconButton } from '@konfigyr/components/clipboard';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 
@@ -11,7 +12,11 @@ describe('components | clipboard | <ClipboardButton/>', () => {
   });
 
   test('should render button with text to be copied', async () => {
-    const { getByRole } = renderWithMessageProvider(<ClipboardButton text="text to be copied" />);
+    const { getByRole } = renderWithMessageProvider(
+      <TooltipProvider>
+        <ClipboardButton text="text to be copied" />
+      </TooltipProvider>,
+    );
 
     expect(getByRole('button')).toBeDefined();
     expect(getByRole('button')).toHaveTextContent('Copy');
@@ -26,7 +31,11 @@ describe('components | clipboard | <ClipboardButton/>', () => {
   });
 
   test('should render button with text to be copied and present state in the tooltip', async () => {
-    const { getByRole, queryByRole } = renderWithMessageProvider(<ClipboardIconButton text="text to be copied" />);
+    const { getByRole, queryByRole } = renderWithMessageProvider(
+      <TooltipProvider>
+        <ClipboardIconButton text="text to be copied" />
+      </TooltipProvider>,
+    );
 
     expect(getByRole('button')).toBeDefined();
     expect(queryByRole('tooltip')).toBeNull();

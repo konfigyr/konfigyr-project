@@ -74,9 +74,8 @@ export function CreateServiceForm({ namespace, onCreate }: { namespace: Namespac
                 defaultMessage="This is your service’s unique identifier within this namespace. It must be identical to your application's configured name to ensure properties are loaded correctly."
                 description="The help text used in the service forms to provide instructions how service URL should be defined"
               />}
-            >
-              <field.Input type="text"/>
-            </field.Control>
+              render={<field.Input type="text"/>}
+            />
           )}
         />
 
@@ -85,9 +84,8 @@ export function CreateServiceForm({ namespace, onCreate }: { namespace: Namespac
           children={(field) => (
             <field.Control
               label={<ServiceNameLabel />}
-            >
-              <field.Input type="text"/>
-            </field.Control>
+              render={<field.Input type="text"/>}
+            />
           )}
         />
 
@@ -95,9 +93,8 @@ export function CreateServiceForm({ namespace, onCreate }: { namespace: Namespac
           <field.Control
             label={<ServiceDescriptionLabel />}
             description={<ServiceDescriptionHelpText />}
-          >
-            <field.Textarea rows={6} />
-          </field.Control>
+            render={<field.Textarea rows={6} />}
+          />
         )} />
 
         <Separator />

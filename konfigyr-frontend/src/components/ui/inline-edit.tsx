@@ -8,7 +8,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Slot } from 'radix-ui';
+import { mergeProps } from '@base-ui/react/merge-props';
+import { useRender } from '@base-ui/react/use-render';
 import { CheckIcon, XIcon } from 'lucide-react';
 import { CancelLabel, SaveLabel } from '@konfigyr/components/messages';
 import { Button } from '@konfigyr/components/ui/button';
@@ -106,11 +107,11 @@ export function InlineEdit<T>({ value, children, onChange, onError }: {
   );
 }
 
-export function InlineEditPlaceholder({ disabled = false, className, children }: {
+export function InlineEditPlaceholder({ disabled = false, render, className, children }: {
   disabled?: boolean,
   className?: string,
   children?: ReactNode
-}) {
+} & useRender.ComponentProps<'div'>) {
   const { isEditing, value, onEdit } = useContext(InlineEditContext);
 
   if (isEditing) {
@@ -126,19 +127,35 @@ export function InlineEditPlaceholder({ disabled = false, className, children }:
     }
   }, [onEdit]);
 
-  return (
-    <Slot.Root
-      className={cn('group/inline-edit-placeholder relative cursor-pointer', className)}
-      onClick={disabled ? undefined : onEdit}
-      onKeyDown={onKeyDown}
-      role={disabled ? undefined : 'button'}
-      tabIndex={disabled ? undefined : 0}
-    >
-      {children ? children : (
-        <span className="text-muted-foreground">{value}</span>
-      )}
-    </Slot.Root>
-  );
+  return useRender({
+    defaultTagName: 'div',
+    props: mergeProps(
+      {
+        className: cn('group/inline-edit-placeholder relative cursor-pointer', className),
+        onKeyDown,
+        role: disabled ? undefined : 'button',
+        tabIndex: disabled ? undefined : 0,
+      },
+      disabled ? {
+        'aria-disabled': true,
+      } : {
+        role: 'button',
+        tabIndex: 0,
+        onClick: onEdit,
+      },
+      children ? {
+        children,
+      } : {
+        children: (
+          <span className="text-muted-foreground">{value}</span>
+        ),
+      },
+    ),
+    render,
+    state: {
+      slot: 'inline-edit-placeholder',
+    },
+  });
 }
 
 export function useFocusEffect<T extends HTMLElement>(context: EditingContext<any>): RefObject<T | null> {

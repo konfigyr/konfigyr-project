@@ -103,25 +103,27 @@ function ValueCell<T>({ property, onSave }: {
           'font-mono text-sm font-medium text-muted-foreground rounded-md px-1.5 py-0.5 -mx-1.5 -my-0.5 transition-colors',
           property.state === 'deleted' ? 'cursor-default line-through opacity-60' : 'hover:bg-muted/80',
         )}
-      >
-        <div className="flex items-center gap-2">
-          {property.value?.encoded && property.value.encoded.length > 40 ? (
-            <Tooltip delayDuration={200}>
-              <TooltipTrigger asChild>
-                <span className="truncate max-w-70 block">{property.value.encoded}</span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="font-mono text-xs max-w-sm break-all">
-                {property.value.encoded}
-              </TooltipContent>
-            </Tooltip>
-          ) : property.value?.encoded}
+        render={
+          <div className="flex items-center gap-2">
+            {property.value?.encoded && property.value.encoded.length > 40 ? (
+              <Tooltip>
+                <TooltipTrigger delay={200} className="truncate max-w-70 block">
+                  {property.value.encoded}
+                </TooltipTrigger>
+                <TooltipContent side="top" className="font-mono text-xs max-w-sm break-all">
+                  {property.value.encoded}
+                </TooltipContent>
+              </Tooltip>
+            ) : property.value?.encoded}
 
-          {property.state !== 'deleted' && (
-            <span className="opacity-0 group-hover/inline-edit-placeholder:opacity-50 transition-opacity">
-              <PencilIcon className="h-3 w-3" />
-            </span>
-          )}
-        </div>
+            {property.state !== 'deleted' && (
+              <span className="opacity-0 group-hover/inline-edit-placeholder:opacity-50 transition-opacity">
+                <PencilIcon className="h-3 w-3" />
+              </span>
+            )}
+          </div>
+        }
+      >
       </InlineEditPlaceholder>
 
       <InlineInputField property={property} />
@@ -149,8 +151,8 @@ function ActionButton({ tooltip, destructive = false, className, children, onCli
   }, [onClick]);
 
   return (
-    <Tooltip delayDuration={300}>
-      <TooltipTrigger asChild>
+    <Tooltip>
+      <TooltipTrigger delay={300} render={
         <Button
           size="sm"
           variant="ghost"
@@ -164,7 +166,7 @@ function ActionButton({ tooltip, destructive = false, className, children, onCli
         >
           {children}
         </Button>
-      </TooltipTrigger>
+      }/>
       <TooltipContent side="top" className="text-xs">
         {tooltip}
       </TooltipContent>
@@ -197,7 +199,7 @@ function ActionsCell<T>({
           size="sm"
           variant="ghost"
           text={property.value.encoded}
-          delayDuration={300}
+          delay={300}
           className="text-muted-foreground hover:text-foreground"
         />
       )}

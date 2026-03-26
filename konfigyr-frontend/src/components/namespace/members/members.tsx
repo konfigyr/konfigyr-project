@@ -56,7 +56,7 @@ export function SkeletonArticle() {
 
 export function MemberArticle({ member, onEdit, onRemove }: MemberArticleProps) {
   return (
-    <Item>
+    <Item variant="list">
       <ItemMedia>
         <Avatar size="lg">
           <AvatarImage src={member.avatar} />
@@ -78,11 +78,13 @@ export function MemberArticle({ member, onEdit, onRemove }: MemberArticleProps) 
 
       <ItemActions>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" aria-label="More options">
-              <EllipsisVerticalIcon />
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" aria-label="More options">
+                <EllipsisVerticalIcon />
+              </Button>
+            }
+          />
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => onEdit(member)}>
               <FormattedMessage
@@ -144,7 +146,7 @@ export function Members({ namespace }: { namespace: Namespace }) {
             )}
 
             {members && (
-              <ItemGroup className="-mx-4">
+              <ItemGroup>
                 {members.map(member => (
                   <MemberArticle
                     key={member.id}

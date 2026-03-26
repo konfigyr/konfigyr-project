@@ -11,7 +11,7 @@ describe('components | UI | <Separator/>', () => {
     const input = getByTestId('separator');
     expect(input).toBeInTheDocument();
     expect(input).toHaveAttribute('data-orientation', 'horizontal');
-    expect(input).not.toHaveAttribute('aria-orientation');
+    expect(input).toHaveAttribute('aria-orientation', 'horizontal');
   });
 
   test('should render separator with vertical orientation', () => {
@@ -20,14 +20,13 @@ describe('components | UI | <Separator/>', () => {
     const input = getByTestId('separator');
     expect(input).toBeInTheDocument();
     expect(input).toHaveAttribute('data-orientation', 'vertical');
-    expect(input).not.toHaveAttribute('aria-orientation');
+    expect(input).toHaveAttribute('aria-orientation', 'vertical');
   });
 
   test('should render separator with aria-orientation', () => {
     const { getByTestId } = render(
       <Separator
         data-testid="separator"
-        decorative={false}
         orientation="vertical"
       />,
     );

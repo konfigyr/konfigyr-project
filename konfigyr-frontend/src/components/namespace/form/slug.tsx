@@ -154,9 +154,12 @@ export function NamespaceSlugForm({ namespace }: { namespace: Namespace }) {
                 onChangeAsync: ({ value }) => validateSlug(queryClient, value, namespace.slug),
               }}
               children={(field) => (
-                <field.Control description={<SlugExample />}>
-                  <field.Input aria-labelledby={`label-slug-${id}`} aria-describedby={`help-slug-${id}`} />
-                </field.Control>
+                <field.Control
+                  description={<SlugExample />}
+                  render={
+                    <field.Input aria-labelledby={`label-slug-${id}`} aria-describedby={`help-slug-${id}`} />
+                  }
+                />
               )}
             />
 

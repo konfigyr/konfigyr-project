@@ -103,13 +103,15 @@ export function AccountEmailForm({ account }: { account: Account }) {
             </p>
 
             <form.AppField name="email" children={(field) => (
-              <field.Control>
-                <field.Input
-                  type="text"
-                  aria-labelledby={`label-email-${id}`}
-                  aria-describedby={`help-email-${id}`}
-                />
-              </field.Control>
+              <field.Control
+                render={
+                  <field.Input
+                    type="text"
+                    aria-labelledby={`label-email-${id}`}
+                    aria-describedby={`help-email-${id}`}
+                  />
+                }
+              />
             )} />
 
             {isTokenPresent && (
@@ -128,9 +130,8 @@ export function AccountEmailForm({ account }: { account: Account }) {
                       description="Help text describing that the email confirmation code email has been sent and it should be entered"
                     />
                   )}
-                >
-                  <field.Input type="text" />
-                </field.Control>
+                  render={<field.Input type="text" />}
+                />
               )} />
             )}
 

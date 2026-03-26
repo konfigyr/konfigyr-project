@@ -62,12 +62,14 @@ export function DataSizeField({ property, value, onChange, onBlur, ...props }: D
       />
       <InputGroupAddon align="inline-end">
         <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger asChild>
-            <InputGroupButton variant="ghost" size="xs" className="h-5 text-xs font-semibold">
-              <code>{value?.unit || DataUnit.BYTES}</code>
-              <ChevronDownIcon className={cn('size-3 transition', open && 'rotate-180')} />
-            </InputGroupButton>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <InputGroupButton variant="ghost" size="xs" className="h-5 text-xs font-semibold">
+                <code>{value?.unit || DataUnit.BYTES}</code>
+                <ChevronDownIcon className={cn('size-3 transition', open && 'rotate-180')} />
+              </InputGroupButton>
+            }
+          />
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
               <DropdownMenuLabel>

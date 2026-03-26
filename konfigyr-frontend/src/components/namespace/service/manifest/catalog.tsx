@@ -158,7 +158,7 @@ function Properties({ properties, page = 1 }: { properties: Array<ServiceCatalog
   }
 
   return (
-    <ItemGroup className="-mx-4">
+    <ItemGroup>
       {slice.map(property => (
         <PropertyItem
           key={`${property.artifact}:${property.name}`}

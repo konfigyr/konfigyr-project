@@ -5,7 +5,7 @@ import { useGetKeysets, useNamespace } from '@konfigyr/hooks';
 import { CreateKeysetLabel } from '@konfigyr/components/kms/messages';
 import { KeysetFilters } from '@konfigyr/components/kms/keyset-filters';
 import { KeysetTable } from '@konfigyr/components/kms/keyset-table';
-import { Button } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/components/ui/button';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import type { KeysetSearchQuery } from '@konfigyr/hooks/types';
@@ -46,15 +46,14 @@ function RouteComponent() {
           onQueryChange={onQueryChange}
         />
 
-        <Button variant="ghost" asChild>
-          <Link
-            to="/namespace/$namespace/kms/create"
-            params={{ namespace: namespace.slug }}
-          >
-            <PlusIcon size="1rem"/>
-            <CreateKeysetLabel />
-          </Link>
-        </Button>
+        <Link
+          to="/namespace/$namespace/kms/create"
+          params={{ namespace: namespace.slug }}
+          className={buttonVariants({ variant: 'ghost' })}
+        >
+          <PlusIcon data-icon="inline-start"/>
+          <CreateKeysetLabel />
+        </Link>
       </div>
 
       <KeysetTable

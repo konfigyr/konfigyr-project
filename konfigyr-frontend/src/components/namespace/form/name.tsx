@@ -82,9 +82,11 @@ export function NamespaceNameForm({ namespace }: { namespace: Namespace }) {
             </p>
 
             <form.AppField name="name" children={(field) => (
-              <field.Control>
-                <field.Input aria-labelledby={`label-name-${id}`} aria-describedby={`help-name-${id}`} />
-              </field.Control>
+              <field.Control
+                render={
+                  <field.Input aria-labelledby={`label-name-${id}`} aria-describedby={`help-name-${id}`} />
+                }
+              />
             )} />
 
           </CardContent>

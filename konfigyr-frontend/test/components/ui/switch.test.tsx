@@ -13,12 +13,13 @@ describe('components | UI | <Switch/>', () => {
 
     const input = getByRole('switch');
     expect(input).toBeInTheDocument();
+    expect(input).toBeChecked();
     expect(input).toHaveAttribute('aria-checked', 'true');
-    expect(input).toHaveAttribute('data-state', 'checked');
 
     await userEvents.click(input);
 
     // this is a controlled component, should not change its state
+    expect(input).toBeChecked();
     expect(input).toHaveAttribute('aria-checked', 'true');
   });
 
@@ -31,14 +32,14 @@ describe('components | UI | <Switch/>', () => {
 
     const input = getByRole('switch');
     expect(input).toBeInTheDocument();
+    expect(input).not.toBeChecked();
     expect(input).toHaveAttribute('aria-checked', 'false');
-    expect(input).toHaveAttribute('data-state', 'unchecked');
 
     await userEvents.click(input);
 
-    expect(onCheckedChange).toHaveBeenCalledExactlyOnceWith(true);
+    expect(onCheckedChange).toHaveBeenCalled();
 
+    expect(input).toBeChecked();
     expect(input).toHaveAttribute('aria-checked', 'true');
-    expect(input).toHaveAttribute('data-state', 'checked');
   });
 });

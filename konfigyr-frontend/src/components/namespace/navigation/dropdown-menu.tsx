@@ -48,32 +48,39 @@ export function NamespaceDropDownMenu({ namespace }: { namespace: Namespace }) {
 
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger asChild>
-        <SidebarMenuButton className="w-full h-auto flex items-center justify-between gap-2">
-          <NamespaceItem namespace={namespace} size="size-10" />
-          <ChevronDownIcon
-            className={cn('relative top-[1px] ml-1 size-3 transition duration-300', open && 'rotate-180')}
-            aria-hidden="true"
-          />
-        </SidebarMenuButton>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <SidebarMenuButton className="w-full h-auto flex items-center justify-between gap-2">
+            <NamespaceItem namespace={namespace} size="size-10" />
+            <ChevronDownIcon
+              className={cn('relative top-[1px] ml-1 size-3 transition duration-300', open && 'rotate-180')}
+              aria-hidden="true"
+            />
+          </SidebarMenuButton>
+        }
+      />
       <DropdownMenuContent>
         <DropdownMenuGroup>
           {namespaces?.filter(item => item.id !== namespace.id).map((item) => (
-            <DropdownMenuItem key={item.id} asChild>
-              <Link to="/namespace/$namespace" params={{ namespace: item.slug }}>
-                <NamespaceItem namespace={item} size="size-8" />
-              </Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem
+              key={item.id}
+              render={
+                <Link to="/namespace/$namespace" params={{ namespace: item.slug }}>
+                  <NamespaceItem namespace={item} size="size-8" />
+                </Link>
+              }
+            />
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/namespace/provision">
-            <PlusIcon size="1rem" aria-hidden="true"/>
-            Create new namespace
-          </Link>
-        </DropdownMenuItem>
+        <DropdownMenuItem
+          render={
+            <Link to="/namespace/provision">
+              <PlusIcon size="1rem" aria-hidden="true"/>
+              Create new namespace
+            </Link>
+          }
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

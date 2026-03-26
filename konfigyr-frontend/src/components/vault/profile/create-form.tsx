@@ -106,9 +106,8 @@ export function CreateProfileForm({ namespace, service, onCreate }: {
                 <field.Control
                   label={<ProfileNameLabel />}
                   description={<ProfileNameHelpText />}
-                >
-                  <field.Input type="text" />
-                </field.Control>
+                  render={<field.Input type="text" />}
+                />
               )}
             />
 
@@ -121,9 +120,8 @@ export function CreateProfileForm({ namespace, service, onCreate }: {
                 <field.Control
                   label={<ProfileSlugLabel />}
                   description={<ProfileSlugHelpText />}
-                >
-                  <field.Input type="text" />
-                </field.Control>
+                  render={<field.Input type="text" />}
+                />
               )}
             />
 
@@ -131,9 +129,8 @@ export function CreateProfileForm({ namespace, service, onCreate }: {
               <field.Control
                 label={<ProfileDescriptionLabel />}
                 description={<ProfileDescriptionHelpText />}
-              >
-                <field.Textarea rows={6} />
-              </field.Control>
+                render={<field.Textarea rows={6} />}
+              />
             )} />
           </FieldGroup>
         </FieldSet>
@@ -187,9 +184,8 @@ export function CreateProfileForm({ namespace, service, onCreate }: {
                 <field.Control
                   label={<ProfilePositionLabel />}
                   description={<ProfilePositionHelpText />}
-                >
-                  <field.Input type="number" />
-                </field.Control>
+                  render={<field.Input type="number" />}
+                />
               )}
             />
           </FieldGroup>

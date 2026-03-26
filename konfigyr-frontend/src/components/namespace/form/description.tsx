@@ -81,13 +81,15 @@ export function NamespaceDescriptionForm({ namespace }: { namespace: Namespace }
             </p>
 
             <form.AppField name="description" children={(field) => (
-              <field.Control>
-                <field.Textarea
-                  rows={8}
-                  aria-labelledby={`label-description-${id}`}
-                  aria-describedby={`help-description-${id}`}
-                />
-              </field.Control>
+              <field.Control
+                render={
+                  <field.Textarea
+                    rows={8}
+                    aria-labelledby={`label-description-${id}`}
+                    aria-describedby={`help-description-${id}`}
+                  />
+                }
+              />
             )} />
 
           </CardContent>
