@@ -1,5 +1,11 @@
 import { FormattedMessage } from 'react-intl';
+import { MessageCircleWarningIcon } from 'lucide-react';
 import { cn } from '@konfigyr/components/utils';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@konfigyr/components/ui/alert';
 import { Badge } from '@konfigyr/components/ui/badge';
 import {
   Tooltip,
@@ -10,15 +16,42 @@ import {
 import type { ComponentProps, ReactNode } from 'react';
 import type { PropertyDeprecation } from '@konfigyr/hooks/artifactory/types';
 
-export function PropertyDeprecation({ deprecation }: { deprecation?: PropertyDeprecation }) {
+export function PropertyDeprecation({ deprecation, ...props }: { deprecation?: PropertyDeprecation } & ComponentProps<typeof Badge>) {
   if (!deprecation) {
     return null;
   }
 
   return (
     <PropertyDeprecationTooltip deprecation={deprecation}>
-      <PropertyDeprecationBadge />
+      <PropertyDeprecationBadge {...props}/>
     </PropertyDeprecationTooltip>
+  );
+}
+
+function PropertyDeprecationContent({ deprecation }: { deprecation: PropertyDeprecation }) {
+  return (
+    <div className="grid max-w-full">
+      <p className="leading-snug mb-1">
+        {deprecation.reason ? deprecation.reason : (
+          <FormattedMessage
+            defaultMessage="No deprecation reason specified."
+            description="Tooltip message displayed when property deprecation reason is not specified."
+            tagName="i"
+          />
+        )}
+      </p>
+
+      {deprecation.replacement && (
+        <>
+          <FormattedMessage
+            defaultMessage="Replaced by:"
+            description="Label used in the property deprecation tooltip that shows the property replacement."
+            tagName="strong"
+          />
+          <pre>{deprecation.replacement}</pre>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -28,30 +61,31 @@ export function PropertyDeprecationTooltip({ deprecation, children }: { deprecat
       <TooltipTrigger>
         {children}
       </TooltipTrigger>
-      <TooltipContent className="grid max-w-full">
-        <p className="leading-snug mb-1">
-          {deprecation.reason ? deprecation.reason : (
-            <FormattedMessage
-              defaultMessage="No deprecation reason specified."
-              description="Tooltip message displayed when property deprecation reason is not specified."
-              tagName="i"
-            />
-          )}
-        </p>
-
-        {deprecation.replacement && (
-          <>
-            <FormattedMessage
-              defaultMessage="Replaced by:"
-              description="Label used in the property deprecation tooltip that shows the property replacement."
-              tagName="b"
-            />
-            <pre>{deprecation.replacement}</pre>
-          </>
-        )}
-
+      <TooltipContent>
+        <PropertyDeprecationContent deprecation={deprecation} />
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+export function PropertyDeprecationAlert({ deprecation, className }: { deprecation?: PropertyDeprecation, className?: string }) {
+  if (!deprecation) {
+    return null;
+  }
+
+  return (
+    <Alert className={className}>
+      <MessageCircleWarningIcon />
+      <AlertTitle>
+        <FormattedMessage
+          defaultMessage="Deprecated"
+          description="Title used for property deprecation alert."
+        />
+      </AlertTitle>
+      <AlertDescription>
+        <PropertyDeprecationContent deprecation={deprecation} />
+      </AlertDescription>
+    </Alert>
   );
 }
 
@@ -60,7 +94,7 @@ export function PropertyDeprecationBadge({ className, ...props }: ComponentProps
     <Badge
       variant="outline"
       size="sm"
-      className={cn('font-normal border-destructive/40 text-destructive', className)}
+      className={cn('font-normal border-destructive/40 text-destructive!', className)}
       {...props}
     >
       <FormattedMessage

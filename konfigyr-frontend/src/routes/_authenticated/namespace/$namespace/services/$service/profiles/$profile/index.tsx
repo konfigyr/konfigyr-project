@@ -2,7 +2,12 @@ import { FormattedMessage } from 'react-intl';
 import { ProfileMenu } from '@konfigyr/components/vault/navigation/profile-menu';
 import { ChangesetEditor } from '@konfigyr/components/vault/changeset/editor';
 import { PolicyAlert } from '@konfigyr/components/vault/profile/policy-alert';
-import { getProfileQuery, getProfilesQuery, useChangesetState } from '@konfigyr/hooks';
+import {
+  getProfileQuery,
+  getProfilesQuery,
+  useChangesetState,
+  useServiceCatalogQuery,
+} from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
 import { ChangeHistoryAlert } from '@konfigyr/components/vault/change-history/change-history-alert';
 import type { Namespace, Service } from '@konfigyr/hooks/types';
@@ -24,7 +29,8 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { namespace, service, profiles, profile } = Route.useLoaderData();
-  const { data } = useChangesetState(namespace, service, profile);
+  const { data: changeset } = useChangesetState(namespace, service, profile);
+  const { data: catalog } = useServiceCatalogQuery(namespace.slug, service.slug);
 
   return (
     <div className="mx-4 space-y-6">
@@ -59,11 +65,9 @@ function RouteComponent() {
         profile={profile}
       />
 
-      <div>
-        {data && (
-          <ChangesetEditor changeset={data} />
-        )}
-      </div>
+      {(changeset && catalog) && (
+        <ChangesetEditor catalog={catalog} changeset={changeset} />
+      )}
     </div>
   );
 }

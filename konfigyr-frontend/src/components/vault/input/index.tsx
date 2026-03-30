@@ -62,7 +62,15 @@ const useSchemaInputComponent = (schema: PropertyJsonSchema): FunctionComponent<
   }
 };
 
-export function InputField<T>({ property, ref, value, onChange, onBlur, onKeyDown }: InputFieldProps<HTMLElement, ConfigurationPropertyValue<T>>) {
+export function InputField<T>({
+  id,
+  property,
+  ref,
+  value,
+  onChange,
+  onBlur,
+  onKeyDown,
+}: InputFieldProps<HTMLElement, ConfigurationPropertyValue<T>>) {
   const InputComponent = useSchemaInputComponent(property.schema);
   const transform = useJsonSchemeTransform<T>(property.schema);
   const hints = useSchemaHints(property.schema);
@@ -76,6 +84,7 @@ export function InputField<T>({ property, ref, value, onChange, onBlur, onKeyDow
     <>
       <InputComponent
         ref={ref}
+        id={id}
         list={hints?.id}
         hints={hints?.hints}
         property={property}

@@ -38,7 +38,17 @@ export interface InputFieldProps<TElement extends HTMLElement, TValue> {
   /**
    * The reference to the HTML element that the input field is rendered into.
    */
-  ref?: RefObject<TElement>,
+  ref?: RefObject<TElement | null>,
+
+  /**
+   * The ID of the input field.
+   */
+  id?: string,
+
+  /**
+   * The class name of the input field.
+   */
+  className?: string,
 
   /**
    * Callback function to be called when a key is pressed inside the input field.

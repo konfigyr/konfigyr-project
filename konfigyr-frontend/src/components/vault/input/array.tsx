@@ -17,7 +17,7 @@ import {
 import type { ComponentProps, KeyboardEvent, ReactNode } from 'react';
 import type { InputFieldProps, SchemaHint } from './types';
 
-export type ArrayFieldProps = InputFieldProps<HTMLElement, Array<string>> & ComponentProps<typeof Combobox>;
+export type ArrayFieldProps = InputFieldProps<HTMLInputElement, Array<string>> & ComponentProps<typeof Combobox>;
 
 type Item = {
   id: string,
@@ -49,7 +49,7 @@ const addItemsFor = (items: Array<Item>, type: Item['type'], values?: Array<stri
   return items;
 };
 
-export function ArrayField({ property, value, hints, onChange, onBlur, onKeyDown }: ArrayFieldProps) {
+export function ArrayField({ ref, property, value, className, hints, onChange, onBlur, onKeyDown }: ArrayFieldProps) {
   const anchor = useComboboxAnchor();
   const [input, onInputChange] = useState('');
   const [highlighted, onHighlightedChange] = useState(false);
@@ -85,7 +85,7 @@ export function ArrayField({ property, value, hints, onChange, onBlur, onKeyDown
       onInputValueChange={onInputChange}
       onItemHighlighted={it => onHighlightedChange(!!it)}
     >
-      <ComboboxChips ref={anchor} className="w-full max-w-xs">
+      <ComboboxChips ref={anchor}>
         <ComboboxValue>
           {(values) => (
             <>
@@ -93,9 +93,11 @@ export function ArrayField({ property, value, hints, onChange, onBlur, onKeyDown
                 <ComboboxChip key={it}>{it}</ComboboxChip>
               ))}
               <ComboboxChipsInput
+                ref={ref}
                 autoFocus
                 onBlur={onBlur}
                 onKeyDown={onInputKeyDown}
+                className={className}
                 name={property.schema.title || property.name}
                 aria-label={property.schema.title || property.name}
                 aria-description={property.schema.description || property.description}

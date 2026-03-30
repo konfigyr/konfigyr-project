@@ -18,6 +18,7 @@ import type {
   ChangesetState,
   ConfigurationProperty,
   ConfigurationPropertyValue,
+  ServiceCatalog,
 } from '@konfigyr/hooks/types';
 import type { StatusFilter } from '@konfigyr/components/vault/properties/status-filters';
 
@@ -53,7 +54,7 @@ const useFilteredProperties = (
   }, [properties, termFilter]);
 };
 
-export function ChangesetEditor({ changeset }: { changeset: ChangesetState }) {
+export function ChangesetEditor({ catalog, changeset }: { catalog: ServiceCatalog, changeset: ChangesetState }) {
   const [propertyStatusFilter, onPropertyStatusFilterChanged] = useState<StatusFilter>('all');
   const [propertyTermFilter, onPropertyTermFilterChanged] = useState<string>('');
 
@@ -114,6 +115,7 @@ export function ChangesetEditor({ changeset }: { changeset: ChangesetState }) {
           />
 
           <PropertyDialog
+            catalog={catalog}
             changeset={changeset}
             onAdd={onAdd}
           />
