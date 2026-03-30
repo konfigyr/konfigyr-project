@@ -3,9 +3,9 @@ import { cleanup, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { ChangesetEditor } from '@konfigyr/components/vault/changeset/editor';
-import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
+import { namespaces, profiles, propertyDescriptors, services } from '@konfigyr/test/helpers/mocks';
 
-import type { ChangesetState } from '@konfigyr/hooks/types';
+import type { ChangesetState, ServiceCatalog } from '@konfigyr/hooks/types';
 
 const changeset: ChangesetState = {
   namespace: namespaces.konfigyr,
@@ -47,12 +47,21 @@ const changeset: ChangesetState = {
   deleted: 0,
 };
 
+const catalog: ServiceCatalog = {
+  service: services.konfigyrApi,
+  properties: [
+    ...propertyDescriptors.springAopProperties,
+    ...propertyDescriptors.springConfigProperties,
+  ],
+};
+
 describe('components | vault | changeset | <ChangesetEditor/>', () => {
   afterEach(() => cleanup());
 
   test('should render changeset editor without active filters', () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
+        catalog={catalog}
         changeset={changeset}
       />,
     );
@@ -64,6 +73,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   test('should filter changeset properties by term', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
+        catalog={catalog}
         changeset={changeset}
       />,
     );
@@ -80,6 +90,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   test('should filter changeset properties by state', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
+        catalog={catalog}
         changeset={changeset}
       />,
     );
@@ -104,6 +115,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   test('should display an empty state when no filter matches the property', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
+        catalog={catalog}
         changeset={changeset}
       />,
     );
@@ -119,6 +131,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   test('should open changeset property history', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
+        catalog={catalog}
         changeset={changeset}
       />,
     );
@@ -136,6 +149,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   test('should add changeset property value', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
+        catalog={catalog}
         changeset={changeset}
       />,
     );
@@ -147,18 +161,26 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
 
     await waitFor(() => {
       expect(result.getByRole('dialog', { name: 'Add configuration property' })).toBeInTheDocument();
-      expect(result.getByRole('textbox', { name: 'Property name' })).toBeInTheDocument();
-      expect(result.getByRole('textbox', { name: 'Value' })).toBeInTheDocument();
     });
 
+    expect(result.getByRole('combobox', { name: 'Property name' })).toBeInTheDocument();
+
     await userEvent.type(
-      result.getByRole('textbox', { name: 'Property name' }),
-      'application.version',
+      result.getByRole('combobox', { name: 'Property name' }),
+      'application.index',
+    );
+
+    await waitFor(() => {
+      expect(result.getByRole('option', { name: 'application.index' })).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      result.getByRole('option', { name: 'application.index' }),
     );
 
     await userEvent.type(
-      result.getByRole('textbox', { name: 'Value' }),
-      '1.0.0',
+      result.getByRole('textbox', { name: 'application.index' }),
+      'konfigyr-frontend',
     );
 
     await userEvent.click(result.getByRole('button', { name: 'Add property' }));
@@ -166,11 +188,14 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
     await waitFor(() => {
       expect(result.queryByRole('dialog', { name: 'Add configuration property' })).toBeNull();
     });
+
+    expect(result.findByText('konfigyr-frontend'));
   });
 
   test('should update changeset property value', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
+        catalog={catalog}
         changeset={changeset}
       />,
     );
@@ -197,6 +222,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   test('should delete changeset property', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
+        catalog={catalog}
         changeset={changeset}
       />,
     );

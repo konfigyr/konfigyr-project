@@ -1,4 +1,5 @@
 import { Input } from '@konfigyr/components/ui/input';
+import { cn } from '@konfigyr/components/utils';
 
 import type { ComponentProps } from 'react';
 import type { InputFieldProps } from './types';
@@ -18,14 +19,14 @@ const useInputType = (format: string | undefined): string => {
   }
 };
 
-export function TextField({ property, value, onChange, ...props }: TextFieldProps) {
+export function TextField({ property, value, className, onChange, ...props }: TextFieldProps) {
   const type = useInputType(property.schema.format);
 
   return (
     <Input
       type={type}
       value={value}
-      className="h-7 text-sm font-mono"
+      className={cn('text-sm font-mono', className)}
       minLength={property.schema.minLength}
       maxLength={property.schema.maxLength}
       pattern={property.schema.pattern}

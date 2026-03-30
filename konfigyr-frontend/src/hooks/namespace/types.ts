@@ -82,7 +82,7 @@ export interface ServiceCatalogProperty extends PropertyDescriptor {
 
 export interface ServiceCatalog {
   service: Service,
-  version: string,
+  version?: string,
   properties: Array<ServiceCatalogProperty>
 }
 

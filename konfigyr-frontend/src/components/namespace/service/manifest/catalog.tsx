@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { GroupIcon } from 'lucide-react';
-import { useServiceCatalogQuery } from '@konfigyr/hooks';
+import { usePropertyDescriptorSearch, useServiceCatalogQuery } from '@konfigyr/hooks';
 import { PropertyDeprecation } from '@konfigyr/components/artifactory/property-deprecation';
 import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
 import { PropertySchema } from '@konfigyr/components/artifactory/property-schema';
@@ -45,33 +45,6 @@ import type {
 } from '@konfigyr/hooks/types';
 
 const PER_PAGE = 20 as const;
-
-function useFilter(properties: Array<ServiceCatalogProperty>, filter: string = ''): Array<ServiceCatalogProperty> {
-  return useMemo(() => {
-    const term = filter.trim().toLowerCase();
-
-    return properties
-      .map(property => {
-        let score = 0;
-        const name = property.name.toLowerCase();
-        const description = property.description?.toLowerCase() || '';
-
-        if (name === term) {
-          score += 100; // exact match, the highest score
-        } else if (name.includes(term)) {
-          score += 10; // partial match, slightly higher score
-        }
-
-        if (description.includes(term)) {
-          score += 1; // description partial matches, lowest score
-        }
-
-        return { ...property, score };
-      })
-      .filter(it => it.score > 0)
-      .sort((a, b) => b.score - a.score);
-  }, [filter, properties]);
-}
 
 function SkeletonLoader() {
   return (
@@ -194,7 +167,7 @@ export function ServiceCatalog({ namespace, service }: { namespace: Namespace, s
 
   const { data: catalog, error, isPending, isError } = useServiceCatalogQuery(namespace.slug, service.slug);
 
-  const properties = useFilter(catalog?.properties || [], term);
+  const properties = usePropertyDescriptorSearch(catalog?.properties || [], term);
   const pages = useMemo(() => Math.ceil(properties.length / PER_PAGE), [properties.length]);
 
   const onPageChange = useCallback((event: SyntheticEvent, value: number) => {

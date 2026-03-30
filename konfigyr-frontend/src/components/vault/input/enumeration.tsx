@@ -8,16 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@konfigyr/components/ui/select';
+import { cn } from '@konfigyr/components/utils';
 
 import type { InputFieldProps } from './types';
 
 export type EnumerationFieldProps = InputFieldProps<HTMLElement, string>;
 
-export function EnumerationField({ property, value, onChange }: EnumerationFieldProps) {
+export function EnumerationField({ property, value, className, onChange }: EnumerationFieldProps) {
   return (
     <Select value={value} onValueChange={it => it && onChange?.(it)}>
       <SelectTrigger
-        className="h-7 text-sm font-mono w-full"
+        className={cn('text-sm font-mono w-full', className)}
         aria-label={property.schema.title || property.name}
         aria-description={property.schema.description || property.description}
       >

@@ -23,7 +23,8 @@ export const badgeVariants = cva(
       },
       size: {
         default: 'px-2 py-0.5 text-xs',
-        sm: 'px-1.5 py-0.2 text-[0.75rem]',
+        xs: 'px-0.5 py-0.2 text-[0.5rem] h-3.5',
+        sm: 'px-1.5 py-0.2 text-[0.65rem] h-4.25',
         lg: 'px-3 py-1 text-sm',
       },
     },

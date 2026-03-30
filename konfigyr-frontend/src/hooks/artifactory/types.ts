@@ -47,7 +47,7 @@ export interface PropertyJsonSchema {
 }
 
 export interface PropertyDeprecation {
-  reason: string;
+  reason?: string;
   replacement?: string;
 }
 

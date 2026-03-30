@@ -20,13 +20,13 @@ import {
 } from '@konfigyr/components/ui/dropdown-menu';
 import { cn } from '@konfigyr/components/utils';
 
-import type { ComponentProps, FocusEvent } from 'react';
+import type { ComponentProps } from 'react';
 import type { Duration } from '@konfigyr/hooks/transforms';
 import type { InputFieldProps } from './types';
 
 export type DurationFieldProps = InputFieldProps<HTMLInputElement, Duration> & ComponentProps<typeof InputGroupInput>;
 
-export function DurationField({ property, value, onChange, onBlur, ...props }: DurationFieldProps) {
+export function DurationField({ property, value, className, onChange, onBlur, ...props }: DurationFieldProps) {
   const [inputValue, setInputValue] = useState(value?.value);
   const [open, setOpen] = useState(false);
 
@@ -44,33 +44,26 @@ export function DurationField({ property, value, onChange, onBlur, ...props }: D
     }
   }, [value, onChange]);
 
-  const onFocusOut = (event: FocusEvent<HTMLInputElement>) => {
-    if (!open && typeof onBlur === 'function') {
-      onBlur(event);
-    }
-  };
-
   return (
-    <InputGroup className="h-7">
+    <InputGroup className={className}>
       <InputGroupInput
         type="number"
         value={inputValue}
         className="text-sm font-mono"
         onChange={event => onValueChange(event.target.valueAsNumber)}
-        onBlur={onFocusOut}
         {...props}
       />
       <InputGroupAddon align="inline-end">
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger
             render={
-              <InputGroupButton variant="ghost" size="xs" className="h-5 text-xs font-semibold">
+              <InputGroupButton variant="ghost" size="sm" className="h-5 text-xs font-semibold">
                 <code>{value?.unit || DurationUnit.MILLISECONDS}</code>
                 <ChevronDownIcon className={cn('size-3 transition', open && 'rotate-180')} />
               </InputGroupButton>
             }
           />
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent className="min-w-42" align="end">
             <DropdownMenuGroup>
               <DropdownMenuLabel>
                 <SelectDurationUnitLabel />

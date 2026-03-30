@@ -1,6 +1,7 @@
 import * as profiles from './mocks/profile';
 import * as services from './mocks/services';
 
+export * as propertyDescriptors from './mocks/property-descriptors';
 export * as accounts from './mocks/account';
 export * as kms from './mocks/kms';
 export * as namespaces from './mocks/namespace';
