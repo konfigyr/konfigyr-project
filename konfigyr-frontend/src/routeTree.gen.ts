@@ -242,13 +242,13 @@ const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute 
   )
 
 export interface FileRoutesByFullPath {
+  '/': typeof AuthenticatedIndexRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
-  '/': typeof AuthenticatedIndexRoute
   '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
   '/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
-  '/account': typeof AuthenticatedAccountIndexRoute
+  '/account/': typeof AuthenticatedAccountIndexRoute
   '/namespace/$namespace/applications': typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteWithChildren
   '/namespace/$namespace/kms': typeof AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren
   '/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
@@ -260,7 +260,7 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace/kms/create': typeof AuthenticatedNamespaceNamespaceKmsCreateRoute
   '/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
-  '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
+  '/namespace/$namespace/settings/': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
   '/namespace/$namespace/services/$service/manifest': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteWithChildren
   '/namespace/$namespace/services/$service/create-profile': typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute
   '/namespace/$namespace/services/$service/settings': typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute
@@ -268,7 +268,7 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteWithChildren
   '/namespace/$namespace/services/$service/manifest/artifacts': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute
   '/namespace/$namespace/services/$service/manifest/': typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute
-  '/namespace/$namespace/services/$service/requests': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
+  '/namespace/$namespace/services/$service/requests/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
   '/namespace/$namespace/services/$service/profiles/$profile/history': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute
   '/namespace/$namespace/services/$service/profiles/$profile/': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute
 }
@@ -333,13 +333,13 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/api/$'
     | '/auth/code'
     | '/auth/scopes'
-    | '/'
     | '/namespace/$namespace'
     | '/namespace/provision'
-    | '/account'
+    | '/account/'
     | '/namespace/$namespace/applications'
     | '/namespace/$namespace/kms'
     | '/namespace/$namespace/invitations'
@@ -351,7 +351,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/kms/create'
     | '/namespace/$namespace/applications/'
     | '/namespace/$namespace/kms/'
-    | '/namespace/$namespace/settings'
+    | '/namespace/$namespace/settings/'
     | '/namespace/$namespace/services/$service/manifest'
     | '/namespace/$namespace/services/$service/create-profile'
     | '/namespace/$namespace/services/$service/settings'
@@ -359,7 +359,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/services/$service/profiles/$profile'
     | '/namespace/$namespace/services/$service/manifest/artifacts'
     | '/namespace/$namespace/services/$service/manifest/'
-    | '/namespace/$namespace/services/$service/requests'
+    | '/namespace/$namespace/services/$service/requests/'
     | '/namespace/$namespace/services/$service/profiles/$profile/history'
     | '/namespace/$namespace/services/$service/profiles/$profile/'
   fileRoutesByTo: FileRoutesByTo
@@ -433,7 +433,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -468,7 +468,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated/account/': {
       id: '/_authenticated/account/'
       path: '/account'
-      fullPath: '/account'
+      fullPath: '/account/'
       preLoaderRoute: typeof AuthenticatedAccountIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
@@ -524,7 +524,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated/namespace/$namespace/settings/': {
       id: '/_authenticated/namespace/$namespace/settings/'
       path: '/settings'
-      fullPath: '/namespace/$namespace/settings'
+      fullPath: '/namespace/$namespace/settings/'
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
@@ -601,7 +601,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated/namespace/$namespace/services/$service/requests/': {
       id: '/_authenticated/namespace/$namespace/services/$service/requests/'
       path: '/requests'
-      fullPath: '/namespace/$namespace/services/$service/requests'
+      fullPath: '/namespace/$namespace/services/$service/requests/'
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }

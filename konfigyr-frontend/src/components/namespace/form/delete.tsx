@@ -27,7 +27,7 @@ import {
 } from '@konfigyr/components/ui/card';
 import { useForm } from '@konfigyr/components/ui/form';
 
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 export interface NamespaceDeleteFormProps {
@@ -49,7 +49,7 @@ export function NamespaceDeleteForm({ namespace, onDelete }: NamespaceDeleteForm
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
 

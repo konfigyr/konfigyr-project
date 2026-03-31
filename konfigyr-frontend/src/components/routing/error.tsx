@@ -21,7 +21,7 @@ export function ErrorBoundary({ error, reset }: ErrorComponentProps) {
   const location = useLocation();
 
   useInsertionEffect(() => {
-    logger.error({ error },`Unexpected error occurred while rendering page: ${location.url}`);
+    logger.error({ error },`Unexpected error occurred while rendering page: ${location.href}`);
   });
 
   return (

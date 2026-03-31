@@ -20,7 +20,7 @@ import {
   NamespaceNameLabel,
 } from './messages';
 
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 const namespaceNameSchema = z.object({
@@ -57,7 +57,7 @@ export function NamespaceNameForm({ namespace }: { namespace: Namespace }) {
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
 

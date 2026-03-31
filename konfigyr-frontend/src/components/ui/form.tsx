@@ -179,11 +179,11 @@ export function SubmitButton({ children, ...props }: ButtonProps) {
 
   return (
     <form.Subscribe
-      selector={state => [state.isValid, state.isValidating, state.isSubmitting]}
-      children={([isValid, isValidating, isSubmitting]) => (
+      selector={state => [state.canSubmit, state.isValid, state.isValidating, state.isSubmitting]}
+      children={([canSubmit, isValid, isValidating, isSubmitting]) => (
         <Button
           type="submit"
-          disabled={!isValid}
+          disabled={!canSubmit && !isValid}
           loading={isSubmitting || isValidating}
           {...props}
         >

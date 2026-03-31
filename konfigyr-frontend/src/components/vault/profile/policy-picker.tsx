@@ -74,7 +74,7 @@ function PolicyOption({ value }: { value: Profile['policy'] }) {
   );
 }
 
-export function PolicyPicker({ options, value, onChange}: {
+export function PolicyPicker({ options, value, onChange }: {
   options: Array<Profile['policy']>,
   value?: Profile['policy'],
   onChange: (value: Profile['policy']) => void

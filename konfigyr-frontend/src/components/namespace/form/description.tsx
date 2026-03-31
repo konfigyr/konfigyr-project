@@ -20,7 +20,7 @@ import {
   NamespaceDescriptionLabel,
 } from './messages';
 
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 const namespaceDescriptionSchema = z.object({
@@ -56,7 +56,7 @@ export function NamespaceDescriptionForm({ namespace }: { namespace: Namespace }
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
 
