@@ -23,7 +23,7 @@ subprojects {
     version = '1.0.0'
 
     checkstyle {
-        toolVersion = "12.1.2"
+        toolVersion = "13.4.0"
     }
 
     lombok {
