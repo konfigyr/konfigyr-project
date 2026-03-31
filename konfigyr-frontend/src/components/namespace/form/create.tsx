@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import slugify from 'slugify';
-import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { FormattedMessage } from 'react-intl';
 import { useCreateNamespace } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { Separator } from '@konfigyr/components/ui/separator';
-import { SlugDescription, validateSlug } from './slug';
+import { SlugDescription } from './slug';
+import { useValidateSlug } from './validations';
 import {
   NamespaceDescriptionHelpText,
   NamespaceDescriptionLabel,
@@ -16,7 +16,6 @@ import {
   NamespaceSlugLabel,
 } from './messages';
 
-import type { FormEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 const namespaceFormSchema = z.object({
@@ -30,10 +29,13 @@ const namespaceFormSchema = z.object({
     .max(255, { message: 'Description must be at most 255 characters.' }),
 });
 
+type FormSchema = z.infer<typeof namespaceFormSchema>;
+
 export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namespace) => void | Promise<void> }) {
   const queryClient = useQueryClient();
   const { mutateAsync: createNamespace } = useCreateNamespace();
   const errorNotification = useErrorNotification();
+  const validateSlug = useValidateSlug<FormSchema>(queryClient);
 
   const form = useForm({
     defaultValues: {
@@ -54,6 +56,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
     },
   });
 
+  const onSubmit = useFormSubmit(form);
+
   const generateSlug = (name: string) => {
     const state = form.getFieldMeta('slug');
 
@@ -63,16 +67,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
 
     form.setFieldValue('slug', slugify(name, { lower: true }), {
       dontUpdateMeta: true,
-      dontRunListeners: true,
     });
   };
-
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
 
   return (
     <form.AppForm>
@@ -95,7 +91,7 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
           name="slug"
           validators={{
             onChangeAsyncDebounceMs: 300,
-            onChangeAsync: ({ value }) => validateSlug(queryClient, value),
+            onChangeAsync: validateSlug,
           }}
           children={(field) => (
             <field.Control

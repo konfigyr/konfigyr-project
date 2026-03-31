@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   Select,
@@ -9,11 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@konfigyr/components/ui/select';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { KeysetAlgorithmSelect } from './keyset-algorithm';
 import { KeysetStateSelect } from './keyset-state';
 
-import type { FormEvent } from 'react';
 import type { KeysetSearchQuery, KeysetState } from '@konfigyr/hooks/types';
 
 export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQuery, onQueryChange: (query: KeysetSearchQuery) => void }) {
@@ -36,12 +34,7 @@ export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQue
     }),
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit();
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

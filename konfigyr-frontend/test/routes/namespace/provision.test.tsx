@@ -91,13 +91,15 @@ describe('routes | namespace | provision', () => {
       'available-namespace',
     );
 
+    // wait for the debounce period to be over to avoid race conditions when validating the URL slug
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
     await waitFor(() => {
       expect(result.getByRole('textbox', { name: 'URL' })).toBeValid();
     });
 
     expect(result.getByRole('textbox', { name: 'URL' }))
       .toHaveValue('available-namespace');
-
   });
 
   test('should create namespace and redirect to namespace overview page', async () => {

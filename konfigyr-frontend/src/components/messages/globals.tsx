@@ -54,10 +54,17 @@ export const OAuthErrorDetail = () => (
   />
 );
 
+export const HomeLabel = () => (
+  <FormattedMessage
+    defaultMessage="Home"
+    description="The label for a link that leads to the home page."
+  />
+);
+
 export const ContactSupport = () => (
   <FormattedMessage
     defaultMessage="Contact our support team"
-    description="The label for a link that leads to the support page"
+    description="The label for a link that leads to the support page."
   />
 );
 

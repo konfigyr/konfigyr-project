@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { NamespaceSlugForm } from '@konfigyr/components/namespace/form/slug';
 import { Toaster } from '@konfigyr/components/ui/sonner';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
@@ -11,7 +11,7 @@ import type { RenderResult } from '@testing-library/react';
 describe('components | namespace | <NamespaceSlugForm/>', () => {
   let result: RenderResult;
 
-  beforeAll(() => {
+  beforeEach(() => {
     result = renderWithQueryClient((
       <>
         <NamespaceSlugForm namespace={namespaces.konfigyr} />
@@ -20,20 +20,15 @@ describe('components | namespace | <NamespaceSlugForm/>', () => {
     ));
   });
 
-  afterAll(() => cleanup());
+  afterEach(() => cleanup());
 
-  test('should render namespace slug form', async () => {
-    await waitFor(() => {
-      expect(result.getByRole('textbox')).toBeInTheDocument();
-      expect(result.getByRole('textbox')).toHaveAccessibleName('Rename namespace');
-      expect(result.getByRole('textbox')).toHaveAccessibleDescription(
-        'The unique URL-friendly identifier for this namespace. Auto-generated from the name, but you can tweak it if needed. No spaces, just dashes!',
-      );
-    });
-
-    await waitFor(() => {
-      expect(result.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
-    });
+  test('should render namespace slug form', () => {
+    expect(result.getByRole('textbox')).toBeInTheDocument();
+    expect(result.getByRole('textbox')).toHaveAccessibleName('Rename namespace');
+    expect(result.getByRole('textbox')).toHaveAccessibleDescription(
+      'The unique URL-friendly identifier for this namespace. Auto-generated from the name, but you can tweak it if needed. No spaces, just dashes!',
+    );
+    expect(result.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
   });
 
   test('should fail to submit invalid form', async () => {
@@ -60,24 +55,26 @@ describe('components | namespace | <NamespaceSlugForm/>', () => {
   });
 
   test('should enter namespace slug that is already taken', async () => {
-    await userEvents.type(
-      result.getByRole('textbox'),
-      'taken-slug',
-    );
-
-    expect(result.getByRole('textbox')).toBeInvalid();
-    expect(result.getByRole('button')).toBeDisabled();
-  });
-
-  test('should submit form with valid URL slug', async () => {
     await userEvents.clear(
       result.getByRole('textbox'),
     );
 
     await userEvents.type(
       result.getByRole('textbox'),
-      namespaces.konfigyr.slug,
+      'taken-slug',
     );
+
+    await waitFor(() => {
+      expect(result.getByRole('textbox')).toBeInvalid();
+      expect(result.getByRole('button')).toBeDisabled();
+    });
+  });
+
+  test('should submit form with valid URL slug', async () => {
+    await waitFor(() => {
+      expect(result.getByRole('textbox')).toBeValid();
+      expect(result.getByRole('button')).not.toBeDisabled();
+    });
 
     await userEvents.click(
       result.getByRole('button'),

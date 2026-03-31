@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import slugify from 'slugify';
-import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useCreateProfile } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -11,7 +10,7 @@ import {
   FieldSeparator,
   FieldSet,
 } from '@konfigyr/components/ui/field';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { PolicyPicker } from './policy-picker';
 import {
   ProfileDescriptionHelpText,
@@ -24,7 +23,6 @@ import {
   ProfileSlugLabel,
 } from './messages';
 
-import type { FormEvent } from 'react';
 import type { Namespace, Profile, ProfilePolicy, Service } from '@konfigyr/hooks/types';
 
 const AVAILABLE_POLICIES: Array<ProfilePolicy> = ['PROTECTED', 'UNPROTECTED'] as const;
@@ -72,6 +70,8 @@ export function CreateProfileForm({ namespace, service, onCreate }: {
     },
   });
 
+  const onSubmit = useFormSubmit(form);
+
   const generateSlug = (name: string) => {
     const state = form.getFieldMeta('slug');
 
@@ -84,13 +84,6 @@ export function CreateProfileForm({ namespace, service, onCreate }: {
       dontRunListeners: true,
     });
   };
-
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
 
   return (
     <form.AppForm>

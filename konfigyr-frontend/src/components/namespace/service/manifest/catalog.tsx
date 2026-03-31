@@ -37,7 +37,7 @@ import {
   ServiceManifestsInstructions,
 } from '../messages';
 
-import type { FormEvent, SyntheticEvent } from 'react';
+import type { SubmitEvent, SyntheticEvent } from 'react';
 import type {
   Namespace,
   Service,
@@ -143,7 +143,7 @@ function Properties({ properties, page = 1 }: { properties: Array<ServiceCatalog
 }
 
 function SearchForm({ term, onTermChange }: { term: string, onTermChange: (term: string) => void }) {
-  const onSubmit = useCallback((event: FormEvent) => {
+  const onSubmit = useCallback((event: SubmitEvent) => {
     event.preventDefault();
     event.stopPropagation();
     onTermChange(term);

@@ -1,15 +1,14 @@
 import { z } from 'zod';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import {
   CreateNamespaceApplicationLabel,
   UpdateNamespaceApplicationLabel,
 } from '@konfigyr/components/namespace/applications/messages';
 import { ApplicationScopesField } from './application-scopes-field';
 
-import type { FormEvent } from 'react';
 import type { CreateNamespaceApplication, Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
 export const namespaceApplicationSchema = z.object({
@@ -85,12 +84,7 @@ export function NamespaceApplicationForm({ namespace, namespaceApplication, hand
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

@@ -1,18 +1,19 @@
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 import viteReact from '@vitejs/plugin-react-swc';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+    resolve: {
+        tsconfigPaths: true,
+    },
     plugins: [
-        tsconfigPaths(),
         viteReact({
             tsDecorators: true,
             plugins: [
                 [
                     '@swc/plugin-formatjs',
                     {
-                        idInterpolationPattern: '[md5:contenthash:hex:10]',
+                        idInterpolationPattern: '[sha512:contenthash:base64:10]',
                         ast: true,
                     },
                 ],

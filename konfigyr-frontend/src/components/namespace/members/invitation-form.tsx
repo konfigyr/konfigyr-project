@@ -1,4 +1,4 @@
-import { useCallback, useId } from 'react';
+import { useId } from 'react';
 import { SendIcon } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useInviteNamespaceMember } from '@konfigyr/hooks';
@@ -12,9 +12,8 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 
-import type { FormEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 interface Invitation {
@@ -41,12 +40,7 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

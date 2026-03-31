@@ -1,6 +1,5 @@
 'use client';
 
-import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { UserXIcon } from 'lucide-react';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -24,10 +23,9 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { useForm } from '@konfigyr/components/ui/form';
-
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { YesLabel } from '@konfigyr/components/messages';
-import type { FormEvent } from 'react';
+
 import type { Account } from '@konfigyr/hooks/types';
 
 export function AccountDeleteConfirmationDialog({ account, onDelete }: { account: Account, onDelete: () => Promise<void> | void }) {
@@ -44,12 +42,7 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <>

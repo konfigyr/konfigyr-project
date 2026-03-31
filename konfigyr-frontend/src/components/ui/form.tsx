@@ -18,7 +18,7 @@ import { cn } from '@konfigyr/components/utils';
 
 import type { ChangeEvent } from 'react';
 import type { UseRenderRenderProp } from '@base-ui/react/use-render';
-import type { FieldApi } from '@tanstack/react-form';
+import type { FieldApi, FormApi } from '@tanstack/react-form';
 import type { ButtonProps } from './button';
 
 export type Primitive = string | number | boolean | undefined | null;
@@ -179,11 +179,11 @@ export function SubmitButton({ children, ...props }: ButtonProps) {
 
   return (
     <form.Subscribe
-      selector={state => [state.isValid, state.isValidating, state.isSubmitting]}
-      children={([isValid, isValidating, isSubmitting]) => (
+      selector={state => [state.canSubmit, state.isValid, state.isValidating, state.isSubmitting]}
+      children={([canSubmit, isValid, isValidating, isSubmitting]) => (
         <Button
           type="submit"
-          disabled={!isValid}
+          disabled={!canSubmit && !isValid}
           loading={isSubmitting || isValidating}
           {...props}
         >
@@ -241,6 +241,15 @@ export function FormTextarea(props: React.ComponentProps<typeof Textarea>) {
       {...props}
     />
   );
+}
+
+export function useFormSubmit<TFormData>(form: FormApi<TFormData, any, any, any, any, any, any, any, any, any, any, any>) {
+  return React.useCallback((event: React.SubmitEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    return form.handleSubmit(event);
+  }, [form.handleSubmit]);
 }
 
 /* Expose the `useForm` hook that provides access to custom field and form components */

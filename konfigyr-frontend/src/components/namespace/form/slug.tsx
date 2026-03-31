@@ -1,12 +1,11 @@
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { useCallback, useId, useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Link2Icon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { checkNamespaceQuery, useUpdateNamespace } from '@konfigyr/hooks';
+import { useUpdateNamespace } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { Button } from '@konfigyr/components/ui/button';
 import {
   Card,
   CardAction,
@@ -16,39 +15,13 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { useFieldContext, useForm } from '@konfigyr/components/ui/form';
+import { useFieldContext, useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { cn } from '@konfigyr/components/utils';
 import { NamespaceSlugDescription } from './messages';
+import { useValidateSlug } from './validations';
 
-import type { ComponentProps, FormEvent } from 'react';
+import type { ComponentProps } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
-import type { QueryClient } from '@tanstack/react-query';
-
-export async function validateSlug(queryClient: QueryClient, slug: string, existing?: string) {
-  if (!slug || slug === existing) {
-    return null;
-  }
-
-  let exists;
-
-  try {
-    const result = await queryClient.ensureQueryData(checkNamespaceQuery(slug));
-    exists = result.exists;
-  } catch (error) {
-    exists = false;
-  }
-
-  if (exists) {
-    return (
-      <FormattedMessage
-        defaultMessage="Namespace with the following URL already exists, please choose another one."
-        description="Error message that is shown when user tries to create a namespace with a slug that already exists."
-      />
-    );
-  }
-
-  return null;
-}
 
 export function SlugExample({ className, ...props }: ComponentProps<'span'>) {
   const field = useFieldContext<string>();
@@ -96,6 +69,7 @@ export function NamespaceSlugForm({ namespace }: { namespace: Namespace }) {
   const queryClient = useQueryClient();
   const { mutateAsync: updateNamespace } = useUpdateNamespace(namespace);
   const errorNotification = useErrorNotification();
+  const validateSlug = useValidateSlug(queryClient, namespace.slug);
 
   const form = useForm({
     defaultValues: {
@@ -120,12 +94,7 @@ export function NamespaceSlugForm({ namespace }: { namespace: Namespace }) {
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>
@@ -151,7 +120,7 @@ export function NamespaceSlugForm({ namespace }: { namespace: Namespace }) {
               name="slug"
               validators={{
                 onChangeAsyncDebounceMs: 300,
-                onChangeAsync: ({ value }) => validateSlug(queryClient, value, namespace.slug),
+                onChangeAsync: validateSlug,
               }}
               children={(field) => (
                 <field.Control
@@ -172,21 +141,12 @@ export function NamespaceSlugForm({ namespace }: { namespace: Namespace }) {
               />
             </p>
             <CardAction>
-              <form.Subscribe
-                selector={state => [state.isValid, state.isValidating, state.isSubmitting]}
-                children={([isValid, isValidating, isSubmitting]) => (
-                  <Button
-                    type="submit"
-                    disabled={!isValid}
-                    loading={isSubmitting || isValidating}
-                  >
-                    <FormattedMessage
-                      defaultMessage="Rename"
-                      description="Namespace URL slug settings form submit button label"
-                    />
-                  </Button>
-                )}
-              />
+              <form.Submit>
+                <FormattedMessage
+                  defaultMessage="Rename"
+                  description="Namespace URL slug settings form submit button label"
+                />
+              </form.Submit>
             </CardAction>
           </CardFooter>
         </Card>

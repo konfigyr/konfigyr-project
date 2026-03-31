@@ -1,15 +1,14 @@
 import { z } from 'zod';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { useKeysetOperation } from '@konfigyr/hooks';
 import { CancelLabel } from '@konfigyr/components/messages';
 import { Button } from '@konfigyr/components/ui/button';
 import { Alert, AlertTitle } from '@konfigyr/components/ui/alert';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { KeysetVerifySignatureLabel } from '../messages';
 
-import type { FormEvent } from 'react';
 import type { Keyset, KeysetVerificationOperationResponse, Namespace } from '@konfigyr/hooks/types';
 
 const verifySignatureRequestSchema = z.object({
@@ -60,12 +59,7 @@ export function KeysetVerifySignatureOperation({ namespace, keyset, onCancel, on
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>
