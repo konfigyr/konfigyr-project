@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { useCallback, useId, useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Link2Icon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,12 +15,12 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { useFieldContext, useForm } from '@konfigyr/components/ui/form';
+import { useFieldContext, useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { cn } from '@konfigyr/components/utils';
 import { NamespaceSlugDescription } from './messages';
 import { useValidateSlug } from './validations';
 
-import type { ComponentProps, SubmitEvent } from 'react';
+import type { ComponentProps } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 export function SlugExample({ className, ...props }: ComponentProps<'span'>) {
@@ -94,12 +94,7 @@ export function NamespaceSlugForm({ namespace }: { namespace: Namespace }) {
     },
   });
 
-  const onSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

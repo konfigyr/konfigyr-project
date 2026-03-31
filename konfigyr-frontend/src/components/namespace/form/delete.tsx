@@ -1,6 +1,5 @@
 'use client';
 
-import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { UserXIcon } from 'lucide-react';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -25,9 +24,8 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 
-import type { SubmitEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 export interface NamespaceDeleteFormProps {
@@ -49,12 +47,7 @@ export function NamespaceDeleteForm({ namespace, onDelete }: NamespaceDeleteForm
     },
   });
 
-  const onSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <>

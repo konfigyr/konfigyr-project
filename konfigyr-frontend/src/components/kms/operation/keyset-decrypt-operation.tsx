@@ -1,16 +1,15 @@
 import { z } from 'zod';
-import { useCallback, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useKeysetOperation } from '@konfigyr/hooks';
 import { ClipboardButton } from '@konfigyr/components/clipboard';
 import { CancelLabel, CloseLabel } from '@konfigyr/components/messages';
 import { Button } from '@konfigyr/components/ui/button';
 import { Label } from '@konfigyr/components/ui/label';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { Textarea } from '@konfigyr/components/ui/textarea';
 import { KeysetDecryptLabel } from '../messages';
 
-import type { FormEvent } from 'react';
 import type { Keyset, KeysetDecryptOperationResponse, Namespace } from '@konfigyr/hooks/types';
 
 const decryptRequestSchema = z.object({
@@ -74,12 +73,7 @@ export function KeysetDecryptOperation({ namespace, keyset, onCancel, onError }:
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   if (response) {
     return (

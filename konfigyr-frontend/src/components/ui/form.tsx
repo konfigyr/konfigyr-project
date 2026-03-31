@@ -18,7 +18,7 @@ import { cn } from '@konfigyr/components/utils';
 
 import type { ChangeEvent } from 'react';
 import type { UseRenderRenderProp } from '@base-ui/react/use-render';
-import type { FieldApi } from '@tanstack/react-form';
+import type { FieldApi, FormApi } from '@tanstack/react-form';
 import type { ButtonProps } from './button';
 
 export type Primitive = string | number | boolean | undefined | null;
@@ -241,6 +241,15 @@ export function FormTextarea(props: React.ComponentProps<typeof Textarea>) {
       {...props}
     />
   );
+}
+
+export function useFormSubmit<TFormData>(form: FormApi<TFormData, any, any, any, any, any, any, any, any, any, any, any>) {
+  return React.useCallback((event: React.SubmitEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    return form.handleSubmit(event);
+  }, [form.handleSubmit]);
 }
 
 /* Expose the `useForm` hook that provides access to custom field and form components */

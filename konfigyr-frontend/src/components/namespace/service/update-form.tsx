@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useUpdateNamespaceService } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -11,14 +10,13 @@ import {
   CardFooter,
   CardHeader,
 } from '@konfigyr/components/ui/card';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import {
   ServiceDescriptionHelpText,
   ServiceDescriptionLabel,
   ServiceNameLabel,
 } from './messages';
 
-import type { FormEvent } from 'react';
 import type { Namespace, Service } from '@konfigyr/hooks/types';
 
 const serviceUpdateSchema = z.object({
@@ -59,12 +57,7 @@ export function ServiceUpdateForm({ namespace, service }: { namespace: Namespace
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

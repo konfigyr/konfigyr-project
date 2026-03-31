@@ -1,13 +1,11 @@
 import { z } from 'zod';
-import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useCreateKeyset } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { KeysetAlgorithmSelect } from './keyset-algorithm';
 import { CreateKeysetLabel } from './messages';
 
-import type { FormEvent } from 'react';
 import type { Keyset, Namespace } from '@konfigyr/hooks/types';
 
 const keysetSchema = z.object({
@@ -41,12 +39,7 @@ export function CreateKeysetForm({ namespace, onCreate }: { namespace: Namespace
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

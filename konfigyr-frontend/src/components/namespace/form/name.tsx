@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { useCallback, useId } from 'react';
+import { useId } from 'react';
 import { IdCardIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { useUpdateNamespace } from '@konfigyr/hooks';
@@ -14,13 +14,12 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import {
   NamespaceNameDescription,
   NamespaceNameLabel,
 } from './messages';
 
-import type { SubmitEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 const namespaceNameSchema = z.object({
@@ -57,12 +56,7 @@ export function NamespaceNameForm({ namespace }: { namespace: Namespace }) {
     },
   });
 
-  const onSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

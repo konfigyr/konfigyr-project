@@ -1,7 +1,7 @@
 'use client';
 
 import { z } from 'zod';
-import { useCallback, useId } from 'react';
+import { useId } from 'react';
 import { toast } from 'sonner';
 import { IdCardIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
@@ -15,10 +15,9 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { useUpdateAccountName } from '@konfigyr/hooks';
 
-import type { FormEvent } from 'react';
 import type { Account } from '@konfigyr/hooks/types';
 
 const nameFormSchema = z.object({
@@ -53,12 +52,7 @@ export function AccountNameForm({ account }: { account: Account }) {
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

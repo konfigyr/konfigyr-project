@@ -1,11 +1,10 @@
 import { z } from 'zod';
 import slugify from 'slugify';
-import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { FormattedMessage } from 'react-intl';
 import { useCreateNamespace } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { Separator } from '@konfigyr/components/ui/separator';
 import { SlugDescription } from './slug';
 import { useValidateSlug } from './validations';
@@ -17,7 +16,6 @@ import {
   NamespaceSlugLabel,
 } from './messages';
 
-import type { SubmitEvent } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
 const namespaceFormSchema = z.object({
@@ -48,11 +46,6 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
     validators: {
       onSubmit: namespaceFormSchema,
     },
-    onSubmitInvalid: ({ formApi }) => {
-      console.log('invalid', JSON.stringify(
-        formApi.getAllErrors(), null, 2,
-      ));
-    },
     onSubmit: async ({ value }) => {
       try {
         const namespace = await createNamespace(value);
@@ -62,6 +55,8 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
       }
     },
   });
+
+  const onSubmit = useFormSubmit(form);
 
   const generateSlug = (name: string) => {
     const state = form.getFieldMeta('slug');
@@ -74,13 +69,6 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
       dontUpdateMeta: true,
     });
   };
-
-  const onSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
 
   return (
     <form.AppForm>

@@ -1,9 +1,8 @@
 import { z } from 'zod';
-import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useCreateNamespaceService } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { Separator } from '@konfigyr/components/ui/separator';
 import {
   ServiceDescriptionHelpText,
@@ -11,7 +10,6 @@ import {
   ServiceNameLabel,
 } from './messages';
 
-import type { FormEvent } from 'react';
 import type { Namespace, Service } from '@konfigyr/hooks/types';
 
 const serviceFormSchema = z.object({
@@ -48,12 +46,7 @@ export function CreateServiceForm({ namespace, onCreate }: { namespace: Namespac
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   return (
     <form.AppForm>

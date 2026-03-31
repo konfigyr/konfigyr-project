@@ -1,7 +1,7 @@
 'use client';
 
 import { z } from 'zod';
-import { useCallback, useId } from 'react';
+import { useId } from 'react';
 import { toast } from 'sonner';
 import { AtSignIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
@@ -15,13 +15,12 @@ import {
   CardIcon,
   CardTitle,
 } from '@konfigyr/components/ui/card';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import {
   useConfirmAccountEmailChange,
   useUpdateAccountEmail,
 } from '@konfigyr/hooks';
 
-import type { FormEvent } from 'react';
 import type { Account } from '@konfigyr/hooks/types';
 
 const emailFormSchema = z.object({
@@ -70,12 +69,7 @@ export function AccountEmailForm({ account }: { account: Account }) {
     },
   });
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    return form.handleSubmit(event);
-  }, [form.handleSubmit]);
+  const onSubmit = useFormSubmit(form);
 
   const isTokenPresent = Boolean(form.getFieldValue('token'));
 

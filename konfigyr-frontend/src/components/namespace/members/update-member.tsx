@@ -7,7 +7,7 @@ import { useErrorNotification } from '@konfigyr/components/error';
 import { NamespaceRoleDescription, NamespaceRoleLabel } from '@konfigyr/components/namespace/role';
 import { Button } from '@konfigyr/components/ui/button';
 import { Label } from '@konfigyr/components/ui/label';
-import { useForm } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,8 @@ export function UpdateMemberForm({ namespace, member, onClose }: { namespace: Na
     },
   });
 
+  const onSubmit = useFormSubmit(form);
+
   const onOpenChange = useCallback((state: boolean) => {
     if (!state) {
       onClose();
@@ -59,11 +61,7 @@ export function UpdateMemberForm({ namespace, member, onClose }: { namespace: Na
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <form.AppForm>
-          <form onSubmit={event => {
-            event.preventDefault();
-            event.stopPropagation();
-            return form.handleSubmit(event);
-          }}>
+          <form onSubmit={onSubmit}>
             <DialogHeader>
               <DialogTitle>
                 <FormattedMessage
