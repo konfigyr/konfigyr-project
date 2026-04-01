@@ -32,11 +32,13 @@ import java.io.Serializable;
  * @since 1.0.0
  * @see CursorPage
  */
- @NullMarked
+@NullMarked
 public interface CursorPageable extends Serializable {
 
 	/**
 	 * Returns a {@link CursorPageable} instance representing a request for the entire, unconstrained dataset.
+	 *
+	 * @return a unpageable cursor pageable instance.
 	 */
 	static CursorPageable unpaged() {
 		return UnpagedCursorPageable.INSTANCE;

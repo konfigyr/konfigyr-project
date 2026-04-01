@@ -76,7 +76,7 @@ class CursorPageTest {
 	void createPageWithPagingInstructions() {
 		final var content = List.of("one", "two", "three");
 		final var next = CursorPageable.of("next", 3);
-		final var previous = CursorPageable.of("previous",3);
+		final var previous = CursorPageable.of("previous", 3);
 
 		assertThatObject(CursorPage.of(content, next, previous))
 				.returns(content, CursorPage::content)
@@ -106,7 +106,9 @@ class CursorPageTest {
 	@DisplayName("should wrap the page contents into an unmodifiable list")
 	void unmodifiablePageContents() {
 		final var contents = new ArrayList<String>();
-		contents.add("one"); contents.add("two"); contents.add("three");
+		contents.add("one");
+		contents.add("two");
+		contents.add("three");
 
 		assertThat(CursorPage.of(contents).content())
 				.isUnmodifiable();
