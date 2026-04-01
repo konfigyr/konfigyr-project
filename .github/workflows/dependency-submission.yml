@@ -24,3 +24,6 @@ jobs:
 
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@v6
+        with:
+          artifact-retention-days: 1
+          dependency-graph: 'generate-and-submit'
