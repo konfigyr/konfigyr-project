@@ -50,6 +50,7 @@ if (typeof window !== 'undefined') {
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
   window.HTMLElement.prototype.releasePointerCapture = vi.fn();
   window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+  window.HTMLElement.prototype.getAnimations = vi.fn(() => []);
 }
 
 declare global {
