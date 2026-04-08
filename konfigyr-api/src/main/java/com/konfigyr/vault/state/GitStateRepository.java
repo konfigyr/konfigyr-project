@@ -1,7 +1,6 @@
 package com.konfigyr.vault.state;
 
 import com.konfigyr.namespace.Service;
-import com.konfigyr.vault.ChangeHistory;
 import com.konfigyr.vault.Profile;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -543,7 +542,7 @@ public final class GitStateRepository implements StateRepository {
 	}
 
 	@Override
-	public Page<ChangeHistory> history(Profile profile, Pageable pageable) {
+	public Page<RepositoryVersion> history(Profile profile, Pageable pageable) {
 		return executeRepositoryOperation(() -> {
 			final Ref branch = repository.findRef(formatProfileRefName(profile));
 
@@ -553,7 +552,7 @@ public final class GitStateRepository implements StateRepository {
 								.formatted(profile.slug(), service.id(), service.slug()));
 			}
 
-			List<ChangeHistory> result = new ArrayList<>();
+			List<RepositoryVersion> result = new ArrayList<>();
 			long total = 0;
 
 			try (RevWalk walk = new RevWalk(repository)) {
@@ -567,7 +566,7 @@ public final class GitStateRepository implements StateRepository {
 
 				for (RevCommit rev : walk) {
 					if (index >= offset && result.size() < pageSize) {
-						result.add(GitConverters.convertToChangeHistory(rev));
+						result.add(GitConverters.convertToRepositoryVersion(rev));
 					}
 					index++;
 					total++;
