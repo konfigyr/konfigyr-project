@@ -1,9 +1,10 @@
 package com.konfigyr.vault.extension;
 
 import com.konfigyr.namespace.Service;
-import com.konfigyr.vault.Profile;
-import com.konfigyr.vault.Vault;
+import com.konfigyr.vault.*;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.Map;
 
 @NullMarked
 abstract class AbstractDelegatingVault implements Vault {
@@ -22,6 +23,36 @@ abstract class AbstractDelegatingVault implements Vault {
 	@Override
 	public Profile profile() {
 		return delegate.profile();
+	}
+
+	@Override
+	public Properties state() {
+		return delegate.state();
+	}
+
+	@Override
+	public Map<String, String> unseal() {
+		return delegate.unseal();
+	}
+
+	@Override
+	public PropertyValue seal(PropertyValue property) {
+		return delegate.seal(property);
+	}
+
+	@Override
+	public PropertyValue unseal(PropertyValue property) {
+		return delegate.unseal(property);
+	}
+
+	@Override
+	public ApplyResult apply(PropertyChanges changes) {
+		return delegate.apply(changes);
+	}
+
+	@Override
+	public Vault submit(PropertyChanges changes) {
+		return delegate.submit(changes);
 	}
 
 	@Override

@@ -18,6 +18,7 @@ import {
   splitSearchTerm,
 } from '@konfigyr/hooks';
 import { useJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
+import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 import { PropertyName } from '@konfigyr/components/artifactory/property-name';
 import { PropertyDefaultValue } from '@konfigyr/components/artifactory/property-default-value';
 import { PropertyDeprecation, PropertyDeprecationAlert } from '@konfigyr/components/artifactory/property-deprecation';
@@ -421,7 +422,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
       onAdd({
         ...descriptor,
         value: value,
-        state: 'added',
+        state: ConfigurationPropertyState.ADDED,
       });
 
       handleOpenChange(false);

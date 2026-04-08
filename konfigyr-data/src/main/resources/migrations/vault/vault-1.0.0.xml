@@ -55,10 +55,254 @@
 			</column>
 		</createTable>
 
+		<addForeignKeyConstraint
+				baseTableName="vault_profiles"
+				baseColumnNames="service_id"
+				constraintName="fk_vault_profile_owner"
+				referencedTableName="services"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
 		<addUniqueConstraint
 				tableName="vault_profiles"
 				columnNames="service_id,slug"
 				constraintName="unique_service_profile"
 		/>
     </changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-vault-change-history-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="vault_change_history" />
+			</not>
+		</preConditions>
+
+		<comment>Vault change history table</comment>
+
+		<createTable tableName="vault_change_history">
+			<column name="id" type="bigint">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="service_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="profile_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="revision" type="varchar(64)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="previous_revision" type="varchar(64)" />
+
+			<column name="subject" type="varchar(128)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="description" type="text">
+				<constraints nullable="true"/>
+			</column>
+
+			<column name="change_count" type="integer">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="author_id" type="varchar(128)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="author_type" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="author_name" type="text">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="created_at" type="timestamptz">
+				<constraints nullable="false" primaryKey="true"/>
+			</column>
+		</createTable>
+
+		<modifySql applyToRollback="false">
+			<append value=" PARTITION BY RANGE (created_at);"/>
+		</modifySql>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-vault-change-history-constraints" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<foreignKeyConstraintExists foreignKeyName="fk_vault_change_history_profile" />
+			</not>
+		</preConditions>
+
+		<comment>
+			Creates a `create_change_history_partition` function that would be used to create partitions for the
+			`vault_change_history` table for the current month if one does not exist. Apart from this function,
+			this changeset would also add required indexes and necessary foreign key constraints.
+		</comment>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_change_history"
+				baseColumnNames="namespace_id"
+				constraintName="fk_vault_change_history_namespace"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_change_history"
+				baseColumnNames="service_id"
+				constraintName="fk_vault_change_history_service"
+				referencedTableName="services"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_change_history"
+				baseColumnNames="profile_id"
+				constraintName="fk_vault_change_history_profile"
+				referencedTableName="vault_profiles"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="vault_change_history" indexName="idx_namespace_lookup">
+			<column name="namespace_id" />
+			<column name="created_at" />
+		</createIndex>
+
+		<createIndex tableName="vault_change_history" indexName="idx_service_lookup">
+			<column name="service_id" />
+			<column name="created_at" />
+		</createIndex>
+
+		<createIndex tableName="vault_change_history" indexName="idx_profile_lookup">
+			<column name="profile_id" />
+			<column name="created_at" />
+		</createIndex>
+
+		<sql>
+			CREATE OR REPLACE FUNCTION create_change_history_partition(p_date TIMESTAMPTZ) RETURNS void AS '
+				DECLARE
+			       start_date DATE := date_trunc(''month'', p_date)::timestamptz;
+				   end_date DATE := (start_date + INTERVAL ''1 month'')::timestamptz;
+				   partition_name TEXT := format(''vault_change_history_%s'', to_char(start_date, ''YYYY_MM''));
+				BEGIN
+					EXECUTE format(
+						''CREATE TABLE IF NOT EXISTS %I PARTITION OF vault_change_history FOR VALUES FROM (%L) TO (%L)'',
+			       		partition_name, start_date, end_date
+			       );
+				END;
+			' LANGUAGE plpgsql;
+		</sql>
+
+		<sql>
+			SELECT create_change_history_partition(now());
+		</sql>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-vault-property-history-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="vault_property_history" />
+			</not>
+		</preConditions>
+
+		<comment>Vault property change history table</comment>
+
+		<createTable tableName="vault_property_history">
+			<column name="change_id" type="bigint">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+
+			<column name="profile_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="property_name" type="text">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+
+			<column name="change_operation" type="varchar(16)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="new_value_checksum" type="bytea" />
+			<column name="new_value_cipher" type="bytea" />
+			<column name="old_value_checksum" type="bytea" />
+			<column name="old_value_cipher" type="bytea" />
+
+			<column name="created_at" type="timestamptz">
+				<constraints nullable="false" primaryKey="true"/>
+			</column>
+		</createTable>
+
+		<modifySql applyToRollback="false">
+			<append value=" PARTITION BY RANGE (created_at);"/>
+		</modifySql>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-vault-property-history-constraints" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<foreignKeyConstraintExists foreignKeyName="fk_vault_property_change_history" />
+			</not>
+		</preConditions>
+
+		<comment>
+			Creates a `create_property_history_partition` function that would be used to create partitions for
+			the `vault_property_history` table for the current month if one does not exist. Apart from this function,
+			this changeset would also add required lookup index by `change_id` and the foreign key constraints to
+			the `vault_change_history` that owns the property history changes.
+		</comment>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_property_history"
+				baseColumnNames="change_id,created_at"
+				constraintName="fk_vault_property_change_history"
+				referencedTableName="vault_change_history"
+				referencedColumnNames="id,created_at"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="vault_property_history" indexName="idx_property_change_history_lookup">
+			<column name="change_id" />
+		</createIndex>
+
+		<createIndex tableName="vault_property_history" indexName="idx_property_profile_history_lookup">
+			<column name="profile_id" />
+			<column name="property_name" />
+		</createIndex>
+
+		<sql>
+			CREATE OR REPLACE FUNCTION create_property_history_partition(p_date TIMESTAMPTZ) RETURNS void AS '
+				DECLARE
+			       start_date DATE := date_trunc(''month'', p_date)::timestamptz;
+				   end_date DATE := (start_date + INTERVAL ''1 month'')::timestamptz;
+				   partition_name TEXT := format(''vault_property_history_%s'', to_char(start_date, ''YYYY_MM''));
+				BEGIN
+					EXECUTE format(
+						''CREATE TABLE IF NOT EXISTS %I PARTITION OF vault_property_history FOR VALUES FROM (%L) TO (%L)'',
+			       		partition_name, start_date, end_date
+			       );
+				END;
+			' LANGUAGE plpgsql;
+		</sql>
+
+		<sql>
+			SELECT create_property_history_partition(now());
+		</sql>
+	</changeSet>
+
 </databaseChangeLog>

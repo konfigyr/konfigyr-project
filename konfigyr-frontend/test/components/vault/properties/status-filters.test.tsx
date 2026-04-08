@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
-import { PropertyStatusFilters } from '@konfigyr/components/vault/properties/status-filters';
+import { PropertyStatusFilters, StatusFilter } from '@konfigyr/components/vault/properties/status-filters';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
 
 const changeset = {
@@ -29,7 +29,7 @@ describe('components | vault | properties | <StatusFilters/>', () => {
     const result = renderWithMessageProvider(
       <PropertyStatusFilters
         changeset={changeset}
-        value="all"
+        value={StatusFilter.ALL}
         onChange={onChange}
       />,
     );
@@ -47,7 +47,7 @@ describe('components | vault | properties | <StatusFilters/>', () => {
     const result = renderWithMessageProvider(
       <PropertyStatusFilters
         changeset={changeset}
-        value="deleted"
+        value={StatusFilter.REMOVED}
         onChange={onChange}
       />,
     );
@@ -59,7 +59,7 @@ describe('components | vault | properties | <StatusFilters/>', () => {
     await userEvents.click(result.getByRole('radio', { name: 'Modified' }));
 
     await waitFor(() => {
-      expect(onChange).toHaveBeenCalledExactlyOnceWith('modified');
+      expect(onChange).toHaveBeenCalledExactlyOnceWith(StatusFilter.UPDATED);
     });
   });
 });

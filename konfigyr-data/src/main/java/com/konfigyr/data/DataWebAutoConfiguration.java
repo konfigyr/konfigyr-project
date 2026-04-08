@@ -20,7 +20,7 @@ public class DataWebAutoConfiguration implements WebMvcConfigurer {
 
 	@Override
 	public void addArgumentResolvers(@NonNull List<HandlerMethodArgumentResolver> resolvers) {
-		resolvers.add(new CursorPageableHandlerMethodArgumentResolver());
+		resolvers.addFirst(new CursorPageableHandlerMethodArgumentResolver());
 	}
 
 }

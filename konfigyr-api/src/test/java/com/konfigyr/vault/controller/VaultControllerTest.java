@@ -1,12 +1,15 @@
 package com.konfigyr.vault.controller;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.hateoas.CollectionModel;
+import com.konfigyr.hateoas.CursorModel;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.vault.*;
+import com.konfigyr.vault.history.RevisionNotFoundException;
 import com.konfigyr.vault.state.GitStateRepository;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.*;
@@ -69,9 +72,7 @@ class VaultControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should retrieve a change history for a service profile")
 	void retrieveProfileChangeHistory() {
-		final var profile = prepareServiceProfile("staging");
-
-		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history", "konfigyr", service.slug(), profile.slug())
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history", "konfigyr", service.slug(), "locked")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
 				.exchange()
 				.assertThat()
@@ -79,17 +80,25 @@ class VaultControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.convertTo(collectionModel(ChangeHistory.class))
-				.satisfies(it -> assertThat(it.getContent())
-					.hasSize(1)
-					.singleElement()
-					.satisfies(ch -> {
-						assertThat(ch.id()).isNotNull();
-						assertThat(ch.appliedBy()).isNotNull();
-						assertThat(ch.appliedAt()).isNotNull();
-						assertThat(ch.subject()).isEqualTo("Repository initialized for Service(EntityId(2, 0000000000002), konfigyr-id)");
-						assertThat(ch.description()).isEqualTo("Repository initialized for Service(EntityId(2, 0000000000002), konfigyr-id)");
-					}));
+				.convertTo(cursorModel(ChangeHistory.class))
+				.satisfies(it -> assertThat(it.getMetadata())
+						.isNotNull()
+						.returns(7L, CursorModel.CursorMetadata::size)
+						.returns(null, CursorModel.CursorMetadata::next)
+						.returns(null, CursorModel.CursorMetadata::previous)
+				)
+				.extracting(CollectionModel::getContent, InstanceOfAssertFactories.iterable(ChangeHistory.class))
+				.hasSize(7)
+				.extracting(ChangeHistory::id, ChangeHistory::revision, ChangeHistory::subject)
+				.containsExactly(
+						tuple(EntityId.from(7), "last-revision", "Last change"),
+						tuple(EntityId.from(6), "sixth-revision", "Sixth change"),
+						tuple(EntityId.from(5), "fifth-revision", "Fifth change"),
+						tuple(EntityId.from(4), "fourth-revision", "Fourth change"),
+						tuple(EntityId.from(3), "third-revision", "Third change"),
+						tuple(EntityId.from(2), "second-revision", "Second change"),
+						tuple(EntityId.from(1), "first-revision", "First change")
+				);
 	}
 
 	@Test
@@ -152,7 +161,7 @@ class VaultControllerTest extends AbstractControllerTest {
 	void applyChangesForProfile() {
 		final var profile = prepareServiceProfile("development");
 
-		mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/apply", "konfigyr", service.slug(), profile.slug())
+		final var result = mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/apply", "konfigyr", service.slug(), profile.slug())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_PROFILES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"Test changes\",\"changes\":[{\"name\":\"server.port\",\"value\":\"8080\",\"operation\":\"CREATE\"}]}")
@@ -162,20 +171,17 @@ class VaultControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.convertTo(ApplyResult.class)
+				.convertTo(VaultController.RevisionInformation.class)
+				.returns("Test changes", VaultController.RevisionInformation::subject)
+				.returns(null, VaultController.RevisionInformation::description)
+				.returns("John Doe", VaultController.RevisionInformation::author)
 				.satisfies(it -> assertThat(it.revision())
 						.isNotBlank()
 						.matches("[a-f0-9]{40}")
 				)
 				.satisfies(it -> assertThat(it.timestamp())
 						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.SECONDS))
-				)
-				.extracting(ApplyResult::changes, InstanceOfAssertFactories.map(String.class, PropertyHistory.class))
-				.hasEntrySatisfying("server.port", it -> assertThat(it)
-						.returns(PropertyHistory.Action.ADDED, PropertyHistory::action)
-						.returns("John Doe <john.doe@konfigyr.com>", PropertyHistory::author)
-						.returns("8080", PropertyHistory::newValue)
-				);
+				).actual();
 
 		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/properties", "konfigyr", service.slug(), profile.slug())
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
@@ -188,6 +194,54 @@ class VaultControllerTest extends AbstractControllerTest {
 				.convertTo(InstanceOfAssertFactories.map(String.class, String.class))
 				.hasSize(1)
 				.containsEntry("server.port", "8080");
+
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history/{revision}", "konfigyr", service.slug(), profile.slug(), result.revision())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(cursorModel(ChangeHistoryRecord.class))
+				.extracting(CursorModel::getContent, InstanceOfAssertFactories.iterable(ChangeHistoryRecord.class))
+				.hasSize(1)
+				.first()
+				.returns(result.revision(), ChangeHistoryRecord::revision)
+				.returns("server.port", ChangeHistoryRecord::name)
+				.returns(PropertyTransitionType.ADDED, ChangeHistoryRecord::action)
+				.returns(null, ChangeHistoryRecord::from)
+				.returns("8080", ChangeHistoryRecord::to)
+				.returns(result.author(), ChangeHistoryRecord::appliedBy)
+				.returns(result.timestamp(), ChangeHistoryRecord::appliedAt)
+				.satisfies(it -> assertThat(it.id())
+						.hasSize(32)
+						.isHexadecimal()
+				);
+
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/property/{property}/history", "konfigyr", service.slug(), profile.slug(), "server.port")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(collectionModel(ChangeHistoryRecord.class))
+				.extracting(CollectionModel::getContent, InstanceOfAssertFactories.iterable(ChangeHistoryRecord.class))
+				.hasSize(1)
+				.first()
+				.returns(result.revision(), ChangeHistoryRecord::revision)
+				.returns("server.port", ChangeHistoryRecord::name)
+				.returns(PropertyTransitionType.ADDED, ChangeHistoryRecord::action)
+				.returns(null, ChangeHistoryRecord::from)
+				.returns("8080", ChangeHistoryRecord::to)
+				.returns(result.author(), ChangeHistoryRecord::appliedBy)
+				.returns(result.timestamp(), ChangeHistoryRecord::appliedAt)
+				.satisfies(it -> assertThat(it.id())
+						.hasSize(32)
+						.isHexadecimal()
+				);
 	}
 
 	@Test
@@ -320,6 +374,102 @@ class VaultControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(forbidden(OAuthScope.WRITE_PROFILES));
+	}
+
+	@Test
+	@DisplayName("should retrieve empty change history for a profile")
+	void emptyChangeHistoryForProfile() {
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history", "konfigyr", service.slug(), "development")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(cursorModel(PropertyHistory.class))
+				.extracting(CursorModel::getContent, InstanceOfAssertFactories.iterable(PropertyHistory.class))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve change history for an unknown profile")
+	void changeHistoryForUnknownProfile() {
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history", "konfigyr", service.slug(), "unknown-profile")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(profileNotFound("unknown-profile"));
+	}
+
+	@Test
+	@DisplayName("should retrieve empty property history for a profile and revision")
+	void emptyPropertyHistoryForRevision() {
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/property/{property}/history", "konfigyr", service.slug(), "development", "revision")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(collectionModel(ChangeHistoryRecord.class))
+				.extracting(CollectionModel::getContent, InstanceOfAssertFactories.iterable(ChangeHistoryRecord.class))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve property history by revision for an unknown profile")
+	void propertyHistoryForUnknownProfileByRevision() {
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history/{revision}", "konfigyr", service.slug(), "unknown-profile", "revision")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(profileNotFound("unknown-profile"));
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve property history for profile for an unkonwn revision")
+	void propertyHistoryForUnknownRevision() {
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history/{revision}", "konfigyr", service.slug(), "locked", "unknown-revision")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(RevisionNotFoundException.class))
+				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+						.hasTitle("Revision not found")
+						.hasDetailContaining("We couldn't find a profile change history matching the requested revision hash")
+				));
+	}
+
+	@Test
+	@DisplayName("should retrieve empty property history for a profile and property name")
+	void emptyPropertyHistoryForProperty() {
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/property/{property}/history", "konfigyr", service.slug(), "locked", "unknown.property.name")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(collectionModel(ChangeHistoryRecord.class))
+				.extracting(CollectionModel::getContent, InstanceOfAssertFactories.iterable(ChangeHistoryRecord.class))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve property history by property name for an unknown profile")
+	void propertyHistoryForUnknownProfileByPropertyName() {
+		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/property/{property}/history", "konfigyr", service.slug(), "unknown-profile", "unknown.property.name")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(profileNotFound("unknown-profile"));
 	}
 
 	private Profile prepareServiceProfile(String name) {

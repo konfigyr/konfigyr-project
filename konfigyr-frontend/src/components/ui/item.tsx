@@ -8,12 +8,21 @@ import { Separator } from '@konfigyr/components/ui/separator';
 import type { ComponentProps } from 'react';
 import type { VariantProps } from 'class-variance-authority';
 
-export function ItemGroup({ className, ...props }: React.ComponentProps<'div'>) {
+export function ItemGroup({
+  size = 'default',
+  className,
+  ...props
+}: { size?: 'default' | 'sm' | 'xs' } & React.ComponentProps<'div'>) {
   return (
     <div
       role="list"
       data-slot="item-group"
-      className={cn('group/item-group flex w-full flex-col gap-4 has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2', className)}
+      data-size={size}
+      className={cn(
+        'group/item-group flex w-full flex-col gap-4',
+        'has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2',
+        className,
+      )}
       {...props}
     />
   );

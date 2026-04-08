@@ -3,8 +3,9 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
+import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 import { PropertyHistorySidebar } from '@konfigyr/components/vault/properties/history-sidebar';
-import { profiles } from '@konfigyr/test/helpers/mocks';
+import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
 
 import type { ConfigurationProperty } from '@konfigyr/hooks/types';
 
@@ -16,7 +17,9 @@ function TestHistorySidebar({ property, opened = false }: { property: Configurat
       open={open}
       onOpenChange={setOpen}
       property={property}
-      profile={profiles.staging}
+      namespace={namespaces.konfigyr}
+      service={services.konfigyrApi}
+      profile={profiles.development}
     />
   );
 }
@@ -25,7 +28,7 @@ const applicationNameProperty: ConfigurationProperty<string> = {
   name: 'application.name',
   description: 'Application name property',
   typeName: 'java.lang.String',
-  state: 'unchanged',
+  state: ConfigurationPropertyState.UNCHANGED,
   value: {
     encoded: 'konfigyr-frontend',
     decoded: 'konfigyr-frontend',
@@ -39,7 +42,7 @@ const applicationProfileProperty: ConfigurationProperty<string> = {
   name: 'application.profile',
   description: 'Application profile property',
   typeName: 'java.lang.String',
-  state: 'unchanged',
+  state: ConfigurationPropertyState.UNCHANGED,
   schema: {
     type: 'string',
     enum: ['staging', 'production'],
@@ -88,14 +91,26 @@ describe('components | vault | properties | <HistorySidebar/>', () => {
     });
   });
 
+  test('should display opened sidebar with an empty timeline', async () => {
+    const result = renderWithQueryClient(
+      <TestHistorySidebar opened={true} property={{
+        ...applicationProfileProperty, name: 'empty-configuration-property',
+      }} />,
+    );
+
+    await waitFor(() => {
+      expect(result.getByText('No history found for this property.')).toBeInTheDocument();
+    });
+  });
+
   test('should display opened sidebar with timeline', async () => {
     const result = renderWithQueryClient(
       <TestHistorySidebar opened={true} property={applicationProfileProperty} />,
     );
 
     await waitFor(() => {
-      expect(result.getAllByText('added')).length(1);
-      expect(result.getAllByText('modified')).length(2);
+      expect(result.getAllByText('Added')).length(1);
+      expect(result.getAllByText('Modified')).length(2);
     });
   });
 });

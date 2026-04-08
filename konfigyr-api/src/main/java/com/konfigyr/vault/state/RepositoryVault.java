@@ -5,18 +5,17 @@ import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.vault.*;
+import com.konfigyr.vault.Properties;
 import lombok.Builder;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.jspecify.annotations.NonNull;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
+import java.io.Serial;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 @Builder
 final class RepositoryVault implements Vault {
@@ -27,7 +26,7 @@ final class RepositoryVault implements Vault {
 	private final StateRepository repository;
 	private final KeysetOperations keysetOperations;
 
-	private volatile Properties state;
+	private volatile PropertiesState state;
 
 	@NonNull
 	@Override
@@ -64,6 +63,18 @@ final class RepositoryVault implements Vault {
 		return Collections.unmodifiableMap(properties);
 	}
 
+	@NonNull
+	@Override
+	public PropertyValue seal(@NonNull PropertyValue property) {
+		return property.seal(keysetOperations);
+	}
+
+	@NonNull
+	@Override
+	public PropertyValue unseal(@NonNull PropertyValue property) {
+		return property.unseal(keysetOperations);
+	}
+
 	/**
 	 * Returns the current configuration state of the vault.
 	 *
@@ -74,14 +85,15 @@ final class RepositoryVault implements Vault {
 	public Properties state() {
 		if (state == null) {
 			try {
-				state = Properties.from(repository.get(profile));
+				final RepositoryState repositoryState = repository.get(profile);
+				state = new PropertiesState(repositoryState.revision(), Properties.from(repositoryState));
 			} catch (IOException ex) {
 				throw new RepositoryStateException(RepositoryStateException.ErrorCode.CORRUPTED_STATE,
 						"Failed read repository configuration state for '%s' profile of Service(%s, %s)".formatted(
 								profile.slug(), service.id(), service.slug()), ex);
 			}
 		}
-		return state;
+		return state.properties();
 	}
 
 	@NonNull
@@ -124,24 +136,41 @@ final class RepositoryVault implements Vault {
 
 		Assert.state(mergeOutcome.isApplied(), "Unexpected outcome when attempting to merge changeset: " + mergeOutcome);
 		Assert.state(mergeOutcome.revision() != null, "Merge outcome revision must not be null");
-		final Map<String, PropertyHistory> history = new LinkedHashMap<>(changes.size());
+		final SortedSet<PropertyTransition> transitions = new TreeSet<>(PropertyTransition::compareTo);
 
 		for (PropertyChange change : changes) {
-			final PropertyHistory diff = switch (change.operation()) {
-				case CREATE -> PropertyHistory.added(mergeOutcome.author(), change.value(), mergeOutcome.timestamp());
-				case MODIFY -> PropertyHistory.updated(mergeOutcome.author(), change.value(),
-						unseal(current, change.name(), keysetOperations), mergeOutcome.timestamp());
-				case REMOVE -> PropertyHistory.removed(mergeOutcome.author(), unseal(current, change.name(), keysetOperations),
-						mergeOutcome.timestamp());
+			final PropertyTransition transition = switch (change.operation()) {
+				case CREATE -> PropertyTransition.added(
+						change.name(),
+						get(updated, change.name())
+				);
+				case MODIFY -> PropertyTransition.updated(
+						change.name(),
+						get(current, change.name()),
+						get(updated, change.name())
+				);
+				case REMOVE -> PropertyTransition.removed(
+						change.name(),
+						get(current, change.name())
+				);
 			};
-
-			history.put(change.name(), diff);
+			transitions.add(transition);
 		}
 
-		// update the new state of the vault
-		state = updated;
+		// grab the previous revision from the state and update it
+		// to the new state of the vault using the merge outcome
+		final String parentRevision = state.revision();
+		state = new PropertiesState(mergeOutcome.revision(), updated);
 
-		return new ApplyResult(mergeOutcome.revision(), Collections.unmodifiableMap(history), mergeOutcome.timestamp());
+		return new ApplyResult(
+				mergeOutcome.revision(),
+				parentRevision,
+				changes.subject(),
+				changes.description(),
+				Collections.unmodifiableSet(transitions),
+				author,
+				mergeOutcome.timestamp()
+		);
 	}
 
 	@NonNull
@@ -153,25 +182,20 @@ final class RepositoryVault implements Vault {
 		throw new UnsupportedOperationException("Submitting changes is not yet supported.");
 	}
 
-	@NonNull
-	@Override
-	public Page<ChangeHistory> history(@NonNull Pageable pageable) {
-		return repository.history(profile, pageable);
-	}
-
 	@Override
 	public void close() throws Exception {
 		repository.close();
 	}
 
-	private static String unseal(Properties properties, String name, KeysetOperations operations) {
-		return properties.get(name)
-				.map(value -> unseal(value, operations))
-				.orElseThrow(() -> new IllegalArgumentException("Failed to find property in state with name: " + name));
+	private static PropertyValue get(Properties properties, String name) {
+		final PropertyValue value = properties.get(name)
+				.orElseThrow(() -> new IllegalStateException("Failed to find property in state with name: " + name));
+		Assert.state(value.isSealed(), "Property value must be sealed");
+		return value;
 	}
 
-	private static String unseal(PropertyValue value, KeysetOperations operations) {
-		final PropertyValue unsealed = value.unseal(operations);
-		return new String(unsealed.get().array(), StandardCharsets.UTF_8);
+	private record PropertiesState(String revision, Properties properties) implements Serializable {
+		@Serial
+		private static final long serialVersionUID = 1L;
 	}
 }

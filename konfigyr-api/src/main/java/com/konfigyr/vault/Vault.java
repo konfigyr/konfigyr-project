@@ -3,8 +3,6 @@ package com.konfigyr.vault;
 import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.namespace.Service;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
 
@@ -87,6 +85,31 @@ public interface Vault extends AutoCloseable {
 	Map<String, String> unseal();
 
 	/**
+	 * Seals the given property value.
+	 * <p>
+	 * This operation uses the configured {@link KeysetOperations} to encrypt the property value.
+	 * <p>
+	 * Implementations should avoid caching the unsealed value beyond the scope of the current request.
+	 *
+	 * @param property the property value to seal, cannot be {@literal null}
+	 * @return the sealed property value, never {@literal null}
+	 */
+	PropertyValue seal(PropertyValue property);
+
+	/**
+	 * Unseals the given property value.
+	 * <p>
+	 * This operation uses the configured {@link KeysetOperations} to decrypt the property value.
+	 * Callers must treat the returned data as sensitive.
+	 * <p>
+	 * Implementations should avoid caching the unsealed value beyond the scope of the current request.
+	 *
+	 * @param property the property value to unseal, cannot be {@literal null}
+	 * @return the unsealed property value, never {@literal null}
+	 */
+	PropertyValue unseal(PropertyValue property);
+
+	/**
 	 * Applies the given {@link PropertyChanges} directly to the target {@link Profile} and persists
 	 * the result.
 	 * <p>
@@ -116,14 +139,6 @@ public interface Vault extends AutoCloseable {
 	 * @return this vault instance
 	 */
 	Vault submit(PropertyChanges changes);
-
-	/**
-	 * Retrieves the Git commit history for the specified profile.
-	 *
-	 * @param pageable paging and sorting instructions
-	 * @return paged collections of change history, never {@literal null}
-	 */
-	Page<ChangeHistory> history(Pageable pageable);
 
 	/**
 	 * Closes the vault and releases any underlying resources.

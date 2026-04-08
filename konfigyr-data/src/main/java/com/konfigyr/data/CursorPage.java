@@ -6,6 +6,8 @@ import org.springframework.data.util.Streamable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A container for a page of data retrieved via cursor-based pagination.
@@ -149,4 +151,8 @@ public interface CursorPage<T> extends Streamable<T> {
 	 */
 	boolean hasPrevious();
 
+	@Override
+	default <R> CursorPage<R> map(Function<? super T, ? extends R> mapper) {
+		return of(stream().map(mapper).collect(Collectors.toUnmodifiableList()), nextPageable(), previousPageable());
+	}
 }

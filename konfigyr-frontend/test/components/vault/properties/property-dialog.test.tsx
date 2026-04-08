@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vite
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
+import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 import { namespaces, profiles, propertyDescriptors, services } from '@konfigyr/test/helpers/mocks';
 import { PropertyDialog } from '@konfigyr/components/vault/properties/property-dialog';
 
@@ -18,7 +19,7 @@ const changeset: ChangesetState = {
     name: 'application.name',
     description: 'Application name property',
     typeName: 'java.lang.String',
-    state: 'modified',
+    state: ConfigurationPropertyState.UPDATED,
     value: {
       encoded: 'konfigyr-frontend',
       decoded: 'konfigyr-frontend',
@@ -30,7 +31,7 @@ const changeset: ChangesetState = {
     name: 'application.profile',
     description: 'Application profile property',
     typeName: 'java.lang.String',
-    state: 'unchanged',
+    state: ConfigurationPropertyState.UNCHANGED,
     value: {
       encoded: 'staging',
       decoded: 'staging',
@@ -129,7 +130,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       description: 'Config file name.',
       defaultValue: 'application',
       score: 100,
-      state: 'added',
+      state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'Test configuration property', decoded: 'Test configuration property' },
     });
 
@@ -183,7 +184,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       },
       description: 'Log levels severity mapping. For instance, `logging.level.org.springframework=DEBUG`.',
       score: 101,
-      state: 'added',
+      state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'DEBUG', decoded: 'DEBUG' },
     });
 
@@ -245,7 +246,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       schema: { type: 'string' },
       description: 'OAuth client registrations.',
       score: 100,
-      state: 'added',
+      state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'client-secret', decoded: 'client-secret' },
     });
 
@@ -280,7 +281,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       name: 'konfigyr.test-missing-property',
       typeName: 'java.lang.String',
       schema: { type: 'string' },
-      state: 'added',
+      state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'Added value', decoded: 'Added value' },
     });
   });

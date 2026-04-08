@@ -185,7 +185,8 @@ const applyChangeset = http.post('http://localhost/api/namespaces/:namespace/ser
   });
 });
 
-const getHistory = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/history', ({ params }) => {
+const getHistory = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/history', ({ params, request }) => {
+  const uri = new URL(request.url);
   const { namespace, service, profile } = params;
 
   if (namespace !== namespaces.konfigyr.slug) {
@@ -211,16 +212,147 @@ const getHistory = http.get('http://localhost/api/namespaces/:namespace/services
   return HttpResponse.json({
     data: [{
       id: '9eadce4691d8fcd863aeeb07ef81d8146083d814',
+      revision: '9eadce4691d8fcd863aeeb07ef81d8146083d814',
       subject: 'Changeset draft',
       description: 'Changeset draft',
+      changes: 4,
       appliedBy: 'Test User <test.user@ebf.com>',
       appliedAt,
     }],
     metadata: {
-      size: 1,
-      number: 0,
-      total: 2,
-      pages: 2,
+      size: uri.searchParams.get('size') || 20,
+      previous: uri.searchParams.has('token') && 'previous-token',
+      next: 'next-token',
+    },
+  });
+});
+
+const getHistoryDetails = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/history/:revision', ({ params }) => {
+  const { namespace, service, profile, revision } = params;
+
+  if (namespace !== namespaces.konfigyr.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  if (service !== services.konfigyrApi.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  if (profile !== profiles.development.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  if (revision === 'empty-revision') {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  return HttpResponse.json({
+    data: [{
+      id: '1',
+      name: 'spring.config.location',
+      revision,
+      action: 'UPDATED',
+      from: 'file:/config.yaml',
+      to: 'classpath:/config.yaml',
+      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedBy: 'jane.doe@konfigyr.com',
+    }, {
+      id: '2',
+      name: 'logging.level.com.konfigyr.test',
+      revision,
+      action: 'UPDATED',
+      from: 'DEBUG',
+      to: 'INFO',
+      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedBy: 'jane.doe@konfigyr.com',
+    }, {
+      id: '3',
+      name: 'logging.file.max-size',
+      revision,
+      action: 'ADDED',
+      to: '10GB',
+      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedBy: 'jane.doe@konfigyr.com',
+    }, {
+      id: '4',
+      name: 'logging.file.max-history',
+      revision,
+      action: 'REMOVED',
+      from: '10',
+      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedBy: 'jane.doe@konfigyr.com',
+    }],
+  });
+});
+
+const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/property/:name/history', ({ params, request }) => {
+  const uri = new URL(request.url);
+  const { namespace, service, profile, name } = params;
+
+  if (namespace !== namespaces.konfigyr.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  if (service !== services.konfigyrApi.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  if (profile !== profiles.development.slug) {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  if (name === 'empty-configuration-property') {
+    return HttpResponse.json({
+      data: [],
+    });
+  }
+
+  return HttpResponse.json({
+    data: [{
+      id: '1',
+      name,
+      revision: '80b028f2248cbaa3b36cb4d615ee9c8d9384a8a6',
+      action: 'UPDATED',
+      from: '10',
+      to: '20',
+      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedBy: 'jane.doe@konfigyr.com',
+    }, {
+      id: '2',
+      name,
+      revision: '80b028f2248cbaa3b36cb4d615ee9c8d9384a8a6',
+      action: 'UPDATED',
+      from: '5',
+      to: '10',
+      appliedAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+      appliedBy: 'john.doe@konfigyr.com',
+    }, {
+      id: '3',
+      name,
+      revision: '85698e54b9eb76912c58729703e1bf9ce0c6fad4',
+      action: 'ADDED',
+      to: '5',
+      appliedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+      appliedBy: 'jane.doe@konfigyr.com',
+    }],
+    metadata: {
+      size: uri.searchParams.get('size') || 20,
+      previous: uri.searchParams.has('token') && 'previous-token',
+      next: 'next-token',
     },
   });
 });
@@ -233,4 +365,6 @@ export default [
   getProperties,
   applyChangeset,
   getHistory,
+  getHistoryDetails,
+  getPropertyHistory,
 ];

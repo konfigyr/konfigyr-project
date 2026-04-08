@@ -9,6 +9,7 @@ import {
   TrashIcon,
   UndoIcon,
 } from 'lucide-react';
+import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 import { PropertyDeprecation } from '@konfigyr/components/artifactory/property-deprecation';
 import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
 import { PropertyName } from '@konfigyr/components/artifactory/property-name';
@@ -40,7 +41,7 @@ import {
   TooltipTrigger,
 } from '@konfigyr/components/ui/tooltip';
 import { cn } from '@konfigyr/components/utils';
-import { StateBadge } from './state-label';
+import { StateBadge } from './state-badge';
 import {
   PropertyNameLabel,
   PropertyValueLabel,
@@ -50,7 +51,6 @@ import {
 import type { ReactNode } from 'react';
 import type {
   ConfigurationProperty,
-  ConfigurationPropertyState,
   ConfigurationPropertyValue,
 } from '@konfigyr/hooks/types';
 
@@ -61,14 +61,14 @@ interface PropertyActionProps {
 }
 
 const statusBorderColors: Record<ConfigurationPropertyState, string> = {
-  unchanged: 'border-l-transparent',
-  modified: 'border-l-amber-500',
-  deleted: 'border-l-destructive',
-  added: 'border-l-emerald-500',
+  [ConfigurationPropertyState.UNCHANGED]: 'border-l-transparent',
+  [ConfigurationPropertyState.UPDATED]: 'border-l-amber-500',
+  [ConfigurationPropertyState.REMOVED]: 'border-l-destructive',
+  [ConfigurationPropertyState.ADDED]: 'border-l-emerald-500',
 };
 
 function PropertyNameCell<T>({ property }: { property: ConfigurationProperty<T> }) {
-  const isDeleted = property.state === 'deleted';
+  const isDeleted = property.state === ConfigurationPropertyState.REMOVED;
 
   return (
     <div className="flex flex-col gap-1 min-w-0">
@@ -78,9 +78,7 @@ function PropertyNameCell<T>({ property }: { property: ConfigurationProperty<T> 
           className={cn(isDeleted && 'line-through text-muted-foreground')}
         />
         <PropertyDeprecation deprecation={property.deprecation} />
-        {property.state === 'added' && (<StateBadge variant="added" />)}
-        {property.state === 'modified' && (<StateBadge variant="modified" />)}
-        {isDeleted && (<StateBadge variant="deleted" />)}
+        <StateBadge variant={property.state} />
       </div>
 
       <PropertyDescription
@@ -95,13 +93,15 @@ function ValueCell<T>({ property, onSave }: {
   property: ConfigurationProperty<T>,
   onSave: (property: ConfigurationProperty<T>, value: ConfigurationPropertyValue<T>) => void,
 }) {
+  const isDeleted = property.state === ConfigurationPropertyState.REMOVED;
+
   return (
     <InlineEdit value={property.value} onChange={value => onSave(property, value!)}>
       <InlineEditPlaceholder
-        disabled={property.state === 'deleted'}
+        disabled={isDeleted}
         className={cn(
           'font-mono text-sm font-medium text-muted-foreground rounded-md px-1.5 py-0.5 -mx-1.5 -my-0.5 transition-colors',
-          property.state === 'deleted' ? 'cursor-default line-through opacity-60' : 'hover:bg-muted/80',
+          isDeleted ? 'cursor-default line-through opacity-60' : 'hover:bg-muted/80',
         )}
         render={
           <div className="flex items-center gap-2">
@@ -116,7 +116,7 @@ function ValueCell<T>({ property, onSave }: {
               </Tooltip>
             ) : property.value?.encoded}
 
-            {property.state !== 'deleted' && (
+            {isDeleted && (
               <span className="opacity-0 group-hover/inline-edit-placeholder:opacity-50 transition-opacity">
                 <PencilIcon className="h-3 w-3" />
               </span>
@@ -180,7 +180,7 @@ function ActionsCell<T>({
   onRestore,
   onHistory,
 }: { property: ConfigurationProperty<T> } & PropertyActionProps) {
-  if (property.state === 'deleted') {
+  if (property.state === ConfigurationPropertyState.REMOVED) {
     return (
       <div className="flex items-center justify-end gap-0.5">
         {onRestore && (
@@ -278,8 +278,8 @@ export function PropertiesTable({
                 className={cn(
                   'group/row transition-colors border-l-[3px]!',
                   statusBorderColors[property.state],
-                  property.deprecation && property.state === 'unchanged' && 'opacity-70',
-                  property.state === 'deleted' && 'bg-destructive/3 opacity-80',
+                  property.deprecation && property.state === ConfigurationPropertyState.UNCHANGED && 'opacity-70',
+                  property.state === ConfigurationPropertyState.REMOVED && 'bg-destructive/3 opacity-80',
                 )}
               >
                 <TableCell className="py-3 pl-4">

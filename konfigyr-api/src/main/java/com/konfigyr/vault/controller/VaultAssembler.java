@@ -22,13 +22,13 @@ record VaultAssembler(Namespace namespace, Service service) {
 
 	}
 
-	<T> RepresentationModelAssembler<T, EntityModel<T>> properties() {
+	<T> RepresentationModelAssembler<T, EntityModel<T>> of() {
 		return EntityModel::of;
 	}
+
 	RepresentationModelAssembler<ChangeHistory, EntityModel<ChangeHistory>> changeHistory(Profile profile) {
 		return changeHistory -> EntityModel.of(changeHistory, linkBuilder(profile, changeHistory).selfRel());
 	}
-
 
 	private LinkBuilder linkBuilder() {
 		return Link.builder().path("namespaces")
@@ -49,7 +49,7 @@ record VaultAssembler(Namespace namespace, Service service) {
 				.path("profiles")
 				.path(profile.name())
 				.path("history")
-				.path(changeHistory.id());
+				.path(changeHistory.revision());
 
 	}
 

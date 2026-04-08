@@ -2,6 +2,7 @@ package com.konfigyr.test;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.hateoas.CollectionModel;
+import com.konfigyr.hateoas.CursorModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.namespace.ServiceNotFoundException;
@@ -89,13 +90,32 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * @return the paged model assert factory, never {@literal null}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected static <T, A extends AbstractAssert<?, PagedModel<T>>> AssertFactory<PagedModel<T>, A> pagedModel(@NonNull Class<T> type) {
+	protected static <T, A extends AbstractObjectAssert<?, PagedModel<T>>> AssertFactory<PagedModel<T>, A> pagedModel(@NonNull Class<T> type) {
 		final ResolvableType resolvableType = ResolvableType.forClassWithGenerics(PagedModel.class, type);
 
 		return new InstanceOfAssertFactory(
 				resolvableType.resolve(PagedModel.class),
 				resolvableType.resolveGenerics(),
-				Assertions::assertThat
+				Assertions::assertThatObject
+		);
+	}
+
+	/**
+	 * Constructs an {@link AssertFactory} for {@link CursorModel} with the given contents type.
+	 *
+	 * @param type the content type of the cursor model, can't be {@literal null}
+	 * @param <T> content type
+	 * @param <A> assert type
+	 * @return the cursor model assert factory, never {@literal null}
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected static <T, A extends AbstractObjectAssert<?, CursorModel<T>>> AssertFactory<CursorModel<T>, A> cursorModel(@NonNull Class<T> type) {
+		final ResolvableType resolvableType = ResolvableType.forClassWithGenerics(CursorModel.class, type);
+
+		return new InstanceOfAssertFactory(
+				resolvableType.resolve(CursorModel.class),
+				resolvableType.resolveGenerics(),
+				Assertions::assertThatObject
 		);
 	}
 
@@ -108,13 +128,13 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	 * @return the collection model assert factory, never {@literal null}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected static <T, A extends AbstractAssert<?, CollectionModel<T>>> AssertFactory<PagedModel<T>, A> collectionModel(@NonNull Class<T> type) {
+	protected static <T, A extends AbstractObjectAssert<?, CollectionModel<T>>> AssertFactory<PagedModel<T>, A> collectionModel(@NonNull Class<T> type) {
 		final ResolvableType resolvableType = ResolvableType.forClassWithGenerics(CollectionModel.class, type);
 
 		return new InstanceOfAssertFactory(
 				resolvableType.resolve(CollectionModel.class),
 				resolvableType.resolveGenerics(),
-				Assertions::assertThat
+				Assertions::assertThatObject
 		);
 	}
 

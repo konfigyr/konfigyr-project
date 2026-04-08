@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
+import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 import { ChangesetEditor } from '@konfigyr/components/vault/changeset/editor';
 import { namespaces, profiles, propertyDescriptors, services } from '@konfigyr/test/helpers/mocks';
 
@@ -17,7 +18,7 @@ const changeset: ChangesetState = {
     name: 'application.name',
     description: 'Application name property',
     typeName: 'java.lang.String',
-    state: 'modified',
+    state: ConfigurationPropertyState.UPDATED,
     value: {
       encoded: 'konfigyr-frontend',
       decoded: 'konfigyr-frontend',
@@ -29,7 +30,7 @@ const changeset: ChangesetState = {
     name: 'application.profile',
     description: 'Application profile property',
     typeName: 'java.lang.String',
-    state: 'unchanged',
+    state: ConfigurationPropertyState.UNCHANGED,
     value: {
       encoded: 'staging',
       decoded: 'staging',
@@ -215,7 +216,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
     await userEvent.keyboard('[Enter]');
 
     await waitFor(() => {
-      expect(result.queryAllByText('modified')).toHaveLength(3);
+      expect(result.queryAllByText('Modified')).toHaveLength(4);
     });
   });
 

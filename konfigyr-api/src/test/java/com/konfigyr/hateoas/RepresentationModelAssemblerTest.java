@@ -1,5 +1,7 @@
 package com.konfigyr.hateoas;
 
+import com.konfigyr.data.CursorPage;
+import com.konfigyr.data.CursorPageable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
@@ -66,5 +68,21 @@ class RepresentationModelAssemblerTest {
 				);
 	}
 
+	@Test
+	@DisplayName("should assemble page of entities into a cursor model")
+	void assembleToCursorModel() {
+		final var page = CursorPage.of(List.of("foo", "bar"), CursorPageable.of("next-token", 20));
+		final CursorModel<EntityModel<String>> model = assembler.assemble(page);
+
+		assertThat(model)
+				.hasSize(2)
+				.containsExactly(EntityModel.of("foo"), EntityModel.of("bar"));
+
+		assertThat(model.getLinks())
+				.hasSize(1)
+				.containsExactly(
+						Link.of("/?token=next-token", LinkRelation.NEXT)
+				);
+	}
 
 }

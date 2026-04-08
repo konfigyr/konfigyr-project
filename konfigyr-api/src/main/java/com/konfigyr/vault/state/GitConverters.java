@@ -20,8 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Utility class that provides converter functions to performing mapping of {@code JGit} specific
@@ -45,29 +43,28 @@ final class GitConverters {
 	 * @return the converted {@link ChangeHistory}, never {@literal null}.
 	 */
 	static RepositoryState convertToRepositoryState(RevCommit commit, InputStreamSource contents) {
-		return new RepositoryState(
-				commit.name(),
-				commit.getFirstMessageLine(),
-				resolveAuthor(commit),
-				resolveTimestamp(commit),
-				contents
-		);
+		return RepositoryState.builder()
+				.revision(commit.name())
+				.summary(commit.getFirstMessageLine())
+				.author(resolveAuthor(commit))
+				.timestamp(resolveTimestamp(commit))
+				.contents(contents)
+				.build();
 	}
 
 	/**
-	 * Attempts to convert the resolved {@link RevCommit} to a {@link ChangeHistory}.
+	 * Attempts to convert the resolved {@link RevCommit} to a {@link RepositoryVersion}.
 	 *
-	 * @param commit the Git commit to convert to a {@link ChangeHistory}, cannot be {@literal null}.
-	 * @return the converted {@link ChangeHistory}, never {@literal null}.
+	 * @param commit the Git commit to convert to a {@link RepositoryVersion}, cannot be {@literal null}.
+	 * @return the converted {@link RepositoryVersion}, never {@literal null}.
 	 */
-	static ChangeHistory convertToChangeHistory(RevCommit commit) {
-		return new ChangeHistory(
-				commit.name(),
-				commit.getShortMessage(),
-				commit.getFullMessage(),
-				resolveAuthor(commit),
-				resolveTimestamp(commit)
-		);
+	static RepositoryVersion convertToRepositoryVersion(RevCommit commit) {
+		return RepositoryVersion.builder()
+				.revision(commit.name())
+				.summary(commit.getFirstMessageLine())
+				.author(resolveAuthor(commit))
+				.timestamp(resolveTimestamp(commit))
+				.build();
 	}
 
 	/**
@@ -102,7 +99,6 @@ final class GitConverters {
 	}
 
 	static MergeOutcome convertToConflictingOutcome(PersonIdent author, ResolveMerger merger, String source, String target) throws IOException {
-		final Map<String, String> conflicts = new LinkedHashMap<>();
 		final MergeFormatter formatter = new MergeFormatter();
 
 		final MergeResult<? extends Sequence> result = merger.getMergeResults()

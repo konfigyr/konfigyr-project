@@ -1,5 +1,6 @@
 package com.konfigyr.vault;
 
+import com.konfigyr.entity.EntityId;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
 
@@ -20,8 +21,10 @@ import java.time.OffsetDateTime;
  * and each entry corresponds to exactly one applied changeset.
  *
  * @param id unique identifier of the change history entry, can't be {@literal null}.
+ * @param revision revision number of the changeset that was applied, can't be {@literal null}.
  * @param subject human-readable subject of the change, can't be {@literal null}.
  * @param description human-readable summary of the change, can't be {@literal null}.
+ * @param count the number of property changes that were applied; can't be negative.
  * @param appliedBy name of the user that applied the change, can't be {@literal null}.
  * @param appliedAt timestamp when the change was applied, can't be {@literal null}.
  * @author Vladimir Spasic
@@ -29,8 +32,15 @@ import java.time.OffsetDateTime;
  */
 @NullMarked
 @ValueObject
-public record ChangeHistory(String id, String subject, String description, String appliedBy, OffsetDateTime appliedAt)
-		implements Comparable<ChangeHistory>, Serializable {
+public record ChangeHistory(
+		EntityId id,
+		String revision,
+		String subject,
+		String description,
+		int count,
+		String appliedBy,
+		OffsetDateTime appliedAt
+) implements Comparable<ChangeHistory>, Serializable {
 
 	@Override
 	public int compareTo(ChangeHistory o) {

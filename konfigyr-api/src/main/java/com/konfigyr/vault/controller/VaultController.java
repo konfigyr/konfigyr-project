@@ -1,23 +1,26 @@
 package com.konfigyr.vault.controller;
 
+import com.konfigyr.data.CursorPage;
+import com.konfigyr.data.CursorPageable;
+import com.konfigyr.hateoas.CollectionModel;
+import com.konfigyr.hateoas.CursorModel;
 import com.konfigyr.hateoas.EntityModel;
-import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.vault.*;
+import com.konfigyr.vault.history.RevisionNotFoundException;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import org.jspecify.annotations.NonNull;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,10 +29,13 @@ import java.util.Set;
 public class VaultController extends AbstractVaultController {
 
 	private final VaultAccessor accessor;
+	private final VaultChronicle chronicle;
 
-	VaultController(NamespaceManager namespaces, Services services, ProfileManager profiles, VaultAccessor accessor) {
+	VaultController(NamespaceManager namespaces, Services services, ProfileManager profiles,
+					VaultAccessor accessor, VaultChronicle chronicle) {
 		super(namespaces, profiles, services);
 		this.accessor = accessor;
+		this.chronicle = chronicle;
 	}
 
 	@PreAuthorize("isMember(#namespace)")
@@ -51,7 +57,7 @@ public class VaultController extends AbstractVaultController {
 	@PreAuthorize("isMember(#namespace)")
 	@RequiresScope(OAuthScope.WRITE_PROFILES)
 	@PostMapping("profiles/{profileName}/apply")
-	EntityModel<ApplyResult> apply(
+	EntityModel<RevisionInformation> apply(
 			@PathVariable String namespace,
 			@PathVariable String service,
 			@PathVariable String profileName,
@@ -65,27 +71,73 @@ public class VaultController extends AbstractVaultController {
 			result = vault.apply(request.changes(profile));
 		}
 
-		return assembler.<ApplyResult>properties().assemble(result);
+		return assembler.<RevisionInformation>of().assemble(new RevisionInformation(result));
 	}
 
 	@PreAuthorize("isMember(#namespace)")
 	@RequiresScope(OAuthScope.READ_PROFILES)
 	@GetMapping("profiles/{profileName}/history")
-	PagedModel<EntityModel<ChangeHistory>> history(
+	CursorModel<EntityModel<ChangeHistory>> history(
 			@PathVariable String namespace,
 			@PathVariable String service,
 			@PathVariable String profileName,
-			@PageableDefault @NonNull Pageable pageable
+			@NonNull CursorPageable pageable
+	) {
+		final VaultAssembler assembler = createAssembler(namespace, service);
+		final Profile profile = lookupProfile(assembler.service(), profileName);
+
+		return assembler.changeHistory(profile)
+				.assemble(chronicle.fetchHistory(profile, pageable));
+	}
+
+	@PreAuthorize("isMember(#namespace)")
+	@RequiresScope(OAuthScope.READ_PROFILES)
+	@GetMapping("profiles/{profileName}/history/{revision}")
+	CollectionModel<EntityModel<ChangeHistoryRecord>> history(
+			@PathVariable String namespace,
+			@PathVariable String service,
+			@PathVariable String profileName,
+			@PathVariable String revision
 	) throws Exception {
 		final VaultAssembler assembler = createAssembler(namespace, service);
 		final Profile profile = lookupProfile(assembler.service(), profileName);
 
-		Page<ChangeHistory> result;
+		final List<PropertyHistory> history = chronicle.examine(profile, revision)
+				.map(chronicle::traceRevision)
+				.orElseThrow(() -> new RevisionNotFoundException(profile.slug(), revision));
+
+		final List<ChangeHistoryRecord> changes;
+
 		try (Vault vault = accessor.open(AuthenticatedPrincipal.resolve(), assembler.service(), profile)) {
-			result = vault.history(pageable);
+			changes = history.stream()
+					.map(it -> ChangeHistoryRecord.from(it, vault))
+					.toList();
 		}
 
-		return assembler.changeHistory(profile).assemble(result);
+		return assembler.<ChangeHistoryRecord>of().assemble(changes);
+	}
+
+	@PreAuthorize("isMember(#namespace)")
+	@RequiresScope(OAuthScope.READ_PROFILES)
+	@GetMapping("profiles/{profileName}/property/{propertyName}/history")
+	CursorModel<EntityModel<ChangeHistoryRecord>> transitions(
+			@PathVariable String namespace,
+			@PathVariable String service,
+			@PathVariable String profileName,
+			@PathVariable String propertyName,
+			@NonNull CursorPageable pageable
+	) throws Exception {
+		final VaultAssembler assembler = createAssembler(namespace, service);
+		final Profile profile = lookupProfile(assembler.service(), profileName);
+
+		final CursorPage<PropertyHistory> history = chronicle.traceProperty(profile, propertyName, pageable);
+		final CursorPage<ChangeHistoryRecord> changes;
+
+		try (Vault vault = accessor.open(AuthenticatedPrincipal.resolve(), assembler.service(), profile)) {
+			changes = history.map(it -> ChangeHistoryRecord.from(it, vault));
+		}
+
+		return assembler.<ChangeHistoryRecord>of().assemble(changes);
 	}
 
 	record ChangesetRequest(@NotBlank String name, String description, @NotEmpty Set<PropertyChange> changes) {
@@ -99,6 +151,13 @@ public class VaultController extends AbstractVaultController {
 					.build();
 		}
 
+	}
+
+	record RevisionInformation(String revision, String author, String subject, String description, OffsetDateTime timestamp) {
+		RevisionInformation(ApplyResult result) {
+			this(result.revision(), result.author().getDisplayName().orElseGet(result.author()),
+					result.subject(), result.description(), result.timestamp());
+		}
 	}
 
 }

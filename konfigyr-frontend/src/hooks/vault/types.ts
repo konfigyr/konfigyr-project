@@ -18,7 +18,22 @@ export interface CreateProfile {
   position?: number;
 }
 
-export type ConfigurationPropertyState = 'unchanged' | 'modified' | 'deleted' | 'added';
+export enum PropertyTransitionType {
+  ADDED = 'ADDED',
+  UPDATED = 'UPDATED',
+  REMOVED = 'REMOVED',
+}
+
+enum UnchangedPropertyState {
+  UNCHANGED = 'UNCHANGED',
+}
+
+export type ConfigurationPropertyState = PropertyTransitionType | UnchangedPropertyState;
+
+export const ConfigurationPropertyState = {
+  ...PropertyTransitionType,
+  ...UnchangedPropertyState,
+};
 
 /**
  * Interface that represents the value of a configuration property. The value contains two
@@ -52,15 +67,6 @@ export interface ChangesetState {
   deleted: number;
 }
 
-export interface ChangeHistoryRecord {
-  id: string;
-  user: string;
-  action: 'created' | 'modified' | 'deleted';
-  previousValue?: string;
-  newValue?: string;
-  timestamp: string;
-}
-
 export enum Operation {
   CREATE = 'CREATE',
   MODIFY = 'MODIFY',
@@ -86,13 +92,26 @@ export interface ApplyRequest {
 
 export interface ChangeHistory {
   id: string;
+  revision: string;
   subject: string;
-  description: string;
+  description?: string;
+  count: number;
+  appliedBy: string;
+  appliedAt: string;
+}
+
+export interface ChangeHistoryRecord {
+  id: string;
+  revision: string;
+  name: string;
+  action: PropertyTransitionType;
+  from: string,
+  to: string,
   appliedBy: string;
   appliedAt: string;
 }
 
 export interface ChangeHistoryQuery extends Record<string, string | number | boolean | undefined> {
   size?: number;
-  page?: number;
+  token?: string;
 }

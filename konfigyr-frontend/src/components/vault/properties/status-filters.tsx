@@ -2,12 +2,19 @@
 
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
+import { labelForTransitionType } from '@konfigyr/components/vault/messages';
 import { Button } from '@konfigyr/components/ui/button';
 import { cn } from '@konfigyr/components/utils';
 
+import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import type { ChangesetState } from '@konfigyr/hooks/types';
 
-export type StatusFilter = 'all' | 'modified' | 'added' | 'deleted';
+export const StatusFilter = {
+  ALL: 'ALL',
+  ...PropertyTransitionType,
+};
+
+export type StatusFilter = typeof StatusFilter[keyof typeof StatusFilter];
 
 interface StatusFilterState {
   key: StatusFilter;
@@ -18,22 +25,12 @@ function useStatusLabel(label: StatusFilter): string | undefined {
   const intl = useIntl();
 
   switch (label) {
-    case 'all': return intl.formatMessage({
+    case StatusFilter.ALL: return intl.formatMessage({
       defaultMessage: 'All',
       description: 'Default label for the changeset status filter used to show all properties.',
     });
-    case 'modified': return intl.formatMessage({
-      defaultMessage: 'Modified',
-      description: 'Default label for the changeset status filter used to show only modified properties.',
-    });
-    case 'added': return intl.formatMessage({
-      defaultMessage: 'Added',
-      description: 'Default label for the changeset status filter used to show only added properties.',
-    });
-    case 'deleted': return intl.formatMessage({
-      defaultMessage: 'Deleted',
-      description: 'Default label for the changeset status filter used to show only deleted properties.',
-    });
+    default:
+      return labelForTransitionType(intl, label as PropertyTransitionType);
   }
 }
 
@@ -69,16 +66,16 @@ export function PropertyStatusFilters({ changeset, value = 'all', onChange }: {
   onChange: (value: StatusFilter) => void,
 }) {
   const states: Array<StatusFilterState> = useMemo(() => [{
-    key: 'all',
+    key: StatusFilter.ALL,
     count: changeset.properties.length,
   }, {
-    key: 'modified',
+    key: StatusFilter.UPDATED,
     count: changeset.modified,
   }, {
-    key: 'added',
+    key: StatusFilter.ADDED,
     count: changeset.added,
   }, {
-    key: 'deleted',
+    key: StatusFilter.REMOVED,
     count: changeset.deleted,
   }], [changeset]);
 

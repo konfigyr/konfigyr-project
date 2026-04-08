@@ -2,11 +2,11 @@ package com.konfigyr.vault;
 
 import com.konfigyr.crypto.KeysetOperationsFactory;
 import com.konfigyr.namespace.Services;
-import com.konfigyr.vault.extension.LockingVaultExtension;
 import com.konfigyr.vault.state.RepositoryVaultManager;
 import com.konfigyr.vault.state.StateRepositoryEventListener;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,8 +29,11 @@ public class VaultAutoConfiguration {
 	}
 
 	@Bean
-	VaultAccessor repositoryVaultManager(KeysetOperationsFactory keysetOperationsFactory) {
-		return new RepositoryVaultManager(new LockingVaultExtension(), properties.getRepositoryDirectory(),
+	VaultAccessor repositoryVaultManager(
+			ObjectProvider<VaultExtension> extensions,
+			KeysetOperationsFactory keysetOperationsFactory
+	) {
+		return new RepositoryVaultManager(VaultExtension.compose(extensions), properties.getRepositoryDirectory(),
 				keysetOperationsFactory);
 	}
 

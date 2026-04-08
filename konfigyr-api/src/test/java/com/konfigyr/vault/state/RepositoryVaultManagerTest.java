@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.modulith.test.AssertablePublishedEvents;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.MalformedInputException;
@@ -73,7 +74,7 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 
 	@Test
 	@DisplayName("should apply changes to unprotected service profile")
-	void shouldApplyChangesToUnprotectedProfile() {
+	void shouldApplyChangesToUnprotectedProfile(AssertablePublishedEvents events) {
 		final var profile = prepareServiceProfile("development");
 		final var vault = accessor.open(principal, service, profile);
 
@@ -89,17 +90,25 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 
 		assertThat(result.changes())
 				.hasSize(2)
-				.hasEntrySatisfying("server.port", it -> assertThat(it)
-						.returns(PropertyHistory.Action.ADDED, PropertyHistory::action)
-						.returns("8080", PropertyHistory::newValue)
-				)
-				.hasEntrySatisfying("server.address", it -> assertThat(it)
-						.returns(PropertyHistory.Action.ADDED, PropertyHistory::action)
-						.returns("localhost", PropertyHistory::newValue)
+				.satisfiesExactly(
+						it -> assertThat(it)
+								.returns("server.address", PropertyTransition::name)
+								.returns(PropertyTransitionType.ADDED, PropertyTransition::type)
+								.returns(null, PropertyTransition::from)
+								.returns(vault.seal(PropertyValue.create(profile.id(), "server.address", "localhost")),
+										PropertyTransition::to),
+						it -> assertThat(it)
+								.returns("server.port", PropertyTransition::name)
+								.returns(PropertyTransitionType.ADDED, PropertyTransition::type)
+								.returns(null, PropertyTransition::from)
+								.returns(vault.seal(PropertyValue.create(profile.id(), "server.port", "8080")),
+										PropertyTransition::to)
 				);
 
-		assertThat(vault.state())
-				.as("Should return sealed property state with 3 properties")
+		final var state = vault.state();
+
+		assertThat(state)
+				.as("Should return sealed property state with 2 properties")
 				.hasSize(2);
 
 		assertThat(vault.unseal())
@@ -107,6 +116,9 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 				.hasSize(2)
 				.containsEntry("server.port", "8080")
 				.containsEntry("server.address", "localhost");
+
+		events.ofType(VaultEvent.ChangesApplied.class)
+				.matchingValue(VaultEvent.ChangesApplied::result, result);
 
 		result = vault.apply(
 				PropertyChanges.builder()
@@ -120,18 +132,24 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 
 		assertThat(result.changes())
 				.hasSize(3)
-				.hasEntrySatisfying("spring.application.name", it -> assertThat(it)
-						.returns(PropertyHistory.Action.ADDED, PropertyHistory::action)
-						.returns("test-application", PropertyHistory::newValue)
-				)
-				.hasEntrySatisfying("server.port", it -> assertThat(it)
-						.returns(PropertyHistory.Action.UPDATED, PropertyHistory::action)
-						.returns("8888", PropertyHistory::newValue)
-						.returns("8080", PropertyHistory::oldValue)
-				)
-				.hasEntrySatisfying("server.address", it -> assertThat(it)
-						.returns(PropertyHistory.Action.REMOVED, PropertyHistory::action)
-						.returns("localhost", PropertyHistory::oldValue)
+				.satisfiesExactly(
+						it -> assertThat(it)
+								.returns("server.address", PropertyTransition::name)
+								.returns(PropertyTransitionType.REMOVED, PropertyTransition::type)
+								.returns(state.get("server.address").orElse(null), PropertyTransition::from)
+								.returns(null, PropertyTransition::to),
+						it -> assertThat(it)
+								.returns("server.port", PropertyTransition::name)
+								.returns(PropertyTransitionType.UPDATED, PropertyTransition::type)
+								.returns(state.get("server.port").orElse(null), PropertyTransition::from)
+								.returns(vault.seal(PropertyValue.create(profile.id(), "server.port", "8888")),
+										PropertyTransition::to),
+						it -> assertThat(it)
+								.returns("spring.application.name", PropertyTransition::name)
+								.returns(PropertyTransitionType.ADDED, PropertyTransition::type)
+								.returns(null, PropertyTransition::from)
+								.returns(vault.seal(PropertyValue.create(profile.id(), "spring.application.name", "test-application")),
+										PropertyTransition::to)
 				);
 
 		assertThat(vault.state())
@@ -143,6 +161,9 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 				.hasSize(2)
 				.containsEntry("spring.application.name", "test-application")
 				.containsEntry("server.port", "8888");
+
+		events.ofType(VaultEvent.ChangesApplied.class)
+				.matchingValue(VaultEvent.ChangesApplied::result, result);
 
 		assertThatNoException()
 				.as("Should close vault without exceptions")
@@ -178,7 +199,7 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 
 	@Test
 	@DisplayName("should fail to apply changes directly to a protected service profile")
-	void shouldNotApplyChangesToProtectedProfile() {
+	void shouldNotApplyChangesToProtectedProfile(AssertablePublishedEvents events) {
 		final var profile = prepareServiceProfile("production");
 		final var vault = accessor.open(principal, service, profile);
 
@@ -201,6 +222,9 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 				.as("No changes should be applied to the vault state")
 				.isEmpty();
 
+		assertThat(events.eventOfTypeWasPublished(VaultEvent.ChangesApplied.class))
+				.isFalse();
+
 		assertThatNoException()
 				.as("Should close vault without exceptions")
 				.isThrownBy(vault::close);
@@ -208,7 +232,7 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 
 	@Test
 	@DisplayName("should fail to apply changes directly to an immutable service profile")
-	void shouldNotApplyChangesToImmutableProfile() {
+	void shouldNotApplyChangesToImmutableProfile(AssertablePublishedEvents events) {
 		final var profile = prepareServiceProfile("locked");
 		final var vault = accessor.open(principal, service, profile);
 
@@ -230,6 +254,9 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 		assertThat(vault.state())
 				.as("No changes should be applied to the vault state")
 				.isEmpty();
+
+		assertThat(events.eventOfTypeWasPublished(VaultEvent.ChangesApplied.class))
+				.isFalse();
 
 		assertThatNoException()
 				.as("Should close vault without exceptions")

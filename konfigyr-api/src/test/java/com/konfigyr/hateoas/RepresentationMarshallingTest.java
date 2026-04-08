@@ -1,6 +1,8 @@
 package com.konfigyr.hateoas;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.konfigyr.data.CursorPage;
+import com.konfigyr.data.CursorPageable;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -100,12 +102,37 @@ public class RepresentationMarshallingTest {
 				.isEqualTo(model);
 	}
 
+	@Test
+	@DisplayName("should serialize cursor model")
+	void cursorModel() {
+		CursorPage<@NonNull EntityModel<Person>> page = CursorPage.of(
+				List.of(Person.create(Link.of("https://localhost/1"))),
+				CursorPageable.of("next-token", 10),
+				CursorPageable.of(10)
+		);
+		RepresentationModel<?> model = CursorModel.of(page, Link.of("https://localhost"));
+
+		final var json = mapper.writeValueAsString(model);
+
+		assertThat(json)
+				.isEqualTo("{\"data\":[{\"firstName\":\"John\",\"lastName\":\"Doe\",\"links\":[{\"rel\":\"self\",\"href\":\"https://localhost/1\",\"method\":\"GET\"}]}]," +
+						"\"metadata\":{\"size\":1,\"next\":\"next-token\",\"previous\":null}," +
+						"\"links\":[{\"rel\":\"self\",\"href\":\"https://localhost\",\"method\":\"GET\"}]}");
+
+		assertThatObject(mapper.readValue(json, cursorTypeFor(Person.class)))
+				.isEqualTo(model);
+	}
+
 	private JavaType entityTypeFor(Class<?> type) {
 		return mapper.getTypeFactory().constructParametricType(EntityModel.class, type);
 	}
 
 	private JavaType collectionTypeFor(Class<?> type) {
 		return mapper.getTypeFactory().constructParametricType(CollectionModel.class, entityTypeFor(type));
+	}
+
+	private JavaType cursorTypeFor(Class<?> type) {
+		return mapper.getTypeFactory().constructParametricType(CursorModel.class, entityTypeFor(type));
 	}
 
 	private JavaType pageTypeFor(Class<?> type) {

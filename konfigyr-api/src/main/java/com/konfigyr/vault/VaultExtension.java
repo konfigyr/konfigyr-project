@@ -2,6 +2,8 @@ package com.konfigyr.vault;
 
 import org.jspecify.annotations.NullMarked;
 
+import java.util.stream.StreamSupport;
+
 /**
  * Interface that can be used to extend or customize the behavior of the {@link Vault} instances.
  *
@@ -11,6 +13,19 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 @FunctionalInterface
 public interface VaultExtension {
+
+	/**
+	 * Composes the multiple vault extensions into a single extension using the {@link #compose(VaultExtension)}
+	 * method.
+	 *
+	 * @param extensions must not be {@literal null}.
+	 * @return the composed extension, never {@literal null}.
+	 */
+	static VaultExtension compose(Iterable<VaultExtension> extensions) {
+		return StreamSupport.stream(extensions.spliterator(), false)
+				.reduce(VaultExtension::compose)
+				.orElseGet(() -> vault -> vault);
+	}
 
 	/**
 	 * Extends the given {@link Vault} instance.
@@ -32,7 +47,7 @@ public interface VaultExtension {
 	 * then applies this extension
 	 */
 	default VaultExtension compose(VaultExtension before) {
-		return vault -> extend(before.extend(vault));
+		return vault -> before.extend(extend(vault));
 	}
 
 }

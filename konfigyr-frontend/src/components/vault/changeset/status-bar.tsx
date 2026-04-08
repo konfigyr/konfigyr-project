@@ -10,20 +10,24 @@ import {
 import { FormattedMessage } from 'react-intl';
 import { CheckIcon, CircleXIcon, PencilIcon, SaveIcon } from 'lucide-react';
 import { cva } from 'class-variance-authority';
-import { useErrorNotification } from '@konfigyr/components/error';
 import {
   useApplyChangeset,
   useDiscardChangeset,
   useRenameChangeset,
   useSubmitChangeset,
 } from '@konfigyr/hooks';
+import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
+import { useErrorNotification } from '@konfigyr/components/error';
 import { Button } from '@konfigyr/components/ui/button';
 import {
   InlineEdit,
   InlineEditInput,
   InlineEditPlaceholder,
 } from '@konfigyr/components/ui/inline-edit';
-import { StateLabel } from '@konfigyr/components/vault/properties/state-label';
+import {
+  ChangesCountLabel,
+  useLabelForTransitionType,
+} from '@konfigyr/components/vault/messages';
 import { cn } from '@konfigyr/components/utils';
 
 import type { RefObject } from 'react';
@@ -117,6 +121,29 @@ function ChangesetName({ changeset, onError }: { changeset: ChangesetState, onEr
         />
       </InlineEdit>
     </div>
+  );
+}
+
+function StateCountLabel({ type, count }: { type: PropertyTransitionType, count: number }) {
+  const label = useLabelForTransitionType(type);
+
+  return (
+    <p
+      className={cn(
+        'flex items-center gap-1 text-xs',
+        type === PropertyTransitionType.ADDED && '[&>*:first-child]:bg-emerald-600',
+        type === PropertyTransitionType.UPDATED && '[&>*:first-child]:bg-amber-600',
+        type === PropertyTransitionType.REMOVED && '[&>*:first-child]:bg-destructive',
+      )}
+    >
+      <span className="size-2 rounded-sm shrink-0" />
+      {count && (
+        <span className="text-foreground font-medium tabular-nums">{count}</span>
+      )}
+      <span className="text-muted-foreground hidden sm:inline">
+        {label}
+      </span>
+    </p>
   );
 }
 
@@ -242,17 +269,17 @@ function ChangesetStatusBarContents({
 
       <div className="flex items-center gap-3">
         <p className="text-[11px] text-muted-foreground tabular-nums">
-          {totalChanges} {totalChanges === 1 ? 'change' : 'changes'}
+          <ChangesCountLabel count={totalChanges} />
         </p>
         <div className="flex items-center gap-2.5">
           {changeset.modified > 0 && (
-            <StateLabel variant="modified" count={changeset.modified} />
+            <StateCountLabel type={PropertyTransitionType.UPDATED} count={changeset.modified} />
           )}
           {changeset.added > 0 && (
-            <StateLabel variant="added" count={changeset.added} />
+            <StateCountLabel type={PropertyTransitionType.ADDED} count={changeset.added} />
           )}
           {changeset.deleted > 0 && (
-            <StateLabel variant="deleted" count={changeset.deleted} />
+            <StateCountLabel type={PropertyTransitionType.REMOVED} count={changeset.deleted} />
           )}
         </div>
       </div>

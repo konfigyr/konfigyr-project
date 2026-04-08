@@ -1,5 +1,6 @@
 package com.konfigyr.hateoas;
 
+import com.konfigyr.data.CursorPage;
 import org.springframework.data.domain.Page;
 import org.jspecify.annotations.NonNull;
 
@@ -37,6 +38,33 @@ public interface RepresentationModelAssembler<T, R extends RepresentationModel<?
 		return StreamSupport.stream(entities.spliterator(), false)
 				.map(this::assemble)
 				.collect(Collectors.collectingAndThen(Collectors.toList(), CollectionModel::of));
+	}
+
+	/**
+	 * Converts {@link CursorPage cursor based page of entities} into a {@link CursorModel} instance.
+	 *
+	 * @param entities entities to be converted, must not be {@literal null}.
+	 * @return the cursor paged model, never {@literal null}.
+	 */
+	@NonNull
+	default CursorModel<R> assemble(@NonNull CursorPage<? extends @NonNull T> entities) {
+		final CursorModel<R> model = CursorModel.of(entities.map(this::assemble));
+
+		if (entities.hasPrevious()) {
+			model.add(Link.builder()
+					.query("token", entities.previousPageable().token())
+					.rel(LinkRelation.PREVIOUS)
+			);
+		}
+
+		if (entities.hasNext()) {
+			model.add(Link.builder()
+					.query("token", entities.nextPageable().token())
+					.rel(LinkRelation.NEXT)
+			);
+		}
+
+		return model;
 	}
 
 	/**

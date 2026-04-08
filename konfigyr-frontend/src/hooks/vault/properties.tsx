@@ -1,32 +1,11 @@
 import { useMemo } from 'react';
 import { useDebounce } from 'use-debounce';
 import { queryOptions, useQuery } from '@tanstack/react-query';
+import request from '@konfigyr/lib/http';
 
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
+import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { ChangeHistoryRecord, Profile } from '@konfigyr/hooks/vault/types';
-
-/* Default history of the property changes. Should be replaced with a real API call. */
-const history: Array<ChangeHistoryRecord> = [{
-  id: '1',
-  timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-  user: 'alex.novak@configvault.io',
-  action: 'modified',
-  previousValue: '10',
-  newValue: '20',
-}, {
-  id: '2',
-  timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-  user: 'ci-pipeline@github',
-  action: 'modified',
-  previousValue: '5',
-  newValue: '10',
-}, {
-  id: '3',
-  timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-  user: 'alex.novak@configvault.io',
-  action: 'created',
-  newValue: '5',
-}];
 
 /**
  * Keys used to store the configuration properties in the query client.
@@ -35,18 +14,24 @@ export const propertyKeys = {
   getPropertyHistory: (profile: Profile, name: string) => ['vault', profile.id, 'property', name, 'history'],
 };
 
-export const getHistoryQuery = (profile: Profile, name: string) => {
+export const getPropertyHistoryQuery = (namespace: Namespace, service: Service, profile: Profile, name: string) => {
   return queryOptions({
     queryKey: propertyKeys.getPropertyHistory(profile, name),
     queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      return history;
+      return await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/property/${name}/history`).json<{
+        data: Array<ChangeHistoryRecord>;
+        metadata: {
+          size: number,
+          next?: string | null,
+          previous?: string | null,
+        }
+      }>();
     },
   });
 };
 
-export const useGetHistory = (profile: Profile, name: string) => {
-  return useQuery(getHistoryQuery(profile, name));
+export const useGetPropertyHistory = (namespace: Namespace, service: Service, profile: Profile, name: string) => {
+  return useQuery(getPropertyHistoryQuery(namespace, service, profile, name));
 };
 
 /* Search property metadata hooks */
@@ -94,7 +79,7 @@ export function useSplitSearchTerm(term?: string, delay: number = 200): Array<st
  *
  * @param properties the property descriptors to filter
  * @param terms the search terms to filter the descriptors
- * @returns {Array<T & { score?: number }>} the filtered property descriptors with their scores
+ * @returns {Array} the filtered property descriptors with their scores
  */
 export function filterPropertyDescriptors<T extends PropertyDescriptor>(
   properties: Array<T> = [],

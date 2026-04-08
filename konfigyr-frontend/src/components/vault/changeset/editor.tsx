@@ -11,7 +11,7 @@ import { ChangesetStatusBar } from '@konfigyr/components/vault/changeset/status-
 import { PropertyDialog } from '@konfigyr/components/vault/properties/property-dialog';
 import { SearchInputGroup } from '@konfigyr/components/vault/properties/search-input-group';
 import { PropertyHistorySidebar } from '@konfigyr/components/vault/properties/history-sidebar';
-import { PropertyStatusFilters } from '@konfigyr/components/vault/properties/status-filters';
+import { PropertyStatusFilters, StatusFilter } from '@konfigyr/components/vault/properties/status-filters';
 import { PropertiesTable } from '@konfigyr/components/vault/properties/table';
 
 import type {
@@ -20,7 +20,6 @@ import type {
   ConfigurationPropertyValue,
   ServiceCatalog,
 } from '@konfigyr/hooks/types';
-import type { StatusFilter } from '@konfigyr/components/vault/properties/status-filters';
 
 const matches = (term: string, value?: string | undefined | null) => {
   if (value === undefined || value === null) {
@@ -35,7 +34,7 @@ const useFilteredProperties = (
   statusFilter: StatusFilter,
 ) => {
   const properties = useMemo(() => {
-    if (statusFilter === 'all') {
+    if (statusFilter === StatusFilter.ALL) {
       return changeset.properties;
     }
     return changeset.properties.filter(it => it.state === statusFilter);
@@ -55,7 +54,7 @@ const useFilteredProperties = (
 };
 
 export function ChangesetEditor({ catalog, changeset }: { catalog: ServiceCatalog, changeset: ChangesetState }) {
-  const [propertyStatusFilter, onPropertyStatusFilterChanged] = useState<StatusFilter>('all');
+  const [propertyStatusFilter, onPropertyStatusFilterChanged] = useState<StatusFilter>(StatusFilter.ALL);
   const [propertyTermFilter, onPropertyTermFilterChanged] = useState<string>('');
 
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -99,6 +98,8 @@ export function ChangesetEditor({ catalog, changeset }: { catalog: ServiceCatalo
         open={historyOpen}
         onOpenChange={setHistoryOpen}
         property={historyProperty}
+        namespace={changeset.namespace}
+        service={changeset.service}
         profile={changeset.profile}
       />
 

@@ -108,34 +108,62 @@ class RepositoryVaultTest {
 				.profile(profile)
 				.subject("Incoming changes")
 				.createProperty("server.port", "8080")
+				.modifyProperty("server.ssl.enabled", "true")
+				.removeProperty("server.ssl.key-store")
+				.build();
+
+		final var properties = Properties.builder()
+				.add("server.ssl.enabled", PropertyValue.create(
+						profile.id(), "server.ssl.enabled", "false").seal(keysetOperations))
+				.add("server.ssl.key-store", PropertyValue.create(
+						profile.id(), "server.ssl.key-store", "ssl-store.jsk").seal(keysetOperations))
 				.build();
 
 		final var state = RepositoryState.builder()
-				.revision("git-revision")
+				.revision("previous-revision")
 				.summary("Latest configuration state")
 				.author("john.doe@konfigyr.com")
 				.timestamp(OffsetDateTime.now())
-				.contents(() -> new ByteArrayInputStream(new byte[0]))
+				.contents(properties)
 				.build();
 
 		doReturn(state).when(repository).get(profile);
 
-		final var updateOutcome = MergeOutcome.applied("changeset-branch", state.author(), state.revision());
+		final var updateOutcome = MergeOutcome.applied("changeset-branch", state.author(), "updated-revision");
 		doReturn(updateOutcome).when(repository).update(eq(profile), any());
 
-		final var mergeOutcome = MergeOutcome.applied("profile-branch", state.author(), state.revision());
+		final var mergeOutcome = MergeOutcome.applied("profile-branch", state.author(), "merged-revision");
 		doReturn(mergeOutcome).when(repository).merge(profile, updateOutcome.branch());
 
-		assertThat(vault.apply(changes))
+		assertThatObject(vault.apply(changes))
 				.returns(mergeOutcome.revision(), ApplyResult::revision)
+				.returns(state.revision(), ApplyResult::previousRevision)
+				.returns(changes.subject(), ApplyResult::subject)
+				.returns(changes.description(), ApplyResult::description)
+				.returns(author, ApplyResult::author)
 				.returns(mergeOutcome.timestamp(), ApplyResult::timestamp)
-				.extracting(ApplyResult::changes, InstanceOfAssertFactories.map(String.class, PropertyHistory.class))
+				.extracting(ApplyResult::changes, InstanceOfAssertFactories.iterable(PropertyTransition.class))
 				.hasSize(changes.size())
-				.hasEntrySatisfying("server.port", it -> assertThat(it)
-						.returns(PropertyHistory.Action.ADDED, PropertyHistory::action)
-						.returns("8080", PropertyHistory::newValue)
-						.returns(mergeOutcome.author(), PropertyHistory::author)
-						.returns(mergeOutcome.timestamp(), PropertyHistory::timestamp)
+				.satisfiesExactly(
+						it -> assertThat(it)
+								.returns("server.port", PropertyTransition::name)
+								.returns(PropertyTransitionType.ADDED, PropertyTransition::type)
+								.returns(null, PropertyTransition::from)
+								.returns(PropertyValue.create(profile.id(), "server.port", "8080")
+										.seal(keysetOperations), PropertyTransition::to),
+						it -> assertThat(it)
+								.returns("server.ssl.enabled", PropertyTransition::name)
+								.returns(PropertyTransitionType.UPDATED, PropertyTransition::type)
+								.returns(PropertyValue.create(profile.id(), "server.ssl.enabled", "false")
+											.seal(keysetOperations), PropertyTransition::from)
+								.returns(PropertyValue.create(profile.id(), "server.ssl.enabled", "true")
+										.seal(keysetOperations), PropertyTransition::to),
+						it -> assertThat(it)
+								.returns("server.ssl.key-store", PropertyTransition::name)
+								.returns(PropertyTransitionType.REMOVED, PropertyTransition::type)
+								.returns(PropertyValue.create(profile.id(), "server.ssl.key-store", "ssl-store.jsk")
+										.seal(keysetOperations), PropertyTransition::from)
+								.returns(null, PropertyTransition::to)
 				);
 
 		verify(repository, never()).discard(profile, updateOutcome.branch());

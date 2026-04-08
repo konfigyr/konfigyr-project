@@ -1,5 +1,12 @@
-import { createContext, useContext, useMemo } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
 import { FormattedMessage } from 'react-intl';
+import { mergeProps } from '@base-ui/react/merge-props';
+import { useRender } from '@base-ui/react/use-render';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -33,6 +40,30 @@ export type PaginationProps = {
   pages?: number;
 };
 
+export type CursorPaginationProps = {
+  /**
+   * Property that defines the current page size. Defaults to 10.
+   */
+  size?: number;
+
+  /**
+   * The cursor token of the next page.
+   */
+  next?: string | null;
+
+  /**
+   * The cursor token of the previous page.
+   */
+  previous?: string | null;
+
+  /**
+   * Callback function that is called when the user clicks on the next or previous page button.
+   * @param token the selected cursor token
+   * @param size the selected page size
+   */
+  onChange: (token: string, size: number) => unknown;
+};
+
 const PaginationContext = createContext<PaginationProps>({
   size: 10,
   page: 1,
@@ -40,7 +71,9 @@ const PaginationContext = createContext<PaginationProps>({
   pages: 1,
 });
 
-function Pagination({ page, size, total, pages, className, ...props }: PaginationProps & ComponentProps<'nav'>) {
+export const usePagination = () => useContext(PaginationContext);
+
+export function Pagination({ page, size, total, pages, className, ...props }: PaginationProps & ComponentProps<'nav'>) {
   return (
     <PaginationContext.Provider value={{ page, size, total, pages }}>
       <nav
@@ -54,7 +87,55 @@ function Pagination({ page, size, total, pages, className, ...props }: Paginatio
   );
 }
 
-function PaginationContent({
+export function CursorPagination({
+  size = 10,
+  next,
+  previous,
+  onChange,
+  className,
+  ...props
+}: CursorPaginationProps & Omit<ComponentProps<'nav'>, 'onChange'>) {
+  const onNext = useCallback(() => {
+    if (typeof next === 'string') {
+      onChange(next, size);
+    }
+  }, [size, next]);
+
+  const onPrevious = useCallback(() => {
+    if (typeof previous === 'string') {
+      onChange(previous, size);
+    }
+  }, [size, previous]);
+
+  return (
+    <PaginationContext.Provider value={{ size }}>
+      <nav
+        role='navigation'
+        aria-label='pagination'
+        data-slot='cursor-pagination'
+        className={cn('mx-auto flex w-full justify-center', className)}
+        {...props}
+      >
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              disabled={typeof previous !== 'string'}
+              onClick={onPrevious}
+            />
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext
+              disabled={typeof next !== 'string'}
+              onClick={onNext}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </nav>
+    </PaginationContext.Provider>
+  );
+}
+
+export function PaginationContent({
   className,
   ...props
 }: ComponentProps<'ul'>) {
@@ -67,13 +148,13 @@ function PaginationContent({
   );
 }
 
-type Page = { page: number, active: boolean };
+export type Page = { page: number, active: boolean };
 
 export function PaginationRange({ range = 5, children }: {
   range?: number,
   children: (state: Page) => ReactNode | null | undefined,
 }) {
-  const { page = 1, pages = 1 } = useContext(PaginationContext);
+  const { page = 1, pages = 1 } = usePagination();
 
   const items = useMemo(() => {
     const state: Array<Page> = [];
@@ -128,51 +209,61 @@ export function PaginationRange({ range = 5, children }: {
   ));
 }
 
-function PaginationItem({ ...props }: ComponentProps<'li'>) {
+export function PaginationItem({ ...props }: ComponentProps<'li'>) {
   return <li data-slot='pagination-item' {...props} />;
 }
 
-type PaginationLinkProps = { isActive?: boolean } & Pick<ComponentProps<typeof Button>, 'size'> & ComponentProps<'a'>;
+export type PaginationLinkProps = {
+  isActive?: boolean;
+  disabled?: boolean;
+  href?: string
+} & Pick<ComponentProps<typeof Button>, 'size'> & useRender.ComponentProps<'button'>;
 
-function PaginationLink({
+export function PaginationLink({
   className,
-  isActive,
+  isActive = false,
   size = 'icon',
+  disabled = false,
   ...props
 }: PaginationLinkProps) {
-  return (
-    <a
-      aria-current={isActive ? 'page' : undefined}
-      data-slot='pagination-link'
-      data-active={isActive}
-      className={cn(
+  return useRender({
+    defaultTagName: props.href ? 'a' : 'button',
+    props: mergeProps<'a' | 'button'>({
+      'aria-current': isActive ? 'page' : undefined,
+      'aria-disabled': disabled,
+      tabIndex: disabled ? -1 : undefined,
+      className: cn(
         'cursor-pointer',
-        isActive && 'w-128',
+        isActive && 'w-lg',
+        disabled && 'pointer-events-none opacity-50',
         buttonVariants({
           variant: isActive ? 'outline' : 'ghost',
           size,
         }),
         className,
-      )}
-      {...props}
-    />
-  );
+      ),
+    }, props),
+    state: {
+      slot: 'pagination-link',
+      active: String(isActive),
+    },
+  });
 }
 
-function PaginationPrevious({
+export function PaginationPrevious({
+  size = 'default',
   className,
   ...props
 }: ComponentProps<typeof PaginationLink>) {
-  const { page = 1 } = useContext(PaginationContext);
-  const disabled = page === 1;
+  const { page = 1 } = usePagination();
+  const disabled = props.disabled ?? page === 1;
 
   return (
     <PaginationLink
-      aria-disabled={disabled}
+      size={size}
+      disabled={disabled}
       aria-label='Go to previous page'
-      size='default'
-      tabIndex={disabled ? -1 : undefined}
-      className={cn('gap-1 px-2.5 sm:pl-2.5', disabled && 'pointer-events-none opacity-50', className)}
+      className={cn('gap-1 px-2.5 sm:pl-2.5', className)}
       {...props}
     >
       <ChevronLeftIcon />
@@ -186,20 +277,20 @@ function PaginationPrevious({
   );
 }
 
-function PaginationNext({
+export function PaginationNext({
+  size = 'default',
   className,
   ...props
 }: ComponentProps<typeof PaginationLink>) {
-  const { page = 1, pages = 1 } = useContext(PaginationContext);
-  const disabled = page === pages;
+  const { page = 1, pages = 1 } = usePagination();
+  const disabled = props.disabled ?? page === pages;
 
   return (
     <PaginationLink
-      aria-disabled={disabled}
+      size={size}
+      disabled={disabled}
       aria-label='Go to next page'
-      size='default'
-      tabIndex={disabled ? -1 : undefined}
-      className={cn('gap-1 px-2.5 sm:pr-2.5', disabled && 'pointer-events-none opacity-50', className)}
+      className={cn('gap-1 px-2.5 sm:pr-2.5', className)}
       {...props}
     >
       <span className='hidden sm:block'>
@@ -213,7 +304,7 @@ function PaginationNext({
   );
 }
 
-function PaginationEllipsis({
+export function PaginationEllipsis({
   className,
   ...props
 }: ComponentProps<'span'>) {
@@ -234,13 +325,3 @@ function PaginationEllipsis({
     </span>
   );
 }
-
-export {
-  Pagination,
-  PaginationContent,
-  PaginationLink,
-  PaginationItem,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-};

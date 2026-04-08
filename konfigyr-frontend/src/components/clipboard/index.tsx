@@ -10,7 +10,7 @@ import {
 import { cn } from '@konfigyr/components/utils';
 import { CopiedLabel, CopyLabel } from '@konfigyr/components/messages';
 
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 function useClipboardButton(text: string): [boolean, () => void] {
   const [copied, setCopied] = useState(false);
@@ -64,8 +64,9 @@ export function ClipboardIconButton({
   delay,
   className,
   children,
+  tooltip,
   ...props
-}: { delay?: number } & ClipboardButtonProps) {
+}: { delay?: number, tooltip?: ReactNode } & ClipboardButtonProps) {
   const [copied, onCopy] = useClipboardButton(text);
   const [open, setOpen] = useState(false);
 
@@ -86,7 +87,7 @@ export function ClipboardIconButton({
         </Button>
       }/>
       <TooltipContent>
-        {copied ? (<CopiedLabel />) : (<CopyLabel />)}
+        {copied ? (<CopiedLabel />) : (tooltip ?? <CopyLabel />)}
       </TooltipContent>
     </Tooltip>
   );
