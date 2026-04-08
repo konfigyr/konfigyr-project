@@ -4,7 +4,6 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.support.Slug;
-import com.konfigyr.vault.ChangeHistory;
 import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfilePolicy;
 import com.konfigyr.vault.Properties;
@@ -191,7 +190,7 @@ class GitStateRepositoryTest {
 		assertThat(repository.history(profile, Pageable.ofSize(5)))
 				.as("Git repository history should two expected commits in the correct order")
 				.hasSize(2)
-				.extracting(ChangeHistory::subject)
+				.extracting(RepositoryVersion::summary)
 				.containsExactly("First changes", "Repository initialized for Service(EntityId(123567, 0000000003RNF), test-service)");
 	}
 
