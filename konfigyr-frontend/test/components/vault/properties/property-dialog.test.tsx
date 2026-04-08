@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
@@ -6,7 +6,6 @@ import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 import { namespaces, profiles, propertyDescriptors, services } from '@konfigyr/test/helpers/mocks';
 import { PropertyDialog } from '@konfigyr/components/vault/properties/property-dialog';
 
-import type { RenderResult } from '@testing-library/react';
 import type { ChangesetState, ConfigurationProperty, ServiceCatalog } from '@konfigyr/hooks/types';
 
 const changeset: ChangesetState = {
@@ -60,63 +59,87 @@ const catalog: ServiceCatalog = {
 };
 
 describe('components | vault | properties | <PropertyDialog/>', () => {
-  let onAdd: (property: ConfigurationProperty<unknown>) => void;
-  let result: RenderResult;
+  const onAdd: (property: ConfigurationProperty<unknown>) => void = vi.fn();
 
-  beforeAll(() => {
-    onAdd = vi.fn();
-    result = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
-    ));
+  afterEach(() => {
+    vi.clearAllMocks();
+    cleanup();
   });
 
-  afterEach(() => vi.clearAllMocks());
-
-  afterAll(() => cleanup());
-
   test('should render the property dialog with the closed state', () => {
-    expect(result.getByRole('button', { name: 'Add property' })).toBeInTheDocument();
-    expect(result.queryByRole('dialog')).not.toBeInTheDocument();
+    const { getByRole, queryByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    expect(getByRole('button', { name: 'Add property' })).toBeInTheDocument();
+    expect(queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   test('should open the property dialog with the property search combobox in focus', async () => {
-    await userEvents.click(result.getByRole('button', { name: 'Add property' }));
+    const { getByRole, queryByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
 
-    expect(result.getByRole('dialog')).toBeInTheDocument();
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
 
-    expect(result.getByRole('combobox', { name: 'Property name' })).toBeInTheDocument();
-    expect(result.getByRole('combobox', { name: 'Property name' })).toHaveFocus();
+    expect(getByRole('dialog')).toBeInTheDocument();
 
-    expect(result.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(getByRole('combobox', { name: 'Property name' })).toBeInTheDocument();
+    expect(getByRole('combobox', { name: 'Property name' })).toHaveFocus();
+
+    expect(queryByRole('textbox')).not.toBeInTheDocument();
   });
 
   test('should find a configuration property with simple string type', async () => {
+    const { getAllByRole, getByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
+
     await userEvents.type(
-      result.getByRole('combobox', { name: 'Property name' }),
+      getByRole('combobox', { name: 'Property name' }),
       'spring.config.name',
     );
 
     await waitFor(() => {
-      expect(result.getAllByRole('option')).toHaveLength(1);
+      expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    expect(result.getByRole('option', { name: 'spring.config.name' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.config.name' })).toBeInTheDocument();
 
     await userEvents.keyboard('[Enter]');
 
-    expect(result.getByRole('combobox', { name: 'Property name' })).toHaveValue('spring.config.name');
-    expect(result.getByRole('textbox', { name: 'spring.config.name' })).toBeInTheDocument();
+    expect(getByRole('combobox', { name: 'Property name' })).toHaveValue('spring.config.name');
+    expect(getByRole('textbox', { name: 'spring.config.name' })).toBeInTheDocument();
   });
 
   test('should add selected configuration property with the entered value', async () => {
-    expect(result.getByRole('textbox', { name: 'spring.config.name' })).toHaveValue('application');
+    const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
+
+    await userEvents.type(
+      getByRole('combobox', { name: 'Property name' }),
+      'spring.config.name',
+    );
+
+    await waitFor(() => {
+      expect(getAllByRole('option')).toHaveLength(1);
+    });
+
+    await userEvents.keyboard('[Enter]');
+
+    expect(getByRole('textbox', { name: 'spring.config.name' })).toHaveValue('application');
 
     await userEvents.clear(
-      result.getByRole('textbox', { name: 'spring.config.name' }),
+      getByRole('textbox', { name: 'spring.config.name' }),
     );
 
     await userEvents.type(
-      result.getByRole('textbox', { name: 'spring.config.name' }),
+      getByRole('textbox', { name: 'spring.config.name' }),
       'Test configuration property',
     );
 
@@ -134,44 +157,50 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       value: { encoded: 'Test configuration property', decoded: 'Test configuration property' },
     });
 
-    expect(result.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
   test('should add a configuration property with object schema type', async () => {
-    await userEvents.click(result.getByRole('button', { name: 'Add property' }));
+    const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
 
     await userEvents.type(
-      result.getByRole('combobox', { name: 'Property name' }),
+      getByRole('combobox', { name: 'Property name' }),
       'logging.level',
     );
 
     await waitFor(() => {
-      expect(result.getAllByRole('option')).toHaveLength(1);
+      expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    expect(result.getByRole('option', { name: 'logging.level' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'logging.level' })).toBeInTheDocument();
 
     await userEvents.keyboard('[Tab]');
 
     await waitFor(() => {
-      expect(result.getAllByRole('option')).toHaveLength(3);
+      expect(getAllByRole('option')).toHaveLength(3);
     });
 
-    expect(result.getByRole('option', { name: 'logging.level.root' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'logging.level.sql' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'logging.level.web' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'logging.level.root' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'logging.level.sql' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'logging.level.web' })).toBeInTheDocument();
 
     await userEvents.click(
-      result.getByRole('option', { name: 'logging.level.web' }),
+      getByRole('option', { name: 'logging.level.web' }),
     );
 
     await userEvents.type(
-      result.getByRole('combobox', { name: 'logging.level.web' }),
+      getByRole('combobox', { name: 'logging.level.web' }),
       'DEBUG',
     );
 
     await userEvents.click(
-      result.getByRole('button', { name: 'Add property' }),
+      getByRole('button', { name: 'Add property' }),
     );
 
     expect(onAdd).toHaveBeenCalledExactlyOnceWith({
@@ -188,55 +217,61 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       value: { encoded: 'DEBUG', decoded: 'DEBUG' },
     });
 
-    expect(result.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
   test('should add a configuration property with a complex object schema type', async () => {
-    await userEvents.click(result.getByRole('button', { name: 'Add property' }));
+    const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
 
     await userEvents.type(
-      result.getByRole('combobox', { name: 'Property name' }),
+      getByRole('combobox', { name: 'Property name' }),
       'spring.security.oauth2.client.registration',
     );
 
     await waitFor(() => {
-      expect(result.getAllByRole('option')).toHaveLength(1);
+      expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration' })).toBeInTheDocument();
 
     await userEvents.keyboard('[Tab]');
 
     // start typing to enter the object key...
     await userEvents.type(
-      result.getByRole('combobox'),
+      getByRole('combobox'),
       '.github',
     );
 
     await waitFor(() => {
-      expect(result.getAllByRole('option')).toHaveLength(8);
+      expect(getAllByRole('option')).toHaveLength(8);
     });
 
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.provider' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.redirectUri' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.authorizationGrantType' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientAuthenticationMethod' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientId' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' })).toBeInTheDocument();
-    expect(result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.scope' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.provider' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.redirectUri' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.authorizationGrantType' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientAuthenticationMethod' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientId' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.scope' })).toBeInTheDocument();
 
     await userEvents.click(
-      result.getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' }),
+      getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' }),
     );
 
     await userEvents.type(
-      result.getByRole('textbox', { name: 'spring.security.oauth2.client.registration.github.clientSecret' }),
+      getByRole('textbox', { name: 'spring.security.oauth2.client.registration.github.clientSecret' }),
       'client-secret',
     );
 
     await userEvents.click(
-      result.getByRole('button', { name: 'Add property' }),
+      getByRole('button', { name: 'Add property' }),
     );
 
     expect(onAdd).toHaveBeenCalledExactlyOnceWith({
@@ -250,28 +285,34 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       value: { encoded: 'client-secret', decoded: 'client-secret' },
     });
 
-    expect(result.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
   test('should add a configuration property that has no matching descriptor', async () => {
-    await userEvents.click(result.getByRole('button', { name: 'Add property' }));
+    const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
 
     await userEvents.type(
-      result.getByRole('combobox', { name: 'Property name' }),
+      getByRole('combobox', { name: 'Property name' }),
       'konfigyr.test-missing-property',
     );
 
     await waitFor(() => {
-      expect(result.getAllByRole('option')).toHaveLength(1);
+      expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    expect(result.getByRole('option', { name: 'konfigyr.test-missing-property' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'konfigyr.test-missing-property' })).toBeInTheDocument();
 
     await userEvents.keyboard('[Enter]');
 
     // start typing to enter the object key...
     await userEvents.type(
-      result.getByRole('textbox', { name: 'konfigyr.test-missing-property' }),
+      getByRole('textbox', { name: 'konfigyr.test-missing-property' }),
       'Added value',
     );
 
@@ -283,6 +324,10 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       schema: { type: 'string' },
       state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'Added value', decoded: 'Added value' },
+    });
+
+    await waitFor(() => {
+      expect(queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
