@@ -9,6 +9,7 @@ import com.konfigyr.vault.ProfileManager;
 import com.konfigyr.vault.ProfileNotFoundException;
 import com.konfigyr.vault.state.StateRepositoryFactory;
 import lombok.RequiredArgsConstructor;
+import org.jmolecules.ddd.annotation.Factory;
 import org.jooq.DSLContext;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ import static com.konfigyr.data.tables.VaultChangeRequests.VAULT_CHANGE_REQUESTS
  * @since 1.0.0
  * @see GateContext
  */
+@Factory
 @RequiredArgsConstructor
 class GateContextFactory {
 

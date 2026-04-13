@@ -5,9 +5,9 @@ import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.test.AbstractIntegrationTest;
 import com.konfigyr.vault.*;
-import com.konfigyr.vault.state.GitStateRepository;
 import com.konfigyr.vault.state.RepositoryStateException;
 import com.konfigyr.vault.state.StateRepository;
+import com.konfigyr.vault.state.StateRepositoryFactory;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ class GatekeeperTest extends AbstractIntegrationTest {
 	static final EntityId CHANGE_REQUEST_ID = EntityId.from(123456789);
 
 	@Autowired
-	VaultProperties properties;
+	StateRepositoryFactory stateRepositoryFactory;
 
 	@Autowired
 	ChangeRequestGatekeeper gatekeeper;
@@ -50,13 +50,14 @@ class GatekeeperTest extends AbstractIntegrationTest {
 		profile = profiles.get(service, "development").orElseThrow();
 
 		// set up the repository and the profile branch
-		repository = GitStateRepository.initialize(service, properties.getRepositoryDirectory());
+		repository = stateRepositoryFactory.create(service);
 		repository.create(profile);
 	}
 
 	@AfterEach
 	void cleanup() throws Exception {
 		repository.destroy();
+		repository.close();
 	}
 
 	@Test

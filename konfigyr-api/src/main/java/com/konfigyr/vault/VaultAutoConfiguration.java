@@ -3,6 +3,7 @@ package com.konfigyr.vault;
 import com.konfigyr.crypto.KeysetOperationsFactory;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.vault.changes.ChangeRequestManager;
+import com.konfigyr.vault.state.StateRepositoryFactory;
 import com.konfigyr.vault.state.VaultStateManager;
 import com.konfigyr.vault.state.StateRepositoryEventListener;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,8 @@ public class VaultAutoConfiguration {
 	}
 
 	@Bean
-	StateRepositoryEventListener stateRepositoryEventListener(Services services) {
-		return new StateRepositoryEventListener(services, properties.getRepositoryDirectory());
+	StateRepositoryEventListener stateRepositoryEventListener(Services services, StateRepositoryFactory factory) {
+		return new StateRepositoryEventListener(services, factory);
 	}
 
 }

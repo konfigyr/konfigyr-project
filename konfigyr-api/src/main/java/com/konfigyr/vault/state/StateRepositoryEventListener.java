@@ -13,8 +13,6 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import java.nio.file.Path;
-
 @Slf4j
 @RequiredArgsConstructor
 public class StateRepositoryEventListener {
@@ -25,13 +23,13 @@ public class StateRepositoryEventListener {
 	static Marker PROFILE_DELETED = MarkerFactory.getMarker("STATE_REPOSITORY_PROFILE_DELETED");
 
 	private final Services services;
-	private final Path path;
+	private final StateRepositoryFactory factory;
 
 	@Async
 	@Retryable
 	@TransactionalEventListener(id = "source-control.repository-provisioner", classes = ServiceEvent.Created.class)
 	void provisionServiceSourceControlRepository(ServiceEvent.Created event) throws Exception {
-		try (StateRepository repository = GitStateRepository.initialize(event.get(), path)) {
+		try (StateRepository repository = factory.create(event.get())) {
 			log.info(INITIALIZED, "Successfully created Git repository for {}", repository.owner());
 		}
 	}
@@ -44,7 +42,7 @@ public class StateRepositoryEventListener {
 				"Failed to find Service that owns the Profile with identifier: " + event.get().id()
 		));
 
-		try (StateRepository repository = GitStateRepository.load(service, path)) {
+		try (StateRepository repository = factory.get(service)) {
 			final String branch = repository.create(event.get());
 
 			log.info(PROFILE_CREATED, "Successfully created Git profile branch with name '{}' for: {}",
@@ -56,7 +54,7 @@ public class StateRepositoryEventListener {
 	@Retryable
 	@TransactionalEventListener(id = "source-control.repository-deprovisioner", classes = ServiceEvent.Deleted.class)
 	void deprovisionServiceSourceControlRepository(ServiceEvent.Deleted event) throws Exception {
-		try (StateRepository repository = GitStateRepository.load(event.get(), path)) {
+		try (StateRepository repository = factory.get(event.get())) {
 			repository.destroy();
 
 			log.info(DESTROYED, "Successfully destroyed Git repository for: {}", repository.owner());
@@ -71,7 +69,7 @@ public class StateRepositoryEventListener {
 				"Failed to find Service that owns the Profile with identifier: " + event.get().id()
 		));
 
-		try (StateRepository repository = GitStateRepository.load(service, path)) {
+		try (StateRepository repository = factory.get(service)) {
 			repository.delete(event.get());
 
 			log.info(PROFILE_DELETED, "Successfully deleted Git profile branch for: {}", event.get());

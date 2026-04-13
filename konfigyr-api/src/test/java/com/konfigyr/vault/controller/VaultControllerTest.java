@@ -10,7 +10,8 @@ import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.vault.*;
 import com.konfigyr.vault.history.RevisionNotFoundException;
-import com.konfigyr.vault.state.GitStateRepository;
+import com.konfigyr.vault.state.StateRepository;
+import com.konfigyr.vault.state.StateRepositoryFactory;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ import static com.konfigyr.vault.controller.VaultProfileControllerTest.profileNo
 class VaultControllerTest extends AbstractControllerTest {
 
 	@Autowired
-	VaultProperties properties;
+	StateRepositoryFactory stateRepositoryFactory;
 
 	@Autowired
 	ProfileManager profiles;
@@ -39,16 +40,16 @@ class VaultControllerTest extends AbstractControllerTest {
 	Services services;
 
 	Service service;
-	GitStateRepository repository;
+	StateRepository repository;
 
 	@BeforeEach
 	void setup() {
 		service = services.get(EntityId.from(2)).orElseThrow();
-		repository = GitStateRepository.initialize(service, properties.getRepositoryDirectory());
+		repository = stateRepositoryFactory.create(service);
 	}
 
 	@AfterEach
-	void cleanup() {
+	void cleanup() throws Exception {
 		repository.destroy();
 		repository.close();
 	}

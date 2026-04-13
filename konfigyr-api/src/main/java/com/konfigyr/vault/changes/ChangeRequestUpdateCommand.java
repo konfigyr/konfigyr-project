@@ -4,7 +4,6 @@ import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.vault.ChangeRequest;
 import com.konfigyr.vault.ChangeRequestState;
-import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -34,7 +33,6 @@ import java.io.Serializable;
  * @since 1.0.0
  */
 @NullMarked
-@ValueObject
 public record ChangeRequestUpdateCommand(
 		Service service,
 		Long number,

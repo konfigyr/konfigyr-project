@@ -3,7 +3,6 @@ package com.konfigyr.vault.changes;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.vault.ApplyResult;
 import com.konfigyr.vault.Profile;
-import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.Serial;
@@ -43,7 +42,6 @@ import java.io.Serializable;
  * @since 1.0.0
  */
 @NullMarked
-@ValueObject
 public record ChangeRequestCreateCommand(
 		Service service,
 		Profile profile,

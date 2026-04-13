@@ -33,6 +33,11 @@ public class VaultStateManager implements StateRepositoryFactory, VaultAccessor 
 	}
 
 	@Override
+	public StateRepository create(Service service) {
+		return GitStateRepository.initialize(service, repositoryLocation);
+	}
+
+	@Override
 	public Vault open(AuthenticatedPrincipal principal, Service service, Profile profile) {
 		final KeysetOperations keysetOperations = keysetOperationsFactory.create(
 				KeysetDefinition.of("vault/" + service.id().serialize(), TinkAlgorithm.AES256_GCM)

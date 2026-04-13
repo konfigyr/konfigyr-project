@@ -10,7 +10,8 @@ import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.vault.*;
 import com.konfigyr.vault.changes.ChangeRequestReviewCommand;
-import com.konfigyr.vault.state.GitStateRepository;
+import com.konfigyr.vault.state.StateRepository;
+import com.konfigyr.vault.state.StateRepositoryFactory;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,13 +35,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 class VaultChangeRequestControllerTest extends AbstractControllerTest {
 
 	@Autowired
-	VaultProperties properties;
+	StateRepositoryFactory stateRepositoryFactory;
 
 	@Autowired
 	Services services;
 
 	Service service;
-	GitStateRepository repository;
+	StateRepository repository;
 
 	@BeforeEach
 	void setup() {
@@ -48,9 +49,10 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 	}
 
 	@AfterEach
-	void cleanup() {
+	void cleanup() throws Exception {
 		if (repository != null) {
 			repository.destroy();
+			repository.close();
 		}
 	}
 
@@ -256,7 +258,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should retrieve change request changes for a service and number")
 	void retrieveChangesForChangeRequest() {
-		repository = GitStateRepository.initialize(service, properties.getRepositoryDirectory());
+		repository = stateRepositoryFactory.create(service);
 
 		mvc.get().uri("/namespaces/{slug}/services/{service}/changes/{number}/changes", "konfigyr", service.slug(), "5")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
@@ -513,7 +515,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should discard change request")
 	void discardChangeRequest() {
-		repository = GitStateRepository.initialize(service, properties.getRepositoryDirectory());
+		repository = stateRepositoryFactory.create(service);
 
 		mvc.delete().uri("/namespaces/{slug}/services/{service}/changes/{number}", "konfigyr", service.slug(), "2")
 				.with(authentication(TestPrincipals.john(), OAuthScope.DELETE_PROFILES))

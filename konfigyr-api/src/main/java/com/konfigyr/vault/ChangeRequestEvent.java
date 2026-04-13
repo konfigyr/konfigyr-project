@@ -14,7 +14,7 @@ public sealed class ChangeRequestEvent extends EntityEvent permits
 		ChangeRequestEvent.Opened, ChangeRequestEvent.Merged, ChangeRequestEvent.Discarded {
 
 	/**
-	 * Creates a new {@link ChangeRequestEvent} for the given {@link EntityId} of the {@link ChangeRequest}
+	 * Creates a new {@link ChangeRequestEvent} for the given {@link EntityId} of the {@link ChangeRequest}.
 	 *
 	 * @param id the entity identifier of change request that is the event subject, cannot be {@literal null}.
 	 */

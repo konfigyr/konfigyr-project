@@ -29,7 +29,7 @@ class VaultStateManagerTest extends AbstractIntegrationTest {
 	static byte[] INVALID_STATE = Base64.decode("/8Cw4py/goA=");
 
 	@Autowired
-	VaultProperties properties;
+	StateRepositoryFactory stateRepositoryFactory;
 
 	@Autowired
 	ProfileManager profiles;
@@ -41,18 +41,18 @@ class VaultStateManagerTest extends AbstractIntegrationTest {
 	VaultAccessor accessor;
 
 	Service service;
-	GitStateRepository repository;
+	StateRepository repository;
 	AuthenticatedPrincipal principal;
 
 	@BeforeEach
 	void setup() {
 		principal = authenticatedPrincipal();
 		service = services.get(EntityId.from(2)).orElseThrow();
-		repository = GitStateRepository.initialize(service, properties.getRepositoryDirectory());
+		repository = stateRepositoryFactory.create(service);
 	}
 
 	@AfterEach
-	void cleanup() {
+	void cleanup() throws Exception {
 		repository.destroy();
 		repository.close();
 	}

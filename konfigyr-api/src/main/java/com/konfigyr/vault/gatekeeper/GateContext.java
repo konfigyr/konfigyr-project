@@ -6,6 +6,7 @@ import com.konfigyr.vault.ChangeRequestState;
 import com.konfigyr.vault.Profile;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.util.Lazy;
@@ -40,6 +41,7 @@ import org.springframework.util.Assert;
  * @since 1.0.0
  */
 @NullMarked
+@ValueObject
 final class GateContext {
 	private final EntityId serviceId;
 	private final EntityId profileId;
