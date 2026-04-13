@@ -2,7 +2,8 @@ package com.konfigyr.vault;
 
 import com.konfigyr.crypto.KeysetOperationsFactory;
 import com.konfigyr.namespace.Services;
-import com.konfigyr.vault.state.RepositoryVaultManager;
+import com.konfigyr.vault.changes.ChangeRequestManager;
+import com.konfigyr.vault.state.VaultStateManager;
 import com.konfigyr.vault.state.StateRepositoryEventListener;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -29,12 +30,18 @@ public class VaultAutoConfiguration {
 	}
 
 	@Bean
-	VaultAccessor repositoryVaultManager(
+	ChangeRequestManager changeRequestManager() {
+		return new ChangeRequestManager(context);
+	}
+
+	@Bean
+	VaultStateManager vaultStateManager(
 			ObjectProvider<VaultExtension> extensions,
+			ChangeRequestManager changeRequestManager,
 			KeysetOperationsFactory keysetOperationsFactory
 	) {
-		return new RepositoryVaultManager(VaultExtension.compose(extensions), properties.getRepositoryDirectory(),
-				keysetOperationsFactory);
+		return new VaultStateManager(VaultExtension.compose(extensions), properties.getRepositoryDirectory(),
+				changeRequestManager, keysetOperationsFactory);
 	}
 
 	@Bean

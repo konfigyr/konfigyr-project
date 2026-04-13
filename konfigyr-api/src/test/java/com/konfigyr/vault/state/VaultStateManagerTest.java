@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.modulith.test.AssertablePublishedEvents;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.MalformedInputException;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-class RepositoryVaultManagerTest extends AbstractIntegrationTest {
+class VaultStateManagerTest extends AbstractIntegrationTest {
 
 	static byte[] INVALID_STATE = Base64.decode("/8Cw4py/goA=");
 
@@ -171,25 +172,142 @@ class RepositoryVaultManagerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should fail to submit changes as it is not implemented")
-	void shouldNotSupportSubmitOperation() {
+	@Transactional
+	@DisplayName("should submit changes to the vault and create a change request")
+	void shouldSubmitChangesToProtectedProfile() {
 		final var profile = prepareServiceProfile("staging");
 		final var vault = accessor.open(principal, service, profile);
 
 		final var changes = PropertyChanges.builder()
 				.profile(profile)
-				.subject("Test changes")
+				.subject("Test proposed changes")
+				.description("Change request description")
 				.createProperty("server.port", "8080")
 				.build();
 
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.as("Should not allow to submit changes as it is not yet implemented")
-				.isThrownBy(() -> vault.submit(changes))
-				.withMessageContaining("Submitting changes is not yet supported")
-				.withNoCause();
+		final var changeRequest = vault.submit(changes);
+
+		assertThat(changeRequest)
+				.returns(service, ChangeRequest::service)
+				.returns(6L, ChangeRequest::number)
+				.returns(ChangeRequestState.OPEN, ChangeRequest::state)
+				.returns(ChangeRequestMergeStatus.NOT_APPROVED, ChangeRequest::mergeStatus)
+				.returns(changes.subject(), ChangeRequest::subject)
+				.returns(changes.description(), ChangeRequest::description)
+				.returns(principal.getDisplayName().orElse(null), ChangeRequest::createdBy);
 
 		assertThat(vault.state())
 				.as("No changes should be applied to the vault state")
+				.isEmpty();
+
+		assertThatNoException()
+				.as("Should close vault without exceptions")
+				.isThrownBy(vault::close);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should merge changes from the change request to the target profile")
+	void shouldMergeChangeRequest() {
+		final var profile = prepareServiceProfile("staging");
+		final var vault = accessor.open(principal, service, profile);
+
+		final var changes = PropertyChanges.builder()
+				.profile(profile)
+				.subject("Test proposed changes")
+				.description("Change request description")
+				.createProperty("server.port", "8080")
+				.build();
+
+		final var changeRequest = vault.submit(changes);
+		final var result = vault.merge(changeRequest);
+
+		assertThatObject(result)
+				.returns(changeRequest.subject(), ApplyResult::subject)
+				.returns(changeRequest.description(), ApplyResult::description);
+
+		assertThat(result)
+				.hasSize(1)
+				.first()
+				.returns("server.port", PropertyTransition::name)
+				.returns(PropertyTransitionType.ADDED, PropertyTransition::type)
+				.returns(null, PropertyTransition::from)
+				.returns(vault.seal(PropertyValue.create(profile.id(), "server.port", "8080")), PropertyTransition::to);
+
+		assertThat(vault.state())
+				.as("Should return sealed property state with one property")
+				.hasSize(1);
+
+		assertThatNoException()
+				.as("Should close vault without exceptions")
+				.isThrownBy(vault::close);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to merge changes from the change request due to conflicts with the target profile")
+	void mergeConflictingChangeRequest() {
+		final var profile = prepareServiceProfile("staging");
+		final var vault = accessor.open(principal, service, profile);
+
+		final var first = vault.submit(
+				PropertyChanges.builder()
+						.profile(profile)
+						.subject("Test proposed changes")
+						.description("Change request description")
+						.createProperty("server.port", "8080")
+						.build()
+		);
+
+		final var second = vault.submit(
+				PropertyChanges.builder()
+						.profile(profile)
+						.subject("Test changes")
+						.description("Additional description about the changes")
+						.createProperty("server.port", "8888")
+						.createProperty("server.address", "localhost")
+						.build()
+		);
+
+		assertThat(vault.state())
+				.as("Should return empty state before merging change requests")
+				.isEmpty();
+
+		assertThatNoException().isThrownBy(() -> vault.merge(second));
+
+		assertThatExceptionOfType(ConflictingProfileStateException.class)
+				.isThrownBy(() -> vault.merge(first));
+
+		assertThatNoException()
+				.as("Should close vault without exceptions")
+				.isThrownBy(vault::close);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should discard changes proposed by the change request")
+	void shouldDiscardChangeRequest() {
+		final var profile = prepareServiceProfile("staging");
+		final var vault = accessor.open(principal, service, profile);
+
+		final var changes = PropertyChanges.builder()
+				.profile(profile)
+				.subject("Test proposed changes")
+				.description("Change request description")
+				.createProperty("server.port", "8080")
+				.build();
+
+		final var changeRequest = vault.submit(changes);
+
+		assertThat(vault.state())
+				.as("Should return empty state before discard")
+				.isEmpty();
+
+		assertThatObject(vault.discard(changeRequest))
+				.returns(ChangeRequestState.DISCARDED, ChangeRequest::state);
+
+		assertThat(vault.state())
+				.as("Should return empty state after discard")
 				.isEmpty();
 
 		assertThatNoException()

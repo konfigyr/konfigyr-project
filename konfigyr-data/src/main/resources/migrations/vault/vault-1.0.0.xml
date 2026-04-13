@@ -305,4 +305,185 @@
 		</sql>
 	</changeSet>
 
+	<changeSet author="vspasic" id="1.0.0-create-vault-change-requests-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="vault_change_requests" />
+			</not>
+		</preConditions>
+
+		<comment>Vault Change Requests table</comment>
+
+		<createTable tableName="vault_change_requests" remarks="Stores change requests to be applied to configuration state.">
+			<column name="id" type="bigint">
+				<constraints nullable="false" primaryKey="true"/>
+			</column>
+
+			<column name="service_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="profile_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="number" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="state" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="merge_status" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="change_count" type="integer">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="branch_name" type="varchar">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="base_revision" type="varchar(64)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="head_revision" type="varchar(64)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="subject" type="varchar(128)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="description" type="text">
+				<constraints nullable="true"/>
+			</column>
+
+			<column name="created_by" type="text">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_change_requests"
+				baseColumnNames="service_id"
+				constraintName="fk_vault_change_request_owner"
+				referencedTableName="services"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_change_requests"
+				baseColumnNames="profile_id"
+				constraintName="fk_vault_change_request_target"
+				referencedTableName="vault_profiles"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addUniqueConstraint
+				tableName="vault_change_requests"
+				columnNames="service_id,number"
+				constraintName="unique_change_request"
+		/>
+
+		<createIndex tableName="vault_change_requests" indexName="idx_change_request_lookup">
+			<column name="service_id" />
+			<column name="state" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-vault-change-request-properties-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="vault_change_request_properties" />
+			</not>
+		</preConditions>
+
+		<comment>Vault Change Request property changes table</comment>
+
+		<createTable tableName="vault_change_request_properties" remarks="Stores properties that should be changed by the change request.">
+			<column name="change_request_id" type="bigint">
+				<constraints nullable="false" primaryKey="true"/>
+			</column>
+
+			<column name="property_name" type="text">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+
+			<column name="change_operation" type="varchar(16)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="new_value_checksum" type="bytea" />
+			<column name="new_value_cipher" type="bytea" />
+			<column name="old_value_checksum" type="bytea" />
+			<column name="old_value_cipher" type="bytea" />
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_change_request_properties"
+				baseColumnNames="change_request_id"
+				constraintName="fk_vault_change_request_property"
+				referencedTableName="vault_change_requests"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-vault-change-request-events-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="vault_change_request_events" />
+			</not>
+		</preConditions>
+
+		<comment>Vault Change Request events table</comment>
+
+		<createTable tableName="vault_change_request_events" remarks="Stores events that occurred during change request lifecycle.">
+			<column name="id" type="uuid" defaultValueComputed="gen_random_uuid()">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+
+			<column name="change_request_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="type" type="varchar(32)">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+
+			<column name="data" type="jsonb" remarks="Stores additional event data, like revision, comments..."/>
+
+			<column name="initiator" type="text">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="timestamp" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_change_request_events"
+				baseColumnNames="change_request_id"
+				constraintName="fk_vault_change_request_event_owner"
+				referencedTableName="vault_change_requests"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
 </databaseChangeLog>

@@ -171,10 +171,30 @@ public final class LockingVaultExtension implements VaultExtension {
 		}
 
 		@Override
-		public Vault submit(PropertyChanges changes) {
+		public ChangeRequest submit(PropertyChanges changes) {
 			lock.writeLock().lock();
 			try {
 				return delegate.submit(changes);
+			} finally {
+				lock.writeLock().unlock();
+			}
+		}
+
+		@Override
+		public ApplyResult merge(ChangeRequest changeRequest) {
+			lock.writeLock().lock();
+			try {
+				return delegate.merge(changeRequest);
+			} finally {
+				lock.writeLock().unlock();
+			}
+		}
+
+		@Override
+		public ChangeRequest discard(ChangeRequest changeRequest) {
+			lock.writeLock().lock();
+			try {
+				return delegate.discard(changeRequest);
 			} finally {
 				lock.writeLock().unlock();
 			}

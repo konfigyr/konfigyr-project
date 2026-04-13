@@ -6,7 +6,12 @@ import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.vault.*;
 import com.konfigyr.vault.Properties;
+import com.konfigyr.vault.changes.ChangeRequestCreateCommand;
+import com.konfigyr.vault.changes.ChangeRequestManager;
+import com.konfigyr.vault.changes.ChangeRequestRevision;
+import com.konfigyr.vault.changes.ChangeRequestUpdateCommand;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
@@ -17,16 +22,18 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+@Slf4j
 @Builder
 final class RepositoryVault implements Vault {
 
 	private final Service service;
 	private final Profile profile;
 	private final AuthenticatedPrincipal author;
-	private final StateRepository repository;
+	private final StateRepository stateRepository;
+	private final ChangeRequestManager changeRequestManager;
 	private final KeysetOperations keysetOperations;
 
-	private volatile PropertiesState state;
+	private volatile Revision revision;
 
 	@NonNull
 	@Override
@@ -83,17 +90,7 @@ final class RepositoryVault implements Vault {
 	@NonNull
 	@Override
 	public Properties state() {
-		if (state == null) {
-			try {
-				final RepositoryState repositoryState = repository.get(profile);
-				state = new PropertiesState(repositoryState.revision(), Properties.from(repositoryState));
-			} catch (IOException ex) {
-				throw new RepositoryStateException(RepositoryStateException.ErrorCode.CORRUPTED_STATE,
-						"Failed read repository configuration state for '%s' profile of Service(%s, %s)".formatted(
-								profile.slug(), service.id(), service.slug()), ex);
-			}
-		}
-		return state.properties();
+		return revision().properties();
 	}
 
 	@NonNull
@@ -111,43 +108,159 @@ final class RepositoryVault implements Vault {
 
 		final Changeset changeset = new Changeset(author, updated, changes);
 
-		final MergeOutcome updateOutcome = repository.update(profile, changeset);
+		final MergeOutcome updateOutcome = stateRepository.update(profile, changeset);
 
 		if (!updateOutcome.isApplied()) {
-			repository.discard(profile, updateOutcome.branch());
+			stateRepository.discard(profile, updateOutcome.branch());
 
 			throw new IllegalStateException("Failed to prepare changeset for profile '%s' of Service(%s, %s) due to: %s"
 					.formatted(profile.slug(), service.id(), service.slug(), updateOutcome));
 		}
 
-		final MergeOutcome mergeOutcome = repository.merge(profile, updateOutcome.branch());
+		final MergeOutcome mergeOutcome = stateRepository.merge(profile, updateOutcome.branch());
 
 		if (mergeOutcome.isConflicting()) {
-			repository.discard(profile, updateOutcome.branch());
+			stateRepository.discard(profile, updateOutcome.branch());
 
 			Assert.state(mergeOutcome.conflicts() != null, "Merge conflicts must not be null");
 			throw new ConflictingProfileStateException(profile, mergeOutcome.conflicts());
 		} else if (mergeOutcome.isUnknown()) {
-			repository.discard(profile, updateOutcome.branch());
+			stateRepository.discard(profile, updateOutcome.branch());
 
 			throw new IllegalStateException("Failed to apply changes to profile '%s' of Service(%s, %s) due to: %s"
 					.formatted(profile.slug(), service.id(), service.slug(), mergeOutcome));
 		}
 
 		Assert.state(mergeOutcome.isApplied(), "Unexpected outcome when attempting to merge changeset: " + mergeOutcome);
+
+		final ApplyResult result = createChangeResult(mergeOutcome, changes, current, updated);
+
+		// update the new state of the vault...
+		revision = new Revision(result.revision(), updated);
+
+		return result;
+	}
+
+	@NonNull
+	@Override
+	public ChangeRequest submit(@NonNull PropertyChanges changes) {
+		if (profile.policy() == ProfilePolicy.IMMUTABLE) {
+			throw ProfilePolicyViolationException.immutableProfile(profile);
+		}
+
+		final Properties updated = state().apply(changes, keysetOperations);
+		final Changeset changeset = new Changeset(author, updated, changes);
+
+		final MergeOutcome updateOutcome = stateRepository.update(profile, changeset);
+
+		if (!updateOutcome.isApplied()) {
+			stateRepository.discard(profile, updateOutcome.branch());
+
+			throw new IllegalStateException("Failed to prepare changeset for profile '%s' of Service(%s, %s) due to: %s"
+					.formatted(profile.slug(), service.id(), service.slug(), updateOutcome));
+		}
+
+		final ApplyResult result = createChangeResult(updateOutcome, changes, state(), updated);
+
+		try {
+			return changeRequestManager.create(new ChangeRequestCreateCommand(
+					service, profile, result, updateOutcome.branch()
+			));
+		} catch (Exception ex) {
+			stateRepository.discard(profile, updateOutcome.branch());
+			throw ex;
+		}
+	}
+
+	@NonNull
+	@Override
+	public ApplyResult merge(@NonNull ChangeRequest changeRequest) {
+		Assert.state(
+				changeRequest.state() == ChangeRequestState.OPEN,
+				() -> "ChangeRequest(id=%s, state=%s) must be in open state to be merged".formatted(
+						changeRequest.id(), changeRequest.state()
+				)
+		);
+
+		final ChangeRequestRevision changeRequestRevision = changeRequestManager.revision(changeRequest);
+		final Revision headRevision = revision();
+
+		// TODO: check revision states before merging...
+
+		final MergeOutcome mergeOutcome = stateRepository.merge(profile, changeRequestRevision.branch());
+
+		if (mergeOutcome.isConflicting()) {
+			Assert.state(mergeOutcome.conflicts() != null, "Merge conflicts must not be null");
+			throw new ConflictingProfileStateException(profile, mergeOutcome.conflicts());
+		} else if (mergeOutcome.isUnknown()) {
+			throw new IllegalStateException("Failed to apply changes to profile '%s' of Service(%s, %s) due to: %s"
+					.formatted(profile.slug(), service.id(), service.slug(), mergeOutcome));
+		}
+
 		Assert.state(mergeOutcome.revision() != null, "Merge outcome revision must not be null");
+		Assert.state(mergeOutcome.isApplied(), "Unexpected outcome when attempting to merge changeset: " + mergeOutcome);
+
+		// force the update of the new state of the vault...
+		revision = null;
+
+		changeRequestManager.update(new ChangeRequestUpdateCommand(changeRequest, author, ChangeRequestState.MERGED));
+
+		return new ApplyResult(
+				mergeOutcome.revision(),
+				headRevision.revision(),
+				changeRequest.subject(),
+				changeRequest.description(),
+				Set.copyOf(changeRequestRevision.changes()),
+				author,
+				mergeOutcome.timestamp()
+		);
+	}
+
+	@NonNull
+	@Override
+	public ChangeRequest discard(@NonNull ChangeRequest changeRequest) {
+		Assert.state(
+				changeRequest.state() == ChangeRequestState.OPEN,
+				() -> "ChangeRequest(id=%s, state=%s) must be in open state to be discarded".formatted(
+						changeRequest.id(), changeRequest.state()
+				)
+		);
+
+		final ChangeRequestRevision revision = changeRequestManager.revision(changeRequest);
+
+		try {
+			stateRepository.discard(profile, revision.branch());
+		} catch (RepositoryStateException ex) {
+			if (ex.getErrorCode() == RepositoryStateException.ErrorCode.UNKNOWN_CHANGESET) {
+				log.info("Changeset branch {} was already discarded for ChangeRequest({})", revision.branch(), changeRequest.id());
+			} else {
+				throw ex;
+			}
+		}
+
+		return changeRequestManager.update(new ChangeRequestUpdateCommand(changeRequest, author, ChangeRequestState.DISCARDED));
+	}
+
+	@Override
+	public void close() throws Exception {
+		stateRepository.close();
+	}
+
+	private ApplyResult createChangeResult(MergeOutcome outcome, PropertyChanges changes, Properties current, Properties next) {
+		Assert.state(outcome.revision() != null, "Merge outcome revision must not be null");
+
 		final SortedSet<PropertyTransition> transitions = new TreeSet<>(PropertyTransition::compareTo);
 
 		for (PropertyChange change : changes) {
 			final PropertyTransition transition = switch (change.operation()) {
 				case CREATE -> PropertyTransition.added(
 						change.name(),
-						get(updated, change.name())
+						get(next, change.name())
 				);
 				case MODIFY -> PropertyTransition.updated(
 						change.name(),
 						get(current, change.name()),
-						get(updated, change.name())
+						get(next, change.name())
 				);
 				case REMOVE -> PropertyTransition.removed(
 						change.name(),
@@ -157,34 +270,29 @@ final class RepositoryVault implements Vault {
 			transitions.add(transition);
 		}
 
-		// grab the previous revision from the state and update it
-		// to the new state of the vault using the merge outcome
-		final String parentRevision = state.revision();
-		state = new PropertiesState(mergeOutcome.revision(), updated);
-
 		return new ApplyResult(
-				mergeOutcome.revision(),
-				parentRevision,
+				outcome.revision(),
+				revision().revision(),
 				changes.subject(),
 				changes.description(),
 				Collections.unmodifiableSet(transitions),
 				author,
-				mergeOutcome.timestamp()
+				outcome.timestamp()
 		);
 	}
 
-	@NonNull
-	@Override
-	public Vault submit(@NonNull PropertyChanges changes) {
-		if (profile.policy() == ProfilePolicy.IMMUTABLE) {
-			throw ProfilePolicyViolationException.immutableProfile(profile);
+	private Revision revision() {
+		if (revision == null) {
+			try {
+				final RepositoryState repositoryState = stateRepository.get(profile);
+				revision = new Revision(repositoryState.revision(), Properties.from(repositoryState));
+			} catch (IOException ex) {
+				throw new RepositoryStateException(RepositoryStateException.ErrorCode.CORRUPTED_STATE,
+						"Failed read repository configuration state for '%s' profile of Service(%s, %s)".formatted(
+								profile.slug(), service.id(), service.slug()), ex);
+			}
 		}
-		throw new UnsupportedOperationException("Submitting changes is not yet supported.");
-	}
-
-	@Override
-	public void close() throws Exception {
-		repository.close();
+		return revision;
 	}
 
 	private static PropertyValue get(Properties properties, String name) {
@@ -194,7 +302,7 @@ final class RepositoryVault implements Vault {
 		return value;
 	}
 
-	private record PropertiesState(String revision, Properties properties) implements Serializable {
+	private record Revision(String revision, Properties properties) implements Serializable {
 		@Serial
 		private static final long serialVersionUID = 1L;
 	}

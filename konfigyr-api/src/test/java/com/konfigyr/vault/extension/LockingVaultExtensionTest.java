@@ -1,10 +1,9 @@
 package com.konfigyr.vault.extension;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.io.ByteArray;
 import com.konfigyr.namespace.Service;
-import com.konfigyr.vault.Profile;
-import com.konfigyr.vault.PropertyChanges;
-import com.konfigyr.vault.Vault;
+import com.konfigyr.vault.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
@@ -110,6 +109,62 @@ class LockingVaultExtensionTest {
 	}
 
 	@Test
+	@DisplayName("should allow multiple readers when sealing the property value")
+	void concurrentSealAllowed() throws Exception {
+		final var vault = createVault(1, 1);
+
+		final var executor = Executors.newFixedThreadPool(3);
+		final var latch = new CountDownLatch(3);
+
+		Runnable sealer = () -> {
+			vault.seal(PropertyValue.unsealed(
+					ByteArray.fromString("value"),
+					ByteArray.fromString("checksum")
+			));
+			latch.countDown();
+		};
+
+		executor.submit(sealer);
+		executor.submit(sealer);
+		executor.submit(sealer);
+
+		assertThat(latch.await(2, TimeUnit.SECONDS))
+				.as("Seal should execute concurrently")
+				.isTrue();
+
+		vault.close();
+		executor.shutdown();
+	}
+
+	@Test
+	@DisplayName("should allow multiple readers when unsealing the property value")
+	void concurrentUnsealAllowed() throws Exception {
+		final var vault = createVault(1, 1);
+
+		final var executor = Executors.newFixedThreadPool(3);
+		final var latch = new CountDownLatch(3);
+
+		Runnable unsealer = () -> {
+			vault.seal(PropertyValue.sealed(
+					ByteArray.fromString("encrypted"),
+					ByteArray.fromString("checksum")
+			));
+			latch.countDown();
+		};
+
+		executor.submit(unsealer);
+		executor.submit(unsealer);
+		executor.submit(unsealer);
+
+		assertThat(latch.await(2, TimeUnit.SECONDS))
+				.as("Unseal should execute concurrently")
+				.isTrue();
+
+		vault.close();
+		executor.shutdown();
+	}
+
+	@Test
 	@DisplayName("should block readers when writing the vault state")
 	void writerBlocksReaders() throws Exception {
 		final var vault = createVault(1, 1);
@@ -186,6 +241,82 @@ class LockingVaultExtensionTest {
 	}
 
 	@Test
+	@DisplayName("should block readers when merging the change request to the vault state")
+	void mergeBlocksReaders() throws Exception {
+		final var vault = createVault(1, 1);
+
+		final var executor = Executors.newFixedThreadPool(3);
+
+		final var writerStarted = new CountDownLatch(1);
+		final var writerFinish = new CountDownLatch(1);
+		final var executed = new AtomicBoolean(false);
+
+		executor.submit(() -> {
+			writerStarted.countDown();
+			vault.merge(mock(ChangeRequest.class));
+			writerFinish.countDown();
+		});
+
+		writerStarted.await();
+
+		executor.submit(() -> {
+			vault.state();
+			executed.set(true);
+		});
+
+		Thread.sleep(100);
+
+		assertThat(executed.get())
+				.as("Reader must block while writer holds lock")
+				.isFalse();
+
+		assertThat(writerFinish.await(2, TimeUnit.SECONDS))
+				.as("Writer should be finished")
+				.isTrue();
+
+		vault.close();
+		executor.shutdown();
+	}
+
+	@Test
+	@DisplayName("should block updates when discarding the change request")
+	void discardBlocksUpdates() throws Exception {
+		final var vault = createVault(1, 1);
+
+		final var executor = Executors.newFixedThreadPool(3);
+
+		final var writerStarted = new CountDownLatch(1);
+		final var writerFinish = new CountDownLatch(1);
+		final var executed = new AtomicBoolean(false);
+
+		executor.submit(() -> {
+			writerStarted.countDown();
+			vault.merge(mock(ChangeRequest.class));
+			writerFinish.countDown();
+		});
+
+		writerStarted.await();
+
+		executor.submit(() -> {
+			vault.submit(mock(PropertyChanges.class));
+			executed.set(true);
+		});
+
+		Thread.sleep(100);
+
+		assertThat(executed.get())
+				.as("Update must be blocked while writer holds lock")
+				.isFalse();
+
+		assertThat(writerFinish.await(2, TimeUnit.SECONDS))
+				.as("Writer should be finished")
+				.isTrue();
+
+		vault.close();
+		executor.shutdown();
+	}
+
+	@Test
 	@DisplayName("do not remove the lock entry while it is locked")
 	void lockNotRemovedWhileHeld() throws Exception {
 		final var vault = createVault(1, 1);
@@ -228,6 +359,8 @@ class LockingVaultExtensionTest {
 		doAnswer(delayed).when(vault).state();
 		doAnswer(delayed).when(vault).apply(any());
 		doAnswer(delayed).when(vault).submit(any());
+		doAnswer(delayed).when(vault).merge(any());
+		doAnswer(delayed).when(vault).discard(any());
 
 		return extension.extend(vault);
 	}

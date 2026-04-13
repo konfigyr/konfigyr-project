@@ -7,6 +7,7 @@ import com.konfigyr.hateoas.RepresentationModelAssembler;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.vault.ChangeHistory;
+import com.konfigyr.vault.ChangeRequest;
 import com.konfigyr.vault.Profile;
 import org.springframework.http.HttpMethod;
 
@@ -20,6 +21,16 @@ record VaultAssembler(Namespace namespace, Service service) {
 				.add(linkBuilder(profile).path("history").method(HttpMethod.GET).rel("change history"))
 				.add(linkBuilder(profile).path("apply").method(HttpMethod.POST).rel("apply"));
 
+	}
+
+	RepresentationModelAssembler<ChangeRequest, EntityModel<ChangeRequest>> changeRequest() {
+		return request -> EntityModel.of(request, linkBuilder(request).selfRel())
+				.add(linkBuilder(request).method(HttpMethod.PUT).rel("update"))
+				.add(linkBuilder(request).method(HttpMethod.DELETE).rel("discard changes"))
+				.add(linkBuilder(request).path("history").rel("history"))
+				.add(linkBuilder(request).path("changes").rel("property changes"))
+				.add(linkBuilder(request).path("merge").method(HttpMethod.POST).rel("merge changes"))
+				.add(linkBuilder(request).path("review").method(HttpMethod.POST).rel("submit review"));
 	}
 
 	<T> RepresentationModelAssembler<T, EntityModel<T>> of() {
@@ -50,7 +61,12 @@ record VaultAssembler(Namespace namespace, Service service) {
 				.path(profile.name())
 				.path("history")
 				.path(changeHistory.revision());
+	}
 
+	private LinkBuilder linkBuilder(ChangeRequest request) {
+		return linkBuilder()
+				.path("changes")
+				.path(request.number());
 	}
 
 }
