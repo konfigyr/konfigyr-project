@@ -51,8 +51,18 @@ abstract class AbstractDelegatingVault implements Vault {
 	}
 
 	@Override
-	public Vault submit(PropertyChanges changes) {
+	public ChangeRequest submit(PropertyChanges changes) {
 		return delegate.submit(changes);
+	}
+
+	@Override
+	public ApplyResult merge(ChangeRequest changeRequest) {
+		return delegate.merge(changeRequest);
+	}
+
+	@Override
+	public ChangeRequest discard(ChangeRequest changeRequest) {
+		return delegate.discard(changeRequest);
 	}
 
 	@Override

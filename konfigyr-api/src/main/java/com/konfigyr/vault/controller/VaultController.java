@@ -19,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,6 +71,26 @@ public class VaultController extends AbstractVaultController {
 		}
 
 		return assembler.<RevisionInformation>of().assemble(new RevisionInformation(result));
+	}
+
+	@PreAuthorize("isMember(#namespace)")
+	@RequiresScope(OAuthScope.WRITE_PROFILES)
+	@PostMapping("profiles/{profileName}/submit")
+	EntityModel<ChangeRequest> submit(
+			@PathVariable String namespace,
+			@PathVariable String service,
+			@PathVariable String profileName,
+			@RequestBody @Validated ChangesetRequest request
+	) throws Exception {
+		final VaultAssembler assembler = createAssembler(namespace, service);
+		final Profile profile = lookupProfile(assembler.service(), profileName);
+		final ChangeRequest result;
+
+		try (Vault vault = accessor.open(AuthenticatedPrincipal.resolve(), assembler.service(), profile)) {
+			result = vault.submit(request.changes(profile));
+		}
+
+		return assembler.changeRequest().assemble(result);
 	}
 
 	@PreAuthorize("isMember(#namespace)")
@@ -151,13 +170,6 @@ public class VaultController extends AbstractVaultController {
 					.build();
 		}
 
-	}
-
-	record RevisionInformation(String revision, String author, String subject, String description, OffsetDateTime timestamp) {
-		RevisionInformation(ApplyResult result) {
-			this(result.revision(), result.author().getDisplayName().orElseGet(result.author()),
-					result.subject(), result.description(), result.timestamp());
-		}
 	}
 
 }

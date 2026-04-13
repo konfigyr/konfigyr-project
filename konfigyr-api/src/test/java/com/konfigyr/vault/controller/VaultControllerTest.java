@@ -10,12 +10,14 @@ import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.vault.*;
 import com.konfigyr.vault.history.RevisionNotFoundException;
-import com.konfigyr.vault.state.GitStateRepository;
+import com.konfigyr.vault.state.StateRepository;
+import com.konfigyr.vault.state.StateRepositoryFactory;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -29,7 +31,7 @@ import static com.konfigyr.vault.controller.VaultProfileControllerTest.profileNo
 class VaultControllerTest extends AbstractControllerTest {
 
 	@Autowired
-	VaultProperties properties;
+	StateRepositoryFactory stateRepositoryFactory;
 
 	@Autowired
 	ProfileManager profiles;
@@ -38,16 +40,16 @@ class VaultControllerTest extends AbstractControllerTest {
 	Services services;
 
 	Service service;
-	GitStateRepository repository;
+	StateRepository repository;
 
 	@BeforeEach
 	void setup() {
 		service = services.get(EntityId.from(2)).orElseThrow();
-		repository = GitStateRepository.initialize(service, properties.getRepositoryDirectory());
+		repository = stateRepositoryFactory.create(service);
 	}
 
 	@AfterEach
-	void cleanup() {
+	void cleanup() throws Exception {
 		repository.destroy();
 		repository.close();
 	}
@@ -171,10 +173,10 @@ class VaultControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.convertTo(VaultController.RevisionInformation.class)
-				.returns("Test changes", VaultController.RevisionInformation::subject)
-				.returns(null, VaultController.RevisionInformation::description)
-				.returns("John Doe", VaultController.RevisionInformation::author)
+				.convertTo(RevisionInformation.class)
+				.returns("Test changes", RevisionInformation::subject)
+				.returns(null, RevisionInformation::description)
+				.returns("John Doe", RevisionInformation::author)
 				.satisfies(it -> assertThat(it.revision())
 						.isNotBlank()
 						.matches("[a-f0-9]{40}")
@@ -381,6 +383,165 @@ class VaultControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@Transactional
+	@DisplayName("should submit property changes to the configuration state for a protected service profile and create change request")
+	void createChangeRequest() {
+		final var profile = prepareServiceProfile("production");
+
+		mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/submit", "konfigyr", service.slug(), profile.slug())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_PROFILES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"Test changes\",\"description\":\"Creates a change request\",\"changes\":[{\"name\":\"server.port\",\"value\":\"8080\",\"operation\":\"CREATE\"}]}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(ChangeRequest.class)
+				.returns(6L, ChangeRequest::number)
+				.returns(ChangeRequestState.OPEN, ChangeRequest::state)
+				.returns(ChangeRequestMergeStatus.NOT_APPROVED, ChangeRequest::mergeStatus)
+				.returns(1, ChangeRequest::count)
+				.returns("Test changes", ChangeRequest::subject)
+				.returns("Creates a change request", ChangeRequest::description)
+				.returns("John Doe", ChangeRequest::createdBy)
+				.satisfies(it -> assertThat(it.createdAt())
+						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.SECONDS))
+				)
+				.satisfies(it -> assertThat(it.updatedAt())
+						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.SECONDS))
+				);
+
+		mvc.get().uri("/namespaces/{slug}/services/{service}/changes/{number}/changes", "konfigyr", service.slug(), "6")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(collectionModel(VaultChangeRequestController.ChangeRequestChange.class))
+				.extracting(CollectionModel::getContent, InstanceOfAssertFactories.ITERABLE)
+				.hasSize(1)
+				.first(InstanceOfAssertFactories.type(VaultChangeRequestController.ChangeRequestChange.class))
+				.returns("server.port", VaultChangeRequestController.ChangeRequestChange::name)
+				.returns(PropertyTransitionType.ADDED, VaultChangeRequestController.ChangeRequestChange::action)
+				.returns(null, VaultChangeRequestController.ChangeRequestChange::from)
+				.returns("8080", VaultChangeRequestController.ChangeRequestChange::to);
+
+		mvc.post().uri("/namespaces/{slug}/services/{service}/changes/{number}/merge", "konfigyr", service.slug(), "6")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_PROFILES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(RevisionInformation.class)
+				.returns("Test changes", RevisionInformation::subject)
+				.returns("Creates a change request", RevisionInformation::description)
+				.returns("John Doe", RevisionInformation::author)
+				.satisfies(it -> assertThat(it.revision())
+						.isNotBlank()
+						.matches("[a-f0-9]{40}")
+				)
+				.satisfies(it -> assertThat(it.timestamp())
+						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.SECONDS))
+				);
+	}
+
+	@Test
+	@DisplayName("should fail to submit property changes due to invalid change request payload")
+	void submitChangesWithInvalidPayload() {
+		final var profile = prepareServiceProfile("staging");
+
+		mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/submit", "konfigyr", service.slug(), profile.slug())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_PROFILES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
+						.hasTitleContaining("Invalid")
+						.hasDetailContaining("invalid request data")
+						.hasPropertySatisfying("errors", errors -> assertThat(errors)
+								.isNotNull()
+								.isInstanceOf(Collection.class)
+								.asInstanceOf(InstanceOfAssertFactories.collection(Map.class))
+								.extracting("pointer")
+								.containsExactlyInAnyOrder("changes", "name")
+						)
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to submit property changes to an unknown profile")
+	void submitChangesToUnknownProfile() {
+		mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/submit", "konfigyr", service.slug(), "unknown")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_PROFILES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"Test changes\",\"changes\":[{\"name\":\"server.port\",\"value\":\"8080\",\"operation\":\"CREATE\"}]}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(profileNotFound("unknown"));
+	}
+
+	@Test
+	@DisplayName("should fail to submit property changes to an unknown service")
+	void submitChangesToUnknownService() {
+		mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/submit", "konfigyr", "unknown-service", "live")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_PROFILES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"Test changes\",\"changes\":[{\"name\":\"server.port\",\"value\":\"8080\",\"operation\":\"CREATE\"}]}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound("unknown-service"));
+	}
+
+	@Test
+	@DisplayName("should fail to submit property changes to an unknown namespace")
+	void submitChangesToUnknownNamespace() {
+		mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/submit", "unknown-namespace", service.slug(), "staging")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_PROFILES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"Test changes\",\"changes\":[{\"name\":\"server.port\",\"value\":\"8080\",\"operation\":\"CREATE\"}]}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(namespaceNotFound("unknown-namespace"));
+	}
+
+	@Test
+	@DisplayName("should fail to submit property changes when user is not a member of a namespace")
+	void submitChangesWithoutMembership() {
+		mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/submit", "john-doe", "john-doe-blog", "live")
+				.with(authentication(TestPrincipals.jane(), OAuthScope.WRITE_PROFILES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"Test changes\",\"changes\":[{\"name\":\"server.port\",\"value\":\"8080\",\"operation\":\"CREATE\"}]}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should fail to submit property changes without required scope")
+	void submitChangesWithoutScope() {
+		mvc.post().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/submit", "john-doe", "john-doe-blog", "live")
+				.with(authentication(TestPrincipals.john()))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"Test changes\",\"changes\":[{\"name\":\"server.port\",\"value\":\"8080\",\"operation\":\"CREATE\"}]}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.WRITE_PROFILES));
+	}
+
+	@Test
 	@DisplayName("should retrieve empty change history for a profile")
 	void emptyChangeHistoryForProfile() {
 		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history", "konfigyr", service.slug(), "development")
@@ -435,7 +596,7 @@ class VaultControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should fail to retrieve property history for profile for an unkonwn revision")
+	@DisplayName("should fail to retrieve property history for profile for an unknown revision")
 	void propertyHistoryForUnknownRevision() {
 		mvc.get().uri("/namespaces/{slug}/services/{service}/profiles/{profile}/history/{revision}", "konfigyr", service.slug(), "locked", "unknown-revision")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))

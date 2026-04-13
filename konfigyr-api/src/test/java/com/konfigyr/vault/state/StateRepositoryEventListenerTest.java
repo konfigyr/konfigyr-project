@@ -1,5 +1,6 @@
 package com.konfigyr.vault.state;
 
+import com.konfigyr.crypto.KeysetOperationsFactory;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.ServiceEvent;
@@ -8,6 +9,8 @@ import com.konfigyr.namespace.Services;
 import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfileEvent;
 import com.konfigyr.vault.ProfilePolicy;
+import com.konfigyr.vault.VaultExtension;
+import com.konfigyr.vault.changes.ChangeRequestManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,8 +55,11 @@ class StateRepositoryEventListenerTest {
 
 	@BeforeEach
 	void setup(@TempDir(cleanup = CleanupMode.ALWAYS) Path directory) {
+		final var factory = new VaultStateManager(mock(VaultExtension.class), directory,
+				mock(ChangeRequestManager.class), mock(KeysetOperationsFactory.class));
+
 		root = directory;
-		listener = new StateRepositoryEventListener(services, directory);
+		listener = new StateRepositoryEventListener(services, factory);
 	}
 
 	@AfterEach

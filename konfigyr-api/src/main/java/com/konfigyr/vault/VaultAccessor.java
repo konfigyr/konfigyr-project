@@ -2,6 +2,7 @@ package com.konfigyr.vault;
 
 import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
+import org.jmolecules.ddd.annotation.Factory;
 import org.jspecify.annotations.NullMarked;
 
 /**
@@ -24,6 +25,7 @@ import org.jspecify.annotations.NullMarked;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
+@Factory
 @NullMarked
 @FunctionalInterface
 public interface VaultAccessor {

@@ -9,7 +9,8 @@ import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.vault.*;
 import com.konfigyr.vault.environment.ConfigEnvironment;
 import com.konfigyr.vault.environment.PropertySource;
-import com.konfigyr.vault.state.GitStateRepository;
+import com.konfigyr.vault.state.StateRepository;
+import com.konfigyr.vault.state.StateRepositoryFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 	private static final String SECRET = "nryjshWX-PdDHdR8yqyu1u5A2KBFgH-O_ljxbQODo-Y";
 
 	@Autowired
-	VaultProperties properties;
+	StateRepositoryFactory stateRepositoryFactory;
 
 	@Autowired
 	ProfileManager profiles;
@@ -117,7 +118,7 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 	void retrieveConfigs() throws Exception {
 		final Service service = services.get(EntityId.from(1)).orElseThrow();
 		final Profile profile = updateProfilePolicy(lookupProfile("live", service), ProfilePolicy.UNPROTECTED);
-		final GitStateRepository repository = GitStateRepository.initialize(service, properties.getRepositoryDirectory());
+		final StateRepository repository = stateRepositoryFactory.create(service);
 
 		try {
 			repository.create(profile);
