@@ -33,7 +33,6 @@ export function ServiceNavigationMenu({ namespace, service }: { namespace: Names
               to="/namespace/$namespace/services/$service/requests"
               params={{ namespace: namespace.slug, service: service.slug }}
               activeProps={{ 'data-active': true }}
-              activeOptions={{ exact: true }}
               className={navigationMenuTriggerStyle()}
             >
               Change requests
@@ -47,7 +46,6 @@ export function ServiceNavigationMenu({ namespace, service }: { namespace: Names
               to="/namespace/$namespace/services/$service/manifest"
               params={{ namespace: namespace.slug, service: service.slug }}
               activeProps={{ 'data-active': true }}
-              activeOptions={{ exact: true }}
               className={navigationMenuTriggerStyle()}
             >
               Manifest

@@ -204,7 +204,7 @@ public class PagedModel<T> extends CollectionModel<T> {
 		 * @param page the page object containing elements and page metadata, can't be {@literal null}.
 		 */
 		public PageMetadata(@NonNull Page<?> page) {
-			this(page.getSize(), page.getNumber(), page.getTotalElements(), page.getTotalPages());
+			this(page.getSize(), page.getNumber() + 1, page.getTotalElements(), page.getTotalPages());
 		}
 	}
 }

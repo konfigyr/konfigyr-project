@@ -95,7 +95,7 @@ public class RepresentationMarshallingTest {
 
 		assertThat(json)
 				.isEqualTo("{\"data\":[{\"firstName\":\"John\",\"lastName\":\"Doe\",\"links\":[{\"rel\":\"self\",\"href\":\"https://localhost/1\",\"method\":\"GET\"}]}]," +
-						"\"metadata\":{\"size\":1,\"number\":0,\"total\":1,\"pages\":1}," +
+						"\"metadata\":{\"size\":1,\"number\":1,\"total\":1,\"pages\":1}," +
 						"\"links\":[{\"rel\":\"self\",\"href\":\"https://localhost\",\"method\":\"GET\"}]}");
 
 		assertThatObject(mapper.readValue(json, pageTypeFor(Person.class)))

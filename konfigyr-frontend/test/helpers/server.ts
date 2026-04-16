@@ -1,5 +1,6 @@
 import { setupServer } from 'msw/node';
 import account from './server/account';
+import changeRequests from './server/change-requests';
 import kms from './server/kms';
 import namespaces from './server/namespaces';
 import applications from './server/namespace/applications';
@@ -10,6 +11,7 @@ import vault from './server/vault';
 
 export const handlers = [
   ...account,
+  ...changeRequests,
   ...kms,
   ...namespaces,
   ...applications,

@@ -54,7 +54,7 @@ class PagedModelTest {
 		assertThat(metadata)
 				.isNotNull()
 				.returns(2L, PagedModel.PageMetadata::size)
-				.returns(0L, PagedModel.PageMetadata::number)
+				.returns(1L, PagedModel.PageMetadata::number)
 				.returns(5L, PagedModel.PageMetadata::totalElements)
 				.returns(3L, PagedModel.PageMetadata::totalPages);
 	}

@@ -58,7 +58,7 @@ describe('components | vault | change-history | <ChangeHistorySidebar/>', () => 
       />,
     );
 
-    expect(container.querySelector('[data-slot="changeset-history-skeleton"]'))
+    expect(container.querySelector('[data-slot="property-transition-item-skeleton"]'))
       .toBeInTheDocument();
   });
 

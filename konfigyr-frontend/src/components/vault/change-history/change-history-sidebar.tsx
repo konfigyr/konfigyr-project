@@ -1,17 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
 import { FormattedDate, FormattedMessage } from 'react-intl';
-import {
-  GalleryVerticalEndIcon,
-  MinusIcon,
-  PlusIcon,
-} from 'lucide-react';
+import { GalleryVerticalEndIcon } from 'lucide-react';
 import { useGetChangeHistoryDetails } from '@konfigyr/hooks';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { ErrorState } from '@konfigyr/components/error';
 import { MissingPropertyDescriptionLabel } from '@konfigyr/components/artifactory/messages';
-import { PropertyName } from '@konfigyr/components/artifactory/property-name';
 import { RelativeDate } from '@konfigyr/components/messages/relative-date';
 import { ChangesCountLabel } from '@konfigyr/components/vault/messages';
 import { Badge } from '@konfigyr/components/ui/badge';
@@ -22,15 +16,16 @@ import {
   SheetTitle,
 } from '@konfigyr/components/ui/sheet';
 import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { ScrollArea } from '@konfigyr/components/ui/scroll-area';
-import { cn } from '@konfigyr/components/utils';
-import { PropertyTransitionTypeLabel } from './property-transition-type';
+import {
+  PropertyTransitionItemGroup,
+  PropertyTransitionItemSkeleton,
+  useGroupedPropertyTransitions,
+} from './property-transition';
 
 import type { ReactNode } from 'react';
 import type {
   ChangeHistory,
-  ChangeHistoryRecord,
   Namespace,
   Profile,
   Service,
@@ -64,41 +59,6 @@ function ChangeHistoryTimestamp({ history }: { history: ChangeHistory }) {
   );
 }
 
-function ChangeHistorySkeleton() {
-  return (
-    <div data-slot="changeset-history-skeleton" className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <Skeleton className="size-5 rounded-full" />
-        <Skeleton className="h-4 w-16" />
-      </div>
-      <Skeleton className="h-3 w-48" />
-      <Skeleton className="h-8" />
-      <div className="flex items-center gap-2">
-        <Skeleton className="size-5 rounded-full" />
-        <Skeleton className="h-4 w-20" />
-      </div>
-      <Skeleton className="h-3 w-96" />
-      <Skeleton className="h-16" />
-    </div>
-  );
-}
-
-function ChangeHistoryPropertyValue({ variant, value, className }: { variant: 'addition' | 'removal', value: ReactNode, className?: string }) {
-  return (
-    <div className={cn(
-      'flex items-center gap-2 px-3 py-1 leading-loose',
-      variant === 'removal' && 'bg-destructive/5 text-destructive/80',
-      variant === 'addition' && 'bg-emerald-500/5 text-emerald-700',
-      className,
-    )}>
-      <span className="select-none shrink-0">
-        {variant === 'removal' ? <MinusIcon className="size-2" /> : <PlusIcon className="size-2" />}
-      </span>
-      <span className="break-all font-medium">{value}</span>
-    </div>
-  );
-}
-
 function ChangeHistoryStat({ label, value }: { label: ReactNode, value: ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
@@ -112,80 +72,7 @@ function ChangeHistoryStat({ label, value }: { label: ReactNode, value: ReactNod
   );
 }
 
-function ChangeHistoryTimelineItemGroup({ type, records = [] }: {
-  type: PropertyTransitionType,
-  records?: Array<ChangeHistoryRecord>,
-}) {
-  if (records.length === 0) {
-    return null;
-  }
-
-  return (
-    <li key={type}>
-      <PropertyTransitionTypeLabel type={type} />
-
-      {records.map(record => (
-        <ChangeHistoryTimelineItem key={record.name} record={record} />
-      ))}
-    </li>
-  );
-}
-
-function ChangeHistoryTimelineItem({ record }: { record: ChangeHistoryRecord }) {
-  return (
-    <div className="flex flex-col text-xs">
-      <PropertyName
-        value={record.name}
-        className="text-xs text-foreground/90 leading-loose overflow-hidden text-ellipsis whitespace-nowrap"
-        title={record.name}
-      />
-
-      {record.action === PropertyTransitionType.ADDED && (
-        <ChangeHistoryPropertyValue
-          variant="addition"
-          value={record.to}
-        />
-      )}
-
-      {record.action === PropertyTransitionType.UPDATED && (
-        <span className="overflow-hidden border rounded-md">
-          <ChangeHistoryPropertyValue
-            className="border-b border-border/50"
-            variant="removal"
-            value={record.from}
-          />
-          <ChangeHistoryPropertyValue
-            variant="addition"
-            value={record.to}
-          />
-        </span>
-      )}
-
-      {record.action === PropertyTransitionType.REMOVED && (
-        <ChangeHistoryPropertyValue
-          variant="removal"
-          value={record.from}
-        />
-      )}
-    </div>
-  );
-}
-
 const TRANSITIONS = Object.values(PropertyTransitionType);
-
-function useGroupedHistoryRecords(records: Array<ChangeHistoryRecord>) {
-  return useMemo(
-    () => records.reduce((state, record) => {
-      const { action } = record;
-      if (!state[action]) {
-        state[action] = [];
-      }
-      state[action].push(record);
-      return state;
-    }, {} as Record<PropertyTransitionType, Array<ChangeHistoryRecord> | undefined>),
-    [records],
-  );
-}
 
 function ChangeHistoryTimeline({ history, namespace, service, profile }: {
   history: ChangeHistory,
@@ -194,7 +81,7 @@ function ChangeHistoryTimeline({ history, namespace, service, profile }: {
   profile: Profile,
 }) {
   const { data, error, isError, isPending } = useGetChangeHistoryDetails(namespace, service, profile, history);
-  const records = useGroupedHistoryRecords(data || []);
+  const records = useGroupedPropertyTransitions(data || []);
 
   if (isError) {
     return (
@@ -204,7 +91,7 @@ function ChangeHistoryTimeline({ history, namespace, service, profile }: {
 
   if (isPending) {
     return (
-      <ChangeHistorySkeleton />
+      <PropertyTransitionItemSkeleton />
     );
   }
 
@@ -225,11 +112,12 @@ function ChangeHistoryTimeline({ history, namespace, service, profile }: {
   return (
     <ul className="space-y-4">
       {TRANSITIONS.map((type) => (
-        <ChangeHistoryTimelineItemGroup
-          key={type}
-          type={type}
-          records={records[type]}
-        />
+        <li key={type}>
+          <PropertyTransitionItemGroup
+            type={type}
+            transitions={records[type]}
+          />
+        </li>
       ))}
     </ul>
   );

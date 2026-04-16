@@ -146,13 +146,13 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.hasSize(3)
 				.satisfiesExactly(
 						it -> assertThat(it)
-								.returns(ChangeRequestHistory.Type.DISCARDED, ChangeRequestHistory::type)
+								.returns(ChangeRequestHistory.Type.CREATED, ChangeRequestHistory::type)
 								.returns("Jane Doe", ChangeRequestHistory::initiator),
 						it -> assertThat(it)
 								.returns(ChangeRequestHistory.Type.COMMENTED, ChangeRequestHistory::type)
 								.returns("John Doe", ChangeRequestHistory::initiator),
 						it -> assertThat(it)
-								.returns(ChangeRequestHistory.Type.CREATED, ChangeRequestHistory::type)
+								.returns(ChangeRequestHistory.Type.DISCARDED, ChangeRequestHistory::type)
 								.returns("Jane Doe", ChangeRequestHistory::initiator)
 				);
 	}
@@ -211,7 +211,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.history(changeRequestFor(2, 4)))
 				.hasSize(2)
-				.first()
+				.last()
 				.returns(event, ChangeRequestHistory::type)
 				.returns("Jane Doe", ChangeRequestHistory::initiator)
 				.satisfies(it -> assertThat(it.timestamp())
@@ -249,7 +249,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(4)
-				.first()
+				.last()
 				.returns(ChangeRequestHistory.Type.RENAMED, ChangeRequestHistory::type)
 				.returns("John Doe", ChangeRequestHistory::initiator);
 	}
@@ -273,12 +273,12 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it)
 								.returns(ChangeRequestHistory.Type.RENAMED, ChangeRequestHistory::type)
 								.returns("John Doe", ChangeRequestHistory::initiator),
-						Index.atIndex(0)
+						Index.atIndex(2)
 				)
 				.satisfies(it -> assertThat(it)
 								.returns(ChangeRequestHistory.Type.DISCARDED, ChangeRequestHistory::type)
 								.returns("John Doe", ChangeRequestHistory::initiator),
-						Index.atIndex(1)
+						Index.atIndex(3)
 				);
 	}
 
@@ -298,7 +298,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(4)
-				.first()
+				.last()
 				.returns(ChangeRequestHistory.Type.RENAMED, ChangeRequestHistory::type)
 				.returns("John Doe", ChangeRequestHistory::initiator);
 	}
@@ -318,7 +318,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(4)
-				.first()
+				.last()
 				.returns(ChangeRequestHistory.Type.RENAMED, ChangeRequestHistory::type)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
 	}
@@ -377,7 +377,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(4)
-				.first()
+				.last()
 				.returns(ChangeRequestHistory.Type.COMMENTED, ChangeRequestHistory::type)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
 	}
@@ -395,7 +395,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(4)
-				.first()
+				.last()
 				.returns(ChangeRequestHistory.Type.APPROVED, ChangeRequestHistory::type)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
 	}
@@ -413,7 +413,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(4)
-				.first()
+				.last()
 				.returns(ChangeRequestHistory.Type.CHANGES_REQUESTED, ChangeRequestHistory::type)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
 	}

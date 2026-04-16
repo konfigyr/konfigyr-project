@@ -37,6 +37,7 @@ import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRou
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/artifacts'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/route'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/requests/$number/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history'
 
@@ -222,6 +223,15 @@ const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute =
         AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
     } as any,
   )
+const AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport.update(
+    {
+      id: '/requests/$number/',
+      path: '/requests/$number/',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+    } as any,
+  )
 const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute =
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport.update(
     {
@@ -271,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace/services/$service/requests/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
   '/namespace/$namespace/services/$service/profiles/$profile/history': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute
   '/namespace/$namespace/services/$service/profiles/$profile/': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute
+  '/namespace/$namespace/services/$service/requests/$number/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute
 }
 export interface FileRoutesByTo {
   '/api/$': typeof ApiSplatRoute
@@ -296,6 +307,7 @@ export interface FileRoutesByTo {
   '/namespace/$namespace/services/$service/requests': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
   '/namespace/$namespace/services/$service/profiles/$profile/history': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute
   '/namespace/$namespace/services/$service/profiles/$profile': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute
+  '/namespace/$namespace/services/$service/requests/$number': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -329,6 +341,7 @@ export interface FileRoutesById {
   '/_authenticated/namespace/$namespace/services/$service/requests/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
   '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute
   '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/': typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute
+  '/_authenticated/namespace/$namespace/services/$service/requests/$number/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -362,6 +375,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/services/$service/requests/'
     | '/namespace/$namespace/services/$service/profiles/$profile/history'
     | '/namespace/$namespace/services/$service/profiles/$profile/'
+    | '/namespace/$namespace/services/$service/requests/$number/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/api/$'
@@ -387,6 +401,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/services/$service/requests'
     | '/namespace/$namespace/services/$service/profiles/$profile/history'
     | '/namespace/$namespace/services/$service/profiles/$profile'
+    | '/namespace/$namespace/services/$service/requests/$number'
   id:
     | '__root__'
     | '/_authenticated'
@@ -419,6 +434,7 @@ export interface FileRouteTypes {
     | '/_authenticated/namespace/$namespace/services/$service/requests/'
     | '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history'
     | '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/'
+    | '/_authenticated/namespace/$namespace/services/$service/requests/$number/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -626,6 +642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
+    '/_authenticated/namespace/$namespace/services/$service/requests/$number/': {
+      id: '/_authenticated/namespace/$namespace/services/$service/requests/$number/'
+      path: '/requests/$number'
+      fullPath: '/namespace/$namespace/services/$service/requests/$number/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    }
     '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/': {
       id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/'
       path: '/'
@@ -725,6 +748,7 @@ interface AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren {
   AuthenticatedNamespaceNamespaceServicesServiceIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRoute
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteWithChildren
   AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute
+  AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute
 }
 
 const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren: AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren =
@@ -741,6 +765,8 @@ const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteChildren: Authenti
       AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteWithChildren,
     AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute:
       AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute,
+    AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute:
+      AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute,
   }
 
 const AuthenticatedNamespaceNamespaceServicesServiceRouteRouteWithChildren =

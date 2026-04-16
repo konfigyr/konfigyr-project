@@ -13,14 +13,14 @@ import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 
 import type { PaginationProps } from '@konfigyr/components/ui/pagination';
 
-function PaginationComponent(props: PaginationProps & { range?: number }) {
+function PaginationComponent({ range, ...props }: PaginationProps & { range?: number }) {
   return (
     <Pagination {...props}>
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious />
         </PaginationItem>
-        <PaginationRange range={props.range}>
+        <PaginationRange range={range}>
           {state => (
             <PaginationLink isActive={state.active}>{state.page}</PaginationLink>
           )}
