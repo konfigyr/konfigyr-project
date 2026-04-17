@@ -33,7 +33,7 @@ describe('components | kms | <CreateKeysetForm/>', () => {
     );
 
     await userEvents.click(
-      result.getByRole('button'),
+      result.getByRole('button', { name: 'Create keyset' }),
     );
 
     await waitFor(() => {
@@ -65,7 +65,7 @@ describe('components | kms | <CreateKeysetForm/>', () => {
     );
 
     await userEvents.click(
-      result.getByRole('button'),
+      result.getByRole('button', { name: 'Create keyset' }),
     );
 
     await waitFor(() => {
@@ -96,7 +96,7 @@ describe('components | kms | <CreateKeysetForm/>', () => {
     );
 
     await userEvents.click(
-      result.getByRole('button'),
+      result.getByRole('button', { name: 'Create keyset' }),
     );
 
     await waitFor(() => {
