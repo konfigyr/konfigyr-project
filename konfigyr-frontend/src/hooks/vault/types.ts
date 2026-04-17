@@ -35,6 +35,13 @@ export const ConfigurationPropertyState = {
   ...UnchangedPropertyState,
 };
 
+export interface PropertyTransition {
+  name: string;
+  action: PropertyTransitionType;
+  from?: string;
+  to?: string;
+}
+
 /**
  * Interface that represents the value of a configuration property. The value contains two
  * different states, the encoded and the decoded.
@@ -73,21 +80,98 @@ export enum Operation {
   REMOVE = 'REMOVE',
 }
 
-export interface ApplyResult {
+/**
+ * Interface that represents the latest revision information of a vault when a change
+ * is applied or a change request is merged.
+ */
+export interface VaultRevisionInformation {
   revision: string;
-  changes: Map<string, ChangeHistoryRecord>
+  author: string;
+  subject: string;
+  description?: string;
+  timestamp: string;
 }
 
 export interface PropertyChange {
-  name: string,
-  operation: Operation,
-  value?: string,
+  name: string;
+  operation: Operation;
+  value?: string;
 }
 
 export interface ApplyRequest {
-  name: string,
-  description?: string,
-  changes: Array<PropertyChange>
+  name: string;
+  description?: string;
+  changes: Array<PropertyChange>;
+}
+
+export enum ChangeRequestState {
+  OPEN = 'OPEN',
+  MERGED = 'MERGED',
+  DISCARDED = 'DISCARDED',
+}
+
+export enum ChangeRequestMergeStatus {
+  NOT_OPEN = 'NOT_OPEN',
+  OUTDATED = 'OUTDATED',
+  CONFLICTING = 'CONFLICTING',
+  NOT_APPROVED = 'NOT_APPROVED',
+  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
+  CHECKING = 'CHECKING',
+  MERGEABLE = 'MERGEABLE',
+}
+
+export interface ChangeRequest {
+  id: string;
+  service: Service;
+  profile: Profile;
+  number: number;
+  state: ChangeRequestState;
+  mergeStatus: ChangeRequestMergeStatus
+  subject: string;
+  description?: string;
+  count: number;
+  createdBy: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ChangeRequestChange extends PropertyTransition {
+}
+
+export enum ChangeRequestReviewType {
+  COMMENT = 'COMMENT',
+  APPROVE = 'APPROVE',
+  REQUEST_CHANGES = 'REQUEST_CHANGES',
+}
+
+export interface SubmitChangeRequestReview {
+  state: ChangeRequestReviewType;
+  comment?: string;
+}
+
+export enum ChangeRequestHistoryType {
+  CREATED = 'CREATED',
+  APPROVED = 'APPROVED',
+  COMMENTED = 'COMMENTED',
+  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
+  RENAMED = 'RENAMED',
+  MERGED = 'MERGED',
+  DISCARDED = 'DISCARDED',
+}
+
+export interface ChangeRequestHistory {
+  id: string;
+  type: ChangeRequestHistoryType;
+  initiator: string;
+  timestamp: string;
+}
+
+export interface ChangeRequestQuery extends Record<string, string | number | boolean | undefined> {
+  term?: string;
+  profile?: string;
+  state?: ChangeRequestState;
+  page?: number;
+  size?: number;
 }
 
 export interface ChangeHistory {
@@ -100,13 +184,9 @@ export interface ChangeHistory {
   appliedAt: string;
 }
 
-export interface ChangeHistoryRecord {
+export interface ChangeHistoryRecord extends PropertyTransition {
   id: string;
   revision: string;
-  name: string;
-  action: PropertyTransitionType;
-  from: string,
-  to: string,
   appliedBy: string;
   appliedAt: string;
 }

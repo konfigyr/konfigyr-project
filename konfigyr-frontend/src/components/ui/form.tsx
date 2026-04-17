@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { SearchIcon } from 'lucide-react';
 import { useRender } from '@base-ui/react/use-render';
 import { createFormHook, createFormHookContexts } from '@tanstack/react-form';
 import { Button } from '@konfigyr/components/ui/button';
@@ -11,6 +12,11 @@ import {
   FieldLabel,
 } from '@konfigyr/components/ui/field';
 import { Input } from '@konfigyr/components/ui/input';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@konfigyr/components/ui/input-group';
 import { Label } from '@konfigyr/components/ui/label';
 import { Switch } from '@konfigyr/components/ui/switch';
 import { Textarea } from '@konfigyr/components/ui/textarea';
@@ -51,7 +57,7 @@ const { fieldContext, formContext, useFieldContext, useFormContext } = createFor
 /* Create a custom form control context to be used by internal components */
 const FormControlContext = React.createContext<FormControlContextValue<any>>({} as any);
 
-function useFormControl<TData extends Primitive>(): FormControlContextValue<TData> {
+export function useFormControl<TData extends Primitive>(): FormControlContextValue<TData> {
   return React.useContext<FormControlContextValue<TData>>(FormControlContext);
 }
 
@@ -215,6 +221,30 @@ export function FormInput(props: React.ComponentProps<typeof Input>) {
   );
 }
 
+export function FormSearchInput(props: React.ComponentProps<typeof InputGroupInput>) {
+  const field = useFieldContext<string | number>();
+
+  const onChange = (event: ChangeEvent<HTMLInputElement>) => {
+    field.handleChange(event.target.value);
+  };
+
+  return (
+    <InputGroup>
+      <InputGroupInput
+        autoComplete="off"
+        type="search"
+        value={field.state.value}
+        onChange={onChange}
+        onBlur={() => field.handleBlur()}
+        {...props}
+      />
+      <InputGroupAddon>
+        <SearchIcon size="1rem" className="text-muted-foreground" />
+      </InputGroupAddon>
+    </InputGroup>
+  );
+}
+
 export function FormSwitch(props: React.ComponentProps<typeof Switch>) {
   const { formInputId, field } = useFormControl<boolean>();
 
@@ -260,6 +290,7 @@ export const { useAppForm: useForm } = createFormHook({
     Control: FormControl,
     Input: FormInput,
     Label: Label,
+    SearchInput: FormSearchInput,
     Switch: FormSwitch,
     Textarea: FormTextarea,
   },

@@ -45,7 +45,7 @@ public interface StateRepositoryFactory {
 	 * the existing instance or fail, depending on the desired semantics.
 	 *
 	 * @param service the service for which the repository should be created, can't be {@literal null}
-	 * @return a newly created and initialized state repository, never {@link null}
+	 * @return a newly created and initialized state repository, never {@literal null}
 	 * @throws RepositoryStateException if repository can not be created for the given service
 	 */
 	StateRepository create(Service service);
@@ -60,7 +60,7 @@ public interface StateRepositoryFactory {
 	 * that the returned repository reflects the current state associated with the service.
 	 *
 	 * @param service the service whose repository should be retrieved, can't be {@literal null}
-	 * @return the existing state repository for the service, never {@link null}
+	 * @return the existing state repository for the service, never {@literal null}
 	 * @throws RepositoryStateException if no repository exists for the given service
 	 */
 	StateRepository get(Service service);

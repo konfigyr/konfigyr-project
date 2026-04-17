@@ -65,7 +65,7 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 				)
 				.satisfies(it -> assertThat(it.getMetadata())
 						.returns(20L, PagedModel.PageMetadata::size)
-						.returns(0L, PagedModel.PageMetadata::number)
+						.returns(1L, PagedModel.PageMetadata::number)
 						.returns(2L, PagedModel.PageMetadata::totalElements)
 						.returns(1L, PagedModel.PageMetadata::totalPages)
 				)

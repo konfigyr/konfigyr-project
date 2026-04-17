@@ -3,6 +3,7 @@ export * from './account/query';
 export * from './kms/query';
 export * from './namespace/context';
 export * from './namespace/query';
+export * from './vault/change-requests';
 export * from './vault/changeset';
 export * from './vault/profiles';
 export * from './vault/properties';

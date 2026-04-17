@@ -1,6 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
+import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { CreateProfile, Profile } from '@konfigyr/hooks/vault/types';
 
@@ -22,7 +23,7 @@ export const getProfilesQuery = (namespace: Namespace, service: Service) => {
     queryFn: async ({ signal }): Promise<Array<Profile>> => {
       const uri = `api/namespaces/${namespace.slug}/services/${service.slug}/profiles`;
       const response = await request.get(uri, { signal })
-        .json<{ data: Array<Profile> }>();
+        .json<PageResponse<Profile>>();
 
       return response.data;
     },

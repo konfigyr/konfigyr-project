@@ -176,8 +176,8 @@ export function PaginationRange({ range = 5, children }: {
       const visible: Array<number> = [];
 
       // determine page range limits
-      const lowerLimit = page - Math.floor((range - 1) / 2);
-      const upperLimit = page + Math.ceil((range - 1) / 2);
+      const lowerLimit = Math.max(page - Math.floor((range - 1) / 2), 1);
+      const upperLimit = Math.min(page + Math.ceil((range - 1) / 2), pages);
 
       for (let i = lowerLimit; i <= upperLimit; i++) {
         // if page is too low shift the range by one page up, if possible
@@ -224,6 +224,7 @@ export function PaginationLink({
   isActive = false,
   size = 'icon',
   disabled = false,
+  render,
   ...props
 }: PaginationLinkProps) {
   return useRender({
@@ -243,6 +244,7 @@ export function PaginationLink({
         className,
       ),
     }, props),
+    render,
     state: {
       slot: 'pagination-link',
       active: String(isActive),

@@ -137,7 +137,7 @@ public class ChangeRequestManager {
 		return context.select()
 				.from(VAULT_CHANGE_REQUEST_EVENTS)
 				.where(VAULT_CHANGE_REQUEST_EVENTS.CHANGE_REQUEST_ID.eq(request.id().get()))
-				.orderBy(VAULT_CHANGE_REQUEST_EVENTS.TIMESTAMP.desc())
+				.orderBy(VAULT_CHANGE_REQUEST_EVENTS.TIMESTAMP.asc())
 				.fetch(ChangeRequestManager::toChangeRequestHistory);
 	}
 
@@ -257,6 +257,13 @@ public class ChangeRequestManager {
 		}
 
 		insert.execute();
+
+		context.insertInto(VAULT_CHANGE_REQUEST_EVENTS)
+				.set(VAULT_CHANGE_REQUEST_EVENTS.CHANGE_REQUEST_ID, id)
+				.set(VAULT_CHANGE_REQUEST_EVENTS.TYPE, ChangeRequestHistory.Type.CREATED.name())
+				.set(VAULT_CHANGE_REQUEST_EVENTS.INITIATOR, author.getDisplayName().orElseGet(author))
+				.set(VAULT_CHANGE_REQUEST_EVENTS.TIMESTAMP, result.timestamp())
+				.execute();
 
 		return new ChangeRequest(
 				EntityId.from(id),

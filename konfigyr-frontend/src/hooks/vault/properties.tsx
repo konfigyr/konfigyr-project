@@ -4,6 +4,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
+import type { CursorResponse } from '@konfigyr/hooks/hateoas/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { ChangeHistoryRecord, Profile } from '@konfigyr/hooks/vault/types';
 
@@ -17,15 +18,9 @@ export const propertyKeys = {
 export const getPropertyHistoryQuery = (namespace: Namespace, service: Service, profile: Profile, name: string) => {
   return queryOptions({
     queryKey: propertyKeys.getPropertyHistory(profile, name),
-    queryFn: async () => {
-      return await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/property/${name}/history`).json<{
-        data: Array<ChangeHistoryRecord>;
-        metadata: {
-          size: number,
-          next?: string | null,
-          previous?: string | null,
-        }
-      }>();
+    queryFn: async (): Promise<CursorResponse<ChangeHistoryRecord>> => {
+      return await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/property/${name}/history`)
+        .json<CursorResponse<ChangeHistoryRecord>>();
     },
   });
 };

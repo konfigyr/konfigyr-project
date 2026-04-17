@@ -77,7 +77,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 				.extracting(PagedModel::getMetadata)
 				.isNotNull()
 				.returns(20L, PagedModel.PageMetadata::size)
-				.returns(0L, PagedModel.PageMetadata::number)
+				.returns(1L, PagedModel.PageMetadata::number)
 				.returns(1L, PagedModel.PageMetadata::totalElements)
 				.returns(1L, PagedModel.PageMetadata::totalPages);
 	}
@@ -86,7 +86,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 	@DisplayName("should paginate search for change requests")
 	void paginateChangeRequestSearch() {
 		mvc.get().uri("/namespaces/{slug}/services/{service}/changes", "konfigyr", service.slug())
-				.param("page", "1")
+				.param("page", "2")
 				.param("size", "2")
 				.param("sort", "updated,desc")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_PROFILES))
@@ -104,7 +104,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 				.extracting(PagedModel::getMetadata)
 				.isNotNull()
 				.returns(2L, PagedModel.PageMetadata::size)
-				.returns(1L, PagedModel.PageMetadata::number)
+				.returns(2L, PagedModel.PageMetadata::number)
 				.returns(5L, PagedModel.PageMetadata::totalElements)
 				.returns(3L, PagedModel.PageMetadata::totalPages);
 	}

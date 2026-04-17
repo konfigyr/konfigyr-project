@@ -1,6 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
+import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
 import type {
   CreateKeyset,
   Keyset,
@@ -30,7 +31,7 @@ export const getKeysetsQuery = (namespace: string, query: KeysetSearchQuery = {}
     queryFn: async ({ signal }) => {
       const response = await request.get(`api/namespaces/${namespace}/kms`, {
         signal, searchParams: query,
-      }).json<{ data: Array<Keyset> }>();
+      }).json<PageResponse<Keyset>>();
 
       return response.data;
     },

@@ -3,6 +3,8 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { useGetAccount } from '@konfigyr/hooks/account/query';
 import request from '@konfigyr/lib/http';
 import { NamespaceRole } from './types';
+
+import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
 import type {
   CreateNamespace,
   CreateNamespaceApplication,
@@ -37,7 +39,7 @@ export const getNamespacesQuery = () => {
     queryKey: namespaceKeys.getNamespaces(),
     queryFn: async ({ signal }): Promise<Array<Namespace>> => {
       const response = await request.get('api/namespaces', { signal })
-        .json<{ data: Array<Namespace> }>();
+        .json<PageResponse<Namespace>>();
 
       return response.data;
     },
@@ -134,7 +136,7 @@ export const getNamespaceMembers = (slug: string) => {
     queryKey: namespaceKeys.getNamespaceMembers(slug),
     queryFn: async (): Promise<Array<Member>> => {
       const response = await request.get(`api/namespaces/${slug}/members`)
-        .json<{ data: Array<Member> }>();
+        .json<PageResponse<Member>>();
       return response.data;
     },
   });
@@ -149,7 +151,7 @@ export const getNamespaceInvitations = (slug: string) => {
     queryKey: namespaceKeys.getNamespaceInvitations(slug),
     queryFn: async (): Promise<Array<Invitation>> => {
       const response = await request.get(`api/namespaces/${slug}/invitations`)
-        .json<{ data: Array<Invitation> }>();
+        .json<PageResponse<Invitation>>();
       return response.data;
     },
   });
@@ -215,7 +217,7 @@ export const getNamespaceServicesQuery = (slug: string) => {
     queryKey: namespaceKeys.getNamespaceServices(slug),
     queryFn: async ({ signal }): Promise<Array<Service>> => {
       const response = await request.get(`api/namespaces/${slug}/services`, { signal })
-        .json<{ data: Array<Service> }>();
+        .json<PageResponse<Service>>();
 
       return response.data;
     },
@@ -317,7 +319,7 @@ export const useGetNamespaceApplications = (slug: string) => {
       queryKey: namespaceKeys.getNamespaceApplications(slug),
       queryFn: async (): Promise<Array<NamespaceApplication>> => {
         const response = await request.get(`api/namespaces/${slug}/applications`)
-          .json<{ data: Array<NamespaceApplication> }>();
+          .json<PageResponse<NamespaceApplication>>();
         return response.data;
       },
     }),

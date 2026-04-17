@@ -6,18 +6,20 @@ import { useJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
 import { ConfigurationPropertyState, Operation } from '@konfigyr/hooks/vault/types';
 
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
+import type { CollectionResponse, CursorResponse } from '@konfigyr/hooks/hateoas/types';
 import type { Namespace, Service, ServiceCatalog } from '@konfigyr/hooks/namespace/types';
 import type {
   ApplyRequest,
-  ApplyResult,
   ChangeHistory,
   ChangeHistoryQuery,
   ChangeHistoryRecord,
+  ChangeRequest,
   ChangesetState,
   ConfigurationProperty,
   ConfigurationPropertyValue,
   Profile,
   PropertyChange,
+  VaultRevisionInformation,
 } from '@konfigyr/hooks/vault/types';
 
 const DEFAULT_PROPERTY_DESCRIPTOR: Omit<PropertyDescriptor, 'name'> = {
@@ -164,7 +166,8 @@ export const useApplyChangeset = () => {
 
       await request.post(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/apply`, {
         json: generateApplyRequestFromChangeset(changeset),
-      }).json<ApplyResult>();
+      }).json<VaultRevisionInformation>();
+
       return changeset;
     },
     onSuccess: async (changeset: ChangesetState) => {
@@ -185,11 +188,23 @@ export const useSubmitChangeset = () => {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: async (state: ChangesetState): Promise<ChangesetState> => {
-      return client.fetchQuery(getChangesetStateQuery(state.namespace, state.service, state.profile));
+    mutationFn: async (changeset: ChangesetState): Promise<ChangeRequest> => {
+      const { namespace, service, profile } = changeset;
+
+      return request.post(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/submit`, {
+        json: generateApplyRequestFromChangeset(changeset),
+      }).json<ChangeRequest>();
     },
-    onSuccess(state: ChangesetState) {
-      client.setQueryData(vaultKeys.getChangeset(state.profile), state);
+    onSuccess: async (changeRequest: ChangeRequest) => {
+      await client.invalidateQueries({
+        predicate: query => {
+          const key = query.queryKey;
+          if (key[0] === 'vault') {
+            return key[1] === changeRequest.profile.id;
+          }
+          return false;
+        },
+      });
     },
   });
 };
@@ -277,17 +292,10 @@ export const getChangeHistoryQuery = (namespace: Namespace, service: Service, pr
   return queryOptions({
     queryKey: vaultKeys.getChangeHistory(profile, query),
     placeholderData: keepPreviousData,
-    queryFn: async () => {
+    queryFn: async ({ signal }): Promise<CursorResponse<ChangeHistory>> => {
       return await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/history`, {
-        searchParams: query,
-      }).json<{
-        data: Array<ChangeHistory>;
-        metadata: {
-          size: number,
-          next?: string | null,
-          previous?: string | null,
-        }
-      }>();
+        searchParams: query, signal,
+      }).json<CursorResponse<ChangeHistory>>();
     },
   });
 };
@@ -300,9 +308,8 @@ export const getChangeHistoryDetailsQuery = (namespace: Namespace, service: Serv
   return queryOptions({
     queryKey: vaultKeys.getChangeHistoryDetails(profile, history),
     queryFn: async () => {
-      const { data } = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/history/${history.revision}`).json<{
-        data: Array<ChangeHistoryRecord>;
-      }>();
+      const { data } = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/history/${history.revision}`)
+        .json<CollectionResponse<ChangeHistoryRecord>>();
 
       return data;
     },
