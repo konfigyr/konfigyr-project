@@ -1,5 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 
+import type { ProfilePolicy } from '@konfigyr/hooks/types';
+
 export const ProfileNameLabel = () => (
   <FormattedMessage
     defaultMessage="Profile name"
@@ -42,12 +44,57 @@ export const ProfileDescriptionHelpText = () => (
   />
 );
 
-export const ProfilePolicyLabel = () => (
-  <FormattedMessage
-    defaultMessage="Profile policy"
-    description="Label used to provide a label for a profile policy. Used mainly in profile forms."
-  />
-);
+export function ProfilePolicyLabel({ value }: { value: ProfilePolicy }) {
+  switch (value) {
+    case 'UNPROTECTED':
+      return (
+        <FormattedMessage
+          defaultMessage="Unprotected profile"
+          description="Label text for unprotected profile"
+        />
+      );
+    case 'PROTECTED':
+      return (
+        <FormattedMessage
+          defaultMessage="Protected profile"
+          description="Label text for protected profile"
+        />
+      );
+    case 'IMMUTABLE':
+      return (
+        <FormattedMessage
+          defaultMessage="Profile is read-only"
+          description="Label text for immutable profile"
+        />
+      );
+  }
+}
+
+export function ProfilePolicyDescription({ value }: { value: ProfilePolicy }) {
+  switch (value) {
+    case 'UNPROTECTED':
+      return (
+        <FormattedMessage
+          defaultMessage="Changes to this profile will be directly applied without any review or approval."
+          description="Description text for unprotected profile, stating that changes can be directly applied."
+        />
+      );
+    case 'PROTECTED':
+      return (
+        <FormattedMessage
+          defaultMessage="Changes to this profile require review and approval before being applied."
+          description="Description text for protected profile, stating that changes requires review and approval before being applied."
+        />
+      );
+    case 'IMMUTABLE':
+      return (
+        <FormattedMessage
+          defaultMessage="No configuration changes may be applied to this profile. The existing configuration remains readable and auditable but cannot be modified."
+          description="Description text for immutable profile, stating that profile is locked and cannot be edited."
+        />
+      );
+  }
+}
 
 export const ProfilePositionLabel = () => (
   <FormattedMessage

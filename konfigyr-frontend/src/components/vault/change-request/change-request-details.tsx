@@ -79,6 +79,28 @@ function ChangeRequestSubject({ changeRequest, onChange }: {
   );
 }
 
+function ChangeRequestDescription({ changeRequest }: { changeRequest: ChangeRequest }) {
+  if (!changeRequest.description) {
+    return null;
+  }
+
+  return (
+    <Card className="border">
+      <CardHeader>
+        <CardTitle>
+          <FormattedMessage
+            defaultMessage="Overview"
+            description="Title of the property change description section in the change request details page."
+          />
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {changeRequest.description}
+      </CardContent>
+    </Card>
+  );
+}
+
 const TRANSITIONS = Object.values(PropertyTransitionType);
 
 function ChangeRequestChanges({ namespace, service, changeRequest }: {
@@ -210,6 +232,9 @@ function ChangeRequestDetailsArticle({ namespace, service, changeRequest }: {
       </header>
 
       <div className="space-y-4">
+        <ChangeRequestDescription
+          changeRequest={changeRequest}
+        />
         <ChangeRequestChanges
           namespace={namespace}
           service={service}

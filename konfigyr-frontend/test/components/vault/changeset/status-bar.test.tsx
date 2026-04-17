@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
+import { ConfigurationPropertyState, PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { Toaster } from '@konfigyr/components/ui/sonner';
 import { ChangesetStatusBar } from '@konfigyr/components/vault/changeset/status-bar';
 import { useChangesetState } from '@konfigyr/hooks';
@@ -9,8 +11,24 @@ import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
 
 import type { Profile } from '@konfigyr/hooks/types';
 
-function TestChangesetStatusBar({ profile }: { profile: Profile }) {
-  const { data: changeset } = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profile);
+function TestChangesetStatusBar({ profile, modified = false }: { profile: Profile, modified?: boolean }) {
+  const { data } = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profile);
+
+  const changeset = useMemo(() => {
+    if (data && modified) {
+      data.properties.push({
+        name: 'spring.application.name',
+        typeName: 'java.lang.String',
+        schema: { type: 'string' },
+        value: { encoded: 'test-app', decoded: 'test-app' },
+        state: PropertyTransitionType.ADDED,
+      });
+      data.added = data.properties.filter(p => p.state === ConfigurationPropertyState.ADDED).length;
+      data.modified = data.properties.filter(p => p.state === ConfigurationPropertyState.UPDATED).length;
+      data.deleted = data.properties.filter(p => p.state === ConfigurationPropertyState.REMOVED).length;
+    }
+    return data;
+  }, [data, modified]);
 
   return changeset && (
     <>
@@ -20,7 +38,7 @@ function TestChangesetStatusBar({ profile }: { profile: Profile }) {
   );
 }
 
-describe('components | vault | changeset | <ChangesetStatusBa/>', () => {
+describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
   afterEach(() => cleanup());
 
   test('should render changeset status bar for unprotected profile', async () => {
@@ -109,8 +127,8 @@ describe('components | vault | changeset | <ChangesetStatusBa/>', () => {
     });
   });
 
-  test('should apply changeset', async () => {
-    const { getByRole, getByText } = renderWithQueryClient(
+  test('should disable the submit changeset dialog trigger button when no changes are present', async () => {
+    const { getByRole } = renderWithQueryClient(
       <TestChangesetStatusBar profile={profiles.development} />,
     );
 
@@ -118,12 +136,60 @@ describe('components | vault | changeset | <ChangesetStatusBa/>', () => {
       expect(getByRole('button', { name: 'Apply' })).toBeInTheDocument();
     });
 
+    expect(getByRole('button', { name: 'Apply' })).toBeDisabled();
+  });
+
+  test('should open the submit changeset dialog and apply the changes to an unprotected profile', async () => {
+    const { getByRole, getByText } = renderWithQueryClient(
+      <TestChangesetStatusBar profile={profiles.development} modified={true} />,
+    );
+
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Apply' })).toBeInTheDocument();
+      expect(getByRole('button', { name: 'Apply' })).not.toBeDisabled();
+    });
+
     await userEvent.click(
       getByRole('button', { name: 'Apply' }),
     );
 
     await waitFor(() => {
+      expect(getByRole('dialog')).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      getByRole('button', { name: 'Propose changes' }),
+    );
+
+    await waitFor(() => {
       expect(getByText('Your changes were successfully applied')).toBeInTheDocument();
+    });
+  });
+
+  test('should open the submit changeset dialog and submit the changes to a protected profile', async () => {
+    const { getByRole, getByText } = renderWithQueryClient(
+      <TestChangesetStatusBar profile={profiles.staging} modified={true} />,
+    );
+
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Submit' })).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      getByRole('button', { name: 'Submit' }),
+    );
+
+    await waitFor(() => {
+      expect(getByRole('dialog')).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      getByRole('button', { name: 'Propose changes' }),
+    );
+
+    await waitFor(() => {
+      expect(getByText('Change request created')).toBeInTheDocument();
+      expect(getByText('Your changes were submitted for review and are now waiting for approval.')).toBeInTheDocument();
     });
   });
 });
