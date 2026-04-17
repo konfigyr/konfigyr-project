@@ -8,7 +8,8 @@ import {
   useState,
 } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { CheckIcon, CircleXIcon, PencilIcon, SaveIcon } from 'lucide-react';
+import { CircleXIcon, PencilIcon, SaveIcon } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import { cva } from 'class-variance-authority';
 import {
   useApplyChangeset,
@@ -29,10 +30,11 @@ import {
   useLabelForTransitionType,
 } from '@konfigyr/components/vault/messages';
 import { cn } from '@konfigyr/components/utils';
+import { ChangesetSubmitDialog } from './dialog';
 
 import type { RefObject } from 'react';
 import type { VariantProps } from 'class-variance-authority';
-import type { ChangesetState } from '@konfigyr/hooks/types';
+import type { ChangeRequest, ChangesetState } from '@konfigyr/hooks/types';
 
 export const changesetStatusBarVariants = cva(
   'flex items-center gap-4 py-2',
@@ -147,74 +149,6 @@ function StateCountLabel({ type, count }: { type: PropertyTransitionType, count:
   );
 }
 
-function ApplyButton({ changeset, onError }: { changeset: ChangesetState, onError: (error: unknown) => void }) {
-  const { mutateAsync: onApplyChangeset, isPending } = useApplyChangeset();
-
-  const onApply = useCallback(async () => {
-    try {
-      await onApplyChangeset(changeset);
-    } catch (error) {
-      return onError(error);
-    }
-
-    return toast.success((
-      <FormattedMessage
-        defaultMessage="Your changes were successfully applied"
-        description="Notification message that is shown when changeset state was applied."
-      />
-    ));
-  }, [changeset]);
-
-  return (
-    <Button
-      size="sm"
-      loading={isPending}
-      disabled={isPending}
-      onClick={onApply}
-    >
-      <CheckIcon />
-      <FormattedMessage
-        defaultMessage="Apply"
-        description="Label for the apply button in the changeset status bar."
-      />
-    </Button>
-  );
-}
-
-function SubmitButton({ changeset, onError }: { changeset: ChangesetState, onError: (error: unknown) => void }) {
-  const { mutateAsync: onSubmitChangeset, isPending } = useSubmitChangeset();
-
-  const onSubmit = useCallback(async () => {
-    try {
-      await onSubmitChangeset(changeset);
-    } catch (error) {
-      return onError(error);
-    }
-
-    return toast.success((
-      <FormattedMessage
-        defaultMessage="Your changes were successfully submitted"
-        description="Notification message that is shown when changeset state was submitted."
-      />
-    ));
-  }, [changeset]);
-
-  return (
-    <Button
-      size="sm"
-      loading={isPending}
-      disabled={isPending}
-      onClick={onSubmit}
-    >
-      <CheckIcon />
-      <FormattedMessage
-        defaultMessage="Submit"
-        description="Label for the submit button in the changeset status bar."
-      />
-    </Button>
-  );
-}
-
 function DiscardButton({ changeset, onError }: { changeset: ChangesetState, onError: (error: unknown) => void }) {
   const { mutateAsync: onDiscardChangeset, isPending } = useDiscardChangeset();
 
@@ -255,7 +189,63 @@ function ChangesetStatusBarContents({
   variant,
   ref,
 }: ChangesetStatusBarProps & VariantProps<typeof changesetStatusBarVariants> & { ref?: RefObject<HTMLDivElement | null> }) {
+  const navigate = useNavigate();
+  const [opened, setOpened] = useState(false);
   const errorNotification = useErrorNotification();
+  const { mutateAsync: onApplyChangeset } = useApplyChangeset();
+  const { mutateAsync: onSubmitChangeset } = useSubmitChangeset();
+
+  const onApply = useCallback(async (payload: ChangesetState) => {
+    try {
+      await onApplyChangeset(payload);
+    } catch (error) {
+      return errorNotification(error);
+    }
+
+    setOpened(false);
+
+    return toast.success((
+      <FormattedMessage
+        defaultMessage="Your changes were successfully applied"
+        description="Notification message that is shown when changeset state was applied."
+      />
+    ));
+  }, []);
+
+  const onSubmit = useCallback(async (payload: ChangesetState) => {
+    let changeRequest: ChangeRequest;
+
+    try {
+      changeRequest = await onSubmitChangeset(payload);
+    } catch (error) {
+      return errorNotification(error);
+    }
+
+    setOpened(false);
+
+    toast.success((
+      <FormattedMessage
+        defaultMessage="Change request created"
+        description="Notification message subject that is shown when changeset state was submitted and change request is created."
+      />
+    ), {
+      description: (
+        <FormattedMessage
+          defaultMessage="Your changes were submitted for review and are now waiting for approval."
+          description="Notification message details that is shown when changeset state was submitted and change request is created."
+        />
+      ),
+    });
+
+    return navigate({
+      to: '/namespace/$namespace/services/$service/requests/$number',
+      params: {
+        namespace: changeset.namespace.slug,
+        service: changeset.service.slug,
+        number: String(changeRequest.number),
+      },
+    });
+  }, []);
 
   const totalChanges = changeset.added + changeset.modified + changeset.deleted;
 
@@ -291,18 +281,16 @@ function ChangesetStatusBarContents({
           changeset={changeset}
           onError={errorNotification}
         />
-        {changeset.profile.policy === 'PROTECTED' && (
-          <SubmitButton
-            changeset={changeset}
-            onError={errorNotification}
-          />
-        )}
-        {changeset.profile.policy === 'UNPROTECTED' && (
-          <ApplyButton
-            changeset={changeset}
-            onError={errorNotification}
-          />
-        )}
+
+        <ChangesetSubmitDialog
+          changeset={changeset}
+          disabled={totalChanges === 0}
+          open={opened}
+          onApply={onApply}
+          onSubmit={onSubmit}
+          onOpenChange={setOpened}
+          onError={errorNotification}
+        />
       </div>
     </div>
   );

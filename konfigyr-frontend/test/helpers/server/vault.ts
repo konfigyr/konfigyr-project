@@ -1,5 +1,9 @@
 import { HttpResponse, http } from 'msw';
 import {
+  ChangeRequestMergeStatus,
+  ChangeRequestState,
+} from '@konfigyr/hooks/vault/types';
+import {
   isValidProfile,
   isValidService,
   namespaces,
@@ -185,6 +189,55 @@ const applyChangeset = http.post('http://localhost/api/namespaces/:namespace/ser
   });
 });
 
+const submitChangeset = http.post('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/submit', async ({ params, request }) => {
+  const { namespace, service, profile } = params;
+
+  const { subject, description, changes } = await request.clone().json() as {
+    subject?: string,
+    description?: string,
+    changes: Array<any>,
+  };
+
+  if (namespace === namespaces.unknown.slug) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Namespace not found',
+      detail: `Namespace with identifier '${namespace}' not found.`,
+    }, { status: 404 });
+  }
+
+  if (!isValidService(service)) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Service not found',
+      detail: `Service with identifier '${service}' not found.`,
+    }, { status: 404 });
+  }
+
+  if (!isValidProfile(profile)) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Profile not found',
+      detail: `Profile with identifier '${profile}' not found.`,
+    }, { status: 404 });
+  }
+
+  return HttpResponse.json({
+    id: 'submitted-changes',
+    service: services.konfigyrApi,
+    profile: profiles.staging,
+    number: 9,
+    state: ChangeRequestState.OPEN,
+    mergeState: ChangeRequestMergeStatus.MERGEABLE,
+    count: changes.length,
+    subject: subject,
+    description: description,
+    createdBy: 'John Doe',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+});
+
 const getHistory = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/history', ({ params, request }) => {
   const uri = new URL(request.url);
   const { namespace, service, profile } = params;
@@ -364,6 +417,7 @@ export default [
   history,
   getProperties,
   applyChangeset,
+  submitChangeset,
   getHistory,
   getHistoryDetails,
   getPropertyHistory,

@@ -67,6 +67,7 @@ export interface ChangesetState {
   service: Service;
   profile: Profile;
   name: string;
+  description?: string;
   state: string;
   properties: Array<ConfigurationProperty<any>>;
   added: number;

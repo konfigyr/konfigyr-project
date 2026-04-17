@@ -54,6 +54,7 @@ const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyReques
 
   return {
     name: payload.name,
+    description: payload.description,
     changes,
   };
 };
