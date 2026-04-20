@@ -5,6 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import {
   GitPullRequestClosedIcon,
 } from 'lucide-react';
+import { Editor } from '@konfigyr/components/editor';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { ChangeRequestReviewType } from '@konfigyr/hooks/vault/types';
 import {
@@ -134,7 +135,18 @@ export function ChangeRequestSubmitReview({ onDiscard, onReview }: {
               name="comment"
               children={(field) => (
                 <field.Control
-                  render={<field.Textarea placeholder="Leave comment (optional)" rows={6} />}
+                  render={<Editor
+                    name="change-request-review-comment"
+                    value={field.state.value}
+                    placeholder={
+                      <FormattedMessage
+                        defaultMessage="Leave a comment (optional)"
+                        description="Placeholder for the change request review comment field"
+                      />
+                    }
+                    onValueChange={field.handleChange}
+                    onBlur={field.handleBlur}
+                  />}
                 />
               )}
             />

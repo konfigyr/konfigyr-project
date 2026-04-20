@@ -34,7 +34,6 @@ export function UpdateMemberForm({ namespace, member, onClose }: { namespace: Na
       try {
         await updateNamespaceMember({ id: member!.id, role: value.role });
       } catch (error) {
-        console.error(error);
         return errorNotification(error);
       }
 
