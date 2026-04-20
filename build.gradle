@@ -72,7 +72,7 @@ subprojects {
 
             /* Fix Dependabot alerts */
             dependency('org.apache.commons:commons-compress:1.28.0') // used by testcontainers
-            dependency('com.google.guava:guava:33.5.0-jre') // used by checkstyle
+            dependency('com.google.guava:guava:33.6.0-jre') // used by checkstyle
 
             /* JSoup HTML test support */
             dependency('org.jsoup:jsoup:1.22.1')
