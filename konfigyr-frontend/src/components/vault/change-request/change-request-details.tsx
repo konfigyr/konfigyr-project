@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
   PencilIcon,
@@ -16,15 +17,18 @@ import {
   PropertyTransitionType,
 } from '@konfigyr/hooks/vault/types';
 import { ErrorState } from '@konfigyr/components/error';
-import { RelativeDate } from '@konfigyr/components/messages';
+import { Editor } from '@konfigyr/components/editor';
+import { CancelLabel, EditLabel, RelativeDate } from '@konfigyr/components/messages';
 import { Button } from '@konfigyr/components/ui/button';
 import {
   Card,
   CardAction,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@konfigyr/components/ui/card';
+import { HtmlContents } from '@konfigyr/components/ui/content';
 import {
   InlineEdit,
   InlineEditInput,
@@ -79,7 +83,20 @@ function ChangeRequestSubject({ changeRequest, onChange }: {
   );
 }
 
-function ChangeRequestDescription({ changeRequest }: { changeRequest: ChangeRequest }) {
+function ChangeRequestDescription({
+  changeRequest,
+  isPending,
+  onChange,
+}: { changeRequest: ChangeRequest, isPending: boolean, onChange: (description: string) => Promise<any> }) {
+  const intl = useIntl();
+  const [editing, setEditing] = useState(false);
+  const [markdown, setMarkdown] = useState(changeRequest.description?.markdown || '');
+
+  const onEditDescription = useCallback(async (description: string) => {
+    await onChange(description);
+    setEditing(false);
+  }, [onChange, setEditing]);
+
   if (!changeRequest.description) {
     return null;
   }
@@ -93,10 +110,44 @@ function ChangeRequestDescription({ changeRequest }: { changeRequest: ChangeRequ
             description="Title of the property change description section in the change request details page."
           />
         </CardTitle>
+        <CardAction>
+          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+            <EditLabel />
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent>
-        {changeRequest.description}
+        {editing ? (
+          <Editor
+            value={markdown}
+            onValueChange={setMarkdown}
+            aria-label={intl.formatMessage({
+              defaultMessage: 'Update change request description',
+              description: 'Label for the change request description editor',
+            })}
+          />
+        ) : (
+          <HtmlContents html={changeRequest.description.html} />
+        )}
       </CardContent>
+      {editing && (
+        <CardFooter className="flex gap-2 items-end">
+          <Button variant="destructive" onClick={() => setEditing(false)}>
+            <CancelLabel />
+          </Button>
+          <Button
+            variant="outline"
+            disabled={isPending}
+            loading={isPending}
+            onClick={() => onEditDescription(markdown)}
+          >
+            <FormattedMessage
+              defaultMessage="Update description"
+              description="Label used to update the change request description from the details page"
+            />
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
@@ -208,7 +259,7 @@ function ChangeRequestDetailsArticle({ namespace, service, changeRequest }: {
   service: Service;
   changeRequest: ChangeRequest;
 }) {
-  const { mutateAsync: updateChangeRequest } = useUpdateChangeRequest(namespace, service, changeRequest);
+  const { mutateAsync: updateChangeRequest, isPending: isUpdatePending } = useUpdateChangeRequest(namespace, service, changeRequest);
   const { mutateAsync: mergeChangeRequest } = useMergeChangeRequest(namespace, service, changeRequest);
   const { mutateAsync: reviewChangeRequest } = useReviewChangeRequest(namespace, service, changeRequest);
   const { mutateAsync: discardChangeRequest } = useDiscardChangeRequest(namespace, service, changeRequest);
@@ -216,13 +267,13 @@ function ChangeRequestDetailsArticle({ namespace, service, changeRequest }: {
   return (
     <article className="space-y-4">
       <header className="space-y-2">
-        <p className="text-2xl flex items-center gap-1">
+        <div className="text-2xl flex items-center gap-1">
           <span className="text-foreground/70">#{changeRequest.number}</span>
           <ChangeRequestSubject
             changeRequest={changeRequest}
             onChange={subject => updateChangeRequest({ subject })}
           />
-        </p>
+        </div>
         <p className="flex items-center gap-1">
           <ChangeRequestStateBadge value={changeRequest.state} />
           <span className="text-sm">
@@ -234,6 +285,8 @@ function ChangeRequestDetailsArticle({ namespace, service, changeRequest }: {
       <div className="space-y-4">
         <ChangeRequestDescription
           changeRequest={changeRequest}
+          isPending={isUpdatePending}
+          onChange={description => updateChangeRequest({ description })}
         />
         <ChangeRequestChanges
           namespace={namespace}

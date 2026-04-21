@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { ProfileMenu } from '@konfigyr/components/vault/navigation/profile-menu';
 import { ChangesetEditor } from '@konfigyr/components/vault/changeset/editor';
@@ -10,7 +11,7 @@ import {
 } from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
 import { ChangeHistoryAlert } from '@konfigyr/components/vault/change-history/change-history-alert';
-import type { Namespace, Service } from '@konfigyr/hooks/types';
+import type { ChangeRequest, Namespace, Service } from '@konfigyr/hooks/types';
 
 export const Route = createFileRoute(
   '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/',
@@ -28,9 +29,21 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
+  const navigate = Route.useNavigate();
   const { namespace, service, profiles, profile } = Route.useLoaderData();
   const { data: changeset } = useChangesetState(namespace, service, profile);
   const { data: catalog } = useServiceCatalogQuery(namespace.slug, service.slug);
+
+  const onChangeRequestCreated = useCallback((changeRequest: ChangeRequest) => {
+    return navigate({
+      to: '/namespace/$namespace/services/$service/requests/$number',
+      params: {
+        namespace: namespace.slug,
+        service: service.slug,
+        number: String(changeRequest.number),
+      },
+    });
+  }, [navigate, namespace, service]);
 
   return (
     <div className="mx-4 space-y-6">
@@ -66,7 +79,11 @@ function RouteComponent() {
       />
 
       {(changeset && catalog) && (
-        <ChangesetEditor catalog={catalog} changeset={changeset} />
+        <ChangesetEditor
+          catalog={catalog}
+          changeset={changeset}
+          onChangeRequestCreated={onChangeRequestCreated}
+        />
       )}
     </div>
   );

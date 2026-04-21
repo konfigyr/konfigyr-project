@@ -1,3 +1,8 @@
+export interface MarkdownContents {
+  markdown: string;
+  html: string;
+}
+
 export interface CollectionResponse<T> {
   data: Array<T>;
 }

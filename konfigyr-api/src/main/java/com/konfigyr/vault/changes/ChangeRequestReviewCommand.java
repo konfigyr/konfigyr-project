@@ -1,5 +1,6 @@
 package com.konfigyr.vault.changes;
 
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.vault.ChangeRequestHistory;
@@ -52,7 +53,7 @@ public record ChangeRequestReviewCommand(
 		Long number,
 		AuthenticatedPrincipal principal,
 		Operation operation,
-		@Nullable String comment
+		@Nullable MarkdownContents comment
 ) implements Serializable {
 
 	@Serial

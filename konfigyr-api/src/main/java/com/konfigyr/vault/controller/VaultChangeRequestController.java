@@ -3,6 +3,7 @@ package com.konfigyr.vault.controller;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.Services;
@@ -193,7 +194,7 @@ class VaultChangeRequestController extends AbstractVaultController {
 
 	record UpdateChangeRequest(
 			@Length(min = 2, max = 30) String subject,
-			@Length(max = 255) String description
+			@Length(max = 255) MarkdownContents description
 	) {
 
 		ChangeRequestUpdateCommand command(Service service, Long number) {
@@ -204,7 +205,7 @@ class VaultChangeRequestController extends AbstractVaultController {
 
 	record ReviewChangeRequest(
 			@NotNull ChangeRequestReviewCommand.Operation state,
-			@Length(max = 255) String comment
+			@Length(max = 255) MarkdownContents comment
 	) {
 
 		ChangeRequestReviewCommand command(Service service, Long number) {

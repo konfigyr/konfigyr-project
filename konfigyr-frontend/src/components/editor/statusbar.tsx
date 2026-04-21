@@ -1,22 +1,19 @@
 import { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { cn } from '@konfigyr/components/utils';
-import { useEditorState } from './context';
 
 import type { ComponentProps } from 'react';
 
-export function TextStats({ className, ...props }: { text?: string } & ComponentProps<'div'>) {
+export function TextStats({ text = '', className, ...props }: { text?: string } & ComponentProps<'div'>) {
   const intl = useIntl();
-  const { value } = useEditorState();
 
   const { chars, lines } = useMemo(() => ({
-    chars: value.length,
-    lines: value.split('\n').length,
-  }), [value]);
+    chars: text.length,
+    lines: text.split('\n').length,
+  }), [text]);
 
   return (
     <div
-      data-slot="editor-text-stats"
       className={cn('flex items-center gap-2 font-mono select-none', className)}
       {...props}
     >
@@ -57,11 +54,18 @@ export function MarkdownSupported({ className, ...props }: { className?: string 
   );
 }
 
-export function StatusBar({ className, ...props }: { className?: string } & ComponentProps<'div'>) {
+export function StatusBar({ value, className, ...props }: { value?: string, className?: string } & ComponentProps<'div'>) {
   return (
-    <div className={cn('flex items-center justify-between text-xs text-muted-foreground', className)} {...props}>
+    <div
+      data-slot="editor-statusbar"
+      className={cn(
+        'flex items-center justify-between px-2.5 py-1 text-xs text-muted-foreground',
+        className,
+      )}
+      {...props}
+    >
       <MarkdownSupported />
-      <TextStats />
+      <TextStats text={value} />
     </div>
   );
 }

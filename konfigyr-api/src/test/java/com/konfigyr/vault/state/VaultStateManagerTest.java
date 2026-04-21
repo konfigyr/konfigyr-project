@@ -2,6 +2,7 @@ package com.konfigyr.vault.state;
 
 import com.google.crypto.tink.subtle.Base64;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.security.AuthenticatedPrincipal;
@@ -192,8 +193,8 @@ class VaultStateManagerTest extends AbstractIntegrationTest {
 				.returns(6L, ChangeRequest::number)
 				.returns(ChangeRequestState.OPEN, ChangeRequest::state)
 				.returns(ChangeRequestMergeStatus.NOT_APPROVED, ChangeRequest::mergeStatus)
-				.returns(changes.subject(), ChangeRequest::subject)
-				.returns(changes.description(), ChangeRequest::description)
+				.returns("Test proposed changes", ChangeRequest::subject)
+				.returns(MarkdownContents.of("Change request description"), ChangeRequest::description)
 				.returns(principal.getDisplayName().orElse(null), ChangeRequest::createdBy);
 
 		assertThat(vault.state())
@@ -223,8 +224,8 @@ class VaultStateManagerTest extends AbstractIntegrationTest {
 		final var result = vault.merge(changeRequest);
 
 		assertThatObject(result)
-				.returns(changeRequest.subject(), ApplyResult::subject)
-				.returns(changeRequest.description(), ApplyResult::description);
+				.returns("Test proposed changes", ApplyResult::subject)
+				.returns("Change request description", ApplyResult::description);
 
 		assertThat(result)
 				.hasSize(1)

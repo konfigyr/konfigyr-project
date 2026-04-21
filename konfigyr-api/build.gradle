@@ -27,6 +27,13 @@ dependencies {
     /* Spring Common libraries */
     implementation 'org.springframework.retry:spring-retry'
 
+    /* Markdown and HTML sanitization */
+    implementation 'org.commonmark:commonmark:0.28.0'
+    implementation("org.commonmark:commonmark-ext-autolink:0.28.0")
+    implementation("org.commonmark:commonmark-ext-gfm-strikethrough:0.28.0")
+    implementation("org.commonmark:commonmark-ext-task-list-items:0.28.0")
+    implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
+
     implementation 'org.bouncycastle:bcprov-jdk18on'
 
     /* Java Git client */

@@ -3,6 +3,7 @@ package com.konfigyr.vault.controller;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.PagedModel;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.security.OAuthScope;
@@ -171,7 +172,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 				.returns(ChangeRequestMergeStatus.MERGEABLE, ChangeRequest::mergeStatus)
 				.returns(2, ChangeRequest::count)
 				.returns("Increase server port", ChangeRequest::subject)
-				.returns("Move service to new port range", ChangeRequest::description)
+				.returns(MarkdownContents.of("Move service to new port range"), ChangeRequest::description)
 				.returns("John Doe", ChangeRequest::createdBy);
 	}
 
@@ -219,7 +220,22 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.convertTo(collectionModel(ChangeRequestHistory.class));
+				.convertTo(collectionModel(ChangeRequestHistory.class))
+				.extracting(CollectionModel::getContent, InstanceOfAssertFactories.iterable(ChangeRequestHistory.class))
+				.hasSize(2)
+				.satisfiesExactly(
+						it -> assertThat(it)
+								.returns(ChangeRequestHistory.Type.CREATED, ChangeRequestHistory::type)
+								.returns(null, ChangeRequestHistory::comment)
+								.returns("John Doe", ChangeRequestHistory::initiator),
+						it -> assertThat(it)
+								.returns(ChangeRequestHistory.Type.APPROVED, ChangeRequestHistory::type)
+								.returns("Jane Doe", ChangeRequestHistory::initiator)
+								.returns(
+										MarkdownContents.of("Looks good to me."),
+										ChangeRequestHistory::comment
+								)
+				);
 	}
 
 	@Test
@@ -327,7 +343,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 				.returns(ChangeRequestMergeStatus.NOT_OPEN, ChangeRequest::mergeStatus)
 				.returns(1, ChangeRequest::count)
 				.returns("Experimental feature toggle", ChangeRequest::subject)
-				.returns("Testing feature toggle rollout", ChangeRequest::description)
+				.returns(MarkdownContents.of("Testing feature toggle rollout"), ChangeRequest::description)
 				.returns("Jane Doe", ChangeRequest::createdBy);
 	}
 
@@ -413,7 +429,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 				.returns(ChangeRequestMergeStatus.NOT_OPEN, ChangeRequest::mergeStatus)
 				.returns(1, ChangeRequest::count)
 				.returns("Updated subject", ChangeRequest::subject)
-				.returns("Updated change request description", ChangeRequest::description);
+				.returns(MarkdownContents.of("Updated change request description"), ChangeRequest::description);
 	}
 
 	@Test
@@ -436,7 +452,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 				.returns(ChangeRequestMergeStatus.NOT_OPEN, ChangeRequest::mergeStatus)
 				.returns(1, ChangeRequest::count)
 				.returns("Experimental feature toggle", ChangeRequest::subject)
-				.returns("Testing feature toggle rollout", ChangeRequest::description);
+				.returns(MarkdownContents.of("Testing feature toggle rollout"), ChangeRequest::description);
 	}
 
 	@Test
@@ -531,7 +547,7 @@ class VaultChangeRequestControllerTest extends AbstractControllerTest {
 				.returns(ChangeRequestMergeStatus.MERGEABLE, ChangeRequest::mergeStatus)
 				.returns(2, ChangeRequest::count)
 				.returns("Increase server port", ChangeRequest::subject)
-				.returns("Move service to new port range", ChangeRequest::description);
+				.returns(MarkdownContents.of("Move service to new port range"), ChangeRequest::description);
 	}
 
 	@Test

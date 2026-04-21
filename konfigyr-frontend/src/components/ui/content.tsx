@@ -1,27 +1,17 @@
-import { useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
-import { Marked } from 'marked';
-import { markedHighlight } from 'marked-highlight';
-import hljs from 'highlight.js';
+import { useEffect, useState } from 'react';
+import production from 'react/jsx-runtime';
+import { unified } from 'unified';
+import rehypeParse from 'rehype-parse';
+import rehypePrism from 'rehype-prism-plus';
+import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import { cn } from '@konfigyr/components/utils';
-import 'highlight.js/styles/github.min.css';
 
-import { useEditorState } from './context';
+import type { ComponentProps, ReactElement } from 'react';
 
-const engine = new Marked(markedHighlight({
-  emptyLangClass: 'hljs',
-  langPrefix: 'hljs language-',
-  highlight(code, lang) {
-    const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-    return hljs.highlight(code, { language }).value;
-  },
-}));
-
-function PreviewContents({ markdown }: { markdown: string }) {
-  const html = useMemo(() => engine.parse(markdown) as string, [markdown]);
-
+export function Contents({ className, children, ...props }: { className?: string } & ComponentProps<'div'>) {
   return (
     <div
+      data-slot="contents"
       className={cn(
         // heading styles
         '[&_h1]:text-[1.375rem] [&_h1]:font-medium [&_h1]:font-heading [&_h1]:leading-snug [&_h1]:mb-3 [&_h1]:pb-2 [&_h1]:border-b [&_h1]:border-border',
@@ -35,8 +25,6 @@ function PreviewContents({ markdown }: { markdown: string }) {
         '[&_strong]:font-medium [&_strong]:text-foreground',
         '[&_em]:italic',
         // code styles
-        '[&_pre]:bg-muted [&_pre]:border [&_pre]:border-border [&_pre]:rounded-md',
-        '[&_code]:font-mono [&_code]:text-xs [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded',
         // horizontal rule styles
         '[&_hr]:border-none [&_hr]:border-t [&_hr]:border-border [&_hr]:my-5',
         // image styles
@@ -58,31 +46,53 @@ function PreviewContents({ markdown }: { markdown: string }) {
         '[&_td]:px-3 [&_td]:py-1.5 [&_td]:border-b [&_td]:border-border [&_td]:text-foreground',
         '[&_tbody_tr:last-child_td]:border-b-0',
         '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+        className,
       )}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+      {...props}
+    >
+      {children}
+    </div>
   );
 }
 
-export function MarkdownPreview() {
-  const { value } = useEditorState();
+const processor = unified()
+  .use(rehypeParse, { fragment: true })
+  .use(rehypePrism);
+
+export function HtmlContents({ html, ...props }: { html: string } & ComponentProps<typeof Contents>) {
+  const [contents, setContents] = useState<ReactElement | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    processor.run(processor.parse(html), (err, tree) => {
+      if (!cancelled) {
+        setError(err ?? null);
+
+        if (tree) {
+          setContents(toJsxRuntime(tree, {
+            ...production,
+            ignoreInvalidStyle: true,
+            passKeys: true,
+            passNode: true,
+          }));
+        }
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [html]);
+
+  if (error) {
+    throw error;
+  }
 
   return (
-    <div
-      role="note"
-      aria-live="polite"
-      data-slot="editor-preview"
-      className="px-2.5 py-1 text-sm leading-relaxed text-foreground"
-    >
-      {(value && value.length > 0) ? (
-        <PreviewContents markdown={value} />
-      ): (
-        <FormattedMessage
-          tagName="i"
-          defaultMessage="No preview available"
-          description="Message displayed when there is no preview available"
-        />
-      )}
-    </div>
+    <Contents {...props}>
+      {contents}
+    </Contents>
   );
 }

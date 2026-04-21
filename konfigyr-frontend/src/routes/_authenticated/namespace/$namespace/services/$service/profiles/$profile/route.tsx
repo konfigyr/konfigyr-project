@@ -1,4 +1,3 @@
-import { LayoutContent } from '@konfigyr/components/layout';
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 import { getProfileQuery } from '@konfigyr/hooks';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
@@ -34,9 +33,5 @@ export const Route = createFileRoute(
 });
 
 function NamespaceApplicationsLayoutComponent() {
-  return (
-    <LayoutContent>
-      <Outlet />
-    </LayoutContent>
-  );
+  return <Outlet />;
 }

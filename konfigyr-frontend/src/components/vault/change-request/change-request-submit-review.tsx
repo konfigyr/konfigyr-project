@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useCallback, useId } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import {
   GitPullRequestClosedIcon,
 } from 'lucide-react';
@@ -71,6 +71,7 @@ export function ChangeRequestSubmitReview({ onDiscard, onReview }: {
   onDiscard: () => void | Promise<any>;
   onReview: (review: SubmitChangeRequestReview) => void | Promise<any>;
 }) {
+  const intl = useIntl();
   const errorNotification = useErrorNotification();
   const form = useForm({
     defaultValues: {
@@ -91,12 +92,10 @@ export function ChangeRequestSubmitReview({ onDiscard, onReview }: {
         return errorNotification(error);
       }
 
-      toast.success((
-        <FormattedMessage
-          defaultMessage="Your review was successfully submitted"
-          description="Notification message that is shown when user successfully submits a change request review."
-        />
-      ));
+      toast.success(intl.formatMessage({
+        defaultMessage: 'Your review was successfully submitted',
+        description: 'Notification message that is shown when user successfully submits a change request review.',
+      }));
 
       form.reset();
     },
@@ -110,12 +109,10 @@ export function ChangeRequestSubmitReview({ onDiscard, onReview }: {
       return errorNotification(error);
     }
 
-    toast.success((
-      <FormattedMessage
-        defaultMessage="Change request was discarded"
-        description="Notification message shown when change request was discarded."
-      />
-    ));
+    toast.success(intl.formatMessage({
+      defaultMessage: 'Change request was discarded',
+      description: 'Notification message shown when change request was discarded.',
+    }));
   }, [onDiscard]);
 
   return (
@@ -138,12 +135,14 @@ export function ChangeRequestSubmitReview({ onDiscard, onReview }: {
                   render={<Editor
                     name="change-request-review-comment"
                     value={field.state.value}
-                    placeholder={
-                      <FormattedMessage
-                        defaultMessage="Leave a comment (optional)"
-                        description="Placeholder for the change request review comment field"
-                      />
-                    }
+                    aria-label={intl.formatMessage({
+                      defaultMessage: 'Change request comment',
+                      description: 'Label for the change request review comment field',
+                    })}
+                    placeholder={intl.formatMessage({
+                      defaultMessage: 'Leave a comment (optional)',
+                      description: 'Placeholder for the change request review comment field',
+                    })}
                     onValueChange={field.handleChange}
                     onBlur={field.handleBlur}
                   />}

@@ -9,7 +9,7 @@ describe('components | clipboard | <Editor/>', () => {
 
   test('renders the editor region with the correct ARIA roles', () => {
     const { getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" aria-label="comments"/>,
+      <Editor aria-label="comments"/>,
     );
 
     expect(getByRole('textbox')).toBeInTheDocument();
@@ -21,15 +21,17 @@ describe('components | clipboard | <Editor/>', () => {
   });
 
   test('renders the placeholder when no value is provided', () => {
-    const { getByText } = renderWithMessageProvider(
-      <Editor name="test-editor" placeholder={<span>Start writing...</span>}/>,
+    const { getByRole } = renderWithMessageProvider(
+      <Editor placeholder="Start writing"/>,
     );
-    expect(getByText('Start writing...')).toBeInTheDocument();
+    expect(getByRole('textbox')).toBeInTheDocument();
+    expect(getByRole('textbox')).toHaveValue('');
+    expect(getByRole('textbox')).toHaveAttribute('placeholder', 'Start writing');
   });
 
   test('renders with an initial value visible in the editor', async () => {
     const { queryByText, getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" placeholder="Start writing" value="Hello world"/>,
+      <Editor placeholder="Start writing" value="Hello world"/>,
     );
 
     await waitFor(() => {
@@ -39,12 +41,9 @@ describe('components | clipboard | <Editor/>', () => {
     expect(queryByText('Start writing')).not.toBeInTheDocument();
   });
 
-  /*
-  see this issue: https://github.com/facebook/lexical/discussions/2659
-
   test('displays typed text in the editor region', async () => {
     const { getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" />,
+      <Editor />,
     );
 
     const editor = getByRole('textbox');
@@ -61,7 +60,7 @@ describe('components | clipboard | <Editor/>', () => {
     const onValueChange = vi.fn();
 
     const { getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" onValueChange={onValueChange} />,
+      <Editor onValueChange={onValueChange} />,
     );
 
     const editor = getByRole('textbox');
@@ -77,11 +76,10 @@ describe('components | clipboard | <Editor/>', () => {
 
     expect(onValueChange).toHaveBeenLastCalledWith('Hello');
   });
-  */
 
   test('should update the controller value prop in the editor', async () => {
     const { rerender, getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" value="Initial contents"/>,
+      <Editor value="Initial contents"/>,
     );
 
     await waitFor(() => {
@@ -89,7 +87,7 @@ describe('components | clipboard | <Editor/>', () => {
     });
 
     rerender(
-      <Editor name="test-editor" value="Updated contents"/>,
+      <Editor value="Updated contents"/>,
     );
 
     await waitFor(() => {
@@ -99,7 +97,7 @@ describe('components | clipboard | <Editor/>', () => {
 
   test('clears the editor when value is reset to an empty string', async () => {
     const { rerender, getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" value="Initial contents" placeholder="Placeholder text"/>,
+      <Editor value="Initial contents" placeholder="Placeholder text"/>,
     );
 
     await waitFor(() => {
@@ -107,7 +105,7 @@ describe('components | clipboard | <Editor/>', () => {
     });
 
     rerender(
-      <Editor name="test-editor" value=""/>,
+      <Editor value=""/>,
     );
 
     await waitFor(() => {
@@ -119,7 +117,7 @@ describe('components | clipboard | <Editor/>', () => {
     const onValueChange = vi.fn();
 
     const { rerender, getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" value="Initial contents" onValueChange={onValueChange}/>,
+      <Editor value="Initial contents" onValueChange={onValueChange}/>,
     );
 
     await waitFor(() => {
@@ -127,7 +125,7 @@ describe('components | clipboard | <Editor/>', () => {
     });
 
     rerender(
-      <Editor name="test-editor" value="Initial contents" onValueChange={onValueChange}/>,
+      <Editor value="Initial contents" onValueChange={onValueChange}/>,
     );
 
     await waitFor(() => {
@@ -138,7 +136,7 @@ describe('components | clipboard | <Editor/>', () => {
   test('switches to the preview when the preview button is clicked', async () => {
     const onEditingChange = vi.fn();
     const { queryByRole, getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" onEditingChange={onEditingChange} />,
+      <Editor onEditingChange={onEditingChange} />,
     );
 
     expect(queryByRole('button', { name: 'Preview' })).toBeInTheDocument();
@@ -156,7 +154,7 @@ describe('components | clipboard | <Editor/>', () => {
   });
 
   test('renders the markdown as HTML in the preview panel', async () => {
-    const { getByRole } = renderWithMessageProvider(<Editor name="test-editor" value="# Hello world"/>);
+    const { getByRole } = renderWithMessageProvider(<Editor value="# Hello world"/>);
 
     await userEvent.click(
       getByRole('button', { name: 'Preview' }),
@@ -170,7 +168,7 @@ describe('components | clipboard | <Editor/>', () => {
   });
 
   test('renders bold markdown correctly in preview', async () => {
-    const { getByRole } = renderWithMessageProvider(<Editor name="test-editor" value="**bold text**"/>);
+    const { getByRole } = renderWithMessageProvider(<Editor value="**bold text**"/>);
 
     await userEvent.click(
       getByRole('button', { name: 'Preview' }),
@@ -185,7 +183,7 @@ describe('components | clipboard | <Editor/>', () => {
 
   test('renders bullet list correctly in preview', async () => {
     const { getByRole } = renderWithMessageProvider(
-      <Editor name="test-editor" value={'- item one\n- item two'}/>,
+      <Editor value={'- item one\n- item two'}/>,
     );
 
     await userEvent.click(
@@ -200,5 +198,15 @@ describe('components | clipboard | <Editor/>', () => {
     expect(items).toHaveLength(2);
     expect(items[0]).toHaveTextContent('item one');
     expect(items[1]).toHaveTextContent('item two');
+  });
+
+  test('renders apply toolbar button action when clicked', async () => {
+    const { getByRole } = renderWithMessageProvider(<Editor />);
+
+    await userEvent.click(
+      getByRole('button', { name: 'Bold' }),
+    );
+
+    expect(getByRole('textbox')).toHaveTextContent('****');
   });
 });

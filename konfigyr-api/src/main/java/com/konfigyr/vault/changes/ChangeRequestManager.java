@@ -4,6 +4,7 @@ import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.support.SearchQuery;
@@ -198,6 +199,11 @@ public class ChangeRequestManager {
 		final ApplyResult result = command.result();
 		final AuthenticatedPrincipal author = result.author();
 
+		MarkdownContents description = null;
+		if (result.description() != null) {
+			description = MarkdownContents.of(result.description());
+		}
+
 		final long number = context.select(DSL.max(VAULT_CHANGE_REQUESTS.NUMBER))
 				.from(VAULT_CHANGE_REQUESTS)
 				.where(VAULT_CHANGE_REQUESTS.SERVICE_ID.eq(command.service().id().get()))
@@ -216,7 +222,8 @@ public class ChangeRequestManager {
 								.set(VAULT_CHANGE_REQUESTS.MERGE_STATUS, ChangeRequestMergeStatus.NOT_APPROVED.name())
 								.set(VAULT_CHANGE_REQUESTS.CHANGE_COUNT, result.changes().size())
 								.set(VAULT_CHANGE_REQUESTS.SUBJECT, result.subject())
-								.set(VAULT_CHANGE_REQUESTS.DESCRIPTION, result.description())
+								.set(VAULT_CHANGE_REQUESTS.DESCRIPTION_CHECKSUM, description, MarkdownContents::checksum)
+								.set(VAULT_CHANGE_REQUESTS.DESCRIPTION, description, MarkdownContents::value)
 								.set(VAULT_CHANGE_REQUESTS.BRANCH_NAME, command.branch())
 								.set(VAULT_CHANGE_REQUESTS.BASE_REVISION, result.previousRevision())
 								.set(VAULT_CHANGE_REQUESTS.HEAD_REVISION, result.revision())
@@ -273,7 +280,7 @@ public class ChangeRequestManager {
 				ChangeRequestState.OPEN,
 				ChangeRequestMergeStatus.NOT_APPROVED,
 				result.subject(),
-				result.description(),
+				description,
 				result.changes().size(),
 				author.getDisplayName().orElseGet(author),
 				result.timestamp(),
@@ -318,7 +325,8 @@ public class ChangeRequestManager {
 		}
 
 		if (command.description() != null) {
-			record.set(VAULT_CHANGE_REQUESTS.DESCRIPTION, command.description());
+			record.set(VAULT_CHANGE_REQUESTS.DESCRIPTION_CHECKSUM, command.description().checksum());
+			record.set(VAULT_CHANGE_REQUESTS.DESCRIPTION, command.description().value());
 		}
 
 		if (record.changed()) {
@@ -406,12 +414,20 @@ public class ChangeRequestManager {
 				toChangeRequestNumberCondition(command.service(), command.number())
 		).orElseThrow(() -> new ChangeRequestNotFoundException(command.service(), command.number()));
 
+		final SettableRecord record = SettableRecord.of(context, VAULT_CHANGE_REQUEST_EVENTS)
+				.set(VAULT_CHANGE_REQUEST_EVENTS.CHANGE_REQUEST_ID, request.id().get())
+				.set(VAULT_CHANGE_REQUEST_EVENTS.TYPE, command.type().name())
+				.set(VAULT_CHANGE_REQUEST_EVENTS.INITIATOR, initiator.getDisplayName().orElseGet(initiator))
+				.set(VAULT_CHANGE_REQUEST_EVENTS.TIMESTAMP, OffsetDateTime.now());
+
+		if (command.comment() != null) {
+			record.set(VAULT_CHANGE_REQUEST_EVENTS.COMMENT_CHECKSUM, command.comment().checksum())
+					.set(VAULT_CHANGE_REQUEST_EVENTS.COMMENT_CONTENTS, command.comment().value());
+		}
+
 		context.insertInto(VAULT_CHANGE_REQUEST_EVENTS)
-					.set(VAULT_CHANGE_REQUEST_EVENTS.CHANGE_REQUEST_ID, request.id().get())
-					.set(VAULT_CHANGE_REQUEST_EVENTS.TYPE, command.type().name())
-					.set(VAULT_CHANGE_REQUEST_EVENTS.INITIATOR, initiator.getDisplayName().orElseGet(initiator))
-					.set(VAULT_CHANGE_REQUEST_EVENTS.TIMESTAMP, OffsetDateTime.now())
-					.execute();
+				.set(record.get())
+				.execute();
 
 		return request;
 	}
@@ -433,6 +449,7 @@ public class ChangeRequestManager {
 						VAULT_CHANGE_REQUESTS.MERGE_STATUS,
 						VAULT_CHANGE_REQUESTS.CHANGE_COUNT,
 						VAULT_CHANGE_REQUESTS.SUBJECT,
+						VAULT_CHANGE_REQUESTS.DESCRIPTION_CHECKSUM,
 						VAULT_CHANGE_REQUESTS.DESCRIPTION,
 						VAULT_CHANGE_REQUESTS.CREATED_BY,
 						VAULT_CHANGE_REQUESTS.CREATED_AT,
@@ -465,7 +482,7 @@ public class ChangeRequestManager {
 				record.get(VAULT_CHANGE_REQUESTS.STATE, ChangeRequestState.class),
 				record.get(VAULT_CHANGE_REQUESTS.MERGE_STATUS, ChangeRequestMergeStatus.class),
 				record.get(VAULT_CHANGE_REQUESTS.SUBJECT),
-				record.get(VAULT_CHANGE_REQUESTS.DESCRIPTION),
+				toMarkdownContents(record, VAULT_CHANGE_REQUESTS.DESCRIPTION_CHECKSUM, VAULT_CHANGE_REQUESTS.DESCRIPTION),
 				record.get(VAULT_CHANGE_REQUESTS.CHANGE_COUNT),
 				record.get(VAULT_CHANGE_REQUESTS.CREATED_BY),
 				record.get(VAULT_CHANGE_REQUESTS.CREATED_AT),
@@ -491,6 +508,7 @@ public class ChangeRequestManager {
 		return new ChangeRequestHistory(
 				record.get(VAULT_CHANGE_REQUEST_EVENTS.ID, String.class),
 				record.get(VAULT_CHANGE_REQUEST_EVENTS.TYPE, ChangeRequestHistory.Type.class),
+				toMarkdownContents(record, VAULT_CHANGE_REQUEST_EVENTS.COMMENT_CHECKSUM, VAULT_CHANGE_REQUEST_EVENTS.COMMENT_CONTENTS),
 				null,
 				record.get(VAULT_CHANGE_REQUEST_EVENTS.INITIATOR),
 				record.get(VAULT_CHANGE_REQUEST_EVENTS.TIMESTAMP)
@@ -510,6 +528,14 @@ public class ChangeRequestManager {
 						record.get(VAULT_CHANGE_REQUEST_PROPERTIES.NEW_VALUE_CIPHER)
 				)
 		);
+	}
+
+	@Nullable
+	private static MarkdownContents toMarkdownContents(Record record, Field<ByteArray> checksum, Field<String> value) {
+		if (record.get(checksum) != null && record.get(value) != null) {
+			return new MarkdownContents(record.get(value), record.get(checksum));
+		}
+		return null;
 	}
 
 	@Nullable

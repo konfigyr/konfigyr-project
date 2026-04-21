@@ -82,18 +82,16 @@ describe('components | vault | change-request | <ChangeRequestSubmitReview/>', (
       </>,
     );
 
-    // TODO: Content editable is not working in test environment
-    // await userEvents.type(
-    //   getByRole('textbox'),
-    //   'This is a test comment',
-    // );
-    //
+    await userEvents.type(
+      getByRole('textbox'),
+      'This is a test comment',
+    );
+
     await userEvents.click(getByRole('radio', { name: 'Comment' }));
     await userEvents.click(getByRole('button', { name: 'Submit review' }));
 
     expect(onReview).toHaveBeenCalledExactlyOnceWith({
-      // comment: 'This is a test comment',
-      comment: '',
+      comment: 'This is a test comment',
       state: ChangeRequestReviewType.COMMENT,
     });
 

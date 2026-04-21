@@ -1,5 +1,6 @@
 package com.konfigyr.vault;
 
+import com.konfigyr.markdown.MarkdownContents;
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jspecify.annotations.NullMarked;
@@ -28,6 +29,7 @@ import java.time.OffsetDateTime;
  *
  * @param id the unique identifier of the change request history entry, never {@literal null}
  * @param type the type of the event, never {@literal null}
+ * @param comment the comment associated with the event, can be {@literal null}
  * @param details additional details about the event, can't be {@literal null}
  * @param initiator the name of the principal that initiated the event; never {@literal null}
  * @param timestamp the time at which the event occurred, never {@literal null}
@@ -40,6 +42,7 @@ import java.time.OffsetDateTime;
 public record ChangeRequestHistory(
 	@Identity String id,
 	Type type,
+	@Nullable MarkdownContents comment,
 	@Nullable ObjectNode details,
 	String initiator,
 	OffsetDateTime timestamp

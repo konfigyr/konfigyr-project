@@ -3,6 +3,7 @@ package com.konfigyr.vault.controller;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.CursorModel;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.security.OAuthScope;
@@ -404,7 +405,7 @@ class VaultControllerTest extends AbstractControllerTest {
 				.returns(ChangeRequestMergeStatus.NOT_APPROVED, ChangeRequest::mergeStatus)
 				.returns(1, ChangeRequest::count)
 				.returns("Test changes", ChangeRequest::subject)
-				.returns("Creates a change request", ChangeRequest::description)
+				.returns(MarkdownContents.of("Creates a change request"), ChangeRequest::description)
 				.returns("John Doe", ChangeRequest::createdBy)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.SECONDS))

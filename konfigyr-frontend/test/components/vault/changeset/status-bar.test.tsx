@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
@@ -10,8 +10,12 @@ import { useChangesetState } from '@konfigyr/hooks';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
 
 import type { Profile } from '@konfigyr/hooks/types';
+import type { ChangesetStatusBarProps } from '@konfigyr/components/vault/changeset/status-bar';
 
-function TestChangesetStatusBar({ profile, modified = false }: { profile: Profile, modified?: boolean }) {
+function TestChangesetStatusBar({ profile, modified = false, ...props }: {
+  profile: Profile;
+  modified?: boolean;
+} & Omit<ChangesetStatusBarProps, 'changeset'>) {
   const { data } = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profile);
 
   const changeset = useMemo(() => {
@@ -33,7 +37,7 @@ function TestChangesetStatusBar({ profile, modified = false }: { profile: Profil
   return changeset && (
     <>
       <Toaster />
-      <ChangesetStatusBar changeset={changeset} />
+      <ChangesetStatusBar changeset={changeset} {...props} />
     </>
   );
 }
@@ -79,8 +83,9 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
   });
 
   test('should update changeset name', async () => {
+    const onRenamed = vi.fn();
     const { getByRole } = renderWithQueryClient(
-      <TestChangesetStatusBar profile={profiles.development} />,
+      <TestChangesetStatusBar profile={profiles.development} onChangesetRenamed={onRenamed}/>,
     );
 
     await waitFor(() => {
@@ -107,11 +112,15 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
     await waitFor(() => {
       expect(getByRole('button', { name: 'Updated changeset name' })).toBeInTheDocument();
     });
+
+    expect(onRenamed).toHaveBeenCalledOnce();
   });
 
   test('should discard changeset', async () => {
+    const onDiscarded = vi.fn();
+
     const { getByRole, getByText } = renderWithQueryClient(
-      <TestChangesetStatusBar profile={profiles.development} />,
+      <TestChangesetStatusBar profile={profiles.development} onChangesetDiscarded={onDiscarded} />,
     );
 
     await waitFor(() => {
@@ -125,6 +134,8 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
     await waitFor(() => {
       expect(getByText('Your changes were discarded')).toBeInTheDocument();
     });
+
+    expect(onDiscarded).toHaveBeenCalledOnce();
   });
 
   test('should disable the submit changeset dialog trigger button when no changes are present', async () => {
@@ -140,8 +151,10 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
   });
 
   test('should open the submit changeset dialog and apply the changes to an unprotected profile', async () => {
+    const onApplied = vi.fn();
+
     const { getByRole, getByText } = renderWithQueryClient(
-      <TestChangesetStatusBar profile={profiles.development} modified={true} />,
+      <TestChangesetStatusBar profile={profiles.development} modified={true} onChangesetApplied={onApplied} />,
     );
 
     await waitFor(() => {
@@ -164,11 +177,15 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
     await waitFor(() => {
       expect(getByText('Your changes were successfully applied')).toBeInTheDocument();
     });
+
+    expect(onApplied).toHaveBeenCalledOnce();
   });
 
   test('should open the submit changeset dialog and submit the changes to a protected profile', async () => {
+    const onSubmitted = vi.fn();
+
     const { getByRole, getByText } = renderWithQueryClient(
-      <TestChangesetStatusBar profile={profiles.staging} modified={true} />,
+      <TestChangesetStatusBar profile={profiles.staging} modified={true} onChangeRequestCreated={onSubmitted}/>,
     );
 
     await waitFor(() => {
@@ -191,5 +208,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
       expect(getByText('Change request created')).toBeInTheDocument();
       expect(getByText('Your changes were submitted for review and are now waiting for approval.')).toBeInTheDocument();
     });
+
+    expect(onSubmitted).toHaveBeenCalledOnce();
   });
 });

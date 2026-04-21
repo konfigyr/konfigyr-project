@@ -20,6 +20,7 @@ import type {
   ConfigurationPropertyValue,
   ServiceCatalog,
 } from '@konfigyr/hooks/types';
+import type { ChangesetStatusBarProps } from '@konfigyr/components/vault/changeset/status-bar';
 
 const matches = (term: string, value?: string | undefined | null) => {
   if (value === undefined || value === null) {
@@ -53,7 +54,7 @@ const useFilteredProperties = (
   }, [properties, termFilter]);
 };
 
-export function ChangesetEditor({ catalog, changeset }: { catalog: ServiceCatalog, changeset: ChangesetState }) {
+export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: ServiceCatalog } & ChangesetStatusBarProps) {
   const [propertyStatusFilter, onPropertyStatusFilterChanged] = useState<StatusFilter>(StatusFilter.ALL);
   const [propertyTermFilter, onPropertyTermFilterChanged] = useState<string>('');
 
@@ -104,7 +105,7 @@ export function ChangesetEditor({ catalog, changeset }: { catalog: ServiceCatalo
       />
 
       <div className="mb-6">
-        <ChangesetStatusBar changeset={changeset} />
+        <ChangesetStatusBar changeset={changeset} {...props} />
       </div>
 
       <div className="flex items-center justify-between gap-4 mb-4">

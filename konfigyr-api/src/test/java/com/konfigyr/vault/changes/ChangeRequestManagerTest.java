@@ -2,6 +2,7 @@ package com.konfigyr.vault.changes;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.security.AuthenticatedPrincipal;
@@ -118,7 +119,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.returns(ChangeRequestMergeStatus.MERGEABLE, ChangeRequest::mergeStatus)
 				.returns(1, ChangeRequest::count)
 				.returns("Update application name", ChangeRequest::subject)
-				.returns("Align application name with new naming convention", ChangeRequest::description)
+				.returns(MarkdownContents.of("Align application name with new naming convention"), ChangeRequest::description)
 				.returns("John Doe", ChangeRequest::createdBy);
 	}
 
@@ -204,7 +205,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.returns(EntityId.from(4), ChangeRequest::id)
 				.returns(state, ChangeRequest::state)
 				.returns("Tune logging levels", ChangeRequest::subject)
-				.returns("Reduce log verbosity in production", ChangeRequest::description)
+				.returns(MarkdownContents.of("Reduce log verbosity in production"), ChangeRequest::description)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS))
 				);
@@ -245,7 +246,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 		assertThat(manager.update(command))
 				.returns(EntityId.from(1), ChangeRequest::id)
 				.returns(command.subject(), ChangeRequest::subject)
-				.returns("Align application name with new naming convention", ChangeRequest::description);
+				.returns(MarkdownContents.of("Align application name with new naming convention"), ChangeRequest::description);
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(4)
@@ -266,7 +267,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.returns(EntityId.from(2), ChangeRequest::id)
 				.returns(ChangeRequestState.DISCARDED, ChangeRequest::state)
 				.returns(command.subject(), ChangeRequest::subject)
-				.returns("Move service to new port range", ChangeRequest::description);
+				.returns(MarkdownContents.of("Move service to new port range"), ChangeRequest::description);
 
 		assertThat(manager.history(changeRequestFor(2, 2)))
 				.hasSize(4)
@@ -294,7 +295,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.returns(EntityId.from(1), ChangeRequest::id)
 				.returns(ChangeRequestState.MERGED, ChangeRequest::state)
 				.returns(command.subject(), ChangeRequest::subject)
-				.returns("Align application name with new naming convention", ChangeRequest::description);
+				.returns(MarkdownContents.of("Align application name with new naming convention"), ChangeRequest::description);
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(4)
@@ -309,7 +310,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 	void updateChangeRequestSubjectAndDescription() {
 		doReturn("john.doe@konfigyr.com").when(principal).get();
 		final var command = new ChangeRequestUpdateCommand(serviceFor(2), 1L, principal,
-				null, "New subject name", "New description");
+				null, "New subject name", MarkdownContents.of("New description"));
 
 		assertThat(manager.update(command))
 				.returns(EntityId.from(1), ChangeRequest::id)
@@ -328,7 +329,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 	@DisplayName("should update the change request description and ignore same subject")
 	void ignoreChangeRequestSubjectUpdate() {
 		final var command = new ChangeRequestUpdateCommand(serviceFor(2), 1L, principal,
-				null, "Update application name", "New description");
+				null, "Update application name", MarkdownContents.of("New description"));
 
 		assertThat(manager.update(command))
 				.returns(EntityId.from(1), ChangeRequest::id)
@@ -348,7 +349,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 		assertThat(manager.update(command))
 				.returns(EntityId.from(1), ChangeRequest::id)
 				.returns("Update application name", ChangeRequest::subject)
-				.returns("Align application name with new naming convention", ChangeRequest::description);
+				.returns(MarkdownContents.of("Align application name with new naming convention"), ChangeRequest::description);
 
 		assertThat(manager.history(changeRequestFor(2, 1)))
 				.hasSize(3);
@@ -370,7 +371,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 	void submitChangeRequestComment() {
 		doReturn("john.doe@konfigyr.com").when(principal).get();
 		final var command = new ChangeRequestReviewCommand(serviceFor(2), 1L, principal,
-				ChangeRequestReviewCommand.Operation.COMMENT, "So long, and thanks for all the fish");
+				ChangeRequestReviewCommand.Operation.COMMENT, MarkdownContents.of("So long, and thanks for all the fish"));
 
 		assertThat(manager.review(command))
 				.returns(EntityId.from(1), ChangeRequest::id);
@@ -379,6 +380,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.hasSize(4)
 				.last()
 				.returns(ChangeRequestHistory.Type.COMMENTED, ChangeRequestHistory::type)
+				.returns(MarkdownContents.of("So long, and thanks for all the fish"), ChangeRequestHistory::comment)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
 	}
 
@@ -388,7 +390,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 	void submitChangeRequestApproval() {
 		doReturn("john.doe@konfigyr.com").when(principal).get();
 		final var command = new ChangeRequestReviewCommand(serviceFor(2), 1L, principal,
-				ChangeRequestReviewCommand.Operation.APPROVE, "LGTM");
+				ChangeRequestReviewCommand.Operation.APPROVE, MarkdownContents.of("LGTM"));
 
 		assertThat(manager.review(command))
 				.returns(EntityId.from(1), ChangeRequest::id);
@@ -397,6 +399,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.hasSize(4)
 				.last()
 				.returns(ChangeRequestHistory.Type.APPROVED, ChangeRequestHistory::type)
+				.returns(MarkdownContents.of("LGTM"), ChangeRequestHistory::comment)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
 	}
 
@@ -415,6 +418,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.hasSize(4)
 				.last()
 				.returns(ChangeRequestHistory.Type.CHANGES_REQUESTED, ChangeRequestHistory::type)
+				.returns(null, ChangeRequestHistory::comment)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
 	}
 
