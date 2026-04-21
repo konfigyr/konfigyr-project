@@ -194,7 +194,7 @@ class VaultChangeRequestController extends AbstractVaultController {
 
 	record UpdateChangeRequest(
 			@Length(min = 2, max = 30) String subject,
-			@Length(max = 255) MarkdownContents description
+			@Length(max = 65536) MarkdownContents description
 	) {
 
 		ChangeRequestUpdateCommand command(Service service, Long number) {
@@ -205,7 +205,7 @@ class VaultChangeRequestController extends AbstractVaultController {
 
 	record ReviewChangeRequest(
 			@NotNull ChangeRequestReviewCommand.Operation state,
-			@Length(max = 255) MarkdownContents comment
+			@Length(max = 16384) MarkdownContents comment
 	) {
 
 		ChangeRequestReviewCommand command(Service service, Long number) {
