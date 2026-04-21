@@ -9,7 +9,6 @@ import {
 } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { CircleXIcon, PencilIcon, SaveIcon } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
 import { cva } from 'class-variance-authority';
 import {
   useApplyChangeset,
@@ -50,6 +49,10 @@ export const changesetStatusBarVariants = cva(
 
 export interface ChangesetStatusBarProps {
   changeset: ChangesetState,
+  onChangesetApplied?: (changeset: ChangesetState) => void | Promise<void>,
+  onChangesetDiscarded?: (changeset: ChangesetState) => void | Promise<void>,
+  onChangesetRenamed?: (changeset: ChangesetState) => void | Promise<void>,
+  onChangeRequestCreated?: (changeRequest: ChangeRequest) => void | Promise<void>,
 }
 
 export function ChangesetStatusBar(props: ChangesetStatusBarProps) {
@@ -95,14 +98,23 @@ export function StickyChangesetStatusBar({ isVisible, ...props }: ChangesetStatu
   );
 }
 
-function ChangesetName({ changeset, onError }: { changeset: ChangesetState, onError: (error: unknown) => void }) {
+function ChangesetName({ changeset, onRenamed, onError }: {
+  changeset: ChangesetState;
+  onError: (error: unknown) => void;
+  onRenamed?: ChangesetStatusBarProps['onChangesetRenamed'],
+}) {
   const { mutateAsync: onRenameChangeset } = useRenameChangeset(changeset);
+
+  const onRename = useCallback(async (value?: string) => {
+    const updated = await onRenameChangeset(value);
+    await onRenamed?.(updated);
+  }, [changeset]);
 
   return (
     <div className="flex items-center gap-2 min-w-0">
       <InlineEdit
         value={changeset.name}
-        onChange={onRenameChangeset}
+        onChange={onRename}
         onError={onError}
       >
         <InlineEditPlaceholder
@@ -149,7 +161,11 @@ function StateCountLabel({ type, count }: { type: PropertyTransitionType, count:
   );
 }
 
-function DiscardButton({ changeset, onError }: { changeset: ChangesetState, onError: (error: unknown) => void }) {
+function DiscardButton({ changeset, onDiscarded, onError }: {
+  changeset: ChangesetState;
+  onError: (error: unknown) => void;
+  onDiscarded?: ChangesetStatusBarProps['onChangesetDiscarded'];
+}) {
   const { mutateAsync: onDiscardChangeset, isPending } = useDiscardChangeset();
 
   const onDiscard = useCallback(async () => {
@@ -158,6 +174,8 @@ function DiscardButton({ changeset, onError }: { changeset: ChangesetState, onEr
     } catch (error) {
       return onError(error);
     }
+
+    await onDiscarded?.(changeset);
 
     return toast.success((
       <FormattedMessage
@@ -188,10 +206,14 @@ function ChangesetStatusBarContents({
   changeset,
   variant,
   ref,
+  onChangesetApplied,
+  onChangesetDiscarded,
+  onChangesetRenamed,
+  onChangeRequestCreated,
 }: ChangesetStatusBarProps & VariantProps<typeof changesetStatusBarVariants> & { ref?: RefObject<HTMLDivElement | null> }) {
-  const navigate = useNavigate();
   const [opened, setOpened] = useState(false);
   const errorNotification = useErrorNotification();
+
   const { mutateAsync: onApplyChangeset } = useApplyChangeset();
   const { mutateAsync: onSubmitChangeset } = useSubmitChangeset();
 
@@ -203,6 +225,8 @@ function ChangesetStatusBarContents({
     }
 
     setOpened(false);
+
+    await onChangesetApplied?.(changeset);
 
     return toast.success((
       <FormattedMessage
@@ -223,6 +247,8 @@ function ChangesetStatusBarContents({
 
     setOpened(false);
 
+    onChangeRequestCreated?.(changeRequest);
+
     toast.success((
       <FormattedMessage
         defaultMessage="Change request created"
@@ -236,15 +262,6 @@ function ChangesetStatusBarContents({
         />
       ),
     });
-
-    return navigate({
-      to: '/namespace/$namespace/services/$service/requests/$number',
-      params: {
-        namespace: changeset.namespace.slug,
-        service: changeset.service.slug,
-        number: String(changeRequest.number),
-      },
-    });
   }, []);
 
   const totalChanges = changeset.added + changeset.modified + changeset.deleted;
@@ -253,7 +270,9 @@ function ChangesetStatusBarContents({
     <div ref={ref} className={changesetStatusBarVariants({ variant })}>
       <ChangesetName
         changeset={changeset}
-        onError={errorNotification}/>
+        onError={errorNotification}
+        onRenamed={onChangesetRenamed}
+      />
 
       <div className="h-4 w-px bg-border shrink-0" />
 
@@ -280,6 +299,7 @@ function ChangesetStatusBarContents({
         <DiscardButton
           changeset={changeset}
           onError={errorNotification}
+          onDiscarded={onChangesetDiscarded}
         />
 
         <ChangesetSubmitDialog

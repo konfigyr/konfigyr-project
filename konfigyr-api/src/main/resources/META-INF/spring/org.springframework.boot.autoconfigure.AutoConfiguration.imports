@@ -3,5 +3,6 @@ com.konfigyr.artifactory.ArtifactoryAutoConfiguration
 com.konfigyr.batch.BatchAutoConfiguration
 com.konfigyr.feature.FeaturesAutoConfiguration
 com.konfigyr.kms.KeysetManagerAutoConfiguration
+com.konfigyr.markdown.MarkdownAutoconfiguration
 com.konfigyr.namespace.NamespaceManagementAutoConfiguration
 com.konfigyr.vault.VaultAutoConfiguration

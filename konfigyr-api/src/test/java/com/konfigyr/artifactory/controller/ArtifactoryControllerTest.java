@@ -157,8 +157,6 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.isPresent()
 				.get()
 				.satisfies(it -> {
-					System.out.println(new String(it.getContentAsByteArray()));
-
 					final List<PropertyDescriptor> properties = jsonMapper.readValue(
 							it.getContentAsByteArray(),
 							jsonMapper.getTypeFactory().constructCollectionLikeType(List.class, PropertyDescriptor.class)

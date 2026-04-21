@@ -10,7 +10,7 @@ spring:
       enabled: false
 
   cache:
-    cache-names: access-control, crypto-keysets, namespaces
+    cache-names: access-control, crypto-keysets, namespaces, markdown-parser
 
     caffeine:
       spec: recordStats,expireAfterWrite=20m

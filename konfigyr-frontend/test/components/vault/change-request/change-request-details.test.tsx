@@ -51,4 +51,40 @@ describe('components | vault | change-request | <ChangeRequestDetails/>', () => 
     });
   });
 
+  test('should update change request description', async () => {
+    const { getByRole, getByText } = renderWithQueryClient(
+      <ChangeRequestDetails
+        namespace={namespaces.konfigyr}
+        service={services.konfigyrApi}
+        number="1"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    });
+
+    expect(getByText('Align the application name with the new naming convention')).toBeInTheDocument();
+
+    await userEvents.click(
+      getByRole('button', { name: 'Edit' }),
+    );
+
+    expect(getByRole('textbox', { name: 'Update change request description' })).toBeInTheDocument();
+
+    await userEvents.type(
+      getByRole('textbox', { name: 'Update change request description' }),
+      ' - Updated description',
+    );
+
+    await userEvents.click(
+      getByRole('button', { name: 'Update description' }),
+    );
+
+    await waitFor(() => {
+      expect(getByText('Align the application name with the new naming convention - Updated description'))
+        .toBeInTheDocument();
+    });
+  });
+
 });

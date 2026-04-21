@@ -1,5 +1,6 @@
 package com.konfigyr.vault.changes;
 
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.vault.ChangeRequest;
@@ -39,7 +40,7 @@ public record ChangeRequestUpdateCommand(
 		AuthenticatedPrincipal principal,
 		@Nullable ChangeRequestState state,
 		@Nullable String subject,
-		@Nullable String description
+		@Nullable MarkdownContents description
 ) implements Serializable {
 
 	@Serial

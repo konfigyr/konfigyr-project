@@ -26,6 +26,7 @@
     "@tanstack/react-router-devtools": "1.166.11",
     "@tanstack/react-router-ssr-query": "1.166.10",
     "@tanstack/react-start": "1.167.14",
+    "@uiw/react-md-editor": "^4.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "copy-to-clipboard": "^3.3.3",

@@ -1,6 +1,7 @@
 package com.konfigyr.vault;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.support.SearchQuery;
 import org.jmolecules.ddd.annotation.*;
@@ -73,7 +74,7 @@ public record ChangeRequest(
 		ChangeRequestState state,
 		ChangeRequestMergeStatus mergeStatus,
 		String subject,
-		@Nullable String description,
+		@Nullable MarkdownContents description,
 		int count,
 		String createdBy,
 		@Nullable OffsetDateTime createdAt,

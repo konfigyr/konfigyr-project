@@ -209,7 +209,7 @@ final class RepositoryVault implements Vault {
 				mergeOutcome.revision(),
 				headRevision.revision(),
 				changeRequest.subject(),
-				changeRequest.description(),
+				changeRequest.description() == null ? null : changeRequest.description().value(),
 				Set.copyOf(changeRequestRevision.changes()),
 				author,
 				mergeOutcome.timestamp()

@@ -1,4 +1,5 @@
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
+import type { MarkdownContents } from '@konfigyr/hooks/hateoas/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
 export type ProfilePolicy = 'UNPROTECTED' | 'PROTECTED' | 'IMMUTABLE';
@@ -129,7 +130,7 @@ export interface ChangeRequest {
   state: ChangeRequestState;
   mergeStatus: ChangeRequestMergeStatus
   subject: string;
-  description?: string;
+  description?: MarkdownContents;
   count: number;
   createdBy: string;
   createdAt?: string;
@@ -163,6 +164,7 @@ export enum ChangeRequestHistoryType {
 export interface ChangeRequestHistory {
   id: string;
   type: ChangeRequestHistoryType;
+  comment?: MarkdownContents;
   initiator: string;
   timestamp: string;
 }
