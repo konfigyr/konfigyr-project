@@ -73,10 +73,11 @@ class CommonmarkMarkdownParser implements MarkdownParser {
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * <p>The result is cached by Spring under the {@code markdown-html} cache using
-	 * {@link MarkdownContents#checksum()} as the key, so the full parse–render–sanitize
-	 * pipeline only runs once per unique document regardless of concurrent callers.
+	 * <p>
+	 * The result is cached by Spring under the {@code markdown-html} cache using
+	 * {@link MarkdownContents#checksum()} as the key, so the full parse–render–sanitize pipeline only
+	 * runs once per unique document regardless of concurrent callers.
+	 * <p>
 	 * An empty string is returned immediately for blank content without entering the pipeline.
 	 */
 	@Override
@@ -93,18 +94,31 @@ class CommonmarkMarkdownParser implements MarkdownParser {
 
 	/**
 	 * Builds the OWASP HTML sanitizer policy used by this parser.
-	 *
-	 * <p>The allowlist is modeled on GitHub's GFM content policy. Standard block
-	 * and inline elements produced by commonmark-java are permitted. Link {@code href}
-	 * attributes are restricted to {@code http}, {@code https}, and {@code mailto}
-	 * schemes, blocking {@code javascript:} URIs entirely, and {@code rel="nofollow"}
-	 * is enforced on all anchors. Image {@code src} attributes are restricted to
-	 * {@code http} and {@code https}. Task list {@code <input>} elements are allowed
-	 * only with {@code type="checkbox"} and the {@code checked} and {@code disabled}
-	 * attributes, which is exactly what commonmark-java emits for task list items.
-	 * {@code class} attributes on {@code <code>} and {@code <pre>} elements are
-	 * permitted only when the value starts with {@code language-}, preserving syntax
-	 * highlighting markers while blocking arbitrary class injection.
+	 * <p>
+	 * The allowlist is modeled on GitHub's GFM content policy and includes the following:
+	 * <ul>
+	 *     <li>
+	 *         Standard block and inline elements produced by {@code commonmark-java} are permitted.
+	 *     </li>
+	 *     <li>
+	 *         Link {@code href} attributes are restricted to {@code http}, {@code https}, and
+	 *         {@code mailto} schemes, blocking {@code javascript:} URIs entirely, and {@code rel="nofollow"}
+	 *         is enforced on all anchors.
+	 *     </li>
+	 *     <li>
+	 *         Image {@code src} attributes are restricted to {@code http} and {@code https}.
+	 *     </li>
+	 *     <li>
+	 *         Task list {@code <input>} elements are allowed only with {@code type="checkbox"} and the
+	 *         {@code checked} and {@code disabled} attributes, which is exactly what {@code commonmark-java}
+	 *         emits for task list items.
+	 *     </li>
+	 *     <li>
+	 *         {@code class} attributes on <code>&lt;code&gt;</code> and <code>&lt;pre&gt;</code> elements
+	 *         are permitted only when the value starts with {@code language-}, preserving syntax
+	 *         highlighting markers while blocking arbitrary class injection.
+	 *     </li>
+	 * </ul>
 	 *
 	 * @return a configured, immutable, thread-safe {@link PolicyFactory}
 	 */

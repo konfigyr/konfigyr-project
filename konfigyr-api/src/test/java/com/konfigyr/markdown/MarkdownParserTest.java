@@ -1,7 +1,6 @@
 package com.konfigyr.markdown;
 
 import com.konfigyr.io.ByteArray;
-import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,10 +16,6 @@ class MarkdownParserTest {
 	@Test
 	@DisplayName("should create markdown contents and calculate checksum")
 	void sameCreateContents() {
-		System.out.println(
-				Base64.encodeBase64String(MarkdownContents.of("Looks good to me.").checksum().array())
-		);
-
 		final var contents = MarkdownContents.of("hello");
 
 		assertThatObject(contents)
@@ -68,7 +63,7 @@ class MarkdownParserTest {
 			"###### Header,<h6>Header</h6>",
 			"`variable`,<code>variable</code>",
 			"```const x = 1;```,<code>const x &#61; 1;</code>",
-			"---,<hr />",
+			"---,<hr />"
 	})
 	void parseBlockElements(String markdown, String expected) {
 		assertThat(parser.toSafeHtml(MarkdownContents.of(markdown)))
@@ -260,5 +255,5 @@ class MarkdownParserTest {
 		assertThat(parser.toSafeHtml(contents))
 				.doesNotContain("style=");
 	}
-	
+
 }
