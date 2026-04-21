@@ -1,5 +1,6 @@
-import { ServiceUpdateForm } from '@konfigyr/components/namespace/service/update-form';
-import { createFileRoute } from '@tanstack/react-router';
+import {ServiceUpdateForm} from '@konfigyr/components/namespace/service/update-form';
+import {createFileRoute} from '@tanstack/react-router';
+import {ServiceDestructiveActions} from "@konfigyr/components/namespace/service/settings/destructiive-actions";
 
 export const Route = createFileRoute(
   '/_authenticated/namespace/$namespace/services/$service/settings',
@@ -13,6 +14,7 @@ function RouteComponent() {
   return (
     <div className="w-full lg:w-4/5 xl:w-2/3 space-y-6 px-4 mx-auto">
       <ServiceUpdateForm namespace={namespace} service={service} />
+      <ServiceDestructiveActions namespace={namespace} service={service} />
     </div>
   );
 }
