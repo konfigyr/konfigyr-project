@@ -319,6 +319,15 @@ dist
 ### Rollup dist ###
 svg-symbols.html
 
+
+### GSD ###
+.gsd
+.gsd-id
+.mcp.json
+.bg-shell/
+*.swp
+*.swo
+
 ### Local Configuration Files ###
 application-local.yml
 application-local.yaml
@@ -330,3 +339,20 @@ application-local.properties
 ### Local state repository or metadata stores ###
 metadata-store
 state-repositories
+
+# ── GSD baseline (auto-generated) ──
+.vscode/
+*.code-workspace
+.env.*
+!.env.example
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+coverage/
+tmp/

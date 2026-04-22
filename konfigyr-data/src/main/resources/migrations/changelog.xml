@@ -48,4 +48,8 @@
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
 
+	<includeAll path="audit"
+				relativeToChangelogFile="true"
+				errorIfMissingOrEmpty="false"/>
+
 </databaseChangeLog>
