@@ -54,7 +54,11 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
     );
 
     await waitFor(() => {
-      expect(getByText('Delete "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
+      expect(
+        getByText((_, e) =>
+          e?.textContent === 'Delete konfigyr test application'
+        )
+      ).toBeInTheDocument();
       expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 
@@ -75,7 +79,11 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
     );
 
     await waitFor(() => {
-      expect(getByText('Reset "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
+      expect(
+        getByText((_, e) =>
+          e?.textContent === 'Reset konfigyr test application'
+        )
+      ).toBeInTheDocument();
       expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 
