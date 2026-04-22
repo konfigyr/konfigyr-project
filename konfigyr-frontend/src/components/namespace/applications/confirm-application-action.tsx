@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { toast } from 'sonner'
-import { useCallback } from 'react'
-import { FormattedMessage } from 'react-intl'
-import { useErrorNotification } from '@konfigyr/components/error'
-import { Button } from '@konfigyr/components/ui/button'
+import { toast } from 'sonner';
+import { useCallback } from 'react';
+import { FormattedMessage } from 'react-intl';
+import { useErrorNotification } from '@konfigyr/components/error';
+import { Button } from '@konfigyr/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,11 +15,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@konfigyr/components/ui/alert-dialog'
-import { CancelLabel, YesLabel } from '@konfigyr/components/messages'
-import { useRemoveNamespaceApplication, useResetNamespaceApplication } from '@konfigyr/hooks'
-import { DeleteNamespaceApplicationLabel } from '@konfigyr/components/namespace/applications/messages'
-import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types'
+} from '@konfigyr/components/ui/alert-dialog';
+import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
+import { useRemoveNamespaceApplication, useResetNamespaceApplication } from '@konfigyr/hooks';
+import { DeleteNamespaceApplicationLabel } from '@konfigyr/components/namespace/applications/messages';
+import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
 type Props = {
   namespace: Namespace,
@@ -28,19 +28,19 @@ type Props = {
 };
 
 export function ConfirmNamespaceApplicationDeleteAction ({ namespace, application, onConfirm }: Props) {
-  const errorNotification = useErrorNotification()
+  const errorNotification = useErrorNotification();
 
   const {
     isPending: isPending,
     mutateAsync: removeNamespaceApplication,
-  } = useRemoveNamespaceApplication(namespace.slug)
+  } = useRemoveNamespaceApplication(namespace.slug);
 
   const onClickConfirm = useCallback(async () => {
     try {
-      await removeNamespaceApplication(application.id)
-      await onConfirm(application)
+      await removeNamespaceApplication(application.id);
+      await onConfirm(application);
     } catch (error) {
-      return errorNotification(error)
+      return errorNotification(error);
     }
 
     toast.success(<FormattedMessage
@@ -49,9 +49,9 @@ export function ConfirmNamespaceApplicationDeleteAction ({ namespace, applicatio
         name: <strong>{application.name}</strong>,
       }}
       description="Success message for deleting of an application"
-    />)
+    />);
 
-  }, [application, errorNotification])
+  }, [application, errorNotification]);
 
   return (
     <AlertDialog>
@@ -93,31 +93,31 @@ export function ConfirmNamespaceApplicationDeleteAction ({ namespace, applicatio
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }
 
 export function ConfirmNamespaceApplicationResetAction ({ namespace, application, onConfirm }: Props) {
-  const errorNotification = useErrorNotification()
+  const errorNotification = useErrorNotification();
 
   const {
     isPending,
     mutateAsync: resetApplication,
-  } = useResetNamespaceApplication(namespace.slug)
+  } = useResetNamespaceApplication(namespace.slug);
 
   const onClickConfirm = useCallback(async () => {
     try {
-      const created = await resetApplication(application.id)
-      await onConfirm(created)
+      const created = await resetApplication(application.id);
+      await onConfirm(created);
     } catch (error) {
-      return errorNotification(error)
+      return errorNotification(error);
     }
 
     toast.success(<FormattedMessage
       defaultMessage="The {name} application was successfully reset."
       values={{ name: application.name }}
       description="Success message for resetting of an application"
-    />)
-  }, [application, errorNotification])
+    />);
+  }, [application, errorNotification]);
 
   return (
     <AlertDialog>
@@ -162,5 +162,5 @@ export function ConfirmNamespaceApplicationResetAction ({ namespace, application
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }
