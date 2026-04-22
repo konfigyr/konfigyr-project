@@ -13,19 +13,19 @@ import {
 } from '@konfigyr/components/ui/alert-dialog';
 import { Button } from '@konfigyr/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
-import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { useRemoveNamespaceService } from '@konfigyr/hooks';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
 import { Input } from '@base-ui/react/input';
+import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
 export type ServiceSettingsProps = {
   namespace: Namespace,
   service: Service,
   onDelete: (service: Service) => void
-}
+};
 
 export function ServiceDestructiveActions ({ namespace, service, onDelete }: ServiceSettingsProps) {
   return (

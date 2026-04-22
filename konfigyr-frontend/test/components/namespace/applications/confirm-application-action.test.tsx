@@ -30,17 +30,14 @@ describe('components | namespace | applications | confirm application actions', 
 
     await waitFor(() => {
       expect(
-        getByText((_, e) =>
-          e?.textContent === 'Delete konfigyr test application'
-        )
+        getByText((_, e) => e?.textContent === 'Delete konfigyr test application',
+        ),
       ).toBeInTheDocument();
 
       expect(
-        getByText((_, e) =>
-          e?.textContent === 'Are you sure you want to delete konfigyr test application? This action cannot be undone.'
-        )
+        getByText((_, e) => e?.textContent === 'Are you sure you want to delete konfigyr test application? This action cannot be undone.',
+        ),
       ).toBeInTheDocument();
-
 
       expect(getByRole('button', { name: 'Cancel' }), 'redner Cancel button').toBeInTheDocument();
       expect(getByRole('button', { name: 'Yes, I am sure' }), 'redner Yes button').toBeInTheDocument();
@@ -118,15 +115,13 @@ describe('components | namespace | applications | confirm application actions', 
 
     await waitFor(() => {
       expect(
-        getByText((_, e) =>
-          e?.textContent === 'Reset konfigyr test application'
-        )
+        getByText((_, e) => e?.textContent === 'Reset konfigyr test application',
+        ),
       ).toBeInTheDocument();
 
       expect(
-        getByText((_, e) =>
-          e?.textContent === 'Are you sure you want to reset konfigyr test application? This action cannot be undone.'
-        )
+        getByText((_, e) => e?.textContent === 'Are you sure you want to reset konfigyr test application? This action cannot be undone.',
+        ),
       ).toBeInTheDocument();
 
       expect(getByRole('button', { name: 'Cancel' }), 'redner Cancel button').toBeInTheDocument();

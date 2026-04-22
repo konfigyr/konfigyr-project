@@ -28,10 +28,10 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
   test('should render namespace applications details with client secret', () => {
     const { getByRole } = renderComponentWithRouter(
       <ApplicationDetails namespace={namespaces.konfigyr}
-                          application={{
-                            ...applications.konfigyr,
-                            clientSecret: 'shhh! secret',
-                          }}
+        application={{
+          ...applications.konfigyr,
+          clientSecret: 'shhh! secret',
+        }}
       />,
     );
 
@@ -55,8 +55,7 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
 
     await waitFor(() => {
       expect(
-        getByText((_, e) =>
-          e?.textContent === 'Delete konfigyr test application',
+        getByText((_, e) => e?.textContent === 'Delete konfigyr test application',
         ),
       ).toBeInTheDocument();
       expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
@@ -80,8 +79,7 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
 
     await waitFor(() => {
       expect(
-        getByText((_, e) =>
-          e?.textContent === 'Reset konfigyr test application',
+        getByText((_, e) => e?.textContent === 'Reset konfigyr test application',
         ),
       ).toBeInTheDocument();
       expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();

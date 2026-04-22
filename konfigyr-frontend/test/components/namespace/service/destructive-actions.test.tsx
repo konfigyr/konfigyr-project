@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { namespaces, services } from '@konfigyr/test/helpers/mocks';
-import { cleanup, RenderResult, waitFor } from '@testing-library/react';
+import { cleanup, waitFor } from '@testing-library/react';
 import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructiive-actions';
 import userEvents from '@testing-library/user-event/dist/cjs/index.js';
+import type { RenderResult } from '@testing-library/react';
 
 describe('components | namespace | service | <ServiceDestructiveActions/>', () => {
   let result: RenderResult;
@@ -38,8 +39,7 @@ describe('components | namespace | service | <ServiceDestructiveActions/>', () =
 
     await waitFor(() => {
       expect(
-        result.getByText((_, e) =>
-          e?.textContent === `Delete ${services.konfigyrId.name} service`,
+        result.getByText((_, e) => e?.textContent === `Delete ${services.konfigyrId.name} service`,
         ),
       ).toBeInTheDocument();
     });
