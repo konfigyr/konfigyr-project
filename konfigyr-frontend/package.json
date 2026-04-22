@@ -7,6 +7,7 @@
     "dev": "vite dev | pino-pretty",
     "build": "vite build && tsc --noEmit",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "start": "vite start",
     "test": "vitest",
     "test:ui": "vitest --ui",

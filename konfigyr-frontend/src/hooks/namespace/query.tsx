@@ -391,3 +391,25 @@ export const useUpdateNamespaceService = (slug: string, service: string) => {
     },
   });
 };
+
+export const useRemoveNamespaceService = (namespace: string) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (slug: string) => {
+      return await request.delete(`api/namespaces/${namespace}/services/${slug}`)
+        .then(() => slug);
+    },
+    onSuccess(service: string) {
+      client.setQueryData(namespaceKeys.getNamespaceServices(namespace), (services?: Array<Service>) => {
+        if (typeof services === 'undefined' || services.length === 0) {
+          return [];
+        }
+        return services.filter(it => it.slug !== service);
+      });
+      client.removeQueries({
+        queryKey: namespaceKeys.getNamespaceService(namespace, service),
+      });
+    },
+  });
+};

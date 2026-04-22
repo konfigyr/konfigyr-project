@@ -10,7 +10,7 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
 
   test('should render namespace applications details without client secret', () => {
     const { getByRole } = renderComponentWithRouter(
-      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
+      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr}/>,
     );
 
     expect(getByRole('textbox', { name: 'Client ID' })).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
 
   test('should click on the Delete application button', async () => {
     const { getByRole, getByText } = renderComponentWithRouter(
-      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
+      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr}/>,
     );
 
     expect(getByRole('button', { name: 'Delete application' })).toBeInTheDocument();
@@ -54,7 +54,10 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
     );
 
     await waitFor(() => {
-      expect(getByText('Delete "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
+      expect(
+        getByText((_, e) => e?.textContent === 'Delete konfigyr test application',
+        ),
+      ).toBeInTheDocument();
       expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 
@@ -65,7 +68,7 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
 
   test('should click on the Reset application button', async () => {
     const { getByRole, getByText } = renderComponentWithRouter(
-      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr} />,
+      <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr}/>,
     );
 
     expect(getByRole('button', { name: 'Reset application' })).toBeInTheDocument();
@@ -75,7 +78,10 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
     );
 
     await waitFor(() => {
-      expect(getByText('Reset "konfigyr test" application'), 'render title of the confirmation window').toBeInTheDocument();
+      expect(
+        getByText((_, e) => e?.textContent === 'Reset konfigyr test application',
+        ),
+      ).toBeInTheDocument();
       expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 

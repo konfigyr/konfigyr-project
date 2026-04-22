@@ -27,7 +27,7 @@ type Props = {
   onConfirm: (app: NamespaceApplication) => void
 };
 
-export function ConfirmNamespaceApplicationDeleteAction({ namespace, application, onConfirm }: Props) {
+export function ConfirmNamespaceApplicationDeleteAction ({ namespace, application, onConfirm }: Props) {
   const errorNotification = useErrorNotification();
 
   const {
@@ -44,8 +44,10 @@ export function ConfirmNamespaceApplicationDeleteAction({ namespace, application
     }
 
     toast.success(<FormattedMessage
-      defaultMessage="The &quot;{name}&quot; was successfully deleted."
-      values={{ name: application.name }}
+      defaultMessage="The {name} was successfully deleted."
+      values={{
+        name: <strong>{application.name}</strong>,
+      }}
       description="Success message for deleting of an application"
     />);
 
@@ -64,25 +66,29 @@ export function ConfirmNamespaceApplicationDeleteAction({ namespace, application
         <AlertDialogHeader>
           <AlertDialogTitle>
             <FormattedMessage
-              defaultMessage="Delete &quot;{name}&quot; application"
-              values={{ name: application.name }}
+              defaultMessage="Delete {name} application"
+              values={{
+                name: <strong>{application.name}</strong>,
+              }}
               description="Title of the modal that is shown when user tries todelete application"
             />
           </AlertDialogTitle>
           <AlertDialogDescription>
             <FormattedMessage
-              defaultMessage="Are you sure you want to delete &quot;{name}&quot; application? This action cannot be undone."
-              values={{ name: application.name }}
+              defaultMessage="Are you sure you want to delete {name} application? This action cannot be undone."
+              values={{
+                name: <strong>{application.name}</strong>,
+              }}
               description="Confirmation text in the modal that is shown when user tries to delete a namespace application"
             />
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>
-            <CancelLabel />
+            <CancelLabel/>
           </AlertDialogCancel>
           <AlertDialogAction onClick={onClickConfirm} disabled={isPending}>
-            <YesLabel />
+            <YesLabel/>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -90,7 +96,7 @@ export function ConfirmNamespaceApplicationDeleteAction({ namespace, application
   );
 }
 
-export function ConfirmNamespaceApplicationResetAction({ namespace, application, onConfirm }: Props) {
+export function ConfirmNamespaceApplicationResetAction ({ namespace, application, onConfirm }: Props) {
   const errorNotification = useErrorNotification();
 
   const {
@@ -129,25 +135,29 @@ export function ConfirmNamespaceApplicationResetAction({ namespace, application,
         <AlertDialogHeader>
           <AlertDialogTitle>
             <FormattedMessage
-              defaultMessage="Reset &quot;{name}&quot; application"
-              values={{ name: application.name }}
+              defaultMessage="Reset {name} application"
+              values={{
+                name: <strong>{application.name}</strong>,
+              }}
               description="Title of the modal that is shown when user tries to reset application"
             />
           </AlertDialogTitle>
           <AlertDialogDescription>
             <FormattedMessage
-              defaultMessage="Are you sure you want to reset &quot;{name}&quot; application? This action cannot be undone."
-              values={{ name: application.name }}
+              defaultMessage="Are you sure you want to reset {name} application? This action cannot be undone."
+              values={{
+                name: <strong>{application.name}</strong>,
+              }}
               description="Confirmation text in the modal that is shown when user tries to rest a namespace application"
             />
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>
-            <CancelLabel />
+            <CancelLabel/>
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onClickConfirm} disabled={isPending} >
-            <YesLabel />
+          <AlertDialogAction onClick={onClickConfirm} disabled={isPending}>
+            <YesLabel/>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
