@@ -20,18 +20,14 @@ import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages'
 import { Input } from '@base-ui/react/input'
-import { useNavigate } from '@tanstack/react-router'
 
 export type ServiceSettingsProps = {
   namespace: Namespace,
-  service: Service
+  service: Service,
+  onDelete: (service: Service) => void
 }
 
-export type DeleteServiceProps = {
-  onConfirm: (service: Service) => void
-} & ServiceSettingsProps;
-
-export function ServiceDestructiveActions ({ namespace, service }: ServiceSettingsProps) {
+export function ServiceDestructiveActions ({ namespace, service, onDelete }: ServiceSettingsProps) {
   return (
     <Card className="border">
       <CardHeader>
@@ -44,21 +40,14 @@ export function ServiceDestructiveActions ({ namespace, service }: ServiceSettin
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-6">
-          <DeleteServiceItem namespace={namespace} service={service}/>
+          <DeleteServiceItem namespace={namespace} service={service} onDelete={onDelete}/>
         </div>
       </CardContent>
     </Card>
   )
 }
 
-export function DeleteServiceItem ({ namespace, service }: ServiceSettingsProps) {
-
-  const navigate = useNavigate()
-
-  const onDeleted = useCallback(async () => await navigate({
-    to: '/namespace/$namespace',
-    params: { namespace: namespace.slug },
-  }), [namespace.slug])
+export function DeleteServiceItem ({ namespace, service, onDelete }: ServiceSettingsProps) {
 
   return (
     <Item variant="list">
@@ -80,13 +69,13 @@ export function DeleteServiceItem ({ namespace, service }: ServiceSettingsProps)
       </ItemContent>
 
       <ItemActions>
-        <ConfirmDeleteServiceAction namespace={namespace} service={service} onConfirm={onDeleted}/>
+        <ConfirmDeleteServiceAction namespace={namespace} service={service} onDelete={onDelete}/>
       </ItemActions>
     </Item>
   )
 }
 
-export function ConfirmDeleteServiceAction ({ namespace, service, onConfirm }: DeleteServiceProps) {
+export function ConfirmDeleteServiceAction ({ namespace, service, onDelete }: ServiceSettingsProps) {
   const errorNotification = useErrorNotification()
 
   const intl = useIntl()
@@ -101,7 +90,7 @@ export function ConfirmDeleteServiceAction ({ namespace, service, onConfirm }: D
   const onClickConfirm = useCallback(async () => {
     try {
       await removeNamespaceService(service.slug)
-      onConfirm(service)
+      onDelete(service)
     } catch (error) {
       return errorNotification(error)
     }

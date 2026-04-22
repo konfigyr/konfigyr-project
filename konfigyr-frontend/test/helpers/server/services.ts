@@ -194,6 +194,10 @@ const catalog = http.get('http://localhost/api/namespaces/:namespace/services/:s
   });
 });
 
+const remove = http.delete('http://localhost/api/namespaces/:namwspace/services/:slug', () => {
+  return new HttpResponse(null, { status: 204 });
+});
+
 export default [
   list,
   get,
@@ -201,4 +205,5 @@ export default [
   update,
   manifest,
   catalog,
+  remove,
 ];
