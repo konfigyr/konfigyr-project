@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
+  AlertDialogTrigger,
 } from '@konfigyr/components/ui/alert-dialog';
 import { Button } from '@konfigyr/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';

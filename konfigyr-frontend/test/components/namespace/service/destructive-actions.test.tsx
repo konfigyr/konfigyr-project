@@ -39,8 +39,8 @@ describe('components | namespace | service | <ServiceDestructiveActions/>', () =
     await waitFor(() => {
       expect(
         result.getByText((_, e) =>
-          e?.textContent === `Delete ${services.konfigyrId.name} service`
-        )
+          e?.textContent === `Delete ${services.konfigyrId.name} service`,
+        ),
       ).toBeInTheDocument();
     });
 
