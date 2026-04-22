@@ -1,5 +1,5 @@
-import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@konfigyr/components/ui/item'
-import { FormattedMessage, useIntl } from 'react-intl'
+import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@konfigyr/components/ui/item';
+import { FormattedMessage, useIntl } from 'react-intl';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,16 +10,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger
-} from '@konfigyr/components/ui/alert-dialog'
-import { Button } from '@konfigyr/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card'
-import type { Namespace, Service } from '@konfigyr/hooks/namespace/types'
-import { useErrorNotification } from '@konfigyr/components/error'
-import { useRemoveNamespaceService } from '@konfigyr/hooks'
-import { useCallback, useState } from 'react'
-import { toast } from 'sonner'
-import { CancelLabel, YesLabel } from '@konfigyr/components/messages'
-import { Input } from '@base-ui/react/input'
+} from '@konfigyr/components/ui/alert-dialog';
+import { Button } from '@konfigyr/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
+import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
+import { useErrorNotification } from '@konfigyr/components/error';
+import { useRemoveNamespaceService } from '@konfigyr/hooks';
+import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
+import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
+import { Input } from '@base-ui/react/input';
 
 export type ServiceSettingsProps = {
   namespace: Namespace,
@@ -44,7 +44,7 @@ export function ServiceDestructiveActions ({ namespace, service, onDelete }: Ser
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export function DeleteServiceItem ({ namespace, service, onDelete }: ServiceSettingsProps) {
@@ -72,27 +72,27 @@ export function DeleteServiceItem ({ namespace, service, onDelete }: ServiceSett
         <ConfirmDeleteServiceAction namespace={namespace} service={service} onDelete={onDelete}/>
       </ItemActions>
     </Item>
-  )
+  );
 }
 
 export function ConfirmDeleteServiceAction ({ namespace, service, onDelete }: ServiceSettingsProps) {
-  const errorNotification = useErrorNotification()
+  const errorNotification = useErrorNotification();
 
-  const intl = useIntl()
+  const intl = useIntl();
 
-  const [name, setName] = useState<string>('')
+  const [name, setName] = useState<string>('');
 
   const {
     isPending: isPending,
     mutateAsync: removeNamespaceService,
-  } = useRemoveNamespaceService(namespace.slug)
+  } = useRemoveNamespaceService(namespace.slug);
 
   const onClickConfirm = useCallback(async () => {
     try {
-      await removeNamespaceService(service.slug)
-      onDelete(service)
+      await removeNamespaceService(service.slug);
+      onDelete(service);
     } catch (error) {
-      return errorNotification(error)
+      return errorNotification(error);
     }
 
     toast.success(<FormattedMessage
@@ -101,9 +101,9 @@ export function ConfirmDeleteServiceAction ({ namespace, service, onDelete }: Se
         name: <strong>{service.name}</strong>,
       }}
       description="Success message for deleting of a service"
-    />)
+    />);
 
-  }, [service, errorNotification])
+  }, [service, errorNotification]);
 
   return (
     <AlertDialog>
@@ -158,5 +158,5 @@ export function ConfirmDeleteServiceAction ({ namespace, service, onDelete }: Se
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

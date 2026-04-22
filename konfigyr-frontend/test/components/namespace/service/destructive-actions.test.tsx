@@ -1,18 +1,18 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client'
-import { namespaces, services } from '@konfigyr/test/helpers/mocks'
-import { cleanup, RenderResult, waitFor } from '@testing-library/react'
-import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructiive-actions'
-import userEvents from '@testing-library/user-event/dist/cjs/index.js'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
+import { namespaces, services } from '@konfigyr/test/helpers/mocks';
+import { cleanup, RenderResult, waitFor } from '@testing-library/react';
+import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructiive-actions';
+import userEvents from '@testing-library/user-event/dist/cjs/index.js';
 
 describe('components | namespace | service | <ServiceDestructiveActions/>', () => {
-  let result: RenderResult
+  let result: RenderResult;
 
   const onDelete = vi.fn();
 
   beforeEach(() => {
     result = renderWithQueryClient((
-      <ServiceDestructiveActions namespace={namespaces.konfigyr} service={services.konfigyrId} onDelete={onDelete} />
+      <ServiceDestructiveActions namespace={namespaces.konfigyr} service={services.konfigyrId} onDelete={onDelete}/>
     ));
   });
 
@@ -22,11 +22,11 @@ describe('components | namespace | service | <ServiceDestructiveActions/>', () =
   });
 
   test('should render <ServiceDestructiveActions> component', () => {
-    expect(result.getByText('Destructive actions')).toBeInTheDocument()
+    expect(result.getByText('Destructive actions')).toBeInTheDocument();
 
-    expect(result.getByText('Delete this service')).toBeInTheDocument()
-    expect(result.getByText('This action permanently deletes the service and cannot be undone.')).toBeInTheDocument()
-    expect(result.getByText('Delete service')).toBeInTheDocument()
+    expect(result.getByText('Delete this service')).toBeInTheDocument();
+    expect(result.getByText('This action permanently deletes the service and cannot be undone.')).toBeInTheDocument();
+    expect(result.getByText('Delete service')).toBeInTheDocument();
   });
 
   test('should open the delete confirmation modal', async () => {
@@ -82,4 +82,4 @@ describe('components | namespace | service | <ServiceDestructiveActions/>', () =
 
   });
 
-})
+});
