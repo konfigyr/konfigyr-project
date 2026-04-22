@@ -407,6 +407,9 @@ export const useRemoveNamespaceService = (namespace: string) => {
         }
         return services.filter(it => it.slug !== service);
       });
+      client.removeQueries({
+        queryKey: namespaceKeys.getNamespaceService(namespace, service),
+      });
     },
   });
 };
