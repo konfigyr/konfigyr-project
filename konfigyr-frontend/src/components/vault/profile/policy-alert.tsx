@@ -16,7 +16,7 @@ import {
 import type { ComponentProps } from 'react';
 import type { Profile } from '@konfigyr/hooks/types';
 
-function PolicyAlertIcon({ profile }: { profile: Profile }) {
+export function PolicyAlertIcon({ profile }: { profile: Profile }) {
   switch (profile.policy) {
     case 'IMMUTABLE':
       return <LockIcon />;
