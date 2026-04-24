@@ -8,7 +8,6 @@ import com.konfigyr.test.AbstractIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
@@ -135,13 +134,15 @@ class AuditEventRepositoryTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should paginate audit events with cursor")
 	void shouldSupportCursorPagination() {
-		final var query = SearchQuery.of(Pageable.unpaged());
+		final var query = SearchQuery.builder()
+				.criteria(AuditRecord.NAMESPACE_ID_CRITERIA, EntityId.from(2))
+				.build();
 
-		final CursorPage<AuditRecord> firstPage = repository.find(query, CursorPageable.of(5));
+		final CursorPage<AuditRecord> firstPage = repository.find(query, CursorPageable.of(4));
 
 		assertThatObject(firstPage)
 				.as("Should return the first page of 3")
-				.returns(5, CursorPage::size)
+				.returns(4, CursorPage::size)
 				.returns(true, CursorPage::hasNext)
 				.returns(false, CursorPage::hasPrevious);
 
@@ -149,7 +150,7 @@ class AuditEventRepositoryTest extends AbstractIntegrationTest {
 
 		assertThatObject(secondPage)
 				.as("Should return the second page of 3")
-				.returns(5, CursorPage::size)
+				.returns(4, CursorPage::size)
 				.returns(true, CursorPage::hasNext)
 				.returns(true, CursorPage::hasPrevious);
 
@@ -157,7 +158,7 @@ class AuditEventRepositoryTest extends AbstractIntegrationTest {
 
 		assertThatObject(thirdPage)
 				.as("Should return the last page of 3")
-				.returns(3, CursorPage::size)
+				.returns(2, CursorPage::size)
 				.returns(false, CursorPage::hasNext)
 				.returns(true, CursorPage::hasPrevious);
 
