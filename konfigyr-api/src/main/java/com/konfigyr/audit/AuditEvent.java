@@ -43,7 +43,7 @@ public record AuditEvent(
 		Actor actor,
 		@Nullable Map<String, Object> details
 ) implements Serializable {
-	
+
 	@Serial
 	private static final long serialVersionUID = 6397546134191608344L;
 
@@ -59,7 +59,7 @@ public record AuditEvent(
 	/**
 	 * Builder class for constructing {@link AuditEvent} instances.
 	 */
-	public static class Builder {
+	public static final class Builder {
 		private @Nullable EntityId namespaceId;
 		private @Nullable String entityType;
 		private @Nullable EntityId entityId;
