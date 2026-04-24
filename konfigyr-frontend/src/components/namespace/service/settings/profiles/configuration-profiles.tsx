@@ -2,7 +2,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle }
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
-import { ErrorState } from '@konfigyr/components/error';
+import { ErrorState, useErrorNotification } from '@konfigyr/components/error';
 import { useGetProfiles, useUpdateProfile } from '@konfigyr/hooks';
 import React, { useCallback, useState } from 'react';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
@@ -11,37 +11,39 @@ import { useNavigate } from '@tanstack/react-router';
 import { PolicyAlertIcon } from '@konfigyr/components/vault/profile/policy-alert';
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuContent, DropdownMenuGroup,
+  DropdownMenuItem, DropdownMenuPortal,
+  DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@konfigyr/components/ui/dropdown-menu';
-import { EllipsisVerticalIcon, PencilIcon } from 'lucide-react';
+import { PencilIcon } from 'lucide-react';
 import {
   DeleteConfigurationProfileAlert,
 } from '@konfigyr/components/namespace/service/settings/profiles/delete-profile-alert';
-import {
-  UpdateConfigurationProfilePolicyDialog,
-} from '@konfigyr/components/namespace/service/settings/profiles/update-policy-dialog';
 import { InlineEdit, InlineEditInput, InlineEditPlaceholder } from '@konfigyr/components/ui/inline-edit';
-import type { Profile } from '@konfigyr/hooks/vault/types';
+import { ProfilePolicyLabel } from '@konfigyr/components/vault/profile/messages';
+import type { Profile, ProfilePolicy } from '@konfigyr/hooks/vault/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
 export type ProfileItemProps = {
   namespace: Namespace,
   service: Service,
   profile: Profile,
-  onEdit: (profile: Profile) => void
   onRemove: (profile: Profile) => void
+};
+
+export type ProfileItemMenuProps = {
+  profile: Profile,
+  onPolicyUpdate: (policy: ProfilePolicy) => void,
+  onProfileRemove: (profile: Profile) => void,
 };
 
 export function ServiceConfigurationProfiles ({ namespace, service }: { namespace: Namespace, service: Service }) {
   const { data: profiles, error, isPending, isError } = useGetProfiles(namespace, service);
   const navigate = useNavigate();
 
-  const [updating, setUpdating] = useState<Profile | undefined>();
   const [removing, setRemoving] = useState<Profile | undefined>();
 
-  const onCloseUpdatePolicyDialog = useCallback(() => setUpdating(undefined), []);
   const onCloseRemoveProfileAlert = useCallback(() => setRemoving(undefined), []);
 
   const handleProfileClick = (e: React.MouseEvent<HTMLSpanElement>) => {
@@ -104,7 +106,6 @@ export function ServiceConfigurationProfiles ({ namespace, service }: { namespac
                   namespace={namespace}
                   service={service}
                   profile={profile}
-                  onEdit={setUpdating}
                   onRemove={setRemoving}
                 />
               ))}
@@ -119,58 +120,125 @@ export function ServiceConfigurationProfiles ({ namespace, service }: { namespac
         profile={removing}
         onClose={onCloseRemoveProfileAlert}
       />
-
-      <UpdateConfigurationProfilePolicyDialog
-        namespace={namespace}
-        service={service}
-        profile={updating}
-        onClose={onCloseUpdatePolicyDialog}
-      />
     </>
   );
 }
 
-export function ProfileItem ({ namespace, service, profile, onEdit, onRemove }: ProfileItemProps) {
+export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileItemProps) {
+  const { mutateAsync: updateProfile } = useUpdateProfile(namespace, service, profile);
+  const errorNotification = useErrorNotification();
+
+  const onPolicyUpdate = useCallback(async (value: ProfilePolicy) => {
+    try {
+      await updateProfile({ id: profile.id, policy: value });
+    } catch (error) {
+      return errorNotification(error);
+    }
+  }, [profile]);
+
+  const onNameUpdate = useCallback(async (value?: string) => {
+    try {
+      await updateProfile({ id: profile.id, name: value });
+    } catch (error) {
+      return errorNotification(error);
+    }
+  }, [profile]);
+
+  const onDescriptionUpdate = useCallback(async (value?: string) => {
+    try {
+      await updateProfile({ id: profile.id, description: value });
+    } catch (error) {
+      return errorNotification(error);
+    }
+  }, [profile]);
+
   return (
     <Item variant="list">
       <div>
-        <PolicyAlertIcon profile={profile}/>
+        <PolicyAlertIcon policy={profile.policy}/>
       </div>
       <ItemContent>
         <ItemTitle>
-          <ChangeProfileName namespace={namespace} service={service} profile={profile} onError={() => {}}/>
+          <ProfileInlineEdit field={profile.name} onChange={onNameUpdate} onError={errorNotification} />
         </ItemTitle>
         <ItemDescription>
-          <ChangeProfileDescription namespace={namespace} service={service} profile={profile} onError={() => {}}/>
+          <ProfileInlineEdit field={profile.description} onChange={onDescriptionUpdate} onError={errorNotification} />
         </ItemDescription>
       </ItemContent>
 
       <ItemActions>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button variant="ghost" aria-label="More options">
-                <EllipsisVerticalIcon/>
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => onEdit(profile)}>
-              <FormattedMessage
-                defaultMessage="Update policy"
-                description="Label for the update profile policy button"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onRemove(profile)}>
-              <FormattedMessage
-                defaultMessage="Delete profile"
-                description="Label for the delete profile policy button"
-              />
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ProfileItemMenu profile={profile} onPolicyUpdate={onPolicyUpdate} onProfileRemove={onRemove}/>
       </ItemActions>
     </Item>
+  );
+}
+
+export function ProfileItemMenu ({ profile, onPolicyUpdate, onProfileRemove }: ProfileItemMenuProps) {
+
+  const [open, setOpen] = useState(false);
+  const [policy, setPolicy] = React.useState(profile.policy);
+
+  const onChangePolicy = useCallback((value: ProfilePolicy) => {
+    onPolicyUpdate(value);
+    setPolicy(value);
+    setOpen(false);
+  }, [policy]);
+
+  const onRemove = useCallback(() => {
+    onProfileRemove(profile);
+    setOpen(false);
+  }, [profile]);
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost" aria-label="More options">
+            <Button variant="outline" onClick={() => setOpen(true)}>
+              <FormattedMessage
+                defaultMessage="Actions"
+                description="Plabel for actions button for configuration profile menu settings"
+              />
+            </Button>
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end">
+        <DropdownMenuGroup>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <FormattedMessage
+                defaultMessage="Profile policy"
+                description="Profile policy fieldset title"
+              />
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={policy} onValueChange={onChangePolicy}>
+                  <PolicyRadioItem policy={'UNPROTECTED'}/>
+                  <PolicyRadioItem policy={'PROTECTED'}/>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+          <DropdownMenuItem onClick={onRemove}>
+            <FormattedMessage
+              defaultMessage="Delete profile"
+              description="Label for the delete profile policy button"
+            />
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function PolicyRadioItem({ policy }: { policy: ProfilePolicy }) {
+  return (
+    <DropdownMenuRadioItem value={policy}>
+      <PolicyAlertIcon policy={policy}/>
+      <ProfilePolicyLabel value={policy}/>
+    </DropdownMenuRadioItem>
   );
 }
 
@@ -188,72 +256,23 @@ function SkeletonLoader () {
   );
 }
 
-function ChangeProfileName ({ namespace, service, profile, onError }: {
-  namespace: Namespace,
-  service: Service,
-  profile: Profile,
+
+
+function ProfileInlineEdit ({ field, onChange, onError }: {
+  field?: string,
+  onChange: (value?: string) => Promise<string | number | undefined>,
   onError: (error: unknown) => void,
 }) {
-  const { mutateAsync: onRenameProfile } = useUpdateProfile(namespace, service, profile);
-
-  const onRename = useCallback(async (value?: string) => {
-    await onRenameProfile({ id: profile.id, name: value });
-  }, [profile]);
-
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <InlineEdit
-        value={profile.name}
-        onChange={onRename}
-        onError={onError}
-      >
+      <InlineEdit value={field || ''} onChange={onChange} onError={onError} >
         <InlineEditPlaceholder
           render={
             <button
               type="button"
               className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors group/name truncate max-w-50"
             >
-              {profile.name}
-              <PencilIcon
-                className="size-2.5 text-muted-foreground/50 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0"/>
-            </button>
-          }
-        />
-        <InlineEditInput
-          placeholder="Profile name..."
-          className="h-6 text-xs w-48"
-        />
-      </InlineEdit>
-    </div>
-  );
-}
-
-function ChangeProfileDescription ({ namespace, service, profile, onError }: {
-  namespace: Namespace,
-  service: Service,
-  profile: Profile,
-  onError: (error: unknown) => void,
-}) {
-  const { mutateAsync: onRenameProfile } = useUpdateProfile(namespace, service, profile);
-
-  const onRename = useCallback(async (value?: string) => {
-    await onRenameProfile({ id: profile.id, description: value });
-  }, [profile]);
-
-  return (
-    <div className="flex items-center gap-2 min-w-0">
-      <InlineEdit
-        value={profile.description || ''}
-        onChange={onRename}
-        onError={onError}
-      >
-        <InlineEditPlaceholder
-          render={
-            <button
-              type="button"
-              className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors group/name truncate max-w-50"
-            >
-              {profile.description}
+              {field}
               <PencilIcon
                 className="size-2.5 text-muted-foreground/50 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0"/>
             </button>

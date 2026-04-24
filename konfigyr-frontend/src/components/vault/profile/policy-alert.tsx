@@ -12,12 +12,12 @@ import {
   ProfilePolicyDescription,
   ProfilePolicyLabel,
 } from './messages';
+import type { Profile, ProfilePolicy } from '@konfigyr/hooks/types';
 
 import type { ComponentProps } from 'react';
-import type { Profile } from '@konfigyr/hooks/types';
 
-export function PolicyAlertIcon({ profile }: { profile: Profile }) {
-  switch (profile.policy) {
+export function PolicyAlertIcon({ policy }: { policy: ProfilePolicy }) {
+  switch (policy) {
     case 'IMMUTABLE':
       return <LockIcon />;
     case 'PROTECTED':
@@ -30,7 +30,7 @@ export function PolicyAlertIcon({ profile }: { profile: Profile }) {
 export function PolicyAlert({ profile, ...props }: { profile: Profile } & ComponentProps<typeof Alert>) {
   return (
     <Alert {...props}>
-      <PolicyAlertIcon profile={profile} />
+      <PolicyAlertIcon policy={profile.policy} />
       <AlertTitle>
         <ProfilePolicyLabel value={profile.policy} />
       </AlertTitle>
