@@ -1,9 +1,11 @@
 package com.konfigyr.vault.history;
 
+import com.konfigyr.data.CursorPageable;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
@@ -27,6 +29,12 @@ record HistoryCursorToken(String value, long identifier, boolean reversed, Offse
 		buffer.putLong(identifier);
 		buffer.putLong(timestamp.toInstant().toEpochMilli());
 		return new HistoryCursorToken(Hex.encodeHexString(buffer.array()), identifier, reversed, timestamp);
+	}
+
+	@Nullable
+	static HistoryCursorToken decode(CursorPageable pageable) {
+		final String token = pageable.token();
+		return token == null ? null : decode(token);
 	}
 
 	static HistoryCursorToken decode(String encoded) {

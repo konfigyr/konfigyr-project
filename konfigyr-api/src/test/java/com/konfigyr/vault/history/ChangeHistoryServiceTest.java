@@ -369,6 +369,12 @@ class ChangeHistoryServiceTest extends AbstractIntegrationTest {
 				.isEmpty();
 	}
 
+	@Test
+	@DisplayName("should create partitions for change and property history tables")
+	void createTablePartitions() {
+		assertThatNoException().isThrownBy(chronicle::createPartitions);
+	}
+
 	private Profile profileFor(long id) {
 		return assertThat(profiles.get(EntityId.from(id)))
 				.as("Profile with id %d should exist", id)

@@ -1,5 +1,6 @@
 com.konfigyr.account.AccountManagementAutoConfiguration
 com.konfigyr.artifactory.ArtifactoryAutoConfiguration
+com.konfigyr.audit.AuditAutoConfiguration
 com.konfigyr.batch.BatchAutoConfiguration
 com.konfigyr.feature.FeaturesAutoConfiguration
 com.konfigyr.kms.KeysetManagerAutoConfiguration
