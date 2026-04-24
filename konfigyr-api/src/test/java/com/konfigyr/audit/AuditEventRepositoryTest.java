@@ -309,4 +309,11 @@ class AuditEventRepositoryTest extends AbstractIntegrationTest {
 		);
 	}
 
+	@Test
+	@Transactional
+	@DisplayName("should create new audit table partition")
+	void createPartition() {
+		assertThatNoException().isThrownBy(repository::createPartition);
+	}
+
 }

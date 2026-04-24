@@ -2,6 +2,7 @@ package com.konfigyr.audit;
 
 import com.konfigyr.data.CursorPage;
 import com.konfigyr.data.CursorPageable;
+import com.konfigyr.data.Routines;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.data.converter.JsonbConverter;
 import com.konfigyr.entity.EntityId;
@@ -12,6 +13,7 @@ import org.jooq.Record;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -162,10 +164,33 @@ public class AuditEventRepository {
 				.map(this::toAuditRecord);
 	}
 
+	@Transactional(label = "audit.create-partition")
+	@Scheduled(cron = "${konfigyr.audit.partitioning-cron:0 0 0 * * *}")
+	void createPartition() {
+		Routines.createAuditEventsPartition(context.configuration(), OffsetDateTime.now().plusDays(1));
+	}
+
 	private SelectConditionStep<Record> createQuery(Condition condition) {
 		return context.select(AUDIT_EVENT_FIELDS)
 				.from(AUDIT_EVENTS)
 				.where(condition);
+	}
+
+	private AuditRecord toAuditRecord(Record record) {
+		return new AuditRecord(
+				record.get(AUDIT_EVENTS.ID).toString(),
+				record.get(AUDIT_EVENTS.NAMESPACE_ID, EntityId.class),
+				record.get(AUDIT_EVENTS.ENTITY_TYPE),
+				record.get(AUDIT_EVENTS.ENTITY_ID, EntityId.class),
+				record.get(AUDIT_EVENTS.EVENT_TYPE),
+				new Actor(
+						record.get(AUDIT_EVENTS.ACTOR_ID),
+						record.get(AUDIT_EVENTS.ACTOR_TYPE),
+						record.get(AUDIT_EVENTS.ACTOR_NAME)
+				),
+				record.get(AUDIT_EVENTS.DETAILS, detailsConverter),
+				record.get(AUDIT_EVENTS.CREATED_AT)
+		);
 	}
 
 	private static List<Condition> buildFilterConditions(SearchQuery query) {
@@ -217,23 +242,6 @@ public class AuditEventRepository {
 		return CursorPageable.of(
 				AuditCursorToken.of(identifier, timestamp, true).value(),
 				size
-		);
-	}
-
-	private AuditRecord toAuditRecord(Record record) {
-		return new AuditRecord(
-				record.get(AUDIT_EVENTS.ID).toString(),
-				record.get(AUDIT_EVENTS.NAMESPACE_ID, EntityId.class),
-				record.get(AUDIT_EVENTS.ENTITY_TYPE),
-				record.get(AUDIT_EVENTS.ENTITY_ID, EntityId.class),
-				record.get(AUDIT_EVENTS.EVENT_TYPE),
-				new Actor(
-						record.get(AUDIT_EVENTS.ACTOR_ID),
-						record.get(AUDIT_EVENTS.ACTOR_TYPE),
-						record.get(AUDIT_EVENTS.ACTOR_NAME)
-				),
-				record.get(AUDIT_EVENTS.DETAILS, detailsConverter),
-				record.get(AUDIT_EVENTS.CREATED_AT)
 		);
 	}
 
