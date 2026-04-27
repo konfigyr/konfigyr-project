@@ -8,6 +8,7 @@ export interface Profile {
   id: string;
   slug: string;
   name: string;
+  description?: string;
   policy: ProfilePolicy;
   position: number;
 }
@@ -15,6 +16,7 @@ export interface Profile {
 export interface CreateProfile {
   slug?: string;
   name?: string;
+  description?: string;
   policy?: string;
   position?: number;
 }

@@ -20,6 +20,8 @@ const getProfiles = http.get('http://localhost/api/namespaces/:namespace/service
       title: 'Namespace not found',
       detail: `Namespace with identifier '${namespace}' not found.`,
     }, { status: 404 });
+  } else if (namespace === namespaces.johnDoe.slug) {
+    return HttpResponse.json({ data: [] });
   }
 
   const data = [

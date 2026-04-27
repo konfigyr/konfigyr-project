@@ -1,6 +1,9 @@
 import { ServiceUpdateForm } from '@konfigyr/components/namespace/service/update-form';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructiive-actions';
+import {
+  ServiceConfigurationProfiles,
+} from '@konfigyr/components/namespace/service/settings/profiles/configuration-profiles';
 import { useCallback } from 'react';
 
 export const Route = createFileRoute(
@@ -22,6 +25,7 @@ function RouteComponent () {
   return (
     <div className="w-full lg:w-4/5 xl:w-2/3 space-y-6 px-4 mx-auto">
       <ServiceUpdateForm namespace={namespace} service={service}/>
+      <ServiceConfigurationProfiles namespace={namespace} service={service}/>
       <ServiceDestructiveActions namespace={namespace} service={service} onDelete={onDelete}/>
     </div>
   );
