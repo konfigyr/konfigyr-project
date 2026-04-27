@@ -39,7 +39,7 @@ public class KonfigyrDatabase extends PostgresDatabase {
 
 	private static final String CHANGELOG = "src/main/resources/migrations";
 	private static final String CHANGELOG_NAME = "changelog.xml";
-	private static final String POSTGRESQL_IMAGE = "postgres:17.2-alpine";
+	private static final String POSTGRESQL_IMAGE = "postgres:18-alpine";
 
 	private final JooqLogger logger = JooqLogger.getLogger(KonfigyrDatabase.class);
 	private final File changelogs;

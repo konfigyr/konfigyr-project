@@ -2,6 +2,7 @@ package com.konfigyr.identity.authentication.rememberme;
 
 import com.konfigyr.entity.EntityId;
 import jakarta.servlet.http.Cookie;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.data.Index;
 import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,10 +13,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.FactorGrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,7 +26,10 @@ import org.springframework.security.web.authentication.rememberme.AbstractRememb
 
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
@@ -115,8 +120,6 @@ class AccountRememberMeServicesTest {
 	@Test
 	@DisplayName("should return null when remember-me cookie signature does not match and clear it")
 	void autoLoginClearsCookieIfSignatureBlocksDoesNotMatchExpectedValue() {
-		doReturn(principal).when(service).loadUserByUsername(anyString());
-
 		request.setCookies(createCookie(System.currentTimeMillis() + 1000000, principal.getUsername(), "WRONG_KEY"));
 
 		assertThat(services.autoLogin(request, response))
@@ -130,8 +133,6 @@ class AccountRememberMeServicesTest {
 	@Test
 	@DisplayName("should return null when remember-me signing algorithm is different")
 	void autoLoginClearsCookieIfSignatureAlgorithmDoesNotMatch() {
-		doReturn(principal).when(service).loadUserByUsername(anyString());
-
 		request.setCookies(createCookie(
 				System.currentTimeMillis() + 1000000, principal.getUsername(), AccountRememberMeServices.KEY, "MD5"
 		));
@@ -147,7 +148,7 @@ class AccountRememberMeServicesTest {
 	@Test
 	@DisplayName("should return null when remember-me cookie expiry time is invalid and clear it")
 	void autoLoginClearsCookieIfTokenDoesNotContainANumberInCookieValue() {
-		request.setCookies(createCookie(encode("username:NOT_A_NUMBER:signature")));
+		request.setCookies(createCookie(encode("username:factor:NOT_A_NUMBER:NOT_A_NUMBER:signature")));
 
 		assertThat(services.autoLogin(request, response))
 				.isNull();
@@ -173,30 +174,29 @@ class AccountRememberMeServicesTest {
 	}
 
 	@Test
-	@DisplayName("should throw internal service error when user service returns null")
-	void autoLoginClearsCookieIfUserServiceMisconfigured() {
-		doReturn(null).when(service).loadUserByUsername(anyString());
-
-		request.setCookies(createCookie(System.currentTimeMillis() + 1000000, principal.getUsername()));
-
-		assertThatThrownBy(() -> this.services.autoLogin(request, response))
-				.isInstanceOf(InternalAuthenticationServiceException.class);
-	}
-
-	@Test
 	@DisplayName("should create authentication for valid cookie")
 	void autoLoginWithValidTokenAndUserSucceeds() {
+		final long issuedAt = System.currentTimeMillis();
 		doReturn(principal).when(service).loadUserByUsername(anyString());
 
-		request.setCookies(createCookie(System.currentTimeMillis() + 1000000, principal.getUsername()));
+		request.setCookies(createCookie(issuedAt, issuedAt + 1000000, principal.getUsername()));
 
 		assertThat(services.autoLogin(request, response))
 				.isNotNull()
 				.returns(principal, Authentication::getPrincipal)
 				.returns(principal.getUsername(), Authentication::getName)
 				.satisfies(it -> assertThat(it.getAuthorities())
-						.extracting(GrantedAuthority::getAuthority)
-						.containsExactly("konfigyr-account"));
+						.hasSize(2)
+						.asInstanceOf(InstanceOfAssertFactories.iterable(GrantedAuthority.class))
+						.containsExactlyInAnyOrder(
+								new SimpleGrantedAuthority("konfigyr-account"),
+								FactorGrantedAuthority.withAuthority("factor")
+										.issuedAt(Instant.ofEpochMilli(issuedAt))
+										.build()
+						));
+
+		assertThat(request.getAttribute(AccountRememberMeServices.STORED_FACTOR_GRANTED_AUTHORITY))
+				.isNull();
 	}
 
 	@Test
@@ -210,11 +210,24 @@ class AccountRememberMeServicesTest {
 	}
 
 	@Test
+	@DisplayName("should fail to create cookie without issued factor granted authority")
+	void loginSuccessWithoutFactorAuthority() {
+		request.addParameter(AbstractRememberMeServices.DEFAULT_PARAMETER, "on");
+
+		final var authentication = createAuthentication(principal);
+
+		assertThatIllegalStateException()
+				.isThrownBy(() -> services.loginSuccess(request, response, authentication))
+				.withMessageContaining("No FactorGrantedAuthority found in Authentication: %s", authentication)
+				.withNoCause();
+	}
+
+	@Test
 	@DisplayName("should create cookie even without remember-me parameter set")
 	void loginSuccessWhenParameterNotSetOrFalse() {
 		request.addParameter(AbstractRememberMeServices.DEFAULT_PARAMETER, "false");
 
-		services.loginSuccess(request, response, createAuthentication(principal));
+		services.loginSuccess(request, response, createAuthentication(principal, FactorGrantedAuthority.PASSWORD_AUTHORITY));
 
 		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
 				.isNotNull()
@@ -226,7 +239,7 @@ class AccountRememberMeServicesTest {
 	void loginSuccessSetsCookie() {
 		request.addParameter(AbstractRememberMeServices.DEFAULT_PARAMETER, "on");
 
-		services.loginSuccess(request, response, createAuthentication(principal));
+		services.loginSuccess(request, response, createAuthentication(principal, FactorGrantedAuthority.AUTHORIZATION_CODE_AUTHORITY));
 
 		final var cookie = response.getCookie(AccountRememberMeServices.COOKIE_NAME);
 
@@ -242,15 +255,22 @@ class AccountRememberMeServicesTest {
 				.isBase64();
 
 		assertThat(decode(cookie.getValue()).split(":"))
-				.hasSize(3)
+				.hasSize(5)
 				.contains(principal.getUsername(), Index.atIndex(0))
-				.satisfies(tokens -> assertThat(Long.parseLong(tokens[1]))
+				.contains(FactorGrantedAuthority.AUTHORIZATION_CODE_AUTHORITY, Index.atIndex(1))
+				.satisfies(tokens -> assertThat(Long.parseLong(tokens[2]))
 						.isCloseTo(
-								System.currentTimeMillis() + Duration.ofDays(14).toMillis(),
-								Offset.offset(300L) // should not take more than 300ms to generate cookie
+								System.currentTimeMillis(),
+								Offset.offset(300L) // should not take more than 300ms to generate the cookie
 						)
 				)
-				.satisfies(tokens -> assertThat(tokens[2])
+				.satisfies(tokens -> assertThat(Long.parseLong(tokens[3]))
+						.isCloseTo(
+								System.currentTimeMillis() + Duration.ofDays(14).toMillis(),
+								Offset.offset(300L) // should not take more than 300ms to generate the cookie
+						)
+				)
+				.satisfies(tokens -> assertThat(tokens[4])
 						.isNotBlank()
 						.isHexadecimal()
 				);
@@ -297,7 +317,7 @@ class AccountRememberMeServicesTest {
 	@Test
 	@DisplayName("should catch unknown signing algorithm exceptions")
 	void shouldCatchUnknownAlgorithmExceptions() {
-		assertThatThrownBy(() -> AccountRememberMeServices.generateSignature("test", 1, "key", "unknown-algo"))
+		assertThatThrownBy(() -> AccountRememberMeServices.generateSignature("test", "factor", 1, 1, "key", "unknown-algo"))
 				.isInstanceOf(IllegalStateException.class)
 				.hasRootCauseInstanceOf(NoSuchAlgorithmException.class);
 	}
@@ -306,8 +326,18 @@ class AccountRememberMeServicesTest {
 		return new TestingAuthenticationToken(user, user.getPassword(), user.getAuthorities());
 	}
 
+	private static Authentication createAuthentication(UserDetails user, String factor) {
+		final List<GrantedAuthority> authorities = new ArrayList<>(user.getAuthorities());
+		authorities.add(FactorGrantedAuthority.fromAuthority(factor));
+		return new TestingAuthenticationToken(user, user.getPassword(), authorities);
+	}
+
 	private static Cookie createCookie(long expiryTime, String username) {
 		return createCookie(expiryTime, username, AccountRememberMeServices.KEY);
+	}
+
+	private static Cookie createCookie(long issuedTime, long expiryTime, String username) {
+		return createCookie(issuedTime, expiryTime, username, AccountRememberMeServices.KEY, AccountRememberMeServices.DIGEST_ALGORITHM);
 	}
 
 	private static Cookie createCookie(long expiryTime, String username, String key) {
@@ -315,8 +345,12 @@ class AccountRememberMeServicesTest {
 	}
 
 	private static Cookie createCookie(long expiryTime, String username, String key, String algorithm) {
-		final String signature = AccountRememberMeServices.generateSignature(username, expiryTime, key, algorithm);
-		return createCookie(encode(username + ":" + expiryTime + ":" + signature));
+		return createCookie(System.currentTimeMillis(), expiryTime, username, key, algorithm);
+	}
+
+	private static Cookie createCookie(long issuedTime, long expiryTime, String username, String key, String algorithm) {
+		final String signature = AccountRememberMeServices.generateSignature(username, "factor", issuedTime, expiryTime, key, algorithm);
+		return createCookie(encode(username + ":factor:" + issuedTime + ":" + expiryTime + ":" + signature));
 	}
 
 	private static Cookie createCookie(String value) {

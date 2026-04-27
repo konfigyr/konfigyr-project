@@ -1,7 +1,6 @@
 package com.konfigyr.vault.state;
 
 import com.konfigyr.security.AuthenticatedPrincipal;
-import com.konfigyr.vault.ChangeHistory;
 import com.konfigyr.vault.PropertyChanges;
 import org.apache.commons.io.output.WriterOutputStream;
 import org.eclipse.jgit.diff.Sequence;
@@ -36,11 +35,11 @@ final class GitConverters {
 	}
 
 	/**
-	 * Attempts to convert the resolved {@link RevCommit} to a {@link ChangeHistory}.
+	 * Attempts to convert the resolved {@link RevCommit} to a {@link RepositoryState}.
 	 *
-	 * @param commit the Git commit to convert to a {@link ChangeHistory}, cannot be {@literal null}.
+	 * @param commit the Git commit to convert to a {@link RepositoryState}, cannot be {@literal null}.
 	 * @param contents the source of the configuration state contents, cannot be {@literal null}.
-	 * @return the converted {@link ChangeHistory}, never {@literal null}.
+	 * @return the converted {@link RepositoryState}, never {@literal null}.
 	 */
 	static RepositoryState convertToRepositoryState(RevCommit commit, InputStreamSource contents) {
 		return RepositoryState.builder()

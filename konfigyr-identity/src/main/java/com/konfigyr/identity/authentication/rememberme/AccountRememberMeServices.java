@@ -6,9 +6,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.log.LogMessage;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.FactorGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,20 +27,21 @@ import org.springframework.util.StringUtils;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
+import java.time.Instant;
+import java.util.*;
 
 /**
  * Implementation of the {@link RememberMeServices} that
  * is based on the {@link org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices}.
  * <p>
  * The difference here is that we are not using the password of the {@link UserDetails user} to generate
- * the cookie token value. User accounts within this application do not use passwords.
+ * the cookie token value. User accounts within this application do not use passwords, but we do require
+ * the {@link FactorGrantedAuthority} to be present in the {@link Authentication} that should be stored by
+ * this implementation.
  * <p>
  * The cookie encoded by this implementation adopts the following form:
  * <pre>
- * username + ":" + expiryTime + HEX(SHA-256(username + ":" + expiryTime + ":" + key))
+ * username + ":" + factor + ":" + issuedTime + ":" + expiryTime + HEX(SHA-256(username + ":" + expiryTime + ":" + key))
  * </pre>
  * <p>
  * Keep in mind that this implementation of the {@link RememberMeServices} would <strong>always</strong>
@@ -57,6 +60,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 	 */
 	public static final String KEY = EntityId.from(123456789).serialize();
 
+	static final String STORED_FACTOR_GRANTED_AUTHORITY = AccountRememberMeServices.class.getName() + "#FACTOR_GRANTED_AUTHORITY";
 	static final String COOKIE_NAME = "konfigyr.account";
 	static final String DIGEST_ALGORITHM = "SHA-256";
 	static final Duration TOKEN_VALIDITY = Duration.ofDays(14);
@@ -99,8 +103,8 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 		delegate.logout(request, response, authentication);
 	}
 
-	static String generateSignature(String username, long tokenExpiryTime, String key, String algorithm) {
-		final String data = username + ":" + tokenExpiryTime + ":" + key;
+	static String generateSignature(String username, String factor, long issuedTime, long tokenExpiryTime, String key, String algorithm) {
+		final String data = username + ":" + ":" + factor + ":" + issuedTime + ":" + tokenExpiryTime + ":" + key;
 
 		try {
 			final MessageDigest digest = MessageDigest.getInstance(algorithm);
@@ -114,11 +118,26 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 		return MessageDigest.isEqual(Utf8.encode(expected), Utf8.encode(actual));
 	}
 
+	static FactorGrantedAuthority resolveFactorGrantedAuthority(Authentication authentication) {
+		FactorGrantedAuthority authority = null;
+		for (GrantedAuthority grantedAuthority : authentication.getAuthorities()) {
+			if (grantedAuthority instanceof FactorGrantedAuthority factorGrantedAuthority) {
+				if (authority == null || factorGrantedAuthority.getIssuedAt().isAfter(authority.getIssuedAt())) {
+					authority = factorGrantedAuthority;
+				}
+			}
+		}
+		if (authority == null) {
+			throw new IllegalStateException("No FactorGrantedAuthority found in Authentication: " + authentication);
+		}
+		return authority;
+	}
+
 	/**
 	 * This class is intentionally made internal as we do not wish to expose the API of the
 	 * {@link AbstractRememberMeServices} via {@link AccountRememberMeServices}. We should prevent
 	 * any customization, i.e. different cookie names or max age..., of the {@link RememberMeServices}
-	 * that would be registered in Spring HTTP security filter chain.
+	 * that would be registered in a Spring HTTP security filter chain.
 	 */
 	private static final class InternalRememberMeServices extends AbstractRememberMeServices {
 
@@ -139,10 +158,13 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 				return;
 			}
 
+			final FactorGrantedAuthority factor = resolveFactorGrantedAuthority(authentication);
 			final long expiryTime = System.currentTimeMillis() + (1000L * getTokenValiditySeconds());
-			final String signature = generateSignature(username, expiryTime, getKey(), DIGEST_ALGORITHM);
+			final String signature = generateSignature(username, factor.getAuthority(), factor.getIssuedAt().toEpochMilli(),
+					expiryTime, getKey(), DIGEST_ALGORITHM);
 
-			setCookie(new String[] { username, Long.toString(expiryTime), signature }, getTokenValiditySeconds(), request, response);
+			setCookie(new String[] { username, factor.getAuthority(), Long.toString(factor.getIssuedAt().toEpochMilli()),
+							Long.toString(expiryTime), signature }, getTokenValiditySeconds(), request, response);
 
 			if (this.logger.isDebugEnabled()) {
 				this.logger.debug(LogMessage.format(
@@ -159,48 +181,58 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 				HttpServletRequest request,
 				HttpServletResponse response
 		) throws RememberMeAuthenticationException, UsernameNotFoundException {
-			if (tokens.length != 3) {
-				throw new InvalidCookieException("Cookie needs to contain 3 tokens: '" + Arrays.asList(tokens) + "'");
+			if (tokens.length != 5) {
+				throw new InvalidCookieException("Cookie needs to contain 5 tokens: '" + Arrays.asList(tokens) + "'");
 			}
 
-			final long tokenExpiryTime = extractTokenExpiryTime(tokens);
-			final UserDetails user = retrieveUserDetails(tokens[0]);
+			final long factorIssuedTime = extractTokenTimestamp(tokens, 2);
+			final long tokenExpiryTime = extractTokenTimestamp(tokens, 3);
 
-			// Generate the signature to check if it matches the signature of token
-			final String signature = generateSignature(user.getUsername(), tokenExpiryTime, getKey(), DIGEST_ALGORITHM);
+			if (tokenExpiryTime < System.currentTimeMillis()) {
+				throw new InvalidCookieException("Cookie has expired (expired on '" + new Date(tokenExpiryTime) + "')");
+			}
 
-			if (signaturesMatch(signature, tokens[2])) {
-				return user;
+			// a workaround that would pass the FactorGrantedAuthority to the resulting authentication
+			request.setAttribute(STORED_FACTOR_GRANTED_AUTHORITY, FactorGrantedAuthority.withAuthority(tokens[1])
+					.issuedAt(Instant.ofEpochMilli(factorIssuedTime))
+					.build()
+			);
+
+			// Generate the signature to check if it matches the signature of the token
+			final String signature = generateSignature(tokens[0], tokens[1], factorIssuedTime, tokenExpiryTime, getKey(), DIGEST_ALGORITHM);
+
+			if (signaturesMatch(signature, tokens[4])) {
+				return getUserDetailsService().loadUserByUsername(tokens[0]);
 			}
 
 			throw new InvalidCookieException("Cookie contained signature '" + tokens[2] + "' but expected '" + signature + "'");
 		}
 
-		private long extractTokenExpiryTime(String[] tokens) {
-			final long expiryTime;
+		@Override
+		protected Authentication createSuccessfulAuthentication(HttpServletRequest request, UserDetails user) {
+			final Collection<GrantedAuthority> mappedAuthorities = new LinkedHashSet<>(user.getAuthorities());
+			// use the FactorGrantedAuthority that was stored in the request and extracted from the cookie
+			mappedAuthorities.add((FactorGrantedAuthority) request.getAttribute(STORED_FACTOR_GRANTED_AUTHORITY));
+			// clear the attribute as it is no longer required
+			request.removeAttribute(STORED_FACTOR_GRANTED_AUTHORITY);
+
+			final RememberMeAuthenticationToken authentication = new RememberMeAuthenticationToken(
+					getKey(), user, mappedAuthorities
+			);
+			authentication.setDetails(getAuthenticationDetailsSource().buildDetails(request));
+			return authentication;
+		}
+
+		private long extractTokenTimestamp(String[] tokens, int index) {
+			final long timestamp;
 
 			try {
-				expiryTime = Long.parseLong(tokens[1]);
+				timestamp = Long.parseLong(tokens[index]);
 			} catch (NumberFormatException nfe) {
 				throw new InvalidCookieException("Cookie did not contain a valid number (contained '" + tokens[1] + "')");
 			}
 
-			if (expiryTime < System.currentTimeMillis()) {
-				throw new InvalidCookieException("Cookie has expired (expired on '" + new Date(expiryTime) + "')");
-			}
-
-			return expiryTime;
-		}
-
-		private UserDetails retrieveUserDetails(String username) {
-			final UserDetails userDetails = getUserDetailsService().loadUserByUsername(username);
-
-			if (userDetails == null) {
-				throw new InternalAuthenticationServiceException("User details service returned null for username '"
-						+ username + "'. This is considered as an interface contract violation.");
-			}
-
-			return userDetails;
+			return timestamp;
 		}
 
 		@Nullable

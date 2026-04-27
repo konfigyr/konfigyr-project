@@ -7,6 +7,7 @@ import com.konfigyr.test.OAuth2AccessTokens;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.FactorGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -109,11 +110,15 @@ class AccountIdentityTest {
 				.returns(identity, OidcAccountIdentityUser::getAccountIdentity)
 				.returns(identity.getId(), OidcAccountIdentityUser::getId)
 				.returns(identity.getName(), OidcAccountIdentityUser::getName)
-				.returns(identity.getAuthorities(), OidcAccountIdentityUser::getAuthorities)
 				.returns(token, OidcAccountIdentityUser::getIdToken)
 				.returns(claims, OidcAccountIdentityUser::getClaims)
 				.returns(claims, OidcAccountIdentityUser::getAttributes)
-				.returns(null, OidcAccountIdentityUser::getUserInfo);
+				.returns(null, OidcAccountIdentityUser::getUserInfo)
+				.satisfies(it -> assertThat(it.getAuthorities())
+						.hasSize(2)
+						.extracting(GrantedAuthority::getAuthority)
+						.containsExactlyInAnyOrder("jane", FactorGrantedAuthority.AUTHORIZATION_CODE_AUTHORITY)
+				);
 	}
 
 	@Test
