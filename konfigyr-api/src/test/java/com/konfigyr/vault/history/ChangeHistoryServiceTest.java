@@ -249,7 +249,7 @@ class ChangeHistoryServiceTest extends AbstractIntegrationTest {
 		assertThat(chronicle.examine(profileFor(3), "first-revision"))
 				.isPresent()
 				.get()
-				.returns(EntityId.from(8), ChangeHistory::id)
+				.returns("019690a1-0008-7000-8000-000000000008", ChangeHistory::id)
 				.returns("first-revision", ChangeHistory::revision)
 				.returns("First change", ChangeHistory::subject)
 				.returns("Initial changes", ChangeHistory::description)

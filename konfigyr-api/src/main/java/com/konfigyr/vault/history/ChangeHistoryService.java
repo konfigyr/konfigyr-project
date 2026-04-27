@@ -19,10 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.konfigyr.data.tables.Services.SERVICES;
 import static com.konfigyr.data.tables.VaultChangeHistory.VAULT_CHANGE_HISTORY;
@@ -80,10 +77,9 @@ public class ChangeHistoryService implements VaultChronicle {
 		final ChangeHistoryOwnership ownership = lookupOwnership(profile);
 		final AuthenticatedPrincipal author = result.author();
 
-		final Long id = context.insertInto(VAULT_CHANGE_HISTORY)
+		final UUID id = context.insertInto(VAULT_CHANGE_HISTORY)
 				.set(
 						SettableRecord.of(context, VAULT_CHANGE_HISTORY)
-								.set(VAULT_CHANGE_HISTORY.ID, EntityId.generate().map(EntityId::get))
 								.set(VAULT_CHANGE_HISTORY.NAMESPACE_ID, ownership.namespace())
 								.set(VAULT_CHANGE_HISTORY.SERVICE_ID, ownership.service())
 								.set(VAULT_CHANGE_HISTORY.PROFILE_ID, ownership.profile())
@@ -290,7 +286,9 @@ public class ChangeHistoryService implements VaultChronicle {
 	@Override
 	@Transactional(label = "vault.trace-revision-changes", readOnly = true)
 	public List<PropertyHistory> traceRevision(ChangeHistory revision) {
-		return createPropertyHistoryQuery(VAULT_PROPERTY_HISTORY.CHANGE_ID.eq(revision.id().get()))
+		final UUID id = UUID.fromString(revision.id());
+
+		return createPropertyHistoryQuery(VAULT_PROPERTY_HISTORY.CHANGE_ID.eq(id))
 				.fetch(ChangeHistoryService::toPropertyHistory);
 	}
 
@@ -326,14 +324,14 @@ public class ChangeHistoryService implements VaultChronicle {
 				.orElseThrow(() -> new ProfileNotFoundException(profile));
 	}
 
-	private static CursorPageable encodeNextCursor(long identifier, OffsetDateTime timestamp, int size) {
+	private static CursorPageable encodeNextCursor(UUID identifier, OffsetDateTime timestamp, int size) {
 		return CursorPageable.of(
 				HistoryCursorToken.of(identifier, timestamp).value(),
 				size
 		);
 	}
 
-	private static CursorPageable encodePreviousCursor(long identifier, OffsetDateTime timestamp, int size) {
+	private static CursorPageable encodePreviousCursor(UUID identifier, OffsetDateTime timestamp, int size) {
 		return CursorPageable.of(
 				HistoryCursorToken.of(identifier, timestamp, true).value(),
 				size
@@ -342,7 +340,7 @@ public class ChangeHistoryService implements VaultChronicle {
 
 	private static ChangeHistory toChangeHistory(Record record) {
 		return new ChangeHistory(
-				record.get(VAULT_CHANGE_HISTORY.ID, EntityId.class),
+				record.get(VAULT_CHANGE_HISTORY.ID, String.class),
 				record.get(VAULT_CHANGE_HISTORY.REVISION),
 				record.get(VAULT_CHANGE_HISTORY.SUBJECT),
 				record.get(VAULT_CHANGE_HISTORY.DESCRIPTION),

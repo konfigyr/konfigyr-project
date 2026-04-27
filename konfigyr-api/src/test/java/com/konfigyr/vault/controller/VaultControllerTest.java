@@ -94,13 +94,13 @@ class VaultControllerTest extends AbstractControllerTest {
 				.hasSize(7)
 				.extracting(ChangeHistory::id, ChangeHistory::revision, ChangeHistory::subject)
 				.containsExactly(
-						tuple(EntityId.from(7), "last-revision", "Last change"),
-						tuple(EntityId.from(6), "sixth-revision", "Sixth change"),
-						tuple(EntityId.from(5), "fifth-revision", "Fifth change"),
-						tuple(EntityId.from(4), "fourth-revision", "Fourth change"),
-						tuple(EntityId.from(3), "third-revision", "Third change"),
-						tuple(EntityId.from(2), "second-revision", "Second change"),
-						tuple(EntityId.from(1), "first-revision", "First change")
+						tuple("019690a1-0007-7000-8000-000000000007", "last-revision", "Last change"),
+						tuple("019690a1-0006-7000-8000-000000000006", "sixth-revision", "Sixth change"),
+						tuple("019690a1-0005-7000-8000-000000000005", "fifth-revision", "Fifth change"),
+						tuple("019690a1-0004-7000-8000-000000000004", "fourth-revision", "Fourth change"),
+						tuple("019690a1-0003-7000-8000-000000000003", "third-revision", "Third change"),
+						tuple("019690a1-0002-7000-8000-000000000002", "second-revision", "Second change"),
+						tuple("019690a1-0001-7000-8000-000000000001", "first-revision", "First change")
 				);
 	}
 

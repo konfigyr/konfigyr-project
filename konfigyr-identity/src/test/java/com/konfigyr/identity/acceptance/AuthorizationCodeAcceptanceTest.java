@@ -22,6 +22,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.FactorGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
@@ -35,7 +37,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -160,7 +164,11 @@ class AuthorizationCodeAcceptanceTest {
 	static Cookie generateRememberMeCookie(AccountIdentity identity) {
 		final var request = new MockHttpServletRequest();
 		final var response = new MockHttpServletResponse();
-		final var authentication = new TestingAuthenticationToken(identity, "", identity.getAuthorities());
+
+		final List<GrantedAuthority> authorities = new ArrayList<>(identity.getAuthorities());
+		authorities.add(FactorGrantedAuthority.fromAuthority(FactorGrantedAuthority.AUTHORIZATION_CODE_AUTHORITY));
+
+		final var authentication = new TestingAuthenticationToken(identity, "", authorities);
 
 		services.loginSuccess(request, response, authentication);
 
