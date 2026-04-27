@@ -16,7 +16,7 @@ import {
   DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@konfigyr/components/ui/dropdown-menu';
-import { PencilIcon } from 'lucide-react';
+import { PencilIcon, TrashIcon, VaultIcon } from 'lucide-react';
 import {
   DeleteConfigurationProfileAlert,
 } from '@konfigyr/components/namespace/service/settings/profiles/delete-profile-alert';
@@ -203,10 +203,11 @@ export function ProfileItemMenu ({ profile, onPolicyUpdate, onProfileRemove }: P
           </Button>
         }
       />
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent className="w-48" align="end">
         <DropdownMenuGroup>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
+              <VaultIcon />
               <FormattedMessage
                 defaultMessage="Profile policy"
                 description="Profile policy fieldset title"
@@ -222,6 +223,7 @@ export function ProfileItemMenu ({ profile, onPolicyUpdate, onProfileRemove }: P
             </DropdownMenuPortal>
           </DropdownMenuSub>
           <DropdownMenuItem onClick={onRemove}>
+            <TrashIcon />
             <FormattedMessage
               defaultMessage="Delete profile"
               description="Label for the delete profile policy button"
@@ -255,8 +257,6 @@ function SkeletonLoader () {
     </article>
   );
 }
-
-
 
 function ProfileInlineEdit ({ field, onChange, onError }: {
   field?: string,
