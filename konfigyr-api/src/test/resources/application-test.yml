@@ -22,6 +22,9 @@ konfigyr:
       secret: base64:5c2b2b9f31055ff68acb6c3be98699adbbd1a243fa65062ccc6aac4d3888edf1
       expiration: 5m
 
+  audit:
+    partitioning-cron: '-'
+
   crypto:
     master-key:
       value: F95fYHXZgV1SFko-HZJShmF70ys8tXP9LGnW6cX5dmc=
@@ -35,6 +38,10 @@ konfigyr:
       build-debounce-period: 10s
       build-timeout: 10s
       parallel-builds: 5
+
+  vault:
+    change-history:
+      partitioning-cron: '-'
 
 logging:
   level:

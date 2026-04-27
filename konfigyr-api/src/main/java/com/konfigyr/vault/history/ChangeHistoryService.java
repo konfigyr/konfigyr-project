@@ -2,6 +2,7 @@ package com.konfigyr.vault.history;
 
 import com.konfigyr.data.CursorPage;
 import com.konfigyr.data.CursorPageable;
+import com.konfigyr.data.Routines;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
@@ -13,6 +14,7 @@ import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -145,7 +147,7 @@ public class ChangeHistoryService implements VaultChronicle {
 			);
 		}
 
-		final HistoryCursorToken token = decodeCursor(pageable);
+		final HistoryCursorToken token = HistoryCursorToken.decode(pageable);
 		final boolean isReversed = token != null && token.reversed();
 		final SortOrder sortOrder = isReversed ? SortOrder.ASC : SortOrder.DESC;
 
@@ -229,7 +231,7 @@ public class ChangeHistoryService implements VaultChronicle {
 			);
 		}
 
-		final HistoryCursorToken token = decodeCursor(pageable);
+		final HistoryCursorToken token = HistoryCursorToken.decode(pageable);
 		final boolean isReversed = token != null && token.reversed();
 		final SortOrder sortOrder = isReversed ? SortOrder.ASC : SortOrder.DESC;
 
@@ -292,6 +294,14 @@ public class ChangeHistoryService implements VaultChronicle {
 				.fetch(ChangeHistoryService::toPropertyHistory);
 	}
 
+	@Transactional(label = "vault.create-revision-change-partitions")
+	@Scheduled(cron = "${konfigyr.vault.change-history.partitioning-cron:0 0 0 * * *}")
+	void createPartitions() {
+		final OffsetDateTime tomorrow = OffsetDateTime.now().plusDays(1);
+		Routines.createChangeHistoryPartition(context.configuration(), tomorrow);
+		Routines.createPropertyHistoryPartition(context.configuration(), tomorrow);
+	}
+
 	private SelectConditionStep<Record> createChangeHistoryQuery(Condition condition) {
 		return context.select(CHANGE_HISTORY_FIELDS)
 				.from(VAULT_CHANGE_HISTORY)
@@ -314,11 +324,6 @@ public class ChangeHistoryService implements VaultChronicle {
 				.where(VAULT_PROFILES.ID.eq(profile.get()))
 				.fetchOptional(ChangeHistoryOwnership::new)
 				.orElseThrow(() -> new ProfileNotFoundException(profile));
-	}
-
-	@Nullable
-	private static HistoryCursorToken decodeCursor(CursorPageable pageable) {
-		return pageable.token() == null ? null : HistoryCursorToken.decode(pageable.token());
 	}
 
 	private static CursorPageable encodeNextCursor(long identifier, OffsetDateTime timestamp, int size) {

@@ -7,7 +7,8 @@
     <include file="test-changelog.xml" />
 
     <changeSet id="namespace-test-data" author="vspasic">
-        <sqlFile path="data/invitations.sql" />
+		<sqlFile path="data/audit.sql" />
+		<sqlFile path="data/invitations.sql" />
 		<sqlFile path="data/kms.sql" />
 		<sqlFile path="data/vault.sql" />
     </changeSet>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="vspasic" id="1.0.0-create-audit-events-table" context="api">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="audit_events" />
+            </not>
+        </preConditions>
+
+        <comment>Cross-domain audit event log table, partitioned by month on created_at</comment>
+
+        <createTable tableName="audit_events">
+            <column name="id" type="uuid" defaultValueComputed="gen_random_uuid()">
+                <constraints nullable="false" primaryKey="true" />
+            </column>
+
+            <column name="namespace_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="entity_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="entity_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="event_type" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="actor_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="actor_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="actor_name" type="text">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="details" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="created_at" type="timestamptz" defaultValueComputed="now()">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+        </createTable>
+
+        <modifySql applyToRollback="false">
+            <append value=" PARTITION BY RANGE (created_at);"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet author="vspasic" id="1.0.0-create-audit-events-constraints" context="api">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_audit_namespace_lookup" />
+            </not>
+        </preConditions>
+
+        <comment>
+            Creates a `create_audit_events_partition` function that would be used to create partitions for the
+            `audit_events` table for the current month if one does not exist. Apart from this function,
+            this changeset would also add required indexes for namespace and entity lookups.
+        </comment>
+
+        <createIndex tableName="audit_events" indexName="idx_audit_namespace_lookup">
+            <column name="namespace_id" />
+            <column name="created_at" />
+        </createIndex>
+
+        <createIndex tableName="audit_events" indexName="idx_audit_entity_lookup">
+            <column name="entity_type" />
+            <column name="entity_id" />
+            <column name="created_at" />
+        </createIndex>
+
+        <sql>
+            CREATE OR REPLACE FUNCTION create_audit_events_partition(p_date TIMESTAMPTZ) RETURNS void AS '
+                DECLARE
+                   start_date DATE := date_trunc(''month'', p_date)::timestamptz;
+                   end_date DATE := (start_date + INTERVAL ''1 month'')::timestamptz;
+                   partition_name TEXT := format(''audit_events_%s'', to_char(start_date, ''YYYY_MM''));
+                BEGIN
+                    EXECUTE format(
+                        ''CREATE TABLE IF NOT EXISTS %I PARTITION OF audit_events FOR VALUES FROM (%L) TO (%L)'',
+                        partition_name, start_date, end_date
+                    );
+                END;
+            ' LANGUAGE plpgsql;
+        </sql>
+
+        <sql>
+            SELECT create_audit_events_partition(now());
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

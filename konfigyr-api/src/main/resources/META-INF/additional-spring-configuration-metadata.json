@@ -20,6 +20,20 @@
       "defaultValue": "0 * * * * *",
       "description": "Specifies the interval of the Service Catalog scheduler that would schedule pending Service Catalog rebuild tasks. Defaults to every second.",
       "sourceType": "com.konfigyr.namespace.catalog.ServiceCatalogScheduler"
+    },
+    {
+      "name": "konfigyr.audit.partitioning-cron",
+      "type": "java.lang.String",
+      "defaultValue": "0 0 0 * * *",
+      "description": "Specifies the cron interval for the audit events table partitioning task. Defaults to every second.",
+      "sourceType": "com.konfigyr.audit.AuditEventRepository"
+    },
+    {
+      "name": "konfigyr.vault.change-history.partitioning-cron",
+      "type": "java.lang.String",
+      "defaultValue": "0 0 0 * * *",
+      "description": "Specifies the cron interval for the change history table partitioning task. Defaults to every second.",
+      "sourceType": "com.konfigyr.vault.history.ChangeHistoryService"
     }
   ]
 }
