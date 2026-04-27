@@ -22,6 +22,7 @@ import {
 } from '@konfigyr/components/namespace/service/settings/profiles/delete-profile-alert';
 import { InlineEdit, InlineEditInput, InlineEditPlaceholder } from '@konfigyr/components/ui/inline-edit';
 import { ProfilePolicyLabel } from '@konfigyr/components/vault/profile/messages';
+import { toast } from 'sonner';
 import type { Profile, ProfilePolicy } from '@konfigyr/hooks/vault/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
@@ -131,6 +132,10 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
   const onPolicyUpdate = useCallback(async (value: ProfilePolicy) => {
     try {
       await updateProfile({ id: profile.id, policy: value });
+      toast.success(<FormattedMessage
+        defaultMessage="The profile policy was successfully updated."
+        description="Success message for the profile policy update"
+      />);
     } catch (error) {
       return errorNotification(error);
     }
