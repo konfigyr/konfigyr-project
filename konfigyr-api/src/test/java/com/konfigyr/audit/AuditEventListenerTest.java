@@ -382,10 +382,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		listener.on(new ProfileEvent.Created(profile));
 
-		assertAuditRecord("service", EntityId.from(1), "profile.created")
+		assertAuditRecord("service", EntityId.from(1000), "profile.created")
 				.returns(EntityId.from(1), AuditRecord::namespaceId)
 				.returns("service", AuditRecord::entityType)
-				.returns(EntityId.from(1), AuditRecord::entityId)
+				.returns(EntityId.from(1000), AuditRecord::entityId)
 				.returns("profile.created", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("name", "production")
@@ -407,10 +407,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		listener.on(new ProfileEvent.Updated(profile));
 
-		assertAuditRecord("service", EntityId.from(2), "profile.updated")
+		assertAuditRecord("service", EntityId.from(1001), "profile.updated")
 				.returns(EntityId.from(2), AuditRecord::namespaceId)
 				.returns("service", AuditRecord::entityType)
-				.returns(EntityId.from(2), AuditRecord::entityId)
+				.returns(EntityId.from(1001), AuditRecord::entityId)
 				.returns("profile.updated", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("name", "production")
@@ -432,10 +432,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		listener.on(new ProfileEvent.Deleted(profile));
 
-		assertAuditRecord("service", EntityId.from(3), "profile.deleted")
+		assertAuditRecord("service", EntityId.from(1001), "profile.deleted")
 				.returns(EntityId.from(2), AuditRecord::namespaceId)
 				.returns("service", AuditRecord::entityType)
-				.returns(EntityId.from(3), AuditRecord::entityId)
+				.returns(EntityId.from(1001), AuditRecord::entityId)
 				.returns("profile.deleted", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("name", "staging")

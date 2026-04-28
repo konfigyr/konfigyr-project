@@ -20,9 +20,8 @@ import static com.konfigyr.data.tables.ServiceConfigurationCatalog.SERVICE_CONFI
 import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 
 /**
- * Performs the actual rebuild of the service configuration catalog for a given release that
- * is triggered by the {@link ServiceCatalogScheduler}. The service configuration catalog re-build
- * operation is designed to be:
+ * Performs the actual rebuild of the service configuration catalog for a given release. The service
+ * configuration catalog re-build operation is designed to be:
  * <ul>
  *     <li><b>Idempotent</b> – repeated executions produce the same result for the same database state</li>
  *     <li><b>Deterministic</b> – the catalog is a pure function of release artifacts and metadata</li>
@@ -50,7 +49,6 @@ import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
  *
  * @author Vladimir Spasic
  * @since 1.0.0
- * @see ServiceCatalogScheduler
  */
 @Slf4j
 @NullMarked

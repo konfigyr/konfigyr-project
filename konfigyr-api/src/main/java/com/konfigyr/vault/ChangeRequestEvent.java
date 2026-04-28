@@ -2,6 +2,7 @@ package com.konfigyr.vault;
 
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.AuthenticatedPrincipal;
 import org.jspecify.annotations.NonNull;
 
 /**
@@ -11,7 +12,8 @@ import org.jspecify.annotations.NonNull;
  * @since 1.0.0
  **/
 public sealed class ChangeRequestEvent extends EntityEvent permits
-		ChangeRequestEvent.Opened, ChangeRequestEvent.Merged, ChangeRequestEvent.Discarded {
+		ChangeRequestEvent.Opened, ChangeRequestEvent.Merged, ChangeRequestEvent.Approved,
+		ChangeRequestEvent.ChangesRequested, ChangeRequestEvent.Discarded {
 
 	/**
 	 * Creates a new {@link ChangeRequestEvent} for the given {@link EntityId} of the {@link ChangeRequest}.
@@ -67,6 +69,70 @@ public sealed class ChangeRequestEvent extends EntityEvent permits
 		@NonNull
 		public ApplyResult result() {
 			return result;
+		}
+
+	}
+
+	/**
+	 * Vault event that is published when {@link ChangeRequest} is successfully approved.
+	 */
+	public static final class Approved extends ChangeRequestEvent {
+
+		private final AuthenticatedPrincipal reviewer;
+
+		/**
+		 * Create a new {@link Approved} event with the {@link EntityId entity identifier} of the
+		 * {@link ChangeRequest} that was approved by the {@link AuthenticatedPrincipal reviewer}.
+		 *
+		 * @param id the entity identifier of the approved change request, cannot be {@literal null}.
+		 * @param reviewer the {@link AuthenticatedPrincipal} that approved the change request, cannot be {@literal null}.
+		 */
+		public Approved(EntityId id, AuthenticatedPrincipal reviewer) {
+			super(id);
+			this.reviewer = reviewer;
+		}
+
+		/**
+		 * Returns the {@link AuthenticatedPrincipal} that approved the {@link ChangeRequest}.
+		 *
+		 * @return the {@link AuthenticatedPrincipal reviewer}, never {@literal null}.
+		 */
+		@NonNull
+		public AuthenticatedPrincipal reviewer() {
+			return reviewer;
+		}
+
+	}
+
+	/**
+	 * Vault event that is published when additional changes were requested for the {@link ChangeRequest}.
+	 */
+	public static final class ChangesRequested extends ChangeRequestEvent {
+
+		private final AuthenticatedPrincipal reviewer;
+
+		/**
+		 * Create a new {@link ChangesRequested} event with the {@link EntityId entity identifier}
+		 * of the {@link ChangeRequest} for which the {@link AuthenticatedPrincipal reviewer} requested
+		 * additional changes.
+		 *
+		 * @param id the entity identifier of the change request, cannot be {@literal null}.
+		 * @param reviewer the {@link AuthenticatedPrincipal} that requested changes, cannot be {@literal null}.
+		 */
+		public ChangesRequested(EntityId id, AuthenticatedPrincipal reviewer) {
+			super(id);
+			this.reviewer = reviewer;
+		}
+
+		/**
+		 * Returns the {@link AuthenticatedPrincipal} that requested additional changes to be made
+		 * in the {@link ChangeRequest}.
+		 *
+		 * @return the {@link AuthenticatedPrincipal reviewer}, never {@literal null}.
+		 */
+		@NonNull
+		public AuthenticatedPrincipal reviewer() {
+			return reviewer;
 		}
 
 	}

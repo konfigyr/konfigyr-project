@@ -6,4 +6,5 @@ com.konfigyr.feature.FeaturesAutoConfiguration
 com.konfigyr.kms.KeysetManagerAutoConfiguration
 com.konfigyr.markdown.MarkdownAutoconfiguration
 com.konfigyr.namespace.NamespaceManagementAutoConfiguration
+com.konfigyr.queue.WorkerQueueAutoConfiguration
 com.konfigyr.vault.VaultAutoConfiguration

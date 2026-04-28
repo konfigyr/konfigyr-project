@@ -1,5 +1,6 @@
 package com.konfigyr.vault.changes;
 
+import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
 import com.konfigyr.markdown.MarkdownContents;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
@@ -368,7 +370,7 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 	@Test
 	@Transactional
 	@DisplayName("should submit a change request comment")
-	void submitChangeRequestComment() {
+	void submitChangeRequestComment(AssertablePublishedEvents events) {
 		doReturn("john.doe@konfigyr.com").when(principal).get();
 		final var command = new ChangeRequestReviewCommand(serviceFor(2), 1L, principal,
 				ChangeRequestReviewCommand.Operation.COMMENT, MarkdownContents.of("So long, and thanks for all the fish"));
@@ -382,12 +384,15 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.returns(ChangeRequestHistory.Type.COMMENTED, ChangeRequestHistory::type)
 				.returns(MarkdownContents.of("So long, and thanks for all the fish"), ChangeRequestHistory::comment)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
+
+		assertThat(events.eventOfTypeWasPublished(ChangeRequestEvent.class))
+				.isFalse();
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should submit a change request approval")
-	void submitChangeRequestApproval() {
+	void submitChangeRequestApproval(AssertablePublishedEvents events) {
 		doReturn("john.doe@konfigyr.com").when(principal).get();
 		final var command = new ChangeRequestReviewCommand(serviceFor(2), 1L, principal,
 				ChangeRequestReviewCommand.Operation.APPROVE, MarkdownContents.of("LGTM"));
@@ -401,12 +406,16 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.returns(ChangeRequestHistory.Type.APPROVED, ChangeRequestHistory::type)
 				.returns(MarkdownContents.of("LGTM"), ChangeRequestHistory::comment)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
+
+		events.ofType(ChangeRequestEvent.Approved.class)
+				.matchingValue(EntityEvent::id, EntityId.from(1))
+				.matchingValue(ChangeRequestEvent.Approved::reviewer, principal);
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should request additional changes for change request")
-	void requestAdditionalChangesForChangeRequest() {
+	void requestAdditionalChangesForChangeRequest(AssertablePublishedEvents events) {
 		doReturn("john.doe@konfigyr.com").when(principal).get();
 		final var command = new ChangeRequestReviewCommand(serviceFor(2), 1L, principal,
 				ChangeRequestReviewCommand.Operation.REQUEST_CHANGES);
@@ -420,6 +429,10 @@ class ChangeRequestManagerTest extends AbstractIntegrationTest {
 				.returns(ChangeRequestHistory.Type.CHANGES_REQUESTED, ChangeRequestHistory::type)
 				.returns(null, ChangeRequestHistory::comment)
 				.returns("john.doe@konfigyr.com", ChangeRequestHistory::initiator);
+
+		events.ofType(ChangeRequestEvent.ChangesRequested.class)
+				.matchingValue(EntityEvent::id, EntityId.from(1))
+				.matchingValue(ChangeRequestEvent.ChangesRequested::reviewer, principal);
 	}
 
 	@Test

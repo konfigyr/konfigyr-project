@@ -233,7 +233,7 @@ class AuditEventListener {
 	void on(ProfileEvent.Created event) {
 		insert(event, builder -> builder
 				.entityType("service")
-				.entityId(event.get().service())
+				.entityId(event.id())
 				.eventType("profile.created")
 				.details("name", event.get().slug())
 		);
@@ -243,7 +243,7 @@ class AuditEventListener {
 	void on(ProfileEvent.Updated event) {
 		insert(event, builder -> builder
 				.entityType("service")
-				.entityId(event.get().service())
+				.entityId(event.id())
 				.eventType("profile.updated")
 				.details("name", event.get().slug())
 		);
@@ -253,7 +253,7 @@ class AuditEventListener {
 	void on(ProfileEvent.Deleted event) {
 		insert(event, builder -> builder
 				.entityType("service")
-				.entityId(event.get().service())
+				.entityId(event.id())
 				.eventType("profile.deleted")
 				.details("name", event.get().slug())
 		);

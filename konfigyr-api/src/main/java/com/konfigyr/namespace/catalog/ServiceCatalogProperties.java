@@ -2,7 +2,6 @@ package com.konfigyr.namespace.catalog;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.hibernate.validator.constraints.Range;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
@@ -63,20 +62,5 @@ public class ServiceCatalogProperties {
 	@DurationMin(seconds = 10)
 	@DurationUnit(ChronoUnit.SECONDS)
 	private Duration buildTimeout = Duration.ofMinutes(1);
-
-	/**
-	 * Maximum number of catalog rebuilds that can be executed concurrently.
-	 * <p>
-	 * Each rebuild performs a transactional delete and insert within a single service partition.
-	 * While partitioning reduces contention, excessive parallelism can still put pressure on the
-	 * database due to concurrent writes and index updates.
-	 * <p>
-	 * This setting limits the number of parallel rebuilds to maintain a predictable load and stable
-	 * performance. It should be tuned based on database capacity and workload characteristics. Start
-	 * conservatively and scale up under load testing. The default value is set to 10, meaning that
-	 * up to 10 catalog rebuilds can be executed at the same time.
-	 */
-	@Range(min = 1, max = 100)
-	private int parallelBuilds = 10;
 
 }
