@@ -32,6 +32,9 @@ import static com.konfigyr.data.tables.VaultChangeRequests.VAULT_CHANGE_REQUESTS
  * The evaluator is responsible for delegating evaluation to the {@link ChangeRequestGatekeeper},
  * persisting the resulting {@link ChangeRequestMergeStatus} and providing observability through
  * logging and metrics.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
  */
 @Slf4j
 @NullMarked
