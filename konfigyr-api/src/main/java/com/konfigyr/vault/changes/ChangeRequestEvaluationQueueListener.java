@@ -9,11 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -82,7 +82,7 @@ class ChangeRequestEvaluationQueueListener {
 			isolation = Isolation.SERIALIZABLE,
 			label = "vault.change-request.merge-state-task-scheduler"
 	)
-	@TransactionalEventListener(id = "vault.change-request.merge-state-task-scheduler")
+	@EventListener(id = "vault.change-request.merge-state-task-scheduler")
 	void enqueue(VaultEvent.ChangesApplied event) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to schedule change request merge status evaluation tasks for profile: {}", event.id());
@@ -146,7 +146,16 @@ class ChangeRequestEvaluationQueueListener {
 			isolation = Isolation.SERIALIZABLE,
 			label = "vault.change-request.merge-state-task-scheduler"
 	)
-	@TransactionalEventListener(id = "vault.change-request.merge-state-task-scheduler")
+	@EventListener(
+			id = "vault.change-request.merge-state-task-scheduler",
+			classes = {
+					ChangeRequestEvent.Opened.class,
+					ChangeRequestEvent.Approved.class,
+					ChangeRequestEvent.ChangesRequested.class,
+					ChangeRequestEvent.Merged.class,
+					ChangeRequestEvent.Discarded.class
+			}
+	)
 	void enqueue(ChangeRequestEvent event) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to schedule change request merge state evaluation for: {}", event);

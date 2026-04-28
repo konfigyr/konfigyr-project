@@ -3,6 +3,7 @@ package com.konfigyr.vault;
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.security.AuthenticatedPrincipal;
+import org.jmolecules.event.annotation.DomainEvent;
 import org.jspecify.annotations.NonNull;
 
 /**
@@ -27,6 +28,7 @@ public sealed class ChangeRequestEvent extends EntityEvent permits
 	/**
 	 * Vault event that is published when {@link ChangeRequest} is successfully opened by the {@link Vault}.
 	 */
+	@DomainEvent(name = "change-request.opened", namespace = "vault")
 	public static final class Opened extends ChangeRequestEvent {
 
 		/**
@@ -45,6 +47,7 @@ public sealed class ChangeRequestEvent extends EntityEvent permits
 	 * Vault event that is published when {@link ChangeRequest} is successfully merged to the target
 	 * {@link Profile} by the {@link Vault}.
 	 */
+	@DomainEvent(name = "change-request.merged", namespace = "vault")
 	public static final class Merged extends ChangeRequestEvent {
 
 		private final ApplyResult result;
@@ -76,6 +79,7 @@ public sealed class ChangeRequestEvent extends EntityEvent permits
 	/**
 	 * Vault event that is published when {@link ChangeRequest} is successfully approved.
 	 */
+	@DomainEvent(name = "change-request.approved", namespace = "vault")
 	public static final class Approved extends ChangeRequestEvent {
 
 		private final AuthenticatedPrincipal reviewer;
@@ -107,6 +111,7 @@ public sealed class ChangeRequestEvent extends EntityEvent permits
 	/**
 	 * Vault event that is published when additional changes were requested for the {@link ChangeRequest}.
 	 */
+	@DomainEvent(name = "change-request.changes-requested", namespace = "vault")
 	public static final class ChangesRequested extends ChangeRequestEvent {
 
 		private final AuthenticatedPrincipal reviewer;
@@ -140,6 +145,7 @@ public sealed class ChangeRequestEvent extends EntityEvent permits
 	/**
 	 * Vault event that is published when {@link ChangeRequest} is successfully discarded by the {@link Vault}.
 	 */
+	@DomainEvent(name = "change-request.discarded", namespace = "vault")
 	public static final class Discarded extends ChangeRequestEvent {
 
 		/**

@@ -16,9 +16,7 @@ import com.konfigyr.support.Slug;
 import com.konfigyr.test.AbstractIntegrationTest;
 import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestPrincipals;
-import com.konfigyr.vault.Profile;
-import com.konfigyr.vault.ProfileEvent;
-import com.konfigyr.vault.ProfilePolicy;
+import com.konfigyr.vault.*;
 import org.assertj.core.api.ObjectAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -382,9 +380,9 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		listener.on(new ProfileEvent.Created(profile));
 
-		assertAuditRecord("service", EntityId.from(1000), "profile.created")
+		assertAuditRecord("profile", EntityId.from(1000), "profile.created")
 				.returns(EntityId.from(1), AuditRecord::namespaceId)
-				.returns("service", AuditRecord::entityType)
+				.returns("profile", AuditRecord::entityType)
 				.returns(EntityId.from(1000), AuditRecord::entityId)
 				.returns("profile.created", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
@@ -407,9 +405,9 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		listener.on(new ProfileEvent.Updated(profile));
 
-		assertAuditRecord("service", EntityId.from(1001), "profile.updated")
+		assertAuditRecord("profile", EntityId.from(1001), "profile.updated")
 				.returns(EntityId.from(2), AuditRecord::namespaceId)
-				.returns("service", AuditRecord::entityType)
+				.returns("profile", AuditRecord::entityType)
 				.returns(EntityId.from(1001), AuditRecord::entityId)
 				.returns("profile.updated", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
@@ -432,9 +430,9 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		listener.on(new ProfileEvent.Deleted(profile));
 
-		assertAuditRecord("service", EntityId.from(1001), "profile.deleted")
+		assertAuditRecord("profile", EntityId.from(1001), "profile.deleted")
 				.returns(EntityId.from(2), AuditRecord::namespaceId)
-				.returns("service", AuditRecord::entityType)
+				.returns("profile", AuditRecord::entityType)
 				.returns(EntityId.from(1001), AuditRecord::entityId)
 				.returns("profile.deleted", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
@@ -459,8 +457,52 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertThat(repository.find(
 				SearchQuery.builder()
-						.criteria(AuditRecord.ENTITY_TYPE_CRITERIA, "service")
-						.criteria(AuditRecord.ENTITY_ID_CRITERIA, profile.service())
+						.criteria(AuditRecord.ENTITY_TYPE_CRITERIA, "profile")
+						.criteria(AuditRecord.ENTITY_ID_CRITERIA, profile.id())
+						.build(),
+				CursorPageable.unpaged()
+		)).isEmpty();
+	}
+
+	@Test
+	@DisplayName("should persist audit record for vault changes applied event")
+	void shouldAuditVaultChangesApplied() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var author = TestAccounts.jane().build();
+
+		final ApplyResult result = mock(ApplyResult.class);
+		doReturn("new-profile-revision").when(result).revision();
+		doReturn(TestPrincipals.from(author).getPrincipal()).when(result).author();
+
+		listener.on(new VaultEvent.ChangesApplied(EntityId.from(4), result));
+
+		assertAuditRecord("profile", EntityId.from(4), "profile.changes-applied")
+				.returns(EntityId.from(2), AuditRecord::namespaceId)
+				.returns("profile", AuditRecord::entityType)
+				.returns(EntityId.from(4), AuditRecord::entityId)
+				.returns("profile.changes-applied", AuditRecord::eventType)
+				.satisfies(it -> assertThat(it.actor())
+						.returns(author.id().serialize(), Actor::id)
+						.returns(PrincipalType.USER_ACCOUNT.name(), Actor::type)
+						.returns(author.displayName(), Actor::name)
+				)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("revision", "new-profile-revision")
+				);
+	}
+
+	@Test
+	@DisplayName("should fail to persist audit record for vault event when namespace can not be resolved")
+	void shouldAuditVaultEventWithoutNamespace() {
+		setSecurityContext(TestPrincipals.john());
+
+		listener.on(new VaultEvent.ChangesApplied(EntityId.from(9999), mock(ApplyResult.class)));
+
+		assertThat(repository.find(
+				SearchQuery.builder()
+						.criteria(AuditRecord.ENTITY_TYPE_CRITERIA, "profile")
+						.criteria(AuditRecord.ENTITY_ID_CRITERIA, EntityId.from(9999))
 						.build(),
 				CursorPageable.unpaged()
 		)).isEmpty();

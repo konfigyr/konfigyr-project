@@ -9,7 +9,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.CollectionUtils;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -34,10 +33,9 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * <strong>Lifecycle management</strong><br>
  * Reporting the outcome of each execution back to the {@link WorkerQueue} by invoking either
- * {@link WorkerQueue#complete(QueuedTask, Duration)} or
- * {@link WorkerQueue#fail(QueuedTask, Duration, Throwable)}. The queue is responsible for determining
- * whether the task should be removed, retried, or rescheduled based on its internal state
- * (e.g., retry count, reschedule flags).
+ * {@link WorkerQueue#complete(QueuedTask)} or {@link WorkerQueue#fail(QueuedTask, Throwable)}.
+ * The queue is responsible for determining whether the task should be removed, retried, or
+ * rescheduled based on its internal state (e.g., retry count, reschedule flags).
  * <p>
  * <strong>Timeout handling</strong><br>
  * Implementations may enforce an execution timeout for individual tasks. If a task exceeds
@@ -78,7 +76,7 @@ class WorkerQueueScheduler implements InitializingBean, DisposableBean {
 	 * Failures result in the task being rescheduled with the backoff, while successful executions
 	 * remove the entry from the queue.
 	 */
-	@Scheduled(cron = "${konfigyr.scheduler.cron-expression:0 * * * * *}")
+	@Scheduled(cron = "${konfigyr.scheduler.cron-expression:* * * * * *}")
 	void schedule() {
 		final List<QueuedTask> tasks = workerQueue.consume();
 
