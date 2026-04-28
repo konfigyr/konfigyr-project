@@ -31,11 +31,6 @@ public class VaultAutoConfiguration {
 	}
 
 	@Bean
-	ChangeRequestManager changeRequestManager() {
-		return new ChangeRequestManager(context);
-	}
-
-	@Bean
 	VaultStateManager vaultStateManager(
 			ObjectProvider<VaultExtension> extensions,
 			ChangeRequestManager changeRequestManager,

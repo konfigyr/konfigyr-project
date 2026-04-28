@@ -16,6 +16,7 @@ import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -62,6 +63,7 @@ public class ChangeRequestManager {
 			.build();
 
 	private final DSLContext context;
+	private final ApplicationEventPublisher publisher;
 
 	/**
 	 * Searches for change requests of a given {@link Service} matching the provided query.
@@ -428,6 +430,15 @@ public class ChangeRequestManager {
 		context.insertInto(VAULT_CHANGE_REQUEST_EVENTS)
 				.set(record.get())
 				.execute();
+
+		switch (command.operation()) {
+			case APPROVE -> publisher.publishEvent(new ChangeRequestEvent.Approved(
+					request.id(), command.principal()
+			));
+			case REQUEST_CHANGES -> publisher.publishEvent(new ChangeRequestEvent.ChangesRequested(
+					request.id(), command.principal()
+			));
+		}
 
 		return request;
 	}

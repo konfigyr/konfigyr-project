@@ -16,6 +16,10 @@
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>
 
+	<includeAll path="queue"
+				relativeToChangelogFile="true"
+				errorIfMissingOrEmpty="false"/>
+
 	<includeAll path="accounts"
 				relativeToChangelogFile="true"
 				errorIfMissingOrEmpty="false"/>

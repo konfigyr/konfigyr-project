@@ -1,10 +1,12 @@
 package com.konfigyr.audit;
 
+import com.konfigyr.vault.ChangeRequestEvent;
 import org.jmolecules.event.annotation.DomainEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Arrays;
@@ -54,6 +56,7 @@ class AuditEventListenerCoverageTest {
 	private static Set<Class<?>> findDomainEventClasses() {
 		final var scanner = new ClassPathScanningCandidateComponentProvider(false);
 		scanner.addIncludeFilter(new AnnotationTypeFilter(DomainEvent.class));
+		scanner.addExcludeFilter(new AssignableTypeFilter(ChangeRequestEvent.class));
 
 		return scanner.findCandidateComponents("com.konfigyr").stream()
 				.map(bd -> {

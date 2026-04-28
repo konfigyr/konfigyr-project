@@ -177,7 +177,7 @@ class GatekeeperTest extends AbstractIntegrationTest {
 				.set(VAULT_CHANGE_REQUESTS.PROFILE_ID, profile.id().get())
 				.set(VAULT_CHANGE_REQUESTS.NUMBER, CHANGE_REQUEST_ID.get())
 				.set(VAULT_CHANGE_REQUESTS.STATE, state.name())
-				.set(VAULT_CHANGE_REQUESTS.MERGE_STATUS, ChangeRequestMergeStatus.CHECKING.name())
+				.set(VAULT_CHANGE_REQUESTS.MERGE_STATUS, ChangeRequestMergeStatus.NOT_APPROVED.name())
 				.set(VAULT_CHANGE_REQUESTS.CHANGE_COUNT, 0)
 				.set(VAULT_CHANGE_REQUESTS.BRANCH_NAME, "change-request-branch")
 				.set(VAULT_CHANGE_REQUESTS.BASE_REVISION, base)

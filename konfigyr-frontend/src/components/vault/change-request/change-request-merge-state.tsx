@@ -4,7 +4,6 @@ import { FormattedMessage } from 'react-intl';
 import {
   CircleCheckIcon,
   CircleXIcon,
-  GitCompareArrowsIcon,
   GitMergeConflictIcon,
   GitMergeIcon,
   GitPullRequestClosedIcon,
@@ -35,10 +34,6 @@ function ChangeRequestMergeStateIcon({ value, className }: { value: ChangeReques
     case ChangeRequestMergeStatus.CHANGES_REQUESTED:
       return (
         <MessageCirclePlusIcon className={cn('text-destructive', className)} />
-      );
-    case ChangeRequestMergeStatus.CHECKING:
-      return (
-        <GitCompareArrowsIcon className={className} />
       );
     case ChangeRequestMergeStatus.CONFLICTING:
     case ChangeRequestMergeStatus.OUTDATED:
@@ -73,13 +68,6 @@ function ChangeRequestMergeStateTitle({ value }: { value: ChangeRequestMergeStat
         <FormattedMessage
           defaultMessage="Additional changes required"
           description="Title of the change request merge card when change request has additional changes requested."
-        />
-      );
-    case ChangeRequestMergeStatus.CHECKING:
-      return (
-        <FormattedMessage
-          defaultMessage="Checking..."
-          description="Title of the change request merge card when merge state is being checked."
         />
       );
     case ChangeRequestMergeStatus.CONFLICTING:
@@ -127,13 +115,6 @@ function ChangeRequestMergeStateDescription({ value }: { value: ChangeRequestMer
         <FormattedMessage
           defaultMessage="At least one reviewer requested additional changes before the change request can be merged."
           description="Description of the change request merge card when change request has additional changes requested."
-        />
-      );
-    case ChangeRequestMergeStatus.CHECKING:
-      return (
-        <FormattedMessage
-          defaultMessage="We are checking the mergeability of this change request. This may take a few minutes."
-          description="Description of the change request merge card when merge state is being checked."
         />
       );
     case ChangeRequestMergeStatus.CONFLICTING:
