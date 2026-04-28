@@ -73,13 +73,6 @@ public enum ChangeRequestMergeStatus {
 	CHANGES_REQUESTED,
 
 	/**
-	 * The change request is currently being evaluated (e.g., Git checks in progress).
-	 * <p>
-	 * This is typically a transient state and may be used when mergeability has not yet been determined.
-	 */
-	CHECKING,
-
-	/**
 	 * The change request satisfies all conditions and can be merged.
 	 */
 	MERGEABLE
