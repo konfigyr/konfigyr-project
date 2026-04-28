@@ -150,7 +150,7 @@ class WorkerQueue {
 					.where(WORKER_QUEUE.ID.eq(task.id()))
 					.execute();
 		} else {
-			log.info("Task been successfully executed for queue '{}' and identifier: {}", task.queueName(), task.entityId());
+			log.info(MARKER, "Task been successfully executed for queue '{}' and identifier: {}", task.queueName(), task.entityId());
 
 			context.deleteFrom(WORKER_QUEUE)
 					.where(WORKER_QUEUE.ID.eq(task.id()))
