@@ -6,6 +6,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +62,8 @@ import static com.konfigyr.data.tables.WorkerQueue.WORKER_QUEUE;
 @RequiredArgsConstructor
 class WorkerQueue {
 
+	static final Marker MARKER = MarkerFactory.getMarker("WORKER_QUEUE");
+
 	private final DSLContext context;
 	private final QueueRegistrar registrar;
 
@@ -78,7 +82,7 @@ class WorkerQueue {
 	 * queue without processing the same task more than once.
 	 * <p>
 	 * The returned tasks represent tasks that must eventually be completed via
-	 * {@link #complete(QueuedTask)} or {@link #fail(QueuedTask, Duration, Throwable)}.
+	 * {@link #complete(QueuedTask)} or {@link #fail(QueuedTask, Throwable)}.
 	 *
 	 * @return the list of queued tasks to be processed, never {@literal null}
 	 */
@@ -87,7 +91,7 @@ class WorkerQueue {
 		final OffsetDateTime timestamp = OffsetDateTime.now();
 
 		if (log.isDebugEnabled()) {
-			log.debug("Consuming pending service catalog build tasks from the queue with: [parallelism={}, timestamp={}]",
+			log.debug(MARKER, "Consuming pending service catalog build tasks from the queue with: [parallelism={}, timestamp={}]",
 					20, timestamp);
 		}
 
@@ -136,7 +140,7 @@ class WorkerQueue {
 			final Duration backoff = registrar.get(task.queueName()).backoff();
 			final OffsetDateTime scheduledAt = OffsetDateTime.now().plus(backoff);
 
-			log.info("Rescheduling task: [queue={}, entity={}, at={}]", task.queueName(), task.entityId(), scheduledAt);
+			log.info(MARKER, "Rescheduling task: [queue={}, entity={}, at={}]", task.queueName(), task.entityId(), scheduledAt);
 
 			context.update(WORKER_QUEUE)
 					.set(WORKER_QUEUE.STATUS, QueuedTaskState.PENDING.name())
@@ -175,7 +179,7 @@ class WorkerQueue {
 	 */
 	@Transactional(isolation = Isolation.SERIALIZABLE, label = "work-queue.fail")
 	void fail(QueuedTask task, @Nullable Throwable cause) {
-		log.warn("Unexpected error occurred while executing task in queue '{}' and identifier: {}",
+		log.warn(MARKER, "Unexpected error occurred while executing task in queue '{}' and identifier: {}",
 				task.queueName(), task.entityId(), cause);
 
 		final Duration backoff = registrar.get(task.queueName()).backoff();
