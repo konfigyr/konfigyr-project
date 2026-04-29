@@ -1,14 +1,12 @@
 package com.konfigyr.namespace.catalog;
 
 import com.konfigyr.artifactory.ArtifactoryConverters;
+import com.konfigyr.queue.QueueProcessorRegistration;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.TaskExecutor;
 
 @RequiredArgsConstructor
 @Configuration(proxyBeanMethods = false)
@@ -29,18 +27,15 @@ public class ServiceCatalogConfiguration {
 	}
 
 	@Bean
-	ServiceCatalogQueue serviceCatalogQueue() {
-		return new ServiceCatalogQueue(context, properties.getBuildDebouncePeriod(), properties.getParallelBuilds());
+	ServiceCatalogQueueListener serviceCatalogQueue() {
+		return new ServiceCatalogQueueListener(context, properties.getBuildDebouncePeriod());
 	}
 
 	@Bean
-	ServiceCatalogScheduler serviceCatalogScheduler(
-			ServiceCatalogWorker worker,
-			ServiceCatalogQueue queue,
-			@Qualifier(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
-			TaskExecutor taskExecutor
-	) {
-		return new ServiceCatalogScheduler(queue, worker, taskExecutor, properties.getBuildTimeout());
+	QueueProcessorRegistration serviceCatalogBuilderProcessorRegistration(ServiceCatalogWorker worker) {
+		return QueueProcessorRegistration.of(ServiceCatalogQueueListener.QUEUE_NAME, worker::build)
+				.backoff(properties.getBuildDebouncePeriod())
+				.timeout(properties.getBuildTimeout());
 	}
 
 }

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+		xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+	<changeSet author="vspasic" id="1.0.0-create-worker-queue-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="worker_queue" />
+			</not>
+		</preConditions>
+
+		<comment>Initial worker queue table migration</comment>
+
+		<createTable tableName="worker_queue" remarks="Table that acts as a generic worker queue.">
+			<column name="id" type="uuid" defaultValueComputed="uuidv7()" remarks="The unique queued worker identifier.">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+
+			<column name="queue_name" type="varchar(65)" remarks="The name of the queue, defines the the type of the work being executed.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="entity_id" type="bigint" remarks="The identifier of an entity that is a subject for the worker defined by the queue name.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="status" type="varchar(20)" remarks="Stores the state of the worker in the queue.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="retry_count" type="integer" defaultValueNumeric="0" remarks="How many times was this job retried.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="needs_reschedule" type="boolean" defaultValueBoolean="false"
+					remarks="Flag when set to `true` should reschedule the job for execution when completed."/>
+
+			<column name="last_error" type="text" />
+
+			<column name="scheduled_at" type="timestamptz" remarks="Timestamp that is used by the scheduler to queue the job.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="started_at" type="timestamptz" remarks="Timestamp that tells the time when this job was started and locked." />
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()" remarks="Timestamp when this job was added to the worker queue.">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addUniqueConstraint
+				tableName="worker_queue"
+				constraintName="unique_queued_task"
+				columnNames="queue_name, entity_id"
+		/>
+
+		<createIndex tableName="worker_queue" indexName="idx_consume_worker_queue">
+			<column name="status"/>
+			<column name="scheduled_at"/>
+		</createIndex>
+	</changeSet>
+
+</databaseChangeLog>

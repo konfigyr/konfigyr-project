@@ -1,6 +1,6 @@
 plugins {
-    id 'io.freefair.lombok' version '9.2.0' apply false
-    id 'org.springframework.boot' version '4.0.5' apply false
+    id 'io.freefair.lombok' version '9.4.0' apply false
+    id 'org.springframework.boot' version '4.0.6' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
@@ -75,7 +75,7 @@ subprojects {
             dependency('com.google.guava:guava:33.6.0-jre') // used by checkstyle
 
             /* JSoup HTML test support */
-            dependency('org.jsoup:jsoup:1.22.1')
+            dependency('org.jsoup:jsoup:1.22.2')
             dependency('com.icegreen:greenmail:2.1.8')
 
             /* Wiremock Spring Boot integration */

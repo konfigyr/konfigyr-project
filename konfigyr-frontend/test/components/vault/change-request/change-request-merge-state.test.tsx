@@ -55,20 +55,6 @@ describe('components | vault | change-request | <ChangeRequestMergeStateCard/>',
     expect(getByRole('button')).toBeDisabled();
   });
 
-  test('should render <ChangeRequestMergeStateCard/> component for checking state', () => {
-    const { container, getByRole, getByText } = renderWithMessageProvider(
-      <ChangeRequestMergeStateCard value={ChangeRequestMergeStatus.CHECKING} onMerge={onMerge} />,
-    );
-
-    expect(getByText('Checking...')).toBeInTheDocument();
-    expect(getByText('We are checking the mergeability of this change request. This may take a few minutes.')).toBeInTheDocument();
-    expect(container.querySelector('svg')).toBeInTheDocument();
-    expect(container.querySelector('svg')).toHaveClass('lucide-git-compare-arrows');
-
-    expect(getByRole('button', { name: 'Merge changes' })).toBeInTheDocument();
-    expect(getByRole('button')).toBeDisabled();
-  });
-
   test('should render <ChangeRequestMergeStateCard/> component for conflicting state', () => {
     const { container, getByRole, getByText } = renderWithMessageProvider(
       <ChangeRequestMergeStateCard value={ChangeRequestMergeStatus.CONFLICTING} onMerge={onMerge} />,

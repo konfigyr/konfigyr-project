@@ -11,6 +11,7 @@ import com.konfigyr.namespace.*;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.PrincipalType;
 import com.konfigyr.vault.ProfileEvent;
+import com.konfigyr.vault.VaultEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static com.konfigyr.data.tables.Services.SERVICES;
+import static com.konfigyr.data.tables.VaultProfiles.VAULT_PROFILES;
 
 /**
  * Centralized audit event listener that captures domain events from all bounded contexts
@@ -227,13 +229,13 @@ class AuditEventListener {
 		);
 	}
 
-	// ── Vault (Profile) events ──────────────────────────────────────────────
+	// ── Vault events ──────────────────────────────────────────────
 
 	@TransactionalEventListener(id = "audit.profile-created", classes = ProfileEvent.Created.class)
 	void on(ProfileEvent.Created event) {
 		insert(event, builder -> builder
-				.entityType("service")
-				.entityId(event.get().service())
+				.entityType("profile")
+				.entityId(event.id())
 				.eventType("profile.created")
 				.details("name", event.get().slug())
 		);
@@ -242,8 +244,8 @@ class AuditEventListener {
 	@TransactionalEventListener(id = "audit.profile-updated", classes = ProfileEvent.Updated.class)
 	void on(ProfileEvent.Updated event) {
 		insert(event, builder -> builder
-				.entityType("service")
-				.entityId(event.get().service())
+				.entityType("profile")
+				.entityId(event.id())
 				.eventType("profile.updated")
 				.details("name", event.get().slug())
 		);
@@ -252,10 +254,21 @@ class AuditEventListener {
 	@TransactionalEventListener(id = "audit.profile-deleted", classes = ProfileEvent.Deleted.class)
 	void on(ProfileEvent.Deleted event) {
 		insert(event, builder -> builder
-				.entityType("service")
-				.entityId(event.get().service())
+				.entityType("profile")
+				.entityId(event.id())
 				.eventType("profile.deleted")
 				.details("name", event.get().slug())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.changes-applied", classes = VaultEvent.ChangesApplied.class)
+	void on(VaultEvent.ChangesApplied event) {
+		insert(event, builder -> builder
+				.entityType("profile")
+				.entityId(event.id())
+				.eventType("profile.changes-applied")
+				.actor(event.result().author())
+				.details("revision", event.result().revision())
 		);
 	}
 
@@ -384,6 +397,7 @@ class AuditEventListener {
 				case InvitationEvent ie -> ie.namespace();
 				case KeysetManagementEvent kme -> kme.namespace();
 				case ProfileEvent pe -> resolve(pe);
+				case VaultEvent ve -> resolve(ve);
 				default -> null;
 			};
 		}
@@ -397,6 +411,17 @@ class AuditEventListener {
 					.fetchOptional(SERVICES.NAMESPACE_ID, EntityId.class)
 					.orElseThrow(() -> new NamespaceException("Could not resolve namespace for profile " +
 							event.get().slug() + " of service " + service.get()));
+		}
+
+		private EntityId resolve(VaultEvent event) {
+			final EntityId profile = event.id();
+
+			return context.select(SERVICES.NAMESPACE_ID)
+					.from(VAULT_PROFILES)
+					.innerJoin(SERVICES).on(SERVICES.ID.eq(VAULT_PROFILES.SERVICE_ID))
+					.where(VAULT_PROFILES.ID.eq(profile.get()))
+					.fetchOptional(SERVICES.NAMESPACE_ID, EntityId.class)
+					.orElseThrow(() -> new NamespaceException("Could not resolve namespace for profile: " + profile));
 		}
 
 	}

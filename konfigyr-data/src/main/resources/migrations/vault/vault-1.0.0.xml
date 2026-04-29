@@ -81,7 +81,7 @@
 		<comment>Vault change history table</comment>
 
 		<createTable tableName="vault_change_history">
-			<column name="id" type="bigint">
+			<column name="id" type="uuid" defaultValueComputed="uuidv7()">
 				<constraints nullable="false" primaryKey="true" />
 			</column>
 
@@ -222,7 +222,7 @@
 		<comment>Vault property change history table</comment>
 
 		<createTable tableName="vault_property_history">
-			<column name="change_id" type="bigint">
+			<column name="change_id" type="uuid">
 				<constraints nullable="false" primaryKey="true" />
 			</column>
 
@@ -458,7 +458,7 @@
 		<comment>Vault Change Request events table</comment>
 
 		<createTable tableName="vault_change_request_events" remarks="Stores events that occurred during change request lifecycle.">
-			<column name="id" type="uuid" defaultValueComputed="gen_random_uuid()">
+			<column name="id" type="uuid" defaultValueComputed="uuidv7()">
 				<constraints nullable="false" primaryKey="true" />
 			</column>
 

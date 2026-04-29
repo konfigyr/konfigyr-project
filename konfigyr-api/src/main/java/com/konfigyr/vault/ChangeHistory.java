@@ -1,6 +1,5 @@
 package com.konfigyr.vault;
 
-import com.konfigyr.entity.EntityId;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
 
@@ -33,7 +32,7 @@ import java.time.OffsetDateTime;
 @NullMarked
 @ValueObject
 public record ChangeHistory(
-		EntityId id,
+		String id,
 		String revision,
 		String subject,
 		String description,

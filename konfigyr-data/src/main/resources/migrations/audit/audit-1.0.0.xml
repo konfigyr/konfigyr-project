@@ -14,7 +14,7 @@
         <comment>Cross-domain audit event log table, partitioned by month on created_at</comment>
 
         <createTable tableName="audit_events">
-            <column name="id" type="uuid" defaultValueComputed="gen_random_uuid()">
+            <column name="id" type="uuid" defaultValueComputed="uuidv7()">
                 <constraints nullable="false" primaryKey="true" />
             </column>
 

@@ -21,6 +21,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.FactorGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -629,8 +631,11 @@ class AuthorizationServerIntegrationTest {
 		return request -> {
 			final var response = new MockHttpServletResponse();
 
+			final List<GrantedAuthority> authorities = new ArrayList<>(identity.getAuthorities());
+			authorities.add(FactorGrantedAuthority.fromAuthority(FactorGrantedAuthority.AUTHORIZATION_CODE_AUTHORITY));
+
 			services.loginSuccess(request, response, new UsernamePasswordAuthenticationToken(
-					identity, identity.getPassword(), identity.getAuthorities()
+					identity, identity.getPassword(), authorities
 			));
 
 			request.setCookies(response.getCookies());

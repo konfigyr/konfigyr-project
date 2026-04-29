@@ -2,6 +2,7 @@ package com.konfigyr.vault;
 
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
+import org.jmolecules.event.annotation.DomainEvent;
 import org.jspecify.annotations.NonNull;
 
 /**
@@ -25,6 +26,7 @@ public sealed abstract class VaultEvent extends EntityEvent permits VaultEvent.C
 	/**
 	 * Vault event that is published when {@link PropertyChanges} are successfully applied to the {@link Vault}.
 	 */
+	@DomainEvent(name = "changes-applied", namespace = "vault")
 	public static final class ChangesApplied extends VaultEvent {
 
 		private final ApplyResult result;

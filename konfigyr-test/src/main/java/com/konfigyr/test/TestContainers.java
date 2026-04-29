@@ -23,7 +23,7 @@ public interface TestContainers {
 	 */
 	@Container
 	@ServiceConnection
-	PostgreSQLContainer postresql = new PostgreSQLContainer("postgres:16.2")
+	PostgreSQLContainer postresql = new PostgreSQLContainer("postgres:18-alpine")
 			.withDatabaseName("konfigyr");
 
 }

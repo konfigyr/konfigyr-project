@@ -15,11 +15,11 @@
       "sourceType": "com.konfigyr.namespace.Invitations"
     },
     {
-      "name": "konfigyr.namespace.service-catalog.scheduler-cron-expression",
+      "name": "konfigyr.scheduler.cron-expression",
       "type": "java.lang.String",
-      "defaultValue": "0 * * * * *",
-      "description": "Specifies the interval of the Service Catalog scheduler that would schedule pending Service Catalog rebuild tasks. Defaults to every second.",
-      "sourceType": "com.konfigyr.namespace.catalog.ServiceCatalogScheduler"
+      "defaultValue": "* * * * * *",
+      "description": "Specifies the interval of the worker queue scheduler that would schedule pending tasks. Defaults to every second.",
+      "sourceType": "com.konfigyr.queue.WorkerQueueScheduler"
     },
     {
       "name": "konfigyr.audit.partitioning-cron",
