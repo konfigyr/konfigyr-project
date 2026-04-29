@@ -13,7 +13,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@konfigyr/components/ui/dropdown-menu';
 import { CheckIcon, ChevronDownIcon, PencilIcon, TrashIcon } from 'lucide-react';
@@ -77,7 +78,8 @@ export function ServiceConfigurationProfiles ({ namespace, service }: { namespac
                   description="Description for the empty state component"
                   values={{
                     link: (chunks) => (
-                      <Link to="/namespace/$namespace/services/$service/create-profile" params={{ namespace: namespace.slug, service: service.slug }}>
+                      <Link to="/namespace/$namespace/services/$service/create-profile"
+                        params={{ namespace: namespace.slug, service: service.slug }}>
                         {chunks}
                       </Link>
                     ),
@@ -116,6 +118,7 @@ export function ServiceConfigurationProfiles ({ namespace, service }: { namespac
 export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileItemProps) {
   const { mutateAsync: updateProfile } = useUpdateProfile(namespace, service, profile);
   const errorNotification = useErrorNotification();
+  const [open, setOpen] = useState(false);
 
   const onPolicyUpdate = useCallback(async (value: ProfilePolicy) => {
     try {
@@ -126,6 +129,8 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
       />);
     } catch (error) {
       return errorNotification(error);
+    } finally {
+      setOpen(false);
     }
   }, [profile]);
 
@@ -152,49 +157,54 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
       </div>
       <ItemContent>
         <ItemTitle>
-          <ProfileInlineEdit field={profile.name} onChange={onNameUpdate} onError={errorNotification} />
+          <ProfileInlineEdit field={profile.name} onChange={onNameUpdate} onError={errorNotification}/>
         </ItemTitle>
         <ItemDescription>
-          <ProfileInlineEdit field={profile.description} onChange={onDescriptionUpdate} onError={errorNotification} />
+          <ProfileInlineEdit field={profile.description} onChange={onDescriptionUpdate} onError={errorNotification}/>
         </ItemDescription>
       </ItemContent>
 
       <div>
-        <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="outline"> <ProfilePolicyLabel value={profile.policy}/> <ChevronDownIcon /></Button>} />
-          <DropdownMenuContent className="w-xl" align="end" >
+        <DropdownMenu open={open} onOpenChange={setOpen}>
+          <DropdownMenuTrigger render={
+            <Button variant="outline" onClick={() => setOpen(true)}>
+              <ProfilePolicyLabel value={profile.policy}/>
+              <ChevronDownIcon/>
+            </Button>
+          }/>
+          <DropdownMenuContent className="w-xl" align="end">
             <DropdownMenuGroup>
-              {POLICIES.map((p) => (
-                <DropdownMenuItem key={p} >
-                  <CheckIcon className={p === profile.policy ? '' : 'invisible'} />
-                  <Item className="w-full p-2">
-                    <ItemContent>
-                      <PolicyItem policy={p} onClick={onPolicyUpdate} />
-                    </ItemContent>
-                  </Item>
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuRadioGroup value={POLICIES} onValueChange={onPolicyUpdate}>
+                {POLICIES.map((p) => (
+                  <DropdownMenuRadioItem value={p}>
+                    <CheckIcon className={p === profile.policy ? '' : 'invisible'}/>
+                    <DropdownMenuRadioItemPolicy policy={p}/>
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
       <ItemActions>
         <Button variant="destructive" onClick={() => onRemove(profile)}>
-          <TrashIcon />
+          <TrashIcon/>
         </Button>
       </ItemActions>
     </Item>
   );
 }
 
-function PolicyItem({ policy, onClick }: { policy: ProfilePolicy, onClick: (policy: ProfilePolicy) => void, }) {
+function DropdownMenuRadioItemPolicy ({ policy }: { policy: ProfilePolicy }) {
   const label = usePolicyLabel(policy);
   const description = usePolicyDescription(policy);
   return (
-    <ItemContent onClick={() => onClick(policy)}>
-      <p>{label}</p>
-      <p>{description}</p>
-    </ItemContent>
+    <span className="w-full p-2">
+      <span className={'flex flex-1 flex-col gap-1'}>
+        <p className="font-medium text-lg/relaxed">{label}</p>
+        <p className="text-muted-foreground text-sm/relaxed">{description}</p>
+      </span>
+    </span>
   );
 }
 
@@ -219,7 +229,7 @@ function ProfileInlineEdit ({ field, onChange, onError }: {
 }) {
   return (
     <span className="flex items-center gap-2 min-w-0">
-      <InlineEdit value={field || ''} onChange={onChange} onError={onError} >
+      <InlineEdit value={field || ''} onChange={onChange} onError={onError}>
         <InlineEditPlaceholder
           render={
             <button
