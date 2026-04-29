@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { subMinutes } from 'date-fns';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { ChangeRequestHistoryType } from '@konfigyr/hooks/vault/types';
 import { ChangeRequestTimeline } from '@konfigyr/components/vault/change-request/change-request-timeline';
@@ -10,7 +11,7 @@ const history: ChangeRequestHistory = {
   id: 'history',
   type: ChangeRequestHistoryType.CREATED,
   initiator: 'Jane Doe',
-  timestamp: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
+  timestamp: subMinutes(new Date(), 6).toISOString(),
 };
 
 const render = (type?: ChangeRequestHistoryType) => renderWithMessageProvider(

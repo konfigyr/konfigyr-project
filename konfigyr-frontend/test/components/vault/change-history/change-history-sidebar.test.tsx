@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
+import { subHours } from 'date-fns';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { ChangeHistorySidebar } from '@konfigyr/components/vault/change-history/change-history-sidebar';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
@@ -14,7 +15,7 @@ const history = {
   },
   count: 2,
   appliedBy: 'John Doe',
-  appliedAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+  appliedAt: subHours(new Date(), 3).toISOString(),
 };
 
 describe('components | vault | change-history | <ChangeHistorySidebar/>', () => {

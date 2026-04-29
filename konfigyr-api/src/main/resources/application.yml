@@ -21,7 +21,7 @@ spring:
       email: noreply@konfigyr.com
 
   messages:
-     basename: messages/email, messages/problem-detail
+     basename: messages/audit, messages/email, messages/problem-detail
 
   liquibase:
     change-log: migrations/changelog.xml
