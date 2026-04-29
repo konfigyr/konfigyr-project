@@ -34,7 +34,7 @@ export type ProfileItemProps = {
   onRemove: (profile: Profile) => void
 };
 
-const POLICIES: Array<ProfilePolicy> = ['PROTECTED', 'UNPROTECTED'];
+const POLICIES: Array<ProfilePolicy> = ['PROTECTED', 'UNPROTECTED', 'IMMUTABLE'];
 
 export function ServiceConfigurationProfiles ({ namespace, service }: { namespace: Namespace, service: Service }) {
   const { data: profiles, error, isPending, isError } = useGetProfiles(namespace, service);
@@ -192,8 +192,8 @@ function PolicyItem({ policy, onClick }: { policy: ProfilePolicy, onClick: (poli
   const description = usePolicyDescription(policy);
   return (
     <ItemContent onClick={() => onClick(policy)}>
-      <ItemTitle>{label}</ItemTitle>
-      <ItemDescription>{description}</ItemDescription>
+      <p>{label}</p>
+      <p>{description}</p>
     </ItemContent>
   );
 }
@@ -218,7 +218,7 @@ function ProfileInlineEdit ({ field, onChange, onError }: {
   onError: (error: unknown) => void,
 }) {
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <span className="flex items-center gap-2 min-w-0">
       <InlineEdit value={field || ''} onChange={onChange} onError={onError} >
         <InlineEditPlaceholder
           render={
@@ -237,6 +237,6 @@ function ProfileInlineEdit ({ field, onChange, onError }: {
           className="h-6 text-xs w-48"
         />
       </InlineEdit>
-    </div>
+    </span>
   );
 }

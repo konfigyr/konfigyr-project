@@ -191,7 +191,7 @@ export function InlineEditContainer<T>({ className, children, ...props }: Compon
   }
 
   return (
-    <div
+    <span
       className={cn(
         'group/inline-edit-input flex items-center gap-1.5',
         isPending && 'opacity-80 pointer-events-none',
@@ -226,7 +226,7 @@ export function InlineEditContainer<T>({ className, children, ...props }: Compon
           <CancelLabel />
         </span>
       </Button>
-    </div>
+    </span>
   );
 }
 
