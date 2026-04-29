@@ -11,6 +11,8 @@ import {
   services,
 } from '../mocks';
 
+import type { ChangeHistory, ChangeHistoryRecord, CursorResponse, PageResponse } from '@konfigyr/hooks/types';
+
 const getProfiles = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles', ({ params }) => {
   const { namespace, service } = params;
 
@@ -267,8 +269,11 @@ const getHistory = http.get('http://localhost/api/namespaces/:namespace/services
       id: '9eadce4691d8fcd863aeeb07ef81d8146083d814',
       revision: '9eadce4691d8fcd863aeeb07ef81d8146083d814',
       subject: 'Changeset draft',
-      description: 'Changeset draft',
-      changes: 4,
+      description: {
+        markdown: 'Changeset draft',
+        html: 'Changeset draft',
+      },
+      count: 4,
       appliedBy: 'Test User <test.user@ebf.com>',
       appliedAt,
     }],
@@ -277,7 +282,7 @@ const getHistory = http.get('http://localhost/api/namespaces/:namespace/services
       previous: uri.searchParams.has('token') && 'previous-token',
       next: 'next-token',
     },
-  });
+  } as CursorResponse<ChangeHistory>);
 });
 
 const getHistoryDetails = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/history/:revision', ({ params }) => {
@@ -343,7 +348,7 @@ const getHistoryDetails = http.get('http://localhost/api/namespaces/:namespace/s
       appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
       appliedBy: 'jane.doe@konfigyr.com',
     }],
-  });
+  } as PageResponse<ChangeHistoryRecord>);
 });
 
 const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/property/:name/history', ({ params, request }) => {
@@ -407,7 +412,7 @@ const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/
       previous: uri.searchParams.has('token') && 'previous-token',
       next: 'next-token',
     },
-  });
+  } as CursorResponse<ChangeHistoryRecord>);
 });
 
 export default [

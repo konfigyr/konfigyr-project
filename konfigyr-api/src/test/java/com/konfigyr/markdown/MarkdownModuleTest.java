@@ -1,5 +1,6 @@
 package com.konfigyr.markdown;
 
+import com.konfigyr.io.ByteArray;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,12 +24,21 @@ class MarkdownModuleTest {
 				.isEqualTo("{\"markdown\":\"# Hello world\",\"html\":\"<h1>Hello world</h1>\\n\"}");
 	}
 
-	@ValueSource(strings = { "", " ", "  ", "# Hello world" })
+	@ValueSource(strings = { "\"\"", "\" \"", "\"  \"", "\"\\n\"", "\"\\t\\n\"", "{\"markdown\": \" \"}"})
+	@DisplayName("should not deserialize empty or blank markdown contents")
+	@ParameterizedTest(name = "should not deserialize markdown contents: {0}")
+	void deserializeEmptyMarkdownContents(String json) {
+		assertThat(mapper.readValue(json, MarkdownContents.class))
+				.as("Blank markdown contents should be ignored")
+				.isNull();
+	}
+
+	@Test
 	@DisplayName("should deserialize markdown contents")
-	@ParameterizedTest(name = "should deserialize markdown contents: {0}")
-	void deserializeMarkdown(String markdown) {
-		assertThat(mapper.readValue(StringNode.valueOf(markdown).toString(), MarkdownContents.class))
-				.isEqualTo(MarkdownContents.of(markdown));
+	void deserializeMarkdown() {
+		assertThat(mapper.readValue(StringNode.valueOf("# Hello world").toString(), MarkdownContents.class))
+				.isEqualTo(new MarkdownContents("# Hello world",
+						ByteArray.fromBase64String("DBhrmNU1qJf6XV1gfLxwmLHQNtQylWkCOv5FWbbJc2I=")));
 	}
 
 	@Test

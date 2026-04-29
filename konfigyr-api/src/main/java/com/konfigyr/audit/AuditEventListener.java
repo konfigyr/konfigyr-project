@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -261,7 +262,8 @@ class AuditEventListener {
 		);
 	}
 
-	@TransactionalEventListener(id = "audit.changes-applied", classes = VaultEvent.ChangesApplied.class)
+	// the VaultEvent.ChangesApplied event is never published within a transaction
+	@EventListener(id = "audit.changes-applied", classes = VaultEvent.ChangesApplied.class)
 	void on(VaultEvent.ChangesApplied event) {
 		insert(event, builder -> builder
 				.entityType("profile")
