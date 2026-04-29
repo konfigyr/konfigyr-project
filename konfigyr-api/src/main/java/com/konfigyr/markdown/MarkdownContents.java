@@ -2,7 +2,9 @@ package com.konfigyr.markdown;
 
 import com.konfigyr.io.ByteArray;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import java.nio.charset.StandardCharsets;
@@ -65,6 +67,19 @@ public final class MarkdownContents implements CharSequence {
 
 		this.value = value;
 		this.checksum = checksum;
+	}
+
+	/**
+	 * Creates a new {@code MarkdownContents} from the given raw Markdown string. In case the given
+	 * Markdown string is be {@code null} or blank, this method returns {@code null}.
+	 *
+	 * @param value the raw Markdown string; can be {@code null}
+	 * @return a new {@code MarkdownContents} instance or {@code null} if {@code value} is {@code null} or blank
+	 * @throws IllegalStateException if the {@code SHA-256} digest algorithm is not supported
+	 */
+	@Nullable
+	public static MarkdownContents ofNullable(@Nullable String value) {
+		return StringUtils.isBlank(value) ? null : of(value);
 	}
 
 	/**

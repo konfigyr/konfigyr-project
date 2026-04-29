@@ -111,6 +111,10 @@
 				<constraints nullable="true"/>
 			</column>
 
+			<column name="description_checksum" type="bytea">
+				<constraints nullable="true"/>
+			</column>
+
 			<column name="change_count" type="integer">
 				<constraints nullable="false" />
 			</column>

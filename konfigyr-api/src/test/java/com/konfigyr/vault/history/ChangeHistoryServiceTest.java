@@ -4,6 +4,7 @@ import com.konfigyr.data.CursorPage;
 import com.konfigyr.data.CursorPageable;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.test.AbstractIntegrationTest;
 import com.konfigyr.test.TestPrincipals;
@@ -70,9 +71,9 @@ class ChangeHistoryServiceTest extends AbstractIntegrationTest {
 				.as("Created revision should exist for profile")
 				.isPresent()
 				.get()
-				.returns(result.revision(), ChangeHistory::revision)
-				.returns(result.subject(), ChangeHistory::subject)
-				.returns(result.description(), ChangeHistory::description)
+				.returns("new-revision", ChangeHistory::revision)
+				.returns("Subject of changes", ChangeHistory::subject)
+				.returns(MarkdownContents.of("Description of changes"), ChangeHistory::description)
 				.returns("John Doe", ChangeHistory::appliedBy)
 				.satisfies(it -> assertThat(it.appliedAt())
 						.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS))
@@ -252,7 +253,7 @@ class ChangeHistoryServiceTest extends AbstractIntegrationTest {
 				.returns("019690a1-0008-7000-8000-000000000008", ChangeHistory::id)
 				.returns("first-revision", ChangeHistory::revision)
 				.returns("First change", ChangeHistory::subject)
-				.returns("Initial changes", ChangeHistory::description)
+				.returns(MarkdownContents.of("Initial changes"), ChangeHistory::description)
 				.returns("John Doe", ChangeHistory::appliedBy)
 				.satisfies(it -> assertThat(it.appliedAt())
 						.isCloseTo(OffsetDateTime.now().minusDays(2), within(5, ChronoUnit.MINUTES))

@@ -12,16 +12,16 @@ SELECT create_change_history_partition(now() - interval '2 month');
 SELECT create_property_history_partition(now() - interval '1 month');
 SELECT create_property_history_partition(now() - interval '2 month');
 
-INSERT INTO vault_change_history(id, namespace_id, service_id, profile_id, revision, previous_revision, subject, description, change_count, author_id, author_type, author_name, created_at) VALUES
-('019690a1-0001-7000-8000-000000000001', 2, 2, 4, 'first-revision', NULL, 'First change', 'Initial changes', 1, 1, 'USER', 'John Doe', now() - interval '34 days'),
-('019690a1-0002-7000-8000-000000000002', 2, 2, 4, 'second-revision', 'first-revision', 'Second change', NULL, 2, 2, 'USER', 'Jane Doe', now() - interval '27 days'),
-('019690a1-0003-7000-8000-000000000003', 2, 2, 4, 'third-revision', 'second-revision', 'Third change', NULL, 1, 1, 'USER', 'John Doe', now() - interval '18 days'),
-('019690a1-0004-7000-8000-000000000004', 2, 2, 4, 'fourth-revision', 'third-revision', 'Fourth change', 'A while longer...', 1, 1, 'USER', 'John Doe', now() - interval '12 days'),
-('019690a1-0005-7000-8000-000000000005', 2, 2, 4, 'fifth-revision', 'fourth-revision', 'Fifth change', NULL, 1, 2, 'OAUTH_CLIENT', 'Konfigyr active app', now() - interval '9 days'),
-('019690a1-0006-7000-8000-000000000006', 2, 2, 4, 'sixth-revision', 'fifth-revision', 'Sixth change', 'The next one does it...', 1, 1, 'USER', 'John Doe', now() - interval '3 days'),
-('019690a1-0007-7000-8000-000000000007', 2, 2, 4, 'last-revision', 'sixth-revision', 'Last change', 'Got no more', 1, 1, 'USER', 'John Doe', now() - interval '2 days'),
-('019690a1-0008-7000-8000-000000000008', 2, 2, 3, 'first-revision', NULL, 'First change', 'Initial changes', 1, 1, 'USER', 'John Doe', now() - interval '2 days'),
-('019690a1-0009-7000-8000-000000000009', 1, 1, 5, 'first-revision', NULL, 'Testing', NULL, 1, 1, 'USER', 'John Doe', now() - interval '7 days');
+INSERT INTO vault_change_history(id, namespace_id, service_id, profile_id, revision, previous_revision, subject, description, description_checksum, change_count, author_id, author_type, author_name, created_at) VALUES
+('019690a1-0001-7000-8000-000000000001', 2, 2, 4, 'first-revision', NULL, 'First change', 'Initial changes', decode('+vp2HL1n71E4qQdvy4P+L7lgozAKaZOk/1CIkSYx9tw=', 'base64'), 1, 1, 'USER', 'John Doe', now() - interval '34 days'),
+('019690a1-0002-7000-8000-000000000002', 2, 2, 4, 'second-revision', 'first-revision', 'Second change', NULL, NULL, 2, 2, 'USER', 'Jane Doe', now() - interval '27 days'),
+('019690a1-0003-7000-8000-000000000003', 2, 2, 4, 'third-revision', 'second-revision', 'Third change', NULL, NULL, 1, 1, 'USER', 'John Doe', now() - interval '18 days'),
+('019690a1-0004-7000-8000-000000000004', 2, 2, 4, 'fourth-revision', 'third-revision', 'Fourth change', 'A while longer...', decode('n7K0v18UUdlyQG739xqJ4qEa6vS4GCntEwSOUEqtdig=', 'base64'), 1, 1, 'USER', 'John Doe', now() - interval '12 days'),
+('019690a1-0005-7000-8000-000000000005', 2, 2, 4, 'fifth-revision', 'fourth-revision', 'Fifth change', NULL, NULL, 1, 2, 'OAUTH_CLIENT', 'Konfigyr active app', now() - interval '9 days'),
+('019690a1-0006-7000-8000-000000000006', 2, 2, 4, 'sixth-revision', 'fifth-revision', 'Sixth change', 'The next one does it...', decode('Y886gTHHWnEKsEjQiLagysjIFF/ElUg+23HU2PtbGJs=', 'base64'), 1, 1, 'USER', 'John Doe', now() - interval '3 days'),
+('019690a1-0007-7000-8000-000000000007', 2, 2, 4, 'last-revision', 'sixth-revision', 'Last change', 'Got no more', decode('PMH/bdTmnnI5KoOb3epBwfOiF6/oynAfDCGRmSqHON8=', 'base64'), 1, 1, 'USER', 'John Doe', now() - interval '2 days'),
+('019690a1-0008-7000-8000-000000000008', 2, 2, 3, 'first-revision', NULL, 'First change', 'Initial changes', decode('+vp2HL1n71E4qQdvy4P+L7lgozAKaZOk/1CIkSYx9tw=', 'base64'), 1, 1, 'USER', 'John Doe', now() - interval '2 days'),
+('019690a1-0009-7000-8000-000000000009', 1, 1, 5, 'first-revision', NULL, 'Testing', NULL, NULL, 1, 1, 'USER', 'John Doe', now() - interval '7 days');
 
 INSERT INTO vault_property_history(change_id, profile_id, property_name, change_operation, new_value_checksum, new_value_cipher, old_value_checksum, old_value_cipher, created_at) VALUES
 ('019690a1-0001-7000-8000-000000000001', 4, 'spring.application.name', 'ADDED', '1234567890', '1234567890', NULL, NULL, now() - interval '34 days'),

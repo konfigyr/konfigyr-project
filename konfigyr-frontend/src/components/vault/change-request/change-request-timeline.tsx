@@ -146,7 +146,7 @@ function ChangeRequestTimelineItem({ history, isLast }: { history: ChangeRequest
         <div className="flex items-baseline justify-between gap-2 text-xs">
           <span><ChangeRequestTimelineSummary history={history} /></span>
         </div>
-        {history.comment && (
+        {history.comment && history.comment.html && (
           <div className="px-4 py-2 mt-2 rounded-md border text-sm">
             <HtmlContents html={history.comment.html} />
           </div>

@@ -5,9 +5,10 @@ import org.jmolecules.event.annotation.DomainEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -70,14 +71,15 @@ class AuditEventListenerCoverageTest {
 	}
 
 	/**
-	 * Collects all event classes referenced in {@link TransactionalEventListener#classes()}
+	 * Collects all event classes referenced in {@link EventListener#classes()}
 	 * annotations on methods of {@link AuditEventListener}.
 	 */
 	private static Set<Class<?>> findAuditedEventClasses() {
 		return Arrays.stream(AuditEventListener.class.getDeclaredMethods())
-				.filter(method -> method.isAnnotationPresent(TransactionalEventListener.class))
-				.map(method -> method.getAnnotation(TransactionalEventListener.class))
-				.flatMap(annotation -> Arrays.stream(annotation.classes()))
+				.map(MergedAnnotations::from)
+				.filter(annotations -> annotations.isPresent(EventListener.class))
+				.map(annotations -> annotations.get(EventListener.class))
+				.flatMap(annotation -> Arrays.stream(annotation.getClassArray("classes")))
 				.collect(Collectors.toSet());
 	}
 
