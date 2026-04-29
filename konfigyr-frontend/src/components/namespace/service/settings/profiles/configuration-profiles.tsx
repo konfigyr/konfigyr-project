@@ -7,7 +7,7 @@ import { useGetProfiles, useUpdateProfile } from '@konfigyr/hooks';
 import React, { useCallback, useState } from 'react';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { EmptyState } from '@konfigyr/components/ui/empty';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { PolicyAlertIcon } from '@konfigyr/components/vault/profile/policy-alert';
 import {
   DropdownMenu,
@@ -47,14 +47,6 @@ export function ServiceConfigurationProfiles ({ namespace, service }: { namespac
 
   const onCloseRemoveProfileAlert = useCallback(() => setRemoving(undefined), []);
 
-  const handleProfileClick = (e: React.MouseEvent<HTMLSpanElement>) => {
-    e.preventDefault();
-    navigate({
-      to: '/namespace/$namespace/services/$service',
-      params: { namespace: namespace.slug, service: service.slug },
-    });
-  };
-
   return (
     <>
       <Card className="border">
@@ -89,9 +81,9 @@ export function ServiceConfigurationProfiles ({ namespace, service }: { namespac
                   description="Description for the empty state component"
                   values={{
                     link: (chunks) => (
-                      <a onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
+                      <Link to="/namespace/$namespace/services/$service" params={{ namespace: namespace.slug, service: service.slug }}>
                         {chunks}
-                      </a>
+                      </Link>
                     ),
                   }}
                 />
