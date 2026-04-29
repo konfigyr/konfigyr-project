@@ -1,5 +1,6 @@
 export * from './account/context';
 export * from './account/query';
+export * from './audit/query';
 export * from './kms/query';
 export * from './namespace/context';
 export * from './namespace/query';

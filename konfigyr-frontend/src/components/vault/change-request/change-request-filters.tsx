@@ -98,7 +98,7 @@ export function ChangeRequestFilters({ namespace, service, query, onQueryChange 
 
   return (
     <form.AppForm>
-      <form name="keyset-filters" className="flex gap-4 grow" onSubmit={onSubmit}>
+      <form name="change-request-filters" className="flex gap-4 grow" onSubmit={onSubmit}>
         <form.AppField
           name="term"
           listeners={{
