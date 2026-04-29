@@ -8,7 +8,10 @@ const history = {
   id: 'first-change',
   revision: '9eadce4691d8fcd863aeeb07ef81d8146083d814',
   subject: 'First change',
-  description: 'The first change to the configuration',
+  description: {
+    markdown: 'The **first change** to the *configuration*',
+    html: 'The first change to the configuration',
+  },
   count: 2,
   appliedBy: 'John Doe',
   appliedAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
@@ -43,7 +46,7 @@ describe('components | vault | change-history | <ChangeHistorySidebar/>', () => 
 
     expect(getByRole('dialog', { name: history.subject })).toBeInTheDocument();
     expect(getByText(history.revision)).toBeInTheDocument();
-    expect(getByText(history.description)).toBeInTheDocument();
+    expect(getByText(history.description.html)).toBeInTheDocument();
     expect(getByText(history.appliedBy)).toBeInTheDocument();
   });
 
