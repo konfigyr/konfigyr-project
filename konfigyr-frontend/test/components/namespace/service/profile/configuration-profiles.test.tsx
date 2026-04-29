@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { namespaces, services } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import {
   ServiceConfigurationProfiles,
 } from '@konfigyr/components/namespace/service/settings/profiles/configuration-profiles';
 import userEvents from '@testing-library/user-event/dist/cjs/index.js';
+import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 
 describe('components | namespace | service | profiles | <ServiceConfigurationProfiles/>', () => {
 
@@ -15,7 +15,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
   });
 
   test('should render <ServiceConfigurationProfiles> component with loading state', () => {
-    const result = renderWithQueryClient(
+    const result = renderComponentWithRouter(
       <ServiceConfigurationProfiles namespace={namespaces.johnDoe} service={services.konfigyrId} />,
     );
 
@@ -25,7 +25,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
 
   test('should render empty <ServiceConfigurationProfiles> component', async () => {
 
-    const { getByText } = renderWithQueryClient((
+    const { getByText } = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.johnDoe}
         service={services.konfigyrId}
@@ -44,25 +44,8 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
 
   });
 
-  test('should render open <ServiceConfigurationProfiles> component with two profiles', async () => {
-    const { getByText } = renderWithQueryClient((
-      <ServiceConfigurationProfiles
-        namespace={namespaces.konfigyr}
-        service={services.konfigyrId}
-      />
-    ));
-
-    expect(getByText('Configuration profiles')).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(getByText('Development')).toBeInTheDocument();
-      expect(getByText('Staging')).toBeInTheDocument();
-    });
-  });
-
-
-  test('should render <ServiceConfigurationProfiles> component and open delete profile alert', async () => {
-    const { getByText, getAllByRole } = renderWithQueryClient((
+  test('should render <ServiceConfigurationProfiles> component and delete Development profile', async () => {
+    const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.konfigyr}
         service={services.konfigyrId}
@@ -70,17 +53,23 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
     ));
 
     await waitFor(() => {
-      expect(getByText('Development')).toBeInTheDocument();
+      expect(result.getByText('Development')).toBeInTheDocument();
+      expect(result.getByText('Staging')).toBeInTheDocument();
     });
 
-    await userEvents.click(getAllByRole('button', { name: /actions/i })[0]);
-    await userEvents.click(getByText(/delete profile/i));
+    await userEvents.click(result.getAllByTestId('delete-profile-button')[0]);
 
     await waitFor(() => {
-      expect(getByText('Delete Development profile')).toBeInTheDocument();
-      expect(getByText('Are you sure you want to delete Development configuration profile?')).toBeInTheDocument();
+      expect(result.getByText('Delete Development profile')).toBeInTheDocument();
+      expect(result.getByText('Are you sure you want to delete Development configuration profile?')).toBeInTheDocument();
     });
 
+    await userEvents.click(
+      result.getByRole('button', { name: 'Yes, I am sure' }),
+    );
+
+    expect(await result.findByText('Staging')).toBeInTheDocument();
+    expect(result.queryByText('Development')).not.toBeInTheDocument();
   });
 
 });

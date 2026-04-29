@@ -60,6 +60,12 @@ const getProfile = http.get('http://localhost/api/namespaces/:namespace/services
   }, { status: 404 });
 });
 
+const deleteProfile = http.delete('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile', ({ params }) => {
+  const { namespace, service, profile } = params;
+
+  return new HttpResponse(null, { status: 204 });
+});
+
 const createProfile = http.post('http://localhost/api/namespaces/:namespace/services/:service/profiles', async ({ params, request }) => {
   const { namespace, service } = params;
 
@@ -415,6 +421,7 @@ const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/
 export default [
   getProfiles,
   getProfile,
+  deleteProfile,
   createProfile,
   history,
   getProperties,

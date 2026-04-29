@@ -187,7 +187,7 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
         </DropdownMenu>
       </div>
       <ItemActions>
-        <Button variant="destructive" onClick={() => onRemove(profile)}>
+        <Button variant="destructive" onClick={() => onRemove(profile)} data-testid="delete-profile-button" >
           <TrashIcon/>
         </Button>
       </ItemActions>
