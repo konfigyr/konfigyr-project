@@ -80,7 +80,7 @@ class MarkdownModule extends SimpleModule {
 		@Override
 		public MarkdownContents deserialize(JsonParser parser, DeserializationContext ctx) throws JacksonException {
 			if (parser.currentToken() == JsonToken.VALUE_STRING) {
-				return MarkdownContents.of(parser.getValueAsString());
+				return MarkdownContents.ofNullable(parser.getValueAsString());
 			}
 
 			if (parser.currentToken() == JsonToken.START_OBJECT) {
@@ -96,7 +96,7 @@ class MarkdownModule extends SimpleModule {
 				}
 
 				if (markdown != null) {
-					return MarkdownContents.of(markdown);
+					return MarkdownContents.ofNullable(markdown);
 				}
 			}
 
