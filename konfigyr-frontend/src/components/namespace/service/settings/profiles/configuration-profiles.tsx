@@ -164,7 +164,9 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
       </ItemContent>
 
       <ItemActions>
-        <ProfileItemMenu profile={profile} onPolicyUpdate={onPolicyUpdate} onProfileRemove={onRemove}/>
+        <Button variant="destructive" onClick={() => onRemove(profile)}>
+          <TrashIcon />
+        </Button>
       </ItemActions>
     </Item>
   );
