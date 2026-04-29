@@ -34,8 +34,9 @@ class AuditControllerTest extends AbstractControllerTest {
 				.convertTo(cursorModel(AuditRecord.class))
 				.extracting(CursorModel::getContent, InstanceOfAssertFactories.iterable(AuditRecord.class))
 				.hasSize(10)
-				.allSatisfy(record -> assertThat(record.namespaceId())
-						.isEqualTo(EntityId.from(2))
+				.allSatisfy(record -> assertThat(record)
+						.returns(EntityId.from(2), AuditRecord::namespaceId)
+						.satisfies(it -> assertThat(it.message()).isNotBlank())
 				);
 	}
 
@@ -138,9 +139,10 @@ class AuditControllerTest extends AbstractControllerTest {
 				.extracting(CursorModel::getContent, InstanceOfAssertFactories.iterable(AuditRecord.class))
 				.hasSize(1)
 				.first()
-				.satisfies(record -> assertThat(record.eventType())
-						.isEqualTo("service.created")
-				);
+				.satisfies(record -> {
+					assertThat(record.eventType()).isEqualTo("service.created");
+					assertThat(record.message()).isEqualTo("Service was created");
+				});
 	}
 
 	@Test

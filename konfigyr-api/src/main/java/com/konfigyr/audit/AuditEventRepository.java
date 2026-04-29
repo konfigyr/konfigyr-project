@@ -13,6 +13,7 @@ import org.jooq.Record;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.context.MessageSource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -64,10 +65,12 @@ public class AuditEventRepository {
 
 	private final DSLContext context;
 	private final Converter<JSONB, Map<String, Object>> detailsConverter;
+	private final AuditMessageResolver messageResolver;
 
-	public AuditEventRepository(DSLContext context, JsonMapper jsonMapper) {
+	public AuditEventRepository(DSLContext context, JsonMapper jsonMapper, MessageSource messageSource) {
 		this.context = context;
 		this.detailsConverter = JsonbConverter.create(jsonMapper, jsonMapper.constructType(Object.class));
+		this.messageResolver = new AuditMessageResolver(messageSource);
 	}
 
 	/**
@@ -177,18 +180,22 @@ public class AuditEventRepository {
 	}
 
 	private AuditRecord toAuditRecord(Record record) {
+		final Map<String, Object> details = record.get(AUDIT_EVENTS.DETAILS, detailsConverter);
+		final String eventType = record.get(AUDIT_EVENTS.EVENT_TYPE);
+
 		return new AuditRecord(
 				record.get(AUDIT_EVENTS.ID).toString(),
 				record.get(AUDIT_EVENTS.NAMESPACE_ID, EntityId.class),
 				record.get(AUDIT_EVENTS.ENTITY_TYPE),
 				record.get(AUDIT_EVENTS.ENTITY_ID, EntityId.class),
-				record.get(AUDIT_EVENTS.EVENT_TYPE),
+				eventType,
 				new Actor(
 						record.get(AUDIT_EVENTS.ACTOR_ID),
 						record.get(AUDIT_EVENTS.ACTOR_TYPE),
 						record.get(AUDIT_EVENTS.ACTOR_NAME)
 				),
-				record.get(AUDIT_EVENTS.DETAILS, detailsConverter),
+				details,
+				messageResolver.resolve(eventType, details),
 				record.get(AUDIT_EVENTS.CREATED_AT)
 		);
 	}
