@@ -7,22 +7,23 @@ import { useGetProfiles, useUpdateProfile } from '@konfigyr/hooks';
 import React, { useCallback, useState } from 'react';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { PolicyAlertIcon } from '@konfigyr/components/vault/profile/policy-alert';
 import {
   DropdownMenu,
-  DropdownMenuContent, DropdownMenuGroup,
-  DropdownMenuItem, DropdownMenuPortal,
-  DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@konfigyr/components/ui/dropdown-menu';
-import { PencilIcon, TrashIcon, VaultIcon } from 'lucide-react';
+import { CheckIcon, ChevronDownIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import {
   DeleteConfigurationProfileAlert,
 } from '@konfigyr/components/namespace/service/settings/profiles/delete-profile-alert';
 import { InlineEdit, InlineEditInput, InlineEditPlaceholder } from '@konfigyr/components/ui/inline-edit';
-import { ProfilePolicyLabel } from '@konfigyr/components/vault/profile/messages';
 import { toast } from 'sonner';
+import { usePolicyDescription, usePolicyLabel } from '@konfigyr/components/vault/profile/policy-picker';
+import { ProfilePolicyLabel } from '@konfigyr/components/vault/profile/messages';
 import type { Profile, ProfilePolicy } from '@konfigyr/hooks/vault/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
@@ -33,15 +34,10 @@ export type ProfileItemProps = {
   onRemove: (profile: Profile) => void
 };
 
-export type ProfileItemMenuProps = {
-  profile: Profile,
-  onPolicyUpdate: (policy: ProfilePolicy) => void,
-  onProfileRemove: (profile: Profile) => void,
-};
+const POLICIES: Array<ProfilePolicy> = ['PROTECTED', 'UNPROTECTED'];
 
 export function ServiceConfigurationProfiles ({ namespace, service }: { namespace: Namespace, service: Service }) {
   const { data: profiles, error, isPending, isError } = useGetProfiles(namespace, service);
-  const navigate = useNavigate();
 
   const [removing, setRemoving] = useState<Profile | undefined>();
 
@@ -81,7 +77,7 @@ export function ServiceConfigurationProfiles ({ namespace, service }: { namespac
                   description="Description for the empty state component"
                   values={{
                     link: (chunks) => (
-                      <Link to="/namespace/$namespace/services/$service" params={{ namespace: namespace.slug, service: service.slug }}>
+                      <Link to="/namespace/$namespace/services/$service/create-profile" params={{ namespace: namespace.slug, service: service.slug }}>
                         {chunks}
                       </Link>
                     ),
@@ -163,6 +159,25 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
         </ItemDescription>
       </ItemContent>
 
+      <div>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="outline"> <ProfilePolicyLabel value={profile.policy}/> <ChevronDownIcon /></Button>} />
+          <DropdownMenuContent className="w-xl" align="end" >
+            <DropdownMenuGroup>
+              {POLICIES.map((p) => (
+                <DropdownMenuItem key={p} >
+                  <CheckIcon className={p === profile.policy ? '' : 'invisible'} />
+                  <Item className="w-full p-2">
+                    <ItemContent>
+                      <PolicyItem policy={p} onClick={onPolicyUpdate} />
+                    </ItemContent>
+                  </Item>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <ItemActions>
         <Button variant="destructive" onClick={() => onRemove(profile)}>
           <TrashIcon />
@@ -172,74 +187,14 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
   );
 }
 
-export function ProfileItemMenu ({ profile, onPolicyUpdate, onProfileRemove }: ProfileItemMenuProps) {
-
-  const [open, setOpen] = useState(false);
-  const [policy, setPolicy] = React.useState(profile.policy);
-
-  const onChangePolicy = useCallback((value: ProfilePolicy) => {
-    onPolicyUpdate(value);
-    setPolicy(value);
-    setOpen(false);
-  }, [policy]);
-
-  const onRemove = useCallback(() => {
-    onProfileRemove(profile);
-    setOpen(false);
-  }, [profile]);
-
+function PolicyItem({ policy, onClick }: { policy: ProfilePolicy, onClick: (policy: ProfilePolicy) => void, }) {
+  const label = usePolicyLabel(policy);
+  const description = usePolicyDescription(policy);
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger
-        render={
-          <Button variant="ghost" aria-label="More options">
-            <Button variant="outline" onClick={() => setOpen(true)}>
-              <FormattedMessage
-                defaultMessage="Actions"
-                description="Plabel for actions button for configuration profile menu settings"
-              />
-            </Button>
-          </Button>
-        }
-      />
-      <DropdownMenuContent className="w-48" align="end">
-        <DropdownMenuGroup>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <VaultIcon />
-              <FormattedMessage
-                defaultMessage="Profile policy"
-                description="Profile policy fieldset title"
-              />
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup value={policy} onValueChange={onChangePolicy}>
-                  <PolicyRadioItem policy={'UNPROTECTED'}/>
-                  <PolicyRadioItem policy={'PROTECTED'}/>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
-          <DropdownMenuItem onClick={onRemove}>
-            <TrashIcon />
-            <FormattedMessage
-              defaultMessage="Delete profile"
-              description="Label for the delete profile policy button"
-            />
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function PolicyRadioItem({ policy }: { policy: ProfilePolicy }) {
-  return (
-    <DropdownMenuRadioItem value={policy}>
-      <PolicyAlertIcon policy={policy}/>
-      <ProfilePolicyLabel value={policy}/>
-    </DropdownMenuRadioItem>
+    <ItemContent onClick={() => onClick(policy)}>
+      <ItemTitle>{label}</ItemTitle>
+      <ItemDescription>{description}</ItemDescription>
+    </ItemContent>
   );
 }
 
