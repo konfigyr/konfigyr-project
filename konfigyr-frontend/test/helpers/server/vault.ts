@@ -11,6 +11,7 @@ import {
   profiles,
   services,
 } from '../mocks';
+import type { Profile } from '@konfigyr/hooks/vault/types';
 
 import type { ChangeHistory, ChangeHistoryRecord, CursorResponse, PageResponse } from '@konfigyr/hooks/types';
 
@@ -23,6 +24,8 @@ const getProfiles = http.get('http://localhost/api/namespaces/:namespace/service
       title: 'Namespace not found',
       detail: `Namespace with identifier '${namespace}' not found.`,
     }, { status: 404 });
+  } else if (namespace === namespaces.johnDoe.slug) {
+    return HttpResponse.json({ data: [] });
   }
 
   const data = [
@@ -54,6 +57,33 @@ const getProfile = http.get('http://localhost/api/namespaces/:namespace/services
     return HttpResponse.json(profiles.staging);
   }
 
+  return HttpResponse.json({
+    status: 404,
+    title: 'Profile not found',
+    detail: `Profile with identifier '${profile}' not found.`,
+  }, { status: 404 });
+});
+
+const deleteProfile = http.delete('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile', () => {
+  return new HttpResponse(null, { status: 204 });
+});
+
+const updateProfile = http.put('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile', async ({ params, request }) => {
+  const { profile } = params;
+
+  const existingProfile = [
+    profiles.staging,
+    profiles.development,
+    profiles.deprecated,
+  ].find(p => p.id === profile);
+
+  if (existingProfile) {
+    const body = await request.json() as Partial<Profile>;
+    return HttpResponse.json({
+      ...existingProfile,
+      ...body,
+    });
+  }
   return HttpResponse.json({
     status: 404,
     title: 'Profile not found',
@@ -417,7 +447,9 @@ const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/
 export default [
   getProfiles,
   getProfile,
+  deleteProfile,
   createProfile,
+  updateProfile,
   history,
   getProperties,
   applyChangeset,
