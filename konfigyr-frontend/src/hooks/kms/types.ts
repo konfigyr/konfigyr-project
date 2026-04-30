@@ -1,3 +1,5 @@
+import type { Pageable } from '../hateoas/types';
+
 export type KeysetState = 'ACTIVE' | 'INACTIVE' | 'PENDING_DESTRUCTION' | 'DESTROYED';
 export type KeysetOperation = 'encrypt' | 'decrypt' | 'sign' | 'verify';
 
@@ -20,7 +22,7 @@ export interface CreateKeyset {
   tags: Array<string>;
 }
 
-export interface KeysetSearchQuery extends Record<string, string | number | boolean | undefined> {
+export interface KeysetSearchQuery extends Pageable {
   term?: string;
   state?: KeysetState;
   algorithm?: string;

@@ -4,7 +4,7 @@ import { useGetAccount } from '@konfigyr/hooks/account/query';
 import request from '@konfigyr/lib/http';
 import { NamespaceRole } from './types';
 
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse, Pageable } from '@konfigyr/hooks/hateoas/types';
 import type {
   CreateNamespace,
   CreateNamespaceApplication,
@@ -27,7 +27,7 @@ export const namespaceKeys = {
   getNamespaceScopes: (slug: string) => ['namespace', slug, 'scopes'],
   getNamespaceApplications: (slug: string) => ['namespace', slug, 'applications'],
   getNamespaceApplication: (slug: string, id: string) => ['namespace', slug, 'applications', id],
-  getNamespaceInvitations: (slug: string) => ['namespace', slug, 'invitations'],
+  getNamespaceInvitations: (slug: string, pageable: Pageable) => ['namespace', slug, 'invitations', pageable],
   getNamespaceServices: (slug: string) => ['namespace', slug, 'services'],
   getNamespaceService: (slug: string, service: string) => ['namespace', slug, 'services', service],
   getNamespaceServiceCatalog: (slug: string, service: string) => ['namespace', slug, 'services', service, 'catalog'],
@@ -139,20 +139,19 @@ export const getNamespaceMembers = (slug: string) => {
         .json<PageResponse<Member>>();
       return response.data;
     },
+    placeholderData: previousData => previousData,
   });
 };
 
-export const useGetNamespaceInvitations = (slug: string) => {
-  return useQuery(getNamespaceInvitations(slug));
+export const useGetNamespaceInvitations = (namespace: Namespace, pageable?: Pageable) => {
+  return useQuery(getNamespaceInvitations(namespace, pageable));
 };
 
-export const getNamespaceInvitations = (slug: string) => {
+export const getNamespaceInvitations = (namespace: Namespace, pageable: Pageable = {}) => {
   return queryOptions({
-    queryKey: namespaceKeys.getNamespaceInvitations(slug),
-    queryFn: async (): Promise<Array<Invitation>> => {
-      const response = await request.get(`api/namespaces/${slug}/invitations`)
-        .json<PageResponse<Invitation>>();
-      return response.data;
+    queryKey: namespaceKeys.getNamespaceInvitations(namespace.slug, pageable),
+    queryFn: async ({ signal }): Promise<PageResponse<Invitation>> => {
+      return await request.get(`api/namespaces/${namespace.slug}/invitations`, { signal, searchParams: { ...pageable } }).json();
     },
   });
 };

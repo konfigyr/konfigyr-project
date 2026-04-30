@@ -37,7 +37,7 @@ export const getChangeRequestsQuery = (namespace: Namespace, service: Service, q
     queryFn: async ({ signal }): Promise<PageResponse<ChangeRequest>> => {
       const uri = `api/namespaces/${namespace.slug}/services/${service.slug}/changes`;
 
-      return request.get(uri, { searchParams: query, signal })
+      return request.get(uri, { searchParams: { ...query }, signal })
         .json<PageResponse<ChangeRequest>>();
     },
     placeholderData: previousData => previousData,

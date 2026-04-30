@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { toast } from 'sonner';
 import { SendIcon } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useInviteNamespaceMember } from '@konfigyr/hooks';
@@ -37,6 +38,13 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
       }
 
       form.reset();
+
+      return toast.success((
+        <FormattedMessage
+          defaultMessage="Invitation has been succesfully sent"
+          description="Notification message that is shown when invitation has been created and sent"
+        />
+      ));
     },
   });
 
