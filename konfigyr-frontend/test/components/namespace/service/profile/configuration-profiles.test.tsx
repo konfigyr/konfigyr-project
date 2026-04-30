@@ -44,7 +44,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
 
   });
 
-  test('should render <ServiceConfigurationProfiles> component and delete Development profile', async () => {
+  test('should delete Development profile', async () => {
     const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.konfigyr}
@@ -69,7 +69,31 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
     );
 
     expect(await result.findByText('Staging')).toBeInTheDocument();
-    expect(result.queryByText('Development')).not.toBeInTheDocument();
+    expect(result.queryByText('Development'), 'Development profile was deleted').not.toBeInTheDocument();
+  });
+
+  test('should update policy to Read-only for the Development profile', async () => {
+    const result = renderComponentWithRouter((
+      <ServiceConfigurationProfiles
+        namespace={namespaces.konfigyr}
+        service={services.konfigyrId}
+      />
+    ));
+
+    expect(await result.findByText('Development')).toBeInTheDocument();
+    expect(result.container.querySelector('.lucide-lock'), 'Profile has Unprotected policy').not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(result.getByText('Development')).toBeInTheDocument();
+    });
+
+    await userEvents.click(result.getByText('Unprotected profile'));
+    await userEvents.click(result.getByText('Read-only'));
+
+    await waitFor(() => {
+      expect(result.container.querySelector('.lucide-lock'), 'Profile policy was updated to Ready-only').toBeInTheDocument();
+    });
+
   });
 
 });

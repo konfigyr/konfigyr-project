@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import {
   ChangeRequestMergeStatus,
-  ChangeRequestState,
+  ChangeRequestState, Profile,
 } from '@konfigyr/hooks/vault/types';
 import {
   isValidProfile,
@@ -60,10 +60,31 @@ const getProfile = http.get('http://localhost/api/namespaces/:namespace/services
   }, { status: 404 });
 });
 
-const deleteProfile = http.delete('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile', ({ params }) => {
+const deleteProfile = http.delete('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile', () => {
+  return new HttpResponse(null, { status: 204 });
+});
+
+const updateProfile = http.put('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile', async ({ params, request }) => {
   const { namespace, service, profile } = params;
 
-  return new HttpResponse(null, { status: 204 });
+  const existingProfile = [
+    profiles.staging,
+    profiles.development,
+    profiles.deprecated,
+  ].find(p => p.id === profile);
+
+  if (existingProfile) {
+    const body  = await request.json() as Partial<Profile>
+    return HttpResponse.json({
+      existingProfile,
+      ...body,
+    });
+  }
+  return HttpResponse.json({
+    status: 404,
+    title: 'Profile not found',
+    detail: `Profile with identifier '${profile}' not found.`,
+  }, { status: 404 });
 });
 
 const createProfile = http.post('http://localhost/api/namespaces/:namespace/services/:service/profiles', async ({ params, request }) => {
@@ -423,6 +444,7 @@ export default [
   getProfile,
   deleteProfile,
   createProfile,
+  updateProfile,
   history,
   getProperties,
   applyChangeset,
