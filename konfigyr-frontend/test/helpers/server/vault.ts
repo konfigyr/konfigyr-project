@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import {
   ChangeRequestMergeStatus,
-  ChangeRequestState, Profile,
+  ChangeRequestState,
 } from '@konfigyr/hooks/vault/types';
 import {
   isValidProfile,
@@ -10,6 +10,7 @@ import {
   profiles,
   services,
 } from '../mocks';
+import type { Profile } from '@konfigyr/hooks/vault/types';
 
 const getProfiles = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles', ({ params }) => {
   const { namespace, service } = params;
@@ -74,7 +75,7 @@ const updateProfile = http.put('http://localhost/api/namespaces/:namespace/servi
   ].find(p => p.id === profile);
 
   if (existingProfile) {
-    const body  = await request.json() as Partial<Profile>
+    const body = await request.json() as Partial<Profile>;
     return HttpResponse.json({
       existingProfile,
       ...body,
