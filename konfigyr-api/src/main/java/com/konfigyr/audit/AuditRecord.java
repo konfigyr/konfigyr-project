@@ -29,6 +29,7 @@ import java.util.Map;
  * @param eventType the type of event that occurred (e.g. "namespace.renamed", "service.created"), can't be {@literal null}.
  * @param actor the actor who triggered the event, can't be {@literal null}.
  * @param details optional event-specific payload, can be {@literal null}.
+ * @param message human-readable description of the event, resolved by the {@link AuditEventRepository}, can't be {@literal null}.
  * @param createdAt timestamp when the event was persisted, can't be {@literal null}.
  * @author Vladimir Spasic
  * @since 1.0.0
@@ -43,6 +44,7 @@ public record AuditRecord(
 		String eventType,
 		Actor actor,
 		@Nullable Map<String, Object> details,
+		String message,
 		OffsetDateTime createdAt
 ) implements Comparable<AuditRecord>, Serializable {
 

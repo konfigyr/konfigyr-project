@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { add, sub } from 'date-fns';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { RelativeDate } from '@konfigyr/components/messages/relative-date';
 
@@ -25,7 +26,7 @@ describe('components | messages | <RelativeDate/>', () => {
   });
 
   test('should render relative date message with seconds ago', () => {
-    const date = new Date(Date.now());
+    const date = new Date();
 
     const result = renderWithMessageProvider(
       <RelativeDate value={date}/>,
@@ -36,7 +37,7 @@ describe('components | messages | <RelativeDate/>', () => {
   });
 
   test('should render relative date message for date in minutes and custom title', () => {
-    const date = new Date(Date.now() - 1000 * 60 * 8);
+    const date = sub(new Date(), { minutes: 8 });
 
     const result = renderWithMessageProvider(
       <RelativeDate title="Accessible title" value={date}/>,
@@ -48,7 +49,7 @@ describe('components | messages | <RelativeDate/>', () => {
   });
 
   test('should render relative date in future message for date in minutes', () => {
-    const date = new Date(Date.now() + 1000 * 60 * 35);
+    const date = add(new Date(), { minutes: 35 });
 
     const result = renderWithMessageProvider(
       <RelativeDate value={date}/>,
@@ -59,7 +60,7 @@ describe('components | messages | <RelativeDate/>', () => {
   });
 
   test('should render relative date message for date in hours', () => {
-    const date = new Date(Date.now() - 1000 * 60 * 60 * 3);
+    const date = sub(new Date(), { hours: 3 });
 
     const result = renderWithMessageProvider(
       <RelativeDate value={date}/>,
@@ -70,7 +71,7 @@ describe('components | messages | <RelativeDate/>', () => {
   });
 
   test('should render relative date message for date in days', () => {
-    const date = new Date(Date.now() - 1000 * 60 * 60 * 24 * 2);
+    const date = sub(new Date(), { days: 2 });
 
     const result = renderWithMessageProvider(
       <RelativeDate value={date}/>,
@@ -81,7 +82,7 @@ describe('components | messages | <RelativeDate/>', () => {
   });
 
   test('should render relative date message for date in weeks', () => {
-    const date = new Date(Date.now() - 1000 * 60 * 60 * 24 * 33);
+    const date = sub(new Date(), { weeks: 5 });
 
     const result = renderWithMessageProvider(
       <RelativeDate value={date}/>,
@@ -92,7 +93,7 @@ describe('components | messages | <RelativeDate/>', () => {
   });
 
   test('should render relative date message for date in months', () => {
-    const date = new Date(Date.now() - 1000 * 60 * 60 * 24 * 79);
+    const date = sub(new Date(), { days: 79 });
 
     const result = renderWithMessageProvider(
       <RelativeDate value={date.toISOString()}/>,
@@ -103,7 +104,7 @@ describe('components | messages | <RelativeDate/>', () => {
   });
 
   test('should render relative date message for date in years', () => {
-    const date = new Date(Date.now() - 1000 * 60 * 60 * 24 * 418);
+    const date = sub(new Date(), { days: 418 });
 
     const result = renderWithMessageProvider(
       <RelativeDate value={date.getTime()}/>,

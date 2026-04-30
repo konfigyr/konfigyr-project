@@ -182,7 +182,7 @@ export interface ChangeHistory {
   id: string;
   revision: string;
   subject: string;
-  description?: string;
+  description?: MarkdownContents;
   count: number;
   appliedBy: string;
   appliedAt: string;

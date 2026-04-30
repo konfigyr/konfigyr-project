@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { subMinutes } from 'date-fns';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { profiles, services } from '@konfigyr/test/helpers/mocks';
 import { ChangeRequestMergeStatus, ChangeRequestState } from '@konfigyr/hooks/vault/types';
@@ -17,8 +18,8 @@ const changeRequest: ChangeRequest = {
   subject: 'CR Summary',
   count: 4,
   createdBy: 'John Doe',
-  createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-  updatedAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+  createdAt: subMinutes(new Date(), 4).toISOString(),
+  updatedAt: subMinutes(new Date(), 18).toISOString(),
 };
 
 describe('components | vault | change-request | <ChangeRequestStateSummary/>', () => {

@@ -6,6 +6,7 @@ import com.konfigyr.data.Routines;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.markdown.MarkdownContents;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.vault.*;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class ChangeHistoryService implements VaultChronicle {
 			VAULT_CHANGE_HISTORY.REVISION,
 			VAULT_CHANGE_HISTORY.SUBJECT,
 			VAULT_CHANGE_HISTORY.DESCRIPTION,
+			VAULT_CHANGE_HISTORY.DESCRIPTION_CHECKSUM,
 			VAULT_CHANGE_HISTORY.CHANGE_COUNT,
 			VAULT_CHANGE_HISTORY.AUTHOR_NAME,
 			VAULT_CHANGE_HISTORY.CREATED_AT
@@ -76,6 +78,7 @@ public class ChangeHistoryService implements VaultChronicle {
 	void commit(EntityId profile, ApplyResult result) {
 		final ChangeHistoryOwnership ownership = lookupOwnership(profile);
 		final AuthenticatedPrincipal author = result.author();
+		final MarkdownContents description = MarkdownContents.ofNullable(result.description());
 
 		final UUID id = context.insertInto(VAULT_CHANGE_HISTORY)
 				.set(
@@ -84,7 +87,8 @@ public class ChangeHistoryService implements VaultChronicle {
 								.set(VAULT_CHANGE_HISTORY.SERVICE_ID, ownership.service())
 								.set(VAULT_CHANGE_HISTORY.PROFILE_ID, ownership.profile())
 								.set(VAULT_CHANGE_HISTORY.SUBJECT, result.subject())
-								.set(VAULT_CHANGE_HISTORY.DESCRIPTION, result.description())
+								.set(VAULT_CHANGE_HISTORY.DESCRIPTION, description, MarkdownContents::value)
+								.set(VAULT_CHANGE_HISTORY.DESCRIPTION_CHECKSUM, description, MarkdownContents::checksum)
 								.set(VAULT_CHANGE_HISTORY.CHANGE_COUNT, result.changes().size())
 								.set(VAULT_CHANGE_HISTORY.AUTHOR_ID, author.get())
 								.set(VAULT_CHANGE_HISTORY.AUTHOR_TYPE, author.getType().name())
@@ -339,11 +343,21 @@ public class ChangeHistoryService implements VaultChronicle {
 	}
 
 	private static ChangeHistory toChangeHistory(Record record) {
+		MarkdownContents description = null;
+
+		if (record.get(VAULT_CHANGE_HISTORY.DESCRIPTION) != null
+				&& record.get(VAULT_CHANGE_HISTORY.DESCRIPTION_CHECKSUM) != null) {
+			description = new MarkdownContents(
+					record.get(VAULT_CHANGE_HISTORY.DESCRIPTION),
+					record.get(VAULT_CHANGE_HISTORY.DESCRIPTION_CHECKSUM)
+			);
+		}
+
 		return new ChangeHistory(
 				record.get(VAULT_CHANGE_HISTORY.ID, String.class),
 				record.get(VAULT_CHANGE_HISTORY.REVISION),
 				record.get(VAULT_CHANGE_HISTORY.SUBJECT),
-				record.get(VAULT_CHANGE_HISTORY.DESCRIPTION),
+				description,
 				record.get(VAULT_CHANGE_HISTORY.CHANGE_COUNT),
 				record.get(VAULT_CHANGE_HISTORY.AUTHOR_NAME),
 				record.get(VAULT_CHANGE_HISTORY.CREATED_AT)

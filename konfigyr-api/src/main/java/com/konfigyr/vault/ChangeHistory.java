@@ -1,7 +1,9 @@
 package com.konfigyr.vault;
 
+import com.konfigyr.markdown.MarkdownContents;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -35,7 +37,7 @@ public record ChangeHistory(
 		String id,
 		String revision,
 		String subject,
-		String description,
+		@Nullable MarkdownContents description,
 		int count,
 		String appliedBy,
 		OffsetDateTime appliedAt

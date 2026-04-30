@@ -9,6 +9,7 @@ import { MissingPropertyDescriptionLabel } from '@konfigyr/components/artifactor
 import { RelativeDate } from '@konfigyr/components/messages/relative-date';
 import { ChangesCountLabel } from '@konfigyr/components/vault/messages';
 import { Badge } from '@konfigyr/components/ui/badge';
+import { HtmlContents } from '@konfigyr/components/ui/content';
 import {
   Sheet,
   SheetContent,
@@ -40,9 +41,21 @@ export interface ChangeHistorySidebar {
   profile: Profile;
 }
 
+function ChangeHistoryDescription({ history }: { history: ChangeHistory }) {
+  if (history.description && history.description.html) {
+    return (
+      <HtmlContents html={history.description.html} />
+    );
+  }
+
+  return (
+    <MissingPropertyDescriptionLabel />
+  );
+}
+
 function ChangeHistoryTimestamp({ history }: { history: ChangeHistory }) {
   return (
-    <>
+    <p>
       <FormattedDate
         value={history.appliedAt}
         year="numeric"
@@ -55,7 +68,7 @@ function ChangeHistoryTimestamp({ history }: { history: ChangeHistory }) {
       <small className="text-xs text-muted-foreground ml-1">
         (<RelativeDate value={history.appliedAt} />)
       </small>
-    </>
+    </p>
   );
 }
 
@@ -65,9 +78,9 @@ function ChangeHistoryStat({ label, value }: { label: ReactNode, value: ReactNod
       <p className="text-xs font-heading font-medium text-muted-foreground">
         {label}
       </p>
-      <p className="text-sm text-foreground">
+      <div className="text-sm text-foreground">
         {value}
-      </p>
+      </div>
     </div>
   );
 }
@@ -178,7 +191,7 @@ export function ChangeHistorySidebar({
                   description="Label for the description of a change history record"
                 />
               }
-              value={history.description ?? <MissingPropertyDescriptionLabel />}
+              value={<ChangeHistoryDescription history={history} />}
             />
 
             <div className="flex justify-between items-center">

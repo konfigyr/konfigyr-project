@@ -6,6 +6,7 @@ import org.jooq.DSLContext;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.jooq.autoconfigure.JooqAutoConfiguration;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.jackson.SecurityJacksonModules;
@@ -31,7 +32,7 @@ public class AuditAutoConfiguration {
 	private final DSLContext context;
 
 	@Bean
-	AuditEventRepository auditEventRepository(ResourceLoader resourceLoader, JsonMapper jsonMapper) {
+	AuditEventRepository auditEventRepository(ResourceLoader resourceLoader, JsonMapper jsonMapper, MessageSource messageSource) {
 		final ClassLoader classLoader = resourceLoader.getClassLoader();
 		Assert.notNull(classLoader, "Class loader can not be resolved");
 
@@ -42,7 +43,7 @@ public class AuditAutoConfiguration {
 				.addModules(SecurityJacksonModules.getModules(classLoader, validator))
 				.build();
 
-		return new AuditEventRepository(context, auditJsonMapper);
+		return new AuditEventRepository(context, auditJsonMapper, messageSource);
 	}
 
 	@Bean

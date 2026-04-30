@@ -4,6 +4,7 @@ import changeRequests from './server/change-requests';
 import kms from './server/kms';
 import namespaces from './server/namespaces';
 import applications from './server/namespace/applications';
+import audit from './server/audit';
 import oidc from './server/oidc';
 import proxy from './server/proxy';
 import services from './server/services';
@@ -15,6 +16,7 @@ export const handlers = [
   ...kms,
   ...namespaces,
   ...applications,
+  ...audit,
   ...oidc,
   ...proxy,
   ...services,

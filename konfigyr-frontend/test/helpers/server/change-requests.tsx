@@ -5,6 +5,7 @@ import {
   ChangeRequestState,
   PropertyTransitionType,
 } from '@konfigyr/hooks/vault/types';
+import { subMinutes } from 'date-fns';
 import { konfigyr } from '../mocks/namespace';
 import { konfigyrApi, konfigyrId } from '../mocks/services';
 import { development, staging } from '../mocks/profile';
@@ -44,8 +45,8 @@ const list = http.get('http://localhost/api/namespaces/:namespace/services/:serv
         markdown: 'Align the application name with the new naming convention',
       },
       createdBy: 'John Doe',
-      createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 7).toISOString(),
+      createdAt: subMinutes(new Date(), 12).toISOString(),
+      updatedAt: subMinutes(new Date(), 7).toISOString(),
     }, {
       id: 'second-change-request',
       service: konfigyrApi,
@@ -59,8 +60,8 @@ const list = http.get('http://localhost/api/namespaces/:namespace/services/:serv
         markdown: 'Point to the staging database',
       },
       createdBy: 'John Doe',
-      createdAt: new Date(Date.now() - 1000 * 60 * 7).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
+      createdAt: subMinutes(new Date(), 7).toISOString(),
+      updatedAt: subMinutes(new Date(), 2).toISOString(),
     }],
     metadata: { page: 2, size: 5 },
   });
@@ -114,8 +115,8 @@ const get = http.get('http://localhost/api/namespaces/:namespace/services/:servi
       markdown: 'Align the application name with the new naming convention',
     },
     createdBy: 'John Doe',
-    createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 7).toISOString(),
+    createdAt: subMinutes(new Date(), 12).toISOString(),
+    updatedAt: subMinutes(new Date(), 7).toISOString(),
   }));
 });
 
@@ -144,12 +145,12 @@ const history = http.get('http://localhost/api/namespaces/:namespace/services/:s
       id: 'opened-event',
       type: ChangeRequestHistoryType.CREATED,
       initiator: 'Jane Doe',
-      timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      timestamp: subMinutes(new Date(), 12).toISOString(),
     }, {
       id: 'approved-event',
       type: ChangeRequestHistoryType.APPROVED,
       initiator: 'Jane Doe',
-      timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+      timestamp: subMinutes(new Date(), 8).toISOString(),
     }],
   }));
 });
@@ -174,7 +175,7 @@ const update = http.put('http://localhost/api/namespaces/:namespace/services/:se
       markdown: description ?? 'Align the application name with the new naming convention',
     },
     createdBy: 'John Doe',
-    createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+    createdAt: subMinutes(new Date(), 12).toISOString(),
     updatedAt: new Date().toISOString(),
   }));
 });

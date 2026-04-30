@@ -1,4 +1,5 @@
 import { HttpResponse, http } from 'msw';
+import { subDays, subMinutes } from 'date-fns';
 import {
   ChangeRequestMergeStatus,
   ChangeRequestState,
@@ -11,6 +12,8 @@ import {
   services,
 } from '../mocks';
 import type { Profile } from '@konfigyr/hooks/vault/types';
+
+import type { ChangeHistory, ChangeHistoryRecord, CursorResponse, PageResponse } from '@konfigyr/hooks/types';
 
 const getProfiles = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles', ({ params }) => {
   const { namespace, service } = params;
@@ -290,24 +293,25 @@ const getHistory = http.get('http://localhost/api/namespaces/:namespace/services
     });
   }
 
-  // five days ago
-  const appliedAt = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
   return HttpResponse.json({
     data: [{
       id: '9eadce4691d8fcd863aeeb07ef81d8146083d814',
       revision: '9eadce4691d8fcd863aeeb07ef81d8146083d814',
       subject: 'Changeset draft',
-      description: 'Changeset draft',
-      changes: 4,
+      description: {
+        markdown: 'Changeset draft',
+        html: 'Changeset draft',
+      },
+      count: 4,
       appliedBy: 'Test User <test.user@ebf.com>',
-      appliedAt,
+      appliedAt: subDays(new Date(), 5).toISOString(),
     }],
     metadata: {
       size: uri.searchParams.get('size') || 20,
       previous: uri.searchParams.has('token') && 'previous-token',
       next: 'next-token',
     },
-  });
+  } as CursorResponse<ChangeHistory>);
 });
 
 const getHistoryDetails = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/history/:revision', ({ params }) => {
@@ -345,7 +349,7 @@ const getHistoryDetails = http.get('http://localhost/api/namespaces/:namespace/s
       action: 'UPDATED',
       from: 'file:/config.yaml',
       to: 'classpath:/config.yaml',
-      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedAt: subMinutes(new Date(), 12).toISOString(),
       appliedBy: 'jane.doe@konfigyr.com',
     }, {
       id: '2',
@@ -354,7 +358,7 @@ const getHistoryDetails = http.get('http://localhost/api/namespaces/:namespace/s
       action: 'UPDATED',
       from: 'DEBUG',
       to: 'INFO',
-      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedAt: subMinutes(new Date(), 12).toISOString(),
       appliedBy: 'jane.doe@konfigyr.com',
     }, {
       id: '3',
@@ -362,7 +366,7 @@ const getHistoryDetails = http.get('http://localhost/api/namespaces/:namespace/s
       revision,
       action: 'ADDED',
       to: '10GB',
-      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedAt: subMinutes(new Date(), 12).toISOString(),
       appliedBy: 'jane.doe@konfigyr.com',
     }, {
       id: '4',
@@ -370,10 +374,10 @@ const getHistoryDetails = http.get('http://localhost/api/namespaces/:namespace/s
       revision,
       action: 'REMOVED',
       from: '10',
-      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedAt: subMinutes(new Date(), 12).toISOString(),
       appliedBy: 'jane.doe@konfigyr.com',
     }],
-  });
+  } as PageResponse<ChangeHistoryRecord>);
 });
 
 const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/property/:name/history', ({ params, request }) => {
@@ -412,7 +416,7 @@ const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/
       action: 'UPDATED',
       from: '10',
       to: '20',
-      appliedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      appliedAt: subMinutes(new Date(), 12).toISOString(),
       appliedBy: 'jane.doe@konfigyr.com',
     }, {
       id: '2',
@@ -421,7 +425,7 @@ const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/
       action: 'UPDATED',
       from: '5',
       to: '10',
-      appliedAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+      appliedAt: subMinutes(new Date(), 180).toISOString(),
       appliedBy: 'john.doe@konfigyr.com',
     }, {
       id: '3',
@@ -429,7 +433,7 @@ const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/
       revision: '85698e54b9eb76912c58729703e1bf9ce0c6fad4',
       action: 'ADDED',
       to: '5',
-      appliedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+      appliedAt: subDays(new Date(), 2).toISOString(),
       appliedBy: 'jane.doe@konfigyr.com',
     }],
     metadata: {
@@ -437,7 +441,7 @@ const getPropertyHistory = http.get('http://localhost/api/namespaces/:namespace/
       previous: uri.searchParams.has('token') && 'previous-token',
       next: 'next-token',
     },
-  });
+  } as CursorResponse<ChangeHistoryRecord>);
 });
 
 export default [

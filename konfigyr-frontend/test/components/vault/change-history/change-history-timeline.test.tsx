@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { subDays } from 'date-fns';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { ChangeHistoryTimeline } from '@konfigyr/components/vault/change-history/change-history-timeline';
 
@@ -36,14 +37,14 @@ describe('components | vault | change-history | <ChangeHistoryTimeline/>', () =>
       subject: 'Second change',
       count: 3,
       appliedBy: 'Jane Doe',
-      appliedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      appliedAt: subDays(new Date(), 4).toISOString(),
     }, {
       id: 'first-changeset',
       revision: 'first-changeset',
       subject: 'First change',
       count: 12,
       appliedBy: 'John Doe',
-      appliedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      appliedAt: subDays(new Date(), 5).toISOString(),
     }];
 
     const { getByText, getByRole } = renderWithMessageProvider(

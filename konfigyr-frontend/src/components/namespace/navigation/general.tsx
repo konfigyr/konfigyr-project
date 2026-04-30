@@ -1,5 +1,6 @@
 import {
-  MonitorCloud,
+  ActivityIcon,
+  MonitorCloudIcon,
   MonitorIcon,
   SendIcon,
   Settings2Icon,
@@ -70,7 +71,17 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
                 className="truncate"
                 activeProps={{ 'data-active': true }}
               >
-                <MonitorCloud /> Applications
+                <MonitorCloudIcon /> Applications
+              </Link>
+            } />
+            <SidebarMenuButton render={
+              <Link
+                to="/namespace/$namespace/audit"
+                params={{ namespace: namespace.slug }}
+                className="truncate"
+                activeProps={{ 'data-active': true }}
+              >
+                <ActivityIcon /> Audit logs
               </Link>
             } />
           </SidebarMenuItem>

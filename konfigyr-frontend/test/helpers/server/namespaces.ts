@@ -1,6 +1,15 @@
 import { HttpResponse, http } from 'msw';
 import { accounts, namespaces } from '../mocks';
 
+const list = http.get('http://localhost/api/namespaces', () => {
+  return new HttpResponse({
+    data: [
+      namespaces.johnDoe,
+      namespaces.konfigyr,
+    ],
+  });
+});
+
 const check = http.head('http://localhost/api/namespaces/:slug', ({ params }) => {
   const status = params.slug === 'available-namespace' ? 404 : 200;
   return new HttpResponse(null, { status });
@@ -191,6 +200,7 @@ const removeMember = http.delete('http://localhost/api/namespaces/:slug/members/
 });
 
 export default [
+  list,
   check,
   create,
   get,
