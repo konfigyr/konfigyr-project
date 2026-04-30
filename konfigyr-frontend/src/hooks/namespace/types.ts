@@ -49,8 +49,8 @@ export interface Invitation {
   },
   role: NamespaceRole,
   expired: boolean,
-  createdAt: string,
-  expiryDate: string,
+  createdAt: string | Date,
+  expiryDate: string | Date,
 }
 
 export interface Service {

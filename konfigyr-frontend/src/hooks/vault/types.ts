@@ -1,5 +1,5 @@
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
-import type { MarkdownContents } from '@konfigyr/hooks/hateoas/types';
+import type { MarkdownContents, Pageable } from '@konfigyr/hooks/hateoas/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
 export type ProfilePolicy = 'UNPROTECTED' | 'PROTECTED' | 'IMMUTABLE';
@@ -168,12 +168,10 @@ export interface ChangeRequestHistory {
   timestamp: string;
 }
 
-export interface ChangeRequestQuery extends Record<string, string | number | boolean | undefined> {
+export interface ChangeRequestQuery extends Pageable {
   term?: string;
   profile?: string;
   state?: ChangeRequestState;
-  page?: number;
-  size?: number;
 }
 
 export interface ChangeHistory {

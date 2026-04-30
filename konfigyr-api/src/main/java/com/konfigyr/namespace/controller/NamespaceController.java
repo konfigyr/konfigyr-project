@@ -6,7 +6,9 @@ import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.hateoas.RepresentationModelAssembler;
 import com.konfigyr.namespace.*;
+import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.PrincipalType;
 import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +23,6 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,16 +40,11 @@ class NamespaceController {
 
 	@GetMapping
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
-	PagedModel<?> search(
-			@Nullable @RequestParam(required = false) String term,
-			@NonNull Authentication authentication,
-			@NonNull Pageable pageable
-	) {
+	PagedModel<?> search(@Nullable @RequestParam(required = false) String term, @NonNull Pageable pageable) {
 		final Page<@NonNull Namespace> result;
-		final Optional<EntityId> account = retrieveAccountIdentifier(authentication);
-		final Optional<EntityId> namespace = retrieveNamespaceIdentifier(authentication);
+		final Optional<EntityId> account = retrieveAccountIdentifier();
+		final Optional<EntityId> namespace = retrieveNamespaceIdentifier();
 
-		// TODO: Improve how we retrieve namespaces based on the current authentication
 		if (account.isPresent()) {
 			final SearchQuery query = SearchQuery.builder()
 					.criteria(SearchQuery.ACCOUNT, account.get())
@@ -96,10 +92,9 @@ class NamespaceController {
 	@ResponseStatus(HttpStatus.CREATED)
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
 	EntityModel<Namespace> create(
-			@RequestBody @Validated NamespaceAttributes attributes,
-			@NonNull Authentication authentication
+			@RequestBody @Validated NamespaceAttributes attributes
 	) {
-		return assembler.assemble(namespaces.create(attributes.definition(authentication)));
+		return assembler.assemble(namespaces.create(attributes.definition()));
 	}
 
 	@PutMapping("/{slug}")
@@ -107,10 +102,9 @@ class NamespaceController {
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
 	EntityModel<Namespace> update(
 			@PathVariable String slug,
-			@RequestBody @Validated NamespaceAttributes attributes,
-			@NonNull Authentication authentication
+			@RequestBody @Validated NamespaceAttributes attributes
 	) {
-		return assembler.assemble(namespaces.update(slug, attributes.definition(authentication)));
+		return assembler.assemble(namespaces.update(slug, attributes.definition()));
 	}
 
 	@DeleteMapping("/{slug}")
@@ -121,27 +115,32 @@ class NamespaceController {
 		namespaces.delete(slug);
 	}
 
-	static Optional<EntityId> retrieveAccountIdentifier(@NonNull Authentication authentication) {
-		try {
-			return Optional.of(EntityId.from(authentication.getName()));
-		} catch (IllegalArgumentException ex) {
-			return Optional.empty();
-		}
+	static Optional<EntityId> retrieveAccountIdentifier() {
+		return AuthenticatedPrincipal.fromSecurityContext()
+				.filter(principal -> PrincipalType.USER_ACCOUNT.equals(principal.getType()))
+				.map(AuthenticatedPrincipal::get)
+				.map(subject -> {
+					try {
+						return EntityId.from(subject);
+					} catch (IllegalArgumentException ignore) {
+						return null;
+					}
+				});
 	}
 
-	static Optional<EntityId> retrieveNamespaceIdentifier(@NonNull Authentication authentication) {
-		if (!authentication.getName().startsWith("kfg-")) {
-			return Optional.empty();
-		}
-
-		try {
-			final byte[] decoded = Base64.urlSafeDecode(authentication.getName().replace("kfg-", ""));
-			final ByteBuffer buffer = ByteBuffer.wrap(decoded);
-
-			return Optional.of(EntityId.from(buffer.getLong()));
-		} catch (Exception ex) {
-			return Optional.empty();
-		}
+	static Optional<EntityId> retrieveNamespaceIdentifier() {
+		return AuthenticatedPrincipal.fromSecurityContext()
+				.filter(principal -> PrincipalType.OAUTH_CLIENT.equals(principal.getType()))
+				.map(AuthenticatedPrincipal::get)
+				.map(subject -> {
+					try {
+						final byte[] decoded = Base64.urlSafeDecode(subject.replace("kfg-", ""));
+						final ByteBuffer buffer = ByteBuffer.wrap(decoded);
+						return EntityId.from(buffer.getLong());
+					} catch (Exception ignore) {
+						return null;
+					}
+				});
 	}
 
 	record NamespaceAttributes(
@@ -149,10 +148,10 @@ class NamespaceController {
 			@NotBlank @Length(min = 3, max = 30) String name,
 			@Length(max = 255) String description
 	) {
-		NamespaceDefinition definition(@NonNull Authentication authentication) {
-			final EntityId owner = retrieveAccountIdentifier(authentication).orElseThrow(
+		NamespaceDefinition definition() {
+			final EntityId owner = retrieveAccountIdentifier().orElseThrow(
 					() -> new AuthenticationCredentialsNotFoundException(
-							"Failed to retrieve account identifier from authentication principal"
+							"Failed to retrieve account identifier from authenticated principal"
 					)
 			);
 

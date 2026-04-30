@@ -3,6 +3,12 @@ export interface MarkdownContents {
   html: string;
 }
 
+export interface Pageable {
+  page?: number
+  size?: number
+  sort?: string
+}
+
 export interface CollectionResponse<T> {
   data: Array<T>;
 }

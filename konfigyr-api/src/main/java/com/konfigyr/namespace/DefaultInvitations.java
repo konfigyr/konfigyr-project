@@ -282,7 +282,7 @@ class DefaultInvitations implements Invitations {
 				/* join sender accounts to retrieve sender information */
 				.innerJoin(SENDER_ACCOUNTS)
 				.on(NAMESPACE_MEMBERS.ACCOUNT_ID.eq(SENDER_ACCOUNTS.ID))
-				/* join recipient accounts to check if recipient is already known */
+				/* join recipient accounts to check if the recipient is already known */
 				.fullOuterJoin(RECIPIENT_ACCOUNTS)
 				.on(RECIPIENT_ACCOUNTS.EMAIL.equalIgnoreCase(invite.recipient()))
 				/* join namespaces to retrieve namespace information */

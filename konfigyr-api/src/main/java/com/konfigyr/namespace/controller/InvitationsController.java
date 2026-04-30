@@ -5,7 +5,9 @@ import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.hateoas.RepresentationModelAssembler;
 import com.konfigyr.namespace.*;
+import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.PrincipalType;
 import com.konfigyr.security.oauth.RequiresScope;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.jspecify.annotations.NonNull;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -74,7 +77,13 @@ class InvitationsController {
 
 	record InvitationAttributes(@NotBlank @Email String email, @NotNull NamespaceRole role) {
 		Invite create(Namespace namespace) {
-			return new Invite(namespace.id(), EntityId.from(1), email(), role());
+			final AuthenticatedPrincipal principal = AuthenticatedPrincipal.resolve();
+
+			if (principal.getType() != PrincipalType.USER_ACCOUNT) {
+				throw new AccessDeniedException("Invitation attempt was made by a non-user account principal: " + principal);
+			}
+
+			return new Invite(namespace.id(), EntityId.from(principal.get()), email(), role());
 		}
 	}
 

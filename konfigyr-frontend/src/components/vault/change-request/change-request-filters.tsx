@@ -182,7 +182,7 @@ export function ChangeRequestFilters({ namespace, service, query, onQueryChange 
           name="sort"
           children={(field) => (
             <Select
-              value={field.state.value as string}
+              value={field.state.value}
               onValueChange={it => field.handleChange(it || SortBy.LATEST)}
             >
               <SelectTrigger className="w-52" aria-label={sortLabel}>
