@@ -69,7 +69,7 @@ const deleteProfile = http.delete('http://localhost/api/namespaces/:namespace/se
 });
 
 const updateProfile = http.put('http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile', async ({ params, request }) => {
-  const { namespace, service, profile } = params;
+  const { profile } = params;
 
   const existingProfile = [
     profiles.staging,
@@ -80,7 +80,7 @@ const updateProfile = http.put('http://localhost/api/namespaces/:namespace/servi
   if (existingProfile) {
     const body = await request.json() as Partial<Profile>;
     return HttpResponse.json({
-      existingProfile,
+      ...existingProfile,
       ...body,
     });
   }

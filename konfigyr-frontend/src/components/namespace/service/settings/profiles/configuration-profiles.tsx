@@ -1,5 +1,5 @@
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@konfigyr/components/ui/item';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
 import { ErrorState, useErrorNotification } from '@konfigyr/components/error';
@@ -17,7 +17,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@konfigyr/components/ui/dropdown-menu';
-import { CheckIcon, ChevronDownIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { ChevronDownIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import {
   DeleteConfigurationProfileAlert,
 } from '@konfigyr/components/namespace/service/settings/profiles/delete-profile-alert';
@@ -25,6 +25,8 @@ import { InlineEdit, InlineEditInput, InlineEditPlaceholder } from '@konfigyr/co
 import { toast } from 'sonner';
 import { usePolicyDescription, usePolicyLabel } from '@konfigyr/components/vault/profile/policy-picker';
 import { ProfilePolicyLabel } from '@konfigyr/components/vault/profile/messages';
+
+import type { ReactNode } from 'react';
 import type { Profile, ProfilePolicy } from '@konfigyr/hooks/vault/types';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
@@ -119,19 +121,21 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
   const { mutateAsync: updateProfile } = useUpdateProfile(namespace, service, profile);
   const errorNotification = useErrorNotification();
   const [open, setOpen] = useState(false);
+  const intl = useIntl();
 
   const onPolicyUpdate = useCallback(async (value: ProfilePolicy) => {
     try {
       await updateProfile({ id: profile.id, policy: value });
-      toast.success(<FormattedMessage
-        defaultMessage="The profile policy was successfully updated."
-        description="Success message for the profile policy update"
-      />);
     } catch (error) {
       return errorNotification(error);
     } finally {
       setOpen(false);
     }
+
+    return toast.success(intl.formatMessage({
+      defaultMessage: 'The profile policy was successfully updated.',
+      description: 'Success message for the profile policy update',
+    }));
   }, [profile]);
 
   const onNameUpdate = useCallback(async (value?: string) => {
@@ -156,30 +160,52 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
         <PolicyAlertIcon policy={profile.policy}/>
       </div>
       <ItemContent>
-        <ItemTitle>
-          <ProfileInlineEdit field={profile.name} onChange={onNameUpdate} onError={errorNotification}/>
+        <ItemTitle className="overflow-visible">
+          <InlineEdit value={profile.name} onChange={onNameUpdate} onError={errorNotification}>
+            <ProfileInlineEditPlaceholder>
+              {profile.name}
+            </ProfileInlineEditPlaceholder>
+            <InlineEditInput className="h-6 text-xs" />
+          </InlineEdit>
         </ItemTitle>
-        <ItemDescription>
-          <ProfileInlineEdit field={profile.description} onChange={onDescriptionUpdate} onError={errorNotification}/>
+        <ItemDescription className="overflow-visible">
+          <InlineEdit value={profile.description || ''} onChange={onDescriptionUpdate} onError={errorNotification}>
+            <ProfileInlineEditPlaceholder>
+              {profile.description ? profile.description : (
+                <FormattedMessage
+                  tagName="i"
+                  defaultMessage="No description provided"
+                  description="Default description for the profile"
+                />
+              )}
+            </ProfileInlineEditPlaceholder>
+            <InlineEditInput className="h-6 text-xs" />
+          </InlineEdit>
         </ItemDescription>
       </ItemContent>
 
       <div>
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger render={
-            <Button variant="outline">
+            <Button
+              variant="outline"
+              onClick={() => setOpen(true)}
+              aria-label={intl.formatMessage({
+                defaultMessage: 'Update policy for {name} profile',
+                description: 'Label for the update profile policy button. This message accepts the profile name as a value.',
+              }, {
+                name: profile.name,
+              })}
+            >
               <ProfilePolicyLabel value={profile.policy}/>
               <ChevronDownIcon/>
             </Button>
           }/>
           <DropdownMenuContent className="w-xl" align="end">
             <DropdownMenuGroup>
-              <DropdownMenuRadioGroup value={POLICIES} onValueChange={onPolicyUpdate}>
+              <DropdownMenuRadioGroup value={profile.policy} onValueChange={onPolicyUpdate}>
                 {POLICIES.map((p) => (
-                  <DropdownMenuRadioItem value={p} key={p} >
-                    <CheckIcon className={p === profile.policy ? '' : 'invisible'}/>
-                    <DropdownMenuRadioItemPolicy policy={p}/>
-                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItemPolicy key={p} policy={p} />
                 ))}
               </DropdownMenuRadioGroup>
             </DropdownMenuGroup>
@@ -187,7 +213,16 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
         </DropdownMenu>
       </div>
       <ItemActions>
-        <Button variant="destructive" onClick={() => onRemove(profile)} data-testid="delete-profile-button" >
+        <Button
+          variant="destructive"
+          onClick={() => onRemove(profile)}
+          aria-label={intl.formatMessage({
+            defaultMessage: 'Delete {name} profile',
+            description: 'Label for the delete profile button. This message accepts the profile name as a value.',
+          }, {
+            name: profile.name,
+          })}
+        >
           <TrashIcon/>
         </Button>
       </ItemActions>
@@ -199,12 +234,12 @@ function DropdownMenuRadioItemPolicy ({ policy }: { policy: ProfilePolicy }) {
   const label = usePolicyLabel(policy);
   const description = usePolicyDescription(policy);
   return (
-    <span className="w-full p-2">
-      <span className={'flex flex-1 flex-col gap-1'}>
-        <p className="font-medium text-lg/relaxed">{label}</p>
-        <p className="text-muted-foreground text-sm/relaxed">{description}</p>
-      </span>
-    </span>
+    <DropdownMenuRadioItem value={policy} aria-label={label}>
+      <div className="w-full p-1 text-sm">
+        <p className="font-medium leading-relaxed">{label}</p>
+        <p className="text-muted-foreground">{description}</p>
+      </div>
+    </DropdownMenuRadioItem>
   );
 }
 
@@ -222,31 +257,19 @@ function SkeletonLoader () {
   );
 }
 
-function ProfileInlineEdit ({ field, onChange, onError }: {
-  field?: string,
-  onChange: (value?: string) => Promise<string | number | undefined>,
-  onError: (error: unknown) => void,
-}) {
+function ProfileInlineEditPlaceholder({ children }: { children: ReactNode }) {
   return (
-    <span className="flex items-center gap-2 min-w-0" data-testid="profile-inline-edit">
-      <InlineEdit value={field || ''} onChange={onChange} onError={onError}>
-        <InlineEditPlaceholder
-          render={
-            <button
-              type="button"
-              className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors group/name truncate max-w-50"
-            >
-              {field}
-              <PencilIcon
-                className="size-2.5 text-muted-foreground/50 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0"/>
-            </button>
-          }
-        />
-        <InlineEditInput
-          placeholder="Profile description..."
-          className="h-6 text-xs w-48"
-        />
-      </InlineEdit>
-    </span>
+    <InlineEditPlaceholder
+      render={
+        <button
+          type="button"
+          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors group/placeholder truncate max-w-50"
+        >
+          {children}
+          <PencilIcon
+            className="size-2.5 text-muted-foreground/50 opacity-0 group-hover/placeholder:opacity-100 transition-opacity shrink-0"/>
+        </button>
+      }
+    />
   );
 }

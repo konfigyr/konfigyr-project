@@ -59,7 +59,7 @@ export function DeleteConfigurationProfileAlert ({ namespace, service, profile, 
         <AlertDialogHeader>
           <AlertDialogTitle>
             <FormattedMessage
-              defaultMessage="Delete {name} profile"
+              defaultMessage="Are you sure you want to delete {name} profile?"
               values={{
                 name: profile?.name,
               }}
@@ -68,9 +68,10 @@ export function DeleteConfigurationProfileAlert ({ namespace, service, profile, 
           </AlertDialogTitle>
           <AlertDialogDescription>
             <FormattedMessage
-              defaultMessage="Are you sure you want to delete {name} configuration profile?"
+              defaultMessage="This action cannot be undone. Deleting the {name} profile will permanently remove the associated configuration states.{br}If you want to keep the profile but prevent further changes, use the read-only profile policy instead."
               values={{
-                name: profile?.name,
+                name: <strong>{profile?.slug}</strong>,
+                br: <span className="block my-2"/>,
               }}
               description="Confirmation text in the modal that is shown when user tries to delete a configuration profile"
             />
@@ -80,7 +81,7 @@ export function DeleteConfigurationProfileAlert ({ namespace, service, profile, 
           <AlertDialogCancel>
             <CancelLabel/>
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onRemove} disabled={isPending}>
+          <AlertDialogAction onClick={onRemove} loading={isPending}>
             <YesLabel/>
           </AlertDialogAction>
         </AlertDialogFooter>

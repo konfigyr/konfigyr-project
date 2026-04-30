@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { namespaces, services } from '@konfigyr/test/helpers/mocks';
-import { cleanup, waitFor, within } from '@testing-library/react';
+import { cleanup, waitFor } from '@testing-library/react';
 import {
   ServiceConfigurationProfiles,
 } from '@konfigyr/components/namespace/service/settings/profiles/configuration-profiles';
@@ -8,7 +8,6 @@ import userEvents from '@testing-library/user-event/dist/cjs/index.js';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 
 describe('components | namespace | service | profiles | <ServiceConfigurationProfiles/>', () => {
-
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -24,7 +23,6 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
   });
 
   test('should render empty <ServiceConfigurationProfiles> component', async () => {
-
     const { getByText } = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.johnDoe}
@@ -57,12 +55,16 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
       expect(result.getByText('Staging')).toBeInTheDocument();
     });
 
-    await userEvents.click(result.getAllByTestId('delete-profile-button')[0]);
+    await userEvents.click(
+      result.getByRole('button', { name: 'Delete Development profile' }),
+    );
 
-    await waitFor(() => {
-      expect(result.getByText('Delete Development profile')).toBeInTheDocument();
-      expect(result.getByText('Are you sure you want to delete Development configuration profile?')).toBeInTheDocument();
-    });
+    expect(result.getByRole('alertdialog', { name: 'Are you sure you want to delete Development profile?' }))
+      .toBeInTheDocument();
+    expect(result.getByRole('alertdialog', { name: 'Are you sure you want to delete Development profile?' }))
+      .toHaveAccessibleDescription('This action cannot be undone. Deleting the development profile will ' +
+        'permanently remove the associated configuration states.If you want to keep the profile but prevent ' +
+        'further changes, use the read-only profile policy instead.');
 
     await userEvents.click(
       result.getByRole('button', { name: 'Yes, I am sure' }),
@@ -72,7 +74,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
     expect(result.queryByText('Development'), 'Development profile was deleted').not.toBeInTheDocument();
   });
 
-  test('should render <ServiceConfigurationProfiles> component  and update policy to Read-only for the Development profile', async () => {
+  test('should render <ServiceConfigurationProfiles> component and update policy to Read-only for the Development profile', async () => {
     const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.konfigyr}
@@ -80,23 +82,33 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
       />
     ));
 
-    expect(await result.findByText('Development')).toBeInTheDocument();
-    expect(result.container.querySelector('.lucide-lock'), 'Profile has Unprotected policy').not.toBeInTheDocument();
-
     await waitFor(() => {
       expect(result.getByText('Development')).toBeInTheDocument();
+      expect(result.getByText('Staging')).toBeInTheDocument();
     });
 
+    expect(result.getByRole('button', { name: 'Update policy for Development profile' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Update policy for Development profile' })).toHaveTextContent('Unprotected profile');
 
-    await userEvents.click(result.getByRole('button', { name: 'Unprotected profile' }));
+    expect(result.getByRole('button', { name: 'Update policy for Staging profile' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Update policy for Staging profile' })).toHaveTextContent('Protected profile');
+
     await userEvents.click(
-      await result.findByRole('menuitemradio', { name: /read-only/i }),
+      result.getByRole('button', { name: 'Update policy for Development profile' }),
+    );
+
+    expect(result.getByRole('menuitemradio', { name: 'Protected' }));
+    expect(result.getByRole('menuitemradio', { name: 'Unprotected' }));
+    expect(result.getByRole('menuitemradio', { name: 'Read-only' }));
+
+    await userEvents.click(
+      result.getByRole('menuitemradio', { name: 'Read-only' }),
     );
 
     await waitFor(() => {
-      expect(result.container.querySelector('.lucide-lock'), 'Profile policy was updated to Ready-only').toBeInTheDocument();
+      expect(result.getByRole('button', { name: 'Update policy for Development profile' }))
+        .toHaveTextContent('Profile is read-only');
     });
-
   });
 
   test('should render <ServiceConfigurationProfiles> component and update Development profile name', async () => {
@@ -109,16 +121,21 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
       />
     ));
 
-    expect(await result.findByText('Development')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.getByText('Development')).toBeInTheDocument();
+    });
+
     expect(result.queryByText(NEW_PROFILE_NAME)).not.toBeInTheDocument();
 
-    const nameInlineEdit = result.getAllByTestId('profile-inline-edit')[0];
-    await userEvents.click(within(nameInlineEdit).getByRole('button'));
-    await userEvents.clear(within(nameInlineEdit).getByRole('textbox'));
-    await userEvents.type(within(nameInlineEdit).getByRole('textbox'), NEW_PROFILE_NAME);
+    await userEvents.click(
+      result.getByRole('button', { name: 'Development' }),
+    );
+
+    await userEvents.clear(result.getByRole('textbox'));
+    await userEvents.type(result.getByRole('textbox'), NEW_PROFILE_NAME);
     await userEvents.keyboard('{Enter}');
 
-    expect(await result.findByText(NEW_PROFILE_NAME)).toBeInTheDocument();
+    expect(result.getByRole('button', { name: NEW_PROFILE_NAME })).toBeInTheDocument();
   });
 
   test('should render <ServiceConfigurationProfiles> component and update Development profile description', async () => {
@@ -131,16 +148,21 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
       />
     ));
 
-    expect(await result.findByText('Development')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.getByText('Development')).toBeInTheDocument();
+    });
+
     expect(result.queryByText(NEW_PROFILE_DESCRIPTION)).not.toBeInTheDocument();
 
-    const descriptionInlineEdit = result.getAllByTestId('profile-inline-edit')[1];
-    await userEvents.click(within(descriptionInlineEdit).getByRole('button'));
-    await userEvents.clear(within(descriptionInlineEdit).getByRole('textbox'));
-    await userEvents.type(within(descriptionInlineEdit).getByRole('textbox'), NEW_PROFILE_DESCRIPTION);
+    await userEvents.click(
+      result.getAllByRole('button', { name: 'No description provided' })[0],
+    );
+
+    await userEvents.clear(result.getByRole('textbox'));
+    await userEvents.type(result.getByRole('textbox'), NEW_PROFILE_DESCRIPTION);
     await userEvents.keyboard('{Enter}');
 
-    expect(await result.findByText(NEW_PROFILE_DESCRIPTION)).toBeInTheDocument();
+    expect(result.getByRole('button', { name: NEW_PROFILE_DESCRIPTION })).toBeInTheDocument();
   });
 
 });
