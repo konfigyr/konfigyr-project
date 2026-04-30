@@ -87,8 +87,11 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
       expect(result.getByText('Development')).toBeInTheDocument();
     });
 
-    await userEvents.click(result.getByText('Unprotected profile'));
-    await userEvents.click(result.getByText('Read-only'));
+
+    await userEvents.click(result.getByRole('button', { name: 'Unprotected profile' }));
+    await userEvents.click(
+      await result.findByRole('menuitemradio', { name: /read-only/i }),
+    );
 
     await waitFor(() => {
       expect(result.container.querySelector('.lucide-lock'), 'Profile policy was updated to Ready-only').toBeInTheDocument();
