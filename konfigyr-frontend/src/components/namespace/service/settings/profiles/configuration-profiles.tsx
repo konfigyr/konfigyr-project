@@ -167,7 +167,7 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
       <div>
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger render={
-            <Button variant="outline" onClick={() => setOpen(true)}>
+            <Button variant="outline">
               <ProfilePolicyLabel value={profile.policy}/>
               <ChevronDownIcon/>
             </Button>
