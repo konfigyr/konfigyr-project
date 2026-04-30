@@ -176,7 +176,7 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
             <DropdownMenuGroup>
               <DropdownMenuRadioGroup value={POLICIES} onValueChange={onPolicyUpdate}>
                 {POLICIES.map((p) => (
-                  <DropdownMenuRadioItem value={p}>
+                  <DropdownMenuRadioItem value={p} key={p} >
                     <CheckIcon className={p === profile.policy ? '' : 'invisible'}/>
                     <DropdownMenuRadioItemPolicy policy={p}/>
                   </DropdownMenuRadioItem>
