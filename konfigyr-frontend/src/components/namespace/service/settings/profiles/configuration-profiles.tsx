@@ -228,7 +228,7 @@ function ProfileInlineEdit ({ field, onChange, onError }: {
   onError: (error: unknown) => void,
 }) {
   return (
-    <span className="flex items-center gap-2 min-w-0">
+    <span className="flex items-center gap-2 min-w-0" data-testid="profile-inline-edit">
       <InlineEdit value={field || ''} onChange={onChange} onError={onError}>
         <InlineEditPlaceholder
           render={

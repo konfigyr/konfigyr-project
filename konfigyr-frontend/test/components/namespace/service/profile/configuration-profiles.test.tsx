@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { namespaces, services } from '@konfigyr/test/helpers/mocks';
-import { cleanup, waitFor } from '@testing-library/react';
+import { cleanup, waitFor, within } from '@testing-library/react';
 import {
   ServiceConfigurationProfiles,
 } from '@konfigyr/components/namespace/service/settings/profiles/configuration-profiles';
@@ -44,7 +44,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
 
   });
 
-  test('should delete Development profile', async () => {
+  test('should render <ServiceConfigurationProfiles> component and delete Development profile', async () => {
     const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.konfigyr}
@@ -72,7 +72,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
     expect(result.queryByText('Development'), 'Development profile was deleted').not.toBeInTheDocument();
   });
 
-  test('should update policy to Read-only for the Development profile', async () => {
+  test('should render <ServiceConfigurationProfiles> component  and update policy to Read-only for the Development profile', async () => {
     const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.konfigyr}
@@ -94,6 +94,50 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
       expect(result.container.querySelector('.lucide-lock'), 'Profile policy was updated to Ready-only').toBeInTheDocument();
     });
 
+  });
+
+  test('should render <ServiceConfigurationProfiles> component and update Development profile name', async () => {
+    const NEW_PROFILE_NAME = 'Development Profile';
+
+    const result = renderComponentWithRouter((
+      <ServiceConfigurationProfiles
+        namespace={namespaces.konfigyr}
+        service={services.konfigyrId}
+      />
+    ));
+
+    expect(await result.findByText('Development')).toBeInTheDocument();
+    expect(result.queryByText(NEW_PROFILE_NAME)).not.toBeInTheDocument();
+
+    const nameInlineEdit = result.getAllByTestId('profile-inline-edit')[0];
+    await userEvents.click(within(nameInlineEdit).getByRole('button'));
+    await userEvents.clear(within(nameInlineEdit).getByRole('textbox'));
+    await userEvents.type(within(nameInlineEdit).getByRole('textbox'), NEW_PROFILE_NAME);
+    await userEvents.keyboard('{Enter}');
+
+    expect(await result.findByText(NEW_PROFILE_NAME)).toBeInTheDocument();
+  });
+
+  test('should render <ServiceConfigurationProfiles> component and update Development profile description', async () => {
+    const NEW_PROFILE_DESCRIPTION = 'Development profile description';
+
+    const result = renderComponentWithRouter((
+      <ServiceConfigurationProfiles
+        namespace={namespaces.konfigyr}
+        service={services.konfigyrId}
+      />
+    ));
+
+    expect(await result.findByText('Development')).toBeInTheDocument();
+    expect(result.queryByText(NEW_PROFILE_DESCRIPTION)).not.toBeInTheDocument();
+
+    const descriptionInlineEdit = result.getAllByTestId('profile-inline-edit')[1];
+    await userEvents.click(within(descriptionInlineEdit).getByRole('button'));
+    await userEvents.clear(within(descriptionInlineEdit).getByRole('textbox'));
+    await userEvents.type(within(descriptionInlineEdit).getByRole('textbox'), NEW_PROFILE_DESCRIPTION);
+    await userEvents.keyboard('{Enter}');
+
+    expect(await result.findByText(NEW_PROFILE_DESCRIPTION)).toBeInTheDocument();
   });
 
 });
