@@ -12,7 +12,6 @@ import com.konfigyr.vault.*;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics;
-import org.apache.commons.collections4.OrderedMapIterator;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -174,8 +173,6 @@ class ConfigurationCache implements MeterBinder {
 
 		@Override
 		public int weigh(CacheKey key, Properties properties) {
-			final OrderedMapIterator<String, PropertyValue> iterator = properties.iterator();
-
 			/*
 			 * Base cost for the cache key:
 			 *
@@ -185,10 +182,7 @@ class ConfigurationCache implements MeterBinder {
 			 */
 			final AtomicInteger weight = new AtomicInteger(32);
 
-			while (iterator.hasNext()) {
-				final String name = iterator.next();
-				final PropertyValue value = iterator.getValue();
-
+			properties.forEachProperty((name, value) -> {
 				/*
 				 * Per-property weight breakdown:
 				 *
@@ -214,7 +208,7 @@ class ConfigurationCache implements MeterBinder {
 				 *      - size = actual byte[] length (already binary, no encoding overhead)
 				 */
 				weight.addAndGet(32 + weigh(name) + weigh(value.get()) + weigh(value.checksum()));
-			}
+			});
 
 			return weight.get();
 		}
