@@ -473,6 +473,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		final var profile = mock(Profile.class);
 		doReturn(EntityId.from(4)).when(profile).id();
+		doReturn(EntityId.from(2)).when(profile).service();
 
 		final ApplyResult result = mock(ApplyResult.class);
 		doReturn("new-profile-revision").when(result).revision();
