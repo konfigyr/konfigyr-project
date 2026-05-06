@@ -41,7 +41,7 @@ public class RepositoryVersion {
 
 	/**
 	 * Returns the name of the author of the last change that was applied to the {@link com.konfigyr.vault.Profile}
-	 * configiration state.
+	 * configuration state.
 	 *
 	 * @return the last author, never {@literal null}
 	 */

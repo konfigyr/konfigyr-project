@@ -1,10 +1,12 @@
 package com.konfigyr.identity.authorization.client;
 
 import com.konfigyr.identity.authorization.AuthorizationProperties;
+import com.konfigyr.security.OAuthScopes;
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jspecify.annotations.NonNull;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
@@ -62,13 +64,16 @@ public class RegisteredNamespaceClientRepository extends AbstractRegisteredClien
 	}
 
 	private RegisteredClient toRegisteredClient(Record record) {
+		final Collection<? extends GrantedAuthority> authorities = OAuthScopes.parse(record.get(OAUTH_APPLICATIONS.SCOPES))
+				.toAuthorities();
+
 		return createRegisteredClient(record.get(OAUTH_APPLICATIONS.CLIENT_ID))
 				.clientName(record.get(OAUTH_APPLICATIONS.NAME))
 				.clientId(record.get(OAUTH_APPLICATIONS.CLIENT_ID))
 				.clientIdIssuedAt(record.get(OAUTH_APPLICATIONS.CREATED_AT, Instant.class))
 				.clientSecret(record.get(OAUTH_APPLICATIONS.CLIENT_SECRET))
 				.clientSecretExpiresAt(record.get(OAUTH_APPLICATIONS.EXPIRES_AT, Instant.class))
-				.scope(record.get(OAUTH_APPLICATIONS.SCOPES))
+				.scopes(it -> authorities.stream().map(GrantedAuthority::getAuthority).forEach(it::add))
 				.tokenSettings(createTokenSettings().build())
 				.clientSettings(createClientSettings().build())
 				.redirectUris(Set::clear)

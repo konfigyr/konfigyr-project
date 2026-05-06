@@ -7,7 +7,7 @@ import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.vault.*;
-import com.konfigyr.vault.environment.ConfigEnvironment;
+import com.konfigyr.vault.environment.ConfigurationEnvironment;
 import com.konfigyr.vault.environment.PropertySource;
 import com.konfigyr.vault.state.StateRepository;
 import com.konfigyr.vault.state.StateRepositoryFactory;
@@ -107,10 +107,10 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.convertTo(ConfigEnvironment.class)
-				.returns("john-doe-blog", ConfigEnvironment::name)
-				.returns(new String[]{"dev"}, ConfigEnvironment::profiles)
-				.returns(List.of(), ConfigEnvironment::propertySources);
+				.convertTo(ConfigurationEnvironment.class)
+				.returns("john-doe-blog", ConfigurationEnvironment::name)
+				.returns(List.of("dev"), ConfigurationEnvironment::profiles)
+				.returns(List.of(), ConfigurationEnvironment::propertySources);
 	}
 
 	@Test
@@ -139,12 +139,12 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 					.apply(log())
 					.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 					.bodyJson()
-					.convertTo(ConfigEnvironment.class)
-					.returns(service.slug(), ConfigEnvironment::name)
-					.returns(new String[]{profile.slug(), "dev"}, ConfigEnvironment::profiles)
+					.convertTo(ConfigurationEnvironment.class)
+					.returns(service.slug(), ConfigurationEnvironment::name)
+					.returns(List.of(profile.slug(), "dev"), ConfigurationEnvironment::profiles)
 					.returns(
 							List.of(new PropertySource("john-doe-blog-live", Map.of("server.port", "8080"))),
-							ConfigEnvironment::propertySources
+							ConfigurationEnvironment::propertySources
 					);
 
 		} finally {
