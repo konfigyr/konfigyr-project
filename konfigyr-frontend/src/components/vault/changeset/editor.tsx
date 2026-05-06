@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   useAddProperty,
+  useImportProperties,
   useModifyProperty,
   useRemoveProperty,
   useRestoreProperty,
@@ -13,7 +14,7 @@ import { SearchInputGroup } from '@konfigyr/components/vault/properties/search-i
 import { PropertyHistorySidebar } from '@konfigyr/components/vault/properties/history-sidebar';
 import { PropertyStatusFilters, StatusFilter } from '@konfigyr/components/vault/properties/status-filters';
 import { PropertiesTable } from '@konfigyr/components/vault/properties/table';
-
+import { PropertiesImportDialog } from '@konfigyr/components/vault/properties/properties-import-dialog';
 import type {
   ChangesetState,
   ConfigurationProperty,
@@ -65,6 +66,7 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
   const { mutateAsync: onUpdateProperty } = useModifyProperty(changeset);
   const { mutateAsync: onDeleteProperty } = useRemoveProperty(changeset);
   const { mutateAsync: onRestoreProperty } = useRestoreProperty(changeset);
+  const { mutateAsync: onImportProperties } = useImportProperties(changeset);
 
   const properties = useFilteredProperties(
     changeset,
@@ -91,6 +93,10 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
 
   const onRestore = async (property: ConfigurationProperty<any>) => {
     await onRestoreProperty({ property });
+  };
+
+  const onImport = async (newProperties: Array<ConfigurationProperty<any>>) => {
+    await onImportProperties(newProperties);
   };
 
   return (
@@ -121,6 +127,8 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
             changeset={changeset}
             onAdd={onAdd}
           />
+
+          <PropertiesImportDialog onImport={onImport} />
         </div>
 
         <PropertyStatusFilters
