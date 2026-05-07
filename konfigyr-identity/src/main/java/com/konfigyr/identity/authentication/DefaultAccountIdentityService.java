@@ -2,6 +2,7 @@ package com.konfigyr.identity.authentication;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authentication.idenitity.AccountIdentityRepository;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -53,6 +54,7 @@ class DefaultAccountIdentityService implements AccountIdentityService {
 
 	@NonNull
 	@Override
+	@Observed(name = "konfigyr.identity.account.lookup", lowCardinalityKeyValues = { "lookup.type", "username" })
 	public AccountIdentity get(@NonNull String username) throws UsernameNotFoundException {
 		final EntityId id;
 
@@ -69,6 +71,7 @@ class DefaultAccountIdentityService implements AccountIdentityService {
 
 	@NonNull
 	@Override
+	@Observed(name = "konfigyr.identity.account.lookup", lowCardinalityKeyValues = { "lookup.type", "identifier" })
 	public AccountIdentity get(@NonNull EntityId id) throws UsernameNotFoundException {
 		AccountIdentity user = lookupFromCache(id.serialize());
 
@@ -87,6 +90,7 @@ class DefaultAccountIdentityService implements AccountIdentityService {
 
 	@NonNull
 	@Override
+	@Observed(name = "konfigyr.identity.account.authenticate")
 	public <R extends OAuth2UserRequest, U extends OAuth2User> AccountIdentityUser get(
 			@NonNull OAuth2UserService<R, U> service,
 			@NonNull R request

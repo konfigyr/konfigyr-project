@@ -8,6 +8,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.catalog.ServiceCatalogSource;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.*;
@@ -226,7 +227,8 @@ public class DefaultServices implements Services {
 	@NonNull
 	@Override
 	@Transactional(label = "service-release")
-	public Manifest publish(@NonNull Service service, @NonNull Collection<? extends ArtifactCoordinates> artifacts) {
+	@Observed(name = "namespace.service.publish")
+	public Manifest publish( @NonNull Service service, @NonNull Collection<? extends ArtifactCoordinates> artifacts) {
 		final Long releaseId = context.insertInto(SERVICE_RELEASES)
 				.set(
 						SettableRecord.of(context, SERVICE_RELEASES)

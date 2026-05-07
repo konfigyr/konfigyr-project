@@ -5,6 +5,8 @@ import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.vault.*;
 import com.konfigyr.vault.Properties;
 import com.konfigyr.vault.state.RepositoryStateException;
+import io.micrometer.observation.annotation.ObservationKeyValue;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
@@ -23,15 +25,30 @@ public class ConfigurationEnvironmentLocator {
 	private final ProfileManager profileManager;
 	private final ConfigurationCache configurationCache;
 
-	public ConfigurationEnvironment locate(AuthenticatedPrincipal principal, Service service, String profile) {
+	@Observed(name = "konfigyr.vault.environment.locator")
+	public ConfigurationEnvironment locate(
+			AuthenticatedPrincipal principal,
+			@ObservationKeyValue(key = "service", expression = "service.id.serialize()") Service service,
+			@ObservationKeyValue(key = "profiles") String profile
+	) {
 		return locate(principal, service, Collections.singleton(profile));
 	}
 
-	public ConfigurationEnvironment locate(AuthenticatedPrincipal principal, Service service, String... profiles) {
+	@Observed(name = "konfigyr.vault.environment.locator")
+	public ConfigurationEnvironment locate(
+			AuthenticatedPrincipal principal,
+			@ObservationKeyValue(key = "service", expression = "service.id.serialize()") Service service,
+			@ObservationKeyValue(key = "profiles") String... profiles
+	) {
 		return locate(principal, service, List.of(profiles));
 	}
 
-	public ConfigurationEnvironment locate(AuthenticatedPrincipal principal, Service service, Collection<String> profileNames) {
+	@Observed(name = "konfigyr.vault.environment.locator")
+	public ConfigurationEnvironment locate(
+			AuthenticatedPrincipal principal,
+			@ObservationKeyValue(key = "service", expression = "service.id.serialize()") Service service,
+			@ObservationKeyValue(key = "profiles") Collection<String> profileNames
+	) {
 		if (CollectionUtils.isEmpty(profileNames)) {
 			return new ConfigurationEnvironment(service.slug(), List.of(), List.of());
 		}

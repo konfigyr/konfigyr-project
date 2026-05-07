@@ -7,6 +7,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.KonfigyrIdentityKeysets;
 import com.konfigyr.identity.authentication.AccountIdentityUser;
 import com.konfigyr.io.ByteArray;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Converter;
@@ -83,6 +84,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 
 	@Override
 	@SuppressWarnings("unchecked")
+	@Observed(name = "konfigyr.identity.access-tokens.lookup")
 	@Transactional(readOnly = true, label = "oauth-client-service-load")
 	public <T extends OAuth2AuthorizedClient> T loadAuthorizedClient(String clientRegistrationId, String principalName) {
 		final EntityId account;
@@ -123,6 +125,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 
 	@Override
 	@Transactional(label = "oauth-client-service-save")
+	@Observed(name = "konfigyr.identity.access-tokens.store")
 	public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
 		final EntityId account = lookupUserIdentifierForAuthentication(principal);
 
@@ -146,6 +149,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 
 	@Override
 	@Transactional(label = "oauth-client-service-remove")
+	@Observed(name = "konfigyr.identity.access-tokens.remove")
 	public void removeAuthorizedClient(String clientRegistrationId, String principalName) {
 		final EntityId account = EntityId.from(principalName);
 

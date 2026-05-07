@@ -6,6 +6,7 @@ import com.konfigyr.data.converter.EncryptionConverter;
 import com.konfigyr.data.converter.JsonConverter;
 import com.konfigyr.data.converter.MessageDigestConverter;
 import com.konfigyr.io.ByteArray;
+import io.micrometer.observation.annotation.Observed;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jmolecules.event.annotation.DomainEventHandler;
@@ -106,6 +107,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	}
 
 	@Override
+	@Observed(name = "konfigyr.identity.authorization.store")
 	@Transactional(label = "authorization-service.save-authorization")
 	public void save(OAuth2Authorization authorization) {
 		Assert.notNull(authorization, "OAuth2 Authorization cannot be null");
@@ -149,6 +151,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	}
 
 	@Override
+	@Observed(name = "konfigyr.identity.consent.store")
 	@Transactional(label = "authorization-service.save-consent")
 	public void save(OAuth2AuthorizationConsent consent) {
 		Assert.notNull(consent, "OAuth2 Authorization consent cannot be null");
@@ -184,6 +187,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
 	@Override
 	@Transactional(readOnly = true, label = "authorization-service.find-authorization-by-id")
+	@Observed(name = "konfigyr.identity.authorization.lookup", lowCardinalityKeyValues = { "lookup.type", "identifier" })
 	public OAuth2Authorization findById(String id) {
 		Assert.hasText(id, "OAuth2 Authorization identifier cannot be empty");
 
@@ -194,6 +198,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
 	@Override
 	@Transactional(readOnly = true, label = "authorization-service.find-authorization-by-token")
+	@Observed(name = "konfigyr.identity.authorization.lookup", lowCardinalityKeyValues = { "lookup.type", "token" })
 	public OAuth2Authorization findByToken(String token, @Nullable OAuth2TokenType type) {
 		Assert.hasText(token, "OAuth2 Authorization token value cannot be empty");
 
@@ -229,6 +234,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	}
 
 	@Override
+	@Observed(name = "konfigyr.identity.consent.lookup")
 	@Transactional(readOnly = true, label = "authorization-service.find-consent-by-id")
 	public OAuth2AuthorizationConsent findById(String registeredClientId, String principalName) {
 		Assert.hasText(registeredClientId, "Registered client identifier cannot be empty");
@@ -251,6 +257,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	}
 
 	@Override
+	@Observed(name = "konfigyr.identity.authorization.remove")
 	@Transactional(label = "authorization-service.remove-authorization")
 	public void remove(OAuth2Authorization authorization) {
 		Assert.notNull(authorization, "OAuth2 Authorization cannot be null");
@@ -280,6 +287,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	}
 
 	@Override
+	@Observed(name = "konfigyr.identity.consent.remove")
 	@Transactional(label = "authorization-service.remove-consent")
 	public void remove(OAuth2AuthorizationConsent consent) {
 		Assert.notNull(consent, "OAuth2 Authorization consent cannot be null");
@@ -309,6 +317,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 		}
 	}
 
+	@Observed(name = "konfigyr.identity.authorization.cleanup")
 	@Scheduled(cron = "${konfigyr.authorization.cleanup.cron:0 * * * * *}")
 	@Transactional(label = "authorization-service.cleanup-expired-authorizations")
 	void cleanup() {

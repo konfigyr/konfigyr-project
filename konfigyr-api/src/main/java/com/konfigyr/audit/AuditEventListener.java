@@ -13,6 +13,7 @@ import com.konfigyr.security.PrincipalType;
 import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfileEvent;
 import com.konfigyr.vault.VaultEvent;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -52,6 +53,7 @@ import static com.konfigyr.data.tables.Services.SERVICES;
 @RequiredArgsConstructor
 class AuditEventListener {
 
+	static final String OBSERVATION_NAME = "audit.event.listener";
 	static final Actor SYSTEM_ACTOR = new Actor("system", PrincipalType.SYSTEM.name(), "Konfigyr");
 
 	private final NamespaceResolver resolver;
@@ -59,6 +61,7 @@ class AuditEventListener {
 
 	// ── Account events ──────────────────────────────────────────────────────
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "account.updated" })
 	@TransactionalEventListener(id = "audit.account-updated", classes = AccountEvent.Updated.class)
 	void on(AccountEvent.Updated event) {
 		insert(event, builder -> builder
@@ -68,6 +71,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "account.deleted" })
 	@TransactionalEventListener(id = "audit.account-deleted", classes = AccountEvent.Deleted.class)
 	void on(AccountEvent.Deleted event) {
 		insert(event, builder -> builder
@@ -79,6 +83,7 @@ class AuditEventListener {
 
 	// ── Namespace events ────────────────────────────────────────────────────
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.created" })
 	@TransactionalEventListener(id = "audit.namespace-created", classes = NamespaceEvent.Created.class)
 	void on(NamespaceEvent.Created event) {
 		insert(event, builder -> builder
@@ -89,6 +94,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.renamed" })
 	@TransactionalEventListener(id = "audit.namespace-renamed", classes = NamespaceEvent.Renamed.class)
 	void on(NamespaceEvent.Renamed event) {
 		insert(event, builder -> builder
@@ -101,6 +107,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.deleted" })
 	@TransactionalEventListener(id = "audit.namespace-deleted", classes = NamespaceEvent.Deleted.class)
 	void on(NamespaceEvent.Deleted event) {
 		insert(event, builder -> builder
@@ -111,6 +118,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.member.added" })
 	@TransactionalEventListener(id = "audit.namespace-member-added", classes = NamespaceEvent.MemberAdded.class)
 	void on(NamespaceEvent.MemberAdded event) {
 		insert(event, builder -> builder
@@ -123,6 +131,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.member.updated" })
 	@TransactionalEventListener(id = "audit.namespace-member-updated", classes = NamespaceEvent.MemberUpdated.class)
 	void on(NamespaceEvent.MemberUpdated event) {
 		insert(event, builder -> builder
@@ -135,6 +144,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.member.removed" })
 	@TransactionalEventListener(id = "audit.namespace-member-removed", classes = NamespaceEvent.MemberRemoved.class)
 	void on(NamespaceEvent.MemberRemoved event) {
 		insert(event, builder -> builder
@@ -148,6 +158,7 @@ class AuditEventListener {
 
 	// ── Namespace invitation events ───────────────────────────────────────────────────
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.invitation.sent" })
 	@TransactionalEventListener(id = "audit.invitation-created", classes = InvitationEvent.Created.class)
 	void on(InvitationEvent.Created event) {
 		insert(event, builder -> builder
@@ -159,6 +170,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.invitation.accepted" })
 	@TransactionalEventListener(id = "audit.invitation-accepted", classes = InvitationEvent.Accepted.class)
 	void on(InvitationEvent.Accepted event) {
 		insert(event, builder -> builder
@@ -170,6 +182,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.invitation.canceled" })
 	@TransactionalEventListener(id = "audit.invitation-canceled", classes = InvitationEvent.Canceled.class)
 	void on(InvitationEvent.Canceled event) {
 		insert(event, builder -> builder
@@ -183,6 +196,7 @@ class AuditEventListener {
 
 	// ── Service events ──────────────────────────────────────────────────────
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.service.created" })
 	@TransactionalEventListener(id = "audit.service-created", classes = ServiceEvent.Created.class)
 	void on(ServiceEvent.Created event) {
 		insert(event, builder -> builder
@@ -193,6 +207,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.service.renamed" })
 	@TransactionalEventListener(id = "audit.service-renamed", classes = ServiceEvent.Renamed.class)
 	void on(ServiceEvent.Renamed event) {
 		insert(event, builder -> builder
@@ -205,6 +220,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.service.published" })
 	@TransactionalEventListener(id = "audit.service-published", classes = ServiceEvent.Published.class)
 	void on(ServiceEvent.Published event) {
 		insert(event, builder -> {
@@ -221,6 +237,7 @@ class AuditEventListener {
 		});
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "namespace.service.deleted" })
 	@TransactionalEventListener(id = "audit.service-deleted", classes = ServiceEvent.Deleted.class)
 	void on(ServiceEvent.Deleted event) {
 		insert(event, builder -> builder
@@ -232,6 +249,7 @@ class AuditEventListener {
 
 	// ── Vault events ──────────────────────────────────────────────
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "vault.profile.created" })
 	@TransactionalEventListener(id = "audit.profile-created", classes = ProfileEvent.Created.class)
 	void on(ProfileEvent.Created event) {
 		insert(event, builder -> builder
@@ -242,6 +260,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "vault.profile.updated" })
 	@TransactionalEventListener(id = "audit.profile-updated", classes = ProfileEvent.Updated.class)
 	void on(ProfileEvent.Updated event) {
 		insert(event, builder -> builder
@@ -252,6 +271,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "vault.profile.deleted" })
 	@TransactionalEventListener(id = "audit.profile-deleted", classes = ProfileEvent.Deleted.class)
 	void on(ProfileEvent.Deleted event) {
 		insert(event, builder -> builder
@@ -262,6 +282,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "vault.changes-applied" })
 	// the VaultEvent.ChangesApplied event is never published within a transaction
 	@EventListener(id = "audit.changes-applied", classes = VaultEvent.ChangesApplied.class)
 	void on(VaultEvent.ChangesApplied event) {
@@ -276,6 +297,7 @@ class AuditEventListener {
 
 	// ── KMS events ──────────────────────────────────────────────────────────
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "kms.keyset.created" })
 	@TransactionalEventListener(id = "audit.keyset-created", classes = KeysetManagementEvent.Created.class)
 	void on(KeysetManagementEvent.Created event) {
 		insert(event, builder -> builder
@@ -285,6 +307,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "kms.keyset.rotated" })
 	@TransactionalEventListener(id = "audit.keyset-rotated", classes = KeysetManagementEvent.Rotated.class)
 	void on(KeysetManagementEvent.Rotated event) {
 		insert(event, builder -> builder
@@ -294,6 +317,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "kms.keyset.disabled" })
 	@TransactionalEventListener(id = "audit.keyset-disabled", classes = KeysetManagementEvent.Disabled.class)
 	void on(KeysetManagementEvent.Disabled event) {
 		insert(event, builder -> builder
@@ -303,6 +327,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "kms.keyset.activated" })
 	@TransactionalEventListener(id = "audit.keyset-activated", classes = KeysetManagementEvent.Activated.class)
 	void on(KeysetManagementEvent.Activated event) {
 		insert(event, builder -> builder
@@ -313,6 +338,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "kms.keyset.removed" })
 	@TransactionalEventListener(id = "audit.keyset-removed", classes = KeysetManagementEvent.Removed.class)
 	void on(KeysetManagementEvent.Removed event) {
 		insert(event, builder -> builder
@@ -322,6 +348,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "kms.keyset.destroyed" })
 	@TransactionalEventListener(id = "audit.keyset-destroyed", classes = KeysetManagementEvent.Destroyed.class)
 	void on(KeysetManagementEvent.Destroyed event) {
 		insert(event, builder -> builder
@@ -333,6 +360,7 @@ class AuditEventListener {
 
 	// ── Artifactory events ──────────────────────────────────────────────────
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "artifactory.release.created" })
 	@TransactionalEventListener(id = "audit.release-created", classes = ArtifactoryEvent.ReleaseCreated.class)
 	void on(ArtifactoryEvent.ReleaseCreated event) {
 		insert(event, builder -> builder
@@ -343,6 +371,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "artifactory.release.completed" })
 	@TransactionalEventListener(id = "audit.release-completed", classes = ArtifactoryEvent.ReleaseCompleted.class)
 	void on(ArtifactoryEvent.ReleaseCompleted event) {
 		insert(event, builder -> builder
@@ -353,6 +382,7 @@ class AuditEventListener {
 		);
 	}
 
+	@Observed(name = OBSERVATION_NAME, lowCardinalityKeyValues = { "type", "artifactory.release.failed" })
 	@TransactionalEventListener(id = "audit.release-failed", classes = ArtifactoryEvent.ReleaseFailed.class)
 	void on(ArtifactoryEvent.ReleaseFailed event) {
 		insert(event, builder -> builder

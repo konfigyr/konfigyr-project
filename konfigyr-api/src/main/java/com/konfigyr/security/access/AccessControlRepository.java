@@ -2,12 +2,14 @@ package com.konfigyr.security.access;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
+import io.micrometer.observation.annotation.ObservationKeyValue;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -22,13 +24,19 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 import static com.konfigyr.data.tables.OauthApplications.OAUTH_APPLICATIONS;
 
 @Slf4j
+@NullMarked
 @RequiredArgsConstructor
 class AccessControlRepository {
 
 	private final DSLContext context;
 
+	@Observed(name = "konfigyr.security.access-control")
 	@Transactional(readOnly = true, label = "access-control-repository.get")
-	AccessControl get(@NonNull ObjectIdentity identity) throws ObjectIdentityNotFound {
+	AccessControl get(
+			@ObservationKeyValue(key = "identity.id", expression = "#identity.id()")
+			@ObservationKeyValue(key = "identity.type", expression = "#identity.type()")
+			ObjectIdentity identity
+	) throws ObjectIdentityNotFound {
 		if (log.isDebugEnabled()) {
 			log.debug("Looking up access control grants for: {}", identity);
 		}
@@ -45,7 +53,7 @@ class AccessControlRepository {
 		return new KonfigyrAccessControl(identity, grants);
 	}
 
-	private Collection<AccessGrant> namespace(@NonNull ObjectIdentity identity) {
+	private Collection<AccessGrant> namespace(ObjectIdentity identity) {
 		final Condition condition = switch (identity.id()) {
 			case String slug -> NAMESPACES.SLUG.eq(slug);
 			case EntityId id -> NAMESPACES.ID.eq(id.get());
@@ -60,7 +68,7 @@ class AccessControlRepository {
 		return Collections.unmodifiableSet(grants);
 	}
 
-	private Collection<AccessGrant> namespaceMembershipGrants(@NonNull Condition condition) {
+	private Collection<AccessGrant> namespaceMembershipGrants(Condition condition) {
 		return context.select(NAMESPACE_MEMBERS.ACCOUNT_ID, NAMESPACE_MEMBERS.ROLE)
 				.from(NAMESPACE_MEMBERS)
 				.innerJoin(NAMESPACES)
@@ -72,7 +80,7 @@ class AccessControlRepository {
 				));
 	}
 
-	private Collection<AccessGrant> namespaceApplicationGrants(@NonNull Condition condition) {
+	private Collection<AccessGrant> namespaceApplicationGrants(Condition condition) {
 		return context.select(OAUTH_APPLICATIONS.CLIENT_ID)
 				.from(OAUTH_APPLICATIONS)
 				.innerJoin(NAMESPACES)
