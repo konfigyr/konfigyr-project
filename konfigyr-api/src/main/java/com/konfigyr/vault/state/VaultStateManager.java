@@ -11,6 +11,7 @@ import com.konfigyr.vault.Vault;
 import com.konfigyr.vault.VaultAccessor;
 import com.konfigyr.vault.VaultExtension;
 import com.konfigyr.vault.changes.ChangeRequestManager;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
@@ -38,6 +39,7 @@ public class VaultStateManager implements StateRepositoryFactory, VaultAccessor 
 	}
 
 	@Override
+	@Observed(name = "konfigyr.vault.open")
 	public Vault open(AuthenticatedPrincipal principal, Service service, Profile profile) {
 		final KeysetOperations keysetOperations = keysetOperationsFactory.create(
 				KeysetDefinition.of("vault/" + service.id().serialize(), TinkAlgorithm.AES256_GCM)

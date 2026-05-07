@@ -12,6 +12,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.health.autoconfigure.contributor.ConditionalOnEnabledHealthIndicator;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 
@@ -43,6 +45,12 @@ public class VaultAutoConfiguration {
 	@Bean
 	StateRepositoryEventListener stateRepositoryEventListener(Services services, StateRepositoryFactory factory) {
 		return new StateRepositoryEventListener(services, factory);
+	}
+
+	@Bean
+	@ConditionalOnEnabledHealthIndicator("git")
+	HealthIndicator gitRepositoryHealthIndicator() {
+		return new GitRepositoryHealthIndicator(properties.getRepositoryDirectory());
 	}
 
 }
