@@ -52,3 +52,7 @@ dependencies {
     testImplementation 'org.wiremock.integrations:wiremock-spring-boot'
     testImplementation 'org.springframework.boot:spring-boot-starter-batch-jdbc-test'
 }
+
+springBoot {
+    buildInfo()
+}

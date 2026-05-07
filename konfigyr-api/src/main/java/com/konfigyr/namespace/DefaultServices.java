@@ -228,7 +228,7 @@ public class DefaultServices implements Services {
 	@Override
 	@Transactional(label = "service-release")
 	@Observed(name = "namespace.service.publish")
-	public Manifest publish( @NonNull Service service, @NonNull Collection<? extends ArtifactCoordinates> artifacts) {
+	public Manifest publish(@NonNull Service service, @NonNull Collection<? extends ArtifactCoordinates> artifacts) {
 		final Long releaseId = context.insertInto(SERVICE_RELEASES)
 				.set(
 						SettableRecord.of(context, SERVICE_RELEASES)

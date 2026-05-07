@@ -39,6 +39,12 @@ spring:
       enabled: true
 
 management:
+  info:
+    java:
+      enabled: true
+    build:
+      enabled: true
+
   endpoints:
     web:
       exposure:
