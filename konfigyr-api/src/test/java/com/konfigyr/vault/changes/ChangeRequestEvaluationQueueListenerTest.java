@@ -5,6 +5,7 @@ import com.konfigyr.queue.QueuedTaskState;
 import com.konfigyr.test.AbstractIntegrationTest;
 import com.konfigyr.vault.ApplyResult;
 import com.konfigyr.vault.ChangeRequestEvent;
+import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.VaultEvent;
 import org.assertj.core.api.ListAssert;
 import org.awaitility.Awaitility;
@@ -104,7 +105,7 @@ class ChangeRequestEvaluationQueueListenerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should enqueue open change requests that were affected by the applied changes on the profile")
 	void scheduleForChangesAppliedEvent() {
-		final var event = new VaultEvent.ChangesApplied(EntityId.from(4), mock(ApplyResult.class));
+		final var event = createChangesAppliedFor(4);
 
 		assertThatNoException().isThrownBy(() -> queue.enqueue(event));
 
@@ -138,7 +139,7 @@ class ChangeRequestEvaluationQueueListenerTest extends AbstractIntegrationTest {
 	void scheduleTasksWith() throws InterruptedException {
 		final var timeout = Duration.ofSeconds(2);
 
-		assertThatNoException().isThrownBy(() -> queue.enqueue(new VaultEvent.ChangesApplied(EntityId.from(4), mock(ApplyResult.class))));
+		assertThatNoException().isThrownBy(() -> queue.enqueue(createChangesAppliedFor(4)));
 		await().untilAsserted(() -> assertQueue()
 				.hasSize(2)
 				.satisfiesExactlyInAnyOrder(
@@ -196,7 +197,7 @@ class ChangeRequestEvaluationQueueListenerTest extends AbstractIntegrationTest {
 
 		Thread.sleep(timeout.plus(timeout));
 
-		assertThatNoException().isThrownBy(() -> queue.enqueue(new VaultEvent.ChangesApplied(EntityId.from(4), mock(ApplyResult.class))));
+		assertThatNoException().isThrownBy(() -> queue.enqueue(createChangesAppliedFor(4)));
 		await().atMost(timeout).untilAsserted(() -> assertQueue()
 				.hasSize(2)
 				.satisfiesExactlyInAnyOrder(
@@ -236,7 +237,7 @@ class ChangeRequestEvaluationQueueListenerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to schedule change request evaluation tasks for an unknown profile")
 	void scheduleForUnknownProfile() {
-		final var event = new VaultEvent.ChangesApplied(EntityId.from(9999), mock(ApplyResult.class));
+		final var event = createChangesAppliedFor(9999);
 
 		assertThatNoException().isThrownBy(() -> queue.enqueue(event));
 		await().untilAsserted(() -> assertQueue().isEmpty());
@@ -245,7 +246,7 @@ class ChangeRequestEvaluationQueueListenerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should not schedule change request evaluation tasks for a profile when none are open")
 	void scheduleForProfileWithoutOpenRequests() {
-		final var event = new VaultEvent.ChangesApplied(EntityId.from(5), mock(ApplyResult.class));
+		final var event = createChangesAppliedFor(5);
 
 		assertThatNoException().isThrownBy(() -> queue.enqueue(event));
 		await().untilAsserted(() -> assertQueue().isEmpty());
@@ -262,6 +263,13 @@ class ChangeRequestEvaluationQueueListenerTest extends AbstractIntegrationTest {
 						.where(condition)
 						.fetch()
 		);
+	}
+
+	static VaultEvent.ChangesApplied createChangesAppliedFor(long profileId) {
+		final var profile = mock(Profile.class);
+		doReturn(EntityId.from(profileId)).when(profile).id();
+
+		return new VaultEvent.ChangesApplied(profile, mock(ApplyResult.class));
 	}
 
 	static ConditionFactory await() {

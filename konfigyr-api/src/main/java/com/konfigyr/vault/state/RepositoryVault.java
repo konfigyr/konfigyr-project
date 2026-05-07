@@ -12,7 +12,6 @@ import com.konfigyr.vault.changes.ChangeRequestRevision;
 import com.konfigyr.vault.changes.ChangeRequestUpdateCommand;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.OrderedMapIterator;
 import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
@@ -57,15 +56,12 @@ final class RepositoryVault implements Vault {
 	@Override
 	public Map<String, String> unseal() {
 		final Properties state = state();
-		final OrderedMapIterator<String, PropertyValue> iterator = state.iterator();
-
 		final Map<String, String> properties = new LinkedHashMap<>(state.size());
-		while (iterator.hasNext()) {
-			final String name = iterator.next();
-			final PropertyValue value = iterator.getValue().unseal(keysetOperations);
 
-			properties.put(name, new String(value.get().array(), StandardCharsets.UTF_8));
-		}
+		state.forEachProperty((name, value) -> {
+			final PropertyValue unsealed = value.unseal(keysetOperations);
+			properties.put(name, new String(unsealed.get().array(), StandardCharsets.UTF_8));
+		});
 
 		return Collections.unmodifiableMap(properties);
 	}

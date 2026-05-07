@@ -5,22 +5,37 @@ import com.konfigyr.entity.EntityId;
 import org.jmolecules.event.annotation.DomainEvent;
 import org.jspecify.annotations.NonNull;
 
+import java.util.function.Supplier;
+
 /**
  * Abstract event type that should be used for all {@link Vault} related events.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-public sealed abstract class VaultEvent extends EntityEvent permits VaultEvent.ChangesApplied {
+public sealed abstract class VaultEvent extends EntityEvent implements Supplier<Profile>
+		permits VaultEvent.ChangesApplied {
+
+	protected final Profile profile;
 
 	/**
-	 * Creates a new {@link VaultEvent} for the given {@link EntityId} of the {@link Profile}
-	 * that owns the {@link Vault}.
+	 * Creates a new {@link VaultEvent} for the given {@link Profile} that owns the {@link Vault}.
 	 *
-	 * @param id the entity identifier of profile that owns the vault, cannot be {@literal null}.
+	 * @param profile the profile that owns the vault, cannot be {@literal null}.
 	 */
-	protected VaultEvent(EntityId id) {
-		super(id);
+	protected VaultEvent(Profile profile) {
+		super(profile.id());
+		this.profile = profile;
+	}
+
+	/**
+	 * Returns the {@link Profile} that is the owner of the {@link Vault} affected by this event.
+	 *
+	 * @return the owning profile, never {@literal null}.
+	 */
+	@Override
+	public Profile get() {
+		return profile;
 	}
 
 	/**
@@ -35,11 +50,11 @@ public sealed abstract class VaultEvent extends EntityEvent permits VaultEvent.C
 		 * Create a new {@link ChangesApplied} event with the {@link EntityId entity identifier} of the
 		 * {@link Profile} that owns the {@link Vault} and the {@link ApplyResult} of the property changes.
 		 *
-		 * @param id the entity identifier of profile that owns the vault, cannot be {@literal null}.
+		 * @param profile the profile that owns the vault, cannot be {@literal null}.
 		 * @param result the result of the changes that were applied
 		 */
-		public ChangesApplied(EntityId id, ApplyResult result) {
-			super(id);
+		public ChangesApplied(Profile profile, ApplyResult result) {
+			super(profile);
 			this.result = result;
 		}
 

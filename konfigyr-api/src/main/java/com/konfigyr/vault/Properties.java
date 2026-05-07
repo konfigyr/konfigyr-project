@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,7 +37,7 @@ import java.util.regex.Pattern;
  * property is simply removed from the state, and the next property takes its place.
  * <p>
  * This type can be converted to a serialized state, in form of an {@link InputStream}, that can be safely
- * stored in a perstent storage, in our case the {@link com.konfigyr.vault.state.StateRepository}. Property
+ * stored in a persistent storage, in our case the {@link com.konfigyr.vault.state.StateRepository}. Property
  * values within this value object can be decrypted using the {@link com.konfigyr.crypto.Keyset} associated
  * with the {@link com.konfigyr.namespace.Service} that owns the configuration.
  * <p>
@@ -307,6 +308,15 @@ public final class Properties implements InputStreamSource, Iterable<String> {
 	@Override
 	public OrderedMapIterator<String, PropertyValue> iterator() {
 		return properties.mapIterator();
+	}
+
+	public void forEachProperty(BiConsumer<? super String, ? super PropertyValue> action) {
+		final OrderedMapIterator<String, PropertyValue> iterator = iterator();
+
+		while (iterator.hasNext()) {
+			iterator.next();
+			action.accept(iterator.getKey(), iterator.getValue());
+		}
 	}
 
 	@Override

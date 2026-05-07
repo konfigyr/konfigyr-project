@@ -10,6 +10,7 @@ import com.konfigyr.kms.KeysetManagementEvent;
 import com.konfigyr.namespace.*;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.PrincipalType;
+import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfileEvent;
 import com.konfigyr.vault.VaultEvent;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static com.konfigyr.data.tables.Services.SERVICES;
-import static com.konfigyr.data.tables.VaultProfiles.VAULT_PROFILES;
 
 /**
  * Centralized audit event listener that captures domain events from all bounded contexts
@@ -398,32 +398,21 @@ class AuditEventListener {
 				case ServiceEvent se -> se.get().namespace();
 				case InvitationEvent ie -> ie.namespace();
 				case KeysetManagementEvent kme -> kme.namespace();
-				case ProfileEvent pe -> resolve(pe);
-				case VaultEvent ve -> resolve(ve);
+				case ProfileEvent pe -> resolve(pe.get());
+				case VaultEvent ve -> resolve(ve.get());
 				default -> null;
 			};
 		}
 
-		private EntityId resolve(ProfileEvent event) {
-			final EntityId service = event.get().service();
+		private EntityId resolve(Profile profile) {
+			final EntityId service = profile.service();
 
 			return context.select(SERVICES.NAMESPACE_ID)
 					.from(SERVICES)
 					.where(SERVICES.ID.eq(service.get()))
 					.fetchOptional(SERVICES.NAMESPACE_ID, EntityId.class)
 					.orElseThrow(() -> new NamespaceException("Could not resolve namespace for profile " +
-							event.get().slug() + " of service " + service.get()));
-		}
-
-		private EntityId resolve(VaultEvent event) {
-			final EntityId profile = event.id();
-
-			return context.select(SERVICES.NAMESPACE_ID)
-					.from(VAULT_PROFILES)
-					.innerJoin(SERVICES).on(SERVICES.ID.eq(VAULT_PROFILES.SERVICE_ID))
-					.where(VAULT_PROFILES.ID.eq(profile.get()))
-					.fetchOptional(SERVICES.NAMESPACE_ID, EntityId.class)
-					.orElseThrow(() -> new NamespaceException("Could not resolve namespace for profile: " + profile));
+							profile.slug() + " of service " + service.get()));
 		}
 
 	}

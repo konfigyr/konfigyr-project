@@ -68,7 +68,14 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 				.returns("Konfigyr active app", RegisteredClient::getClientName)
 				.satisfies(assertClientId("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp", Duration.ofDays(7)))
 				.satisfies(assertClientSecret("4b6dHEXXnAEMM1AD4b6RhqamjFwMdhIRgpyBVJRu-Zk", Duration.ofDays(3)))
-				.satisfies(assertScopes("namespaces"))
+				.satisfies(assertScopes(
+						"namespaces:read",
+						"namespaces:delete",
+						"namespaces:publish-manifests",
+						"namespaces:write",
+						"namespaces:invite",
+						"namespaces"
+				))
 				.satisfies(assertAuthorizationGrantTypes(
 						AuthorizationGrantType.CLIENT_CREDENTIALS,
 						AuthorizationGrantType.REFRESH_TOKEN
@@ -87,7 +94,14 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 				.returns("Konfigyr expired app", RegisteredClient::getClientName)
 				.satisfies(assertClientId("kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD", Duration.ofDays(30)))
 				.satisfies(assertClientSecret("10S6cd0JgdO6WCLmOLB46d-Enx7K20hKSF1qicfev5g", Duration.ofDays(3).negated()))
-				.satisfies(assertScopes("namespaces"))
+				.satisfies(assertScopes(
+						"namespaces:read",
+						"namespaces:delete",
+						"namespaces:publish-manifests",
+						"namespaces:write",
+						"namespaces:invite",
+						"namespaces"
+				))
 				.satisfies(assertAuthorizationGrantTypes(
 						AuthorizationGrantType.CLIENT_CREDENTIALS,
 						AuthorizationGrantType.REFRESH_TOKEN

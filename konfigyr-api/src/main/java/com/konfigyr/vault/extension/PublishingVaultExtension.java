@@ -37,7 +37,7 @@ public class PublishingVaultExtension implements VaultExtension {
 			final ApplyResult result = super.apply(changes);
 			final Profile profile = profile();
 
-			eventPublisher.publishEvent(new VaultEvent.ChangesApplied(profile.id(), result));
+			eventPublisher.publishEvent(new VaultEvent.ChangesApplied(profile, result));
 
 			return result;
 		}
@@ -56,7 +56,7 @@ public class PublishingVaultExtension implements VaultExtension {
 			final ApplyResult result = super.merge(changeRequest);
 			final Profile profile = profile();
 
-			eventPublisher.publishEvent(new VaultEvent.ChangesApplied(profile.id(), result));
+			eventPublisher.publishEvent(new VaultEvent.ChangesApplied(profile, result));
 			eventPublisher.publishEvent(new ChangeRequestEvent.Merged(changeRequest.id(), result));
 
 			return result;

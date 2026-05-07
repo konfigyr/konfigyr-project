@@ -471,11 +471,15 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		final var author = TestAccounts.jane().build();
 
+		final var profile = mock(Profile.class);
+		doReturn(EntityId.from(4)).when(profile).id();
+		doReturn(EntityId.from(2)).when(profile).service();
+
 		final ApplyResult result = mock(ApplyResult.class);
 		doReturn("new-profile-revision").when(result).revision();
 		doReturn(TestPrincipals.from(author).getPrincipal()).when(result).author();
 
-		listener.on(new VaultEvent.ChangesApplied(EntityId.from(4), result));
+		listener.on(new VaultEvent.ChangesApplied(profile, result));
 
 		assertAuditRecord("profile", EntityId.from(4), "profile.changes-applied")
 				.returns(EntityId.from(2), AuditRecord::namespaceId)
@@ -497,7 +501,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditVaultEventWithoutNamespace() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new VaultEvent.ChangesApplied(EntityId.from(9999), mock(ApplyResult.class)));
+		final var profile = mock(Profile.class);
+		doReturn(EntityId.from(9999)).when(profile).id();
+
+		listener.on(new VaultEvent.ChangesApplied(profile, mock(ApplyResult.class)));
 
 		assertThat(repository.find(
 				SearchQuery.builder()

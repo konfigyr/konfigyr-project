@@ -4,8 +4,9 @@ import com.konfigyr.namespace.*;
 import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfileManager;
 import com.konfigyr.vault.ProfileNotFoundException;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 abstract class AbstractVaultController {
 
 	protected final NamespaceManager namespaces;
@@ -18,21 +19,27 @@ abstract class AbstractVaultController {
 		this.services = services;
 	}
 
-	@NonNull
-	Profile lookupProfile(Service service, String profileName) {
-		return profiles.get(service, profileName).orElseThrow(() -> new ProfileNotFoundException(
-				service.slug(), profileName
-		));
+	Namespace lookupNamespace(String namespaceSlug) {
+		return namespaces.findBySlug(namespaceSlug).orElseThrow(
+				() -> new NamespaceNotFoundException(namespaceSlug)
+		);
 	}
 
-	@NonNull
-	VaultAssembler createAssembler(@NonNull String namespaceSlug, @NonNull String serviceSlug) {
-		final Namespace namespace = namespaces.findBySlug(namespaceSlug)
-				.orElseThrow(() -> new NamespaceNotFoundException(namespaceSlug));
+	Service lookupService(Namespace namespace, String serviceSlug) {
+		return services.get(namespace, serviceSlug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace.slug(), serviceSlug)
+		);
+	}
 
-		final Service service = services.get(namespace, serviceSlug)
-				.orElseThrow(() -> new ServiceNotFoundException(namespace.slug(), serviceSlug));
+	Profile lookupProfile(Service service, String profileSlug) {
+		return profiles.get(service, profileSlug).orElseThrow(
+				() -> new ProfileNotFoundException(service.slug(), profileSlug)
+		);
+	}
 
+	VaultAssembler createAssembler(String namespaceSlug, String serviceSlug) {
+		final Namespace namespace = lookupNamespace(namespaceSlug);
+		final Service service = lookupService(namespace, serviceSlug);
 		return new VaultAssembler(namespace, service);
 	}
 

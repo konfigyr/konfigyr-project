@@ -19,7 +19,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @NullMarked
-public record ConfigEnvironment(String name, String[] profiles, List<PropertySource> propertySources) implements Serializable {
+public record ConfigurationEnvironment(String name, List<String> profiles, List<PropertySource> propertySources) implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 551214156160016450L;
