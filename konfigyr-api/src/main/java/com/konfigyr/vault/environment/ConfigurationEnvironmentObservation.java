@@ -12,6 +12,10 @@ final class ConfigurationEnvironmentObservation {
 
 	static final String OBSERVATION_NAME = "konfigyr.vault.environment.locator";
 
+	private ConfigurationEnvironmentObservation() {
+		// prevent instantiation
+	}
+
 	static Observation create(ObservationRegistry registry, Service service) {
 		return Observation.createNotStarted(Convention.INSTANCE, () -> new Context(service), registry);
 	}

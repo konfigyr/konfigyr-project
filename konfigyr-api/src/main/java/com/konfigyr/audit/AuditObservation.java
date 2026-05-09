@@ -20,6 +20,10 @@ final class AuditObservation {
 
 	static final String OBSERVATION_NAME = "konfigyr.audit.event.listener";
 
+	private AuditObservation() {
+		// prevent instantiation
+	}
+
 	static Observation create(ObservationRegistry registry, EntityEvent event) {
 		return Observation.createNotStarted(Convention.INSTANCE, () -> new Context(event), registry);
 	}

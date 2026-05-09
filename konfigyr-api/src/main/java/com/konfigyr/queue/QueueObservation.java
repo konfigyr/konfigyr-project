@@ -7,10 +7,14 @@ import io.micrometer.observation.ObservationRegistry;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-class QueueObservation {
+final class QueueObservation {
 
 	static final String CONSUME_OBSERVATION_NAME = "konfigyr.queue.consume";
 	static final String PROCESS_OBSERVATION_NAME = "konfigyr.queue.process";
+
+	private QueueObservation() {
+		// prevent instantiation
+	}
 
 	static Observation consume(ObservationRegistry registry) {
 		return Observation.createNotStarted(CONSUME_OBSERVATION_NAME, registry);
@@ -35,7 +39,7 @@ class QueueObservation {
 			return task.queueName();
 		}
 	}
-	
+
 	static final class ProcessorConvention implements ObservationConvention<ProcessorContext> {
 
 		static final ObservationConvention<ProcessorContext> INSTANCE = new ProcessorConvention();
@@ -65,5 +69,5 @@ class QueueObservation {
 			return context instanceof ProcessorContext;
 		}
 	}
-	
+
 }

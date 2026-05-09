@@ -17,11 +17,11 @@ final class KonfigyrValueExpressionResolver implements ValueExpressionResolver {
 	private final ExpressionParser expressionParser;
 	private final EvaluationContext evaluationContext;
 
-	public KonfigyrValueExpressionResolver(ConversionService conversionService) {
+	KonfigyrValueExpressionResolver(ConversionService conversionService) {
 		this(new SpelExpressionParser(), conversionService);
 	}
 
-	public KonfigyrValueExpressionResolver(ExpressionParser expressionParser, ConversionService conversionService) {
+	KonfigyrValueExpressionResolver(ExpressionParser expressionParser, ConversionService conversionService) {
 		this.expressionParser = expressionParser;
 		this.evaluationContext = SimpleEvaluationContext
 				.forReadOnlyDataBinding()
