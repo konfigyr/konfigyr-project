@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: konfigyr-identity
+
   cache:
     cache-names: crypto-keysets, user-cache
     caffeine:
