@@ -1,5 +1,6 @@
 package com.konfigyr.queue;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -26,8 +27,8 @@ public class WorkerQueueAutoConfiguration {
 
 	@Bean
 	@ConditionalOnBean(QueueRegistrar.class)
-	WorkerQueueScheduler workerQueueScheduler(WorkerQueue queue, QueueRegistrar registrar) {
-		return new WorkerQueueScheduler(queue, registrar);
+	WorkerQueueScheduler workerQueueScheduler(WorkerQueue queue, QueueRegistrar registrar, ObservationRegistry registry) {
+		return new WorkerQueueScheduler(queue, registrar, registry);
 	}
 
 }

@@ -40,6 +40,26 @@ konfigyr:
         access-token-time-to-live: 15m
         refresh-token-time-to-live: 7d
 
+management:
+  info:
+    java:
+      enabled: true
+    build:
+      enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+
+  endpoint:
+    health:
+      show-details: when-authorized
+
+  observations:
+    annotations:
+      enabled: true
+
 logging:
   pattern:
     console: '%clr(%d{HH:mm:ss.SSS}){faint} %clr([%-20thread]) %clr(%-5level) [%mdc] %clr(%-40.40logger{39}){cyan} %clr(:){faint} %marker %m%n'

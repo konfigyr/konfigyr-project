@@ -1,2 +1,3 @@
 com.konfigyr.crypto.CryptographyAutoConfiguration
+com.konfigyr.observation.ObservationAutoConfiguration
 com.konfigyr.web.WebAutoConfiguration

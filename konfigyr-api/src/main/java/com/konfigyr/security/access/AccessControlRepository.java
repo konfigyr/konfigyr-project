@@ -4,6 +4,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceRole;
 import io.micrometer.observation.annotation.ObservationKeyValue;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.observation.aop.Cardinality;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
@@ -33,8 +34,8 @@ class AccessControlRepository {
 	@Observed(name = "konfigyr.security.access-control")
 	@Transactional(readOnly = true, label = "access-control-repository.get")
 	AccessControl get(
-			@ObservationKeyValue(key = "identity.id", expression = "#identity.id()")
-			@ObservationKeyValue(key = "identity.type", expression = "#identity.type()")
+			@ObservationKeyValue(key = "konfigyr.identity.id", expression = "id")
+			@ObservationKeyValue(key = "konfigyr.identity.type", expression = "type", cardinality = Cardinality.LOW)
 			ObjectIdentity identity
 	) throws ObjectIdentityNotFound {
 		if (log.isDebugEnabled()) {

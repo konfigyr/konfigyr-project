@@ -81,8 +81,8 @@ public class DefaultProvenanceEvaluator implements ProvenanceEvaluator {
 	@Observed(name = "konfigyr.artifactory.provenance-evaluation")
 	@Transactional(readOnly = true, label = "provenance-evaluator.evaluate", isolation = Isolation.SERIALIZABLE)
 	public EvaluationResult evaluate(
-			@NonNull @ObservationKeyValue(key = "artifact", expression = "#version.coordinates().format()") VersionedArtifact version,
-			@NonNull @ObservationKeyValue(key = "property", expression = "#property.name()") PropertyDescriptor property
+			@NonNull @ObservationKeyValue(key = "konfigyr.artifactory.artifact", expression = "coordinates") VersionedArtifact version,
+			@NonNull @ObservationKeyValue(key = "konfigyr.artifactory.property", expression = "name") PropertyDescriptor property
 	) {
 		final ByteArray checksum = generator.generate(property);
 

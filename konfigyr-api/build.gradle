@@ -10,6 +10,7 @@ dependencies {
     implementation project(':konfigyr-mail')
 
     /* Spring Boot starter */
+    implementation 'org.springframework.boot:spring-boot-starter-aspectj'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-batch-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
@@ -22,6 +23,7 @@ dependencies {
 
     /* Tracing and observability */
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
     implementation 'io.micrometer:micrometer-observation'
 
     /* Spring Common libraries */
@@ -51,6 +53,7 @@ dependencies {
     testImplementation 'com.icegreen:greenmail'
     testImplementation 'org.wiremock.integrations:wiremock-spring-boot'
     testImplementation 'org.springframework.boot:spring-boot-starter-batch-jdbc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-micrometer-metrics-test'
 }
 
 springBoot {

@@ -291,6 +291,7 @@ class DefaultKeysetManager implements KeysetManager {
 
 	@Override
 	@Transactional(label = "kms.delete")
+	@Observed(name = "konfigyr.kms.keyset.delete")
 	public void delete(EntityId id) {
 		final KeysetInformation information = lookupKeysetInformation(KMS_KEYSET_METADATA.ID.eq(id.get()))
 				.orElseThrow(() -> new KeysetNotFoundException(id));

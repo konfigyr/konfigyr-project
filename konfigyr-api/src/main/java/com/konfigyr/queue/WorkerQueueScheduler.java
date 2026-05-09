@@ -1,5 +1,7 @@
 package com.konfigyr.queue;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
@@ -56,9 +58,10 @@ class WorkerQueueScheduler implements InitializingBean, DisposableBean {
 	private final Logger logger;
 	private final WorkerQueue workerQueue;
 	private final QueueRegistrar queueRegistrar;
+	private final ObservationRegistry observationRegistry;
 
-	WorkerQueueScheduler(WorkerQueue workerQueue, QueueRegistrar queueRegistrar) {
-		this(LoggerFactory.getLogger(WorkerQueueScheduler.class), workerQueue, queueRegistrar);
+	WorkerQueueScheduler(WorkerQueue workerQueue, QueueRegistrar queueRegistrar, ObservationRegistry observationRegistry) {
+		this(LoggerFactory.getLogger(WorkerQueueScheduler.class), workerQueue, queueRegistrar, observationRegistry);
 	}
 
 	@Override
@@ -78,7 +81,8 @@ class WorkerQueueScheduler implements InitializingBean, DisposableBean {
 	 */
 	@Scheduled(cron = "${konfigyr.scheduler.cron-expression:* * * * * *}")
 	void schedule() {
-		final List<QueuedTask> tasks = workerQueue.consume();
+		final List<QueuedTask> tasks = QueueObservation.consume(observationRegistry)
+				.observe(workerQueue::consume);
 
 		if (logger.isTraceEnabled()) {
 			logger.trace("Received {} tasks from the queue", tasks.size());
@@ -95,7 +99,10 @@ class WorkerQueueScheduler implements InitializingBean, DisposableBean {
 				logger.trace("Executing {} with configuration: {}", task, configuration);
 			}
 
-			final QueueProcessor processor = configuration.queueProcessor();
+			final QueueProcessor processor = decorate(
+					QueueObservation.process(observationRegistry, task),
+					configuration.queueProcessor()
+			);
 
 			CompletableFuture.runAsync(() -> processor.process(task.entityId()), configuration.taskExecutor())
 					.orTimeout(configuration.timeout().toMillis(), TimeUnit.MILLISECONDS)
@@ -134,4 +141,9 @@ class WorkerQueueScheduler implements InitializingBean, DisposableBean {
 			}
 		}
 	}
+
+	private static QueueProcessor decorate(Observation observation, QueueProcessor processor) {
+		return id -> observation.observe(() -> processor.process(id));
+	}
+
 }

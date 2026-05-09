@@ -1,6 +1,7 @@
 package com.konfigyr.audit;
 
 import com.konfigyr.entity.EntityId;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -52,8 +53,12 @@ public class AuditAutoConfiguration {
 	}
 
 	@Bean
-	AuditEventListener auditEventListener(AuditEventListener.NamespaceResolver resolver, AuditEventRepository repository) {
-		return new AuditEventListener(resolver, repository);
+	AuditEventListener auditEventListener(
+			AuditEventListener.NamespaceResolver resolver,
+			AuditEventRepository repository,
+			ObservationRegistry registry
+	) {
+		return new AuditEventListener(repository, resolver, registry);
 	}
 
 }

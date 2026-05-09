@@ -17,6 +17,8 @@ import com.konfigyr.test.AbstractIntegrationTest;
 import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.vault.*;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.tck.TestObservationRegistry;
 import org.assertj.core.api.ObjectAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -648,12 +650,33 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		final var repository = mock(AuditEventRepository.class);
 		doThrow(new RuntimeException("DB down")).when(repository).insert(any());
 
-		final var listener = new AuditEventListener(mock(), repository);
+		final var listener = new AuditEventListener(repository, mock(), ObservationRegistry.NOOP);
 
 		assertThatNoException()
 				.isThrownBy(() -> listener.on(new AccountEvent.Updated(EntityId.from(999))));
 
 		verify(repository).insert(any());
+	}
+
+	@Test
+	@DisplayName("should observe audit event listener")
+	void shouldObserveEventListener() {
+		final var registry = TestObservationRegistry.create();
+		final var listener = new AuditEventListener(repository, mock(), registry);
+
+		assertThatNoException()
+				.isThrownBy(() -> listener.on(new AccountEvent.Deleted(EntityId.from(1))));
+
+		assertThat(registry)
+				.hasObservationWithNameEqualTo(AuditObservation.OBSERVATION_NAME)
+				.that()
+				.hasBeenStarted()
+				.hasBeenStopped()
+				.doesNotHaveError()
+				.hasHighCardinalityKeyValue("konfigyr.audit.event.id", EntityId.from(1).serialize())
+				.hasLowCardinalityKeyValue("konfigyr.audit.event.type", "accounts.deleted")
+				.hasContextualNameEqualTo("audit listener event with '%s' type and '%s' resource identifier"
+						.formatted("accounts.deleted", EntityId.from(1).serialize()));
 	}
 
 	private ObjectAssert<AuditRecord> assertAuditRecord(String entityType, EntityId entityId) {

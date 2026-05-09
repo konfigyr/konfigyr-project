@@ -4,6 +4,7 @@ import com.konfigyr.artifactory.*;
 import com.konfigyr.io.ByteArray;
 import com.konfigyr.test.AbstractIntegrationTest;
 import com.konfigyr.version.Version;
+import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,9 @@ class ProvenanceEvaluatorTest extends AbstractIntegrationTest {
 
 	@Autowired
 	ProvenanceEvaluator evaluator;
+
+	@Autowired
+	TestObservationRegistry registry;
 
 	@Test
 	@DisplayName("should perform provenance evaluation on new property metadata for version")
@@ -119,6 +123,15 @@ class ProvenanceEvaluatorTest extends AbstractIntegrationTest {
 				.returns(coordinates.version(), Provenance::lastSeen)
 				.returns(1, Provenance::occurrences)
 				.returns(ByteArray.fromBase64String("cRJ8jlPpTPmTJEoZEZNDSjvdqafG05QkzNJplXyu9J0="), Provenance::checksum);
+
+		assertThat(registry)
+				.hasObservationWithNameEqualTo("konfigyr.artifactory.provenance-evaluation")
+				.that()
+				.hasBeenStarted()
+				.hasBeenStopped()
+				.doesNotHaveError()
+				.hasHighCardinalityKeyValue("konfigyr.artifactory.artifact", "com.konfigyr:konfigyr-crypto-api:1.0.1")
+				.hasHighCardinalityKeyValue("konfigyr.artifactory.property", "spring.application.name");
 	}
 
 	static PropertyDescriptor metadata(String name, String typeName, String description, JsonSchema schema) {

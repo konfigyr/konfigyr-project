@@ -3,6 +3,7 @@ package com.konfigyr.queue;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.konfigyr.entity.EntityId;
+import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.AdditionalAnswers;
@@ -26,8 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
-import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.*;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.*;
 
@@ -43,6 +43,7 @@ class WorkerQueueSchedulerTest {
 	@Mock
 	QueueProcessor secondQueueProcessor;
 
+	TestObservationRegistry registry;
 	ExecutorService executor;
 
 	QueueRegistrar registrar;
@@ -53,6 +54,7 @@ class WorkerQueueSchedulerTest {
 		Logger logger = (Logger) LoggerFactory.getLogger(WorkerQueueScheduler.class);
 		logger.setLevel(Level.TRACE);
 
+		registry = TestObservationRegistry.create();
 		executor = Executors.newFixedThreadPool(3);
 		registrar = QueueRegistrar.of(
 				QueueProcessorRegistration.of("first-queue", firstQueueProcessor)
@@ -63,7 +65,7 @@ class WorkerQueueSchedulerTest {
 						.backoff(Duration.ofMillis(250))
 						.timeout(Duration.ofMillis(400))
 		);
-		scheduler = new WorkerQueueScheduler(logger, queue, registrar);
+		scheduler = new WorkerQueueScheduler(logger, queue, registrar, registry);
 		scheduler.afterPropertiesSet();
 	}
 
@@ -239,7 +241,7 @@ class WorkerQueueSchedulerTest {
 						.taskExecutor(secondTaskExecutor),
 				QueueProcessorRegistration.of("third-queue", secondQueueProcessor)
 						.taskExecutor(thirdTaskExecutor)
-		));
+		), registry);
 
 		assertThatNoException()
 				.as("Should not throw an exception when invoking lifecycle methods")
@@ -253,6 +255,37 @@ class WorkerQueueSchedulerTest {
 		verify((DisposableBean) firstTaskExecutor).destroy();
 		verify((AutoCloseable) secondTaskExecutor).close();
 		verifyNoInteractions(thirdTaskExecutor);
+	}
+
+	@Test
+	@DisplayName("should observe the the queue consume and task processing operations")
+	void observeQueueConsumeAndExecutorOperations() {
+		final var task = new QueuedTask(UUID.randomUUID(), "first-queue", EntityId.from(1));
+		doReturn(List.of(task)).when(queue).consume();
+
+		assertThatNoException().isThrownBy(scheduler::schedule);
+
+		verify(queue).consume();
+
+		await().untilAsserted(() -> {
+			verify(firstQueueProcessor).process(EntityId.from(1));
+			verify(queue).complete(eq(task));
+		});
+
+		assertThat(registry)
+				.hasObservationWithNameEqualTo(QueueObservation.CONSUME_OBSERVATION_NAME)
+				.that()
+				.hasBeenStarted()
+				.hasBeenStopped()
+				.hasNoKeyValues();
+
+		assertThat(registry)
+				.hasObservationWithNameEqualTo(QueueObservation.PROCESS_OBSERVATION_NAME)
+				.that()
+				.hasBeenStarted()
+				.hasBeenStopped()
+				.hasLowCardinalityKeyValue("konfigyr.queue.name", "first-queue")
+				.hasHighCardinalityKeyValue("konfigyr.queue.entity", EntityId.from(1).serialize());
 	}
 
 	static Stream<QueuedTask> generateTasks(String queueName, int count) {

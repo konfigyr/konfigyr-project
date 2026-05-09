@@ -1,6 +1,5 @@
 package com.konfigyr.identity.authorization.client;
 
-import io.micrometer.observation.annotation.Observed;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -37,13 +36,11 @@ public final class DelegatingRegisteredClientRepository implements RegisteredCli
 	}
 
 	@Override
-	@Observed(name = "konfigyr.identity.client.repository.lookup", lowCardinalityKeyValues = { "lookup.type", "client-registration" })
 	public RegisteredClient findById(String id) {
 		return lookup(RegisteredClientRepository::findById, id);
 	}
 
 	@Override
-	@Observed(name = "konfigyr.identity.client.repository.lookup", lowCardinalityKeyValues = { "lookup.type", "client-id" })
 	public RegisteredClient findByClientId(String clientId) {
 		return lookup(RegisteredClientRepository::findByClientId, clientId);
 	}
