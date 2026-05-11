@@ -16,6 +16,16 @@ describe('components | audit | <AuditEntityTypeIcon/>', () => {
     expect(getByTestId('icon')).toHaveClass('lucide-folder-kanban');
   });
 
+  test('should render <AuditEntityTypeIcon/> component with a label for namespace application entity type', () => {
+    const { getByTestId } = renderWithMessageProvider(
+      <AuditEntityTypeIcon value="namespace-application" data-testid="icon"/>,
+    );
+
+    expect(getByTestId('icon')).toBeInTheDocument();
+    expect(getByTestId('icon')).toHaveAccessibleName('Application');
+    expect(getByTestId('icon')).toHaveClass('lucide-monitor-cloud');
+  });
+
   test('should render <AuditEntityTypeIcon/> component with a label for service entity type', () => {
     const { getByTestId } = renderWithMessageProvider(
       <AuditEntityTypeIcon value="service" data-testid="icon"/>,

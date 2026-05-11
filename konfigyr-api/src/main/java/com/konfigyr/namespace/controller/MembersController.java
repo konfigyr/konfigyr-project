@@ -37,7 +37,9 @@ class MembersController {
 	@GetMapping("/{member}")
 	@PreAuthorize("isMember(#slug)")
 	EntityModel<Member> get(@PathVariable @NonNull String slug, @PathVariable @NonNull EntityId member) {
-		return assembler.assemble(lookupMember(slug, member));
+		final Namespace namespace = lookupNamespace(slug);
+
+		return assembler.assemble(lookupMember(namespace, member));
 	}
 
 	@PutMapping("/{member}")
@@ -47,8 +49,10 @@ class MembersController {
 			@PathVariable @NonNull EntityId member,
 			@RequestBody @Validated MemberAttributes attributes
 	) {
+		final Namespace namespace = lookupNamespace(slug);
+
 		return assembler.assemble(namespaces.updateMember(
-				lookupMember(slug, member).id(), attributes.role()
+				namespace, lookupMember(namespace, member).id(), attributes.role()
 		));
 	}
 
@@ -56,7 +60,9 @@ class MembersController {
 	@PreAuthorize("isAdmin(#slug)")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void remove(@PathVariable @NonNull String slug, @PathVariable @NonNull EntityId member) {
-		namespaces.removeMember(lookupMember(slug, member).id());
+		final Namespace namespace = lookupNamespace(slug);
+
+		namespaces.removeMember(namespace, lookupMember(namespace, member).id());
 	}
 
 	@NonNull
@@ -65,10 +71,8 @@ class MembersController {
 	}
 
 	@NonNull
-	Member lookupMember(String slug, EntityId id) {
-		final Namespace namespace = lookupNamespace(slug);
-
-		return namespaces.getMember(id)
+	Member lookupMember(Namespace namespace, EntityId id) {
+		return namespaces.getMember(namespace, id)
 				.filter(member -> member.isMemberOf(namespace))
 				.orElseThrow(() -> new MemberNotFoundException(id));
 	}

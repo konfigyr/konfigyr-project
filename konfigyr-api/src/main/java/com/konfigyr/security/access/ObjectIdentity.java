@@ -30,7 +30,7 @@ public record ObjectIdentity(@NonNull String type, @NonNull Serializable id) imp
 	 * Creates a new {@link ObjectIdentity} for a {@link com.konfigyr.namespace.Namespace} domain object
 	 * using its unique slug.
 	 *
-	 * @param namespace namespace slug, can not be blank
+	 * @param namespace namespace unique URL slug, can't be blank
 	 * @return the namespace object identity, never {@literal null}
 	 * @throws IllegalArgumentException when slug is blank
 	 */

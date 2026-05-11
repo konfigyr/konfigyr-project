@@ -2,7 +2,10 @@ package com.konfigyr.security.access;
 
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.support.NoOpCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
@@ -10,9 +13,20 @@ import org.springframework.security.access.expression.method.MethodSecurityExpre
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.web.FilterInvocation;
 
+import java.util.Optional;
+
 @NullMarked
 @Configuration(proxyBeanMethods = false)
 public class SecurityAccessConfiguration {
+
+	@Bean
+	AccessControlCache accessControlCache(ObjectProvider<CacheManager> cacheManager) {
+		final Cache cache = Optional.ofNullable(cacheManager.getIfAvailable())
+				.map(manager -> manager.getCache("access-control"))
+				.orElseGet(() -> new NoOpCache("access-control"));
+
+		return new AccessControlCache(cache);
+	}
 
 	@Bean
 	AccessControlRepository accessControlRepository(DSLContext context) {
@@ -20,8 +34,8 @@ public class SecurityAccessConfiguration {
 	}
 
 	@Bean
-	AccessService konfigyrAccessService(AccessControlRepository repository, CacheManager manager) {
-		return new KonfigyrAccessService(repository, manager.getCache("access-control"));
+	AccessService konfigyrAccessService(AccessControlCache accessControlCache, AccessControlRepository accessControlRepository) {
+		return new KonfigyrAccessService(accessControlCache, accessControlRepository);
 	}
 
 	@Bean

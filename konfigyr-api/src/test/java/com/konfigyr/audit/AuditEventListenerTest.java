@@ -112,7 +112,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditNamespaceCreated() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new NamespaceEvent.Created(EntityId.from(700)));
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(700)).when(namespace).id();
+
+		listener.on(new NamespaceEvent.Created(namespace));
 
 		assertAuditRecord("namespace", EntityId.from(700))
 				.returns(EntityId.from(700), AuditRecord::namespaceId)
@@ -127,8 +130,11 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditNamespaceRenamed() {
 		setSecurityContext(TestPrincipals.john());
 
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(701)).when(namespace).id();
+
 		listener.on(new NamespaceEvent.Renamed(
-				EntityId.from(701),
+				namespace,
 				Slug.slugify("old-name"),
 				Slug.slugify("new-name")
 		));
@@ -149,7 +155,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditNamespaceRemoved() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new NamespaceEvent.Deleted(EntityId.from(701)));
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(701)).when(namespace).id();
+
+		listener.on(new NamespaceEvent.Deleted(namespace));
 
 		assertAuditRecord("namespace", EntityId.from(701))
 				.returns(EntityId.from(701), AuditRecord::namespaceId)
@@ -162,9 +171,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditNamespaceMemberAdded() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new NamespaceEvent.MemberAdded(
-				EntityId.from(702), EntityId.from(50), NamespaceRole.ADMIN
-		));
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(702)).when(namespace).id();
+
+		listener.on(new NamespaceEvent.MemberAdded(namespace, EntityId.from(50), NamespaceRole.ADMIN));
 
 		assertAuditRecord("namespace", EntityId.from(702), "namespace.member-added")
 				.returns(EntityId.from(702), AuditRecord::namespaceId)
@@ -179,9 +189,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditNamespaceMemberUpdated() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new NamespaceEvent.MemberUpdated(
-				EntityId.from(703), EntityId.from(50), NamespaceRole.USER
-		));
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(703)).when(namespace).id();
+
+		listener.on(new NamespaceEvent.MemberUpdated(namespace, EntityId.from(50), NamespaceRole.USER));
 
 		assertAuditRecord("namespace", EntityId.from(703), "namespace.member-updated")
 				.satisfies(it -> assertThat(it.details())
@@ -195,7 +206,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditNamespaceMemberRemoved() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new NamespaceEvent.MemberRemoved(EntityId.from(703), EntityId.from(51)));
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(703)).when(namespace).id();
+
+		listener.on(new NamespaceEvent.MemberRemoved(namespace, EntityId.from(51)));
 
 		assertAuditRecord("namespace", EntityId.from(703), "namespace.member-removed")
 				.satisfies(it -> assertThat(it.details())
@@ -208,8 +222,11 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditInvitationCreated() {
 		setSecurityContext(TestPrincipals.john());
 
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(800)).when(namespace).id();
+
 		listener.on(new InvitationEvent.Created(
-				EntityId.from(800), "inv-key-123",
+				namespace, "inv-key-123",
 				UriComponentsBuilder.fromUriString("https://konfigyr.com").build()
 		));
 
@@ -226,7 +243,10 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditInvitationAccepted() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new InvitationEvent.Accepted(EntityId.from(801), "inv-key-456"));
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(801)).when(namespace).id();
+
+		listener.on(new InvitationEvent.Accepted(namespace, "inv-key-456"));
 
 		assertAuditRecord("invitation", EntityId.from(801))
 				.returns("invitation.accepted", AuditRecord::eventType)
@@ -240,13 +260,96 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditInvitationCanceled() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new InvitationEvent.Canceled(EntityId.from(801), "inv-key-789"));
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(801)).when(namespace).id();
+
+		listener.on(new InvitationEvent.Canceled(namespace, "inv-key-789"));
 
 		assertAuditRecord("invitation", EntityId.from(801))
 				.returns("invitation.canceled", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("key", "inv-key-789")
 				);
+	}
+
+	@Test
+	@DisplayName("should persist audit record for namespace application created event")
+	void shouldAuditNamespaceApplicationCreatedEvent() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(900)).when(namespace).id();
+
+		final var application = mock(NamespaceApplication.class);
+		doReturn(EntityId.from(9001)).when(application).id();
+		doReturn("created app").when(application).name();
+
+		listener.on(new NamespaceEvent.ApplicationCreated(namespace, application));
+
+		assertAuditRecord("namespace-application", EntityId.from(9001))
+				.returns("namespace.application-created", AuditRecord::eventType)
+				.returns(EntityId.from(900), AuditRecord::namespaceId)
+				.returns(Map.of("name", "created app"), AuditRecord::details);
+	}
+
+	@Test
+	@DisplayName("should persist audit record for namespace application updated event")
+	void shouldAuditNamespaceApplicationUpdatedEvent() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(900)).when(namespace).id();
+
+		final var application = mock(NamespaceApplication.class);
+		doReturn(EntityId.from(9002)).when(application).id();
+		doReturn("updated app").when(application).name();
+
+		listener.on(new NamespaceEvent.ApplicationUpdated(namespace, application));
+
+		assertAuditRecord("namespace-application", EntityId.from(9002))
+				.returns("namespace.application-updated", AuditRecord::eventType)
+				.returns(EntityId.from(900), AuditRecord::namespaceId)
+				.returns(Map.of("name", "updated app"), AuditRecord::details);
+	}
+
+	@Test
+	@DisplayName("should persist audit record for namespace application reset event")
+	void shouldAuditNamespaceApplicationResetEvent() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(900)).when(namespace).id();
+
+		final var application = mock(NamespaceApplication.class);
+		doReturn(EntityId.from(9003)).when(application).id();
+		doReturn("namespace app").when(application).name();
+
+		listener.on(new NamespaceEvent.ApplicationReset(namespace, application));
+
+		assertAuditRecord("namespace-application", EntityId.from(9003))
+				.returns("namespace.application-reset", AuditRecord::eventType)
+				.returns(EntityId.from(900), AuditRecord::namespaceId)
+				.returns(Map.of("name", "namespace app"), AuditRecord::details);
+	}
+
+	@Test
+	@DisplayName("should persist audit record for namespace application removed event")
+	void shouldAuditNamespaceApplicationRemovedEvent() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(900)).when(namespace).id();
+
+		final var application = mock(NamespaceApplication.class);
+		doReturn(EntityId.from(9004)).when(application).id();
+		doReturn("removed app").when(application).name();
+
+		listener.on(new NamespaceEvent.ApplicationRemoved(namespace, application));
+
+		assertAuditRecord("namespace-application", EntityId.from(9004))
+				.returns("namespace.application-removed", AuditRecord::eventType)
+				.returns(EntityId.from(900), AuditRecord::namespaceId)
+				.returns(Map.of("name", "removed app"), AuditRecord::details);
 	}
 
 	@Test

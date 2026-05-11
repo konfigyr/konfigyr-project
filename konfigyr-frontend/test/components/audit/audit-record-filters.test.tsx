@@ -73,8 +73,9 @@ describe('components | audit | <AuditRecordFilters/>', () => {
       expect(getByRole('listbox')).toBeInTheDocument();
     });
 
-    expect(getAllByRole('option')).toHaveLength(4);
+    expect(getAllByRole('option')).toHaveLength(5);
     expect(getByRole('option', { name: 'Namespace' })).toBeInTheDocument();
+    expect(getByRole('option', { name: 'Application' })).toBeInTheDocument();
     expect(getByRole('option', { name: 'KMS Keyset' })).toBeInTheDocument();
     expect(getByRole('option', { name: 'Service' })).toBeInTheDocument();
     expect(getByRole('option', { name: 'Service profile' })).toBeInTheDocument();

@@ -44,7 +44,7 @@ class AccessServiceTest {
 	@BeforeEach
 	void setup() {
 		cache = spy(new ConcurrentMapCache("test-cache"));
-		service = new KonfigyrAccessService(repository, cache);
+		service = new KonfigyrAccessService(new AccessControlCache(cache), repository);
 	}
 
 	@Test

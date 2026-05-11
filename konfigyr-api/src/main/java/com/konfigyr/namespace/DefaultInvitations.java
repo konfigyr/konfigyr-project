@@ -16,11 +16,11 @@ import org.jooq.Record;
 import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.jspecify.annotations.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +46,7 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
  * @since 1.0.0
  **/
 @Slf4j
+@NullMarked
 @RequiredArgsConstructor
 class DefaultInvitations implements Invitations {
 
@@ -66,10 +67,9 @@ class DefaultInvitations implements Invitations {
 	private final Features features;
 	private final ApplicationEventPublisher publisher;
 
-	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "invitations-find")
-	public Page<@NonNull Invitation> find(@NonNull Namespace namespace, @NonNull Pageable pageable) {
+	public Page<Invitation> find(Namespace namespace, Pageable pageable) {
 		final Condition condition = INVITATIONS.NAMESPACE_ID.eq(namespace.id().get());
 
 		return executor.execute(
@@ -80,10 +80,9 @@ class DefaultInvitations implements Invitations {
 		);
 	}
 
-	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "invitations-retrieve")
-	public Optional<Invitation> get(@NonNull Namespace namespace, @NonNull String key) {
+	public Optional<Invitation> get(Namespace namespace, String key) {
 		if (log.isDebugEnabled()) {
 			log.debug("Retrieving invitation with key {} for namespace: {}", key, namespace.slug());
 		}
@@ -94,16 +93,15 @@ class DefaultInvitations implements Invitations {
 		));
 	}
 
-	@NonNull
 	@Override
 	@Transactional(label = "invitations-create")
-	public Invitation create(@NonNull Invite invite) {
+	public Invitation create(Namespace namespace, Invite invite) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to create and send new invitation for: [namespace={}, sender={}, role={}",
-					invite.namespace(), invite.sender(), invite.role());
+					namespace.slug(), invite.sender(), invite.role());
 		}
 
-		final NamespaceInvitationContext context = lookupNamespaceInvitationContext(invite).orElseThrow(
+		final NamespaceInvitationContext context = lookupNamespaceInvitationContext(namespace, invite).orElseThrow(
 				() -> new InvitationException(InvitationException.ErrorCode.INSUFFICIENT_PERMISSIONS,
 						"Not enough permissions to create invitation")
 		);
@@ -119,7 +117,7 @@ class DefaultInvitations implements Invitations {
 				.set(
 						SettableRecord.of(INVITATIONS)
 								.set(INVITATIONS.KEY, keyGenerator.generateKey())
-								.set(INVITATIONS.NAMESPACE_ID, invite.namespace().get())
+								.set(INVITATIONS.NAMESPACE_ID, namespace.id().get())
 								.set(INVITATIONS.SENDER_ID, context.sender().id(), EntityId::get)
 								.set(INVITATIONS.RECIPIENT_ID, context.recipient().id(), EntityId::get)
 								.set(INVITATIONS.RECIPIENT_EMAIL, context.recipient().email())
@@ -139,7 +137,7 @@ class DefaultInvitations implements Invitations {
 
 		final Invitation invitation = lookupInvitation(DSL.and(
 				INVITATIONS.KEY.eq(key),
-				INVITATIONS.NAMESPACE_ID.eq(invite.namespace().get())
+				INVITATIONS.NAMESPACE_ID.eq(namespace.id().get())
 		)).orElseThrow(
 				() -> new IllegalStateException("Failed to create invitation for: " + invite)
 		);
@@ -148,14 +146,14 @@ class DefaultInvitations implements Invitations {
 				context.name(), key, invite.role(), invite.sender());
 
 		final UriComponents host = ServletUriComponentsBuilder.fromCurrentServletMapping().build();
-		publisher.publishEvent(new InvitationEvent.Created(invitation.namespace(), invitation.key(), host));
+		publisher.publishEvent(new InvitationEvent.Created(namespace, invitation.key(), host));
 
 		return invitation;
 	}
 
 	@Override
 	@Transactional(label = "invitations-accept")
-	public void accept(@NonNull Invitation invitation, @NonNull EntityId recipient) {
+	public void accept(Namespace namespace, Invitation invitation, EntityId recipient) {
 		if (invitation.isExpired()) {
 			throw new InvitationException(InvitationException.ErrorCode.INVITATION_EXPIRED,
 					"Can not accept expiring invitations");
@@ -183,19 +181,19 @@ class DefaultInvitations implements Invitations {
 
 		removeInvitation(invitation);
 
-		publisher.publishEvent(new InvitationEvent.Accepted(invitation.namespace(), invitation.key()));
+		publisher.publishEvent(new InvitationEvent.Accepted(namespace, invitation.key()));
 
 		publisher.publishEvent(new NamespaceEvent.MemberAdded(
-				invitation.namespace(), EntityId.from(recipient.get()), invitation.role()
+				namespace, EntityId.from(recipient.get()), invitation.role()
 		));
 	}
 
 	@Override
 	@Transactional(label = "invitations-cancel")
-	public void cancel(@NonNull Invitation invitation) {
+	public void cancel(Namespace namespace, Invitation invitation) {
 		removeInvitation(invitation);
 
-		publisher.publishEvent(new InvitationEvent.Canceled(invitation.namespace(), invitation.key()));
+		publisher.publishEvent(new InvitationEvent.Canceled(namespace, invitation.key()));
 	}
 
 	/**
@@ -222,12 +220,11 @@ class DefaultInvitations implements Invitations {
 		}
 	}
 
-	@NonNull
-	private Optional<Invitation> lookupInvitation(@NonNull Condition predicate) {
+	private Optional<Invitation> lookupInvitation(Condition predicate) {
 		return createInvitationsQuery(predicate).fetchOptional(DefaultInvitations::invitation);
 	}
 
-	private void removeInvitation(@NonNull Invitation invitation) {
+	private void removeInvitation(Invitation invitation) {
 		context.deleteFrom(INVITATIONS)
 				.where(DSL.and(
 						INVITATIONS.NAMESPACE_ID.eq(invitation.namespace().get()),
@@ -236,7 +233,6 @@ class DefaultInvitations implements Invitations {
 				.execute();
 	}
 
-	@NonNull
 	private SelectConditionStep<? extends Record> createInvitationsQuery(Condition condition) {
 		return context
 				.select(
@@ -263,8 +259,7 @@ class DefaultInvitations implements Invitations {
 				.where(condition);
 	}
 
-	@NonNull
-	private Optional<NamespaceInvitationContext> lookupNamespaceInvitationContext(@NonNull Invite invite) {
+	private Optional<NamespaceInvitationContext> lookupNamespaceInvitationContext(Namespace namespace, Invite invite) {
 		return context.select(
 						NAMESPACES.ID,
 						NAMESPACES.SLUG,
@@ -290,13 +285,13 @@ class DefaultInvitations implements Invitations {
 				.on(NAMESPACE_MEMBERS.NAMESPACE_ID.eq(NAMESPACES.ID))
 				.where(DSL.and(
 						NAMESPACE_MEMBERS.ACCOUNT_ID.eq(invite.sender().get()),
-						NAMESPACE_MEMBERS.NAMESPACE_ID.eq(invite.namespace().get()),
+						NAMESPACE_MEMBERS.NAMESPACE_ID.eq(namespace.id().get()),
 						NAMESPACE_MEMBERS.ROLE.eq(NamespaceRole.ADMIN.name())
 				))
 				.fetchOptional(record -> NamespaceInvitationContext.create(record, invite));
 	}
 
-	private void assertNamespaceMemberCount(@NonNull NamespaceInvitationContext context) {
+	private void assertNamespaceMemberCount(NamespaceInvitationContext context) {
 		log.debug("Checking if Namespace({}) can invite additional members", context.slug());
 
 		final LimitedFeatureValue feature = features.get(context.slug(), NamespaceFeatures.MEMBERS_COUNT)
@@ -315,7 +310,7 @@ class DefaultInvitations implements Invitations {
 		}
 	}
 
-	private static Invitation.Sender sender(Record record) {
+	private static Invitation.@Nullable  Sender sender(Record record) {
 		if (record.get(SENDER_ACCOUNTS.ID) == null) {
 			return null;
 		}
@@ -341,7 +336,6 @@ class DefaultInvitations implements Invitations {
 		);
 	}
 
-	@NonNull
 	private static Invitation invitation(Record record) {
 		return Invitation.builder()
 				.key(record.get(INVITATIONS.KEY))
@@ -354,7 +348,6 @@ class DefaultInvitations implements Invitations {
 				.build();
 	}
 
-	@NullMarked
 	private record NamespaceInvitationContext(
 			EntityId id,
 			String slug,

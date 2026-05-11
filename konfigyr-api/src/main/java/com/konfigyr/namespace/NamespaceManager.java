@@ -192,27 +192,32 @@ public interface NamespaceManager {
 	/**
 	 * Retrieves the {@link Member} with given entity identifier in the {@link Namespace} team.
 	 *
+	 * @param namespace namespace for which the member is retrieved, can't be {@literal null}
 	 * @param member entity identifier of the {@link Member} to be retrieved, can't be {@literal null}
 	 * @return the matching member or an empty {@link Optional}, never {@literal null}
 	 */
-	Optional<Member> getMember(EntityId member);
+	Optional<Member> getMember(Namespace namespace, EntityId member);
 
 	/**
 	 * Updates the {@link NamespaceRole} of the {@link Member} with given entity identifier
 	 * in the {@link Namespace} team.
 	 *
+	 * @param namespace namespace for which the member is updated, can't be {@literal null}
 	 * @param member entity identifier of the {@link Member} to be removed, can't be {@literal null}
 	 * @param role the new {@link NamespaceRole} that should be assigned, can't be {@literal null}
 	 * @return the update member, never {@literal null}
 	 */
-	Member updateMember(EntityId member, NamespaceRole role);
+	@DomainEventPublisher(publishes = "namespaces.member-updated")
+	Member updateMember(Namespace namespace, EntityId member, NamespaceRole role);
 
 	/**
 	 * Removes the {@link Member} with given entity identifier from the {@link Namespace} team.
 	 *
+	 * @param namespace namespace for which the member is removed from, can't be {@literal null}
 	 * @param member entity identifier of the {@link Member} to be removed, can't be {@literal null}
 	 */
-	void removeMember(EntityId member);
+	@DomainEventPublisher(publishes = "namespaces.member-removed")
+	void removeMember(Namespace namespace, EntityId member);
 
 	/**
 	 * Retrieves a page of {@link NamespaceApplication namespace applications} that are matching the
@@ -234,10 +239,12 @@ public interface NamespaceManager {
 	/**
 	 * Creates a new {@link NamespaceApplication} using the given definition.
 	 *
+	 * @param namespace namespace for which the application is created, can't be {@literal null}
 	 * @param definition definition used to create the application for a namespace, can't be {@literal null}
 	 * @return created namespace application, never {@literal null}
 	 */
-	NamespaceApplication createApplication(NamespaceApplicationDefinition definition);
+	@DomainEventPublisher(publishes = "namespaces.application-created")
+	NamespaceApplication createApplication(Namespace namespace, NamespaceApplicationDefinition definition);
 
 	/**
 	 * Updates the {@link NamespaceApplication} with given entity identifier in the {@link Namespace} with
@@ -245,28 +252,34 @@ public interface NamespaceManager {
 	 * <p>
 	 * Generates a new {@code client_secret} for the {@link NamespaceApplication} with the given entity identifier.
 	 *
+	 * @param namespace namespace for which the application is updated, can't be {@literal null}
 	 * @param application identifier of the {@link NamespaceApplication} to be updated, can't be {@literal null}
 	 * @param definition the new definition to be applied to the application, can't be {@literal null}
 	 * @return updated namespace application, never {@literal null}
 	 * @throws NamespaceApplicationNotFoundException when an application does not exist
 	 */
-	NamespaceApplication updateApplication(EntityId application, NamespaceApplicationDefinition definition);
+	@DomainEventPublisher(publishes = "namespaces.application-updated")
+	NamespaceApplication updateApplication(Namespace namespace, EntityId application, NamespaceApplicationDefinition definition);
 
 	/**
 	 * Generates a new {@code client_secret} for the {@link NamespaceApplication} with the given entity identifier.
 	 *
+	 * @param namespace namespace for which the application is updated, can't be {@literal null}
 	 * @param application identifier of the {@link NamespaceApplication} to be reset, can't be {@literal null}
 	 * @return updated namespace application, never {@literal null}
 	 * @throws NamespaceApplicationNotFoundException when an application does not exist
 	 */
-	NamespaceApplication resetApplication(EntityId application);
+	@DomainEventPublisher(publishes = "namespaces.application-reset")
+	NamespaceApplication resetApplication(Namespace namespace, EntityId application);
 
 	/**
 	 * Removes the {@link NamespaceApplication} with given entity identifier from the {@link Namespace}.
 	 *
+	 * @param namespace namespace for which the application is removed from, can't be {@literal null}
 	 * @param application entity identifier of the {@link NamespaceApplication} to be removed, can't be {@literal null}
 	 * @throws NamespaceApplicationNotFoundException when an application does not exist
 	 */
-	void removeApplication(EntityId application);
+	@DomainEventPublisher(publishes = "namespaces.application-removed")
+	void removeApplication(Namespace namespace, EntityId application);
 
 }

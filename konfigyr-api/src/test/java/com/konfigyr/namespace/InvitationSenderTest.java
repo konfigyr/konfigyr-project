@@ -1,6 +1,5 @@
 package com.konfigyr.namespace;
 
-import com.konfigyr.entity.EntityId;
 import com.konfigyr.mail.Mail;
 import com.konfigyr.mail.Recipient;
 import com.konfigyr.support.FullName;
@@ -34,6 +33,9 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 	static final UriComponents host = UriComponentsBuilder.fromUriString("https://konfigyr.com:8443/namespaces?foo=bar#segment").build();
 
 	@Autowired
+	NamespaceManager namespaces;
+
+	@Autowired
 	DSLContext context;
 
 	@Captor
@@ -49,7 +51,8 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should send invitation email when created event is published")
 	void shouldSendInvitation() {
-		final var event = new InvitationEvent.Created(EntityId.from(2), "09320d7f8e21143b2957f1caded74cbc", host);
+		final var namespace = namespaces.findBySlug("konfigyr").orElseThrow();
+		final var event = new InvitationEvent.Created(namespace, "09320d7f8e21143b2957f1caded74cbc", host);
 
 		assertThatNoException().isThrownBy(() -> sender.send(event));
 
@@ -73,7 +76,8 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to send email when invitation is not found")
 	void shouldFailToSendUnknownInvitation() {
-		final var event = new InvitationEvent.Created(EntityId.from(2), "unknown", host);
+		final var namespace = namespaces.findBySlug("konfigyr").orElseThrow();
+		final var event = new InvitationEvent.Created(namespace, "unknown", host);
 
 		assertThatThrownBy(() -> sender.send(event))
 				.isInstanceOf(InvitationException.class)
@@ -86,7 +90,8 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to send invitation email due to mailer exception")
 	void shouldNotCatchMailerExceptions() {
-		final var event = new InvitationEvent.Created(EntityId.from(2), "09320d7f8e21143b2957f1caded74cbc", host);
+		final var namespace = namespaces.findBySlug("konfigyr").orElseThrow();
+		final var event = new InvitationEvent.Created(namespace, "09320d7f8e21143b2957f1caded74cbc", host);
 
 		doThrow(MailSendException.class).when(mailer).send(any());
 

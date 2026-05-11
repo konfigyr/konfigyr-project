@@ -39,14 +39,15 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should create invitation and send invitation email to recipient")
 	void shouldCreateAndSendInvitation(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+
 		final var invite = new Invite(
-				EntityId.from(2),
 				EntityId.from(1),
 				"recipient@konfigyr.com",
 				NamespaceRole.USER
 		);
 
-		final var invitation = invitations.create(invite);
+		final var invitation = invitations.create(namespace, invite);
 
 		assertThat(invitation)
 				.isNotNull()
@@ -87,16 +88,16 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should create invitation to an existing account and send invitation email to recipient")
 	void shouldCreateAndSendInvitationToExistingAccount(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
 		final var account = createAccount("peter.vries@arakis.com", "Piter", "De Vries");
 
 		final var invite = new Invite(
-				EntityId.from(2),
 				EntityId.from(1),
 				"peter.vries@arakis.com",
 				NamespaceRole.USER
 		);
 
-		final var invitation = invitations.create(invite);
+		final var invitation = invitations.create(namespace, invite);
 
 		assertThat(invitation)
 				.isNotNull()
@@ -136,15 +137,15 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to create invitation for account without permissions")
 	void shouldFailToCreateInvitationForInsufficientPermissions(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
 		final var invite = new Invite(
-				EntityId.from(2),
 				EntityId.from(2),
 				"recipient@konfigyr.com",
 				NamespaceRole.USER
 		);
 
 		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.create(invite))
+				.isThrownBy(() -> invitations.create(namespace, invite))
 				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.INSUFFICIENT_PERMISSIONS);
 
@@ -157,15 +158,15 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to create invitation for a recipient that is already a member")
 	void shouldFailToCreateInvitationForExistingMember(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
 		final var invite = new Invite(
-				EntityId.from(2),
 				EntityId.from(1),
 				"john.doe@konfigyr.com",
 				NamespaceRole.ADMIN
 		);
 
 		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.create(invite))
+				.isThrownBy(() -> invitations.create(namespace, invite))
 				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.ALREADY_INVITED);
 
@@ -178,17 +179,17 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to create invitation when no feature has been assigned to a Namespace")
 	void shouldFailToCreateInvitationForMissingFeatureValue(AssertablePublishedEvents events) {
-		doReturn(Optional.empty()).when(features).get("john-doe", NamespaceFeatures.MEMBERS_COUNT);
+		final var namespace = lookupNamespace("john-doe");
+		doReturn(Optional.empty()).when(features).get(namespace.slug(), NamespaceFeatures.MEMBERS_COUNT);
 
 		final var invite = new Invite(
-				EntityId.from(1),
 				EntityId.from(1),
 				"recipient@konfigyr.com",
 				NamespaceRole.USER
 		);
 
 		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.create(invite))
+				.isThrownBy(() -> invitations.create(namespace, invite))
 				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.NOT_ALLOWED);
 
@@ -199,17 +200,17 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to create invitation when Namespace has reached maximum member count")
 	void shouldFailToCreateInvitationWhenMaximumCountIsReached(AssertablePublishedEvents events) {
-		doReturn(Optional.of(FeatureValue.limited(2))).when(features).get("konfigyr", NamespaceFeatures.MEMBERS_COUNT);
+		final var namespace = lookupNamespace("konfigyr");
+		doReturn(Optional.of(FeatureValue.limited(2))).when(features).get(namespace.slug(), NamespaceFeatures.MEMBERS_COUNT);
 
 		final var invite = new Invite(
-				EntityId.from(2),
 				EntityId.from(1),
 				"recipient@konfigyr.com",
 				NamespaceRole.USER
 		);
 
 		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.create(invite))
+				.isThrownBy(() -> invitations.create(namespace, invite))
 				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.MEMBER_LIMIT_REACHED);
 
@@ -218,33 +219,11 @@ class InvitationsTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should fail to create invitation for unknown namespace")
-	void shouldFailToCreateInvitationForUnknownNamespace(AssertablePublishedEvents events) {
-		final var invite = new Invite(
-				EntityId.from(9999),
-				EntityId.from(1),
-				"recipient@konfigyr.com",
-				NamespaceRole.USER
-		);
-
-		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.create(invite))
-				.extracting(InvitationException::getCode)
-				.isEqualTo(InvitationException.ErrorCode.INSUFFICIENT_PERMISSIONS);
-
-		Assertions.assertThat(events.ofType(Mail.class))
-				.isEmpty();
-
-		verifyNoInteractions(features);
-	}
-
-	@Test
 	@DisplayName("should retrieve all invitations for namespace")
 	void shouldRetrieveInvitations() {
-		final var namespace = namespaces.findBySlug("konfigyr");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("konfigyr");
 
-		assertThat(invitations.find(namespace.get(), Pageable.unpaged()))
+		assertThat(invitations.find(namespace, Pageable.unpaged()))
 				.hasSize(2)
 				.extracting(Invitation::key)
 				.containsExactlyInAnyOrder("09320d7f8e21143b2957f1caded74cbc", "09320f6c6481c1fed73573a5430758f1");
@@ -253,24 +232,22 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should retrieve no invitations for namespace that has no invitations")
 	void shouldRetrieveEmptyInvitations() {
-		final var namespace = namespaces.findBySlug("john-doe");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("john-doe");
 
-		assertThat(invitations.find(namespace.get(), Pageable.unpaged()))
+		assertThat(invitations.find(namespace, Pageable.unpaged()))
 				.isEmpty();
 	}
 
 	@Test
 	@DisplayName("should retrieve invitation by namespace and key")
 	void shouldRetrieveInvitation() {
-		final var namespace = namespaces.findBySlug("konfigyr");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("konfigyr");
 
-		assertThat(invitations.get(namespace.get(), "09320d7f8e21143b2957f1caded74cbc"))
+		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
 				.isPresent()
 				.get()
 				.returns("09320d7f8e21143b2957f1caded74cbc", Invitation::key)
-				.returns(namespace.get().id(), Invitation::namespace)
+				.returns(namespace.id(), Invitation::namespace)
 				.returns(NamespaceRole.ADMIN, Invitation::role)
 				.returns(false, Invitation::isExpired)
 				.satisfies(it -> assertThat(it.recipient())
@@ -298,14 +275,13 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should retrieve invitation without a sender")
 	void shouldRetrieveInvitationWithoutSender() {
-		final var namespace = namespaces.findBySlug("konfigyr");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("konfigyr");
 
-		assertThat(invitations.get(namespace.get(), "09320f6c6481c1fed73573a5430758f1"))
+		assertThat(invitations.get(namespace, "09320f6c6481c1fed73573a5430758f1"))
 				.isPresent()
 				.get()
 				.returns("09320f6c6481c1fed73573a5430758f1", Invitation::key)
-				.returns(namespace.get().id(), Invitation::namespace)
+				.returns(namespace.id(), Invitation::namespace)
 				.satisfies(it -> assertThat(it.recipient())
 						.returns("expiring@konfigyr.com", Invitation.Recipient::email)
 						.returns(false, Invitation.Recipient::exists)
@@ -326,20 +302,18 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to lookup invitation assigned to a different namespace")
 	void shouldNotRetrieveInvitationForDifferentNamespace() {
-		final var namespace = namespaces.findBySlug("john-doe");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("john-doe");
 
-		assertThat(invitations.get(namespace.get(), "09320d7f8e21143b2957f1caded74cbc"))
+		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
 				.isEmpty();
 	}
 
 	@Test
 	@DisplayName("should fail to lookup invitation that does not exist for a namespace")
 	void shouldFailToRetrieveUnknownInvitation() {
-		final var namespace = namespaces.findBySlug("konfigyr");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("konfigyr");
 
-		assertThat(invitations.get(namespace.get(), "unknown-key"))
+		assertThat(invitations.get(namespace, "unknown-key"))
 				.isEmpty();
 	}
 
@@ -347,22 +321,21 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should accept pending invitation and create namespace member")
 	void shouldAcceptInvitation(AssertablePublishedEvents events) {
-		final var namespace = namespaces.findBySlug("konfigyr");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("konfigyr");
 
-		final var invitation = invitations.get(namespace.get(), "09320d7f8e21143b2957f1caded74cbc");
+		final var invitation = invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc");
 		assertThat(invitation).isPresent();
 
 		final var recipient = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
 		assertThat(recipient).isNotNull();
 
-		assertThatNoException().isThrownBy(() -> invitations.accept(invitation.get(), recipient));
+		assertThatNoException().isThrownBy(() -> invitations.accept(namespace, invitation.get(), recipient));
 
-		assertThat(namespaces.findMembers(namespace.get()))
+		assertThat(namespaces.findMembers(namespace))
 			.extracting(Member::account, Member::role)
 			.contains(tuple(recipient, invitation.get().role()));
 
-		assertThat(invitations.get(namespace.get(), "09320d7f8e21143b2957f1caded74cbc"))
+		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
 				.isEmpty();
 
 		events.assertThat()
@@ -382,47 +355,45 @@ class InvitationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should fail to accept expiring invitations")
 	void shouldNotAcceptExpiredInvitation() {
-		final var namespace = namespaces.findBySlug("konfigyr");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("konfigyr");
 
-		final var invitation = invitations.get(namespace.get(), "09320f6c6481c1fed73573a5430758f1");
+		final var invitation = invitations.get(namespace, "09320f6c6481c1fed73573a5430758f1");
 		assertThat(invitation).isPresent();
 
 		final var recipient = createAccount("expiring@konfigyr.com", "Leto", "Atreides");
 		assertThat(recipient).isNotNull();
 
 		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.accept(invitation.get(), recipient))
+				.isThrownBy(() -> invitations.accept(namespace, invitation.get(), recipient))
 				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.INVITATION_EXPIRED);
 
-		assertThat(namespaces.findMembers(namespace.get()))
+		assertThat(namespaces.findMembers(namespace))
 				.extracting(Member::account)
 				.doesNotContain(recipient);
 
-		assertThat(invitations.get(namespace.get(), "09320d7f8e21143b2957f1caded74cbc"))
+		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
 				.isPresent();
 	}
 
 	@Test
 	@DisplayName("should fail to accept invitations with unknown recipient account")
 	void shouldNotAcceptInvitationByUnknownAccount() {
-		final var namespace = namespaces.findBySlug("konfigyr");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("konfigyr");
 
-		final var invitation = invitations.get(namespace.get(), "09320d7f8e21143b2957f1caded74cbc");
+		final var invitation = invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc");
 		assertThat(invitation).isPresent();
 
 		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.accept(invitation.get(), EntityId.from(9999)))
+				.isThrownBy(() -> invitations.accept(namespace, invitation.get(), EntityId.from(9999)))
 				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.RECIPIENT_NOT_FOUND);
 
-		assertThat(namespaces.findMembers(namespace.get()))
+		assertThat(namespaces.findMembers(namespace))
 				.extracting(Member::account)
 				.doesNotContain(EntityId.from(9999));
 
-		assertThat(invitations.get(namespace.get(), "09320d7f8e21143b2957f1caded74cbc"))
+		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
 				.isPresent();
 	}
 
@@ -432,15 +403,14 @@ class InvitationsTest extends AbstractIntegrationTest {
 	void shouldCleanupExpiredInvitations() {
 		assertThatNoException().isThrownBy(() -> ((DefaultInvitations) invitations).cleanup());
 
-		final var namespace = namespaces.findBySlug("konfigyr");
-		assertThat(namespace).isPresent();
+		final var namespace = lookupNamespace("konfigyr");
 
-		assertThat(invitations.find(namespace.get(), Pageable.unpaged()))
+		assertThat(invitations.find(namespace, Pageable.unpaged()))
 				.hasSize(1)
 				.extracting(Invitation::key)
 				.doesNotContain("09320f6c6481c1fed73573a5430758f1");
 
-		assertThat(invitations.get(namespace.get(), "09320f6c6481c1fed73573a5430758f1"))
+		assertThat(invitations.get(namespace, "09320f6c6481c1fed73573a5430758f1"))
 				.isEmpty();
 	}
 
@@ -459,6 +429,14 @@ class InvitationsTest extends AbstractIntegrationTest {
 				.fetchOptional(ACCOUNTS.ID)
 				.map(EntityId::from)
 				.orElseThrow(() -> new IllegalStateException("Failed to create new test account"));
+	}
+
+	private Namespace lookupNamespace(String slug) {
+		return assertThat(namespaces.findBySlug(slug))
+				.as("Namespace with slug '%s' not found", slug)
+				.isPresent()
+				.get()
+				.actual();
 	}
 
 }
