@@ -2,7 +2,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
 import org.jmolecules.event.annotation.DomainEventPublisher;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,6 +15,7 @@ import java.util.Optional;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
+@NullMarked
 public interface Invitations {
 
 	/**
@@ -24,8 +25,7 @@ public interface Invitations {
 	 * @param pageable  paging instructions, can't be {@literal null}
 	 * @return paged collections of invitations, never {@literal null}
 	 */
-	@NonNull
-	Page<@NonNull Invitation> find(@NonNull Namespace namespace, @NonNull Pageable pageable);
+	Page<Invitation> find(Namespace namespace, Pageable pageable);
 
 	/**
 	 * Retrieve a single {@link Invitation} by its key that is sent for the given {@link Namespace}.
@@ -34,19 +34,18 @@ public interface Invitations {
 	 * @param key       invitation key, can't be {@literal null}
 	 * @return found invitation or an empty {@link Optional}, never {@literal null}
 	 */
-	@NonNull
-	Optional<Invitation> get(@NonNull Namespace namespace, @NonNull String key);
+	Optional<Invitation> get(Namespace namespace, String key);
 
 	/**
 	 * Creates the {@link Invitation} for the {@link Invite invitation attempt} and sends the invitation
 	 * email with the link to the invite recipient to join the {@link Namespace} as a new member.
 	 *
+	 * @param namespace namespace for which the invitation is created, can't be {@literal null}
 	 * @param invite invite to be sent to the new member, can't be {@literal null}
 	 * @return invitation
 	 */
-	@NonNull
 	@DomainEventPublisher(publishes = "namespace.invitation-created")
-	Invitation create(@NonNull Invite invite);
+	Invitation create(Namespace namespace, Invite invite);
 
 	/**
 	 * Method that is invoked when the recipient of the {@link Invitation} accepts the request and wants to
@@ -55,19 +54,21 @@ public interface Invitations {
 	 * The given {@link Invitation} would be removed from the database and a new {@link Member} would be added
 	 * to the {@link Namespace} with the defined {@link NamespaceRole}.
 	 *
+	 * @param namespace  namespace for which the invitation is accepted, can't be {@literal null}
 	 * @param invitation invitation to be accepted, can't be {@literal null}
 	 * @param recipient  the entity identifier of the account that would become a member, can't be {@literal null}
 	 */
 	@DomainEventPublisher(publishes = "namespace.invitation-accepted")
-	void accept(@NonNull Invitation invitation, @NonNull EntityId recipient);
+	void accept(Namespace namespace, Invitation invitation, EntityId recipient);
 
 	/**
 	 * Cancels the given {@link Invitation invitations} and revokes any sent out {@link Invite invites}
 	 * to recipients.
 	 *
+	 * @param namespace  namespace for which the invitation is canceled, can't be {@literal null}
 	 * @param invitation invitation to be canceled, can't be {@literal null}
 	 */
 	@DomainEventPublisher(publishes = "namespace.invitation-canceled")
-	void cancel(@NonNull Invitation invitation);
+	void cancel(Namespace namespace, Invitation invitation);
 
 }

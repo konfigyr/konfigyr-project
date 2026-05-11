@@ -7,21 +7,35 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.web.util.UriComponents;
 
+import java.util.function.Supplier;
+
 /**
  * Abstract event type that should be used for all {@link Invitation} related events.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-public abstract sealed class InvitationEvent extends EntityEvent permits
-		InvitationEvent.Created, InvitationEvent.Accepted, InvitationEvent.Canceled {
+public abstract sealed class InvitationEvent extends EntityEvent implements Supplier<Namespace>
+		permits InvitationEvent.Created, InvitationEvent.Accepted, InvitationEvent.Canceled {
 
 	protected final String key;
+	protected final Namespace namespace;
 
-	protected InvitationEvent(EntityId id, String key) {
-		super(id);
+	protected InvitationEvent(Namespace namespace, String key) {
+		super(namespace.id());
 		Assert.hasText(key, "Invitation key must not be empty");
 		this.key = key;
+		this.namespace = namespace;
+	}
+
+	/**
+	 * The namespace for which the invitation events occurred.
+	 *
+	 * @return the namespace, never {@literal null}.
+	 */
+	@Override
+	public Namespace get() {
+		return namespace;
 	}
 
 	/**
@@ -54,15 +68,15 @@ public abstract sealed class InvitationEvent extends EntityEvent permits
 		private final UriComponents host;
 
 		/**
-		 * Create a new {@link Created} event with the {@link EntityId entity identifier} of the
-		 * {@link Namespace} and the {@link Invitation} key that was just created by the {@link Invitations}.
+		 * Create a new {@link Created} event with the {@link Namespace} and the {@link Invitation}
+		 * key that was just created by the {@link Invitations}.
 		 *
-		 * @param id entity identifier of the created invitation
+		 * @param namespace the namespace for which the invitation was created
 		 * @param key invitation key
    		 * @param host the URI components host used to construct links
 		 */
-		public Created(EntityId id, String key, UriComponents host) {
-			super(id, key);
+		public Created(Namespace namespace, String key, UriComponents host) {
+			super(namespace, key);
 			this.host = host;
 		}
 
@@ -84,14 +98,14 @@ public abstract sealed class InvitationEvent extends EntityEvent permits
 	public static final class Accepted extends InvitationEvent {
 
 		/**
-		 * Create a new {@link Accepted} event with the {@link EntityId entity identifier} of the
-		 * {@link Namespace} and the {@link Invitation} key that was just accepted by the {@link Invitations}.
+		 * Create a new {@link Accepted} event with the{@link Namespace} and the {@link Invitation}
+		 * key that was just accepted by the {@link Invitations}.
 		 *
-		 * @param id entity identifier of the namespace
+		 * @param namespace the namespace
 		 * @param key invitation key
 		 */
-		public Accepted(EntityId id, String key) {
-			super(id, key);
+		public Accepted(Namespace namespace, String key) {
+			super(namespace, key);
 		}
 	}
 
@@ -102,14 +116,14 @@ public abstract sealed class InvitationEvent extends EntityEvent permits
 	public static final class Canceled extends InvitationEvent {
 
 		/**
-		 * Create a new {@link Canceled} event with the {@link EntityId entity identifier} of the
-		 * {@link Namespace} and the {@link Invitation} key that was just canceled by the {@link Invitations}.
+		 * Create a new {@link Canceled} event with the {@link Namespace} and the {@link Invitation}
+		 * key that was just canceled by the {@link Invitations}.
 		 *
-		 * @param id entity identifier of the namespace
+		 * @param namespace the namespace
 		 * @param key invitation key
 		 */
-		public Canceled(EntityId id, String key) {
-			super(id, key);
+		public Canceled(Namespace namespace, String key) {
+			super(namespace, key);
 		}
 	}
 

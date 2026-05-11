@@ -6,8 +6,6 @@ import com.konfigyr.security.AuthenticatedPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.cache.Cache;
-import org.springframework.cache.support.NoOpCache;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.authorization.AuthorizationResult;
@@ -23,12 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 class KonfigyrAccessService implements AccessService {
 
+	private final AccessControlCache accessControlCache;
 	private final AccessControlRepository accessControlRepository;
-	private final Cache cache;
-
-	KonfigyrAccessService(AccessControlRepository accessControlRepository) {
-		this(accessControlRepository, new NoOpCache("access-controls"));
-	}
 
 	@Nullable
 	@Override
@@ -73,27 +67,15 @@ class KonfigyrAccessService implements AccessService {
 
 	@Nullable
 	private AccessControl getAccessControl(@NonNull ObjectIdentity object) {
-		final Cache.ValueWrapper value = cache.get(object);
-
-		if (value != null) {
-			return (AccessControl) value.get();
+		try {
+			return accessControlCache.get(object, () -> accessControlRepository.get(object));
+		} catch (ObjectIdentityNotFound ex) {
+			log.debug("Object identity does not exist, can not find access control for {}", object);
+			accessControlCache.set(object, null);
+		} catch (Exception ex) {
+			throw new AccessControlException("Failed to retrieve access control for " + object, ex);
 		}
-
-		AccessControl accessControl = null;
-
-		synchronized (cache) {
-			try {
-				accessControl = accessControlRepository.get(object);
-			} catch (ObjectIdentityNotFound ex) {
-				log.debug("Object identity does not exist, can not find access control for {}", object);
-			} catch (Exception ex) {
-				throw new AccessControlException("Failed to retrieve access control for " + object, ex);
-			}
-
-			cache.put(object, accessControl);
-
-			return accessControl;
-		}
+		return null;
 	}
 
 	@Nullable

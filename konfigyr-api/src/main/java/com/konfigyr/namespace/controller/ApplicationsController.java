@@ -57,7 +57,7 @@ class ApplicationsController {
 	EntityModel<NamespaceApplication> get(@PathVariable @NonNull String slug, @PathVariable @NonNull EntityId id) {
 		final Namespace namespace = lookupNamespace(slug);
 
-		return Assemblers.application(lookupNamespace(slug)).assemble(
+		return Assemblers.application(namespace).assemble(
 				lookupNamespaceApplication(namespace, id)
 		);
 	}
@@ -73,7 +73,7 @@ class ApplicationsController {
 		final Namespace namespace = lookupNamespace(slug);
 
 		return Assemblers.application(namespace).assemble(
-				namespaces.createApplication(attributes.create(namespace))
+				namespaces.createApplication(namespace, attributes.create(namespace))
 		);
 	}
 
@@ -89,7 +89,7 @@ class ApplicationsController {
 		final NamespaceApplication application = lookupNamespaceApplication(namespace, id);
 
 		return Assemblers.application(namespace).assemble(
-				namespaces.updateApplication(application.id(), attributes.create(namespace))
+				namespaces.updateApplication(namespace, application.id(), attributes.create(namespace))
 		);
 	}
 
@@ -101,7 +101,7 @@ class ApplicationsController {
 		final NamespaceApplication application = lookupNamespaceApplication(namespace, id);
 
 		return Assemblers.application(namespace).assemble(
-				namespaces.resetApplication(application.id())
+				namespaces.resetApplication(namespace, application.id())
 		);
 	}
 
@@ -110,9 +110,10 @@ class ApplicationsController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
 	void delete(@PathVariable @NonNull String slug, @PathVariable @NonNull EntityId id) {
-		final NamespaceApplication application = lookupNamespaceApplication(lookupNamespace(slug), id);
+		final Namespace namespace = lookupNamespace(slug);
+		final NamespaceApplication application = lookupNamespaceApplication(namespace, id);
 
-		namespaces.removeApplication(application.id());
+		namespaces.removeApplication(namespace, application.id());
 	}
 
 	@NonNull
@@ -148,7 +149,7 @@ class ApplicationsController {
 
 		NamespaceApplicationDefinition create(Namespace namespace) {
 			return NamespaceApplicationDefinition.builder()
-					.namespace(namespace.id())
+					.namespace(namespace)
 					.name(name())
 					.scopes(scopes())
 					.expiration(expiresAt)

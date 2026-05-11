@@ -183,6 +183,48 @@ class AuditEventListener {
 		);
 	}
 
+	// ── Namespace application events ───────────────────────────────────────────────────
+
+	@TransactionalEventListener(id = "audit.application-created", classes = NamespaceEvent.ApplicationCreated.class)
+	void on(NamespaceEvent.ApplicationCreated event) {
+		insert(event, builder -> builder
+				.namespace(event.id())
+				.entityType("namespace-application")
+				.entityId(event.application().id())
+				.eventType("namespace.application-created")
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.application-updated", classes = NamespaceEvent.ApplicationUpdated.class)
+	void on(NamespaceEvent.ApplicationUpdated event) {
+		insert(event, builder -> builder
+				.namespace(event.id())
+				.entityType("namespace-application")
+				.entityId(event.application().id())
+				.eventType("namespace.application-updated")
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.application-reset", classes = NamespaceEvent.ApplicationReset.class)
+	void on(NamespaceEvent.ApplicationReset event) {
+		insert(event, builder -> builder
+				.namespace(event.id())
+				.entityType("namespace-application")
+				.entityId(event.application().id())
+				.eventType("namespace.application-reset")
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.application-removed", classes = NamespaceEvent.ApplicationRemoved.class)
+	void on(NamespaceEvent.ApplicationRemoved event) {
+		insert(event, builder -> builder
+				.namespace(event.id())
+				.entityType("namespace-application")
+				.entityId(event.application().id())
+				.eventType("namespace.application-removed")
+		);
+	}
+
 	// ── Service events ──────────────────────────────────────────────────────
 
 	@TransactionalEventListener(id = "audit.service-created", classes = ServiceEvent.Created.class)

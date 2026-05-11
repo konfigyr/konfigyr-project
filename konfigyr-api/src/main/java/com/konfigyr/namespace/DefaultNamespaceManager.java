@@ -181,7 +181,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 		log.info(CREATED, "Successfully created new namespace {} with administrator member {} from {}",
 				namespace.id(), admin.id(), definition);
 
-		publisher.publishEvent(new NamespaceEvent.Created(namespace.id()));
+		publisher.publishEvent(new NamespaceEvent.Created(namespace));
 
 		return namespace;
 	}
@@ -215,29 +215,28 @@ class DefaultNamespaceManager implements NamespaceManager {
 		} catch (Exception e) {
 			throw new NamespaceException("Unexpected exception occurred while updating namespace", e);
 		}
+		final Namespace namespace = fetch(NAMESPACES.ID.eq(id.get()))
+				.orElseThrow(() -> new NamespaceNotFoundException(slug));
 
 		if (!record.original(NAMESPACES.SLUG).equals(definition.slug().get())) {
-			publisher.publishEvent(new NamespaceEvent.Renamed(id, Slug.slugify(slug), definition.slug()));
+			publisher.publishEvent(new NamespaceEvent.Renamed(namespace, Slug.slugify(slug), definition.slug()));
 		}
 
-		return fetch(NAMESPACES.ID.eq(id.get())).orElseThrow(() -> new NamespaceNotFoundException(slug));
+		return namespace;
 	}
 
 	@Override
 	@CacheEvict(CACHE_NAME)
 	@Transactional(label = "namespace-delete")
 	public void delete(@NonNull String slug) {
-		final EntityId id = context.select(NAMESPACES.ID)
-				.from(NAMESPACES)
-				.where(NAMESPACES.SLUG.eq(slug))
-				.fetchOptional(record -> EntityId.from(record.get(NAMESPACES.ID)))
+		final Namespace namespace = fetch(NAMESPACES.SLUG.eq(slug))
 				.orElseThrow(() -> new NamespaceNotFoundException(slug));
 
 		context.delete(NAMESPACES)
-				.where(NAMESPACES.ID.eq(id.get()))
+				.where(NAMESPACES.ID.eq(namespace.id().get()))
 				.execute();
 
-		publisher.publishEvent(new NamespaceEvent.Deleted(id));
+		publisher.publishEvent(new NamespaceEvent.Deleted(namespace));
 	}
 
 	@NonNull
@@ -264,22 +263,27 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "namespace-get-member")
-	public Optional<Member> getMember(@NonNull EntityId member) {
-		return createMembersQuery(NAMESPACE_MEMBERS.ID.eq(member.get()))
-				.fetchOptional(DefaultNamespaceManager::toMember);
+	public Optional<Member> getMember(@NonNull Namespace namespace, @NonNull EntityId member) {
+		return createMembersQuery(DSL.and(
+				NAMESPACE_MEMBERS.ID.eq(member.get()),
+				NAMESPACE_MEMBERS.NAMESPACE_ID.eq(namespace.id().get())
+		)).fetchOptional(DefaultNamespaceManager::toMember);
 	}
 
 	@NonNull
 	@Override
 	@Transactional(label = "namespace-update-member")
-	public Member updateMember(@NonNull EntityId id, @NonNull NamespaceRole role) {
+	public Member updateMember(@NonNull Namespace namespace, @NonNull EntityId id, @NonNull NamespaceRole role) {
 		if (isLastRemainingAdministrator(id) && NamespaceRole.USER == role) {
 			throw new UnsupportedMembershipOperationException("Last administrator member cannot be updated to user");
 		}
 
 		context.update(NAMESPACE_MEMBERS)
 				.set(NAMESPACE_MEMBERS.ROLE, role.name())
-				.where(NAMESPACE_MEMBERS.ID.eq(id.get()))
+				.where(DSL.and(
+						NAMESPACE_MEMBERS.ID.eq(id.get()),
+						NAMESPACE_MEMBERS.NAMESPACE_ID.eq(namespace.id().get())
+				))
 				.execute();
 
 		final Member member = createMembersQuery(NAMESPACE_MEMBERS.ID.eq(id.get()))
@@ -287,33 +291,34 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.orElseThrow(() -> new NamespaceException("Failed to update unknown member with: " + id));
 
 		log.info("Successfully updated member role: [id={}, namespace={}, account={}, role={}]",
-				member.id(), member.namespace(), member.account(), member.role());
+				member.id(), namespace.slug(), member.account(), member.role());
 
-		publisher.publishEvent(new NamespaceEvent.MemberUpdated(
-				member.namespace(), member.account(), member.role()
-		));
+		publisher.publishEvent(new NamespaceEvent.MemberUpdated(namespace, member.account(), member.role()));
 
 		return member;
 	}
 
 	@Override
 	@Transactional(label = "namespace-remove-member")
-	public void removeMember(@NonNull EntityId id) {
+	public void removeMember(@NonNull Namespace namespace, @NonNull EntityId id) {
 		if (isLastRemainingAdministrator(id)) {
 			throw new UnsupportedMembershipOperationException("Last administrator member cannot be removed");
 		}
 
 		final Record result = context.deleteFrom(NAMESPACE_MEMBERS)
-				.where(NAMESPACE_MEMBERS.ID.eq(id.get()))
-				.returning(NAMESPACE_MEMBERS.ACCOUNT_ID, NAMESPACE_MEMBERS.NAMESPACE_ID)
+				.where(DSL.and(
+						NAMESPACE_MEMBERS.ID.eq(id.get()),
+						NAMESPACE_MEMBERS.NAMESPACE_ID.eq(namespace.id().get())
+				))
+				.returning(NAMESPACE_MEMBERS.ACCOUNT_ID)
 				.fetchAny();
 
 		if (result != null) {
 			log.info("Successfully removed member: [id={}, namespace={}, account={}]",
-					id.get(), result.get(NAMESPACE_MEMBERS.NAMESPACE_ID), result.get(NAMESPACE_MEMBERS.ACCOUNT_ID));
+					id.get(), namespace.slug(), result.get(NAMESPACE_MEMBERS.ACCOUNT_ID));
 
 			publisher.publishEvent(new NamespaceEvent.MemberRemoved(
-					result.get(NAMESPACE_MEMBERS.NAMESPACE_ID, EntityId.class),
+					namespace,
 					result.get(NAMESPACE_MEMBERS.ACCOUNT_ID, EntityId.class)
 			));
 		}
@@ -371,7 +376,10 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@NonNull
 	@Override
 	@Transactional(label = "namespace-create-application")
-	public NamespaceApplication createApplication(@NonNull NamespaceApplicationDefinition definition) {
+	public NamespaceApplication createApplication(
+			@NonNull Namespace namespace,
+			@NonNull NamespaceApplicationDefinition definition
+	) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to create namespace OAuth application from: {}", definition);
 		}
@@ -406,13 +414,19 @@ class DefaultNamespaceManager implements NamespaceManager {
 			throw new IllegalStateException("Failed to create application");
 		}
 
+		publisher.publishEvent(new NamespaceEvent.ApplicationCreated(namespace, application));
+
 		return application;
 	}
 
 	@NonNull
 	@Override
 	@Transactional(label = "namespace-update-application")
-	public NamespaceApplication updateApplication(@NonNull EntityId id, @NonNull NamespaceApplicationDefinition definition) {
+	public NamespaceApplication updateApplication(
+			@NonNull Namespace namespace,
+			@NonNull EntityId id,
+			@NonNull NamespaceApplicationDefinition definition
+	) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to update namespace OAuth application with: [id={}, definition={}]", id, definition);
 		}
@@ -433,19 +447,20 @@ class DefaultNamespaceManager implements NamespaceManager {
 		log.info("Successfully updated namespace OAuth application: [id={}, namespace={}, name={}, scopes={}, expiry={}]",
 				application.id(), application.namespace(), application.name(), application.scopes(), application.expiresAt());
 
+		publisher.publishEvent(new NamespaceEvent.ApplicationUpdated(namespace, application));
+
 		return application;
 	}
 
 	@NonNull
 	@Override
 	@Transactional(label = "namespace-reset-application")
-	public NamespaceApplication resetApplication(@NonNull EntityId id) {
+	public NamespaceApplication resetApplication(@NonNull Namespace namespace, @NonNull EntityId id) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to reset namespace OAuth application with identifier: {}", id);
 		}
 
-		final Record record = createApplicationsQuery(OAUTH_APPLICATIONS.ID.eq(id.get()))
-				.fetchOptional()
+		final Record record = lookupApplication(namespace.id(), id)
 				.orElseThrow(() -> new NamespaceApplicationNotFoundException(id));
 
 		final String clientId = record.get(OAUTH_APPLICATIONS.CLIENT_ID);
@@ -466,19 +481,23 @@ class DefaultNamespaceManager implements NamespaceManager {
 		log.info("Successfully reset namespace OAuth application: [id={}, namespace={}, name={}, scopes={}, expiry={}]",
 				application.id(), application.namespace(), application.name(), application.scopes(), application.expiresAt());
 
+		publisher.publishEvent(new NamespaceEvent.ApplicationReset(namespace, application));
+
 		return application;
 	}
 
 	@Override
 	@Transactional(label = "namespace-remove-application")
-	public void removeApplication(@NonNull EntityId application) {
-		final long count = context.deleteFrom(OAUTH_APPLICATIONS)
-				.where(OAUTH_APPLICATIONS.ID.eq(application.get()))
+	public void removeApplication(@NonNull Namespace namespace, @NonNull EntityId id) {
+		final NamespaceApplication application = lookupApplication(namespace.id(), id)
+				.map(DefaultNamespaceManager::toApplication)
+				.orElseThrow(() -> new NamespaceApplicationNotFoundException(id));
+
+		context.deleteFrom(OAUTH_APPLICATIONS)
+				.where(OAUTH_APPLICATIONS.ID.eq(application.id().get()))
 				.execute();
 
-		if (count == 0) {
-			throw new NamespaceApplicationNotFoundException(application);
-		}
+		publisher.publishEvent(new NamespaceEvent.ApplicationRemoved(namespace, application));
 	}
 
 	@NonNull
@@ -618,6 +637,14 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.innerJoin(NAMESPACES)
 				.on(NAMESPACES.ID.eq(OAUTH_APPLICATIONS.NAMESPACE_ID))
 				.where(condition);
+	}
+
+	@NonNull
+	private Optional<? extends Record> lookupApplication(@NonNull EntityId namespace, @NonNull EntityId application) {
+		return createApplicationsQuery(DSL.and(
+				OAUTH_APPLICATIONS.ID.eq(application.get()),
+				OAUTH_APPLICATIONS.NAMESPACE_ID.eq(namespace.get())
+		)).fetchOptional();
 	}
 
 	@NonNull

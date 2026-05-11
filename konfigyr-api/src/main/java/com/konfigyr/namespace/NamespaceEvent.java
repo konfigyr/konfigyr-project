@@ -7,17 +7,36 @@ import org.jmolecules.event.annotation.DomainEvent;
 import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 
+import java.util.function.Supplier;
+
 /**
  * Abstract event type that should be used for all {@link Namespace} related events.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-public abstract sealed class NamespaceEvent extends EntityEvent
-		permits NamespaceEvent.Created, NamespaceEvent.Renamed, NamespaceEvent.Deleted, NamespaceEvent.MembershipEvent {
+public abstract sealed class NamespaceEvent extends EntityEvent implements Supplier<Namespace>
+		permits NamespaceEvent.Created, NamespaceEvent.Renamed, NamespaceEvent.Deleted,
+			NamespaceEvent.ApplicationEvent, NamespaceEvent.MembershipEvent {
 
-	protected NamespaceEvent(EntityId id) {
-		super(id);
+	/**
+	 * The namespace that is the subject of the event.
+	 */
+	private final Namespace namespace;
+
+	protected NamespaceEvent(Namespace namespace) {
+		super(namespace.id());
+		this.namespace = namespace;
+	}
+
+	/**
+	 * Returns the {@link Namespace} that is the subject of the event.
+	 *
+	 * @return the namespace, never {@literal null}.
+	 */
+	@Override
+	public Namespace get() {
+		return namespace;
 	}
 
 	/**
@@ -27,13 +46,13 @@ public abstract sealed class NamespaceEvent extends EntityEvent
 	public static final class Created extends NamespaceEvent {
 
 		/**
-		 * Create a new {@link Created} event with the {@link EntityId entity identifier} of the
-		 * {@link Namespace} that was just created by the {@link NamespaceManager}.
+		 * Create a new {@link Created} event with the {@link Namespace} that was just
+		 * created by the {@link NamespaceManager}.
 		 *
-		 * @param id entity identifier of the created namespace
+		 * @param namespace the created namespace
 		 */
-		public Created(EntityId id) {
-			super(id);
+		public Created(Namespace namespace) {
+			super(namespace);
 		}
 	}
 
@@ -48,15 +67,15 @@ public abstract sealed class NamespaceEvent extends EntityEvent
 		private final Slug to;
 
 		/**
-		 * Create a new {@link Renamed} event with the {@link EntityId entity identifier} of the
-		 * {@link Namespace} that was just updated and the URL slug values.
+		 * Create a new {@link Renamed} event with the {@link Namespace} that was just
+		 * updated and the URL slug values.
 		 *
-		 * @param id entity identifier of the created namespace
+		 * @param namespace the renamed namespace
 		 * @param from the previous namespace URL slug
 		 * @param to the new namespace URL slug
 		 */
-		public Renamed(EntityId id, Slug from, Slug to) {
-			super(id);
+		public Renamed(Namespace namespace, Slug from, Slug to) {
+			super(namespace);
 			this.from = from;
 			this.to = to;
 		}
@@ -88,13 +107,13 @@ public abstract sealed class NamespaceEvent extends EntityEvent
 	public static final class Deleted extends NamespaceEvent {
 
 		/**
-		 * Create a new {@link Deleted} event with the {@link EntityId entity identifier} of the
-		 * {@link Namespace} that was just deleted by the {@link NamespaceManager}.
+		 * Create a new {@link Deleted} event with the {@link Namespace} that was just
+		 * deleted by the {@link NamespaceManager}.
 		 *
-		 * @param id entity identifier of the deleted namespace
+		 * @param namespace the deleted namespace
 		 */
-		public Deleted(EntityId id) {
-			super(id);
+		public Deleted(Namespace namespace) {
+			super(namespace);
 		}
 	}
 
@@ -106,9 +125,8 @@ public abstract sealed class NamespaceEvent extends EntityEvent
 
 		private final EntityId account;
 
-		protected MembershipEvent(EntityId id, EntityId account) {
-			super(id);
-
+		protected MembershipEvent(Namespace namespace, EntityId account) {
+			super(namespace);
 			Assert.notNull(account, "Entity identifier of the member user account can not be null");
 			this.account = account;
 		}
@@ -139,16 +157,15 @@ public abstract sealed class NamespaceEvent extends EntityEvent
 		private final NamespaceRole role;
 
 		/**
-		 * Create a new {@link MemberAdded} event with the {@link EntityId entity identifier} of the
-		 * {@link Namespace}, {@link com.konfigyr.account.Account} that was added as a new {@link Member}
-		 * and the {@link NamespaceRole} that was assigned to it.
+		 * Create a new {@link MemberAdded} event with the {@link Namespace}, {@link com.konfigyr.account.Account}
+		 * that was added as a new {@link Member} and the {@link NamespaceRole} that was assigned to it.
 		 *
-		 * @param id entity identifier of the namespace
+		 * @param namespace the namespace to which this member was added
 		 * @param account entity identifier of the user account that was added as a member
 		 * @param role namespace role assigned to the new member
 		 */
-		public MemberAdded(EntityId id, EntityId account, NamespaceRole role) {
-			super(id, account);
+		public MemberAdded(Namespace namespace, EntityId account, NamespaceRole role) {
+			super(namespace, account);
 
 			Assert.notNull(role, "Namespace role assigned to the member can not be null");
 			this.role = role;
@@ -169,16 +186,15 @@ public abstract sealed class NamespaceEvent extends EntityEvent
 		private final NamespaceRole role;
 
 		/**
-		 * Create an {@link MemberUpdated} event with the {@link EntityId entity identifier} of the
-		 * {@link Namespace}, {@link com.konfigyr.account.Account} for which the membership was updated
-		 * and the {@link NamespaceRole} that was changed.
+		 * Create an {@link MemberUpdated} event with the {@link Namespace}, {@link com.konfigyr.account.Account}
+		 * for which the membership was updated and the {@link NamespaceRole} that was changed.
 		 *
-		 * @param id entity identifier of the namespace
+		 * @param namespace the namespace to which this member was updated
 		 * @param account entity identifier of the user account for which the membership was updated
 		 * @param role namespace role changed for the member
 		 */
-		public MemberUpdated(EntityId id, EntityId account, NamespaceRole role) {
-			super(id, account);
+		public MemberUpdated(Namespace namespace, EntityId account, NamespaceRole role) {
+			super(namespace, account);
 
 			Assert.notNull(role, "Namespace role that was updated for the member can not be null");
 			this.role = role;
@@ -200,11 +216,113 @@ public abstract sealed class NamespaceEvent extends EntityEvent
 		 * Create an {@link MemberRemoved} event with the {@link EntityId entity identifier} of the
 		 * {@link Namespace} and the {@link com.konfigyr.account.Account} that was removed from the namespace.
 		 *
-		 * @param id entity identifier of the namespace
+		 * @param namespace the namespace from which the member was removed
 		 * @param account entity identifier of the user account that was removed as a namespace member
 		 */
-		public MemberRemoved(EntityId id, EntityId account) {
-			super(id, account);
+		public MemberRemoved(Namespace namespace, EntityId account) {
+			super(namespace, account);
+		}
+	}
+
+	/**
+	 * Abstract event that would be used for all {@link NamespaceApplication} related changes of a {@link Namespace}.
+	 */
+	public static abstract sealed class ApplicationEvent extends NamespaceEvent
+			permits ApplicationCreated, ApplicationUpdated, ApplicationReset, ApplicationRemoved {
+
+		private final NamespaceApplication application;
+
+		protected ApplicationEvent(Namespace namespace, NamespaceApplication application) {
+			super(namespace);
+			this.application = application;
+		}
+
+		/**
+		 * The entity identifier of the {@link com.konfigyr.account.Account} that was the subject of
+		 * the change within the given {@link Namespace}.
+		 *
+		 * @return account entity identifier, never {@literal null}
+		 */
+		@NonNull
+		public NamespaceApplication application() {
+			return application;
+		}
+
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + "[id=" + id + ", application=" + application.id() + ", timestamp=" + timestamp + ']';
+		}
+	}
+
+	/**
+	 * Event that would be published when a new {@link NamespaceApplication} is added to the {@link Namespace}.
+	 */
+	@DomainEvent(name = "application-created", namespace = "namespaces")
+	public static final class ApplicationCreated extends ApplicationEvent {
+
+		/**
+		 * Create a new {@link ApplicationCreated} event with the {@link Namespace} and the created
+		 * {@link NamespaceApplication} instance.
+		 *
+		 * @param namespace the namespace to which this application was added
+		 * @param application the created namespace application
+		 */
+		public ApplicationCreated(Namespace namespace, NamespaceApplication application) {
+			super(namespace, application);
+		}
+	}
+
+	/**
+	 * Event that would be published when an {@link NamespaceApplication} was updated for the {@link Namespace}.
+	 */
+	@DomainEvent(name = "application-updated", namespace = "namespaces")
+	public static final class ApplicationUpdated extends ApplicationEvent {
+
+		/**
+		 * Create a new {@link ApplicationUpdated} event with the {@link Namespace} and the updated
+		 * {@link NamespaceApplication} instance.
+		 *
+		 * @param namespace the namespace that owns the updated application
+		 * @param application the updated namespace application
+		 */
+		public ApplicationUpdated(Namespace namespace, NamespaceApplication application) {
+			super(namespace, application);
+		}
+	}
+
+	/**
+	 * Event that would be published when an {@link NamespaceApplication} was updated for the {@link Namespace}.
+	 */
+	@DomainEvent(name = "application-reset", namespace = "namespaces")
+	public static final class ApplicationReset extends ApplicationEvent {
+
+		/**
+		 * Create a new {@link ApplicationUpdated} event with the {@link Namespace} and the reset
+		 * {@link NamespaceApplication} instance.
+		 *
+		 * @param namespace the namespace that owns the updated application
+		 * @param application the namespace application that was reset
+		 */
+		public ApplicationReset(Namespace namespace, NamespaceApplication application) {
+			super(namespace, application);
+		}
+	}
+
+	/**
+	 * Event that would be published when an {@link NamespaceApplication} was updated for the {@link Namespace}.
+	 */
+	@DomainEvent(name = "application-removed", namespace = "namespaces")
+	public static final class ApplicationRemoved extends ApplicationEvent {
+
+		/**
+		 * Create a new {@link ApplicationRemoved} event with the {@link Namespace} and the removed
+		 * {@link NamespaceApplication} instance.
+		 *
+		 * @param namespace the namespace that owed the removed application
+		 * @param application the removed namespace application
+		 */
+		public ApplicationRemoved(Namespace namespace, NamespaceApplication application) {
+			super(namespace, application);
 		}
 	}
 

@@ -185,7 +185,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should retrieve namespace member")
 	void shouldRetrieveNamespaceMember() {
-		assertThat(manager.getMember(EntityId.from(2)))
+		assertThat(manager.getMember(lookupNamespace("konfigyr"), EntityId.from(2)))
 				.isNotNull()
 				.isNotEmpty()
 				.get()
@@ -198,7 +198,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to retrieve unknown namespace member")
 	void shouldRetrieveUnknownNamespaceMember() {
-		assertThat(manager.getMember(EntityId.from(9999)))
+		assertThat(manager.getMember(lookupNamespace("konfigyr"), EntityId.from(9999)))
 				.isNotNull()
 				.isEmpty();
 	}
@@ -207,7 +207,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should update namespace member")
 	void shouldUpdateNamespaceMember(AssertablePublishedEvents events) {
-		assertThat(manager.updateMember(EntityId.from(3), NamespaceRole.ADMIN))
+		assertThat(manager.updateMember(lookupNamespace("konfigyr"), EntityId.from(3), NamespaceRole.ADMIN))
 				.isNotNull()
 				.returns(EntityId.from(3), Member::id)
 				.returns(EntityId.from(2), Member::account)
@@ -224,7 +224,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to update last namespace admin member to user")
 	void shouldUpdateLastAdministrator(AssertablePublishedEvents events) {
-		assertThatThrownBy(() -> manager.updateMember(EntityId.from(2), NamespaceRole.USER))
+		assertThatThrownBy(() -> manager.updateMember(lookupNamespace("konfigyr"), EntityId.from(2), NamespaceRole.USER))
 				.isInstanceOf(UnsupportedMembershipOperationException.class);
 
 		assertThat(events.ofType(NamespaceEvent.MemberUpdated.class))
@@ -234,7 +234,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to update unknown namespace member")
 	void shouldFailToUpdateUnknownNamespaceMember(AssertablePublishedEvents events) {
-		assertThatThrownBy(() -> manager.updateMember(EntityId.from(9999), NamespaceRole.USER))
+		assertThatThrownBy(() -> manager.updateMember(lookupNamespace("john-doe"), EntityId.from(9999), NamespaceRole.USER))
 				.isInstanceOf(MemberNotFoundException.class);
 
 		assertThat(events.ofType(NamespaceEvent.MemberUpdated.class))
@@ -245,7 +245,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should remove namespace member")
 	void shouldRemoveNamespaceMember(AssertablePublishedEvents events) {
-		assertThatNoException().isThrownBy(() -> manager.removeMember(EntityId.from(3)));
+		assertThatNoException().isThrownBy(() -> manager.removeMember(lookupNamespace("konfigyr"), EntityId.from(3)));
 
 		assertThat(manager.findMembers("konfigyr"))
 				.isNotNull()
@@ -262,7 +262,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should not remove last namespace administrator member")
 	void shouldRemoveLastAdministrator(AssertablePublishedEvents events) {
-		assertThatThrownBy(() -> manager.removeMember(EntityId.from(2)))
+		assertThatThrownBy(() -> manager.removeMember(lookupNamespace("konfigyr"), EntityId.from(2)))
 				.isInstanceOf(UnsupportedMembershipOperationException.class);
 
 		assertThat(events.ofType(NamespaceEvent.MemberRemoved.class))
@@ -272,7 +272,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should remove namespace member that does not exist")
 	void shouldRemoveNonExistingNamespaceMember(AssertablePublishedEvents events) {
-		assertThatThrownBy(() -> manager.removeMember(EntityId.from(9999)))
+		assertThatThrownBy(() -> manager.removeMember(lookupNamespace("konfigyr"), EntityId.from(9999)))
 				.isInstanceOf(MemberNotFoundException.class);
 
 		assertThat(manager.findMembers("konfigyr"))
@@ -655,14 +655,15 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@Test
 	@Transactional
 	@DisplayName("should create namespace application without expiration")
-	void shouldCreateApplicationWithoutExpiration() {
+	void shouldCreateApplicationWithoutExpiration(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
 		final var definition = NamespaceApplicationDefinition.builder()
-				.namespace(EntityId.from(2))
+				.namespace(namespace)
 				.name("Test expiring OAuth application")
 				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
 				.build();
 
-		final var application = manager.createApplication(definition);
+		final var application = manager.createApplication(namespace, definition);
 
 		assertThat(application.id())
 				.isNotNull();
@@ -687,20 +688,26 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(application.updatedAt())
 				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		events.assertThat()
+				.contains(NamespaceEvent.ApplicationCreated.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.ApplicationCreated::application, application);
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should create namespace application with expiration")
-	void shouldCreateApplicationWithExpiration() {
+	void shouldCreateApplicationWithExpiration(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
 		final var definition = NamespaceApplicationDefinition.builder()
-				.namespace(EntityId.from(2))
+				.namespace(namespace)
 				.name("Test OAuth application")
 				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
 				.expiration(OffsetDateTime.now().plusDays(1))
 				.build();
 
-		final var application = manager.createApplication(definition);
+		final var application = manager.createApplication(namespace, definition);
 
 		assertThat(application.id())
 				.isNotNull();
@@ -727,27 +734,56 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(application.updatedAt())
 				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		events.assertThat()
+				.contains(NamespaceEvent.ApplicationCreated.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.ApplicationCreated::application, application);
 	}
 
 	@Test
-	@DisplayName("should fail to create an application for unknown namespace")
-	void shouldCreateApplicationForUnknownNamespace() {
+	@Transactional
+	@DisplayName("should update namespace application")
+	void shouldUpdateApplication(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
 		final var definition = NamespaceApplicationDefinition.builder()
-				.namespace(EntityId.from(9999))
-				.name("Test OAuth application")
-				.scopes("namespaces")
+				.namespace(namespace)
+				.name("Updated OAuth application")
+				.scopes(OAuthScopes.of(OAuthScope.PROFILES, OAuthScope.INVITE_MEMBERS))
+				.expiration(OffsetDateTime.now().plusDays(2))
 				.build();
 
-		assertThatExceptionOfType(NamespaceNotFoundException.class)
-				.isThrownBy(() -> manager.createApplication(definition))
-				.withNoCause();
+		final var application = manager.updateApplication(namespace, EntityId.from(3), definition);
+
+		assertThat(application)
+				.returns(EntityId.from(3), NamespaceApplication::id)
+				.returns(EntityId.from(1), NamespaceApplication::namespace)
+				.returns("Updated OAuth application", NamespaceApplication::name)
+				.returns("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG", NamespaceApplication::clientId)
+				.returns(null, NamespaceApplication::clientSecret)
+				.returns(OAuthScopes.of(OAuthScope.PROFILES, OAuthScope.INVITE_MEMBERS), NamespaceApplication::scopes);
+
+		assertThat(application.createdAt())
+				.isCloseTo(OffsetDateTime.now().minusDays(2), within(1, ChronoUnit.MINUTES));
+
+		assertThat(application.updatedAt())
+				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		assertThat(application.expiresAt())
+				.isCloseTo(definition.expiration(), within(1, ChronoUnit.MINUTES));
+
+		events.assertThat()
+				.contains(NamespaceEvent.ApplicationUpdated.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.ApplicationUpdated::application, application);
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should reset namespace application")
-	void shouldResetApplication() {
-		final var application = manager.resetApplication(EntityId.from(3));
+	void shouldResetApplication(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("john-doe");
+		final var application = manager.resetApplication(namespace, EntityId.from(3));
 
 		assertThat(application)
 				.returns(EntityId.from(3), NamespaceApplication::id)
@@ -766,30 +802,65 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(application.updatedAt())
 				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		events.assertThat()
+				.contains(NamespaceEvent.ApplicationReset.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.ApplicationReset::application, application);
 	}
 
 	@Test
 	@DisplayName("should fail to reset unknown namespace application")
-	void shouldResetUnknownApplication() {
+	void shouldResetUnknownApplication(AssertablePublishedEvents events) {
 		assertThatExceptionOfType(NamespaceApplicationNotFoundException.class)
-				.isThrownBy(() -> manager.resetApplication(EntityId.from(999)));
+				.isThrownBy(() -> manager.resetApplication(lookupNamespace("john-doe"), EntityId.from(999)));
+
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.class))
+				.isFalse();
+	}
+
+	@Test
+	@DisplayName("should fail to reset application that belongs to different namespace")
+	void shouldResetApplicationForDifferentNamespace(AssertablePublishedEvents events) {
+		assertThatExceptionOfType(NamespaceApplicationNotFoundException.class)
+				.isThrownBy(() -> manager.resetApplication(lookupNamespace("konfigyr"), EntityId.from(3)));
+
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.class))
+				.isFalse();
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should delete namespace application")
-	void shouldRemoveApplication() {
-		assertThatNoException().isThrownBy(() -> manager.removeApplication(EntityId.from(1)));
+	void shouldRemoveApplication(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+		assertThatNoException().isThrownBy(() -> manager.removeApplication(namespace, EntityId.from(1)));
 
 		assertThat(manager.getApplication(EntityId.from(1)))
 				.isEmpty();
+
+		events.assertThat()
+				.contains(NamespaceEvent.ApplicationRemoved.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(event -> event.application().id(), EntityId.from(1));
 	}
 
 	@Test
 	@DisplayName("should delete an unknown namespace application")
-	void shouldRemoveUnknownApplication() {
+	void shouldRemoveUnknownApplication(AssertablePublishedEvents events) {
 		assertThatExceptionOfType(NamespaceApplicationNotFoundException.class)
-				.isThrownBy(() -> manager.removeApplication(EntityId.from(999)));
+				.isThrownBy(() -> manager.removeApplication(lookupNamespace("john-doe"), EntityId.from(999)));
+
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.class))
+				.isFalse();
+	}
+
+	private Namespace lookupNamespace(String slug) {
+		return assertThat(manager.findBySlug(slug))
+				.as("Namespace with slug '%s' not found", slug)
+				.isPresent()
+				.get()
+				.actual();
 	}
 
 }

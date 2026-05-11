@@ -10,8 +10,8 @@ import java.io.Serializable;
 /**
  * Record that defines the invitation attempt to a person to join the {@link Namespace} team.
  * <p>
- * The invite needs to contain the {@link EntityId entity identifiers} of the {@link Namespace} and of
- * the {@link com.konfigyr.account.Account sender account}, the email of the person that is being invited
+ * The invite needs to contain the {@link EntityId entity identifier} of the
+ * {@link com.konfigyr.account.Account sender account}, the email of the person that is being invited
  * to the {@link Namespace} team and the {@link NamespaceRole} that this new member is going to have within
  * the team.
  * <p>
@@ -21,8 +21,6 @@ import java.io.Serializable;
  * When the invite is successfully sent to the recipient, the {@link Invitation} would be created and
  * stored in the database.
  *
- * @param namespace entity identifier of the namespace to which this new member would be a part of,
- *                  can't be {@literal null}
  * @param sender	entity identifier of the {@link com.konfigyr.account.Account} that created the
  *                  invite intent, can't be {@literal null}
  * @param recipient email address of the invited person, can't be {@literal null}
@@ -30,10 +28,10 @@ import java.io.Serializable;
  * @author Vladimir Spasic
  * @since 1.0.0
  * @see Invitation
+ * @see Namespace
  **/
 @ValueObject
 public record Invite(
-		@NonNull EntityId namespace,
 		@NonNull EntityId sender,
 		@NonNull String recipient,
 		@NonNull NamespaceRole role

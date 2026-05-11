@@ -132,7 +132,7 @@ public record NamespaceApplicationDefinition(
 	 */
 	public static final class Builder {
 
-		private EntityId namespace;
+		private Namespace namespace;
 		private String name;
 		private OAuthScopes scopes;
 		private OffsetDateTime expiration;
@@ -141,38 +141,13 @@ public record NamespaceApplicationDefinition(
 		}
 
 		/**
-		 * Specify the internal {@link EntityId} of the {@link Namespace} for which the
-		 * {@link NamespaceApplication} would be created.
+		 * Specify the internal the {@link Namespace} for which the {@link NamespaceApplication} would be created.
 		 *
-		 * @param namespace internal namespace identifier
+		 * @param namespace the namespace that should be marked as the owner of the application
 		 * @return namespace application definition builder
 		 */
 		@NonNull
-		public Builder namespace(Long namespace) {
-			return namespace(EntityId.from(namespace));
-		}
-
-		/**
-		 * Specify the external {@link EntityId} of the {@link Namespace} for which the
-		 * {@link NamespaceApplication} would be created.
-		 *
-		 * @param namespace external namespace identifier
-		 * @return namespace application definition builder
-		 */
-		@NonNull
-		public Builder namespace(String namespace) {
-			return namespace(EntityId.from(namespace));
-		}
-
-		/**
-		 * Specify the {@link EntityId} of the {@link Namespace} for which the
-		 * {@link NamespaceApplication} would be created.
-		 *
-		 * @param namespace namespace identifier
-		 * @return namespace application definition builder
-		 */
-		@NonNull
-		public Builder namespace(EntityId namespace) {
+		public Builder namespace(Namespace namespace) {
 			this.namespace = namespace;
 			return this;
 		}
@@ -233,11 +208,11 @@ public record NamespaceApplicationDefinition(
 		 */
 		@NonNull
 		public NamespaceApplicationDefinition build() {
-			Assert.notNull(namespace, "Namespace entity identifier can not be null");
+			Assert.notNull(namespace, "Namespace can not be null");
 			Assert.hasText(name, "Namespace application name can not be blank");
 			Assert.notNull(scopes, "OAuth scopes can not be null");
 
-			return new NamespaceApplicationDefinition(namespace, name, scopes, expiration);
+			return new NamespaceApplicationDefinition(namespace.id(), name, scopes, expiration);
 		}
 
 	}
