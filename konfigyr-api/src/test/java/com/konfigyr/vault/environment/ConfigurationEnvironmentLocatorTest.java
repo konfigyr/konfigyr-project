@@ -90,7 +90,7 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 				.returns(Collections.emptyList(), ConfigurationEnvironment::propertySources);
 
 		assertObservation()
-				.hasEvent("konfigyr.vault.environment.missing", "unknown-profile");
+				.hasEvent("konfigyr.vault.environment.missing", "configuration environment is missing for 'unknown-profile' profile");
 	}
 
 	@Test
@@ -146,7 +146,7 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 				);
 
 		assertObservation()
-				.hasEvent("konfigyr.vault.environment.located", "development");
+				.hasEvent("konfigyr.vault.environment.located", "located configuration environment for 'development' profile");
 	}
 
 	@Test
@@ -169,8 +169,8 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 				);
 
 		assertObservation()
-				.hasEvent("konfigyr.vault.environment.located", "development")
-				.hasEvent("konfigyr.vault.environment.located", "staging");
+				.hasEvent("konfigyr.vault.environment.located", "located configuration environment for 'development' profile")
+				.hasEvent("konfigyr.vault.environment.located", "located configuration environment for 'staging' profile");
 	}
 
 	Profile setupBranchForProfile(String profileName) {
