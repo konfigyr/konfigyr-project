@@ -3,8 +3,6 @@ package com.konfigyr.vault.changes;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.vault.ChangeRequestMergeStatus;
 import com.konfigyr.vault.gatekeeper.ChangeRequestGatekeeper;
-import io.micrometer.observation.annotation.ObservationKeyValue;
-import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -64,8 +62,7 @@ class ChangeRequestEvaluator {
 	 * @param changeRequestId the identifier of the change request to evaluate, must not be {@literal null}
 	 */
 	@Transactional(isolation = Isolation.SERIALIZABLE, label = "vault.change-request.evaluator")
-	@Observed(name = "konfigyr.vault.change-request.evaluator")
-	void evaluate(@ObservationKeyValue(key = "changeRequest") EntityId changeRequestId) {
+	void evaluate(EntityId changeRequestId) {
 		final ChangeRequestMergeStatus status = gatekeeper.evaluate(changeRequestId);
 
 		context.update(VAULT_CHANGE_REQUESTS)

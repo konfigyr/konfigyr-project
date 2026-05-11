@@ -1,8 +1,6 @@
 package com.konfigyr.namespace.catalog;
 
 import com.konfigyr.entity.EntityId;
-import io.micrometer.observation.annotation.ObservationKeyValue;
-import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -83,8 +81,7 @@ class ServiceCatalogWorker {
 	 * @param release the release entity identifier, can't be {@literal null}
 	 */
 	@Transactional(isolation = Isolation.SERIALIZABLE, label = "service-catalog-worker.build")
-	@Observed(name = "konfigyr.namespace.service-catalog-worker")
-	void build(@ObservationKeyValue(key = "release") EntityId release) {
+	void build(EntityId release) {
 		assertReleaseExists(release);
 
 		final long dropped = context.deleteFrom(SERVICE_CONFIGURATION_CATALOG)

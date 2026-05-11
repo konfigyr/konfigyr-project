@@ -3,6 +3,7 @@ package com.konfigyr.vault.gatekeeper;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.vault.ProfileManager;
 import com.konfigyr.vault.state.StateRepositoryFactory;
+import io.micrometer.observation.ObservationRegistry;
 import org.jooq.DSLContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +24,8 @@ public class ChangeRequestGatekeeperConfiguration {
 	}
 
 	@Bean
-	ChangeRequestGatekeeper changeRequestGatekeeper(GateContextFactory contextFactory) {
-		return new ChangeRequestGatekeeper(contextFactory, List.of(
+	ChangeRequestGatekeeper changeRequestGatekeeper(ObservationRegistry observationRegistry, GateContextFactory contextFactory) {
+		return new ChangeRequestGatekeeper(observationRegistry, contextFactory, List.of(
 				new LifecycleGate(),
 				new RepositoryStateGate(),
 				new ReviewStateGate()

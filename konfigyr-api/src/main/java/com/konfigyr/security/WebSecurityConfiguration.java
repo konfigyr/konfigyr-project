@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserC
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -80,6 +81,7 @@ public class WebSecurityConfiguration {
 						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				)
 				.authenticationProvider(provider)
+				.addFilterAfter(new AuthenticatedPrincipalContextFilter(), AuthorizationFilter.class)
 				.build();
 	}
 
@@ -118,6 +120,7 @@ public class WebSecurityConfiguration {
 						.defaultAuthenticationEntryPointFor(exceptionHandler, AnyRequestMatcher.INSTANCE)
 						.defaultAccessDeniedHandlerFor(exceptionHandler, AnyRequestMatcher.INSTANCE)
 				)
+				.addFilterAfter(new AuthenticatedPrincipalContextFilter(), AuthorizationFilter.class)
 				.build();
 	}
 

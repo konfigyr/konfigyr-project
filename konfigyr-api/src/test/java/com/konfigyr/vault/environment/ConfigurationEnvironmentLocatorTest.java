@@ -10,6 +10,8 @@ import com.konfigyr.vault.*;
 import com.konfigyr.vault.state.RepositoryStateException;
 import com.konfigyr.vault.state.StateRepository;
 import com.konfigyr.vault.state.StateRepositoryFactory;
+import io.micrometer.observation.tck.TestObservationRegistry;
+import io.micrometer.observation.tck.TestObservationRegistryAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -51,6 +53,9 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 	@Autowired
 	ConfigurationEnvironmentLocator locator;
 
+	@Autowired
+	TestObservationRegistry observationRegistry;
+
 	@BeforeEach
 	void setup() {
 		service = services.get(EntityId.from(2)).orElseThrow();
@@ -59,7 +64,6 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 
 	@AfterEach
 	void cleanup() throws Exception {
-		System.out.println("Destroying repository");
 		repository.destroy();
 		repository.close();
 	}
@@ -84,6 +88,9 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 				.returns("konfigyr-id", ConfigurationEnvironment::name)
 				.returns(List.of("unknown-profile"), ConfigurationEnvironment::profiles)
 				.returns(Collections.emptyList(), ConfigurationEnvironment::propertySources);
+
+		assertObservation()
+				.hasEvent("konfigyr.vault.environment.missing", "configuration environment is missing for 'unknown-profile' profile");
 	}
 
 	@Test
@@ -94,6 +101,15 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 		assertThatExceptionOfType(RepositoryStateException.class)
 				.isThrownBy(() -> locator.locate(principal, service, "staging"))
 				.returns(RepositoryStateException.ErrorCode.UNKNOWN_REPOSITORY, RepositoryStateException::getErrorCode);
+
+		assertThat(observationRegistry)
+				.hasObservationWithNameEqualTo(ConfigurationEnvironmentObservation.OBSERVATION_NAME)
+				.that()
+				.hasBeenStarted()
+				.hasBeenStopped()
+				.hasError()
+				.assertThatError()
+				.isInstanceOf(RepositoryStateException.class);
 	}
 
 	@Test
@@ -102,6 +118,15 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 		assertThatExceptionOfType(RepositoryStateException.class)
 				.isThrownBy(() -> locator.locate(principal, service, "production"))
 				.returns(RepositoryStateException.ErrorCode.UNKNOWN_PROFILE, RepositoryStateException::getErrorCode);
+
+		assertThat(observationRegistry)
+				.hasObservationWithNameEqualTo(ConfigurationEnvironmentObservation.OBSERVATION_NAME)
+				.that()
+				.hasBeenStarted()
+				.hasBeenStopped()
+				.hasError()
+				.assertThatError()
+				.isInstanceOf(RepositoryStateException.class);
 	}
 
 	@Test
@@ -119,6 +144,9 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 				.satisfiesExactly(
 						assertPropertySource(service, profile, Map.of("spring.profiles.active", "development"))
 				);
+
+		assertObservation()
+				.hasEvent("konfigyr.vault.environment.located", "located configuration environment for 'development' profile");
 	}
 
 	@Test
@@ -139,6 +167,10 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 						assertPropertySource(service, staging, Map.of()),
 						assertPropertySource(service, development, Map.of("spring.profiles.active", "development"))
 				);
+
+		assertObservation()
+				.hasEvent("konfigyr.vault.environment.located", "located configuration environment for 'development' profile")
+				.hasEvent("konfigyr.vault.environment.located", "located configuration environment for 'staging' profile");
 	}
 
 	Profile setupBranchForProfile(String profileName) {
@@ -165,6 +197,17 @@ class ConfigurationEnvironmentLocatorTest extends AbstractIntegrationTest {
 			);
 		}
 		return profile;
+	}
+
+	TestObservationRegistryAssert.TestObservationRegistryAssertReturningObservationContextAssert assertObservation() {
+		return assertThat(observationRegistry)
+				.hasObservationWithNameEqualTo(ConfigurationEnvironmentObservation.OBSERVATION_NAME)
+				.that()
+				.hasBeenStarted()
+				.hasBeenStopped()
+				.doesNotHaveError()
+				.hasContextualNameEqualTo("locating configuration environment for '%s' service".formatted(service.slug()))
+				.hasHighCardinalityKeyValue("konfigyr.namespace.service", service.id().serialize());
 	}
 
 	static Consumer<PropertySource> assertPropertySource(Service service, Profile profile, Map<String, String> source) {

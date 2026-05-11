@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.feature.Features;
 import com.konfigyr.mail.Mailer;
+import com.konfigyr.test.observation.TestObservations;
 import com.konfigyr.test.smtp.TestSmtpServer;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,6 +26,7 @@ import org.wiremock.spring.InjectWireMock;
 @SpringBootTest
 @EnableWireMock
 @TestSmtpServer
+@TestObservations
 @ImportTestcontainers(TestContainers.class)
 @ExtendWith(PublishedEventsExtension.class)
 @ContextConfiguration(initializers = TemporaryDirectoryContextInitializer.class)

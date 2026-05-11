@@ -6,6 +6,7 @@ import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.support.SearchQuery;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.*;
@@ -142,6 +143,7 @@ class DefaultKeysetManager implements KeysetManager {
 
 	@Override
 	@Transactional(label = "kms.create")
+	@Observed(name = "konfigyr.kms.keyset.create")
 	public KeysetMetadata create(KeysetMetadataDefinition definition) {
 		log.debug("Creating KMS keyset with: {}", definition);
 
@@ -204,6 +206,7 @@ class DefaultKeysetManager implements KeysetManager {
 
 	@Override
 	@Transactional(label = "kms.transition")
+	@Observed(name = "konfigyr.kms.keyset.transition")
 	public KeysetMetadata transition(EntityId id, KeysetMetadataState state) {
 		if (KeysetMetadataState.DESTROYED == state) {
 			throw new IllegalArgumentException("Can not transition keyset metadata to destroyed state");
@@ -255,6 +258,7 @@ class DefaultKeysetManager implements KeysetManager {
 
 	@Override
 	@Transactional(label = "kms.rotate")
+	@Observed(name = "konfigyr.kms.keyset.rotate")
 	public KeysetMetadata rotate(EntityId id) {
 		final KeysetInformation information = lookupKeysetInformation(KMS_KEYSET_METADATA.ID.eq(id.get()))
 				.orElseThrow(() -> new KeysetNotFoundException(id));
@@ -287,6 +291,7 @@ class DefaultKeysetManager implements KeysetManager {
 
 	@Override
 	@Transactional(label = "kms.delete")
+	@Observed(name = "konfigyr.kms.keyset.delete")
 	public void delete(EntityId id) {
 		final KeysetInformation information = lookupKeysetInformation(KMS_KEYSET_METADATA.ID.eq(id.get()))
 				.orElseThrow(() -> new KeysetNotFoundException(id));

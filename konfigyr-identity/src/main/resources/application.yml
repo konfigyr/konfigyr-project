@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: konfigyr-identity
+
   cache:
     cache-names: crypto-keysets, user-cache
     caffeine:
@@ -39,6 +42,26 @@ konfigyr:
       token:
         access-token-time-to-live: 15m
         refresh-token-time-to-live: 7d
+
+management:
+  info:
+    java:
+      enabled: true
+    build:
+      enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+
+  endpoint:
+    health:
+      show-details: when-authorized
+
+  observations:
+    annotations:
+      enabled: true
 
 logging:
   pattern:

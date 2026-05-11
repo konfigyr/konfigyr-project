@@ -5,6 +5,8 @@ import com.konfigyr.artifactory.VersionedArtifact;
 import com.konfigyr.artifactory.digest.PropertyDescriptorChecksumGenerator;
 import com.konfigyr.io.ByteArray;
 import com.konfigyr.version.Version;
+import io.micrometer.observation.annotation.ObservationKeyValue;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -76,8 +78,12 @@ public class DefaultProvenanceEvaluator implements ProvenanceEvaluator {
 
 	@NonNull
 	@Override
+	@Observed(name = "konfigyr.artifactory.provenance-evaluation")
 	@Transactional(readOnly = true, label = "provenance-evaluator.evaluate", isolation = Isolation.SERIALIZABLE)
-	public EvaluationResult evaluate(@NonNull VersionedArtifact version, @NonNull PropertyDescriptor property) {
+	public EvaluationResult evaluate(
+			@NonNull @ObservationKeyValue(key = "konfigyr.artifactory.artifact", expression = "coordinates") VersionedArtifact version,
+			@NonNull @ObservationKeyValue(key = "konfigyr.artifactory.property", expression = "name") PropertyDescriptor property
+	) {
 		final ByteArray checksum = generator.generate(property);
 
 		log.debug("Evaluating provenance for artifact version '{}' and property '[name={}, checksum={}]'",

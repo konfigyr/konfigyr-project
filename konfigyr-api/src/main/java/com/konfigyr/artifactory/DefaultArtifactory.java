@@ -5,6 +5,8 @@ import com.konfigyr.data.Keys;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import io.micrometer.observation.annotation.ObservationKeyValue;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -79,8 +81,13 @@ class DefaultArtifactory implements Artifactory {
 	}
 
 	@Override
+	@Observed(name = "konfigyr.artifactory.release")
 	@Transactional(label = "artifactory.release-artifact-component")
-	public VersionedArtifact release(@NonNull ArtifactMetadata metadata) {
+	public VersionedArtifact release(
+			@NonNull
+			@ObservationKeyValue(key = "konfigyr.artifactory.artifact", expression = "#this")
+			ArtifactMetadata metadata
+	) {
 		final ArtifactCoordinates coordinates = ArtifactCoordinates.of(metadata);
 
 		if (exists(coordinates)) {

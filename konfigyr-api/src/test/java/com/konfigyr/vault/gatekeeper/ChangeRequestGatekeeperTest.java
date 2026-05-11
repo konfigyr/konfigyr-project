@@ -2,6 +2,10 @@ package com.konfigyr.vault.gatekeeper;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.vault.ChangeRequestMergeStatus;
+import io.micrometer.observation.tck.TestObservationRegistry;
+import io.micrometer.observation.tck.TestObservationRegistryAssert;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,11 +27,18 @@ class ChangeRequestGatekeeperTest {
 	@Mock
 	GateContext context;
 
+	TestObservationRegistry observationRegistry;
+
+	@BeforeEach
+	void setup() {
+		observationRegistry = TestObservationRegistry.create();
+	}
+
 	@Test
 	@DisplayName("should fail to create a gatekeeper instance with no rules")
 	void createGatekeeperWithoutRules() {
 		assertThatIllegalArgumentException()
-				.isThrownBy(() -> new ChangeRequestGatekeeper(contextFactory, List.of()))
+				.isThrownBy(() -> new ChangeRequestGatekeeper(observationRegistry, contextFactory, List.of()))
 				.withMessage("At least one gate must be configured");
 	}
 
@@ -35,7 +46,7 @@ class ChangeRequestGatekeeperTest {
 	@DisplayName("should fail to evaluate due to context factory error")
 	void contextFactoryFailure() {
 		final var gate = mock(Gate.class);
-		final var gatekeeper = new ChangeRequestGatekeeper(contextFactory, List.of(gate));
+		final var gatekeeper = new ChangeRequestGatekeeper(observationRegistry, contextFactory, List.of(gate));
 
 		final var cause = new RuntimeException("context factory failure");
 		doThrow(cause).when(contextFactory).create(EntityId.from(1246525));
@@ -46,13 +57,16 @@ class ChangeRequestGatekeeperTest {
 
 		verify(contextFactory).create(EntityId.from(1246525));
 		verifyNoInteractions(gate);
+
+		assertObservation(1246525, null)
+				.hasError(cause);
 	}
 
 	@Test
 	@DisplayName("should fail to evaluate due to gate processing error")
 	void gateProcessingFailure() {
 		final var gate = mock(Gate.class);
-		final var gatekeeper = new ChangeRequestGatekeeper(contextFactory, List.of(gate));
+		final var gatekeeper = new ChangeRequestGatekeeper(observationRegistry, contextFactory, List.of(gate));
 
 		final var cause = new RuntimeException("context factory failure");
 		doThrow(cause).when(gate).evaluate(context);
@@ -64,6 +78,9 @@ class ChangeRequestGatekeeperTest {
 
 		verify(contextFactory).create(EntityId.from(1246525));
 		verify(gate).evaluate(context);
+
+		assertObservation(1246525, null)
+				.hasError(cause);
 	}
 
 	@Test
@@ -73,7 +90,7 @@ class ChangeRequestGatekeeperTest {
 		final var second = gateFor(2, GateResult.block(ChangeRequestMergeStatus.NOT_OPEN, "It's closed, duh!"));
 		final var third = gateFor(3, GateResult.pass());
 
-		final var gatekeeper = new ChangeRequestGatekeeper(contextFactory, List.of(first, second, third));
+		final var gatekeeper = new ChangeRequestGatekeeper(observationRegistry, contextFactory, List.of(first, second, third));
 
 		doReturn(context).when(contextFactory).create(EntityId.from(96736));
 
@@ -84,6 +101,9 @@ class ChangeRequestGatekeeperTest {
 		verify(first).evaluate(context);
 		verify(second).evaluate(context);
 		verify(third, never()).evaluate(context);
+
+		assertObservation(96736, ChangeRequestMergeStatus.NOT_OPEN)
+				.doesNotHaveError();
 	}
 
 	@Test
@@ -93,7 +113,7 @@ class ChangeRequestGatekeeperTest {
 		final var second = gateFor(2, GateResult.pass());
 		final var third = gateFor(3, GateResult.pass());
 
-		final var gatekeeper = new ChangeRequestGatekeeper(contextFactory, List.of(first, second, third));
+		final var gatekeeper = new ChangeRequestGatekeeper(observationRegistry, contextFactory, List.of(first, second, third));
 
 		doReturn(context).when(contextFactory).create(EntityId.from(586152));
 
@@ -104,6 +124,22 @@ class ChangeRequestGatekeeperTest {
 		verify(first).evaluate(context);
 		verify(second).evaluate(context);
 		verify(third).evaluate(context);
+
+		assertObservation(586152, ChangeRequestMergeStatus.MERGEABLE)
+				.doesNotHaveError();
+	}
+
+	TestObservationRegistryAssert.TestObservationRegistryAssertReturningObservationContextAssert assertObservation(
+			long id,
+			@Nullable ChangeRequestMergeStatus status
+	) {
+		return assertThat(observationRegistry)
+				.hasObservationWithNameEqualTo(GatekeeperObservation.OBSERVATION_NAME)
+				.that()
+				.hasBeenStarted()
+				.hasBeenStopped()
+				.hasHighCardinalityKeyValue("konfigyr.vault.change-request", EntityId.from(id).serialize())
+				.hasLowCardinalityKeyValue("konfigyr.vault.change-request.merge-status", status == null ? "n/a" : status.name());
 	}
 
 	static Gate gateFor(int order, GateResult result) {

@@ -1,5 +1,6 @@
 package com.konfigyr.queue;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,12 +23,16 @@ class WorkerQueueAutoConfigurationTest {
 	@Mock
 	DSLContext context;
 
+	@Mock
+	ObservationRegistry registry;
+
 	ApplicationContextRunner runner;
 
 	@BeforeEach
 	void setup() {
 		runner = new ApplicationContextRunner()
 				.withBean(DSLContext.class, () -> context)
+				.withBean(ObservationRegistry.class, () -> registry)
 				.withConfiguration(AutoConfigurations.of(WorkerQueueAutoConfiguration.class));
 	}
 

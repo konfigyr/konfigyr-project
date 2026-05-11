@@ -31,6 +31,7 @@ public class ArtifactoryAutoConfiguration implements WebMvcConfigurer {
 		registry.addConverter(Version.class, String.class, Version::toString);
 		registry.addConverter(String.class, ArtifactCoordinates.class, ArtifactCoordinates::parse);
 		registry.addConverter(ArtifactCoordinates.class, String.class, ArtifactCoordinates::toString);
+		registry.addConverter(Artifact.class, String.class, ArtifactCoordinates::format);
 	}
 
 	@Bean

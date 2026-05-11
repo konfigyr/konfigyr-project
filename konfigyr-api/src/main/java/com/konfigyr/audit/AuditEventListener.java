@@ -13,6 +13,7 @@ import com.konfigyr.security.PrincipalType;
 import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfileEvent;
 import com.konfigyr.vault.VaultEvent;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -54,8 +55,9 @@ class AuditEventListener {
 
 	static final Actor SYSTEM_ACTOR = new Actor("system", PrincipalType.SYSTEM.name(), "Konfigyr");
 
-	private final NamespaceResolver resolver;
-	private final AuditEventRepository repository;
+	private final AuditEventRepository auditEventRepository;
+	private final NamespaceResolver namespaceResolver;
+	private final ObservationRegistry observationRegistry;
 
 	// ── Account events ──────────────────────────────────────────────────────
 
@@ -364,21 +366,23 @@ class AuditEventListener {
 	}
 
 	private void insert(EntityEvent event, Consumer<AuditEvent.Builder> factory) {
-		try {
-			final AuditEvent.Builder builder = AuditEvent.builder()
-					.namespace(resolver.resolve(event));
+		AuditObservation.create(observationRegistry, event).observe(() -> {
+			try {
+				final AuditEvent.Builder builder = AuditEvent.builder()
+						.namespace(namespaceResolver.resolve(event));
 
-			AuthenticatedPrincipal.fromSecurityContext().ifPresentOrElse(
-					builder::actor,
-					() -> builder.actor(SYSTEM_ACTOR)
-			);
+				AuthenticatedPrincipal.fromSecurityContext().ifPresentOrElse(
+						builder::actor,
+						() -> builder.actor(SYSTEM_ACTOR)
+				);
 
-			factory.accept(builder);
+				factory.accept(builder);
 
-			repository.insert(builder.build());
-		} catch (Exception ex) {
-			log.error("Failed to persist audit event: {}", event, ex);
-		}
+				auditEventRepository.insert(builder.build());
+			} catch (Exception ex) {
+				log.error("Failed to persist audit event: {}", event, ex);
+			}
+		});
 	}
 
 	/**
