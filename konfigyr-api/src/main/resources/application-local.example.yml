@@ -43,3 +43,20 @@ konfigyr:
       # You can generate a new key here: http://konfigyr-web.app.dev.ebf.de/docs/development-guide/development
       value: RrdmFi8AmHSXzalSmdxIxnCYQlfdPzEytzLcvX3STKU=
 
+management:
+  endpoints:
+    web:
+      exposure:
+        # Exposes all endpoints on the management server
+        include: '*'
+
+  endpoint:
+    health:
+      # Alays show detailed health information for each individual health check
+      show-details: always
+
+  otlp:
+    metrics:
+      export:
+        # Disables the OTLP metrics exporter on your local machine
+        enabled: false

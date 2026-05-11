@@ -2,6 +2,7 @@ package com.konfigyr.vault.gatekeeper;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.vault.ChangeRequestMergeStatus;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.core.OrderComparator;
@@ -30,8 +31,10 @@ public final class ChangeRequestGatekeeper {
 
 	private final List<? extends Gate> gates;
 	private final GateContextFactory contextFactory;
+	private final ObservationRegistry observationRegistry;
 
-	ChangeRequestGatekeeper(GateContextFactory contextFactory, Iterable<? extends Gate> gates) {
+	ChangeRequestGatekeeper(ObservationRegistry observationRegistry, GateContextFactory contextFactory, Iterable<? extends Gate> gates) {
+		this.observationRegistry = observationRegistry;
 		this.contextFactory = contextFactory;
 		this.gates = StreamSupport.stream(gates.spliterator(), false)
 				.sorted(OrderComparator.INSTANCE)
@@ -48,28 +51,30 @@ public final class ChangeRequestGatekeeper {
 	 * @return the resulting {@link ChangeRequestMergeStatus}, never {@literal null}
 	 */
 	public ChangeRequestMergeStatus evaluate(EntityId changeRequestId) {
-		if (log.isDebugEnabled()) {
-			log.debug("Evaluating change request with {} against {} gate(s)", changeRequestId, gates.size());
-		}
-
-		final GateContext context = contextFactory.create(changeRequestId);
-
-		for (Gate gate : gates) {
-			final GateResult result = gate.evaluate(context);
-
+		return GatekeeperObservation.decorate(observationRegistry, changeRequestId, () -> {
 			if (log.isDebugEnabled()) {
-				log.debug("Gatekeeper obtained evaluation result: [gate={}, result={}, context={}]",
-						ClassUtils.getShortName(gate.getClass()), result, context);
+				log.debug("Evaluating change request with {} against {} gate(s)", changeRequestId, gates.size());
 			}
 
-			if (result instanceof GateResult.Block(ChangeRequestMergeStatus status, String reason)) {
-				log.info("Gatekeeper evaluated merge status of '{}' (reason: {}) using '{}' for change request: {}",
-						status, reason, ClassUtils.getShortName(gate.getClass()), context.changeRequestId());
-				return status;
-			}
-		}
+			final GateContext context = contextFactory.create(changeRequestId);
 
-		return ChangeRequestMergeStatus.MERGEABLE;
+			for (Gate gate : gates) {
+				final GateResult result = gate.evaluate(context);
+
+				if (log.isDebugEnabled()) {
+					log.debug("Gatekeeper obtained evaluation result: [gate={}, result={}, context={}]",
+							ClassUtils.getShortName(gate.getClass()), result, context);
+				}
+
+				if (result instanceof GateResult.Block(ChangeRequestMergeStatus status, String reason)) {
+					log.info("Gatekeeper evaluated merge status of '{}' (reason: {}) using '{}' for change request: {}",
+							status, reason, ClassUtils.getShortName(gate.getClass()), context.changeRequestId());
+					return status;
+				}
+			}
+
+			return ChangeRequestMergeStatus.MERGEABLE;
+		});
 	}
 
 }

@@ -21,11 +21,13 @@ final class ConfigurationEnvironmentObservation {
 	}
 
 	static Observation.Event located(String profile) {
-		return Observation.Event.of("konfigyr.vault.environment.located", profile);
+		return Observation.Event.of("konfigyr.vault.environment.located",
+				"located configuration environment for '%s' profile".formatted(profile));
 	}
 
 	static Observation.Event missing(String profile) {
-		return Observation.Event.of("konfigyr.vault.environment.missing", profile);
+		return Observation.Event.of("konfigyr.vault.environment.missing",
+				"configuration environment is missing for '%s' profile".formatted(profile));
 	}
 
 	static final class Context extends Observation.Context {

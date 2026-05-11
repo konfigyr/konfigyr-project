@@ -2,7 +2,8 @@ package com.konfigyr.artifactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.konfigyr.version.Version;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 
@@ -16,23 +17,90 @@ import java.io.Serializable;
  * @author Vladimir Spasic
  * @since 1.0.0
  */
+@NullMarked
 public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Serializable {
 
+	/**
+	 * Parses the given textual representation of Maven coordinates and creates an
+	 * {@link ArtifactCoordinates} instance.
+	 * <p>
+	 * The expected format is {@code groupId:artifactId:version}.
+	 *
+	 * @param coordinates the textual representation of the coordinates to parse, can be {@literal null}
+	 * @return the parsed artifact coordinates, never {@literal null}
+	 * @throws IllegalArgumentException if the coordinates string is invalid or cannot be parsed
+	 */
 	@JsonCreator
-	static ArtifactCoordinates parse(String coordinates) {
+	static ArtifactCoordinates parse(@Nullable String coordinates) {
 		return SimpleArtifactCoordinates.parse(coordinates);
 	}
 
+	/**
+	 * Creates an {@link ArtifactCoordinates} instance from the given {@link Artifact}.
+	 *
+	 * @param artifact the artifact from which to extract coordinates, can't be {@literal null}
+	 * @return the artifact coordinates, never {@literal null}
+	 */
 	static ArtifactCoordinates of(Artifact artifact) {
 		return new SimpleArtifactCoordinates(artifact.groupId(), artifact.artifactId(), artifact.version());
 	}
 
+	/**
+	 * Creates an {@link ArtifactCoordinates} instance from the given Maven coordinate components.
+	 *
+	 * @param groupId    the group identifier, can't be {@literal null}
+	 * @param artifactId the artifact identifier, can't be {@literal null}
+	 * @param version    the version as a string, can't be {@literal null}
+	 * @return the artifact coordinates, never {@literal null}
+	 */
 	static ArtifactCoordinates of(String groupId, String artifactId, String version) {
 		return new SimpleArtifactCoordinates(groupId, artifactId, version);
 	}
 
+	/**
+	 * Creates an {@link ArtifactCoordinates} instance from the given Maven coordinate components.
+	 *
+	 * @param groupId    the group identifier, can't be {@literal null}
+	 * @param artifactId the artifact identifier, can't be {@literal null}
+	 * @param version    the version object, can't be {@literal null}
+	 * @return the artifact coordinates, never {@literal null}
+	 */
 	static ArtifactCoordinates of(String groupId, String artifactId, Version version) {
 		return new SimpleArtifactCoordinates(groupId, artifactId, version);
+	}
+
+	/**
+	 * Formats the given {@link Artifact} into a textual representation of Maven coordinates.
+	 *
+	 * @param artifact the artifact to format, can't be {@literal null}
+	 * @return the formatted coordinates string in the format {@code groupId:artifactId:version}, never {@literal null}
+	 */
+	static String format(Artifact artifact) {
+		return format(artifact.groupId(), artifact.artifactId(), artifact.version());
+	}
+
+	/**
+	 * Formats the given Maven coordinate components into a textual representation.
+	 *
+	 * @param groupId    the group identifier, can't be {@literal null}
+	 * @param artifactId the artifact identifier, can't be {@literal null}
+	 * @param version    the version as a string, can't be {@literal null}
+	 * @return the formatted coordinates string in the format {@code groupId:artifactId:version}, never {@literal null}
+	 */
+	static String format(String groupId, String artifactId, String version) {
+		return String.format("%s:%s:%s", groupId, artifactId, version);
+	}
+
+	/**
+	 * Formats the given Maven coordinate components into a textual representation.
+	 *
+	 * @param groupId    the group identifier, can't be {@literal null}
+	 * @param artifactId the artifact identifier, can't be {@literal null}
+	 * @param version    the version object, can't be {@literal null}
+	 * @return the formatted coordinates string in the format {@code groupId:artifactId:version}, never {@literal null}
+	 */
+	static String format(String groupId, String artifactId, Version version) {
+		return format(groupId, artifactId, version.get());
 	}
 
 	/**
@@ -43,7 +111,7 @@ public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Se
 	 * @return a negative integer, zero, or a positive integer as the first coordinates are less than, equal to,
 	 * or greater than the second.
 	 */
-	static int compare(@NonNull ArtifactCoordinates a, @NonNull ArtifactCoordinates b) {
+	static int compare(ArtifactCoordinates a, ArtifactCoordinates b) {
 		return SimpleArtifactCoordinates.COMPARATOR.compare(a, b);
 	}
 
@@ -52,7 +120,6 @@ public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Se
 	 *
 	 * @return the {@code groupId} Maven coordinate, can't be {@literal null}
 	 */
-	@NonNull
 	String groupId();
 
 	/**
@@ -60,7 +127,6 @@ public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Se
 	 *
 	 * @return the {@code artifactId} Maven coordinate, can't be {@literal null}
 	 */
-	@NonNull
 	String artifactId();
 
 	/**
@@ -68,7 +134,6 @@ public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Se
 	 *
 	 * @return the {@code version} Maven coordinate, can't be {@literal null}
 	 */
-	@NonNull
 	Version version();
 
 	/**
@@ -76,13 +141,12 @@ public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Se
 	 *
 	 * @return the textual representation for the coordinates, can't be {@literal null}
 	 */
-	@NonNull
 	default String format() {
-		return String.format("%s:%s:%s", groupId(), artifactId(), version().get());
+		return format(groupId(), artifactId(), version());
 	}
 
 	@Override
-	default int compareTo(@NonNull ArtifactCoordinates o) {
+	default int compareTo(ArtifactCoordinates o) {
 		return compare(this, o);
 	}
 }

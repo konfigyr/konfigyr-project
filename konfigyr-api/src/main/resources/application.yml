@@ -50,10 +50,6 @@ management:
       exposure:
         include: health, info, metrics
 
-  endpoint:
-    health:
-      show-details: when-authorized
-
   observations:
     annotations:
       enabled: true
