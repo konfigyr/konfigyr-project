@@ -282,13 +282,14 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		final var application = mock(NamespaceApplication.class);
 		doReturn(EntityId.from(9001)).when(application).id();
+		doReturn("created app").when(application).name();
 
 		listener.on(new NamespaceEvent.ApplicationCreated(namespace, application));
 
 		assertAuditRecord("namespace-application", EntityId.from(9001))
 				.returns("namespace.application-created", AuditRecord::eventType)
 				.returns(EntityId.from(900), AuditRecord::namespaceId)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of("name", "created app"), AuditRecord::details);
 	}
 
 	@Test
@@ -301,13 +302,14 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		final var application = mock(NamespaceApplication.class);
 		doReturn(EntityId.from(9002)).when(application).id();
+		doReturn("updated app").when(application).name();
 
 		listener.on(new NamespaceEvent.ApplicationUpdated(namespace, application));
 
 		assertAuditRecord("namespace-application", EntityId.from(9002))
 				.returns("namespace.application-updated", AuditRecord::eventType)
 				.returns(EntityId.from(900), AuditRecord::namespaceId)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of("name", "updated app"), AuditRecord::details);
 	}
 
 	@Test
@@ -320,13 +322,14 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		final var application = mock(NamespaceApplication.class);
 		doReturn(EntityId.from(9003)).when(application).id();
+		doReturn("namespace app").when(application).name();
 
 		listener.on(new NamespaceEvent.ApplicationReset(namespace, application));
 
 		assertAuditRecord("namespace-application", EntityId.from(9003))
 				.returns("namespace.application-reset", AuditRecord::eventType)
 				.returns(EntityId.from(900), AuditRecord::namespaceId)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of("name", "namespace app"), AuditRecord::details);
 	}
 
 	@Test
@@ -339,13 +342,14 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		final var application = mock(NamespaceApplication.class);
 		doReturn(EntityId.from(9004)).when(application).id();
+		doReturn("removed app").when(application).name();
 
 		listener.on(new NamespaceEvent.ApplicationRemoved(namespace, application));
 
 		assertAuditRecord("namespace-application", EntityId.from(9004))
 				.returns("namespace.application-removed", AuditRecord::eventType)
 				.returns(EntityId.from(900), AuditRecord::namespaceId)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of("name", "removed app"), AuditRecord::details);
 	}
 
 	@Test

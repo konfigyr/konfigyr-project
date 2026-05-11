@@ -5,21 +5,27 @@ import {
   FolderKeyIcon,
   GitBranchIcon,
   Grid2x2XIcon,
+  MonitorCloudIcon,
 } from 'lucide-react';
 
 import type { LucideProps } from 'lucide-react';
 
-export type AuditEntityType = string | ('namespace' | 'keyset' | 'service' | 'profile');
+export type AuditEntityType = string | ('namespace' | 'namespace-application' | 'keyset' | 'service' | 'profile');
 
 export function useAuditEntityTypeLabel(): (value: AuditEntityType) => string {
   const intl = useIntl();
 
-  return (value: AuditEntityType)=> {
+  return (value: AuditEntityType) => {
     switch (value) {
       case 'namespace':
         return intl.formatMessage({
           defaultMessage: 'Namespace',
           description: 'Label for the namespace audit entity type',
+        });
+      case 'namespace-application':
+        return intl.formatMessage({
+          defaultMessage: 'Application',
+          description: 'Label for the namespace application audit entity type',
         });
       case 'keyset':
         return intl.formatMessage({
@@ -50,6 +56,10 @@ export function AuditEntityTypeIcon({ value, ...props }: { value: AuditEntityTyp
     case 'namespace':
       return (
         <FolderKanbanIcon {...props} aria-label={label} />
+      );
+    case 'namespace-application':
+      return (
+        <MonitorCloudIcon {...props} aria-label={label} />
       );
     case 'keyset':
       return (

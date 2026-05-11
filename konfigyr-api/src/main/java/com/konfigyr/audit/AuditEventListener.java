@@ -192,6 +192,7 @@ class AuditEventListener {
 				.entityType("namespace-application")
 				.entityId(event.application().id())
 				.eventType("namespace.application-created")
+				.details("name", event.application().name())
 		);
 	}
 
@@ -202,6 +203,7 @@ class AuditEventListener {
 				.entityType("namespace-application")
 				.entityId(event.application().id())
 				.eventType("namespace.application-updated")
+				.details("name", event.application().name())
 		);
 	}
 
@@ -212,6 +214,7 @@ class AuditEventListener {
 				.entityType("namespace-application")
 				.entityId(event.application().id())
 				.eventType("namespace.application-reset")
+				.details("name", event.application().name())
 		);
 	}
 
@@ -222,6 +225,7 @@ class AuditEventListener {
 				.entityType("namespace-application")
 				.entityId(event.application().id())
 				.eventType("namespace.application-removed")
+				.details("name", event.application().name())
 		);
 	}
 

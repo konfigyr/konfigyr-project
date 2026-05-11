@@ -25,6 +25,7 @@ import type { DateRange } from '@konfigyr/components/ui/calendar';
 
 const ENTITY_TYPES = [
   'namespace',
+  'namespace-application',
   'keyset',
   'service',
   'profile',
