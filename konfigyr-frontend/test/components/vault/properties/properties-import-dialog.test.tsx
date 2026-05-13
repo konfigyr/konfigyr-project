@@ -38,8 +38,24 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const importButton = within(dialog).getByRole('button', { name: 'Import' });
     await user.click(importButton);
 
-    await waitFor(() => expect(onImport).toHaveBeenCalledOnce());
-    expect(onImport.mock.calls[0][0]).toMatchObject([{ name: 'server.port' }]);
+    await waitFor(() => {
+      expect(onImport).toHaveBeenCalledExactlyOnceWith(
+        [
+          {
+            name: 'server.port',
+            schema: {
+              type: 'string',
+            },
+            state: 'ADDED',
+            typeName: 'string',
+            value: {
+              decoded: '8080',
+              encoded: '8080',
+            },
+          },
+
+        ]);
+    });
     await waitFor(() => expect(result.queryByRole('dialog')).toBeNull());
   });
 
@@ -66,8 +82,22 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const importButton = within(dialog).getByRole('button', { name: 'Import' });
     await user.click(importButton);
 
-    await waitFor(() => expect(onImport).toHaveBeenCalledOnce());
-    expect(onImport.mock.calls[0][0]).toMatchObject([{ name: 'server.port' }]);
+    await waitFor(() => {
+      expect(onImport).toHaveBeenCalledExactlyOnceWith( [
+        {
+          name: 'server.port',
+          schema: {
+            type: 'string',
+          },
+          state: 'ADDED',
+          typeName: 'string',
+          value: {
+            decoded: '8080',
+            encoded: '8080',
+          },
+        },
+      ]);
+    });
     await waitFor(() => expect(result.queryByRole('dialog')).toBeNull());
   });
 
