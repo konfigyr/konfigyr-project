@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { parse } from 'yaml';
 import type { ConfigurationProperty } from '@konfigyr/hooks/vault/types';
@@ -23,6 +23,22 @@ const decodeEscapes = (value: string) => {
     .replace(/\\\\/g, '\\');
 };
 
+const hasOddTrailingBackslashes = (value: string) => {
+  let count = 0;
+  for (let i = value.length - 1; i >= 0 && value[i] === '\\'; i--) {
+    count++;
+  }
+  return count % 2 === 1;
+};
+
+const isEscaped = (value: string, index: number) => {
+  let backslashes = 0;
+  for (let i = index - 1; i >= 0 && value[i] === '\\'; i--) {
+    backslashes++;
+  }
+  return backslashes % 2 === 1;
+};
+
 /**
  * Parses Java-style `.properties` file content into an array of `Property` objects.
  *
@@ -37,7 +53,7 @@ const parseProperties = (text: string): Array<Property> => {
   const lines: Array<string> = [];
   for (let i = 0; i < rawLines.length; i++) {
     let line = rawLines[i] ?? '';
-    while (/\\$/.test(line) && !/\\\\$/.test(line)) {
+    while (hasOddTrailingBackslashes(line)) {
       line = line.slice(0, -1) + (rawLines[++i] ?? '');
     }
     lines.push(line);
@@ -51,8 +67,7 @@ const parseProperties = (text: string): Array<Property> => {
     let sep = -1;
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
-      const prevBackslash = i > 0 && line[i - 1] === '\\';
-      if (prevBackslash) continue;
+      if (isEscaped(line, i)) continue;
       if (ch === '=' || ch === ':' || /\s/.test(ch)) {
         sep = i;
         break;
@@ -88,10 +103,17 @@ const parseProperties = (text: string): Array<Property> => {
  * @param prefix - A prefix used for nested keys. Used internally during recursion.
  */
 function jsonToProperties (obj: any, prefix = ''): string {
+  if (obj === null || obj === undefined) {
+    return prefix ? `${prefix}=` : '';
+  }
+
+  if (typeof obj !== 'object') {
+    return prefix ? `${prefix}=${obj}` : '';
+  }
+
   const lines: Array<string> = [];
 
-  for (const key in obj) {
-    const value = obj[key];
+  for (const [key, value] of Object.entries(obj)) {
     const newKey = prefix ? `${prefix}.${key}` : key;
 
     if (Array.isArray(value)) {
@@ -157,12 +179,11 @@ const parseJson = (text?: string): Array<Property> => {
  */
 export function useConfigFileParser () {
   const [properties, setProperties] = useState<Array<ConfigurationProperty<any>>>([]);
-  const [error, setError] = useState<string>();
+  const parseSequenceRef = useRef(0);
 
   async function parseFile (file: File) {
+    const currentSequence = ++parseSequenceRef.current;
     try {
-      setError(undefined);
-
       const text = await file.text();
       const name = file.name.toLowerCase();
 
@@ -184,7 +205,7 @@ export function useConfigFileParser () {
           state: PropertyTransitionType.ADDED,
           value: {
             encoded: p.value,
-            decoded: 'string',
+            decoded: p.value,
           },
           typeName: 'string',
           schema: {
@@ -192,17 +213,23 @@ export function useConfigFileParser () {
           },
         };
       });
+      if (parseSequenceRef.current !== currentSequence) {
+        return;
+      }
       setProperties(configurationProperties);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Parse error');
+      if (parseSequenceRef.current !== currentSequence) {
+        return;
+      }
       setProperties([]);
+      throw e;
     }
   }
 
   const reset = () => {
+    parseSequenceRef.current++;
     setProperties([]);
-    setError(undefined);
   };
 
-  return { properties, error, parseFile, reset };
+  return { properties, parseFile, reset };
 }

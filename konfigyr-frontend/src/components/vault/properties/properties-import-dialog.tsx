@@ -17,10 +17,10 @@ import { EmptyState } from '@konfigyr/components/ui/empty';
 import { ImportPropertiesLabel } from './messages';
 import type { ConfigurationProperty } from '@konfigyr/hooks/types';
 
-export function ConfigurationImporter ({ error, onChange }: {
-  error?: string
+export function ConfigurationImporter ({ onChange }: {
   onChange: (file: File ) => void,
 }) {
+  const inputId = 'configuration-importer-input';
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -31,26 +31,21 @@ export function ConfigurationImporter ({ error, onChange }: {
 
   return (
     <Field>
-      <FieldLabel htmlFor="json">
+      <FieldLabel htmlFor={inputId}>
         <FormattedMessage
           defaultMessage="Select existing configuration file"
           description="Label for the dialog that allows importing new configuration properties from a file"
         />
       </FieldLabel>
-      <Input id="json" type="file" accept=".json,application/json,.properties,.yaml,.yml" onChange={handleChange}/>
+      <Input id={inputId} data-testid={inputId} type="file" accept=".json,application/json,.properties,.yaml,.yml" onChange={handleChange}/>
       <FieldDescription>
-        {error
-          ?
-          <span className="text-destructive">{error}</span>
-          :
-          <FormattedMessage
-            defaultMessage="Supported formats: <b>.json</b>, <b>.yaml</b>, <b>.yml</b> or <b>.properties</b>."
-            description="Label describing the supported file formats for importing configuration properties."
-            values={{
-              b: (chunks) => <strong> {chunks}</strong>,
-            }}
-          />
-        }
+        <FormattedMessage
+          defaultMessage="Supported formats: <b>.json</b>, <b>.yaml</b>, <b>.yml</b> or <b>.properties</b>."
+          description="Label describing the supported file formats for importing configuration properties."
+          values={{
+            b: (chunks) => <strong> {chunks}</strong>,
+          }}
+        />
       </FieldDescription>
     </Field>
   );
@@ -60,21 +55,41 @@ export function PropertiesImportDialog ({ onImport }: {
   onImport: (properties: Array<ConfigurationProperty<any>>) => void | Promise<unknown>
 }) {
   const [open, setOpen] = useState(false);
-  const { properties, error, parseFile, reset } = useConfigFileParser();
+  const [isImporting, setIsImporting] = useState(false);
+  const [error, setError] = useState<string>();
+  const { properties, parseFile, reset } = useConfigFileParser();
 
   const onOpenChange = useCallback((state: boolean) => {
     setOpen(state);
+    setError(undefined);
     reset();
-  }, [properties]);
+  }, [reset]);
 
-  const handleSubmit = useCallback(() => {
-    onImport(properties);
-    setOpen(false);
-  }, [properties]);
+  const handleFileChange = useCallback(async (file: File) => {
+    setError(undefined);
+    try {
+      await parseFile(file);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Parse error');
+    }
+  }, [parseFile]);
+
+  const handleSubmit = useCallback(async () => {
+    setIsImporting(true);
+    setError(undefined);
+    try {
+      await onImport(properties);
+      setOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Import failed');
+    } finally {
+      setIsImporting(false);
+    }
+  }, [onImport, properties]);
 
   const amount = useMemo(() => properties.length, [properties]);
 
-  const isImportDisabled = useMemo(() => properties.length === 0, [properties]);
+  const isImportDisabled = useMemo(() => properties.length === 0 || isImporting, [isImporting, properties]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,7 +112,12 @@ export function PropertiesImportDialog ({ onImport }: {
           </DialogTitle>
         </DialogHeader>
 
-        <ConfigurationImporter error={error} onChange={parseFile}/>
+        <ConfigurationImporter onChange={handleFileChange}/>
+        {error && (
+          <p className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
 
         {isImportDisabled
           ? <ConfigurationPropertiesEmpty />
@@ -155,7 +175,7 @@ function ConfigurationPropertiesReadyForImport ({ amount }: { amount: number }) 
       description={
         <FormattedMessage
           defaultMessage="There are {amount} new configuration properties ready for import. The import will create new properties or overwrite existing values."
-          values={{ amount: <strong>{amount}</strong> }}
+          values={{ amount }}
           description="Label prompting an user to import configuration properties from a file."
         />
       }
