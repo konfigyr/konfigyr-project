@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 
-const deferred = <T,>() => {
+function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
   const promise = new Promise<T>((res, rej) => {
@@ -10,7 +10,7 @@ const deferred = <T,>() => {
     reject = rej;
   });
   return { promise, resolve, reject };
-};
+}
 
 const mockFile = (name: string, text: string | Promise<string>): File => {
   return {

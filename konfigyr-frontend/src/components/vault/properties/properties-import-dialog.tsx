@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { CurlyBracesIcon, FileCog, ImportIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
@@ -87,9 +87,7 @@ export function PropertiesImportDialog ({ onImport }: {
     }
   }, [onImport, properties]);
 
-  const amount = useMemo(() => properties.length, [properties]);
-
-  const isImportDisabled = useMemo(() => properties.length === 0 || isImporting, [isImporting, properties]);
+  const isImportDisabled = properties.length === 0 || isImporting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,7 +119,7 @@ export function PropertiesImportDialog ({ onImport }: {
 
         {isImportDisabled
           ? <ConfigurationPropertiesEmpty />
-          : <ConfigurationPropertiesReadyForImport amount={amount} />
+          : <ConfigurationPropertiesReadyForImport amount={properties.length} />
         }
 
         <DialogFooter showCloseButton={true}>
