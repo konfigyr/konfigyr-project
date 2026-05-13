@@ -20,7 +20,7 @@ import type { ConfigurationProperty } from '@konfigyr/hooks/types';
 export function ConfigurationImporter ({ onChange }: {
   onChange: (file: File ) => void,
 }) {
-  const inputId = 'configuration-importer-input';
+  const inputId = React.useId();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -37,7 +37,7 @@ export function ConfigurationImporter ({ onChange }: {
           description="Label for the dialog that allows importing new configuration properties from a file"
         />
       </FieldLabel>
-      <Input id={inputId} data-testid={inputId} type="file" accept=".json,application/json,.properties,.yaml,.yml" onChange={handleChange}/>
+      <Input id={inputId} type="file" accept=".json,application/json,.properties,.yaml,.yml" onChange={handleChange}/>
       <FieldDescription>
         <FormattedMessage
           defaultMessage="Supported formats: <b>.json</b>, <b>.yaml</b>, <b>.yml</b> or <b>.properties</b>."
