@@ -97,6 +97,22 @@ const parseProperties = (text: string): Array<Property> => {
 };
 
 /**
+ * Checks whether a value is a scalar primitive.
+ *
+ * @param value - the value to evaluate.
+ */
+const isScalar = (value: unknown) => {
+  return (
+    value === null ||
+    value === undefined ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'bigint'
+  );
+};
+
+/**
  * Converts a JSON object into a flat string of Java-style `.properties` entries.
  *
  * @param obj - The input object to convert. Can contain nested objects and arrays.
@@ -117,13 +133,19 @@ function jsonToProperties (obj: any, prefix = ''): string {
     const newKey = prefix ? `${prefix}.${key}` : key;
 
     if (Array.isArray(value)) {
-      value.forEach((v, i) => {
-        if (typeof v === 'object') {
-          lines.push(jsonToProperties(v, `${newKey}[${i}]`));
-        } else {
-          lines.push(`${newKey}[${i}]=${v}`);
-        }
-      });
+      // If the array only contains scalar values, serialize it as a single comma-separated value.
+      // This matches common `.properties` conventions like: key=a,b,c
+      if (value.every(isScalar)) {
+        lines.push(`${newKey}=${value.map(v => String(v)).join(',')}`);
+      } else {
+        value.forEach((v, i) => {
+          if (typeof v === 'object') {
+            lines.push(jsonToProperties(v, `${newKey}[${i}]`));
+          } else {
+            lines.push(`${newKey}[${i}]=${v}`);
+          }
+        });
+      }
     } else if (typeof value === 'object' && value !== null) {
       lines.push(jsonToProperties(value, newKey));
     } else {

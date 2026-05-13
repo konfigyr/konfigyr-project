@@ -57,6 +57,58 @@ describe('hooks | vault | useConfigFileParser', () => {
     expect(result.current.properties).toStrictEqual([]);
   });
 
+  test('should serialize scalar arrays as comma-separated values for JSON and YAML', async () => {
+    const { result } = renderHook(() => useConfigFileParser());
+
+    await act(async () => {
+      await result.current.parseFile(
+        mockFile(
+          'application.json',
+          JSON.stringify({
+            tags: ['a', 'b'],
+            nums: [1, 2],
+            mix: ['x', 2, true],
+            items: [{ a: 1 }, { a: 2 }],
+          }),
+        ),
+      );
+    });
+
+    expect(result.current.properties).toMatchObject([
+      { name: 'tags', value: { encoded: 'a,b', decoded: 'a,b' } },
+      { name: 'nums', value: { encoded: '1,2', decoded: '1,2' } },
+      { name: 'mix', value: { encoded: 'x,2,true', decoded: 'x,2,true' } },
+      { name: 'items[0].a', value: { encoded: '1', decoded: '1' } },
+      { name: 'items[1].a', value: { encoded: '2', decoded: '2' } },
+    ]);
+
+    await act(async () => {
+      await result.current.parseFile(
+        mockFile(
+          'application.yaml',
+          [
+            'tags:',
+            '  - a',
+            '  - b',
+            'nums: [1, 2]',
+            'mix: [x, 2, true]',
+            'items:',
+            '  - a: 1',
+            '  - a: 2',
+          ].join('\n'),
+        ),
+      );
+    });
+
+    expect(result.current.properties).toMatchObject([
+      { name: 'tags', value: { encoded: 'a,b', decoded: 'a,b' } },
+      { name: 'nums', value: { encoded: '1,2', decoded: '1,2' } },
+      { name: 'mix', value: { encoded: 'x,2,true', decoded: 'x,2,true' } },
+      { name: 'items[0].a', value: { encoded: '1', decoded: '1' } },
+      { name: 'items[1].a', value: { encoded: '2', decoded: '2' } },
+    ]);
+  });
+
   test('should throw and clear properties on parse error', async () => {
     const { result } = renderHook(() => useConfigFileParser());
 
