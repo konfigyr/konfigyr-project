@@ -20,6 +20,16 @@ const mockFile = (name: string, text: string | Promise<string>): File => {
 };
 
 describe('hooks | vault | useConfigFileParser', () => {
+  test('should expose ready state by default', () => {
+    const { result } = renderHook(() => useConfigFileParser());
+
+    expect(result.current.properties).toStrictEqual([]);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
+  });
+
   test('should parse escaped property keys and odd-backslash continuations', async () => {
     const { result } = renderHook(() => useConfigFileParser());
     const file = mockFile(
@@ -41,6 +51,10 @@ describe('hooks | vault | useConfigFileParser', () => {
       { name: 'my\\ key', value: { encoded: 'escaped-space', decoded: 'escaped-space' } },
       { name: 'message', value: { encoded: 'helloworld', decoded: 'helloworld' } },
     ]);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
   });
 
   test('should not fail on scalar JSON/YAML roots', async () => {
@@ -50,11 +64,17 @@ describe('hooks | vault | useConfigFileParser', () => {
       await result.current.parseFile(mockFile('application.json', 'null'));
     });
     expect(result.current.properties).toStrictEqual([]);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
 
     await act(async () => {
       await result.current.parseFile(mockFile('application.yaml', '42'));
     });
     expect(result.current.properties).toStrictEqual([]);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
   });
 
   test('should serialize scalar arrays as comma-separated values for JSON and YAML', async () => {
@@ -81,6 +101,9 @@ describe('hooks | vault | useConfigFileParser', () => {
       { name: 'items[0].a', value: { encoded: '1', decoded: '1' } },
       { name: 'items[1].a', value: { encoded: '2', decoded: '2' } },
     ]);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
 
     await act(async () => {
       await result.current.parseFile(
@@ -107,9 +130,12 @@ describe('hooks | vault | useConfigFileParser', () => {
       { name: 'items[0].a', value: { encoded: '1', decoded: '1' } },
       { name: 'items[1].a', value: { encoded: '2', decoded: '2' } },
     ]);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
   });
 
-  test('should throw and clear properties on parse error', async () => {
+  test('should expose error state on parse error', async () => {
     const { result } = renderHook(() => useConfigFileParser());
 
     await act(async () => {
@@ -117,13 +143,17 @@ describe('hooks | vault | useConfigFileParser', () => {
     });
     expect(result.current.properties).toMatchObject([{ name: 'ok' }]);
 
-    await expect(
-      act(async () => {
-        await result.current.parseFile(mockFile('application.json', '{invalid'));
-      }),
-    ).rejects.toBeDefined();
+    await act(async () => {
+      await result.current.parseFile(mockFile('application.json', '{invalid'));
+    });
 
     expect(result.current.properties).toStrictEqual([]);
+    expect(result.current.error).toBeDefined();
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error?.message).toBeTruthy();
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(true);
+    expect(result.current.isReady).toBe(false);
   });
 
   test('should ignore stale parse results from previous file selection', async () => {
@@ -138,9 +168,17 @@ describe('hooks | vault | useConfigFileParser', () => {
       void result.current.parseFile(fastFile);
     });
 
+    expect(result.current.isParsing).toBe(true);
+    expect(result.current.isReady).toBe(false);
+
     await waitFor(() => {
       expect(result.current.properties).toMatchObject([{ name: 'current.value' }]);
     });
+
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
 
     await act(async () => {
       slowText.resolve('stale.value=1');
@@ -151,5 +189,28 @@ describe('hooks | vault | useConfigFileParser', () => {
       expect(result.current.properties).toMatchObject([{ name: 'current.value' }]);
       expect(result.current.properties).not.toMatchObject([{ name: 'stale.value' }]);
     });
+
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
+  });
+
+  test('should reset data and status', async () => {
+    const { result } = renderHook(() => useConfigFileParser());
+
+    await act(async () => {
+      await result.current.parseFile(mockFile('application.properties', 'ok=1'));
+    });
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(result.current.properties).toStrictEqual([]);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
   });
 });

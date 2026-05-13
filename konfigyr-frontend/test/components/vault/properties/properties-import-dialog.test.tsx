@@ -15,6 +15,21 @@ const YAML_FILE = `
 describe('components | vault | properties | <PropertiesImportDialog/>', () => {
   afterEach(() => cleanup());
 
+  test('should show empty state by default when dialog is open', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport}/>,
+    );
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+
+    expect(result.getByText('No configuration properties for import')).toBeInTheDocument();
+    expect(result.getByText('Your configuration is empty')).toBeInTheDocument();
+    expect(within(result.getByRole('dialog')).getByRole('button', { name: 'Import' })).toBeDisabled();
+  });
+
   test('should import properties and close dialog on successful submit', async () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
@@ -101,26 +116,29 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     await waitFor(() => expect(result.queryByRole('dialog')).toBeNull());
   });
 
-  test('should keep dialog open and show import error when submit fails', async () => {
+  test('should show parsing error for invalid JSON file', async () => {
     const user = userEvent.setup();
-    const onImport = vi.fn().mockRejectedValue(new Error('Import request failed'));
+    const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
       <PropertiesImportDialog onImport={onImport}/>,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
-    const input = await result.findByLabelText('Select existing configuration file');
-    const file = new File([PROPERTIES_FILE], 'application.properties', { type: 'text/plain' });
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+
+    const input = result.getByLabelText('Select existing configuration file');
+    const file = new File(['{invalid'], 'application.json', { type: 'application/json' });
     await user.upload(input, file);
 
-    await waitFor(() => expect(result.getByText('Ready for import')).toBeInTheDocument());
-    const dialog = result.getByRole('dialog');
-    const importButton = within(dialog).getByRole('button', { name: 'Import' });
-    await user.click(importButton);
-
-    await waitFor(() => expect(result.getByText('Import request failed')).toBeInTheDocument());
-    expect(result.getByRole('dialog')).toBeInTheDocument();
-    expect(within(result.getByRole('dialog')).getByRole('button', { name: 'Import' })).not.toBeDisabled();
+    await waitFor(() => {
+      expect(result.getByText('No configuration properties for import')).toBeInTheDocument();
+      expect(result.getByText('Could not read your configuration: Expected property name or \'}\' in JSON at position 1 (line 1 column 2)')).toBeInTheDocument();
+    });
+    expect(
+      within(
+        result.getByRole('dialog')).getByRole('button', { name: 'Import' }),
+    ).toBeDisabled();
+    expect(onImport).not.toHaveBeenCalled();
   });
 
 });

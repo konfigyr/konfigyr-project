@@ -20,6 +20,8 @@ const decodeEscapes = (value: string) => {
     .replace(/\\r/g, '\r')
     .replace(/\\n/g, '\n')
     .replace(/\\f/g, '\f')
+    // Java .properties allows escaping separators and special key chars.
+    .replace(/\\([:=#!\s])/g, '$1')
     .replace(/\\\\/g, '\\');
 };
 
@@ -201,10 +203,15 @@ const parseJson = (text?: string): Array<Property> => {
  */
 export function useConfigFileParser () {
   const [properties, setProperties] = useState<Array<ConfigurationProperty<any>>>([]);
+  const [error, setError] = useState<Error>();
+  const [isParsing, setIsParsing] = useState(false);
   const parseSequenceRef = useRef(0);
 
   async function parseFile (file: File) {
     const currentSequence = ++parseSequenceRef.current;
+    setIsParsing(true);
+    setError(undefined);
+
     try {
       const text = await file.text();
       const name = file.name.toLowerCase();
@@ -239,19 +246,32 @@ export function useConfigFileParser () {
         return;
       }
       setProperties(configurationProperties);
+      setIsParsing(false);
+      setError(undefined);
     } catch (e) {
       if (parseSequenceRef.current !== currentSequence) {
         return;
       }
       setProperties([]);
-      throw e;
+      setIsParsing(false);
+      setError(e instanceof Error ? e : new Error('Parse error'));
     }
   }
 
   const reset = () => {
     parseSequenceRef.current++;
     setProperties([]);
+    setError(undefined);
+    setIsParsing(false);
   };
 
-  return { properties, parseFile, reset };
+  return {
+    properties,
+    error,
+    parseFile,
+    reset,
+    isParsing,
+    isError: !!error,
+    isReady: !isParsing && !error,
+  };
 }
