@@ -6,6 +6,7 @@ import com.konfigyr.identity.authentication.OAuthAccountIdentityUser;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
@@ -18,6 +19,7 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenClaimNames;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -89,9 +91,24 @@ class TokenCustomizerTest {
 	}
 
 	@Test
+	@DisplayName("should not include personal information in OAuth Access token when no scopes are authorized")
+	void customizeAccessTokenForIdentityWithoutScopes() {
+		final var context = createContextFor(OAuth2TokenType.ACCESS_TOKEN, identity);
+
+		assertThatNoException().isThrownBy(() -> customizer.customize(context));
+
+		assertThat(context.getClaims().build().getClaims())
+				.hasSize(2)
+				.containsEntry(StandardClaimNames.SUB, "test-subject")
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"))
+				.doesNotContainKey(StandardClaimNames.NAME)
+				.doesNotContainKey(StandardClaimNames.EMAIL);
+	}
+
+	@Test
 	@DisplayName("should customize OAuth Access token when account identity is present in Authentication")
 	void customizeAccessTokenForIdentity() {
-		final var context = createContextFor(OAuth2TokenType.ACCESS_TOKEN, identity);
+		final var context = createContextFor(OAuth2TokenType.ACCESS_TOKEN, identity, OidcScopes.OPENID);
 
 		assertThatNoException().isThrownBy(() -> customizer.customize(context));
 
@@ -104,10 +121,25 @@ class TokenCustomizerTest {
 	}
 
 	@Test
+	@DisplayName("should only include email in OAuth Access token when only email scope is authorized")
+	void customizeAccessTokenForIdentityWithEmailScope() {
+		final var context = createContextFor(OAuth2TokenType.ACCESS_TOKEN, identity, OidcScopes.EMAIL);
+
+		assertThatNoException().isThrownBy(() -> customizer.customize(context));
+
+		assertThat(context.getClaims().build().getClaims())
+				.hasSize(3)
+				.containsEntry(StandardClaimNames.SUB, "test-subject")
+				.containsEntry(StandardClaimNames.EMAIL, identity.getEmail())
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"))
+				.doesNotContainKey(StandardClaimNames.NAME);
+	}
+
+	@Test
 	@DisplayName("should customize OAuth Access token when account identity user is present in Authentication")
 	void customizeAccessTokenForUser() {
 		final var user = new OAuthAccountIdentityUser(identity, mock(OAuth2User.class));
-		final var context = createContextFor(OAuth2TokenType.ACCESS_TOKEN, user);
+		final var context = createContextFor(OAuth2TokenType.ACCESS_TOKEN, user, OidcScopes.OPENID);
 
 		assertThatNoException().isThrownBy(() -> customizer.customize(context));
 
@@ -152,19 +184,20 @@ class TokenCustomizerTest {
 				.containsEntry(StandardClaimNames.PICTURE, identity.getAvatar().get());
 	}
 
-	static JwtEncodingContext createContextFor(OAuth2TokenType type, Object principal) {
+	static JwtEncodingContext createContextFor(OAuth2TokenType type, Object principal, String... scopes) {
 		final var authentication = mock(Authentication.class);
 		doReturn(principal).when(authentication).getPrincipal();
 
-		return createContextFor(type, authentication);
+		return createContextFor(type, authentication, scopes);
 	}
 
-	static JwtEncodingContext createContextFor(OAuth2TokenType type, Authentication authentication) {
+	static JwtEncodingContext createContextFor(OAuth2TokenType type, Authentication authentication, String... scopes) {
 		final var claims = JwtClaimsSet.builder().subject("test-subject");
 
 		return JwtEncodingContext.with(JwsHeader.with(SignatureAlgorithm.RS256), claims)
 				.principal(authentication)
 				.tokenType(type)
+				.authorizedScopes(Set.of(scopes))
 				.build();
 	}
 
