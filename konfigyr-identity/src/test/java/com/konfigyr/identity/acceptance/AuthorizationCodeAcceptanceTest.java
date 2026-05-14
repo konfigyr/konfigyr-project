@@ -3,7 +3,6 @@ package com.konfigyr.identity.acceptance;
 import com.konfigyr.identity.AccountIdentities;
 import com.konfigyr.identity.PkceGenerator;
 import com.konfigyr.identity.authentication.AccountIdentity;
-import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
@@ -71,7 +70,7 @@ class AuthorizationCodeAcceptanceTest {
 				.port(port)
 				.build();
 
-		services = new AccountRememberMeServices(context.getBean(AccountIdentityService.class)::get);
+		services = context.getBean(AccountRememberMeServices.class);
 	}
 
 	@BeforeEach

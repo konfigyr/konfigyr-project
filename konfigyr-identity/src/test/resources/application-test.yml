@@ -43,6 +43,10 @@ konfigyr:
       redirect-uris:
         - http://localhost/oauth/client/code
 
+    authentication:
+      remember-me:
+        key: TPAQiGlJHCb+YVx5lUk69Z+JMQyLi7fPUWy/fGvHYd4=
+
   crypto:
     master-key:
       value: u17zpizKhYfdYGZFTZAK1an6fwUb45UMFDVhhwOT4m0=

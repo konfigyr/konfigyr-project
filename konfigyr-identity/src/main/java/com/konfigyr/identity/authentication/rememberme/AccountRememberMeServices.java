@@ -1,6 +1,5 @@
 package com.konfigyr.identity.authentication.rememberme;
 
-import com.konfigyr.entity.EntityId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NullMarked;
@@ -54,12 +53,6 @@ import java.util.*;
 @NullMarked
 public class AccountRememberMeServices implements RememberMeServices, LogoutHandler {
 
-	/**
-	 * The key used to validate the {@link Authentication} that is returned by this service
-	 * when the {@link UserDetails} was successfully resolved.
-	 */
-	public static final String KEY = EntityId.from(123456789).serialize();
-
 	static final String STORED_FACTOR_GRANTED_AUTHORITY = AccountRememberMeServices.class.getName() + "#FACTOR_GRANTED_AUTHORITY";
 	static final String COOKIE_NAME = "konfigyr.account";
 	static final String DIGEST_ALGORITHM = "SHA-256";
@@ -70,16 +63,32 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 	/**
 	 * Creates a new instance of the {@link AccountRememberMeServices} that uses the {@link UserDetailsService}
 	 * to retrieve {@link UserDetails}.
-	 * <p>
 	 *
+	 * @param key shared secret included in the cookie hash and used for provider-token pairing,
+	 *            can't be {@literal null} or blank
 	 * @param service user details service used to load users, can't be {@literal null}
 	 */
-	public AccountRememberMeServices(UserDetailsService service) {
-		this.delegate = new InternalRememberMeServices(KEY, service);
+	public AccountRememberMeServices(String key, UserDetailsService service) {
+		this.delegate = new InternalRememberMeServices(key, service);
 		delegate.setTokenValiditySeconds((int) TOKEN_VALIDITY.toSeconds());
 		delegate.setCookieName(COOKIE_NAME);
 		delegate.setAlwaysRemember(true);
 		delegate.afterPropertiesSet();
+	}
+
+	/**
+	 * Returns the shared secret used to produce and verify remember-me cookie tokens.
+	 * <p>
+	 * This value is concatenated into the SHA-256 hash input alongside the username and expiry time,
+	 * making it impossible to forge a valid cookie without knowing it.
+	 * <p>
+	 * The key is also used by {@link org.springframework.security.authentication.RememberMeAuthenticationProvider}
+	 * to pair tokens with the issuing service via {@code key.hashCode()}.
+	 *
+	 * @return the shared secret used to produce and verify remember-me cookie tokens, never {@literal null}.
+	 */
+	public String getKey() {
+		return delegate.getKey();
 	}
 
 	@Nullable
@@ -104,7 +113,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 	}
 
 	static String generateSignature(String username, String factor, long issuedTime, long tokenExpiryTime, String key, String algorithm) {
-		final String data = username + ":" + ":" + factor + ":" + issuedTime + ":" + tokenExpiryTime + ":" + key;
+		final String data = username + ":" + factor + ":" + issuedTime + ":" + tokenExpiryTime + ":" + key;
 
 		try {
 			final MessageDigest digest = MessageDigest.getInstance(algorithm);

@@ -1,7 +1,6 @@
 package com.konfigyr.identity.configuration;
 
 import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
-import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import com.konfigyr.identity.authorization.AuthorizationServerScopes;
@@ -40,10 +39,10 @@ import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfiguration {
 
-	private final RememberMeServices rememberMeServices;
+	private final AccountRememberMeServices rememberMeServices;
 
-	public SecurityConfiguration(AccountIdentityService accountIdentityService) {
-		this.rememberMeServices = new AccountRememberMeServices(accountIdentityService::get);
+	public SecurityConfiguration(AccountRememberMeServices rememberMeServices) {
+		this.rememberMeServices = rememberMeServices;
 	}
 
 	@Bean
@@ -119,7 +118,7 @@ public class SecurityConfiguration {
 				.anonymous(AbstractHttpConfigurer::disable)
 				.formLogin(AbstractHttpConfigurer::disable)
 				.rememberMe(remember -> remember
-						.key(AccountRememberMeServices.KEY)
+						.key(rememberMeServices.getKey())
 						.rememberMeServices(rememberMeServices)
 				)
 				.oauth2Login(login -> login
@@ -159,12 +158,12 @@ public class SecurityConfiguration {
 	@RequiredArgsConstructor
 	private static final class RememberMeConfigurer extends AbstractHttpConfigurer<RememberMeConfigurer, HttpSecurity> {
 
-		private final RememberMeServices rememberMeServices;
+		private final AccountRememberMeServices rememberMeServices;
 
 		public void init(HttpSecurity http) {
 			http.setSharedObject(RememberMeServices.class, rememberMeServices);
 
-			AuthenticationProvider provider = new RememberMeAuthenticationProvider(AccountRememberMeServices.KEY);
+			AuthenticationProvider provider = new RememberMeAuthenticationProvider(rememberMeServices.getKey());
 			provider = postProcess(provider);
 
 			http.authenticationProvider(provider);
