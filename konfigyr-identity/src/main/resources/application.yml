@@ -34,6 +34,8 @@ konfigyr:
   identity:
     authorization:
       client-id: konfigyr
+      audiences:
+        - konfigyr-api
       redirect-uris:
         - "http://127.0.0.1:8080/login/oauth2/code/konfigyr"
         - "https://oauth.pstmn.io/v1/callback"

@@ -6,6 +6,7 @@ import org.jooq.impl.AbstractConverter;
 import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
 import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -20,6 +21,7 @@ import tools.jackson.databind.json.JsonMapper;
 public final class JsonConverter<T> extends AbstractConverter<String, T> {
 
 	private final ObjectMapper mapper;
+	private final JavaType javaType;
 
 	/**
 	 * Creates a new {@link JsonConverter} with the default {@link ObjectMapper} that would convert
@@ -33,7 +35,7 @@ public final class JsonConverter<T> extends AbstractConverter<String, T> {
 	public static <T> Converter<String, T> create(Class<T> type) {
 		Assert.notNull(type, "Target converter type must not be null");
 
-		return new JsonConverter<>(JsonMapper.builder().build(), type);
+		return create(JsonMapper.builder().build(), type);
 	}
 
 	/**
@@ -50,12 +52,31 @@ public final class JsonConverter<T> extends AbstractConverter<String, T> {
 		Assert.notNull(mapper, "Object mapper must not be null");
 		Assert.notNull(type, "Target converter type must not be null");
 
+		return new JsonConverter<>(mapper, mapper.constructType(type));
+	}
+
+	/**
+	 * Creates a new {@link JsonConverter} with an already customized {@link JsonMapper} that would
+	 * convert values to or from desired type.
+	 *
+	 * @param mapper object mapper instance to be used, can't be {@literal null}
+	 * @param type target type, can't be {@literal null}
+	 * @param <T> generic converter target type
+	 * @return JSON converter, never {@literal null}
+	 */
+	@NonNull
+	public static <T> Converter<String, T> create(ObjectMapper mapper, JavaType type) {
+		Assert.notNull(mapper, "Object mapper must not be null");
+		Assert.notNull(type, "Target converter type must not be null");
+
 		return new JsonConverter<>(mapper, type);
 	}
 
-	JsonConverter(@NonNull ObjectMapper mapper, @NonNull Class<T> type) {
-		super(String.class, type);
+	@SuppressWarnings("unchecked")
+	JsonConverter(@NonNull ObjectMapper mapper, @NonNull JavaType type) {
+		super(String.class, (Class<T>) type.getRawClass());
 		this.mapper = mapper;
+		this.javaType = type;
 	}
 
 	@Override
@@ -65,7 +86,7 @@ public final class JsonConverter<T> extends AbstractConverter<String, T> {
 		}
 
 		try {
-			return mapper.readValue(value, toType());
+			return mapper.readValue(value, javaType);
 		} catch (JacksonException e) {
 			throw new DataTypeException("Error when converting JSON to " + toType(), e);
 		}

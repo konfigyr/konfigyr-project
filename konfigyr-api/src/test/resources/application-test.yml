@@ -14,6 +14,8 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:${wiremock.server.port:8888}
+          audiences:
+            - konfigyr-api
 
 konfigyr:
   account:

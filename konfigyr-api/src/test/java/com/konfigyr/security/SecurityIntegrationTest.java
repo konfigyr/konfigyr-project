@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
@@ -30,6 +31,7 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 	void validateMember() {
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
+				.audience(List.of("konfigyr-api"))
 				.subject(TestPrincipals.john().getName())
 				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
 		);
@@ -50,6 +52,7 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 	void validateApplication() {
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
+				.audience(List.of("konfigyr-api"))
 				.subject("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
 				.claim(StandardClaimNames.NAME, "OAuth application")
 				.claim("scp", OAuthScopes.of(OAuthScope.NAMESPACES, OAuthScope.PROFILES).toString())
@@ -86,6 +89,7 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
+				.audience(List.of("konfigyr-api"))
 				.subject(TestPrincipals.from(account).getName())
 				.claim(StandardClaimNames.EMAIL, account.email())
 				.claim(StandardClaimNames.NAME, account.displayName())
@@ -107,6 +111,7 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 	void invalidSubject() {
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
+				.audience(List.of("konfigyr-api"))
 				.subject("some subject")
 				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
 		);
@@ -139,6 +144,35 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 				.subject(TestPrincipals.john().getName())
 				.expirationTime(Date.from(timestamp.minusSeconds(600)))
 				.notBeforeTime(Date.from(timestamp.minusSeconds(1200)))
+		);
+
+		assertThatRequest(token)
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.matches(SecurityMockMvcResultMatchers.unauthenticated());
+	}
+
+	@Test
+	@DisplayName("should fail to validate the OAuth Access token when audience is missing")
+	void missingAudience() {
+		final String token = generateAccessToken(claims -> claims
+				.issuer(wiremock.baseUrl())
+				.subject(TestPrincipals.john().getName())
+				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
+		);
+
+		assertThatRequest(token)
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.matches(SecurityMockMvcResultMatchers.unauthenticated());
+	}
+
+	@Test
+	@DisplayName("should fail to validate the OAuth Access token when audience does not match")
+	void invalidAudience() {
+		final String token = generateAccessToken(claims -> claims
+				.issuer(wiremock.baseUrl())
+				.audience(List.of("wrong-audience"))
+				.subject(TestPrincipals.john().getName())
+				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
 		);
 
 		assertThatRequest(token)

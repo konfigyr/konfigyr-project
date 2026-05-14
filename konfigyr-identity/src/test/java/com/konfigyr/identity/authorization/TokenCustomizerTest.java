@@ -15,6 +15,9 @@ import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenClaimNames;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -25,7 +28,7 @@ class TokenCustomizerTest {
 
 	final AccountIdentity identity = AccountIdentities.john().build();
 
-	final TokenCustomizer customizer = new TokenCustomizer();
+	final TokenCustomizer customizer = new TokenCustomizer(List.of("konfigyr-api", "konfigyr-identity"));
 
 	@Test
 	@DisplayName("should not customize ID token when account identity is not present in Authentication")
@@ -47,8 +50,9 @@ class TokenCustomizerTest {
 		assertThatNoException().isThrownBy(() -> customizer.customize(context));
 
 		assertThat(context.getClaims().build().getClaims())
-				.hasSize(1)
-				.containsEntry(StandardClaimNames.SUB, "test-subject");
+				.hasSize(2)
+				.containsEntry(StandardClaimNames.SUB, "test-subject")
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"));
 	}
 
 	@Test
@@ -60,8 +64,9 @@ class TokenCustomizerTest {
 		assertThatNoException().isThrownBy(() -> customizer.customize(context));
 
 		assertThat(context.getClaims().build().getClaims())
-				.hasSize(1)
-				.containsEntry(StandardClaimNames.SUB, "test-subject");
+				.hasSize(2)
+				.containsEntry(StandardClaimNames.SUB, "test-subject")
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"));
 	}
 
 	@Test
@@ -77,9 +82,10 @@ class TokenCustomizerTest {
 		assertThatNoException().isThrownBy(() -> customizer.customize(context));
 
 		assertThat(context.getClaims().build().getClaims())
-				.hasSize(2)
+				.hasSize(3)
 				.containsEntry(StandardClaimNames.SUB, "test-subject")
-				.containsEntry(StandardClaimNames.NAME, "Test client name");
+				.containsEntry(StandardClaimNames.NAME, "Test client name")
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"));
 	}
 
 	@Test
@@ -90,10 +96,11 @@ class TokenCustomizerTest {
 		assertThatNoException().isThrownBy(() -> customizer.customize(context));
 
 		assertThat(context.getClaims().build().getClaims())
-				.hasSize(3)
+				.hasSize(4)
 				.containsEntry(StandardClaimNames.SUB, "test-subject")
 				.containsEntry(StandardClaimNames.NAME, identity.getDisplayName())
-				.containsEntry(StandardClaimNames.EMAIL, identity.getEmail());
+				.containsEntry(StandardClaimNames.EMAIL, identity.getEmail())
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"));
 	}
 
 	@Test
@@ -105,10 +112,11 @@ class TokenCustomizerTest {
 		assertThatNoException().isThrownBy(() -> customizer.customize(context));
 
 		assertThat(context.getClaims().build().getClaims())
-				.hasSize(3)
+				.hasSize(4)
 				.containsEntry(StandardClaimNames.SUB, "test-subject")
 				.containsEntry(StandardClaimNames.EMAIL, identity.getEmail())
-				.containsEntry(StandardClaimNames.NAME, identity.getDisplayName());
+				.containsEntry(StandardClaimNames.NAME, identity.getDisplayName())
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"));
 	}
 
 	@Test

@@ -36,6 +36,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -375,7 +376,8 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 					.jwtID(String.valueOf(instant.toEpochMilli()))
 					.notBeforeTime(Date.from(instant))
 					.issueTime(Date.from(instant))
-					.issuer(wiremock.baseUrl());
+					.issuer(wiremock.baseUrl())
+					.audience(List.of("konfigyr-api"));
 
 			customizer.accept(claims);
 

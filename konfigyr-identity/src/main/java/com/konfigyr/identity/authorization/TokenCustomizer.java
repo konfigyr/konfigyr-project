@@ -13,13 +13,24 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 
+import java.util.Collections;
+import java.util.List;
+
 final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
 	static final OAuth2TokenType ID_TOKEN_TOKEN_TYPE = new OAuth2TokenType(OidcParameterNames.ID_TOKEN);
 
+	private final List<String> audiences;
+
+	TokenCustomizer(List<String> audiences) {
+		this.audiences = Collections.unmodifiableList(audiences);
+	}
+
 	@Override
 	public void customize(@NonNull JwtEncodingContext context) {
 		if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
+			context.getClaims().audience(audiences);
+
 			final Authentication authentication = context.getPrincipal();
 
 			if (authentication.getPrincipal() instanceof AccountIdentityUser user) {
