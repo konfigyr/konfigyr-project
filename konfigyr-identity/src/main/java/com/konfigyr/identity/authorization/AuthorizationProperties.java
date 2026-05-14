@@ -40,6 +40,15 @@ public class AuthorizationProperties {
 	private String clientName = "Konfigyr OAuth Client";
 
 	/**
+	 * Audience(s) to include in access tokens issued by this authorization server.
+	 * <p>
+	 * Resource servers that accept these tokens must validate that the {@code aud} claim contains at least
+	 * one of these values before granting access.
+	 */
+	@NotEmpty
+	private Set<String> audiences = new HashSet<>();
+
+	/**
 	 * Redirect URI(s) that the built-in Konfigyr OAuth client may use to redirect the user-agent when using
 	 * the {@code authorization_code} grant type.
 	 */

@@ -19,7 +19,7 @@ import static com.konfigyr.data.tables.OauthApplications.OAUTH_APPLICATIONS;
 public class RegisteredNamespaceClientRepository extends AbstractRegisteredClientRepository {
 
 	private static final Set<AuthorizationGrantType> SUPPORTED_GRANT_TYPES = Set.of(
-			AuthorizationGrantType.CLIENT_CREDENTIALS, AuthorizationGrantType.REFRESH_TOKEN
+			AuthorizationGrantType.CLIENT_CREDENTIALS
 	);
 
 	private final DSLContext context;

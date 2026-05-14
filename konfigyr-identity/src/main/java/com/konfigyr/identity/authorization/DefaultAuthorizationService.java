@@ -39,10 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -100,7 +97,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	) {
 		this.context = context;
 		this.publisher = publisher;
-		this.attributeConverter = JsonConverter.create(mapper, Map.class);
+		this.attributeConverter = JsonConverter.create(mapper, mapper.constructType(Map.class));
 		this.hashingConverter = MessageDigestConverter.create("BLAKE2s-256", BouncyCastleProvider.PROVIDER_NAME);
 		this.encryptionConverter = EncryptionConverter.create(operations);
 		this.registeredClientConverter = Converter.fromNullable(String.class, RegisteredClient.class, repository::findByClientId);

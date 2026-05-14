@@ -29,6 +29,7 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
@@ -97,7 +98,12 @@ public class AuthorizationConfiguration implements InitializingBean {
 
 	@Bean
 	OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
-		return new TokenCustomizer();
+		return new TokenCustomizer(
+				properties.getAudiences()
+						.stream()
+						.filter(StringUtils::hasText)
+						.toList()
+		);
 	}
 
 	@NonNull
