@@ -3,8 +3,10 @@ package com.konfigyr.identity.authentication.rememberme;
 import com.konfigyr.entity.EntityId;
 import jakarta.servlet.http.Cookie;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.api.ObjectAssert;
 import org.assertj.core.data.Index;
 import org.assertj.core.data.Offset;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,8 @@ import static org.assertj.core.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class AccountRememberMeServicesTest {
 
+	static final String TEST_KEY = "test-remember-me-key";
+
 	final UserDetails principal = User.withUsername(EntityId.from(92746L).serialize())
 		.password("not-used")
 		.authorities("konfigyr-account")
@@ -53,7 +57,7 @@ class AccountRememberMeServicesTest {
 	void createTokenBasedRememberMeServices() {
 		request = new MockHttpServletRequest();
 		response = new MockHttpServletResponse();
-		services = new AccountRememberMeServices(service);
+		services = new AccountRememberMeServices(TEST_KEY, service);
 	}
 
 	@Test
@@ -86,8 +90,7 @@ class AccountRememberMeServicesTest {
 		assertThat(services.autoLogin(request, response))
 				.isNull();
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -99,8 +102,7 @@ class AccountRememberMeServicesTest {
 		assertThat(services.autoLogin(request, response))
 				.isNull();
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -112,8 +114,7 @@ class AccountRememberMeServicesTest {
 		assertThat(services.autoLogin(request, response))
 				.isNull();
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -125,8 +126,7 @@ class AccountRememberMeServicesTest {
 		assertThat(services.autoLogin(request, response))
 				.isNull();
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -134,14 +134,13 @@ class AccountRememberMeServicesTest {
 	@DisplayName("should return null when remember-me signing algorithm is different")
 	void autoLoginClearsCookieIfSignatureAlgorithmDoesNotMatch() {
 		request.setCookies(createCookie(
-				System.currentTimeMillis() + 1000000, principal.getUsername(), AccountRememberMeServices.KEY, "MD5"
+				System.currentTimeMillis() + 1000000, principal.getUsername(), TEST_KEY, "MD5"
 		));
 
 		assertThat(services.autoLogin(request, response))
 				.isNull();
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -153,8 +152,7 @@ class AccountRememberMeServicesTest {
 		assertThat(services.autoLogin(request, response))
 				.isNull();
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -168,8 +166,7 @@ class AccountRememberMeServicesTest {
 		assertThat(services.autoLogin(request, response))
 				.isNull();
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -181,7 +178,9 @@ class AccountRememberMeServicesTest {
 
 		request.setCookies(createCookie(issuedAt, issuedAt + 1000000, principal.getUsername()));
 
-		assertThat(services.autoLogin(request, response))
+		final var authentication = services.autoLogin(request, response);
+
+		assertThat(authentication)
 				.isNotNull()
 				.returns(principal, Authentication::getPrincipal)
 				.returns(principal.getUsername(), Authentication::getName)
@@ -204,8 +203,7 @@ class AccountRememberMeServicesTest {
 	void loginFailClearsCookie() {
 		assertThatNoException().isThrownBy(() -> services.loginFail(request, response));
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -229,8 +227,7 @@ class AccountRememberMeServicesTest {
 
 		services.loginSuccess(request, response, createAuthentication(principal, FactorGrantedAuthority.PASSWORD_AUTHORITY));
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns((int) Duration.ofDays(14).toSeconds(), Cookie::getMaxAge);
 	}
 
@@ -279,7 +276,7 @@ class AccountRememberMeServicesTest {
 	@Test
 	@DisplayName("should not create cookie without a valid principal in authentication")
 	void loginSuccessWithoutAuthenticationName() {
-		final var authentication = new TestingAuthenticationToken(null, "", "authority");
+		final var authentication = new TestingAuthenticationToken("", "", "authority");
 		services.loginSuccess(request, response, authentication);
 
 		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
@@ -293,8 +290,7 @@ class AccountRememberMeServicesTest {
 
 		services.logout(request, response, createAuthentication(principal));
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 	}
 
@@ -305,12 +301,10 @@ class AccountRememberMeServicesTest {
 
 		services.logout(request, response, createAuthentication(principal));
 
-		assertThat(response.getCookie(AccountRememberMeServices.COOKIE_NAME))
-				.isNotNull()
+		assertThatCookie(response, AccountRememberMeServices.COOKIE_NAME)
 				.returns(0, Cookie::getMaxAge);
 
-		assertThat(response.getCookie("other-cookie"))
-				.isNotNull()
+		assertThatCookie(response, "other-cookie")
 				.returns(-1, Cookie::getMaxAge);
 	}
 
@@ -333,11 +327,11 @@ class AccountRememberMeServicesTest {
 	}
 
 	private static Cookie createCookie(long expiryTime, String username) {
-		return createCookie(expiryTime, username, AccountRememberMeServices.KEY);
+		return createCookie(expiryTime, username, TEST_KEY);
 	}
 
 	private static Cookie createCookie(long issuedTime, long expiryTime, String username) {
-		return createCookie(issuedTime, expiryTime, username, AccountRememberMeServices.KEY, AccountRememberMeServices.DIGEST_ALGORITHM);
+		return createCookie(issuedTime, expiryTime, username, TEST_KEY, AccountRememberMeServices.DIGEST_ALGORITHM);
 	}
 
 	private static Cookie createCookie(long expiryTime, String username, String key) {
@@ -363,6 +357,14 @@ class AccountRememberMeServicesTest {
 
 	private static String decode(String value) {
 		return new String(Base64.getDecoder().decode(value));
+	}
+
+	private static ObjectAssert<@NonNull Cookie> assertThatCookie(MockHttpServletResponse response, String name) {
+		final var cookie = response.getCookie(name);
+
+		return assertThat(cookie)
+				.as("Cookie %s should be present", name)
+				.isNotNull();
 	}
 
 }

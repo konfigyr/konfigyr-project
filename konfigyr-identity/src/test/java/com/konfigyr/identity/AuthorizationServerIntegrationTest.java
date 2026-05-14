@@ -66,6 +66,9 @@ class AuthorizationServerIntegrationTest {
 	AccountIdentityService identityService;
 
 	@Autowired
+	AccountRememberMeServices rememberMeServices;
+
+	@Autowired
 	KeysetStore keysets;
 
 	@Autowired
@@ -414,7 +417,7 @@ class AuthorizationServerIntegrationTest {
 				.queryParam(PkceParameterNames.CODE_CHALLENGE, PkceGenerator.generateCodeChallenge(verifier))
 				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
 				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
-				.with(rememberMe(identityService, 1))
+				.with(rememberMe(rememberMeServices, identityService, 1))
 				.exchange();
 
 		result.assertThat()
@@ -491,7 +494,7 @@ class AuthorizationServerIntegrationTest {
 				.queryParam(PkceParameterNames.CODE_CHALLENGE, PkceGenerator.generateCodeChallenge(verifier))
 				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
 				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
-				.with(rememberMe(identityService, 1))
+				.with(rememberMe(rememberMeServices, identityService, 1))
 				.exchange();
 
 		result.assertThat()
@@ -624,8 +627,7 @@ class AuthorizationServerIntegrationTest {
 				.containsExactlyInAnyOrderElementsOf(scopes);
 	}
 
-	static RequestPostProcessor rememberMe(AccountIdentityService service, long id) {
-		final AccountRememberMeServices services = new AccountRememberMeServices(service::get);
+	static RequestPostProcessor rememberMe(AccountRememberMeServices rememberMeServices, AccountIdentityService service, long id) {
 		final AccountIdentity identity = service.get(EntityId.from(id));
 
 		return request -> {
@@ -634,7 +636,7 @@ class AuthorizationServerIntegrationTest {
 			final List<GrantedAuthority> authorities = new ArrayList<>(identity.getAuthorities());
 			authorities.add(FactorGrantedAuthority.fromAuthority(FactorGrantedAuthority.AUTHORIZATION_CODE_AUTHORITY));
 
-			services.loginSuccess(request, response, new UsernamePasswordAuthenticationToken(
+			rememberMeServices.loginSuccess(request, response, new UsernamePasswordAuthenticationToken(
 					identity, identity.getPassword(), authorities
 			));
 

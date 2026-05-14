@@ -8,10 +8,12 @@ import com.konfigyr.identity.KonfigyrIdentityKeysets;
 import com.konfigyr.identity.authentication.idenitity.AccountIdentityListener;
 import com.konfigyr.identity.authentication.idenitity.AccountIdentityRepository;
 import com.konfigyr.identity.authentication.oauth.AuthorizedClientService;
+import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.mail.Mailer;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,11 +37,17 @@ import org.springframework.web.client.RestOperations;
 import java.util.concurrent.TimeUnit;
 
 @Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(AuthenticationProperties.class)
 public class AuthenticationConfiguration {
 
+	private final AuthenticationProperties properties;
 	private final Lazy<@NonNull DefaultOAuth2UserService> oauthUserService;
 
-	public AuthenticationConfiguration(ObjectProvider<@NonNull RestTemplateBuilder> builder) {
+	public AuthenticationConfiguration(
+			AuthenticationProperties properties,
+			ObjectProvider<@NonNull RestTemplateBuilder> builder
+	) {
+		this.properties = properties;
 		this.oauthUserService = Lazy.of(() -> createUserService(builder.getIfAvailable(RestTemplateBuilder::new)));
 	}
 
@@ -62,6 +70,11 @@ public class AuthenticationConfiguration {
 	@Bean
 	AccountIdentityService accountIdentityService(AccountIdentityRepository repository, UserCache cache) {
 		return new DefaultAccountIdentityService(repository, cache);
+	}
+
+	@Bean
+	AccountRememberMeServices accountRememberMeServices(AccountIdentityService service) {
+		return new AccountRememberMeServices(properties.getRememberMe().getKey(), service::get);
 	}
 
 	@Bean

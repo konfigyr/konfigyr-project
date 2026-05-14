@@ -61,3 +61,8 @@ konfigyr:
         - "http://127.0.0.1:3000/auth/code"
         - "http://localhost:3000/auth/code"
 
+    authentication:
+      remember-me:
+        # Shared secret included in the remember-me cookie hash and used for provider-token pairing.
+        key: "dEkBACuxmLvyjrseyyc0nXbm8eMCCbAnuoIqOMWLlOo="
+
