@@ -76,10 +76,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						"namespaces:invite",
 						"namespaces"
 				))
-				.satisfies(assertAuthorizationGrantTypes(
-						AuthorizationGrantType.CLIENT_CREDENTIALS,
-						AuthorizationGrantType.REFRESH_TOKEN
-				))
+				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.CLIENT_CREDENTIALS))
 				.satisfies(assertClientAuthenticationMethods())
 				.satisfies(assertTokenSettings())
 				.satisfies(assertClientSettings())
@@ -102,10 +99,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						"namespaces:invite",
 						"namespaces"
 				))
-				.satisfies(assertAuthorizationGrantTypes(
-						AuthorizationGrantType.CLIENT_CREDENTIALS,
-						AuthorizationGrantType.REFRESH_TOKEN
-				))
+				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.CLIENT_CREDENTIALS))
 				.satisfies(assertClientAuthenticationMethods())
 				.satisfies(assertTokenSettings())
 				.satisfies(assertClientSettings())
