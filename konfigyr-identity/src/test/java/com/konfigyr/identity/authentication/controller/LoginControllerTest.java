@@ -1,5 +1,6 @@
 package com.konfigyr.identity.authentication.controller;
 
+import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
 import org.assertj.core.api.Assertions;
@@ -16,7 +17,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.htmlunit.webdriver.MockMvcHtmlUnitDriverBuilder;
@@ -40,6 +45,9 @@ class LoginControllerTest {
 
 	@Autowired
 	MockMvcTester mvc;
+
+	@Autowired
+	RequestCache requestCache;
 
 	@BeforeAll
 	static void setup(WebApplicationContext context) {
@@ -137,9 +145,41 @@ class LoginControllerTest {
 	}
 
 	@Test
+	@DisplayName("should render login redirect page with default target when there is no saved request")
+	void shouldRenderLoginRedirectPageWithoutSavedRequest() {
+		assertThat(mvc.get().uri(KonfigyrIdentityRequestMatchers.LOGIN_REDIRECT_PAGE))
+				.apply(log())
+				.hasStatusOk()
+				.hasViewName("login-redirect")
+				.model()
+				.containsEntry("target", "/");
+	}
+
+	@Test
+	@DisplayName("should render login redirect page with saved request target and remove it from the session")
+	void shouldRenderLoginRedirectPageWithSavedRequest() {
+		final var session = new MockHttpSession();
+		final var request = new MockHttpServletRequest("GET", "/oauth/authorize");
+		request.setSession(session);
+
+		requestCache.saveRequest(request, new MockHttpServletResponse());
+
+		assertThat(mvc.get().uri(KonfigyrIdentityRequestMatchers.LOGIN_REDIRECT_PAGE).session(session))
+				.apply(log())
+				.hasStatusOk()
+				.hasViewName("login-redirect")
+				.model()
+				.containsEntry("target", "http://localhost/oauth/authorize?continue");
+
+		assertThat(requestCache.getRequest(request, new MockHttpServletResponse()))
+				.as("Request should be removed from the session")
+				.isNull();
+	}
+
+	@Test
 	@DisplayName("should render login page with configured OAuth2 Client registrations")
 	void shouldRenderLoginPage() {
-		driver.get("http://localhost/login");
+		driver.get("http://localhost" + KonfigyrIdentityRequestMatchers.LOGIN_PAGE);
 
 		Assertions.assertThat(driver.getTitle())
 				.isNotNull()

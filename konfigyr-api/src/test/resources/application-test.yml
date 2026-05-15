@@ -45,6 +45,12 @@ konfigyr:
     change-history:
       partitioning-cron: '-'
 
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: false
+
 logging:
   level:
     com.konfigyr: DEBUG

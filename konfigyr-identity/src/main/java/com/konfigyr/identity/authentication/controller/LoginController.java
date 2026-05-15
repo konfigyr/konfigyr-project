@@ -2,6 +2,8 @@ package com.konfigyr.identity.authentication.controller;
 
 import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
 import com.konfigyr.web.error.OAuth2ErrorResolver;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -10,10 +12,11 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.util.UriComponents;
@@ -26,7 +29,6 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping(KonfigyrIdentityRequestMatchers.LOGIN_PAGE)
 class LoginController {
 
 	private static final UriComponents REQUEST_PATTERN = UriComponentsBuilder
@@ -35,8 +37,9 @@ class LoginController {
 
 	private final OAuth2ClientProperties properties;
 	private final ClientRegistrationRepository repository;
+	private final RequestCache requestCache;
 
-	@GetMapping
+	@GetMapping(KonfigyrIdentityRequestMatchers.LOGIN_PAGE)
 	String login(
 			@NonNull Model model,
 			@NonNull WebRequest request,
@@ -55,6 +58,26 @@ class LoginController {
 				.addAttribute("error", error != null ? extractError(request) : null);
 
 		return "login";
+	}
+
+	@GetMapping(KonfigyrIdentityRequestMatchers.LOGIN_REDIRECT_PAGE)
+	String loginRedirect(
+			@NonNull Model model,
+			@NonNull HttpServletRequest request,
+			@NonNull HttpServletResponse response
+	) {
+		final SavedRequest savedRequest = requestCache.getRequest(request, response);
+
+		final String target;
+		if (savedRequest != null) {
+			requestCache.removeRequest(request, response);
+			target = savedRequest.getRedirectUrl();
+		} else {
+			target = "/";
+		}
+
+		model.addAttribute("target", target);
+		return "login-redirect";
 	}
 
 	@Nullable

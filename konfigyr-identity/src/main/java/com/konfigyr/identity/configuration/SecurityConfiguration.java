@@ -27,11 +27,13 @@ import org.springframework.security.oauth2.server.authorization.web.OAuth2Author
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
@@ -50,9 +52,15 @@ public class SecurityConfiguration {
 		return PasswordEncoders.get();
 	}
 
+
+	@Bean
+	RequestCache authorizationServerRequestCache() {
+		return new HttpSessionRequestCache();
+	}
+
 	@Bean
 	@Order(1)
-	SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) {
+	SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http, RequestCache requestCache) {
 		final OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
 		return http
@@ -89,7 +97,7 @@ public class SecurityConfiguration {
 						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				)
 				.requestCache(cache -> cache
-						.requestCache(new HttpSessionRequestCache())
+						.requestCache(requestCache)
 				)
 				// Redirect to the login page when not authenticated from the authorization endpoint
 				.exceptionHandling((exceptions) -> exceptions
@@ -103,7 +111,7 @@ public class SecurityConfiguration {
 
 	@Bean
 	@Order(2)
-	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http) {
+	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, RequestCache requestCache) {
 		return http
 				.securityMatchers(requests -> requests
 						.requestMatchers(new NegatedRequestMatcher(
@@ -112,6 +120,7 @@ public class SecurityConfiguration {
 				)
 				.authorizeHttpRequests((authorize) -> authorize
 						.requestMatchers(KonfigyrIdentityRequestMatchers.LOGIN_PAGE).permitAll()
+						.requestMatchers(KonfigyrIdentityRequestMatchers.LOGIN_REDIRECT_PAGE).permitAll()
 						.requestMatchers(KonfigyrIdentityRequestMatchers.SCOPES_METADATA_PAGE).permitAll()
 						.anyRequest().authenticated()
 				)
@@ -123,6 +132,10 @@ public class SecurityConfiguration {
 				)
 				.oauth2Login(login -> login
 						.loginPage(KonfigyrIdentityRequestMatchers.LOGIN_PAGE)
+						.successHandler(new SimpleUrlAuthenticationSuccessHandler(KonfigyrIdentityRequestMatchers.LOGIN_REDIRECT_PAGE))
+				)
+				.requestCache(cache -> cache
+						.requestCache(requestCache)
 				)
 				.securityContext(context -> context
 						.securityContextRepository(securityContextRepository())
