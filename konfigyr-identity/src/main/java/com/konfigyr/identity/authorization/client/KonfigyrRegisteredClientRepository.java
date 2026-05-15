@@ -30,7 +30,11 @@ public class KonfigyrRegisteredClientRepository extends AbstractRegisteredClient
 					AuthorizationServerScopes.register(scopes);
 					scope.getIncluded().forEach(it -> scopes.add(it.getAuthority()));
 				}))
-				.clientSettings(createClientSettings().build())
+				.clientSettings(
+						createClientSettings()
+								.requireAuthorizationConsent(false)
+								.build()
+				)
 				.tokenSettings(createTokenSettings().build())
 				.build();
 	}
