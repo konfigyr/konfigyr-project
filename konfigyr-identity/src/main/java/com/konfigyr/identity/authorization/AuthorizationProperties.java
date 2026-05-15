@@ -3,6 +3,7 @@ package com.konfigyr.identity.authorization;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.cache.autoconfigure.CacheProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.boot.security.oauth2.server.authorization.autoconfigure.servlet.OAuth2AuthorizationServerProperties;
@@ -67,5 +68,14 @@ public class AuthorizationProperties {
 	 */
 	@NestedConfigurationProperty
 	OAuth2AuthorizationServerProperties.Token token = new OAuth2AuthorizationServerProperties.Token();
+
+	/**
+	 * Customize how the Authorization Server caches registered OAuth clients.
+	 * <p>
+	 * It is recommended that entries should be kept in the cache for no longer than 5 minutes,
+	 * and therefore we recommend using the following specification: {@code expireAfterWrite=5m}.
+	 */
+	@NestedConfigurationProperty
+	CacheProperties.Caffeine cache = new CacheProperties.Caffeine();
 
 }

@@ -100,7 +100,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 		this.attributeConverter = JsonConverter.create(mapper, mapper.constructType(Map.class));
 		this.hashingConverter = MessageDigestConverter.create("BLAKE2s-256", BouncyCastleProvider.PROVIDER_NAME);
 		this.encryptionConverter = EncryptionConverter.create(operations);
-		this.registeredClientConverter = Converter.fromNullable(String.class, RegisteredClient.class, repository::findByClientId);
+		this.registeredClientConverter = Converter.fromNullable(String.class, RegisteredClient.class, repository::findById);
 	}
 
 	@Override

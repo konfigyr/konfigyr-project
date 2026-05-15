@@ -41,6 +41,8 @@ konfigyr:
         - "https://oauth.pstmn.io/v1/callback"
       post-logout-redirect-uris:
         - "http://127.0.0.1:8080/"
+      cache:
+        spec: expireAfterWrite=5m,maximumSize=100
       token:
         access-token-time-to-live: 15m
         refresh-token-time-to-live: 7d
