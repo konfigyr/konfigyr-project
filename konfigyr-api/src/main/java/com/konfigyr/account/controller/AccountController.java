@@ -21,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/account")
@@ -46,10 +44,10 @@ class AccountController {
 
 	@PostMapping("/email")
 	@Transactional(readOnly = true)
-	Object issue(@RequestBody @Validated MailHolder holder, @NonNull Authentication authentication) {
+	MailVerificationResponse issue(@RequestBody @Validated MailHolder holder, @NonNull Authentication authentication) {
 		final Account account = retrieveAccountForAuthentication(authentication);
 		final String token = emailVerifier.issue(account, holder.email());
-		return Map.of("token", token, "email", holder.email());
+		return new MailVerificationResponse(token, holder.email());
 	}
 
 	@PutMapping("/email")
@@ -99,6 +97,10 @@ class AccountController {
 	}
 
 	record MailVerification(@NotEmpty String token, @NotEmpty String code) {
+
+	}
+
+	record MailVerificationResponse(String token, String email) {
 
 	}
 
