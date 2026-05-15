@@ -28,6 +28,7 @@ import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames
 import org.springframework.security.oauth2.server.authorization.*;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.Assert;
@@ -341,9 +342,9 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	}
 
 	@Async
-	@Transactional(label = "authorization-service.authorization-consent-revoked")
 	@DomainEventHandler(name = "authorization-consent-revoked", namespace = "authorization")
 	@TransactionalEventListener(classes = AuthorizationConsentEvent.Revoked.class)
+	@Transactional(propagation = Propagation.REQUIRES_NEW, label = "authorization-service.authorization-consent-revoked")
 	void onConsentRevoked(AuthorizationConsentEvent.Revoked event) {
 		final OAuth2AuthorizationConsent consent = event.consent();
 		remove(consent.getPrincipalName(), consent.getRegisteredClientId());

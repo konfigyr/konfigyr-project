@@ -80,7 +80,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.CLIENT_CREDENTIALS))
 				.satisfies(assertClientAuthenticationMethods())
 				.satisfies(assertTokenSettings())
-				.satisfies(assertClientSettings())
+				.satisfies(assertClientSettings(true))
 				.satisfies(assertRedirectUris())
 				.satisfies(assertLogoutRedirectUris());
 	}
@@ -105,7 +105,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.CLIENT_CREDENTIALS))
 				.satisfies(assertClientAuthenticationMethods())
 				.satisfies(assertTokenSettings())
-				.satisfies(assertClientSettings())
+				.satisfies(assertClientSettings(true))
 				.satisfies(assertRedirectUris())
 				.satisfies(assertLogoutRedirectUris());
 	}
