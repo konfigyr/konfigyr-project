@@ -158,7 +158,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 		protected void onLoginSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
 			final String username = retrieveUserName(authentication);
 
-			// If we are unable to find a username do not generate any remember-me cookie
+			// If we are unable to find a username, do not generate any remember-me cookie
 			if (!StringUtils.hasLength(username)) {
 				logger.debug(LogMessage.format(
 						"Can not add remember-me cookie due to a missing username in: %s",
@@ -214,7 +214,7 @@ public class AccountRememberMeServices implements RememberMeServices, LogoutHand
 				return getUserDetailsService().loadUserByUsername(tokens[0]);
 			}
 
-			throw new InvalidCookieException("Cookie contained signature '" + tokens[2] + "' but expected '" + signature + "'");
+			throw new InvalidCookieException("Cookie contained signature '" + tokens[4] + "' but expected '" + signature + "'");
 		}
 
 		@Override
