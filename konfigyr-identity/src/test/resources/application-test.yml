@@ -53,6 +53,12 @@ konfigyr:
     jdbc:
       initialize-schema: never
 
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: off
+
 logging:
   level:
     com.konfigyr: DEBUG

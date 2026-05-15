@@ -18,6 +18,11 @@ public interface KonfigyrIdentityRequestMatchers {
 	String LOGIN_PAGE = "/login";
 
 	/**
+	 * Path that matches the login redirect interstitial page: <code>/login/redirect</code>.
+	 */
+	String LOGIN_REDIRECT_PAGE = "/login/redirect";
+
+	/**
 	 * Path that matches the OAuth 2.0 Consents page: <code>/oauth/consents</code>.
 	 */
 	String CONSENTS_PAGE = "/oauth/consents";
