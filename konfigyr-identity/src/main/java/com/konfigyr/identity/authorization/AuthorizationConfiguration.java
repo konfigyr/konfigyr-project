@@ -56,7 +56,9 @@ public class AuthorizationConfiguration implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() {
-		Security.addProvider(new BouncyCastleProvider());
+		if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+			Security.addProvider(new BouncyCastleProvider());
+		}
 	}
 
 	@Bean

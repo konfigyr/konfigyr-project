@@ -106,8 +106,10 @@ class AuthorizationCodeAcceptanceTest {
 
 		driver.get(uri.toUriString());
 
+		/* Should be kept in case we introduce 3rd party OAuth Clients with a `client_credentials` grant type
+
 		assertThatCurrentUri(driver)
-				.as("Should redirect to login page when not authenticated")
+				.as("Should redirect to consent page to authorize scopes")
 				.hasScheme(uri.getScheme())
 				.hasHost(uri.getHost())
 				.hasPort(uri.getPort())
@@ -133,6 +135,8 @@ class AuthorizationCodeAcceptanceTest {
 
 		assertThatElement(driver, "#consents button[type=\"submit\"]")
 				.satisfies(WebElement::submit);
+
+		 */
 
 		assertThatCurrentUri(driver)
 				.as("Should redirect to client with authorization code")

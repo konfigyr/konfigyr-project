@@ -3,7 +3,7 @@ package com.konfigyr.identity.authorization;
 import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.data.converter.EncryptionConverter;
-import com.konfigyr.data.converter.JsonConverter;
+import com.konfigyr.data.converter.JsonByteArrayConverter;
 import com.konfigyr.data.converter.MessageDigestConverter;
 import com.konfigyr.io.ByteArray;
 import io.micrometer.observation.annotation.Observed;
@@ -28,6 +28,7 @@ import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames
 import org.springframework.security.oauth2.server.authorization.*;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.Assert;
@@ -40,10 +41,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
+import java.util.function.*;
 
 import static com.konfigyr.data.tables.OauthAuthorizations.OAUTH_AUTHORIZATIONS;
 import static com.konfigyr.data.tables.OauthAuthorizationsConsents.OAUTH_AUTHORIZATIONS_CONSENTS;
@@ -69,7 +67,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
 	/* jOOQ Converters */
 	private final EncryptionConverter encryptionConverter;
-	private final Converter<String, Map> attributeConverter;
+	private final Converter<ByteArray, Map> attributeConverter;
 	private final Converter<ByteArray, ByteArray> hashingConverter;
 	private final Converter<String, RegisteredClient> registeredClientConverter;
 	private final Converter<OffsetDateTime, Instant> instantConverter = Converter.of(
@@ -97,7 +95,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	) {
 		this.context = context;
 		this.publisher = publisher;
-		this.attributeConverter = JsonConverter.create(mapper, mapper.constructType(Map.class));
+		this.attributeConverter = JsonByteArrayConverter.create(mapper, mapper.constructType(Map.class));
 		this.hashingConverter = MessageDigestConverter.create("BLAKE2s-256", BouncyCastleProvider.PROVIDER_NAME);
 		this.encryptionConverter = EncryptionConverter.create(operations);
 		this.registeredClientConverter = Converter.fromNullable(String.class, RegisteredClient.class, repository::findById);
@@ -122,8 +120,8 @@ public class DefaultAuthorizationService implements AuthorizationService {
 				.set(OAUTH_AUTHORIZATIONS.PRINCIPAL_NAME, authorization.getPrincipalName())
 				.set(OAUTH_AUTHORIZATIONS.AUTHORIZATION_GRANT_TYPE, authorization.getAuthorizationGrantType(), grantTypeConverter)
 				.set(OAUTH_AUTHORIZATIONS.AUTHORIZED_SCOPES, authorization.getAuthorizedScopes(), scopesConverter)
-				.set(OAUTH_AUTHORIZATIONS.ATTRIBUTES, authorization.getAttributes(), attributeConverter)
-				.set(OAUTH_AUTHORIZATIONS.STATE, (String) authorization.getAttribute(OAuth2ParameterNames.STATE))
+				.with(applyState(authorization))
+				.with(applyAttributes(authorization))
 				.with(applyAuthorizationCode(authorization))
 				.with(applyAccessToken(authorization))
 				.with(applyRefreshToken(authorization))
@@ -205,14 +203,14 @@ public class DefaultAuthorizationService implements AuthorizationService {
 			final ByteArray hash = hashingConverter.to(ByteArray.fromString(token));
 
 			condition = DSL.or(
-					OAUTH_AUTHORIZATIONS.STATE.eq(token),
+					OAUTH_AUTHORIZATIONS.STATE_HASH.eq(hash),
 					OAUTH_AUTHORIZATIONS.AUTHORIZATION_CODE_VALUE.eq(token),
 					OAUTH_AUTHORIZATIONS.ACCESS_TOKEN_HASH.eq(hash),
 					OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_HASH.eq(hash),
 					OAUTH_AUTHORIZATIONS.REFRESH_TOKEN_HASH.eq(hash)
 			);
 		} else if (AUTHORIZATION_STATE_TOKEN_TYPE.equals(type)) {
-			condition = OAUTH_AUTHORIZATIONS.STATE.eq(token);
+			condition = OAUTH_AUTHORIZATIONS.STATE_HASH.eq(hashingConverter.to(ByteArray.fromString(token)));
 		} else if (AUTHORIZATION_CODE_TOKEN_TYPE.equals(type)) {
 			condition = OAUTH_AUTHORIZATIONS.AUTHORIZATION_CODE_VALUE.eq(token);
 		} else if (OAuth2TokenType.ACCESS_TOKEN.equals(type)) {
@@ -315,7 +313,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	}
 
 	@Observed(name = "konfigyr.identity.authorization.cleanup")
-	@Scheduled(cron = "${konfigyr.authorization.cleanup.cron:0 * * * * *}")
+	@Scheduled(cron = "${konfigyr.authorization.cleanup.cron:0 0/15 * * * *}")
 	@Transactional(label = "authorization-service.cleanup-expired-authorizations")
 	void cleanup() {
 		final OffsetDateTime timestamp = OffsetDateTime.now(ZoneOffset.UTC);
@@ -346,6 +344,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 	@Async
 	@DomainEventHandler(name = "authorization-consent-revoked", namespace = "authorization")
 	@TransactionalEventListener(classes = AuthorizationConsentEvent.Revoked.class)
+	@Transactional(propagation = Propagation.REQUIRES_NEW, label = "authorization-service.authorization-consent-revoked")
 	void onConsentRevoked(AuthorizationConsentEvent.Revoked event) {
 		final OAuth2AuthorizationConsent consent = event.consent();
 		remove(consent.getPrincipalName(), consent.getRegisteredClientId());
@@ -407,6 +406,30 @@ public class DefaultAuthorizationService implements AuthorizationService {
 				.from(OAUTH_AUTHORIZATIONS)
 				.where(condition)
 				.fetchOne(this::createAuthorization);
+	}
+
+	@NonNull
+	private UnaryOperator<SettableRecord> applyState(@NonNull OAuth2Authorization authorization) {
+		final String state = authorization.getAttribute(OAuth2ParameterNames.STATE);
+
+		if (StringUtils.hasText(state)) {
+			return record -> {
+				final ByteArray value = ByteArray.fromString(state);
+				return record.set(OAUTH_AUTHORIZATIONS.STATE_HASH, value, hashingConverter);
+			};
+		}
+
+		return UnaryOperator.identity();
+	}
+
+	@NonNull
+	private UnaryOperator<SettableRecord> applyAttributes(@NonNull OAuth2Authorization authorization) {
+		final ByteArray context = ByteArray.fromString(authorization.getId());
+
+		return record -> {
+			final Converter<ByteArray, Map> converter = encryptionConverter.with(context).andThen(attributeConverter);
+			return record.set(OAUTH_AUTHORIZATIONS.ATTRIBUTES, authorization.getAttributes(), converter);
+		};
 	}
 
 	@NonNull
@@ -516,7 +539,9 @@ public class DefaultAuthorizationService implements AuthorizationService {
 		}
 
 		if (record.get(OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_VALUE) != null) {
-			final Map<String, Object> metadata = createAttributes(record, OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_METADATA);
+			final Map<String, Object> metadata = createAttributes(
+					record, OAUTH_AUTHORIZATIONS.OIDC_ID_TOKEN_METADATA, attributeConverter
+			);
 
 			builder.token(
 					new OidcIdToken(
@@ -559,13 +584,30 @@ public class DefaultAuthorizationService implements AuthorizationService {
 		return builder.build();
 	}
 
-	private Consumer<Map<String, Object>> consumeAttributes(@NonNull Record record, @NonNull Field<String> field) {
-		return attributes -> attributes.putAll(createAttributes(record, field));
+	private Consumer<Map<String, Object>> consumeAttributes(@NonNull Record record, @NonNull Field<ByteArray> field) {
+		Converter<ByteArray, Map> converter;
+
+		// the OAuth authorization attributes are encrypted; therefore, we need to decrypt them
+		// first before we can use the JSON attributes converter and consume them
+		if (OAUTH_AUTHORIZATIONS.ATTRIBUTES.equals(field)) {
+			final String id = record.get(OAUTH_AUTHORIZATIONS.ID);
+			Assert.hasText(id, "OAuth authorization must have a unique identifier");
+
+			converter = encryptionConverter.with(id).andThen(attributeConverter);
+		} else {
+			converter = attributeConverter;
+		}
+
+		return attributes -> attributes.putAll(createAttributes(record, field, converter));
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> createAttributes(@NonNull Record record, @NonNull Field<String> field) {
-		final Map<String, Object> value = record.get(field, attributeConverter);
+	private Map<String, Object> createAttributes(
+			@NonNull Record record,
+			@NonNull Field<ByteArray> field,
+			@NonNull Converter<ByteArray, Map> converter
+	) {
+		final Map<String, Object> value = record.get(field, converter);
 		return value == null ? Collections.emptyMap() : value;
 	}
 

@@ -98,7 +98,7 @@ class KonfigyrRegisteredClientRepositoryTest extends AbstractClientRepositoryTes
 				))
 				.satisfies(assertClientAuthenticationMethods())
 				.satisfies(assertTokenSettings())
-				.satisfies(assertClientSettings())
+				.satisfies(assertClientSettings(false))
 				.satisfies(assertRedirectUris("http://localhost/callback", "https://konfigyr.com/callback"))
 				.satisfies(assertLogoutRedirectUris("http://localhost/logout-callback"));
 	}

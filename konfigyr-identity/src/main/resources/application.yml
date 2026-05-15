@@ -3,7 +3,7 @@ spring:
     name: konfigyr-identity
 
   cache:
-    cache-names: crypto-keysets, user-cache
+    cache-names: crypto-keysets
     caffeine:
       spec: expireAfterWrite=1h
 

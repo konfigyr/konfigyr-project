@@ -28,6 +28,8 @@ import org.springframework.security.web.context.DelegatingSecurityContextReposit
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.concurrent.TimeUnit;
@@ -70,7 +72,7 @@ public class WebSecurityConfiguration {
 				.authorizeHttpRequests(requests -> requests
 						.anyRequest().hasAuthority(OAuthScope.READ_PROFILES.getAuthority())
 				)
-				.cors(Customizer.withDefaults())
+				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 				.csrf(csrf -> csrf.ignoringRequestMatchers("/configs/**"))
 				.logout(AbstractHttpConfigurer::disable)
 				.httpBasic(Customizer.withDefaults())
@@ -95,7 +97,7 @@ public class WebSecurityConfiguration {
 						.anyRequest()
 						.authenticated()
 				)
-				.cors(Customizer.withDefaults())
+				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 				.csrf(AbstractHttpConfigurer::disable)
 				.logout(AbstractHttpConfigurer::disable)
 				.httpBasic(AbstractHttpConfigurer::disable)
@@ -138,6 +140,20 @@ public class WebSecurityConfiguration {
 		return new DelegatingSecurityContextRepository(
 				new RequestAttributeSecurityContextRepository()
 		);
+	}
+
+	/**
+	 * Creates a {@link CorsConfigurationSource} that rejects all cross-origin requests by returning
+	 * an empty {@link CorsConfiguration} with no allowed origins, methods, or headers.
+	 * <p>
+	 * The Konfigyr REST API is intended for server-to-server communication only and must not be
+	 * invoked directly from a browser. Any request carrying an {@code Origin} header will be
+	 * denied by Spring Security's CORS filter with a {@code 403 Forbidden} response.
+	 *
+	 * @return CORS configuration source that blocks all cross-origin requests, never {@literal null}
+	 */
+	private static CorsConfigurationSource corsConfigurationSource() {
+		return ignore -> new CorsConfiguration();
 	}
 
 }

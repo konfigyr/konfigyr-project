@@ -92,13 +92,13 @@ abstract class AbstractClientRepositoryTest {
 				.returns(true, TokenSettings::isReuseRefreshTokens);
 	}
 
-	static Consumer<RegisteredClient> assertClientSettings() {
+	static Consumer<RegisteredClient> assertClientSettings(boolean requireAuthorizationConsent) {
 		return client -> assertThat(client.getClientSettings())
 				.isNotNull()
 				.returns(null, ClientSettings::getJwkSetUrl)
 				.returns(null, ClientSettings::getX509CertificateSubjectDN)
 				.returns(null, ClientSettings::getTokenEndpointAuthenticationSigningAlgorithm)
-				.returns(true, ClientSettings::isRequireAuthorizationConsent)
+				.returns(requireAuthorizationConsent, ClientSettings::isRequireAuthorizationConsent)
 				.returns(true, ClientSettings::isRequireProofKey);
 	}
 
