@@ -10,8 +10,8 @@
     {
       "name": "konfigyr.authorization.cleanup.cron",
       "type": "java.lang.String",
-      "defaultValue": "0 0 * * * *",
-      "description": "Specifies the interval of the cleanup job that would remove expired OAuth Authorizations. Defaults to every minute.",
+      "defaultValue": "0 0/15 * * * *",
+      "description": "Specifies the interval of the cleanup job that would remove expired OAuth Authorizations. Defaults to every 15 minutes.",
       "sourceType": "com.konfigyr.identity.authorization.AuthorizationService"
     }
   ]

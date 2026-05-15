@@ -52,7 +52,7 @@ public final class JsonConverter<T> extends AbstractConverter<String, T> {
 		Assert.notNull(mapper, "Object mapper must not be null");
 		Assert.notNull(type, "Target converter type must not be null");
 
-		return new JsonConverter<>(mapper, mapper.constructType(type));
+		return create(mapper, mapper.constructType(type));
 	}
 
 	/**

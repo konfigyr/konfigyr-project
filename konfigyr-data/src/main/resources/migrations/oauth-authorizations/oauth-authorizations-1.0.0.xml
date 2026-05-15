@@ -27,28 +27,28 @@
 				<constraints nullable="false"/>
 			</column>
 			<column name="authorized_scopes" type="varchar(1000)"/>
-			<column name="attributes" type="text"/>
-			<column name="state" type="varchar(500)"/>
+			<column name="attributes" type="bytea"/>
+			<column name="state_hash" type="bytea"/>
 			<column name="authorization_code_value" type="text"/>
 			<column name="authorization_code_issued_at" type="timestamptz"/>
 			<column name="authorization_code_expires_at" type="timestamptz"/>
-			<column name="authorization_code_metadata" type="text"/>
+			<column name="authorization_code_metadata" type="bytea"/>
 			<column name="access_token_value" type="bytea"/>
 			<column name="access_token_hash" type="bytea"/>
 			<column name="access_token_issued_at" type="timestamptz"/>
 			<column name="access_token_expires_at" type="timestamptz"/>
-			<column name="access_token_metadata" type="text"/>
+			<column name="access_token_metadata" type="bytea"/>
 			<column name="access_token_scopes" type="varchar(1000)"/>
 			<column name="oidc_id_token_value" type="bytea"/>
 			<column name="oidc_id_token_hash" type="bytea"/>
 			<column name="oidc_id_token_issued_at" type="timestamptz"/>
 			<column name="oidc_id_token_expires_at" type="timestamptz"/>
-			<column name="oidc_id_token_metadata" type="text"/>
+			<column name="oidc_id_token_metadata" type="bytea"/>
 			<column name="refresh_token_value" type="bytea"/>
 			<column name="refresh_token_hash" type="bytea"/>
 			<column name="refresh_token_issued_at" type="timestamptz"/>
 			<column name="refresh_token_expires_at" type="timestamptz"/>
-			<column name="refresh_token_metadata" type="text"/>
+			<column name="refresh_token_metadata" type="bytea"/>
 		</createTable>
     </changeSet>
 
