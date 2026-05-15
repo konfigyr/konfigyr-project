@@ -20,10 +20,6 @@ import static org.assertj.core.api.Assertions.within;
 
 abstract class AbstractClientRepositoryTest {
 
-	static Consumer<RegisteredClient> assertClientId(String id, Duration issuedBefore) {
-		return assertClientId(id, id, issuedBefore);
-	}
-
 	static Consumer<RegisteredClient> assertClientId(String id, String clientId, Duration issuedBefore) {
 		return client -> {
 			assertThat(client.getId())

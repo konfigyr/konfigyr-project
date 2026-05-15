@@ -1,5 +1,6 @@
 package com.konfigyr.identity.authorization.client;
 
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authorization.AuthorizationProperties;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
@@ -66,7 +67,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 		assertThat(repository.findByClientId("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp"))
 				.isNotNull()
 				.returns("Konfigyr active app", RegisteredClient::getClientName)
-				.satisfies(assertClientId("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp", Duration.ofDays(7)))
+				.satisfies(assertClientId(EntityId.from(2).serialize(), "kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp", Duration.ofDays(7)))
 				.satisfies(assertClientSecret("4b6dHEXXnAEMM1AD4b6RhqamjFwMdhIRgpyBVJRu-Zk", Duration.ofDays(3)))
 				.satisfies(assertScopes(
 						"namespaces:read",
@@ -87,9 +88,11 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 	@Test
 	@DisplayName("should retrieve client by client registration identifier")
 	void retrieveByRegistrationId() {
-		assertThat(repository.findById("kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD"))
+		final var id = EntityId.from(1).serialize();
+
+		assertThat(repository.findById(id))
 				.returns("Konfigyr expired app", RegisteredClient::getClientName)
-				.satisfies(assertClientId("kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD", Duration.ofDays(30)))
+				.satisfies(assertClientId(id, "kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD", Duration.ofDays(30)))
 				.satisfies(assertClientSecret("10S6cd0JgdO6WCLmOLB46d-Enx7K20hKSF1qicfev5g", Duration.ofDays(3).negated()))
 				.satisfies(assertScopes(
 						"namespaces:read",

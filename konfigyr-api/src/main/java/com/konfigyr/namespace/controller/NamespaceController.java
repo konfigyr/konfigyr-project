@@ -156,7 +156,6 @@ class NamespaceController {
 			);
 
 			return NamespaceDefinition.builder()
-					.owner(1L)
 					.slug(slug)
 					.name(name)
 					.description(description)

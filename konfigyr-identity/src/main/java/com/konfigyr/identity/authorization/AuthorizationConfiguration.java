@@ -6,9 +6,13 @@ import com.konfigyr.crypto.jose.JoseAutoConfiguration;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.KonfigyrIdentityKeysets;
 import com.konfigyr.identity.authentication.AccountIdentity;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.konfigyr.identity.authorization.client.CachingRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.DelegatingRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.KonfigyrRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository;
+import org.springframework.boot.cache.metrics.CacheMetricsRegistrar;
+import org.springframework.cache.caffeine.CaffeineCache;
 import com.konfigyr.identity.authorization.jwk.KeysetSource;
 import com.konfigyr.identity.authorization.jwk.SigningJwkSelector;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -64,10 +68,19 @@ public class AuthorizationConfiguration implements InitializingBean {
 	}
 
 	@Bean
-	RegisteredClientRepository registeredClientRepository(DSLContext context) {
+	RegisteredClientRepository registeredClientRepository(DSLContext context, CacheMetricsRegistrar registrar) {
+		Assert.notNull(properties.getCache().getSpec(), "Cache specification must not be null");
+
+		final CaffeineCache cache = new CaffeineCache(
+				"identity.registered-clients",
+				Caffeine.from(properties.getCache().getSpec()).recordStats().build()
+		);
+
+		registrar.bindCacheToRegistry(cache);
+
 		return new DelegatingRegisteredClientRepository(List.of(
 				new KonfigyrRegisteredClientRepository(properties),
-				new RegisteredNamespaceClientRepository(properties, context)
+				new CachingRegisteredClientRepository(cache, new RegisteredNamespaceClientRepository(properties, context))
 		));
 	}
 

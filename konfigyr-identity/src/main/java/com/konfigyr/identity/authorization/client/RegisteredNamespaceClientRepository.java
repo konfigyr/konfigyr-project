@@ -1,8 +1,10 @@
 package com.konfigyr.identity.authorization.client;
 
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authorization.AuthorizationProperties;
 import com.konfigyr.security.OAuthScopes;
 import org.apache.commons.lang3.StringUtils;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jspecify.annotations.NonNull;
@@ -30,13 +32,28 @@ public class RegisteredNamespaceClientRepository extends AbstractRegisteredClien
 	}
 
 	@Override
-	public RegisteredClient findById(String id) {
-		return lookup(id);
+	public RegisteredClient findById(String registrationId) {
+		if (StringUtils.isBlank(registrationId)) {
+			return null;
+		}
+
+		final EntityId id;
+
+		try {
+			id = EntityId.from(registrationId);
+		} catch (IllegalArgumentException e) {
+			return null;
+		}
+
+		return lookup(OAUTH_APPLICATIONS.ID.eq(id.get()));
 	}
 
 	@Override
 	public RegisteredClient findByClientId(String clientId) {
-		return lookup(clientId);
+		if (StringUtils.isBlank(clientId) || !clientId.startsWith("kfg-")) {
+			return null;
+		}
+		return lookup(OAUTH_APPLICATIONS.CLIENT_ID.eq(clientId));
 	}
 
 	@NonNull
@@ -45,12 +62,9 @@ public class RegisteredNamespaceClientRepository extends AbstractRegisteredClien
 		return SUPPORTED_GRANT_TYPES;
 	}
 
-	private RegisteredClient lookup(String id) {
-		if (StringUtils.isBlank(id) || !id.startsWith("kfg-")) {
-			return null;
-		}
-
+	private RegisteredClient lookup(Condition condition) {
 		return context.select(
+						OAUTH_APPLICATIONS.ID,
 						OAUTH_APPLICATIONS.NAME,
 						OAUTH_APPLICATIONS.CLIENT_ID,
 						OAUTH_APPLICATIONS.CLIENT_SECRET,
@@ -59,7 +73,7 @@ public class RegisteredNamespaceClientRepository extends AbstractRegisteredClien
 						OAUTH_APPLICATIONS.CREATED_AT
 				)
 				.from(OAUTH_APPLICATIONS)
-				.where(OAUTH_APPLICATIONS.CLIENT_ID.eq(id))
+				.where(condition)
 				.fetchOne(this::toRegisteredClient);
 	}
 
@@ -67,7 +81,7 @@ public class RegisteredNamespaceClientRepository extends AbstractRegisteredClien
 		final Collection<? extends GrantedAuthority> authorities = OAuthScopes.parse(record.get(OAUTH_APPLICATIONS.SCOPES))
 				.toAuthorities();
 
-		return createRegisteredClient(record.get(OAUTH_APPLICATIONS.CLIENT_ID))
+		return createRegisteredClient(record.get(OAUTH_APPLICATIONS.ID, EntityId.class).serialize())
 				.clientName(record.get(OAUTH_APPLICATIONS.NAME))
 				.clientId(record.get(OAUTH_APPLICATIONS.CLIENT_ID))
 				.clientIdIssuedAt(record.get(OAUTH_APPLICATIONS.CREATED_AT, Instant.class))
