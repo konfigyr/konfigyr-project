@@ -128,7 +128,7 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
             onAdd={onAdd}
           />
 
-          <PropertiesImportDialog onImport={onImport} />
+          <PropertiesImportDialog onImport={onImport} profile={changeset.profile} />
         </div>
 
         <PropertyStatusFilters

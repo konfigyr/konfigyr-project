@@ -14,7 +14,7 @@ import { Field, FieldDescription, FieldLabel } from '@konfigyr/components/ui/fie
 import { Input } from '@konfigyr/components/ui/input';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 import { ImportPropertiesLabel } from './messages';
-import type { ConfigurationProperty } from '@konfigyr/hooks/types';
+import type { ConfigurationProperty, Profile } from '@konfigyr/hooks/types';
 
 type ConfigurationImporterStatusProps = {
   isParsing: boolean;
@@ -58,10 +58,10 @@ export function ConfigurationImporter ({ onChange }: {
   );
 }
 
-export function PropertiesImportDialog ({ onImport }: {
+export function PropertiesImportDialog ({ profile, onImport }: {
   onImport: (properties: Array<ConfigurationProperty<any>>) => void | Promise<unknown>
+  profile: Profile
 }) {
-
   const [open, setOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const { properties, reset, error, parseFile, isParsing, isError } = useConfigFileParser();
@@ -85,7 +85,7 @@ export function PropertiesImportDialog ({ onImport }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="outline">
+          <Button variant="outline" disabled={profile.policy === 'IMMUTABLE'}>
             <ImportIcon/>
             <ImportPropertiesLabel/>
           </Button>

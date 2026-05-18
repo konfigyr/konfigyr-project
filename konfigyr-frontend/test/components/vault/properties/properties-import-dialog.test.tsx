@@ -3,6 +3,7 @@ import { cleanup, waitFor, within } from '@testing-library/react';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { PropertiesImportDialog } from '@konfigyr/components/vault/properties/properties-import-dialog';
 import userEvent from '@testing-library/user-event';
+import { profiles } from '@konfigyr/test/helpers/mocks';
 import React from 'react';
 
 const PROPERTIES_FILE = 'server.port=8080';
@@ -15,11 +16,21 @@ const YAML_FILE = `
 describe('components | vault | properties | <PropertiesImportDialog/>', () => {
   afterEach(() => cleanup());
 
+  test('should render disabled Import button for the immutable profile', () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport} profile={profiles.deprecated} />,
+    );
+
+    expect(result.getByRole('button', { name: 'Import' })).toBeDisabled();
+  });
+
   test('should show empty state by default when dialog is open', async () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport}/>,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} />,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
@@ -34,7 +45,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport}/>,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} />,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
@@ -78,7 +89,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport}/>,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} />,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
@@ -120,7 +131,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport}/>,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} />,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
