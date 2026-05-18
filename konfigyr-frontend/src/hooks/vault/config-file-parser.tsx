@@ -3,13 +3,25 @@ import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { parse } from 'yaml';
 import type { ConfigurationProperty } from '@konfigyr/hooks/vault/types';
 
-type Property = {
-  name: string;
-  value: string;
-};
-
-const buildProperty = (name: string, value: string): Property => {
-  return { name, value };
+/**
+ * Builds a configuration property object from a name/value pair.
+ *
+ * @param name - property key.
+ * @param value - property value
+ */
+const buildConfigurationProperty = (name: string, value: string): ConfigurationProperty<string> => {
+  return {
+    name: name,
+    state: PropertyTransitionType.ADDED,
+    value: {
+      encoded: value,
+      decoded: value,
+    },
+    typeName: 'string',
+    schema: {
+      type: 'string',
+    },
+  };
 };
 /**
  * Decodes escaped sequences in a string (commonly found in `.properties` files).
@@ -49,8 +61,8 @@ const isEscaped = (value: string, index: number) => {
  *
  * @param text - Raw `.properties` file content.
  */
-const parsePropertiesFile = (text: string): Array<Property> => {
-  const out: Array<Property> = [];
+const parsePropertiesFile = (text: string): Array<ConfigurationProperty<string>> => {
+  const out: Array<ConfigurationProperty<string>> = [];
 
   const rawLines = text.replace(/\r\n?/g, '\n').split('\n');
 
@@ -95,14 +107,13 @@ const parsePropertiesFile = (text: string): Array<Property> => {
 
     if (key) {
       out.push(
-        buildProperty(key, value),
+        buildConfigurationProperty(key, value),
       );
     }
   }
 
   return out;
 };
-
 /**
  * Checks whether a value is a scalar primitive.
  *
@@ -118,14 +129,13 @@ const isScalar = (value: unknown) => {
     typeof value === 'bigint'
   );
 };
-
 /**
  * Converts a JSON-compatible object into flat `Property` entries.
  *
  * @param obj - The input object to convert. Can contain nested objects and arrays.
  */
-function jsonToProperties (obj: unknown): Array<Property> {
-  const properties: Array<Property> = [];
+function jsonToProperties (obj: unknown): Array<ConfigurationProperty<string>> {
+  const properties: Array<ConfigurationProperty<string>> = [];
 
   const append = (value: unknown, prefix: string) => {
     if (!prefix) {
@@ -135,7 +145,7 @@ function jsonToProperties (obj: unknown): Array<Property> {
     if (Array.isArray(value)) {
       if (value.every(isScalar)) {
         properties.push(
-          buildProperty(prefix, value.map(v => String(v)).join(',')),
+          buildConfigurationProperty(prefix, value.map(v => String(v)).join(',')),
         );
         return;
       }
@@ -155,7 +165,7 @@ function jsonToProperties (obj: unknown): Array<Property> {
     }
 
     properties.push(
-      buildProperty(prefix, String(value)),
+      buildConfigurationProperty(prefix, String(value)),
     );
   };
 
@@ -169,26 +179,24 @@ function jsonToProperties (obj: unknown): Array<Property> {
 
   return properties;
 }
-
 /**
  * Parses YAML text and converts it into an array of `Property` objects.
  *
  * @param yamlText - Raw YAML content to parse.
  */
-const parseYamlFile = (yamlText?: string): Array<Property> => {
+const parseYamlFile = (yamlText?: string): Array<ConfigurationProperty<string>> => {
   if (!yamlText) {
     return [];
   }
   const parsedYamlObject = parse(yamlText);
   return jsonToProperties(parsedYamlObject);
 };
-
 /**
  * Parses JSON text and converts it into an array of `Property` objects.
  *
  * @param text - Raw JSON string to parse.
  */
-const parseJsonFile = (text?: string): Array<Property> => {
+const parseJsonFile = (text?: string): Array<ConfigurationProperty<string>> => {
   if (!text) {
     return [];
   }
@@ -208,8 +216,11 @@ const parseJsonFile = (text?: string): Array<Property> => {
  * @returns An object containing:
  * - `properties` - The parsed configuration properties.
  * - `error` - An error message if parsing fails.
- * - `parse` - Async function to parse a given `File`.
+ * - `parseFile` - Async function to parse a given `File`.
  * - `reset` - Function to clear parsed data and errors.
+ * - `isParsing` - Indicates whether a parse operation is currently in progress.
+ * - `isError` - Indicates whether the latest parse operation failed.
+ * - `isReady` - Indicates parser idle state (not parsing and no error).
  */
 export function useConfigFileParser () {
   const [properties, setProperties] = useState<Array<ConfigurationProperty<any>>>([]);
@@ -226,7 +237,7 @@ export function useConfigFileParser () {
       const text = await file.text();
       const name = file.name.toLowerCase();
 
-      let parsedProperties: Array<Property> = [];
+      let parsedProperties: Array<ConfigurationProperty<string>> = [];
 
       if (name.endsWith('.json')) {
         parsedProperties = parseJsonFile(text);
@@ -238,24 +249,10 @@ export function useConfigFileParser () {
         throw new Error('Unsupported file type');
       }
 
-      const configurationProperties: Array<ConfigurationProperty<any>> = parsedProperties.map((p: Property) => {
-        return {
-          name: p.name,
-          state: PropertyTransitionType.ADDED,
-          value: {
-            encoded: p.value,
-            decoded: p.value,
-          },
-          typeName: 'string',
-          schema: {
-            type: 'string',
-          },
-        };
-      });
       if (parseSequenceRef.current !== currentSequence) {
         return;
       }
-      setProperties(configurationProperties);
+      setProperties(parsedProperties);
       setIsParsing(false);
       setError(undefined);
     } catch (e) {
