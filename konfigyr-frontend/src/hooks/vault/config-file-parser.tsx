@@ -8,6 +8,9 @@ type Property = {
   value: string;
 };
 
+const buildProperty = (name: string, value: string): Property => {
+  return { name, value };
+};
 /**
  * Decodes escaped sequences in a string (commonly found in `.properties` files).
  *
@@ -46,7 +49,7 @@ const isEscaped = (value: string, index: number) => {
  *
  * @param text - Raw `.properties` file content.
  */
-const parseProperties = (text: string): Array<Property> => {
+const parsePropertiesFile = (text: string): Array<Property> => {
   const out: Array<Property> = [];
 
   const rawLines = text.replace(/\r\n?/g, '\n').split('\n');
@@ -91,7 +94,9 @@ const parseProperties = (text: string): Array<Property> => {
     value = decodeEscapes(value.trim());
 
     if (key) {
-      out.push({ name: key, value });
+      out.push(
+        buildProperty(key, value),
+      );
     }
   }
 
@@ -115,47 +120,54 @@ const isScalar = (value: unknown) => {
 };
 
 /**
- * Converts a JSON object into a flat string of Java-style `.properties` entries.
+ * Converts a JSON-compatible object into flat `Property` entries.
  *
  * @param obj - The input object to convert. Can contain nested objects and arrays.
- * @param prefix - A prefix used for nested keys. Used internally during recursion.
  */
-function jsonToProperties (obj: any, prefix = ''): string {
-  if (obj === null || obj === undefined) {
-    return prefix ? `${prefix}=` : '';
-  }
+function jsonToProperties (obj: unknown): Array<Property> {
+  const properties: Array<Property> = [];
 
-  if (typeof obj !== 'object') {
-    return prefix ? `${prefix}=${obj}` : '';
-  }
-
-  const lines: Array<string> = [];
-
-  for (const [key, value] of Object.entries(obj)) {
-    const newKey = prefix ? `${prefix}.${key}` : key;
+  const append = (value: unknown, prefix: string) => {
+    if (!prefix) {
+      return;
+    }
 
     if (Array.isArray(value)) {
-      // If the array only contains scalar values, serialize it as a single comma-separated value.
-      // This matches common `.properties` conventions like: key=a,b,c
       if (value.every(isScalar)) {
-        lines.push(`${newKey}=${value.map(v => String(v)).join(',')}`);
-      } else {
-        value.forEach((v, i) => {
-          if (typeof v === 'object') {
-            lines.push(jsonToProperties(v, `${newKey}[${i}]`));
-          } else {
-            lines.push(`${newKey}[${i}]=${v}`);
-          }
-        });
+        properties.push(
+          buildProperty(prefix, value.map(v => String(v)).join(',')),
+        );
+        return;
       }
-    } else if (typeof value === 'object' && value !== null) {
-      lines.push(jsonToProperties(value, newKey));
-    } else {
-      lines.push(`${newKey}=${value}`);
+
+      value.forEach((item, index) => {
+        append(item, `${prefix}[${index}]`);
+      });
+      return;
     }
+
+    if (value !== null && typeof value === 'object') {
+      Object.entries(value).forEach(([key, nestedValue]) => {
+        const nestedKey = `${prefix}.${key}`;
+        append(nestedValue, nestedKey);
+      });
+      return;
+    }
+
+    properties.push(
+      buildProperty(prefix, String(value)),
+    );
+  };
+
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return [];
   }
 
-  return lines.join('\n');
+  Object.entries(obj).forEach(([key, value]) => {
+    append(value, key);
+  });
+
+  return properties;
 }
 
 /**
@@ -163,13 +175,12 @@ function jsonToProperties (obj: any, prefix = ''): string {
  *
  * @param yamlText - Raw YAML content to parse.
  */
-const parseYaml = (yamlText?: string): Array<Property> => {
+const parseYamlFile = (yamlText?: string): Array<Property> => {
   if (!yamlText) {
     return [];
   }
   const parsedYamlObject = parse(yamlText);
-  const propertiesString = jsonToProperties(parsedYamlObject);
-  return parseProperties(propertiesString);
+  return jsonToProperties(parsedYamlObject);
 };
 
 /**
@@ -177,13 +188,12 @@ const parseYaml = (yamlText?: string): Array<Property> => {
  *
  * @param text - Raw JSON string to parse.
  */
-const parseJson = (text?: string): Array<Property> => {
+const parseJsonFile = (text?: string): Array<Property> => {
   if (!text) {
     return [];
   }
   const parsedJsonObject = JSON.parse(text);
-  const propertiesText = jsonToProperties(parsedJsonObject);
-  return parseProperties(propertiesText);
+  return jsonToProperties(parsedJsonObject);
 };
 
 /**
@@ -219,11 +229,11 @@ export function useConfigFileParser () {
       let parsedProperties: Array<Property> = [];
 
       if (name.endsWith('.json')) {
-        parsedProperties = parseJson(text);
+        parsedProperties = parseJsonFile(text);
       } else if (name.endsWith('.properties')) {
-        parsedProperties = parseProperties(text);
+        parsedProperties = parsePropertiesFile(text);
       } else if (name.endsWith('.yaml') || name.endsWith('.yml')) {
-        parsedProperties = parseYaml(text);
+        parsedProperties = parseYamlFile(text);
       } else {
         throw new Error('Unsupported file type');
       }
