@@ -240,6 +240,47 @@ export const useAddProperty = generatePropertyOperationMutation(
   },
 );
 
+export const useImportProperties = (changeset: ChangesetState) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (properties: Array<ConfigurationProperty<any>>): Promise<ChangesetState>=> {
+      const result: Array<ConfigurationProperty<any>> = [];
+
+      properties.forEach(( property: ConfigurationProperty<any>) => {
+        const existing = changeset.properties.find(p => p.name === property.name);
+        if (existing) {
+          result.push(
+            {
+              ...existing,
+              value: property.value,
+              state: existing.state === ConfigurationPropertyState.ADDED ? ConfigurationPropertyState.ADDED : ConfigurationPropertyState.UPDATED,
+            },
+          );
+        } else {
+          result.push(
+            {
+              ...property,
+              state: ConfigurationPropertyState.ADDED,
+            },
+          );
+        }
+      });
+
+      return Promise.resolve({
+        ...changeset,
+        properties: result,
+        deleted: result.filter(p => p.state === ConfigurationPropertyState.REMOVED).length,
+        modified: result.filter(p => p.state === ConfigurationPropertyState.UPDATED).length,
+        added: result.filter(p => p.state === ConfigurationPropertyState.ADDED).length,
+      });
+    },
+    onSuccess(result: ChangesetState) {
+      client.setQueryData(vaultKeys.getChangeset(result.profile), result);
+    },
+  });
+};
+
 export const useRestoreProperty = generatePropertyOperationMutation(
   (state, property) => {
     const properties: Array<ConfigurationProperty<any>> = state.properties.map(it => {
