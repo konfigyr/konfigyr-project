@@ -28,6 +28,7 @@ export const namespaceKeys = {
   getNamespaceApplications: (slug: string) => ['namespace', slug, 'applications'],
   getNamespaceApplication: (slug: string, id: string) => ['namespace', slug, 'applications', id],
   getNamespaceInvitations: (slug: string, pageable: Pageable) => ['namespace', slug, 'invitations', pageable],
+  getNamespaceInvitation: (slug: string, key: string) => ['namespace', slug, 'invitation', key],
   getNamespaceServices: (slug: string) => ['namespace', slug, 'services'],
   getNamespaceService: (slug: string, service: string) => ['namespace', slug, 'services', service],
   getNamespaceServiceCatalog: (slug: string, service: string) => ['namespace', slug, 'services', service, 'catalog'],
@@ -152,6 +153,23 @@ export const getNamespaceInvitations = (namespace: Namespace, pageable: Pageable
     queryKey: namespaceKeys.getNamespaceInvitations(namespace.slug, pageable),
     queryFn: async ({ signal }): Promise<PageResponse<Invitation>> => {
       return await request.get(`api/namespaces/${namespace.slug}/invitations`, { signal, searchParams: { ...pageable } }).json();
+    },
+  });
+};
+
+export const getNamespaceInvitation = (namespace: Namespace, key: string) => {
+  return queryOptions({
+    queryKey: namespaceKeys.getNamespaceInvitation(namespace.slug, key),
+    queryFn: async ({ signal }): Promise<Invitation> => {
+      return await request.get(`api/namespaces/${namespace.slug}/invitations/${key}`, { signal }).json();
+    },
+  });
+};
+
+export const useJoinNamespace = (namespace: Namespace, key: string) => {
+  return useMutation({
+    mutationFn: async () => {
+      await request.post(`api/namespaces/${namespace.slug}/invitations/${key}`).json();
     },
   });
 };
