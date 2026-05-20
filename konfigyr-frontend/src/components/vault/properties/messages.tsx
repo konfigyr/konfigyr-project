@@ -21,6 +21,13 @@ export const AddPropertyLabel = () => (
   />
 );
 
+export const ImportPropertiesLabel = () => (
+  <FormattedMessage
+    defaultMessage="Import"
+    description="Label used in action links or buttons that would add a configuration properties from an external file (e.g., JSON, YAML)."
+  />
+);
+
 export const RestorePropertyLabel = () => (
   <FormattedMessage
     defaultMessage="Restore property"
