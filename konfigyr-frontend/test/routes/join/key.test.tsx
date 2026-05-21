@@ -7,7 +7,7 @@ describe('routes | join namespace', () => {
   afterEach(() => cleanup());
 
   test('should render the join namespace page and accept invitation', async () => {
-    const { router, getByRole, getByText } = renderWithRouter('/join/konfigyr/0b9f514567f6cd9bb393a06388fc3dd7');
+    const { router, getByRole, getByText } = renderWithRouter('/join/0b9f514567f6cd9bb393a06388fc3dd7');
 
     await waitFor(() => {
       expect(getByText('You\'ve been invited')).toBeInTheDocument();

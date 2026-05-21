@@ -2,16 +2,13 @@ package com.konfigyr.account;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
 import org.jmolecules.ddd.annotation.AggregateRoot;
-import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.Serial;
@@ -19,18 +16,18 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Record defining the user account.
+ * Aggregate root representing a user account — the primary identity within the system.
+ * <p>
+ * An account holds only identity and profile data. Namespace memberships and invitations are
+ * managed by the {@code com.konfigyr.membership} module and are not part of this aggregate.
  *
  * @param id unique user account identifier, can not be {@literal null}
  * @param status account status, can not be {@literal null}
  * @param email email address of the user account, can not be {@literal null}
  * @param fullName users full name, can be {@literal null}
  * @param avatar URL where the avatar for the user account is hosted, can't be {@literal null}
- * @param memberships account namespace memberships, can not be {@literal null}
  * @param lastLoginAt when was the user account last online, can be {@literal null}
  * @param createdAt when was this user account created, can be {@literal null}
  * @param updatedAt when was this user account last updated, can be {@literal null}
@@ -44,7 +41,6 @@ public record Account(
 		@NonNull String email,
 		@Nullable FullName fullName,
 		@NonNull Avatar avatar,
-		@NonNull @Association(aggregateType = Account.class) Memberships memberships,
 		@Nullable OffsetDateTime lastLoginAt,
 		@Nullable OffsetDateTime createdAt,
 		@Nullable OffsetDateTime updatedAt
@@ -86,15 +82,6 @@ public record Account(
 	}
 
 	/**
-	 * To successfully delete the {@link Account} user accounts are required to leave or delete
-	 * {@link com.konfigyr.namespace.Namespace namespaces} where they are specified as
-	 * {@link NamespaceRole#ADMIN administrors}.
-	 */
-	public boolean isDeletable() {
-		return memberships.stream().noneMatch(membership -> membership.role() == NamespaceRole.ADMIN);
-	}
-
-	/**
 	 * Creates a new {@link Builder fluent account builder} instance used to create
 	 * the {@link Account} record.
 	 *
@@ -128,7 +115,6 @@ public record Account(
 		private String firstName;
 		private String lastName;
 		private Avatar avatar;
-		private List<Membership> memberships;
 		private OffsetDateTime lastLoginAt;
 		private OffsetDateTime createdAt;
 		private OffsetDateTime updatedAt;
@@ -146,9 +132,6 @@ public record Account(
 			lastLoginAt = account.lastLoginAt();
 			createdAt = account.createdAt();
 			updatedAt = account.updatedAt();
-
-			// copy the memberships using the builder method
-			memberships(account.memberships());
 		}
 
 		/**
@@ -274,36 +257,6 @@ public record Account(
 		}
 
 		/**
-		 * Adds a {@link com.konfigyr.namespace.Namespace} {@link Membership} for this account.
-		 *
-		 * @param membership membership to be added.
-		 * @return account builder
-		 */
-		public Builder membership(Membership membership) {
-			if (membership != null) {
-				if (memberships == null) {
-					memberships = new ArrayList<>();
-				}
-
-				memberships.add(membership);
-			}
-			return this;
-		}
-
-		/**
-		 * Adds a {@link com.konfigyr.namespace.Namespace} {@link Membership memberships} for this account.
-		 *
-		 * @param memberships memberships to be added.
-		 * @return account builder
-		 */
-		public Builder memberships(Iterable<Membership> memberships) {
-			if (memberships != null) {
-				memberships.forEach(this::membership);
-			}
-			return this;
-		}
-
-		/**
 		 * Specify when this {@link Account} was last logged-in.
 		 *
 		 * @param lastLoginAt last login date
@@ -378,9 +331,6 @@ public record Account(
 			Assert.notNull(status, "Account status can not be null");
 			Assert.hasText(email, "Account email address can not be blank");
 
-			final Memberships memberships = CollectionUtils.isEmpty(this.memberships) ?
-					Memberships.empty() : Memberships.of(this.memberships);
-
 			final FullName fullName = StringUtils.hasText(firstName) ?
 					FullName.of(firstName, lastName) : null;
 
@@ -390,7 +340,7 @@ public record Account(
 			}
 
 			return new Account(id, status, email, fullName,
-					avatar, memberships, lastLoginAt, createdAt, updatedAt);
+					avatar, lastLoginAt, createdAt, updatedAt);
 		}
 
 	}

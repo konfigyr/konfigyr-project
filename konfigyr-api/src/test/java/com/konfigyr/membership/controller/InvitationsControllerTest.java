@@ -1,19 +1,25 @@
-package com.konfigyr.namespace.controller;
+package com.konfigyr.membership.controller;
 
+import com.konfigyr.account.Account;
+import com.konfigyr.account.AccountManager;
+import com.konfigyr.account.AccountStatus;
+import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.feature.FeatureValue;
 import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
-import com.konfigyr.namespace.Invitation;
-import com.konfigyr.namespace.InvitationException;
+import com.konfigyr.membership.Invitation;
+import com.konfigyr.membership.InvitationException;
 import com.konfigyr.namespace.NamespaceFeatures;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.jooq.DSLContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
@@ -26,11 +32,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-class InvitationsControllerTest extends AbstractNamespaceControllerTest {
+class InvitationsControllerTest extends AbstractMembershipControllerTest {
+
+	@Autowired
+	AccountManager accounts;
+
+	@Autowired
+	DSLContext context;
 
 	@Test
 	@DisplayName("should retrieve invitations for namespace")
@@ -47,17 +60,17 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 				.convertTo(pagedModel(Invitation.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.hasSize(2)
-						.extracting(Invitation::key, Invitation::namespace, Invitation::recipient, Invitation::role)
+						.extracting(Invitation::key, Invitation::organization, Invitation::recipient, Invitation::role)
 						.containsExactly(
 								tuple(
 										"09320f6c6481c1fed73573a5430758f1",
-										EntityId.from(2),
+										new Invitation.Organization(EntityId.from(2), "konfigyr", "Konfigyr", "Konfigyr namespace"),
 										new Invitation.Recipient("expiring@konfigyr.com"),
 										NamespaceRole.USER
 								),
 								tuple(
 										"09320d7f8e21143b2957f1caded74cbc",
-										EntityId.from(2),
+										new Invitation.Organization(EntityId.from(2), "konfigyr", "Konfigyr", "Konfigyr namespace"),
 										new Invitation.Recipient("invitee@konfigyr.com"),
 										NamespaceRole.ADMIN
 								)
@@ -113,7 +126,7 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 				.bodyJson()
 				.convertTo(Invitation.class)
 				.returns("09320f6c6481c1fed73573a5430758f1", Invitation::key)
-				.returns(EntityId.from(2), Invitation::namespace)
+				.returns(new Invitation.Organization(EntityId.from(2), "konfigyr", "Konfigyr", "Konfigyr namespace"), Invitation::organization)
 				.returns(null, Invitation::sender)
 				.returns(new Invitation.Recipient("expiring@konfigyr.com"), Invitation::recipient)
 				.returns(NamespaceRole.USER, Invitation::role)
@@ -185,7 +198,7 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
 				.convertTo(Invitation.class)
-				.returns(EntityId.from(2), Invitation::namespace)
+				.returns(new Invitation.Organization(EntityId.from(2), "konfigyr", "Konfigyr", "Konfigyr namespace"), Invitation::organization)
 				.returns(NamespaceRole.USER, Invitation::role)
 				.returns(false, Invitation::isExpired)
 				.satisfies(it -> assertThat(it.sender())
@@ -222,7 +235,7 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.INTERNAL_SERVER_ERROR, problem -> problem
-						.hasTitle("User already a member")
+						.hasTitle("User is already a member")
 						.hasDetailContaining("This user is already a member of the namespace.")
 						.hasProperty("code", InvitationException.ErrorCode.ALREADY_INVITED.name())
 				));
@@ -332,8 +345,10 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 	@Transactional
 	@DisplayName("should accept pending invitation")
 	void acceptPendingInvitation() {
-		mvc.post().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320d7f8e21143b2957f1caded74cbc")
-				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
+		final Account invitee = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
+
+		mvc.post().uri("/account/invitations/{key}", "09320d7f8e21143b2957f1caded74cbc")
+				.with(authentication(invitee))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -341,10 +356,13 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 	}
 
 	@Test
+	@Transactional
 	@DisplayName("should fail to accept expired invitation")
 	void acceptExpiredInvitation() {
-		mvc.post().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320f6c6481c1fed73573a5430758f1")
-				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
+		final Account invitee = createAccount("expiring@konfigyr.com", "Leto", "Atreides");
+
+		mvc.post().uri("/account/invitations/{key}", "09320f6c6481c1fed73573a5430758f1")
+				.with(authentication(invitee))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -361,10 +379,13 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 	}
 
 	@Test
+	@Transactional
 	@DisplayName("should fail to accept unknown invitation")
 	void acceptUnknownInvitation() {
-		mvc.post().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "unknown")
-				.with(authentication(TestPrincipals.john(), OAuthScope.INVITE_MEMBERS))
+		final Account invitee = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
+
+		mvc.post().uri("/account/invitations/{key}", "unknown")
+				.with(authentication(invitee))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -372,14 +393,151 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 	}
 
 	@Test
-	@DisplayName("should fail to accept without namespaces:invite scope")
-	void acceptWithoutScope() {
-		mvc.post().uri("/namespaces/{slug}/invitations/{key}", "konfigyr", "09320d7f8e21143b2957f1caded74cbc")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+	@DisplayName("should fail to accept invitation that is not sent to the currently logged in account")
+	void acceptInvitationForDifferentAccount() {
+		mvc.post().uri("/account/invitations/{key}", "09320d7f8e21143b2957f1caded74cbc")
+				.with(authentication(TestPrincipals.john()))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
+				.satisfies(invitationNotFound("09320d7f8e21143b2957f1caded74cbc"));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should retrieve invitations for authenticated account")
+	void listAccountInvitations() {
+		final Account invitee = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
+
+		mvc.get().uri("/account/invitations")
+				.with(authentication(invitee))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(pagedModel(Invitation.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.hasSize(1)
+						.extracting(Invitation::key, Invitation::organization, Invitation::role)
+						.containsExactly(tuple(
+								"09320d7f8e21143b2957f1caded74cbc",
+								new Invitation.Organization(EntityId.from(2), "konfigyr", "Konfigyr", "Konfigyr namespace"),
+								NamespaceRole.ADMIN
+						))
+				);
+	}
+
+	@Test
+	@DisplayName("should retrieve empty invitations for account with no invitations")
+	void listEmptyAccountInvitations() {
+		mvc.get().uri("/account/invitations")
+				.with(authentication(TestPrincipals.john()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(Invitation.class))
+				.satisfies(it -> assertThat(it.getContent()).isEmpty());
+	}
+
+	@Test
+	@DisplayName("should fail to list account invitations for invalid authentication type")
+	void listAccountInvitationsForInvalidAuthenticationType() {
+		mvc.get().uri("/account/invitations")
+				.with(authentication(TestPrincipals.application("kfg-client-application")))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should retrieve invitation for authenticated account by key")
+	void retrieveAccountInvitation() {
+		final Account invitee = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
+
+		mvc.get().uri("/account/invitations/{key}", "09320d7f8e21143b2957f1caded74cbc")
+				.with(authentication(invitee))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(Invitation.class)
+				.returns("09320d7f8e21143b2957f1caded74cbc", Invitation::key)
+				.returns(new Invitation.Organization(EntityId.from(2), "konfigyr", "Konfigyr", "Konfigyr namespace"), Invitation::organization)
+				.returns(NamespaceRole.ADMIN, Invitation::role)
+				.returns(false, Invitation::isExpired)
+				.returns(new Invitation.Recipient("invitee@konfigyr.com"), Invitation::recipient);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to retrieve account invitation by unknown key")
+	void retrieveUnknownAccountInvitation() {
+		final Account invitee = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
+
+		mvc.get().uri("/account/invitations/{key}", "unknown")
+				.with(authentication(invitee))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(invitationNotFound("unknown"));
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve account invitation that is not sent to the currently logged in account")
+	void retrieveAccountInvitationForDifferentAccount() {
+		mvc.get().uri("/account/invitations/{key}", "09320d7f8e21143b2957f1caded74cbc")
+				.with(authentication(TestPrincipals.john()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(invitationNotFound("09320d7f8e21143b2957f1caded74cbc"));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should decline pending account invitation")
+	void declineAccountInvitation() {
+		final Account invitee = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
+
+		mvc.delete().uri("/account/invitations/{key}", "09320d7f8e21143b2957f1caded74cbc")
+				.with(authentication(invitee))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NO_CONTENT);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to decline unknown account invitation")
+	void declineUnknownAccountInvitation() {
+		final Account invitee = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
+
+		mvc.delete().uri("/account/invitations/{key}", "unknown")
+				.with(authentication(invitee))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(invitationNotFound("unknown"));
+	}
+
+	@Test
+	@DisplayName("should fail to decline account invitation that is not sent to the currently logged in account")
+	void declineAccountInvitationForDifferentAccount() {
+		mvc.delete().uri("/account/invitations/{key}", "09320d7f8e21143b2957f1caded74cbc")
+				.with(authentication(TestPrincipals.john()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(invitationNotFound("09320d7f8e21143b2957f1caded74cbc"));
 	}
 
 	@Test
@@ -426,6 +584,24 @@ class InvitationsControllerTest extends AbstractNamespaceControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(forbidden(OAuthScope.INVITE_MEMBERS));
+	}
+
+	private Account createAccount(String email, String firstName, String lastName) {
+		return context.insertInto(ACCOUNTS)
+				.set(
+						SettableRecord.of(ACCOUNTS)
+								.set(ACCOUNTS.ID, EntityId.generate().map(EntityId::get))
+								.set(ACCOUNTS.EMAIL, email)
+								.set(ACCOUNTS.STATUS, AccountStatus.ACTIVE.name())
+								.set(ACCOUNTS.FIRST_NAME, firstName)
+								.set(ACCOUNTS.LAST_NAME, lastName)
+								.get()
+				)
+				.returning(ACCOUNTS.ID)
+				.fetchOptional(ACCOUNTS.ID)
+				.map(EntityId::from)
+				.flatMap(accounts::findById)
+				.orElseThrow(() -> new IllegalStateException("Failed to create test account: " + email));
 	}
 
 	static Consumer<MvcTestResult> invitationNotFound(String key) {

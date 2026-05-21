@@ -8,6 +8,7 @@ import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.ServiceCatalog;
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.version.Version;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -30,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-class ServiceControllerTest extends AbstractNamespaceControllerTest {
+class ServiceControllerTest extends AbstractControllerTest {
 
 	@Test
 	@DisplayName("should retrieve all available services for Konfigyr namespace")

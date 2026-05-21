@@ -3,5 +3,6 @@ export type * from './audit/types';
 export type * from './artifactory/types';
 export type * from './hateoas/types';
 export type * from './kms/types';
+export type * from './memberships/types';
 export type * from './namespace/types';
 export type * from './vault/types';

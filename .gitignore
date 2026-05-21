@@ -336,6 +336,9 @@ application-local.properties
 # do not ignore local example configuration files
 !application-local.example.yml
 
+# Claude local configuration
+.claude/settings.local.json
+
 ### Local state repository or metadata stores ###
 metadata-store
 state-repositories

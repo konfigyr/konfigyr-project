@@ -11,9 +11,9 @@ import {
   CardTitle,
 } from '@konfigyr/components/ui/card';
 
-import type { Invitation, Namespace } from '@konfigyr/hooks/types';
+import type { Invitation } from '@konfigyr/hooks/types';
 
-export function JoinNamespace({ namespace, invitation, onAccept }: { namespace: Namespace, invitation: Invitation, onAccept: () => void }) {
+export function JoinNamespace({ invitation, onAccept }: { invitation: Invitation, onAccept: () => void }) {
   return (
     <Card className="border">
       <CardHeader className="border-b">
@@ -27,7 +27,7 @@ export function JoinNamespace({ namespace, invitation, onAccept }: { namespace: 
           <FormattedMessage
             defaultMessage="Join the {namespace} organization"
             description="Title that is shown on the namespace join page when user is invited to join a namespace"
-            values={{ namespace: (<strong>{namespace.name}</strong>) }}
+            values={{ namespace: (<strong>{invitation.organization.name}</strong>) }}
           />
         </CardTitle>
         <CardDescription>
@@ -45,7 +45,7 @@ export function JoinNamespace({ namespace, invitation, onAccept }: { namespace: 
             description="Text on the namespace join page that informs the user about invitation to a namespace and who sent it. It includes sender's name and namespace name."
             values={{
               sender: (<span className="font-medium text-foreground">{invitation.sender.name}</span>),
-              namespace: (<span className="font-medium text-foreground">{namespace.name}</span>),
+              namespace: (<span className="font-medium text-foreground">{invitation.organization.name}</span>),
             }}
           />
         </p>
@@ -54,7 +54,7 @@ export function JoinNamespace({ namespace, invitation, onAccept }: { namespace: 
           <FormattedMessage
             defaultMessage="Join {namespace}"
             description="The button label that is shown on the namespace join page when user is invited to join a namespace. It includes namespace name."
-            values={{ namespace: namespace.name }}
+            values={{ namespace: invitation.organization.name }}
           />
           <ArrowRightIcon />
         </Button>
@@ -75,7 +75,7 @@ export function JoinNamespace({ namespace, invitation, onAccept }: { namespace: 
             description="Join namespace footer message that is shown on the namespace join page when user is invited to join a namespace. It includes sender's name and namespace name."
             values={{
               sender: (<><br/><span className="font-medium text-foreground">{invitation.sender.name}</span></>),
-              namespace: (<span className="font-medium text-foreground/80">{namespace.name}</span>),
+              namespace: (<span className="font-medium text-foreground/80">{invitation.organization.name}</span>),
             }}
           />
         </p>

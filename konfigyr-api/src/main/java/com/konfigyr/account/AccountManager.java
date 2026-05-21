@@ -37,16 +37,6 @@ public interface AccountManager {
 	Optional<Account> findByEmail(@NonNull String email);
 
 	/**
-	 * Retrieves all {@link Memberships} for an {@link Account} with a given {@link EntityId entity identifier}.
-	 *
-	 * @param id account entity identifier, can't be {@literal null}
-	 * @return account memberships or empty, never {@literal null}
-	 * @throws AccountNotFoundException when {@link Account} does not exist
-	 */
-	@NonNull
-	Memberships findMemberships(@NonNull EntityId id);
-
-	/**
 	 * Updates the {@link Account} and publishes the {@link AccountEvent.Updated} event when successful.
 	 *
 	 * @param account account to be updated, can't be {@literal null}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ErrorState } from '@konfigyr/components/error';
 import { FormattedMessage, KonfigyrLeadMessage, KonfigyrTitleMessage } from '@konfigyr/components/messages';
-import { AccountContext, useGetAccount } from '@konfigyr/hooks';
+import { AccountContext, useGetAccount, useGetNamespaces } from '@konfigyr/hooks';
 
 import type { ReactNode } from 'react';
 
@@ -38,7 +38,7 @@ function AccountLoader() {
         </p>
       </div>
 
-      <div className="relative bg-gray-200 h-[2px] w-[18rem] z-50 pointer-events-none rounded-full">
+      <div className="relative bg-gray-200 h-0.5 w-[18rem] z-50 pointer-events-none rounded-full">
         <div
           className="h-full bg-secondary transition-all duration-300 ease-out shadow-sm"
           style={{ width: `${width}%` }}
@@ -77,20 +77,27 @@ function AccountLoader() {
  * @param children the children elements to be rendered
  */
 export const AccountProvider = ({ children }: { children: ReactNode }) => {
-  const { data: account, isPending, isError, error } = useGetAccount();
+  const account = useGetAccount();
+  const namespaces = useGetNamespaces();
 
-  if (isPending) {
+  if (account.isPending || namespaces.isPending) {
     return (<AccountLoader />);
   }
 
-  if (isError) {
+  if (account.isError) {
     return (
-      <ErrorState error={error} />
+      <ErrorState error={account.error} />
+    );
+  }
+
+  if (namespaces.isError) {
+    return (
+      <ErrorState error={namespaces.error} />
     );
   }
 
   return (
-    <AccountContext.Provider value={account}>
+    <AccountContext.Provider value={{ account: account.data, memberships: namespaces.data }}>
       {children}
     </AccountContext.Provider>
   );

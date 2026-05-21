@@ -1,7 +1,6 @@
 package com.konfigyr.account;
 
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractIntegrationTest;
@@ -39,21 +38,12 @@ class AccountManagerTest extends AbstractIntegrationTest {
 				.returns("John Doe", Account::displayName)
 				.returns(FullName.of("John", "Doe"), Account::fullName)
 				.returns(Avatar.generate(id, "JD"), Account::avatar)
-				.returns(false, Account::isDeletable)
 				.satisfies(it -> assertThat(it.lastLoginAt())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now(), byLessThan(10, ChronoUnit.MINUTES))
 				)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.satisfies(it -> assertThat(it.updatedAt()).isNotNull())
-				.satisfies(it -> assertThat(it.memberships())
-						.hasSize(2)
-						.extracting(Membership::id, Membership::namespace, Membership::role)
-						.containsExactly(
-								tuple(EntityId.from(1), "john-doe", NamespaceRole.ADMIN),
-								tuple(EntityId.from(2), "konfigyr", NamespaceRole.ADMIN)
-						)
-				);
+				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
 	}
 
 	@Test
@@ -72,34 +62,9 @@ class AccountManagerTest extends AbstractIntegrationTest {
 				.returns("Jane Doe", Account::displayName)
 				.returns(FullName.of("Jane", "Doe"), Account::fullName)
 				.returns(Avatar.generate(EntityId.from(2), "JD"), Account::avatar)
-				.returns(true, Account::isDeletable)
 				.returns(null, Account::lastLoginAt)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.satisfies(it -> assertThat(it.updatedAt()).isNotNull())
-				.satisfies(it -> assertThat(it.memberships())
-						.hasSize(1)
-						.extracting(Membership::id, Membership::namespace, Membership::role)
-						.containsExactly(
-								tuple(EntityId.from(3), "konfigyr", NamespaceRole.USER)
-						)
-				);
-	}
-
-	@Test
-	@DisplayName("should lookup account memberships")
-	void shouldLookupAccountMemberships() {
-		assertThat(manager.findMemberships(EntityId.from(2)))
-				.hasSize(1)
-				.first()
-				.returns(EntityId.from(3), Membership::id)
-				.returns("konfigyr", Membership::namespace)
-				.returns(NamespaceRole.USER, Membership::role)
-				.returns("Konfigyr", Membership::name)
-				.returns(Avatar.generate("konfigyr", "K"), Membership::avatar)
-				.satisfies(it -> assertThat(it.since())
-						.isNotNull()
-						.isCloseTo(OffsetDateTime.now().minusDays(2), within(2, ChronoUnit.HOURS))
-				);
+				.satisfies(it -> assertThat(it.updatedAt()).isNotNull());
 	}
 
 	@Test
@@ -112,13 +77,6 @@ class AccountManagerTest extends AbstractIntegrationTest {
 	@DisplayName("should return empty optional when account is not found by email address")
 	void shouldFailToLookupAccountByEmail() {
 		assertThat(manager.findByEmail("unknown@konfigyr.com")).isEmpty();
-	}
-
-	@Test
-	@DisplayName("should throw account not found when fetching memberships for an unknown account")
-	void shouldFailToLookupAccountMemberships() {
-		assertThatThrownBy(() -> manager.findMemberships(EntityId.from(18365)))
-				.isInstanceOf(AccountNotFoundException.class);
 	}
 
 	@Test
@@ -139,7 +97,6 @@ class AccountManagerTest extends AbstractIntegrationTest {
 				.returns(updates.firstName(), Account::firstName)
 				.returns(updates.lastName(), Account::lastName)
 				.returns(updates.avatar(), Account::avatar)
-				.returns(john.memberships(), Account::memberships)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
 						.isNotEqualTo(john.updatedAt())

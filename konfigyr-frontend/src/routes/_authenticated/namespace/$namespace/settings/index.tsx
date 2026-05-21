@@ -3,7 +3,7 @@ import {
   LayoutContent,
   LayoutNavbar,
 } from '@konfigyr/components/layout';
-import { useAccount, useNamespace } from '@konfigyr/hooks';
+import { useAccountContext, useNamespace } from '@konfigyr/hooks';
 import { NamespaceDeleteForm } from '@konfigyr/components/namespace/form/delete';
 import { NamespaceDescriptionForm } from '@konfigyr/components/namespace/form/description';
 import { NamespaceNameForm } from '@konfigyr/components/namespace/form/name';
@@ -21,18 +21,17 @@ const deleteNamespace = createServerFn({ method: 'POST' })
 
 const useDeleteNamespace = () => {
   const onDeleteNamespace = useServerFn(deleteNamespace);
-  const account = useAccount();
+  const { account, memberships } = useAccountContext();
 
   return useCallback(async (namespace: Namespace) => {
     const data: DeleteNamespaceRequest = {
       namespace: namespace.slug,
     };
 
-    const memberships = account.memberships
-      .filter(it => it.namespace !== namespace.slug);
+    const namespaces = memberships.filter(it => it.slug !== namespace.slug);
 
-    if (memberships.length > 0) {
-      data.redirect = memberships[0].namespace;
+    if (namespaces.length > 0) {
+      data.redirect = namespaces[0].slug;
     }
 
     await onDeleteNamespace({ data });

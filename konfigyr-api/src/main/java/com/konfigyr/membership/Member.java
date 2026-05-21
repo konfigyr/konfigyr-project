@@ -1,6 +1,8 @@
-package com.konfigyr.namespace;
+package com.konfigyr.membership;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.namespace.Namespace;
+import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.support.Avatar;
 import com.konfigyr.support.FullName;
 import org.jmolecules.ddd.annotation.Entity;

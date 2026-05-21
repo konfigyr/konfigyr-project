@@ -2,6 +2,7 @@ import { setupServer } from 'msw/node';
 import account from './server/account';
 import changeRequests from './server/change-requests';
 import kms from './server/kms';
+import memberships from './server/memberships';
 import namespaces from './server/namespaces';
 import applications from './server/namespace/applications';
 import invitations from './server/namespace/invitations';
@@ -15,6 +16,7 @@ export const handlers = [
   ...account,
   ...changeRequests,
   ...kms,
+  ...memberships,
   ...namespaces,
   ...applications,
   ...invitations,

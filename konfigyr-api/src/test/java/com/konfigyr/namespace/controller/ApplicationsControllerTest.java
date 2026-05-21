@@ -7,6 +7,7 @@ import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.*;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
+import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
@@ -27,7 +28,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-public class ApplicationsControllerTest extends AbstractNamespaceControllerTest {
+public class ApplicationsControllerTest extends AbstractControllerTest {
 
 	@Test
 	@DisplayName("should retrieve applications for namespace")

@@ -1,9 +1,17 @@
 import { createContext, useContext } from 'react';
-import type { Account } from '@konfigyr/hooks/types';
+import type { Account, Namespace } from '@konfigyr/hooks/types';
 
-export const AccountContext = createContext<Account | null>(null);
+export const AccountContext = createContext<{ account: Account, memberships: Array<Namespace> } | null>(null);
 
-export const useAccountContext = () => useContext(AccountContext);
+export const useAccountContext = () => {
+  const context = useContext(AccountContext);
+
+  if (context === null) {
+    throw new Error('Account context is not available. Please make sure that the user is authenticated.');
+  }
+
+  return context;
+};
 
 /**
  * Hook that returns the currently authenticated user account. If the user account is not available,
@@ -12,12 +20,7 @@ export const useAccountContext = () => useContext(AccountContext);
  *
  * @returns {Account} the currently authenticated user account
  */
-export const useAccount = () => {
-  const account = useAccountContext();
-
-  if (account === null) {
-    throw new Error('Account is not available. Please make sure that the user is authenticated.');
-  }
-
+export const useAccount = (): Account => {
+  const { account } = useAccountContext();
   return account;
 };

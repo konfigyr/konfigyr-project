@@ -6,7 +6,6 @@ import org.jmolecules.ddd.annotation.Repository;
 import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -98,126 +97,6 @@ public interface NamespaceManager {
 	 * @throws NamespaceNotFoundException when a {@link Namespace} with the given slug does not exist
 	 */
 	void delete(String slug);
-
-	/**
-	 * Retrieves all {@link Member members} of a given {@link Namespace} within a single page.
-	 *
-	 * @param id namespace entity identifier for which to fetch members, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	default Page<Member> findMembers(EntityId id) {
-		return findMembers(id, Pageable.unpaged());
-	}
-
-	/**
-	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
-	 *
-	 * @param id namespace entity identifier for which to fetch members, can't be {@literal null}
-	 * @param pageable paging instructions, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	default Page<Member> findMembers(EntityId id, Pageable pageable) {
-		return findMembers(id, SearchQuery.of(pageable));
-	}
-
-	/**
-	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
-	 *
-	 * @param id namespace entity identifier for which to fetch members, can't be {@literal null}
-	 * @param query search query to be executed when searching for {@link Member members}, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	Page<Member> findMembers(EntityId id, SearchQuery query);
-
-	/**
-	 * Retrieves all {@link Member members} of a given {@link Namespace} within a single page.
-	 *
-	 * @param slug namespace slug, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	default Page<Member> findMembers(String slug) {
-		return findMembers(slug, Pageable.unpaged());
-	}
-
-	/**
-	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
-	 *
-	 * @param slug namespace slug, can't be {@literal null}
-	 * @param pageable paging instructions, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	default Page<Member> findMembers(String slug, Pageable pageable) {
-		return findMembers(slug, SearchQuery.of(pageable));
-	}
-
-	/**
-	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
-	 *
-	 * @param slug namespace slug, can't be {@literal null}
-	 * @param query search query to be executed when searching for {@link Member members}, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	Page<Member> findMembers(String slug, SearchQuery query);
-
-	/**
-	 * Retrieves all {@link Member members} of a given {@link Namespace} within a single page.
-	 *
-	 * @param namespace namespace for which to fetch members, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	default Page<Member> findMembers(Namespace namespace) {
-		return findMembers(namespace, Pageable.unpaged());
-	}
-
-	/**
-	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
-	 *
-	 * @param namespace namespace for which to fetch members, can't be {@literal null}
-	 * @param pageable paging instructions, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	default Page<Member> findMembers(Namespace namespace, Pageable pageable) {
-		return findMembers(namespace, SearchQuery.of(pageable));
-	}
-
-	/**
-	 * Retrieves a page of {@link Member members} of a given {@link Namespace}.
-	 *
-	 * @param namespace namespace for which to fetch members, can't be {@literal null}
-	 * @param query search query to be executed when searching for {@link Member members}, can't be {@literal null}
-	 * @return namespace members, never {@literal null}
-	 */
-	Page<Member> findMembers(Namespace namespace, SearchQuery query);
-
-	/**
-	 * Retrieves the {@link Member} with given entity identifier in the {@link Namespace} team.
-	 *
-	 * @param namespace namespace for which the member is retrieved, can't be {@literal null}
-	 * @param member entity identifier of the {@link Member} to be retrieved, can't be {@literal null}
-	 * @return the matching member or an empty {@link Optional}, never {@literal null}
-	 */
-	Optional<Member> getMember(Namespace namespace, EntityId member);
-
-	/**
-	 * Updates the {@link NamespaceRole} of the {@link Member} with given entity identifier
-	 * in the {@link Namespace} team.
-	 *
-	 * @param namespace namespace for which the member is updated, can't be {@literal null}
-	 * @param member entity identifier of the {@link Member} to be removed, can't be {@literal null}
-	 * @param role the new {@link NamespaceRole} that should be assigned, can't be {@literal null}
-	 * @return the update member, never {@literal null}
-	 */
-	@DomainEventPublisher(publishes = "namespaces.member-updated")
-	Member updateMember(Namespace namespace, EntityId member, NamespaceRole role);
-
-	/**
-	 * Removes the {@link Member} with given entity identifier from the {@link Namespace} team.
-	 *
-	 * @param namespace namespace for which the member is removed from, can't be {@literal null}
-	 * @param member entity identifier of the {@link Member} to be removed, can't be {@literal null}
-	 */
-	@DomainEventPublisher(publishes = "namespaces.member-removed")
-	void removeMember(Namespace namespace, EntityId member);
 
 	/**
 	 * Retrieves a page of {@link NamespaceApplication namespace applications} that are matching the

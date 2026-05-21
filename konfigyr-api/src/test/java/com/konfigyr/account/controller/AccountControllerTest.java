@@ -43,8 +43,7 @@ class AccountControllerTest extends AbstractControllerTest {
 				.returns(Avatar.generate(EntityId.from(2), "JD"), Account::avatar)
 				.returns(FullName.of("Jane", "Doe"), Account::fullName)
 				.returns("Jane", Account::firstName)
-				.returns("Doe", Account::lastName)
-				.returns(true, Account::isDeletable);
+				.returns("Doe", Account::lastName);
 	}
 
 	@Test

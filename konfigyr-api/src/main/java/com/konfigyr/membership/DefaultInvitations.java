@@ -1,5 +1,6 @@
-package com.konfigyr.namespace;
+package com.konfigyr.membership;
 
+import com.konfigyr.account.Account;
 import com.konfigyr.crypto.TokenGenerator;
 import com.konfigyr.data.Keys;
 import com.konfigyr.data.PageableExecutor;
@@ -8,6 +9,7 @@ import com.konfigyr.data.tables.Accounts;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.feature.Features;
 import com.konfigyr.feature.LimitedFeatureValue;
+import com.konfigyr.namespace.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
@@ -65,10 +67,24 @@ class DefaultInvitations implements Invitations {
 
 	private final DSLContext context;
 	private final Features features;
+	private final NamespaceManager namespaces;
 	private final ApplicationEventPublisher publisher;
 
 	@Override
-	@Transactional(readOnly = true, label = "invitations-find")
+	@Transactional(readOnly = true, label = "invitations-find-for-recipient")
+	public Page<Invitation> find(Account recipient, Pageable pageable) {
+		final Condition condition = INVITATIONS.RECIPIENT_EMAIL.equalIgnoreCase(recipient.email());
+
+		return executor.execute(
+				createInvitationsQuery(condition),
+				DefaultInvitations::invitation,
+				pageable,
+				() -> context.fetchCount(createInvitationsQuery(condition))
+		);
+	}
+
+	@Override
+	@Transactional(readOnly = true, label = "invitations-find-for-namespace")
 	public Page<Invitation> find(Namespace namespace, Pageable pageable) {
 		final Condition condition = INVITATIONS.NAMESPACE_ID.eq(namespace.id().get());
 
@@ -81,12 +97,17 @@ class DefaultInvitations implements Invitations {
 	}
 
 	@Override
-	@Transactional(readOnly = true, label = "invitations-retrieve")
-	public Optional<Invitation> get(Namespace namespace, String key) {
-		if (log.isDebugEnabled()) {
-			log.debug("Retrieving invitation with key {} for namespace: {}", key, namespace.slug());
-		}
+	@Transactional(readOnly = true, label = "invitations-retrieve-for-account")
+	public Optional<Invitation> get(Account recipient, String key) {
+		return lookupInvitation(DSL.and(
+				INVITATIONS.RECIPIENT_EMAIL.equalIgnoreCase(recipient.email()),
+				INVITATIONS.KEY.eq(key)
+		));
+	}
 
+	@Override
+	@Transactional(readOnly = true, label = "invitations-retrieve-for-namespace")
+	public Optional<Invitation> get(Namespace namespace, String key) {
 		return lookupInvitation(DSL.and(
 				INVITATIONS.NAMESPACE_ID.eq(namespace.id().get()),
 				INVITATIONS.KEY.eq(key)
@@ -153,7 +174,12 @@ class DefaultInvitations implements Invitations {
 
 	@Override
 	@Transactional(label = "invitations-accept")
-	public void accept(Namespace namespace, Invitation invitation, EntityId recipient) {
+	public void accept(Account recipient, Invitation invitation) {
+		if (!invitation.recipient().email().equalsIgnoreCase(recipient.email())) {
+			throw new InvitationException(InvitationException.ErrorCode.INVITATION_NOT_FOUND,
+					"The recipient of the invitation does not match the account accepting the invitation");
+		}
+
 		if (invitation.isExpired()) {
 			throw new InvitationException(InvitationException.ErrorCode.INVITATION_EXPIRED,
 					"Can not accept expiring invitations");
@@ -164,8 +190,8 @@ class DefaultInvitations implements Invitations {
 					.set(
 							SettableRecord.of(NAMESPACE_MEMBERS)
 									.set(NAMESPACE_MEMBERS.ID, EntityId.generate().map(EntityId::get))
-									.set(NAMESPACE_MEMBERS.ACCOUNT_ID, recipient.get())
-									.set(NAMESPACE_MEMBERS.NAMESPACE_ID, invitation.namespace().get())
+									.set(NAMESPACE_MEMBERS.ACCOUNT_ID, recipient.id().get())
+									.set(NAMESPACE_MEMBERS.NAMESPACE_ID, invitation.organization().id().get())
 									.set(NAMESPACE_MEMBERS.ROLE, invitation.role().name())
 									.set(NAMESPACE_MEMBERS.SINCE, OffsetDateTime.now())
 									.get()
@@ -176,16 +202,25 @@ class DefaultInvitations implements Invitations {
 					.execute();
 		} catch (DataIntegrityViolationException ex) {
 			throw new InvitationException(InvitationException.ErrorCode.RECIPIENT_NOT_FOUND,
-					"Could not find recipient account with identifier: " + recipient);
+					"Could not find recipient account with identifier: " + recipient, ex);
 		}
 
 		removeInvitation(invitation);
 
-		publisher.publishEvent(new InvitationEvent.Accepted(namespace, invitation.key()));
+		final Namespace namespace = lookupNamespaceForInvitation(invitation);
 
-		publisher.publishEvent(new NamespaceEvent.MemberAdded(
-				namespace, EntityId.from(recipient.get()), invitation.role()
-		));
+		publisher.publishEvent(new InvitationEvent.Accepted(namespace, recipient, invitation.key()));
+		publisher.publishEvent(new NamespaceEvent.MemberAdded(namespace, recipient.id(), invitation.role()));
+	}
+
+	@Override
+	@Transactional(label = "invitations-decline")
+	public void decline(Account recipient, Invitation invitation) {
+		removeInvitation(invitation);
+
+		publisher.publishEvent(new InvitationEvent.Declined(
+				lookupNamespaceForInvitation(invitation), recipient, invitation.key())
+		);
 	}
 
 	@Override
@@ -197,13 +232,11 @@ class DefaultInvitations implements Invitations {
 	}
 
 	/**
-	 * Cleanup job that is executed every hour that would delete expiring {@link Invitation invitations}
-	 * from the database.
+	 * Cleanup job that runs every hour and deletes expired {@link Invitation invitations} from
+	 * the database.
 	 * <p>
-	 * If you wish to change the job execution interval, use the <code>konfigyr.invitations.cleanup.cron</code>
-	 * configuration property and specify your own cron expression.
-	 * <p>
-	 * To disable this task set the value of the crop configuration property to {@code '-'}.
+	 * To change the execution interval, set the {@code konfigyr.invitations.cleanup.cron}
+	 * configuration property to a valid cron expression. To disable this task, set it to {@code '-'}.
 	 *
 	 * @see org.springframework.scheduling.support.CronExpression
 	 * @see org.springframework.scheduling.config.ScheduledTaskRegistrar#CRON_DISABLED
@@ -227,7 +260,7 @@ class DefaultInvitations implements Invitations {
 	private void removeInvitation(Invitation invitation) {
 		context.deleteFrom(INVITATIONS)
 				.where(DSL.and(
-						INVITATIONS.NAMESPACE_ID.eq(invitation.namespace().get()),
+						INVITATIONS.NAMESPACE_ID.eq(invitation.organization().id().get()),
 						INVITATIONS.KEY.eq(invitation.key())
 				))
 				.execute();
@@ -237,6 +270,9 @@ class DefaultInvitations implements Invitations {
 		return context
 				.select(
 						NAMESPACES.ID,
+						NAMESPACES.SLUG,
+						NAMESPACES.NAME,
+						NAMESPACES.DESCRIPTION,
 						SENDER_ACCOUNTS.ID,
 						SENDER_ACCOUNTS.EMAIL,
 						SENDER_ACCOUNTS.FIRST_NAME,
@@ -274,13 +310,10 @@ class DefaultInvitations implements Invitations {
 						RECIPIENT_ACCOUNTS.ID.in(NAMESPACE_MEMBERS.ACCOUNT_ID)
 				)
 				.from(NAMESPACE_MEMBERS)
-				/* join sender accounts to retrieve sender information */
 				.innerJoin(SENDER_ACCOUNTS)
 				.on(NAMESPACE_MEMBERS.ACCOUNT_ID.eq(SENDER_ACCOUNTS.ID))
-				/* join recipient accounts to check if the recipient is already known */
 				.fullOuterJoin(RECIPIENT_ACCOUNTS)
 				.on(RECIPIENT_ACCOUNTS.EMAIL.equalIgnoreCase(invite.recipient()))
-				/* join namespaces to retrieve namespace information */
 				.innerJoin(NAMESPACES)
 				.on(NAMESPACE_MEMBERS.NAMESPACE_ID.eq(NAMESPACES.ID))
 				.where(DSL.and(
@@ -310,7 +343,13 @@ class DefaultInvitations implements Invitations {
 		}
 	}
 
-	private static Invitation.@Nullable  Sender sender(Record record) {
+	private Namespace lookupNamespaceForInvitation(Invitation invitation) {
+		return namespaces.findById(invitation.organization().id()).orElseThrow(() -> new IllegalStateException(
+				"Fail to find namespace by %s for invitation '%s'".formatted(invitation.organization().id(), invitation.key())
+		));
+	}
+
+	private static Invitation.@Nullable Sender sender(Record record) {
 		if (record.get(SENDER_ACCOUNTS.ID) == null) {
 			return null;
 		}
@@ -337,14 +376,25 @@ class DefaultInvitations implements Invitations {
 	}
 
 	private static Invitation invitation(Record record) {
+		final OffsetDateTime expiryDate = record.get(INVITATIONS.EXPIRY_DATE);
+		final InvitationState state = OffsetDateTime.now().isAfter(expiryDate)
+				? InvitationState.EXPIRED
+				: InvitationState.PENDING;
+
 		return Invitation.builder()
 				.key(record.get(INVITATIONS.KEY))
-				.namespace(record.get(NAMESPACES.ID))
+				.organization(new Invitation.Organization(
+						EntityId.from(record.get(NAMESPACES.ID)),
+						record.get(NAMESPACES.SLUG),
+						record.get(NAMESPACES.NAME),
+						record.get(NAMESPACES.DESCRIPTION)
+				))
 				.sender(sender(record))
 				.recipient(recipient(record, record.get(INVITATIONS.RECIPIENT_EMAIL)))
 				.role(NamespaceRole.valueOf(record.get(INVITATIONS.ROLE)))
+				.state(state)
 				.createdAt(record.get(INVITATIONS.CREATED_AT))
-				.expiryDate(record.get(INVITATIONS.EXPIRY_DATE))
+				.expiryDate(expiryDate)
 				.build();
 	}
 

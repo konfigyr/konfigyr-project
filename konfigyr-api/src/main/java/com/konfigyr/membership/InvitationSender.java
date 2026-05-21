@@ -1,4 +1,4 @@
-package com.konfigyr.namespace;
+package com.konfigyr.membership;
 
 import com.konfigyr.mail.Mail;
 import com.konfigyr.mail.Mailer;
@@ -23,8 +23,11 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 import static org.springframework.util.ClassUtils.getShortName;
 
 /**
- * Spring component used to send {@link Invitation invitations} to their designated recipients when
- * the {@link InvitationEvent.Created invitation is created}.
+ * Spring component that sends invitation emails when an {@link InvitationEvent.Created} event is published.
+ * <p>
+ * This listener runs asynchronously and is retried on transient failures. It is not retried for
+ * {@link MembershipException} since those indicate a permanent error condition (e.g. the invitation
+ * no longer exists).
  *
  * @author Vladimir Spasic
  * @see InvitationEvent.Created
@@ -39,7 +42,7 @@ class InvitationSender {
 	private final DSLContext context;
 
 	@Async
-	@Retryable(noRetryFor = InvitationException.class)
+	@Retryable(noRetryFor = MembershipException.class)
 	@TransactionalEventListener(id = "invitation-sender", classes = InvitationEvent.Created.class)
 	void send(InvitationEvent.Created event) {
 		log.debug("Attempting to send out invitation email for event: {}", event);

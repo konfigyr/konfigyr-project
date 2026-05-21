@@ -3,6 +3,7 @@ package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.membership.Member;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.support.Avatar;
@@ -30,6 +31,9 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 	@Autowired
 	NamespaceManager manager;
+
+	@Autowired
+	com.konfigyr.membership.Memberships members;
 
 	@Test
 	@DisplayName("should search namespaces by search term")
@@ -118,20 +122,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should lookup namespace members by entity identifier")
-	void shouldLookupNamespaceMembersById() {
-		final var id = EntityId.from(1);
-
-		assertThat(manager.findMembers(id))
-				.isNotNull()
-				.hasSize(1)
-				.extracting(Member::id, Member::namespace, Member::account, Member::role, Member::email)
-				.containsExactlyInAnyOrder(
-						tuple(EntityId.from(1), id, EntityId.from(1), NamespaceRole.ADMIN, "john.doe@konfigyr.com")
-				);
-	}
-
-	@Test
 	@DisplayName("should lookup namespace by slug path")
 	void shouldLookupNamespaceBySlug() {
 		final var slug = "konfigyr";
@@ -154,138 +144,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should lookup namespace members by slug path")
-	void shouldLookupNamespaceMembersBySlug() {
-		final var slug = "konfigyr";
-
-		assertThat(manager.findMembers(slug))
-				.isNotNull()
-				.hasSize(2)
-				.extracting(Member::id, Member::namespace, Member::account, Member::role, Member::email)
-				.containsExactlyInAnyOrder(
-						tuple(EntityId.from(2), EntityId.from(2), EntityId.from(1), NamespaceRole.ADMIN, "john.doe@konfigyr.com"),
-						tuple(EntityId.from(3), EntityId.from(2), EntityId.from(2), NamespaceRole.USER, "jane.doe@konfigyr.com")
-				);
-	}
-
-	@Test
-	@DisplayName("should search namespace members")
-	void shouldSearchMembers() {
-		final var query = SearchQuery.builder()
-				.term("John")
-				.build();
-
-		assertThat(manager.findMembers("konfigyr", query))
-				.isNotNull()
-				.hasSize(1)
-				.extracting(Member::id)
-				.containsExactlyInAnyOrder(EntityId.from(2));
-	}
-
-	@Test
-	@DisplayName("should retrieve namespace member")
-	void shouldRetrieveNamespaceMember() {
-		assertThat(manager.getMember(lookupNamespace("konfigyr"), EntityId.from(2)))
-				.isNotNull()
-				.isNotEmpty()
-				.get()
-				.returns(EntityId.from(2), Member::id)
-				.returns(EntityId.from(1), Member::account)
-				.returns(EntityId.from(2), Member::namespace)
-				.returns(NamespaceRole.ADMIN, Member::role);
-	}
-
-	@Test
-	@DisplayName("should fail to retrieve unknown namespace member")
-	void shouldRetrieveUnknownNamespaceMember() {
-		assertThat(manager.getMember(lookupNamespace("konfigyr"), EntityId.from(9999)))
-				.isNotNull()
-				.isEmpty();
-	}
-
-	@Test
-	@Transactional
-	@DisplayName("should update namespace member")
-	void shouldUpdateNamespaceMember(AssertablePublishedEvents events) {
-		assertThat(manager.updateMember(lookupNamespace("konfigyr"), EntityId.from(3), NamespaceRole.ADMIN))
-				.isNotNull()
-				.returns(EntityId.from(3), Member::id)
-				.returns(EntityId.from(2), Member::account)
-				.returns(EntityId.from(2), Member::namespace)
-				.returns(NamespaceRole.ADMIN, Member::role);
-
-		events.assertThat()
-				.contains(NamespaceEvent.MemberUpdated.class)
-				.matching(NamespaceEvent.MemberUpdated::id, EntityId.from(2))
-				.matching(NamespaceEvent.MemberUpdated::account, EntityId.from(2))
-				.matching(NamespaceEvent.MemberUpdated::role, NamespaceRole.ADMIN);
-	}
-
-	@Test
-	@DisplayName("should fail to update last namespace admin member to user")
-	void shouldUpdateLastAdministrator(AssertablePublishedEvents events) {
-		assertThatThrownBy(() -> manager.updateMember(lookupNamespace("konfigyr"), EntityId.from(2), NamespaceRole.USER))
-				.isInstanceOf(UnsupportedMembershipOperationException.class);
-
-		assertThat(events.ofType(NamespaceEvent.MemberUpdated.class))
-				.isEmpty();
-	}
-
-	@Test
-	@DisplayName("should fail to update unknown namespace member")
-	void shouldFailToUpdateUnknownNamespaceMember(AssertablePublishedEvents events) {
-		assertThatThrownBy(() -> manager.updateMember(lookupNamespace("john-doe"), EntityId.from(9999), NamespaceRole.USER))
-				.isInstanceOf(MemberNotFoundException.class);
-
-		assertThat(events.ofType(NamespaceEvent.MemberUpdated.class))
-				.isEmpty();
-	}
-
-	@Test
-	@Transactional
-	@DisplayName("should remove namespace member")
-	void shouldRemoveNamespaceMember(AssertablePublishedEvents events) {
-		assertThatNoException().isThrownBy(() -> manager.removeMember(lookupNamespace("konfigyr"), EntityId.from(3)));
-
-		assertThat(manager.findMembers("konfigyr"))
-				.isNotNull()
-				.hasSize(1)
-				.extracting(Member::id)
-				.containsExactly(EntityId.from(2));
-
-		events.assertThat()
-				.contains(NamespaceEvent.MemberRemoved.class)
-				.matching(NamespaceEvent.MemberRemoved::id, EntityId.from(2))
-				.matching(NamespaceEvent.MemberRemoved::account, EntityId.from(2));
-	}
-
-	@Test
-	@DisplayName("should not remove last namespace administrator member")
-	void shouldRemoveLastAdministrator(AssertablePublishedEvents events) {
-		assertThatThrownBy(() -> manager.removeMember(lookupNamespace("konfigyr"), EntityId.from(2)))
-				.isInstanceOf(UnsupportedMembershipOperationException.class);
-
-		assertThat(events.ofType(NamespaceEvent.MemberRemoved.class))
-				.isEmpty();
-	}
-
-	@Test
-	@DisplayName("should remove namespace member that does not exist")
-	void shouldRemoveNonExistingNamespaceMember(AssertablePublishedEvents events) {
-		assertThatThrownBy(() -> manager.removeMember(lookupNamespace("konfigyr"), EntityId.from(9999)))
-				.isInstanceOf(MemberNotFoundException.class);
-
-		assertThat(manager.findMembers("konfigyr"))
-				.isNotNull()
-				.hasSize(2)
-				.extracting(Member::id)
-				.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3));
-
-		assertThat(events.ofType(NamespaceEvent.MemberRemoved.class))
-				.isEmpty();
-	}
-
-	@Test
 	@DisplayName("should check if namespaces exists by slug path")
 	void shouldCheckIfNamespaceExists() {
 		assertThat(manager.exists("john-doe")).isTrue();
@@ -297,18 +155,6 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	@DisplayName("should return empty optional when namespace is not found by entity identifier")
 	void shouldFailToLookupNamespaceById() {
 		assertThat(manager.findById(EntityId.from(991827464))).isEmpty();
-	}
-
-	@Test
-	@DisplayName("should return empty members page when namespace is not found by entity identifier")
-	void shouldFailToLookupNamespaceMembersById() {
-		assertThat(manager.findMembers(EntityId.from(9914))).isEmpty();
-	}
-
-	@Test
-	@DisplayName("should return empty members page when namespace is not found by path slug")
-	void shouldFailToLookupNamespaceMembersByEmail() {
-		assertThat(manager.findMembers("unknown")).isEmpty();
 	}
 
 	@Test
@@ -342,7 +188,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 				.contains(NamespaceEvent.Created.class)
 				.matching(NamespaceEvent::id, namespace.id());
 
-		assertThat(manager.findMembers(namespace))
+		assertThat(members.find(namespace))
 				.isNotNull()
 				.hasSize(1)
 				.first()

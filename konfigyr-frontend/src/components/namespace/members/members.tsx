@@ -108,7 +108,7 @@ export function MemberArticle({ member, onEdit, onRemove }: MemberArticleProps) 
 export function Members({ namespace }: { namespace: Namespace }) {
   const [updating, setUpdating] = useState<Member | undefined>();
   const [removing, setRemoving] = useState<Member | undefined>();
-  const { data: members, error, isPending, isError } = useGetNamespaceMembers(namespace.slug);
+  const { data: members, error, isPending, isError } = useGetNamespaceMembers(namespace);
 
   const onCloseUpdateMemberForm = useCallback(() => setUpdating(undefined), []);
   const onCloseRemoveMemberForm = useCallback(() => setRemoving(undefined), []);

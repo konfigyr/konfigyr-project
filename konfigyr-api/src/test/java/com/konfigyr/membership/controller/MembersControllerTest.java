@@ -1,10 +1,10 @@
-package com.konfigyr.namespace.controller;
+package com.konfigyr.membership.controller;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
-import com.konfigyr.namespace.Member;
+import com.konfigyr.membership.Member;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.support.Avatar;
@@ -22,7 +22,7 @@ import java.time.temporal.ChronoUnit;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-class MembersControllerTest extends AbstractNamespaceControllerTest {
+class MembersControllerTest extends AbstractMembershipControllerTest {
 
 	@Test
 	@DisplayName("should retrieve members for namespace")
