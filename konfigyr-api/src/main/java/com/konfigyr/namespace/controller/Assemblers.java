@@ -17,18 +17,6 @@ interface Assemblers {
 				.add(linkBuilder(namespace).path("services").rel("services"));
 	}
 
-	static RepresentationModelAssembler<Member, EntityModel<Member>> member() {
-		return member -> EntityModel.of(member, linkBuilder(member).selfRel())
-				.add(linkBuilder(member).method(HttpMethod.DELETE).rel("delete"))
-				.add(linkBuilder(member).method(HttpMethod.PUT).rel("update"));
-	}
-
-	static RepresentationModelAssembler<Invitation, EntityModel<Invitation>> invitation() {
-		return invitation -> EntityModel.of(invitation, linkBuilder(invitation).selfRel())
-				.add(linkBuilder(invitation).method(HttpMethod.DELETE).rel("cancel"))
-				.add(linkBuilder(invitation).method(HttpMethod.POST).rel("accept"));
-	}
-
 	static RepresentationModelAssembler<NamespaceApplication, EntityModel<NamespaceApplication>> application(Namespace namespace) {
 		return application -> EntityModel.of(application, linkBuilder(namespace, application).selfRel())
 				.add(linkBuilder(namespace, application).method(HttpMethod.PUT).rel("reset-secret"))
@@ -62,18 +50,6 @@ interface Assemblers {
 
 	static LinkBuilder linkBuilder(Namespace namespace) {
 		return linkBuilder().path(namespace.slug());
-	}
-
-	static LinkBuilder linkBuilder(Member member) {
-		return linkBuilder().path(member.namespace().serialize())
-				.path("members")
-				.path(member.id().serialize());
-	}
-
-	static LinkBuilder linkBuilder(Invitation invitation) {
-		return linkBuilder().path(invitation.namespace().serialize())
-				.path("invitations")
-				.path(invitation.key());
 	}
 
 	static LinkBuilder linkBuilder(Namespace namespace, Service service) {

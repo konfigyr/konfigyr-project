@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo } from 'react';
-import { useAccount } from '@konfigyr/hooks/account/context';
+import { useAccountContext } from '@konfigyr/hooks/account/context';
 import { useLocalStorage } from '@konfigyr/hooks/local-storage';
 
 import type { Account, Namespace } from '@konfigyr/hooks/types';
@@ -19,21 +19,21 @@ export const useNamespace = () => {
 
 export const generateLastUsedNamespaceKey = (account: Account) => `namespace.${account.id}`;
 
-const isMemberOfNamespace = (account: Account, namespace: string) => {
-  return account.memberships.some((membership) => membership.namespace === namespace);
+const isMemberOfNamespace = (memberships: Array<Namespace>, namespace: string) => {
+  return memberships.some((membership) => membership.slug === namespace);
 };
 
 /**
  * Method that would return the last used namespace slug for the currently authenticated user account
  * from the local storage. If there is no such value in the storage, it would return `null`.
  */
-export const getLastUsedNamespace = (account: Account): string | null => {
+export const getLastUsedNamespace = (account: Account, memberships: Array<Namespace>): string | null => {
   const item = window.localStorage.getItem(generateLastUsedNamespaceKey(account));
 
   if (typeof item === 'string') {
     const slug = JSON.parse(item);
 
-    if (isMemberOfNamespace(account, slug)) {
+    if (isMemberOfNamespace(memberships, slug)) {
       return slug;
     }
   }
@@ -44,21 +44,21 @@ export const getLastUsedNamespace = (account: Account): string | null => {
 /**
  * Hook that returns the last used namespace slug for the currently authenticated user account
  * from the local storage. If there is no such namespace in the storage, it would return the first namespace
- * slug from the account memberships.
+ * slug from the account namespace memberships.
  *
  * In case the account is not a member of any namespace, this hook would return `null` as a last namespace value.
  */
 export const useLastUsedNamespace = (): LocalStorageState<string> => {
-  const account = useAccount();
+  const { account, memberships } = useAccountContext();
   const key = useMemo(() => generateLastUsedNamespaceKey(account), [account]);
   const [slug, setNamespace] = useLocalStorage<string>(key);
 
-  if (typeof slug === 'string' && isMemberOfNamespace(account, slug)) {
+  if (typeof slug === 'string' && isMemberOfNamespace(memberships, slug)) {
     return [slug, setNamespace];
   }
 
-  if (account.memberships.length > 0) {
-    return [account.memberships[0].namespace, setNamespace];
+  if (memberships.length > 0) {
+    return [memberships[0].slug, setNamespace];
   }
 
   return [null, setNamespace];

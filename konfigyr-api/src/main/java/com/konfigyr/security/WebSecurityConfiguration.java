@@ -97,7 +97,8 @@ public class WebSecurityConfiguration {
 						.anyRequest()
 						.authenticated()
 				)
-				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+//				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+				.cors(Customizer.withDefaults())
 				.csrf(AbstractHttpConfigurer::disable)
 				.logout(AbstractHttpConfigurer::disable)
 				.httpBasic(AbstractHttpConfigurer::disable)
@@ -153,7 +154,7 @@ public class WebSecurityConfiguration {
 	 * @return CORS configuration source that blocks all cross-origin requests, never {@literal null}
 	 */
 	private static CorsConfigurationSource corsConfigurationSource() {
-		return ignore -> new CorsConfiguration();
+		return ignore -> null;
 	}
 
 }

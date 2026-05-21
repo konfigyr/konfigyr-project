@@ -1,19 +1,19 @@
-package com.konfigyr.namespace.controller;
+package com.konfigyr.membership.controller;
 
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.namespace.MemberNotFoundException;
-import com.konfigyr.namespace.UnsupportedMembershipOperationException;
+import com.konfigyr.membership.MemberNotFoundException;
+import com.konfigyr.membership.UnsupportedMembershipOperationException;
 import com.konfigyr.test.AbstractControllerTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import java.util.function.Consumer;
 
-abstract class AbstractNamespaceControllerTest extends AbstractControllerTest {
+abstract class AbstractMembershipControllerTest extends AbstractControllerTest {
 
 	static Consumer<MvcTestResult> operationNotSupported() {
 		return problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-				.hasTitle("Operation not allowed")
+				.hasTitle("Operation is not allowed")
 				.hasDetailContaining("This action can't be completed because it would leave the organization without an administrator")
 		).andThen(hasFailedWithException(UnsupportedMembershipOperationException.class));
 	}

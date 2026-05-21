@@ -2,16 +2,13 @@ import { HTTPError } from 'ky';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGetAccount } from '@konfigyr/hooks/account/query';
 import request from '@konfigyr/lib/http';
-import { NamespaceRole } from './types';
 
-import type { PageResponse, Pageable } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
 import type {
   CreateNamespace,
   CreateNamespaceApplication,
   CreateService,
-  Invitation,
   Manifest,
-  Member,
   Namespace,
   NamespaceApplication,
   NamespaceOAuthScope,
@@ -23,12 +20,9 @@ export const namespaceKeys = {
   getNamespaces: () => ['namespace'],
   getNamespace: (slug: string) => ['namespace', slug],
   getCheckNamespace: (slug: string) => ['namespace', 'check', slug],
-  getNamespaceMembers: (slug: string) => ['namespace', slug, 'members'],
   getNamespaceScopes: (slug: string) => ['namespace', slug, 'scopes'],
   getNamespaceApplications: (slug: string) => ['namespace', slug, 'applications'],
   getNamespaceApplication: (slug: string, id: string) => ['namespace', slug, 'applications', id],
-  getNamespaceInvitations: (slug: string, pageable: Pageable) => ['namespace', slug, 'invitations', pageable],
-  getNamespaceInvitation: (slug: string, key: string) => ['namespace', slug, 'invitation', key],
   getNamespaceServices: (slug: string) => ['namespace', slug, 'services'],
   getNamespaceService: (slug: string, service: string) => ['namespace', slug, 'services', service],
   getNamespaceServiceCatalog: (slug: string, service: string) => ['namespace', slug, 'services', service, 'catalog'],
@@ -126,103 +120,6 @@ export const useUpdateNamespace = (namespace: Namespace) => {
     },
     onSuccess(updated: Namespace) {
       client.setQueryData(namespaceKeys.getNamespace(updated.slug), updated);
-    },
-  });
-};
-
-/* Namespace membership queries and mutations */
-
-export const getNamespaceMembers = (slug: string) => {
-  return queryOptions({
-    queryKey: namespaceKeys.getNamespaceMembers(slug),
-    queryFn: async (): Promise<Array<Member>> => {
-      const response = await request.get(`api/namespaces/${slug}/members`)
-        .json<PageResponse<Member>>();
-      return response.data;
-    },
-    placeholderData: previousData => previousData,
-  });
-};
-
-export const useGetNamespaceInvitations = (namespace: Namespace, pageable?: Pageable) => {
-  return useQuery(getNamespaceInvitations(namespace, pageable));
-};
-
-export const getNamespaceInvitations = (namespace: Namespace, pageable: Pageable = {}) => {
-  return queryOptions({
-    queryKey: namespaceKeys.getNamespaceInvitations(namespace.slug, pageable),
-    queryFn: async ({ signal }): Promise<PageResponse<Invitation>> => {
-      return await request.get(`api/namespaces/${namespace.slug}/invitations`, { signal, searchParams: { ...pageable } }).json();
-    },
-  });
-};
-
-export const getNamespaceInvitation = (namespace: Namespace, key: string) => {
-  return queryOptions({
-    queryKey: namespaceKeys.getNamespaceInvitation(namespace.slug, key),
-    queryFn: async ({ signal }): Promise<Invitation> => {
-      return await request.get(`api/namespaces/${namespace.slug}/invitations/${key}`, { signal }).json();
-    },
-  });
-};
-
-export const useJoinNamespace = (namespace: Namespace, key: string) => {
-  return useMutation({
-    mutationFn: async () => {
-      await request.post(`api/namespaces/${namespace.slug}/invitations/${key}`).json();
-    },
-  });
-};
-
-export const useGetNamespaceMembers = (slug: string) => {
-  return useQuery(getNamespaceMembers(slug));
-};
-
-export const useInviteNamespaceMember = (slug: string) => {
-  return useMutation({
-    mutationFn: async ({ email, administrator }: { email: string, administrator: boolean }) => {
-      return await request.post(`api/namespaces/${slug}/invitations`, {
-        json: { email, role: administrator ? NamespaceRole.ADMIN : NamespaceRole.USER },
-      }).json<Invitation>();
-    },
-  });
-};
-
-export const useUpdateNamespaceMember = (slug: string) => {
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, role }: { id: string, role: NamespaceRole }) => {
-      return await request.put(`api/namespaces/${slug}/members/${id}`, {
-        json: { role },
-      }).json<Member>();
-    },
-    onSuccess(member: Member) {
-      client.setQueryData(namespaceKeys.getNamespaceMembers(slug), (members?: Array<Member>) => {
-        if (typeof members === 'undefined' || members.length === 0) {
-          return [];
-        }
-        return members.map(it => it.id === member.id ? member : it);
-      });
-    },
-  });
-};
-
-export const useRemoveNamespaceMember = (slug: string) => {
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return await request.delete(`api/namespaces/${slug}/members/${id}`)
-        .then(() => id);
-    },
-    onSuccess(member: string) {
-      client.setQueryData(namespaceKeys.getNamespaceMembers(slug), (members?: Array<Member>) => {
-        if (typeof members === 'undefined' || members.length === 0) {
-          return [];
-        }
-        return members.filter(it => it.id !== member);
-      });
     },
   });
 };

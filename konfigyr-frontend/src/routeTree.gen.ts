@@ -16,11 +16,11 @@ import { Route as AuthCodeRouteImport } from './routes/auth/code'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
 import { Route as AuthenticatedAccountIndexRouteImport } from './routes/_authenticated/account/index'
 import { Route as AuthenticatedNamespaceProvisionRouteImport } from './routes/_authenticated/namespace/provision'
+import { Route as AuthenticatedJoinKeyRouteImport } from './routes/_authenticated/join/$key'
 import { Route as AuthenticatedNamespaceNamespaceRouteRouteImport } from './routes/_authenticated/namespace/$namespace/route'
 import { Route as AuthenticatedNamespaceNamespaceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/index'
 import { Route as AuthenticatedNamespaceNamespaceMembersRouteImport } from './routes/_authenticated/namespace/$namespace/members'
 import { Route as AuthenticatedNamespaceNamespaceInvitationsRouteImport } from './routes/_authenticated/namespace/$namespace/invitations'
-import { Route as AuthenticatedJoinNamespaceKeyRouteImport } from './routes/_authenticated/join/$namespace/$key'
 import { Route as AuthenticatedNamespaceNamespaceKmsRouteRouteImport } from './routes/_authenticated/namespace/$namespace/kms/route'
 import { Route as AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport } from './routes/_authenticated/namespace/$namespace/applications/route'
 import { Route as AuthenticatedNamespaceNamespaceSettingsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/settings/index'
@@ -79,6 +79,11 @@ const AuthenticatedNamespaceProvisionRoute =
     path: '/namespace/provision',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedJoinKeyRoute = AuthenticatedJoinKeyRouteImport.update({
+  id: '/join/$key',
+  path: '/join/$key',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNamespaceNamespaceRouteRoute =
   AuthenticatedNamespaceNamespaceRouteRouteImport.update({
     id: '/namespace/$namespace',
@@ -102,12 +107,6 @@ const AuthenticatedNamespaceNamespaceInvitationsRoute =
     id: '/invitations',
     path: '/invitations',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-  } as any)
-const AuthenticatedJoinNamespaceKeyRoute =
-  AuthenticatedJoinNamespaceKeyRouteImport.update({
-    id: '/join/$namespace/$key',
-    path: '/join/$namespace/$key',
-    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedNamespaceNamespaceKmsRouteRoute =
   AuthenticatedNamespaceNamespaceKmsRouteRouteImport.update({
@@ -271,11 +270,11 @@ export interface FileRoutesByFullPath {
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
   '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
+  '/join/$key': typeof AuthenticatedJoinKeyRoute
   '/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
   '/account/': typeof AuthenticatedAccountIndexRoute
   '/namespace/$namespace/applications': typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteWithChildren
   '/namespace/$namespace/kms': typeof AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren
-  '/join/$namespace/$key': typeof AuthenticatedJoinNamespaceKeyRoute
   '/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
   '/namespace/$namespace/': typeof AuthenticatedNamespaceNamespaceIndexRoute
@@ -304,9 +303,9 @@ export interface FileRoutesByTo {
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
   '/': typeof AuthenticatedIndexRoute
+  '/join/$key': typeof AuthenticatedJoinKeyRoute
   '/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
   '/account': typeof AuthenticatedAccountIndexRoute
-  '/join/$namespace/$key': typeof AuthenticatedJoinNamespaceKeyRoute
   '/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
   '/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceIndexRoute
@@ -335,11 +334,11 @@ export interface FileRoutesById {
   '/auth/scopes': typeof AuthScopesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/namespace/$namespace': typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
+  '/_authenticated/join/$key': typeof AuthenticatedJoinKeyRoute
   '/_authenticated/namespace/provision': typeof AuthenticatedNamespaceProvisionRoute
   '/_authenticated/account/': typeof AuthenticatedAccountIndexRoute
   '/_authenticated/namespace/$namespace/applications': typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteWithChildren
   '/_authenticated/namespace/$namespace/kms': typeof AuthenticatedNamespaceNamespaceKmsRouteRouteWithChildren
-  '/_authenticated/join/$namespace/$key': typeof AuthenticatedJoinNamespaceKeyRoute
   '/_authenticated/namespace/$namespace/invitations': typeof AuthenticatedNamespaceNamespaceInvitationsRoute
   '/_authenticated/namespace/$namespace/members': typeof AuthenticatedNamespaceNamespaceMembersRoute
   '/_authenticated/namespace/$namespace/': typeof AuthenticatedNamespaceNamespaceIndexRoute
@@ -371,11 +370,11 @@ export interface FileRouteTypes {
     | '/auth/code'
     | '/auth/scopes'
     | '/namespace/$namespace'
+    | '/join/$key'
     | '/namespace/provision'
     | '/account/'
     | '/namespace/$namespace/applications'
     | '/namespace/$namespace/kms'
-    | '/join/$namespace/$key'
     | '/namespace/$namespace/invitations'
     | '/namespace/$namespace/members'
     | '/namespace/$namespace/'
@@ -404,9 +403,9 @@ export interface FileRouteTypes {
     | '/auth/code'
     | '/auth/scopes'
     | '/'
+    | '/join/$key'
     | '/namespace/provision'
     | '/account'
-    | '/join/$namespace/$key'
     | '/namespace/$namespace/invitations'
     | '/namespace/$namespace/members'
     | '/namespace/$namespace'
@@ -434,11 +433,11 @@ export interface FileRouteTypes {
     | '/auth/scopes'
     | '/_authenticated/'
     | '/_authenticated/namespace/$namespace'
+    | '/_authenticated/join/$key'
     | '/_authenticated/namespace/provision'
     | '/_authenticated/account/'
     | '/_authenticated/namespace/$namespace/applications'
     | '/_authenticated/namespace/$namespace/kms'
-    | '/_authenticated/join/$namespace/$key'
     | '/_authenticated/namespace/$namespace/invitations'
     | '/_authenticated/namespace/$namespace/members'
     | '/_authenticated/namespace/$namespace/'
@@ -521,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceProvisionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/join/$key': {
+      id: '/_authenticated/join/$key'
+      path: '/join/$key'
+      fullPath: '/join/$key'
+      preLoaderRoute: typeof AuthenticatedJoinKeyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/namespace/$namespace': {
       id: '/_authenticated/namespace/$namespace'
       path: '/namespace/$namespace'
@@ -548,13 +554,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/namespace/$namespace/invitations'
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceInvitationsRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
-    }
-    '/_authenticated/join/$namespace/$key': {
-      id: '/_authenticated/join/$namespace/$key'
-      path: '/join/$namespace/$key'
-      fullPath: '/join/$namespace/$key'
-      preLoaderRoute: typeof AuthenticatedJoinNamespaceKeyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/namespace/$namespace/kms': {
       id: '/_authenticated/namespace/$namespace/kms'
@@ -853,18 +852,18 @@ const AuthenticatedNamespaceNamespaceRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedNamespaceNamespaceRouteRoute: typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
+  AuthenticatedJoinKeyRoute: typeof AuthenticatedJoinKeyRoute
   AuthenticatedNamespaceProvisionRoute: typeof AuthenticatedNamespaceProvisionRoute
   AuthenticatedAccountIndexRoute: typeof AuthenticatedAccountIndexRoute
-  AuthenticatedJoinNamespaceKeyRoute: typeof AuthenticatedJoinNamespaceKeyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedNamespaceNamespaceRouteRoute:
     AuthenticatedNamespaceNamespaceRouteRouteWithChildren,
+  AuthenticatedJoinKeyRoute: AuthenticatedJoinKeyRoute,
   AuthenticatedNamespaceProvisionRoute: AuthenticatedNamespaceProvisionRoute,
   AuthenticatedAccountIndexRoute: AuthenticatedAccountIndexRoute,
-  AuthenticatedJoinNamespaceKeyRoute: AuthenticatedJoinNamespaceKeyRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

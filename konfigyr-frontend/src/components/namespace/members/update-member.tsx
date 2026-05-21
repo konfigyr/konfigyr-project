@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useUpdateNamespaceMember } from '@konfigyr/hooks';
-import { NamespaceRole } from '@konfigyr/hooks/namespace/types';
+import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { NamespaceRoleDescription, NamespaceRoleLabel } from '@konfigyr/components/namespace/role';
 import { Button } from '@konfigyr/components/ui/button';
@@ -24,7 +24,7 @@ export function UpdateMemberForm({ namespace, member, onClose }: { namespace: Na
   const open = useMemo(() => !!member, [member]);
   const roles = Object.values(NamespaceRole);
   const errorNotification = useErrorNotification();
-  const { mutateAsync: updateNamespaceMember } = useUpdateNamespaceMember(namespace.slug);
+  const { mutateAsync: updateNamespaceMember } = useUpdateNamespaceMember(namespace);
 
   const form = useForm({
     defaultValues: {

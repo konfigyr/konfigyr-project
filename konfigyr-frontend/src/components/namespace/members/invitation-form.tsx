@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { SendIcon } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useInviteNamespaceMember } from '@konfigyr/hooks';
-import { NamespaceRole } from '@konfigyr/hooks/namespace/types';
+import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { NamespaceRoleLabel } from '@konfigyr/components/namespace/role';
 import {
@@ -26,7 +26,7 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
   const id = useId();
   const t = useIntl();
   const errorNotification = useErrorNotification();
-  const { mutateAsync: inviteNamespaceMember } = useInviteNamespaceMember(namespace.slug);
+  const { mutateAsync: inviteNamespaceMember } = useInviteNamespaceMember(namespace);
 
   const form = useForm({
     defaultValues: { email: '', administrator: false } as Invitation,

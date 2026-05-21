@@ -1,5 +1,6 @@
 package com.konfigyr.audit;
 
+import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountEvent;
 import com.konfigyr.artifactory.Artifact;
 import com.konfigyr.artifactory.ArtifactCoordinates;
@@ -9,6 +10,7 @@ import com.konfigyr.data.CursorPage;
 import com.konfigyr.data.CursorPageable;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.kms.KeysetManagementEvent;
+import com.konfigyr.membership.InvitationEvent;
 import com.konfigyr.namespace.*;
 import com.konfigyr.security.PrincipalType;
 import com.konfigyr.support.SearchQuery;
@@ -243,15 +245,40 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditInvitationAccepted() {
 		setSecurityContext(TestPrincipals.john());
 
+		final var recipient = mock(Account.class);
+		doReturn("Jane Doe").when(recipient).displayName();
+
 		final var namespace = mock(Namespace.class);
 		doReturn(EntityId.from(801)).when(namespace).id();
 
-		listener.on(new InvitationEvent.Accepted(namespace, "inv-key-456"));
+		listener.on(new InvitationEvent.Accepted(namespace, recipient, "inv-key-456"));
 
 		assertAuditRecord("invitation", EntityId.from(801))
 				.returns("invitation.accepted", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("key", "inv-key-456")
+						.containsEntry("recipient", "Jane Doe")
+				);
+	}
+
+	@Test
+	@DisplayName("should persist audit record for invitation declined event")
+	void shouldAuditInvitationDeclined() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var recipient = mock(Account.class);
+		doReturn("John Doe").when(recipient).displayName();
+
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(801)).when(namespace).id();
+
+		listener.on(new InvitationEvent.Declined(namespace, recipient, "inv-key-456"));
+
+		assertAuditRecord("invitation", EntityId.from(801))
+				.returns("invitation.declined", AuditRecord::eventType)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("key", "inv-key-456")
+						.containsEntry("recipient", "John Doe")
 				);
 	}
 

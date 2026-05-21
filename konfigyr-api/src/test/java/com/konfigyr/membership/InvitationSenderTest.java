@@ -1,7 +1,8 @@
-package com.konfigyr.namespace;
+package com.konfigyr.membership;
 
 import com.konfigyr.mail.Mail;
 import com.konfigyr.mail.Recipient;
+import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractIntegrationTest;
 import com.konfigyr.test.assertions.MailAssert;

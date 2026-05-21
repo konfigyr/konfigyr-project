@@ -2,10 +2,10 @@ import { HttpResponse, http } from 'msw';
 import { accounts, namespaces } from '../mocks';
 
 const list = http.get('http://localhost/api/namespaces', () => {
-  return new HttpResponse({
+  return HttpResponse.json({
     data: [
-      namespaces.johnDoe,
       namespaces.konfigyr,
+      namespaces.johnDoe,
     ],
   });
 });

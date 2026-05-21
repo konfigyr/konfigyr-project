@@ -3,7 +3,6 @@ package com.konfigyr.namespace;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.support.FullName;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,6 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -57,12 +55,6 @@ class DefaultNamespaceManager implements NamespaceManager {
 			.defaultSortField(NAMESPACES.UPDATED_AT.desc())
 			.sortField("name", NAMESPACES.NAME)
 			.sortField("date", NAMESPACES.UPDATED_AT)
-			.build();
-
-	static final PageableExecutor membersExecutor = PageableExecutor.builder()
-			.defaultSortField(NAMESPACE_MEMBERS.SINCE.desc())
-			.sortField("name", ACCOUNTS.FIRST_NAME)
-			.sortField("date", NAMESPACE_MEMBERS.SINCE)
 			.build();
 
 	static final PageableExecutor applicationsExecutor = PageableExecutor.builder()
@@ -176,10 +168,10 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 		Assert.state(namespace != null, () -> "Could not create namespace from: " + definition);
 
-		final Member admin = createMember(namespace.id(), owner, NamespaceRole.ADMIN);
+		final EntityId adminId = createNamespaceAdministratorMember(namespace.id(), owner);
 
 		log.info(CREATED, "Successfully created new namespace {} with administrator member {} from {}",
-				namespace.id(), admin.id(), definition);
+				namespace.id(), adminId, definition);
 
 		publisher.publishEvent(new NamespaceEvent.Created(namespace));
 
@@ -237,91 +229,6 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.execute();
 
 		publisher.publishEvent(new NamespaceEvent.Deleted(namespace));
-	}
-
-	@NonNull
-	@Override
-	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<@NonNull Member> findMembers(@NonNull EntityId id, @NonNull SearchQuery query) {
-		return findMembers(NAMESPACES.ID.eq(id.get()), query);
-	}
-
-	@NonNull
-	@Override
-	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<@NonNull Member> findMembers(@NonNull String slug, @NonNull SearchQuery query) {
-		return findMembers(NAMESPACES.SLUG.eq(slug), query);
-	}
-
-	@NonNull
-	@Override
-	@Transactional(readOnly = true, label = "namespace-find-members")
-	public Page<@NonNull Member> findMembers(@NonNull Namespace namespace, @NonNull SearchQuery query) {
-		return findMembers(namespace.id(), query);
-	}
-
-	@NonNull
-	@Override
-	@Transactional(readOnly = true, label = "namespace-get-member")
-	public Optional<Member> getMember(@NonNull Namespace namespace, @NonNull EntityId member) {
-		return createMembersQuery(DSL.and(
-				NAMESPACE_MEMBERS.ID.eq(member.get()),
-				NAMESPACE_MEMBERS.NAMESPACE_ID.eq(namespace.id().get())
-		)).fetchOptional(DefaultNamespaceManager::toMember);
-	}
-
-	@NonNull
-	@Override
-	@Transactional(label = "namespace-update-member")
-	public Member updateMember(@NonNull Namespace namespace, @NonNull EntityId id, @NonNull NamespaceRole role) {
-		if (isLastRemainingAdministrator(id) && NamespaceRole.USER == role) {
-			throw new UnsupportedMembershipOperationException("Last administrator member cannot be updated to user");
-		}
-
-		context.update(NAMESPACE_MEMBERS)
-				.set(NAMESPACE_MEMBERS.ROLE, role.name())
-				.where(DSL.and(
-						NAMESPACE_MEMBERS.ID.eq(id.get()),
-						NAMESPACE_MEMBERS.NAMESPACE_ID.eq(namespace.id().get())
-				))
-				.execute();
-
-		final Member member = createMembersQuery(NAMESPACE_MEMBERS.ID.eq(id.get()))
-				.fetchOptional(DefaultNamespaceManager::toMember)
-				.orElseThrow(() -> new NamespaceException("Failed to update unknown member with: " + id));
-
-		log.info("Successfully updated member role: [id={}, namespace={}, account={}, role={}]",
-				member.id(), namespace.slug(), member.account(), member.role());
-
-		publisher.publishEvent(new NamespaceEvent.MemberUpdated(namespace, member.account(), member.role()));
-
-		return member;
-	}
-
-	@Override
-	@Transactional(label = "namespace-remove-member")
-	public void removeMember(@NonNull Namespace namespace, @NonNull EntityId id) {
-		if (isLastRemainingAdministrator(id)) {
-			throw new UnsupportedMembershipOperationException("Last administrator member cannot be removed");
-		}
-
-		final Record result = context.deleteFrom(NAMESPACE_MEMBERS)
-				.where(DSL.and(
-						NAMESPACE_MEMBERS.ID.eq(id.get()),
-						NAMESPACE_MEMBERS.NAMESPACE_ID.eq(namespace.id().get())
-				))
-				.returning(NAMESPACE_MEMBERS.ACCOUNT_ID)
-				.fetchAny();
-
-		if (result != null) {
-			log.info("Successfully removed member: [id={}, namespace={}, account={}]",
-					id.get(), namespace.slug(), result.get(NAMESPACE_MEMBERS.ACCOUNT_ID));
-
-			publisher.publishEvent(new NamespaceEvent.MemberRemoved(
-					namespace,
-					result.get(NAMESPACE_MEMBERS.ACCOUNT_ID, EntityId.class)
-			));
-		}
 	}
 
 	@NonNull
@@ -523,53 +430,9 @@ class DefaultNamespaceManager implements NamespaceManager {
 	}
 
 	@NonNull
-	private Page<@NonNull Member> findMembers(@NonNull Condition condition, @NonNull SearchQuery query) {
-		final List<Condition> conditions = new ArrayList<>();
-		conditions.add(condition);
-
-		query.term().map(term -> "%" + term + "%").ifPresent(term -> conditions.add(DSL.or(
-				ACCOUNTS.EMAIL.likeIgnoreCase(term),
-				ACCOUNTS.FIRST_NAME.likeIgnoreCase(term),
-				ACCOUNTS.LAST_NAME.likeIgnoreCase(term)
-		)));
-
+	private EntityId createNamespaceAdministratorMember(@NonNull EntityId namespace, @NonNull EntityId account) {
 		if (log.isDebugEnabled()) {
-			log.debug("Fetching namespace members for namespace for conditions: {}", conditions);
-		}
-
-		return membersExecutor.execute(
-				createMembersQuery(DSL.and(conditions)),
-				DefaultNamespaceManager::toMember,
-				query.pageable(),
-				() -> context.fetchCount(createMembersQuery(DSL.and(conditions)))
-		);
-	}
-
-	@NonNull
-	private SelectConditionStep<? extends Record> createMembersQuery(@NonNull Condition condition) {
-		return context.select(
-						NAMESPACE_MEMBERS.ID,
-						NAMESPACE_MEMBERS.NAMESPACE_ID,
-						NAMESPACE_MEMBERS.ACCOUNT_ID,
-						NAMESPACE_MEMBERS.ROLE,
-						NAMESPACE_MEMBERS.SINCE,
-						ACCOUNTS.EMAIL,
-						ACCOUNTS.FIRST_NAME,
-						ACCOUNTS.LAST_NAME,
-						ACCOUNTS.AVATAR
-				)
-				.from(NAMESPACE_MEMBERS)
-				.innerJoin(NAMESPACES)
-				.on(NAMESPACES.ID.eq(NAMESPACE_MEMBERS.NAMESPACE_ID))
-				.innerJoin(ACCOUNTS)
-				.on(ACCOUNTS.ID.eq(NAMESPACE_MEMBERS.ACCOUNT_ID))
-				.where(condition);
-	}
-
-	@NonNull
-	private Member createMember(@NonNull EntityId namespace, @NonNull EntityId account, @NonNull NamespaceRole role) {
-		if (log.isDebugEnabled()) {
-			log.debug("Creating new namespace member with: [namespace={}, account={}, role={}]", namespace, account, role);
+			log.debug("Creating namespace owner member with: [namespace={}, account={}]", namespace, account);
 		}
 
 		final Long id;
@@ -581,44 +444,19 @@ class DefaultNamespaceManager implements NamespaceManager {
 									.set(NAMESPACE_MEMBERS.ID, EntityId.generate().map(EntityId::get))
 									.set(NAMESPACE_MEMBERS.NAMESPACE_ID, namespace.get())
 									.set(NAMESPACE_MEMBERS.ACCOUNT_ID, account.get())
-									.set(NAMESPACE_MEMBERS.ROLE, role.name())
+									.set(NAMESPACE_MEMBERS.ROLE, NamespaceRole.ADMIN.name())
 									.get()
 					)
 					.returning(NAMESPACE_MEMBERS.ID)
 					.fetchOne(NAMESPACE_MEMBERS.ID);
 		} catch (Exception e) {
-			throw new NamespaceException("Unexpected exception occurred while creating the namespace member", e);
+			throw new NamespaceException("Unexpected exception occurred while creating the namespace owner", e);
 		}
 
-		Assert.state(id != null, () -> String.format("Could not create member for: " +
-				"[namespace=%s, account=%s, role=%s]", namespace, account, role));
+		Assert.state(id != null, () -> String.format("Could not create namespace owner member for: " +
+				"[namespace=%s, account=%s]", namespace, account));
 
-		return createMembersQuery(NAMESPACE_MEMBERS.ID.eq(id))
-				.fetchOptional(DefaultNamespaceManager::toMember)
-				.orElseThrow(() -> new IllegalStateException("Failed to lookup member with: " + EntityId.from(id)));
-	}
-
-	boolean isLastRemainingAdministrator(@NonNull EntityId member) {
-		final boolean exists = context.fetchExists(NAMESPACE_MEMBERS, NAMESPACE_MEMBERS.ID.eq(member.get()));
-
-		if (!exists) {
-			throw new MemberNotFoundException(member);
-		}
-
-		final List<Long> administrators = context.select(NAMESPACE_MEMBERS.ID)
-				.from(NAMESPACE_MEMBERS)
-				.where(DSL.and(
-						NAMESPACE_MEMBERS.ROLE.eq(NamespaceRole.ADMIN.name()),
-						NAMESPACE_MEMBERS.ID.ne(member.get()),
-						NAMESPACE_MEMBERS.NAMESPACE_ID.eq(
-								DSL.select(NAMESPACE_MEMBERS.NAMESPACE_ID)
-										.from(NAMESPACE_MEMBERS)
-										.where(NAMESPACE_MEMBERS.ID.eq(member.get()))
-						)
-				))
-				.fetch(NAMESPACE_MEMBERS.ID);
-
-		return CollectionUtils.isEmpty(administrators);
+		return EntityId.from(id);
 	}
 
 	@NonNull
@@ -657,25 +495,6 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.avatar(record.get(NAMESPACES.AVATAR))
 				.createdAt(record.get(NAMESPACES.CREATED_AT))
 				.updatedAt(record.get(NAMESPACES.UPDATED_AT))
-				.build();
-	}
-
-	@NonNull
-	private static Member toMember(@NonNull Record record) {
-		final FullName fullName = FullName.of(
-				record.get(ACCOUNTS.FIRST_NAME),
-				record.get(ACCOUNTS.LAST_NAME)
-		);
-
-		return Member.builder()
-				.id(record.get(NAMESPACE_MEMBERS.ID))
-				.namespace(record.get(NAMESPACE_MEMBERS.NAMESPACE_ID))
-				.account(record.get(NAMESPACE_MEMBERS.ACCOUNT_ID))
-				.role(record.get(NAMESPACE_MEMBERS.ROLE))
-				.email(record.get(ACCOUNTS.EMAIL))
-				.fullName(fullName)
-				.avatar(record.get(ACCOUNTS.AVATAR))
-				.since(record.get(NAMESPACE_MEMBERS.SINCE))
 				.build();
 	}
 

@@ -2,6 +2,7 @@ export * from './account/context';
 export * from './account/query';
 export * from './audit/query';
 export * from './kms/query';
+export * from './memberships/query';
 export * from './namespace/context';
 export * from './namespace/query';
 export * from './vault/change-requests';

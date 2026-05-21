@@ -1,10 +1,13 @@
-package com.konfigyr.namespace;
+package com.konfigyr.membership;
 
+import com.konfigyr.account.Account;
+import com.konfigyr.account.AccountManager;
 import com.konfigyr.account.AccountStatus;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.feature.FeatureValue;
 import com.konfigyr.mail.Mail;
+import com.konfigyr.namespace.*;
 import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.assertj.core.api.Assertions;
@@ -27,7 +30,13 @@ import static org.mockito.Mockito.*;
 class InvitationsTest extends AbstractIntegrationTest {
 
 	@Autowired
+	AccountManager accounts;
+
+	@Autowired
 	NamespaceManager namespaces;
+
+	@Autowired
+	Memberships memberships;
 
 	@Autowired
 	Invitations invitations;
@@ -79,8 +88,8 @@ class InvitationsTest extends AbstractIntegrationTest {
 
 		events.assertThat()
 				.contains(InvitationEvent.Created.class)
-				.matching(event -> invitation.namespace().equals(event.id()))
-				.matching(event -> invitation.namespace().equals(event.namespace()))
+				.matching(event -> invitation.organization().id().equals(event.id()))
+				.matching(event -> invitation.organization().id().equals(event.namespace()))
 				.matching(event -> invitation.key().equals(event.key()));
 	}
 
@@ -111,7 +120,7 @@ class InvitationsTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it.recipient())
 						.returns(invite.recipient(), Invitation.Recipient::email)
 						.returns(true, Invitation.Recipient::exists)
-						.returns(account, Invitation.Recipient::id)
+						.returns(account.id(), Invitation.Recipient::id)
 						.returns(FullName.of("Piter", "De Vries"), Invitation.Recipient::name)
 				)
 				.satisfies(it -> assertThat(it.sender())
@@ -129,8 +138,8 @@ class InvitationsTest extends AbstractIntegrationTest {
 
 		events.assertThat()
 				.contains(InvitationEvent.Created.class)
-				.matching(event -> invitation.namespace().equals(event.id()))
-				.matching(event -> invitation.namespace().equals(event.namespace()))
+				.matching(event -> invitation.organization().id().equals(event.id()))
+				.matching(event -> invitation.organization().id().equals(event.namespace()))
 				.matching(event -> invitation.key().equals(event.key()));
 	}
 
@@ -247,9 +256,10 @@ class InvitationsTest extends AbstractIntegrationTest {
 				.isPresent()
 				.get()
 				.returns("09320d7f8e21143b2957f1caded74cbc", Invitation::key)
-				.returns(namespace.id(), Invitation::namespace)
+				.returns(new Invitation.Organization(namespace), Invitation::organization)
 				.returns(NamespaceRole.ADMIN, Invitation::role)
 				.returns(false, Invitation::isExpired)
+				.returns(InvitationState.PENDING, Invitation::state)
 				.satisfies(it -> assertThat(it.recipient())
 						.returns("invitee@konfigyr.com", Invitation.Recipient::email)
 						.returns(false, Invitation.Recipient::exists)
@@ -281,16 +291,17 @@ class InvitationsTest extends AbstractIntegrationTest {
 				.isPresent()
 				.get()
 				.returns("09320f6c6481c1fed73573a5430758f1", Invitation::key)
-				.returns(namespace.id(), Invitation::namespace)
+				.returns(new Invitation.Organization(namespace), Invitation::organization)
+				.returns(NamespaceRole.USER, Invitation::role)
+				.returns(true, Invitation::isExpired)
+				.returns(InvitationState.EXPIRED, Invitation::state)
+				.returns(null, Invitation::sender)
 				.satisfies(it -> assertThat(it.recipient())
 						.returns("expiring@konfigyr.com", Invitation.Recipient::email)
 						.returns(false, Invitation.Recipient::exists)
 						.returns(null, Invitation.Recipient::id)
 						.returns(null, Invitation.Recipient::name)
 				)
-				.returns(NamespaceRole.USER, Invitation::role)
-				.returns(true, Invitation::isExpired)
-				.returns(null, Invitation::sender)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES))
 				)
@@ -323,31 +334,32 @@ class InvitationsTest extends AbstractIntegrationTest {
 	void shouldAcceptInvitation(AssertablePublishedEvents events) {
 		final var namespace = lookupNamespace("konfigyr");
 
-		final var invitation = invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc");
-		assertThat(invitation).isPresent();
-
 		final var recipient = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
 		assertThat(recipient).isNotNull();
 
-		assertThatNoException().isThrownBy(() -> invitations.accept(namespace, invitation.get(), recipient));
+		final var invitation = invitations.get(recipient, "09320d7f8e21143b2957f1caded74cbc");
+		assertThat(invitation).isPresent();
 
-		assertThat(namespaces.findMembers(namespace))
+		assertThatNoException().isThrownBy(() -> invitations.accept(recipient, invitation.get()));
+
+		assertThat(memberships.find(namespace))
 			.extracting(Member::account, Member::role)
-			.contains(tuple(recipient, invitation.get().role()));
+			.contains(tuple(recipient.id(), invitation.get().role()));
 
 		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
 				.isEmpty();
 
 		events.assertThat()
 				.contains(InvitationEvent.Accepted.class)
-				.matching(event -> invitation.get().namespace().equals(event.id()))
-				.matching(event -> invitation.get().namespace().equals(event.namespace()))
-				.matching(event -> invitation.get().key().equals(event.key()));
+				.matching(event -> invitation.get().organization().id().equals(event.id()))
+				.matching(event -> invitation.get().organization().id().equals(event.namespace()))
+				.matching(event -> invitation.get().key().equals(event.key()))
+				.matching(event -> recipient.equals(event.recipient()));
 
 		events.assertThat()
 				.contains(NamespaceEvent.MemberAdded.class)
-				.matching(event -> invitation.get().namespace().equals(event.id()))
-				.matching(event -> recipient.equals(event.account()))
+				.matching(event -> invitation.get().organization().id().equals(event.id()))
+				.matching(event -> recipient.id().equals(event.account()))
 				.matching(event -> invitation.get().role().equals(event.role()));
 	}
 
@@ -357,41 +369,73 @@ class InvitationsTest extends AbstractIntegrationTest {
 	void shouldNotAcceptExpiredInvitation() {
 		final var namespace = lookupNamespace("konfigyr");
 
-		final var invitation = invitations.get(namespace, "09320f6c6481c1fed73573a5430758f1");
-		assertThat(invitation).isPresent();
-
 		final var recipient = createAccount("expiring@konfigyr.com", "Leto", "Atreides");
 		assertThat(recipient).isNotNull();
 
+		final var invitation = invitations.get(recipient, "09320f6c6481c1fed73573a5430758f1");
+		assertThat(invitation).isPresent();
+
 		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.accept(namespace, invitation.get(), recipient))
+				.isThrownBy(() -> invitations.accept(recipient, invitation.get()))
 				.extracting(InvitationException::getCode)
 				.isEqualTo(InvitationException.ErrorCode.INVITATION_EXPIRED);
 
-		assertThat(namespaces.findMembers(namespace))
+		assertThat(memberships.find(namespace))
 				.extracting(Member::account)
-				.doesNotContain(recipient);
+				.doesNotContain(recipient.id());
 
 		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
 				.isPresent();
 	}
 
 	@Test
-	@DisplayName("should fail to accept invitations with unknown recipient account")
+	@Transactional
+	@DisplayName("should decline pending invitation")
+	void shouldDeclineInvitation(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+
+		final var recipient = createAccount("invitee@konfigyr.com", "Paul", "Atreides");
+		assertThat(recipient).isNotNull();
+
+		final var invitation = invitations.get(recipient, "09320d7f8e21143b2957f1caded74cbc");
+		assertThat(invitation).isPresent();
+
+		assertThatNoException().isThrownBy(() -> invitations.decline(recipient, invitation.get()));
+
+		assertThat(memberships.find(namespace))
+				.extracting(Member::account)
+				.doesNotContain(recipient.id());
+
+		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
+				.isEmpty();
+
+		events.assertThat()
+				.contains(InvitationEvent.Declined.class)
+				.matching(event -> invitation.get().organization().id().equals(event.id()))
+				.matching(event -> invitation.get().organization().id().equals(event.namespace()))
+				.matching(event -> invitation.get().key().equals(event.key()))
+				.matching(event -> recipient.equals(event.recipient()));
+	}
+
+	@Test
+	@DisplayName("should fail to accept invitations that are sent to a different recipient")
 	void shouldNotAcceptInvitationByUnknownAccount() {
 		final var namespace = lookupNamespace("konfigyr");
+
+		final var recipient = createAccount("peter.vries@arakis.com", "Piter", "De Vries");
+		assertThat(recipient).isNotNull();
 
 		final var invitation = invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc");
 		assertThat(invitation).isPresent();
 
 		assertThatExceptionOfType(InvitationException.class)
-				.isThrownBy(() -> invitations.accept(namespace, invitation.get(), EntityId.from(9999)))
+				.isThrownBy(() -> invitations.accept(recipient, invitation.get()))
 				.extracting(InvitationException::getCode)
-				.isEqualTo(InvitationException.ErrorCode.RECIPIENT_NOT_FOUND);
+				.isEqualTo(InvitationException.ErrorCode.INVITATION_NOT_FOUND);
 
-		assertThat(namespaces.findMembers(namespace))
+		assertThat(memberships.find(namespace))
 				.extracting(Member::account)
-				.doesNotContain(EntityId.from(9999));
+				.doesNotContain(recipient.id());
 
 		assertThat(invitations.get(namespace, "09320d7f8e21143b2957f1caded74cbc"))
 				.isPresent();
@@ -414,7 +458,7 @@ class InvitationsTest extends AbstractIntegrationTest {
 				.isEmpty();
 	}
 
-	private EntityId createAccount(String email, String firstName, String lastName) {
+	private Account createAccount(String email, String firstName, String lastName) {
 		return context.insertInto(ACCOUNTS)
 				.set(
 						SettableRecord.of(ACCOUNTS)
@@ -428,6 +472,7 @@ class InvitationsTest extends AbstractIntegrationTest {
 				.returning(ACCOUNTS.ID)
 				.fetchOptional(ACCOUNTS.ID)
 				.map(EntityId::from)
+				.flatMap(accounts::findById)
 				.orElseThrow(() -> new IllegalStateException("Failed to create new test account"));
 	}
 

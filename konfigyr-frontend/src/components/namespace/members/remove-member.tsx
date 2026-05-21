@@ -22,7 +22,7 @@ export function RemoveMemberForm({ namespace, member, onClose }: { namespace: Na
   const open = useMemo(() => !!member , [member]);
 
   const errorNotification = useErrorNotification();
-  const { isPending, mutateAsync: removeNamespaceMember } = useRemoveNamespaceMember(namespace.slug);
+  const { isPending, mutateAsync: removeNamespaceMember } = useRemoveNamespaceMember(namespace);
 
   const onOpenChange = useCallback((state: boolean) => {
     if (!state) {

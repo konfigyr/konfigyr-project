@@ -1,18 +1,23 @@
-package com.konfigyr.namespace.controller;
+package com.konfigyr.membership.controller;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
-import com.konfigyr.hateoas.RepresentationModelAssembler;
-import com.konfigyr.namespace.*;
+import com.konfigyr.membership.Member;
+import com.konfigyr.membership.MemberNotFoundException;
+import com.konfigyr.membership.Memberships;
+import com.konfigyr.namespace.Namespace;
+import com.konfigyr.namespace.NamespaceManager;
+import com.konfigyr.namespace.NamespaceNotFoundException;
+import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,14 +29,16 @@ import org.springframework.web.bind.annotation.*;
 class MembersController {
 
 	private final NamespaceManager namespaces;
-	private final RepresentationModelAssembler<Member, EntityModel<Member>> assembler = Assemblers.member();
+	private final Memberships members;
 
 	@GetMapping
 	@PreAuthorize("isMember(#slug)")
 	PagedModel<EntityModel<Member>> find(@PathVariable @NonNull String slug, @NonNull Pageable pageable) {
 		final SearchQuery query = SearchQuery.of(pageable);
+		final Namespace namespace = lookupNamespace(slug);
 
-		return assembler.assemble(namespaces.findMembers(lookupNamespace(slug), query));
+		return Assemblers.member(namespace)
+				.assemble(members.find(namespace, query));
 	}
 
 	@GetMapping("/{member}")
@@ -39,7 +46,7 @@ class MembersController {
 	EntityModel<Member> get(@PathVariable @NonNull String slug, @PathVariable @NonNull EntityId member) {
 		final Namespace namespace = lookupNamespace(slug);
 
-		return assembler.assemble(lookupMember(namespace, member));
+		return Assemblers.member(namespace).assemble(lookupMember(namespace, member));
 	}
 
 	@PutMapping("/{member}")
@@ -51,7 +58,7 @@ class MembersController {
 	) {
 		final Namespace namespace = lookupNamespace(slug);
 
-		return assembler.assemble(namespaces.updateMember(
+		return Assemblers.member(namespace).assemble(members.update(
 				namespace, lookupMember(namespace, member).id(), attributes.role()
 		));
 	}
@@ -62,7 +69,7 @@ class MembersController {
 	void remove(@PathVariable @NonNull String slug, @PathVariable @NonNull EntityId member) {
 		final Namespace namespace = lookupNamespace(slug);
 
-		namespaces.removeMember(namespace, lookupMember(namespace, member).id());
+		members.remove(namespace, lookupMember(namespace, member).id());
 	}
 
 	@NonNull
@@ -72,7 +79,7 @@ class MembersController {
 
 	@NonNull
 	Member lookupMember(Namespace namespace, EntityId id) {
-		return namespaces.getMember(namespace, id)
+		return members.get(namespace, id)
 				.filter(member -> member.isMemberOf(namespace))
 				.orElseThrow(() -> new MemberNotFoundException(id));
 	}

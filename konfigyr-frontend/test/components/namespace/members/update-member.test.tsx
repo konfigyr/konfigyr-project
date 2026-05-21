@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { NamespaceRole } from '@konfigyr/hooks/namespace/types';
+import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
 import { UpdateMemberForm } from '@konfigyr/components/namespace/members/update-member';
 import { Toaster } from '@konfigyr/components/ui/sonner';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
@@ -7,7 +7,7 @@ import { namespaces } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
-import type { Member } from '@konfigyr/hooks/namespace/types';
+import type { Member } from '@konfigyr/hooks/memberships/types';
 
 const render = (member: Member | null, onClose: () => void) => renderWithQueryClient((
   <>

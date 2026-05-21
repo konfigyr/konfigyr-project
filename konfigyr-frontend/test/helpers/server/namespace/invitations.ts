@@ -1,6 +1,6 @@
 import { HttpResponse, http } from 'msw';
 import { parseISO } from 'date-fns';
-import { NamespaceRole } from '@konfigyr/hooks/namespace/types';
+import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
 import { accounts, namespaces } from '../../mocks';
 
 import type { Invitation, PageResponse } from '@konfigyr/hooks/types';
@@ -8,6 +8,9 @@ import type { Invitation, PageResponse } from '@konfigyr/hooks/types';
 const MOCK_INVITATIONS: Record<string, Invitation | undefined> = [
   {
     key: '0b9f514567f6cd9bb393a06388fc3dd7',
+    organization: {
+      ...namespaces.konfigyr,
+    },
     sender: {
       id: accounts.johnDoe.id,
       email: accounts.johnDoe.email,
@@ -22,6 +25,9 @@ const MOCK_INVITATIONS: Record<string, Invitation | undefined> = [
     expiryDate: parseISO('2026-04-28T19:45:16'),
   }, {
     key: '0b9f532868b6cdd793f703d7d09eb301',
+    organization: {
+      ...namespaces.konfigyr,
+    },
     sender: {
       id: accounts.johnDoe.id,
       email: accounts.johnDoe.email,
@@ -36,6 +42,9 @@ const MOCK_INVITATIONS: Record<string, Invitation | undefined> = [
     expiryDate: parseISO('2026-04-17T16:30:30'),
   }, {
     key: '9456532868b6cdd235703d7d09eb301',
+    organization: {
+      ...namespaces.konfigyr,
+    },
     sender: {
       id: accounts.janeDoe.id,
       email: accounts.janeDoe.email,
@@ -107,34 +116,7 @@ const get = http.get('http://localhost/api/namespaces/:slug/invitations/:key', (
   return HttpResponse.json(invitation);
 });
 
-const accept = http.post('http://localhost/api/namespaces/:slug/invitations/:key', ({ params }) => {
-  if (params.slug === namespaces.unknown.slug) {
-    return HttpResponse.json({
-      status: 404,
-      title: 'Not found',
-      detail: `Namespace member with slug '${params.slug}' not found.`,
-    }, { status: 404 });
-  }
-
-  if (params.slug === namespaces.johnDoe.slug) {
-    return HttpResponse.json({ data: [], metadata: {} });
-  }
-
-  const invitation = MOCK_INVITATIONS[params.key as string];
-
-  if (!invitation) {
-    return HttpResponse.json({
-      status: 404,
-      title: 'Not found',
-      detail: `Invitation with key '${params.key}' not found.`,
-    }, { status: 404 });
-  }
-
-  return new HttpResponse(null, { status: 204 });
-});
-
 export default [
   list,
   get,
-  accept,
 ];

@@ -7,6 +7,7 @@ import com.konfigyr.artifactory.ArtifactoryEvent;
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.kms.KeysetManagementEvent;
+import com.konfigyr.membership.InvitationEvent;
 import com.konfigyr.namespace.*;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.PrincipalType;
@@ -169,6 +170,19 @@ class AuditEventListener {
 				.entityId(event.namespace())
 				.eventType("invitation.accepted")
 				.details("key", event.key())
+				.details("recipient", event.recipient().displayName())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.invitation-declined", classes = InvitationEvent.Declined.class)
+	void on(InvitationEvent.Declined event) {
+		insert(event, builder -> builder
+				.namespace(event.namespace())
+				.entityType("invitation")
+				.entityId(event.namespace())
+				.eventType("invitation.declined")
+				.details("key", event.key())
+				.details("recipient", event.recipient().displayName())
 		);
 	}
 

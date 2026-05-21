@@ -1,4 +1,4 @@
-package com.konfigyr.namespace;
+package com.konfigyr.membership;
 
 import com.konfigyr.entity.EntityId;
 import org.jspecify.annotations.NonNull;
@@ -12,7 +12,7 @@ import java.io.Serial;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-public class MemberNotFoundException extends NamespaceException {
+public class MemberNotFoundException extends MembershipException {
 
 	@Serial
 	private static final long serialVersionUID = 6228715535652450037L;

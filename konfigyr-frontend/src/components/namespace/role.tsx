@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { NamespaceRole } from '@konfigyr/hooks/namespace/types';
+import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
 import { Badge } from '@konfigyr/components/ui/badge';
 import type { BadgeProps } from '@konfigyr/components/ui/badge';
 

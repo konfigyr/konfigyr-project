@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { getAccountQuery, getLastUsedNamespace } from '@konfigyr/hooks';
+import { getAccountQuery, getLastUsedNamespace, getNamespacesQuery } from '@konfigyr/hooks';
 
 /**
  * The index route that would attempt to resolve the last used namespace slug for the currently logged-in
@@ -12,15 +12,16 @@ import { getAccountQuery, getLastUsedNamespace } from '@konfigyr/hooks';
 export const Route = createFileRoute('/_authenticated/')({
   loader: async ({ context }) => {
     const account = await context.queryClient.ensureQueryData(getAccountQuery());
+    const namespaces = await context.queryClient.ensureQueryData(getNamespacesQuery());
 
-    if (account.memberships.length === 0) {
+    if (namespaces.length === 0) {
       throw redirect({ to: '/namespace/provision' });
     }
 
-    let namespace = getLastUsedNamespace(account);
+    let namespace = getLastUsedNamespace(account, namespaces);
 
     if (namespace == null) {
-      namespace = account.memberships[0].namespace;
+      namespace = namespaces[0].slug;
     }
 
     throw redirect({ to: '/namespace/$namespace', params: { namespace } });

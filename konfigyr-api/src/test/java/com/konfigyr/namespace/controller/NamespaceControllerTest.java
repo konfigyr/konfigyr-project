@@ -6,6 +6,7 @@ import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +23,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-class NamespaceControllerTest extends AbstractNamespaceControllerTest {
+class NamespaceControllerTest extends AbstractControllerTest {
 
 	@Test
 	@DisplayName("should retrieve all available namespaces for logged in John Doe principal")
