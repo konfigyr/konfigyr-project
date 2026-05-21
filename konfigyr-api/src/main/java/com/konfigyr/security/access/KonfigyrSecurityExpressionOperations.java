@@ -1,6 +1,5 @@
 package com.konfigyr.security.access;
 
-import com.konfigyr.account.Memberships;
 import com.konfigyr.namespace.Namespace;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.expression.SecurityExpressionOperations;
@@ -8,13 +7,12 @@ import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 
 /**
- * Konfigyr interface for expression root objects used with expression-based security that would additionally
- * be able to check {@link Namespace} access rights via {@link Memberships} that are present on the
- * {@link Authentication} object.
+ * Konfigyr interface for expression root objects used with expression-based security that would
+ * additionally be able to check {@link Namespace} access rights via memberships that are extracted
+ * based on the current {@link Authentication} object.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
- * @see Memberships
  * @see SecurityExpressionOperations
  **/
 public interface KonfigyrSecurityExpressionOperations extends SecurityExpressionOperations {
