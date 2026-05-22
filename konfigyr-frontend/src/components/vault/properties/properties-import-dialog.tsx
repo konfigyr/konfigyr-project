@@ -15,6 +15,7 @@ import { Input } from '@konfigyr/components/ui/input';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 import { ImportPropertiesLabel } from './messages';
 import type { ConfigurationProperty, Profile } from '@konfigyr/hooks/types';
+import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
 
 type ConfigurationImporterStatusProps = {
   isParsing: boolean;
@@ -24,7 +25,11 @@ type ConfigurationImporterStatusProps = {
   amount: number;
 };
 
-export function ConfigurationImporter ({ onChange }: {
+type ImporterType = 'file' | 'api';
+
+const DEFAULT_IMPORTER_TYPE: ImporterType = 'file';
+
+export function FileConfigurationImporter ({ onChange }: {
   onChange: (file: File) => void,
 }) {
   const inputId = React.useId();
@@ -58,16 +63,30 @@ export function ConfigurationImporter ({ onChange }: {
   );
 }
 
+export function SpringCloudConfigurationImporter () {
+
+  return (
+    <h1>Spring cloud imported</h1>
+  );
+}
+
 export function PropertiesImportDialog ({ profile, onImport }: {
   onImport: (properties: Array<ConfigurationProperty<any>>) => void | Promise<unknown>
   profile: Profile
 }) {
   const [open, setOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [importerType, setImporterType] = useState<ImporterType>(DEFAULT_IMPORTER_TYPE);
   const { properties, reset, error, parseFile, isParsing, isError } = useConfigFileParser();
 
   const onOpenChange = useCallback((state: boolean) => {
     setOpen(state);
+    setImporterType(DEFAULT_IMPORTER_TYPE);
+    reset();
+  }, [reset]);
+
+  const handleImporterTypeChange = useCallback((type: ImporterType) => {
+    setImporterType(type);
     reset();
   }, [reset]);
 
@@ -78,8 +97,7 @@ export function PropertiesImportDialog ({ profile, onImport }: {
     setIsImporting(false);
   }, [onImport, properties]);
 
-  const isImportDisabled = properties.length === 0 || isImporting;
-
+  const isImportDisabled = importerType !== 'file' || properties.length === 0 || isImporting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -102,7 +120,44 @@ export function PropertiesImportDialog ({ profile, onImport }: {
           </DialogTitle>
         </DialogHeader>
 
-        <ConfigurationImporter onChange={parseFile}/>
+        <Tabs>
+          <TabItem
+            render={
+              <button
+                type="button"
+                data-state={importerType === 'file' ? 'active' : undefined}
+                onClick={() => handleImporterTypeChange('file')}
+              >
+                <FormattedMessage
+                  defaultMessage="From File"
+                  description="Tab label for importing configuration properties from a file."
+                />
+              </button>
+            }
+          />
+          <TabItem
+            render={
+              <button
+                type="button"
+                data-state={importerType === 'api' ? 'active' : undefined}
+                onClick={() => handleImporterTypeChange('api')}
+              >
+                <FormattedMessage
+                  defaultMessage="From API"
+                  description="Tab label for importing configuration properties from an API."
+                />
+              </button>
+            }
+          />
+        </Tabs>
+
+        {importerType === 'file' && (
+          <FileConfigurationImporter onChange={parseFile}/>
+        )}
+
+        {importerType === 'api' && (
+          <SpringCloudConfigurationImporter />
+        )}
 
         <ConfigurationImporterStatus
           isParsing={isParsing}
