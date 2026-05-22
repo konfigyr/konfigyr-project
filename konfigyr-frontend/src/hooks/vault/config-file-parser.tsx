@@ -224,7 +224,7 @@ const parseSpringCloudConfigResponse = (payload: unknown): Array<ConfigurationPr
   // Spring Cloud returns sources in precedence order (highest first).
   // Merge from last to first so higher-precedence sources override lower ones.
   for (let i = propertySources.length - 1; i >= 0; i--) {
-    const source = (propertySources[i] as { source?: unknown })?.source;
+    const source = (propertySources[i] as { source?: unknown }).source;
     if (source && typeof source === 'object' && !Array.isArray(source)) {
       Object.assign(mergedSource, source);
     }
@@ -246,7 +246,7 @@ const parseSpringCloudConfigResponse = (payload: unknown): Array<ConfigurationPr
  * - `properties` - The parsed configuration properties.
  * - `error` - An error message if parsing fails.
  * - `parseFile` - Async function to parse a given `File`.
- * - `fetchConfig` - Async function to fetch JSON configuration from API and parse it.
+ * - `fetchConfig` - Async function to fetch JSON configuration from the config server API and parse it.
  * - `reset` - Function to clear parsed data and errors.
  * - `isParsing` - Indicates whether a parse operation is currently in progress.
  * - `isError` - Indicates whether the latest parse operation failed.
@@ -280,7 +280,7 @@ export function useConfigFileParser () {
       setIsParsing(false);
       setError(e instanceof Error ? e : new Error('Parse error'));
     }
-  }
+  };
 
   const parseFile = async (file: File)=> {
     await runParseTask(async () => {
@@ -299,9 +299,9 @@ export function useConfigFileParser () {
 
       throw new Error('Unsupported file type');
     });
-  }
+  };
 
-   const fetchConfig = async (username: string, password: string, url: string) =>  {
+  const fetchConfig = async (username: string, password: string, url: string) => {
     await runParseTask(async () => {
       const auth = btoa(`${username}:${password}`);
       const response = await fetch(url, {
@@ -319,7 +319,7 @@ export function useConfigFileParser () {
       const parsedJsonObject = await response.json();
       return parseSpringCloudConfigResponse(parsedJsonObject);
     });
-  }
+  };
 
   const reset = () => {
     parseSequenceRef.current++;

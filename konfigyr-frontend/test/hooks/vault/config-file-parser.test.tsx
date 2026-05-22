@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 
 function deferred<T>() {
@@ -20,6 +20,10 @@ const mockFile = (name: string, text: string | Promise<string>): File => {
 };
 
 describe('hooks | vault | useConfigFileParser', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
   test('should expose ready state by default', () => {
     const { result } = renderHook(() => useConfigFileParser());
 
@@ -212,5 +216,73 @@ describe('hooks | vault | useConfigFileParser', () => {
     expect(result.current.isParsing).toBe(false);
     expect(result.current.isError).toBe(false);
     expect(result.current.isReady).toBe(true);
+  });
+
+  test('should fetch config from config server and merge propertySources in one object', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        propertySources: [
+          { name: 'high', source: { 'feature.flag': true } },
+          { name: 'low', source: { 'feature.flag': false, 'service.name': 'api' } },
+        ],
+      }),
+    } as Response);
+
+    const { result } = renderHook(() => useConfigFileParser());
+
+    await act(async () => {
+      await result.current.fetchConfig('user', 'password', 'https://config.example.test');
+    });
+
+    expect(result.current.properties).toMatchObject([
+      { name: 'feature.flag', value: { encoded: 'true', decoded: 'true' } },
+      { name: 'service.name', value: { encoded: 'api', decoded: 'api' } },
+    ]);
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isReady).toBe(true);
+  });
+
+  test('should expose error when config server response does not contain propertySources', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ name: 'broken-payload' }),
+    } as Response);
+
+    const { result } = renderHook(() => useConfigFileParser());
+
+    await act(async () => {
+      await result.current.fetchConfig('user', 'pass', 'https://config.example.test');
+    });
+
+    expect(result.current.properties).toStrictEqual([]);
+    expect(result.current.error).toBeDefined();
+    expect(result.current.error?.message).toContain('Invalid configuration response: missing propertySources');
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(true);
+    expect(result.current.isReady).toBe(false);
+  });
+
+  test('should expose error when Config Server request returns 401', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: () => Promise.resolve({}),
+    } as Response);
+
+    const { result } = renderHook(() => useConfigFileParser());
+
+    await act(async () => {
+      await result.current.fetchConfig('user', 'wrong-password', 'https://config.example.test');
+    });
+
+    expect(result.current.properties).toStrictEqual([]);
+    expect(result.current.error).toBeDefined();
+    expect(result.current.error?.message).toBe('Failed to fetch configuration: 401');
+    expect(result.current.isParsing).toBe(false);
+    expect(result.current.isError).toBe(true);
+    expect(result.current.isReady).toBe(false);
   });
 });

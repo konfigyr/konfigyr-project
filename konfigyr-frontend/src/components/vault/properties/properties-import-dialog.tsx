@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { FileCog, ImportIcon, DatabaseBackup } from 'lucide-react';
+import { DatabaseBackup, FileCog, ImportIcon } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -13,9 +13,9 @@ import {
 import { Field, FieldDescription, FieldLabel } from '@konfigyr/components/ui/field';
 import { Input } from '@konfigyr/components/ui/input';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
+import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
 import { ImportPropertiesLabel } from './messages';
 import type { ConfigurationProperty, Profile } from '@konfigyr/hooks/types';
-import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
 
 type ConfigurationImporterStatusProps = {
   isParsing: boolean;
@@ -70,9 +70,9 @@ export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
   const passwordId = React.useId();
   const configServerUrlId = React.useId();
 
-  const [username, setUsername] = useState('sire-app');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [configServerUrl, setConfigServerUrl] = useState('http://config.intern.dev.ebf.de/api/configs/sire-app/dev/master');
+  const [configServerUrl, setConfigServerUrl] = useState('');
 
   const isFetchConfigDisabled = !username.trim() || !password.trim() || !configServerUrl.trim();
   const handleFetchConfig = useCallback(() => {
@@ -123,7 +123,7 @@ export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
         <Input
           id={configServerUrlId}
           type="url"
-          placeholder="https://config.example.com"
+          placeholder="https://config.com/api/configs/app/profile/label"
           value={configServerUrl}
           onChange={(e) => setConfigServerUrl(e.target.value)}
         />
@@ -199,7 +199,7 @@ export function PropertiesImportDialog ({ profile, onImport }: {
                 onClick={() => handleImporterTypeChange('file')}
               >
                 <FormattedMessage
-                  defaultMessage="From File"
+                  defaultMessage="From file"
                   description="Tab label for importing configuration properties from a file."
                 />
               </button>
@@ -213,8 +213,8 @@ export function PropertiesImportDialog ({ profile, onImport }: {
                 onClick={() => handleImporterTypeChange('api')}
               >
                 <FormattedMessage
-                  defaultMessage="From API"
-                  description="Tab label for importing configuration properties from an API."
+                  defaultMessage="From config server"
+                  description="Tab label for importing configuration properties from an Config Server."
                 />
               </button>
             }
