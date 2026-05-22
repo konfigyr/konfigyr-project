@@ -205,6 +205,35 @@ const parseJsonFile = (text?: string): Array<ConfigurationProperty<string>> => {
 };
 
 /**
+ * Parses Spring Cloud Config server response and converts effective `propertySources[*].source` entries into flat configuration properties.
+ *
+ * @param payload - Raw JSON payload returned by Spring Cloud Config server
+ */
+const parseSpringCloudConfigResponse = (payload: unknown): Array<ConfigurationProperty<string>> => {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Invalid configuration response');
+  }
+
+  const propertySources = (payload as { propertySources?: unknown }).propertySources;
+  if (!Array.isArray(propertySources)) {
+    throw new Error('Invalid configuration response: missing propertySources');
+  }
+
+  const mergedSource: Record<string, unknown> = {};
+
+  // Spring Cloud returns sources in precedence order (highest first).
+  // Merge from last to first so higher-precedence sources override lower ones.
+  for (let i = propertySources.length - 1; i >= 0; i--) {
+    const source = (propertySources[i] as { source?: unknown })?.source;
+    if (source && typeof source === 'object' && !Array.isArray(source)) {
+      Object.assign(mergedSource, source);
+    }
+  }
+
+  return jsonToProperties(mergedSource);
+};
+
+/**
  * React hook for parsing configuration files into structured properties.
  *
  * Supports the following file formats:
@@ -217,6 +246,7 @@ const parseJsonFile = (text?: string): Array<ConfigurationProperty<string>> => {
  * - `properties` - The parsed configuration properties.
  * - `error` - An error message if parsing fails.
  * - `parseFile` - Async function to parse a given `File`.
+ * - `fetchConfig` - Async function to fetch JSON configuration from API and parse it.
  * - `reset` - Function to clear parsed data and errors.
  * - `isParsing` - Indicates whether a parse operation is currently in progress.
  * - `isError` - Indicates whether the latest parse operation failed.
@@ -228,26 +258,13 @@ export function useConfigFileParser () {
   const [isParsing, setIsParsing] = useState(false);
   const parseSequenceRef = useRef(0);
 
-  async function parseFile (file: File) {
+  const runParseTask = async (task: () => Promise<Array<ConfigurationProperty<string>>>) => {
     const currentSequence = ++parseSequenceRef.current;
     setIsParsing(true);
     setError(undefined);
 
     try {
-      const text = await file.text();
-      const name = file.name.toLowerCase();
-
-      let parsedProperties: Array<ConfigurationProperty<string>> = [];
-
-      if (name.endsWith('.json')) {
-        parsedProperties = parseJsonFile(text);
-      } else if (name.endsWith('.properties')) {
-        parsedProperties = parsePropertiesFile(text);
-      } else if (name.endsWith('.yaml') || name.endsWith('.yml')) {
-        parsedProperties = parseYamlFile(text);
-      } else {
-        throw new Error('Unsupported file type');
-      }
+      const parsedProperties = await task();
 
       if (parseSequenceRef.current !== currentSequence) {
         return;
@@ -265,6 +282,45 @@ export function useConfigFileParser () {
     }
   }
 
+  const parseFile = async (file: File)=> {
+    await runParseTask(async () => {
+      const text = await file.text();
+      const name = file.name.toLowerCase();
+
+      if (name.endsWith('.json')) {
+        return parseJsonFile(text);
+      }
+      if (name.endsWith('.properties')) {
+        return parsePropertiesFile(text);
+      }
+      if (name.endsWith('.yaml') || name.endsWith('.yml')) {
+        return parseYamlFile(text);
+      }
+
+      throw new Error('Unsupported file type');
+    });
+  }
+
+   const fetchConfig = async (username: string, password: string, url: string) =>  {
+    await runParseTask(async () => {
+      const auth = btoa(`${username}:${password}`);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Basic ${auth}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch configuration: ${response.status}`);
+      }
+
+      const parsedJsonObject = await response.json();
+      return parseSpringCloudConfigResponse(parsedJsonObject);
+    });
+  }
+
   const reset = () => {
     parseSequenceRef.current++;
     setProperties([]);
@@ -276,6 +332,7 @@ export function useConfigFileParser () {
     properties,
     error,
     parseFile,
+    fetchConfig,
     reset,
     isParsing,
     isError: !!error,

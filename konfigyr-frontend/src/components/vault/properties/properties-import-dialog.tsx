@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { FileCog, ImportIcon } from 'lucide-react';
+import { FileCog, ImportIcon, DatabaseBackup } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -63,10 +63,80 @@ export function FileConfigurationImporter ({ onChange }: {
   );
 }
 
-export function SpringCloudConfigurationImporter () {
+export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
+  onFetchConfig: (username: string, password: string, url: string) => void | Promise<unknown>
+}) {
+  const usernameId = React.useId();
+  const passwordId = React.useId();
+  const configServerUrlId = React.useId();
+
+  const [username, setUsername] = useState('sire-app');
+  const [password, setPassword] = useState('');
+  const [configServerUrl, setConfigServerUrl] = useState('http://config.intern.dev.ebf.de/api/configs/sire-app/dev/master');
+
+  const isFetchConfigDisabled = !username.trim() || !password.trim() || !configServerUrl.trim();
+  const handleFetchConfig = useCallback(() => {
+    void onFetchConfig(username.trim(), password, configServerUrl.trim());
+  }, [configServerUrl, onFetchConfig, password, username]);
 
   return (
-    <h1>Spring cloud imported</h1>
+    <div className="space-y-4">
+      <Field>
+        <FieldLabel htmlFor={usernameId}>
+          <FormattedMessage
+            defaultMessage="User name"
+            description="Label for username input in Spring Cloud configuration importer."
+          />
+        </FieldLabel>
+        <Input
+          id={usernameId}
+          type="text"
+          autoComplete="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor={passwordId}>
+          <FormattedMessage
+            defaultMessage="Password"
+            description="Label for password input in Spring Cloud configuration importer."
+          />
+        </FieldLabel>
+        <Input
+          id={passwordId}
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor={configServerUrlId}>
+          <FormattedMessage
+            defaultMessage="Config server URL"
+            description="Label for config server URL input in Spring Cloud configuration importer."
+          />
+        </FieldLabel>
+        <Input
+          id={configServerUrlId}
+          type="url"
+          placeholder="https://config.example.com"
+          value={configServerUrl}
+          onChange={(e) => setConfigServerUrl(e.target.value)}
+        />
+      </Field>
+
+      <Button type="button" disabled={isFetchConfigDisabled} onClick={handleFetchConfig}>
+        <DatabaseBackup/>
+        <FormattedMessage
+          defaultMessage="Fetch config"
+          description="Button label for fetching configuration from Spring Cloud Config server."
+        />
+      </Button>
+    </div>
   );
 }
 
@@ -77,7 +147,7 @@ export function PropertiesImportDialog ({ profile, onImport }: {
   const [open, setOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importerType, setImporterType] = useState<ImporterType>(DEFAULT_IMPORTER_TYPE);
-  const { properties, reset, error, parseFile, isParsing, isError } = useConfigFileParser();
+  const { properties, reset, error, parseFile, fetchConfig, isParsing, isError } = useConfigFileParser();
 
   const onOpenChange = useCallback((state: boolean) => {
     setOpen(state);
@@ -97,7 +167,7 @@ export function PropertiesImportDialog ({ profile, onImport }: {
     setIsImporting(false);
   }, [onImport, properties]);
 
-  const isImportDisabled = importerType !== 'file' || properties.length === 0 || isImporting;
+  const isImportDisabled = properties.length === 0 || isImporting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -156,7 +226,7 @@ export function PropertiesImportDialog ({ profile, onImport }: {
         )}
 
         {importerType === 'api' && (
-          <SpringCloudConfigurationImporter />
+          <SpringCloudConfigurationImporter onFetchConfig={fetchConfig} />
         )}
 
         <ConfigurationImporterStatus
