@@ -245,26 +245,31 @@ export const useImportProperties = (changeset: ChangesetState) => {
 
   return useMutation({
     mutationFn: async (properties: Array<ConfigurationProperty<any>>): Promise<ChangesetState>=> {
-      const result: Array<ConfigurationProperty<any>> = [];
+      const importedByName = new Map(
+        properties.map(property => [property.name, property] as const),
+      );
 
-      properties.forEach(( property: ConfigurationProperty<any>) => {
-        const existing = changeset.properties.find(p => p.name === property.name);
-        if (existing) {
-          result.push(
-            {
-              ...existing,
-              value: property.value,
-              state: existing.state === ConfigurationPropertyState.ADDED ? ConfigurationPropertyState.ADDED : ConfigurationPropertyState.UPDATED,
-            },
-          );
-        } else {
-          result.push(
-            {
-              ...property,
-              state: ConfigurationPropertyState.ADDED,
-            },
-          );
+      const result: Array<ConfigurationProperty<any>> = changeset.properties.map(existing => {
+        const imported = importedByName.get(existing.name);
+        if (!imported) {
+          return existing;
         }
+
+        importedByName.delete(existing.name);
+        return {
+          ...existing,
+          value: imported.value,
+          state: existing.state === ConfigurationPropertyState.ADDED
+            ? ConfigurationPropertyState.ADDED
+            : ConfigurationPropertyState.UPDATED,
+        };
+      });
+
+      importedByName.forEach((property) => {
+        result.push({
+          ...property,
+          state: ConfigurationPropertyState.ADDED,
+        });
       });
 
       return Promise.resolve({
