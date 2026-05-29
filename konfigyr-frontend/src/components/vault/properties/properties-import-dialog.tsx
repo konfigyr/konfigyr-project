@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { z } from 'zod';
 import { DatabaseBackup, FileCog, ImportIcon } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
@@ -11,6 +12,7 @@ import {
   DialogTrigger,
 } from '@konfigyr/components/ui/dialog';
 import { Field, FieldDescription, FieldLabel } from '@konfigyr/components/ui/field';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { Input } from '@konfigyr/components/ui/input';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
@@ -28,6 +30,15 @@ type ConfigurationImporterStatusProps = {
 type ImporterType = 'file' | 'api';
 
 const DEFAULT_IMPORTER_TYPE: ImporterType = 'file';
+
+const springCloudImporterSchema = z.object({
+  username: z.string().trim().min(1, { message: 'User name is required' }),
+  password: z.string().trim().min(1, { message: 'Password is required' }),
+  configServerUrl: z.string()
+    .trim()
+    .min(1, { message: 'Config server URL is required' })
+    .url({ message: 'Config server URL must be a valid URL' }),
+});
 
 export function FileConfigurationImporter ({ onChange }: {
   onChange: (file: File) => void,
@@ -66,77 +77,78 @@ export function FileConfigurationImporter ({ onChange }: {
 export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
   onFetchConfig: (username: string, password: string, url: string) => void | Promise<unknown>
 }) {
-  const usernameId = React.useId();
-  const passwordId = React.useId();
-  const configServerUrlId = React.useId();
-
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [configServerUrl, setConfigServerUrl] = useState('');
-
-  const isFetchConfigDisabled = !username.trim() || !password.trim() || !configServerUrl.trim();
-  const handleFetchConfig = useCallback(() => {
-    void onFetchConfig(username.trim(), password, configServerUrl.trim());
-  }, [configServerUrl, onFetchConfig, password, username]);
+  const form = useForm({
+    defaultValues: {
+      username: '',
+      password: '',
+      configServerUrl: '',
+    },
+    validators: {
+      onSubmit: springCloudImporterSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await onFetchConfig(value.username.trim(), value.password, value.configServerUrl.trim());
+    },
+  });
+  const onSubmit = useFormSubmit(form);
 
   return (
-    <div className="space-y-4">
-      <Field>
-        <FieldLabel htmlFor={usernameId}>
-          <FormattedMessage
-            defaultMessage="User name"
-            description="Label for username input in Spring Cloud configuration importer."
-          />
-        </FieldLabel>
-        <Input
-          id={usernameId}
-          type="text"
-          autoComplete="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+    <form.AppForm>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <form.AppField
+          name="username"
+          children={(field) => (
+            <field.Control
+              label={(
+                <FormattedMessage
+                  defaultMessage="User name"
+                  description="Label for username input in Spring Cloud configuration importer."
+                />
+              )}
+              render={<field.Input type="text" autoComplete="username" />}
+            />
+          )}
         />
-      </Field>
 
-      <Field>
-        <FieldLabel htmlFor={passwordId}>
-          <FormattedMessage
-            defaultMessage="Password"
-            description="Label for password input in Spring Cloud configuration importer."
-          />
-        </FieldLabel>
-        <Input
-          id={passwordId}
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+        <form.AppField
+          name="password"
+          children={(field) => (
+            <field.Control
+              label={(
+                <FormattedMessage
+                  defaultMessage="Password"
+                  description="Label for password input in Spring Cloud configuration importer."
+                />
+              )}
+              render={<field.Input type="password" autoComplete="current-password" />}
+            />
+          )}
         />
-      </Field>
 
-      <Field>
-        <FieldLabel htmlFor={configServerUrlId}>
-          <FormattedMessage
-            defaultMessage="Config server URL"
-            description="Label for config server URL input in Spring Cloud configuration importer."
-          />
-        </FieldLabel>
-        <Input
-          id={configServerUrlId}
-          type="url"
-          placeholder="https://config.com/api/configs/app/profile/label"
-          value={configServerUrl}
-          onChange={(e) => setConfigServerUrl(e.target.value)}
+        <form.AppField
+          name="configServerUrl"
+          children={(field) => (
+            <field.Control
+              label={(
+                <FormattedMessage
+                  defaultMessage="Config server URL"
+                  description="Label for config server URL input in Spring Cloud configuration importer."
+                />
+              )}
+              render={<field.Input type="text" placeholder="https://config.com/api/configs/app/profile/label" />}
+            />
+          )}
         />
-      </Field>
 
-      <Button type="button" disabled={isFetchConfigDisabled} onClick={handleFetchConfig}>
-        <DatabaseBackup/>
-        <FormattedMessage
-          defaultMessage="Fetch config"
-          description="Button label for fetching configuration from Spring Cloud Config server."
-        />
-      </Button>
-    </div>
+        <form.Submit variant="default">
+          <DatabaseBackup/>
+          <FormattedMessage
+            defaultMessage="Fetch config"
+            description="Button label for fetching configuration from Spring Cloud Config server."
+          />
+        </form.Submit>
+      </form>
+    </form.AppForm>
   );
 }
 

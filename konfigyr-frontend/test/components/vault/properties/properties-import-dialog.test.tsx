@@ -155,6 +155,30 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     expect(onImport).not.toHaveBeenCalled();
   });
 
+  test('should validate config server URL on submit', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development}/>,
+    );
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+    await user.click(within(result.getByRole('dialog')).getByRole('tab', { name: 'From config server' }));
+
+    await user.type(result.getByLabelText('User name'), 'test-user');
+    await user.type(result.getByLabelText('Password'), 'test-pwd');
+    await user.type(result.getByLabelText('Config server URL'), 'not-a-url');
+
+    await user.click(result.getByRole('button', { name: 'Fetch config' }));
+
+    await waitFor(() => {
+      expect(result.getByText('Config server URL must be a valid URL')).toBeInTheDocument();
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   test('should fetch properties from config server and submit import', async () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
@@ -181,7 +205,9 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     await user.type(result.getByLabelText('Password'), 'test-pwd');
     await user.type(result.getByLabelText('Config server URL'), 'http://config.com/api/configs/test-app/dev/master');
 
-    await user.click(result.getByRole('button', { name: 'Fetch config' }));
+    const fetchButton = result.getByRole('button', { name: 'Fetch config' });
+    expect(fetchButton).toBeEnabled();
+    await user.click(fetchButton);
 
     await waitFor(() => {
       expect(result.getByText('Ready for import')).toBeInTheDocument();
@@ -234,4 +260,3 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     );
   });
 });
-
