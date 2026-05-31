@@ -14,12 +14,10 @@ import org.jspecify.annotations.NonNull;
  **/
 public abstract sealed class KeysetManagementEvent
 		extends EntityEvent
-		permits KeysetManagementEvent.Created,
+		permits KeysetManagementEvent.KeyEvent,
+		KeysetManagementEvent.Created,
 		KeysetManagementEvent.Rotated,
-		KeysetManagementEvent.Disabled,
-		KeysetManagementEvent.Activated,
-		KeysetManagementEvent.Removed,
-		KeysetManagementEvent.Destroyed {
+		KeysetManagementEvent.Deleted {
 
 	private final EntityId namespace;
 
@@ -65,7 +63,7 @@ public abstract sealed class KeysetManagementEvent
 	public static final class Rotated extends KeysetManagementEvent {
 
 		/**
-		 * Create a new {@link Removed} event with the {@link EntityId entity identifiers} of the
+		 * Create a new {@link Rotated} event with the {@link EntityId entity identifiers} of the
 		 * {@link KeysetMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
 		 *
 		 * @param id entity identifier of the keyset that was rotated
@@ -78,77 +76,215 @@ public abstract sealed class KeysetManagementEvent
 	}
 
 	/**
-	 * Event that would be published when {@link KeysetMetadata} is disabled.
+	 * Event that would be published when {@link KeysetMetadata} is deleted from the system.
 	 */
-	@DomainEvent(name = "keyset-disabled", namespace = "kms")
-	public static final class Disabled extends KeysetManagementEvent {
+	@DomainEvent(name = "keyset-deleted", namespace = "kms")
+	public static final class Deleted extends KeysetManagementEvent {
 
 		/**
-		 * Create a new {@link Disabled} event with the {@link EntityId entity identifiers} of the
+		 * Create a new {@link Deleted} event with the {@link EntityId entity identifiers} of the
 		 * {@link KeysetMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
 		 *
-		 * @param id entity identifier of the disabled keyset
+		 * @param id entity identifier of the keyset that was deleted
 		 * @param namespace entity identifier of the namespace
 		 */
-		public Disabled(EntityId id, EntityId namespace) {
+		public Deleted(EntityId id, EntityId namespace) {
 			super(id, namespace);
 		}
 
 	}
 
 	/**
-	 * Event that would be published when {@link KeysetMetadata} is activated.
+	 * Event that would be published when a {@link KeyMetadata} inside a {@link KeysetMetadata} changes
+	 * state.
 	 */
-	@DomainEvent(name = "keyset-activated", namespace = "kms")
-	public static final class Activated extends KeysetManagementEvent {
+	public static abstract sealed class KeyEvent extends KeysetManagementEvent
+			permits Deactivated, Reactivated, Compromised, Restored, Destroyed {
+
+		private final String key;
+
+		protected KeyEvent(KeyOperation operation, EntityId namespace) {
+			this(operation.keyset(), operation.key(), namespace);
+		}
+
+		protected KeyEvent(EntityId keyset, String key, EntityId namespace) {
+			super(keyset, namespace);
+			this.key = key;
+		}
 
 		/**
-		 * Create a new {@link Disabled} event with the {@link EntityId entity identifiers} of the
-		 * {@link KeysetMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
+		 * Returns the identifier of the {@link KeyMetadata} that was the subject of the operation.
 		 *
-		 * @param id entity identifier of the activated keyset
-		 * @param namespace entity identifier of the namespace
+		 * @return key metadata identifier, never {@literal null}
 		 */
-		public Activated(EntityId id, EntityId namespace) {
-			super(id, namespace);
+		@NonNull
+		public String key() {
+			return key;
 		}
 
 	}
 
 	/**
-	 * Event that would be published when {@link KeysetMetadata} is scheduled for removal.
+	 * Event that would be published when a {@link KeyMetadata} within the {@link KeysetMetadata}
+	 * is disabled or deactivated.
 	 */
-	@DomainEvent(name = "keyset-disabled", namespace = "kms")
-	public static final class Removed extends KeysetManagementEvent {
+	@DomainEvent(name = "keyset-key-deactivated", namespace = "kms")
+	public static final class Deactivated extends KeyEvent {
 
 		/**
-		 * Create a new {@link Removed} event with the {@link EntityId entity identifiers} of the
-		 * {@link KeysetMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
+		 * Create a new {@link Deactivated} event with the {@link KeyOperation.DeactivateKey} operation
+		 * and the {@link EntityId entity identifier} of the {@link Namespace} that is specified as
+		 * the owner of the keyset.
 		 *
-		 * @param id entity identifier of the keyset scheduled for removal
+		 * @param operation deactivate key operation
 		 * @param namespace entity identifier of the namespace
 		 */
-		public Removed(EntityId id, EntityId namespace) {
-			super(id, namespace);
+		Deactivated(KeyOperation.DeactivateKey operation, EntityId namespace) {
+			super(operation, namespace);
+		}
+
+		/**
+		 * Create a new {@link Deactivated} event with the identifiers of the {@link KeysetMetadata},
+		 * {@link KeyMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
+		 *
+		 * @param keyset entity identifier of the keyset
+		 * @param key entity identifier of the key that was deactivated
+		 * @param namespace entity identifier of the namespace
+		 */
+		public Deactivated(EntityId keyset, String key, EntityId namespace) {
+			super(keyset, key, namespace);
 		}
 
 	}
 
 	/**
-	 * Event that would be published when {@link KeysetMetadata} is destroyed.
+	 * Event that would be published when a {@link KeyMetadata} within the {@link KeysetMetadata}
+	 * is activated again.
 	 */
-	@DomainEvent(name = "keyset-disabled", namespace = "kms")
-	public static final class Destroyed extends KeysetManagementEvent {
+	@DomainEvent(name = "keyset-key-reactivated", namespace = "kms")
+	public static final class Reactivated extends KeyEvent {
 
 		/**
-		 * Create a new {@link Removed} event with the {@link EntityId entity identifiers} of the
-		 * {@link KeysetMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
+		 * Create a new {@link Deactivated} event with the {@link KeyOperation.DeactivateKey} operation
+		 * and the {@link EntityId entity identifier} of the {@link Namespace} that is specified as
+		 * the owner of the keyset.
 		 *
-		 * @param id entity identifier of the keyset that was removed
+		 * @param operation reactivate key operation
 		 * @param namespace entity identifier of the namespace
 		 */
-		public Destroyed(EntityId id, EntityId namespace) {
-			super(id, namespace);
+		Reactivated(KeyOperation.ReactivateKey operation, EntityId namespace) {
+			super(operation, namespace);
+		}
+
+		/**
+		 * Create a new {@link Deactivated} event with the identifiers of the {@link KeysetMetadata},
+		 * {@link KeyMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
+		 *
+		 * @param keyset entity identifier of the keyset
+		 * @param key entity identifier of the key that was deactivated
+		 * @param namespace entity identifier of the namespace
+		 */
+		public Reactivated(EntityId keyset, String key, EntityId namespace) {
+			super(keyset, key, namespace);
+		}
+
+	}
+
+	/**
+	 * Event that would be published when a {@link KeyMetadata} within the {@link KeysetMetadata}
+	 * is compromised.
+	 */
+	@DomainEvent(name = "keyset-key-compromised", namespace = "kms")
+	public static final class Compromised extends KeyEvent {
+
+		/**
+		 * Create a new {@link Deactivated} event with the {@link KeyOperation.DeactivateKey} operation
+		 * and the {@link EntityId entity identifier} of the {@link Namespace} that is specified as
+		 * the owner of the keyset.
+		 *
+		 * @param operation destroy key operation
+		 * @param namespace entity identifier of the namespace
+		 */
+		Compromised(KeyOperation.CompromiseKey operation, EntityId namespace) {
+			super(operation, namespace);
+		}
+
+		/**
+		 * Create a new {@link Deleted} event with the identifiers of the {@link KeysetMetadata},
+		 * {@link KeyMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
+		 *
+		 * @param keyset entity identifier of the keyset
+		 * @param key entity identifier of the key that is compromised
+		 * @param namespace entity identifier of the namespace
+		 */
+		public Compromised(EntityId keyset, String key, EntityId namespace) {
+			super(keyset, key, namespace);
+		}
+
+	}
+
+	/**
+	 * Event that would be published when a {@link KeyMetadata} within the {@link KeysetMetadata}
+	 * was restored from the scheduled for destruction state.
+	 */
+	@DomainEvent(name = "keyset-key-restored", namespace = "kms")
+	public static final class Restored extends KeyEvent {
+
+		/**
+		 * Create a new {@link Deactivated} event with the {@link KeyOperation.DeactivateKey} operation
+		 * and the {@link EntityId entity identifier} of the {@link Namespace} that is specified as
+		 * the owner of the keyset.
+		 *
+		 * @param operation restore key operation
+		 * @param namespace entity identifier of the namespace
+		 */
+		Restored(KeyOperation.RestoreKey operation, EntityId namespace) {
+			super(operation, namespace);
+		}
+
+		/**
+		 * Create a new {@link Deactivated} event with the identifiers of the {@link KeysetMetadata},
+		 * {@link KeyMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
+		 *
+		 * @param keyset entity identifier of the keyset
+		 * @param key entity identifier of the key that was restored
+		 * @param namespace entity identifier of the namespace
+		 */
+		public Restored(EntityId keyset, String key, EntityId namespace) {
+			super(keyset, key, namespace);
+		}
+
+	}
+
+	/**
+	 * Event that would be published when a {@link KeyMetadata} within the {@link KeysetMetadata}
+	 * is scheduled for destruction.
+	 */
+	@DomainEvent(name = "keyset-key-destroyed", namespace = "kms")
+	public static final class Destroyed extends KeyEvent {
+
+		/**
+		 * Create a new {@link Destroyed} event with the {@link KeyOperation.DeactivateKey} operation
+		 * and the {@link EntityId entity identifier} of the {@link Namespace} that is specified as
+		 * the owner of the keyset.
+		 *
+		 * @param operation destroy key operation
+		 * @param namespace entity identifier of the namespace
+		 */
+		Destroyed(KeyOperation.DestroyKey operation, EntityId namespace) {
+			super(operation, namespace);
+		}
+
+		/**
+		 * Create a new {@link Destroyed} event with the identifiers of the {@link KeysetMetadata},
+		 * {@link KeyMetadata} and the {@link Namespace} that is specified as the owner of the keyset.
+		 *
+		 * @param keyset entity identifier of the keyset
+		 * @param key entity identifier of the key that should be destroyed
+		 * @param namespace entity identifier of the namespace
+		 */
+		public Destroyed(EntityId keyset, String key, EntityId namespace) {
+			super(keyset, key, namespace);
 		}
 
 	}

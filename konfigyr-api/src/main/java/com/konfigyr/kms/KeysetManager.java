@@ -10,6 +10,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,51 +34,44 @@ import java.util.Set;
 public interface KeysetManager {
 
 	/**
-	 * Performs a lookup of available {@link KeysetMetadata} that are matching the
-	 * filter {@link SearchQuery} filter criteria.
+	 * Performs a lookup of available {@link KeysetMetadata} within the given {@link Namespace}
+	 * that are matching the filter {@link SearchQuery} filter criteria.
 	 *
+	 * @param namespace The namespace that owns the keysets, can't be {@literal null}.
 	 * @param query search query, can't be {@literal null}.
 	 * @return matching keyset metadata page, never {@literal null}.
 	 */
-	Page<KeysetMetadata> find(SearchQuery query);
+	Page<KeysetMetadata> find(Namespace namespace, SearchQuery query);
 
 	/**
-	 * Retrieves the current metadata for a specific Keyset by its unique identifier.
+	 * Retrieves the current metadata for a specific Keyset by its unique identifier
+	 * that belongs to the specific {@link Namespace}.
 	 *
+	 * @param namespace The namespace that owns the keyset, can't be {@literal null}.
 	 * @param id The unique identifier of the keyset metadata, can't be {@literal null}.
 	 * @return matching metadata or empty, never {@literal null}
 	 */
-	Optional<KeysetMetadata> get(EntityId id);
+	Optional<KeysetMetadata> get(Namespace namespace, EntityId id);
 
 	/**
-	 * Retrieves the current metadata for a specific Keyset by its unique identifier that belongs
-	 * to the specific {@link Namespace}.
+	 * Retrieves the {@link KeysetOperations} for a specific Keyset by its unique identifier
+	 * that belongs to the specific {@link Namespace}.
 	 *
-	 * @param namespace The unique identifier of the namespace, can't be {@literal null}.
-	 * @param id The unique identifier of the keyset metadata, can't be {@literal null}.
-	 * @return matching metadata or empty, never {@literal null}
-	 */
-	Optional<KeysetMetadata> get(EntityId namespace, EntityId id);
-
-	/**
-	 * Retrieves the {@link KeysetOperations} for a specific Keyset by its unique identifier.
-	 *
-	 * @param id The unique identifier of the keyset metadata, can't be {@literal null}.
-	 * @return the keyset operations, never {@literal null}
-	 * @throws KeysetNotFoundException when no such keyset exists.
-	 */
-	KeysetOperations operations(EntityId id);
-
-	/**
-	 * Retrieves the {@link KeysetOperations} for a specific Keyset by its unique identifier that belongs
-	 * to the specific {@link Namespace}.
-	 *
-	 * @param namespace The unique identifier of the namespace, can't be {@literal null}.
+	 * @param namespace The namespace that owns the keyset, can't be {@literal null}.
 	 * @param id The unique identifier of the keyset metadata, can't be {@literal null}.
 	 * @return the keyset operations, never {@literal null}
 	 * @throws KeysetNotFoundException when no such keyset exists for a namespace.
 	 */
-	KeysetOperations operations(EntityId namespace, EntityId id);
+	KeysetOperations operations(Namespace namespace, EntityId id);
+
+	/**
+	 * Retrieves the {@link KeyMetadata keys} for a specific Keyset.
+	 *
+	 * @param keyset The keyset metadata for which to retrieve the keys, can't be {@literal null}.
+	 * @return the key metadata contained within the keyset, never {@literal null}
+	 * @throws KeysetNotFoundException when no such keyset exists.
+	 */
+	List<KeyMetadata> keys(KeysetMetadata keyset);
 
 	/**
 	 * Provisions a new {@link com.konfigyr.crypto.Keyset} for a specific {@link Namespace}.
@@ -85,36 +79,39 @@ public interface KeysetManager {
 	 * The implementations of this interface should publish an {@link KeysetManagementEvent.Created} event
 	 * when a new Keyset was successfully created.
 	 *
+	 * @param namespace The namespace that would own the keyset, can't be {@literal null}.
 	 * @param definition The definition of the Keyset to be created, can't be {@literal null}.
 	 * @return The newly created Keyset metadata, never {@literal null}.
 	 */
 	@DomainEventPublisher(publishes = "kms.keyset-created")
-	KeysetMetadata create(KeysetMetadataDefinition definition);
+	KeysetMetadata create(Namespace namespace, KeysetMetadataDefinition definition);
 
 	/**
 	 * Updates the description or tags for a specific keyset metadata.
 	 *
-	 * @param id The identifier of the keyset to update, can't be {@literal null}.
+	 * @param keyset The keyset to update, can't be {@literal null}.
 	 * @param description The new description for the keyset, can be {@literal null}.
 	 * @param tags The new tags for the keyset, can be {@literal null}.
 	 * @return The updated keyset metadata, never {@literal null}.
 	 */
-	KeysetMetadata update(EntityId id, @Nullable String description, @Nullable Set<String> tags);
+	KeysetMetadata update(KeysetMetadata keyset, @Nullable String description, @Nullable Set<String> tags);
 
 	/**
 	 * Transitions the keyset to the new target state. Implementations of this interface should
 	 * publish these events when transition is successful:
 	 * <ul>
-	 *     <li>{@link KeysetManagementEvent.Activated} - when a disabled keyset is reactivated</li>
-	 *     <li>{@link KeysetManagementEvent.Disabled} - when active keyset is disabled</li>
-	 *     <li>{@link KeysetManagementEvent.Removed} - when keyset is scheduled for destruction</li>
+	 *     <li>{@link KeysetManagementEvent.Reactivated} - when a disabled key is reactivated</li>
+	 *     <li>{@link KeysetManagementEvent.Deactivated} - when a key is deactivated</li>
+	 *     <li>{@link KeysetManagementEvent.Compromised} - when a key marked as compromised</li>
+	 *     <li>{@link KeysetManagementEvent.Restored} - when scheduled key destruction was canceled</li>
+	 *     <li>{@link KeysetManagementEvent.Destroyed} - when a key is scheduled for destruction</li>
 	 * </ul>
 	 *
-	 * @param id The identifier of the keyset to transition, can't be {@literal null}.
-	 * @param state The target state of the keyset, can't be {@literal null}.
+	 * @param namespace The namespace that would own the key and keyset, can't be {@literal null}.
+	 * @param operation The key transition operation to be performed, can't be {@literal null}
 	 * @return The updated keyset metadata, never {@literal null}.
 	 */
-	KeysetMetadata transition(EntityId id, KeysetMetadataState state);
+	KeysetMetadata transition(Namespace namespace, KeyOperation operation);
 
 	/**
 	 * Rotates the keyset by adding a new primary key that would be used for cryptographic operations.
@@ -125,21 +122,41 @@ public interface KeysetManager {
 	 * The implementations of this interface should publish an {@link KeysetManagementEvent.Created} event
 	 * when a new Keyset was successfully created.
 	 *
+	 * @param namespace The namespace that owns the keyset, can't be {@literal null}.
 	 * @param id The identifier of the keyset to rotate, can't be {@literal null}.
 	 * @return The rotated keyset metadata, never {@literal null}.
 	 */
 	@DomainEventPublisher(publishes = "kms.keyset-rotated")
-	KeysetMetadata rotate(EntityId id);
+	KeysetMetadata rotate(Namespace namespace, EntityId id);
+
+	/**
+	 * Rotates the keyset by adding a new primary key with a specified {@link KeysetMetadataAlgorithm}
+	 * that would be used for cryptographic operations.
+	 * <p>
+	 * The previous primary key remains available for decryption, or signature verification, but the new key
+	 * will be used for all future encryption.
+	 * <p>
+	 * The implementations of this interface should publish an {@link KeysetManagementEvent.Created} event
+	 * when a new Keyset was successfully created.
+	 *
+	 * @param namespace The namespace that owns the keyset, can't be {@literal null}.
+	 * @param id The identifier of the keyset to rotate, can't be {@literal null}.
+	 * @param algorithm the algorithm to use for the new key, can be {@literal null}.
+	 * @return The rotated keyset metadata, never {@literal null}.
+	 */
+	@DomainEventPublisher(publishes = "kms.keyset-rotated")
+	KeysetMetadata rotate(Namespace namespace, EntityId id, @Nullable KeysetMetadataAlgorithm algorithm);
 
 	/**
 	 * Destroys the keyset and all associated data. This is a permanent operation and cannot be undone.
 	 * <p>
-	 * The implementations of this interface should publish an {@link KeysetManagementEvent.Destroyed} event
+	 * The implementations of this interface should publish an {@link KeysetManagementEvent.Deleted} event
 	 * when a new Keyset was successfully created.
 	 *
+	 * @param namespace the namespace that owns the keyset, can't be {@literal null}.
 	 * @param id The identifier of the keyset to delete, can't be {@literal null}.
 	 */
 	@DomainEventPublisher(publishes = "kms.keyset-destroyed")
-	void delete(EntityId id);
+	void delete(Namespace namespace, EntityId id);
 
 }

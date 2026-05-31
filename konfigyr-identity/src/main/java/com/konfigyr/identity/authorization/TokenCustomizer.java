@@ -7,6 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.security.oauth2.jose.jws.JwsAlgorithm;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
@@ -21,6 +23,7 @@ import java.util.List;
 
 final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
+	static final JwsAlgorithm SIGNING_ALGORITHM = SignatureAlgorithm.PS256;
 	static final OAuth2TokenType ID_TOKEN_TOKEN_TYPE = new OAuth2TokenType(OidcParameterNames.ID_TOKEN);
 
 	private final List<String> audiences;
@@ -31,6 +34,9 @@ final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext>
 
 	@Override
 	public void customize(@NonNull JwtEncodingContext context) {
+		// always use PS256 for signing the JWS
+		context.getJwsHeader().algorithm(SIGNING_ALGORITHM);
+
 		if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
 			context.getClaims().audience(audiences);
 

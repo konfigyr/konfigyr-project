@@ -89,8 +89,7 @@ public final class MessageDigestConverter extends AbstractConverter<ByteArray, B
 			return ByteArray.empty();
 		}
 
-		final byte[] hash = digest.digest(value.array());
-		return new ByteArray(hash);
+		return value.digest(digest);
 	}
 
 }

@@ -11,8 +11,6 @@ import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
-import org.bouncycastle.crypto.Digest;
-import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -75,7 +73,7 @@ class KmsOperationController {
 	@NullMarked
 	private Map<String, Object> execute(String slug, EntityId id, KeysetOperationPerformer performer) {
 		final Namespace namespace = namespaces.findBySlug(slug).orElseThrow(() -> new NamespaceNotFoundException(slug));
-		final KeysetOperations operations = manager.operations(namespace.id(), id);
+		final KeysetOperations operations = manager.operations(namespace, id);
 
 		return performer.perform(operations);
 	}
@@ -101,15 +99,9 @@ class KmsOperationController {
 					StringUtils.hasText(aad()) ? ByteArray.fromString(aad()) : null
 			);
 
-			final Digest digest = new SHA256Digest();
-			digest.update(ciphertext.array(), 0, ciphertext.size());
-
-			final byte[] checksum = new byte[digest.getDigestSize()];
-			digest.doFinal(checksum, 0);
-
 			return Map.of(
-					"ciphertext", ciphertext.encode(),
-					"checksum", new ByteArray(checksum).encode()
+					"ciphertext", ciphertext.encodeBase64(),
+					"checksum", ciphertext.digest("SHA-256").encodeHex()
 			);
 		}
 
@@ -125,7 +117,7 @@ class KmsOperationController {
 					StringUtils.hasText(aad()) ? ByteArray.fromString(aad()) : null
 			);
 
-			return Map.of("plaintext", new String(plaintext.array(), StandardCharsets.UTF_8));
+			return Map.of("plaintext", plaintext.toString(StandardCharsets.UTF_8));
 		}
 
 	}
@@ -137,7 +129,7 @@ class KmsOperationController {
 		public Map<String, Object> perform(@NonNull KeysetOperations operations) {
 			final ByteArray signature = operations.sign(ByteArray.fromString(plaintext()));
 
-			return Map.of("signature", signature.encode());
+			return Map.of("signature", signature.encodeBase64());
 		}
 
 	}

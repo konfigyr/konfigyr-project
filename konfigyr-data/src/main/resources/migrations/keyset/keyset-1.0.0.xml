@@ -1,42 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    
-    <changeSet author="vspasic" id="1.0.0-create-keysets-table" context="identity or api">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <tableExists tableName="KEYSETS"/>
-            </not>
-        </preConditions>
+		xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-        <comment>Table that stores encrypted data encryption keysets</comment>
+	<changeSet author="vspasic" id="1.0.0-create-keysets-table" context="identity or api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="KEYSETS"/>
+			</not>
+		</preConditions>
 
-        <createTable tableName="KEYSETS">
-            <column name="KEYSET_NAME" type="VARCHAR(64)">
-                <constraints nullable="false" primaryKey="true"/>
-            </column>
+		<comment>Table that stores encrypted data encryption keysets</comment>
 
-            <column name="KEYSET_ALGORITHM" type="VARCHAR(64)">
-                <constraints nullable="false"/>
-            </column>
+		<createTable tableName="KEYSETS">
+			<column name="KEYSET_NAME" type="VARCHAR(120)">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="KEYSETS_PK"/>
+			</column>
+			<column name="KEYSET_PURPOSE" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEYSET_FACTORY" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEYSET_VERSION" type="BIGINT" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEYSET_PROVIDER" type="VARCHAR(120)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEYSET_KEK" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="ROTATION_INTERVAL" type="BIGINT"/>
+			<column name="DESTRUCTION_GRACE_PERIOD" type="BIGINT"/>
+		</createTable>
+	</changeSet>
 
-            <column name="KEYSET_PROVIDER" type="VARCHAR(32)">
-                <constraints nullable="false"/>
-            </column>
+	<changeSet author="vspasic" id="1.0.0-create-keyset-keys-table" context="identity or api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="KEYSET_KEYS"/>
+			</not>
+		</preConditions>
 
-            <column name="KEYSET_KEK" type="VARCHAR(128)">
-                <constraints nullable="false"/>
-            </column>
+		<comment>Table that stores individual key material entries within a keyset</comment>
 
-            <column name="KEYSET_DATA" type="BINARY">
-                <constraints nullable="false"/>
-            </column>
+		<createTable tableName="KEYSET_KEYS">
+			<column name="KEYSET_NAME" type="VARCHAR(120)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEY_ID" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEY_ALGORITHM" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEY_TYPE" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEY_STATUS" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEY_PRIMARY" type="BOOLEAN">
+				<constraints nullable="false"/>
+			</column>
+			<column name="KEY_DATA" type="BINARY"/>
+			<column name="CREATED_AT" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="INITIALIZED_AT" type="BIGINT"/>
+			<column name="EXPIRES_AT" type="BIGINT"/>
+			<column name="DESTRUCTION_SCHEDULED_AT" type="BIGINT"/>
+			<column name="DESTROYED_AT" type="BIGINT"/>
+		</createTable>
 
-            <column name="ROTATION_INTERVAL" type="BIGINT"/>
+		<addPrimaryKey
+				tableName="KEYSET_KEYS"
+				columnNames="KEYSET_NAME, KEY_ID"
+				constraintName="KEYSET_KEYS_PK"
+		/>
 
-            <column name="NEXT_ROTATION_TIME" type="BIGINT"/>
-        </createTable>
-    </changeSet>
+		<addForeignKeyConstraint
+				baseTableName="KEYSET_KEYS"
+				baseColumnNames="KEYSET_NAME"
+				constraintName="KEYSET_KEYS_FK"
+				referencedTableName="KEYSETS"
+				referencedColumnNames="KEYSET_NAME"
+				onDelete="CASCADE"
+		/>
+	</changeSet>
 </databaseChangeLog>

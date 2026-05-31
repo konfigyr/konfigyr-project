@@ -4,10 +4,20 @@ import {
   FolderLockIcon,
 } from 'lucide-react';
 import { FormattedDate, FormattedMessage } from 'react-intl';
+import { Link } from '@tanstack/react-router';
 import { ErrorState } from '@konfigyr/components/error';
-import { CreatedAtLabel, DeleteLabel, UpdatedAtLabel } from '@konfigyr/components/messages';
+import {
+  CreatedAtLabel,
+  DeleteLabel,
+  UpdatedAtLabel,
+  ViewLabel,
+} from '@konfigyr/components/messages';
 import { Badge } from '@konfigyr/components/ui/badge';
 import { Button } from '@konfigyr/components/ui/button';
+import {
+  Card,
+  CardContent,
+} from '@konfigyr/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,14 +37,12 @@ import {
   TableRow,
 } from '@konfigyr/components/ui/table';
 import { KeysetAlgorithmName } from './keyset-algorithm';
-import { KeysetState } from './keyset-state';
+import { KeysetStateBadge } from './keyset-state';
 import {
   KeysetAlgorithmLabel,
   KeysetDecryptLabel,
-  KeysetDisableLabel,
   KeysetEncryptLabel,
   KeysetNameLabel,
-  KeysetReactivateLabel,
   KeysetRotateLabel,
   KeysetSignLabel,
   KeysetStateLabel,
@@ -60,14 +68,16 @@ function useOperationSelectedCallback(
   }, [operation, onOperationSelected, keyset]);
 }
 
-function KeysetDropdownMenu({ keyset, onOperationSelected }: { keyset: Keyset, onOperationSelected: (operation: SelectedOperation) => void }) {
+function KeysetDropdownMenu({ namespace, keyset, onOperationSelected }: {
+  namespace: Namespace,
+  keyset: Keyset;
+  onOperationSelected: (operation: SelectedOperation) => void;
+}) {
   const onEncrypt = useOperationSelectedCallback(keyset, 'encrypt', onOperationSelected);
   const onDecrypt = useOperationSelectedCallback(keyset, 'decrypt', onOperationSelected);
   const onSign = useOperationSelectedCallback(keyset, 'sign', onOperationSelected);
   const onVerify = useOperationSelectedCallback(keyset, 'verify', onOperationSelected);
-  const onReactivate = useOperationSelectedCallback(keyset, 'reactivate', onOperationSelected);
   const onRotate = useOperationSelectedCallback(keyset, 'rotate', onOperationSelected);
-  const onDisable = useOperationSelectedCallback(keyset, 'disable', onOperationSelected);
   const onDestroy = useOperationSelectedCallback(keyset, 'destroy', onOperationSelected);
 
   return (
@@ -81,22 +91,19 @@ function KeysetDropdownMenu({ keyset, onOperationSelected }: { keyset: Keyset, o
       />
       <DropdownMenuContent className="w-68">
         <DropdownMenuGroup>
-          <DropdownMenuItem>Edit</DropdownMenuItem>
+          <DropdownMenuItem
+            render={
+              <Link
+                to="/namespace/$namespace/kms/$keyset"
+                params={{ namespace: namespace.slug, keyset: keyset.id }}
+              >
+                <ViewLabel />
+              </Link>
+            }
+          />
           <DropdownMenuItem disabled={keyset.state !== 'ACTIVE'} onClick={onRotate}>
             <KeysetRotateLabel />
           </DropdownMenuItem>
-
-          {keyset.state === 'INACTIVE' && (
-            <DropdownMenuItem onClick={onReactivate}>
-              <KeysetReactivateLabel />
-            </DropdownMenuItem>
-          )}
-
-          {keyset.state === 'ACTIVE' && (
-            <DropdownMenuItem onClick={onDisable}>
-              <KeysetDisableLabel />
-            </DropdownMenuItem>
-          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -124,35 +131,39 @@ function KeysetDropdownMenu({ keyset, onOperationSelected }: { keyset: Keyset, o
   );
 }
 
-function KeysetRow({ keyset, onOperationSelected }: { keyset: Keyset, onOperationSelected: (operation: SelectedOperation) => void }) {
+function KeysetRow({ namespace, keyset, onOperationSelected }: { namespace: Namespace, keyset: Keyset, onOperationSelected: (operation: SelectedOperation) => void }) {
   return (
     <TableRow key={keyset.id}>
       <TableCell>
-        <p className="text-sm leading-snug font-medium">
+        <Link
+          to="/namespace/$namespace/kms/$keyset"
+          params={{ namespace: namespace.slug, keyset: keyset.id }}
+          className="block font-medium underline-offset-2 text-primary hover:underline"
+        >
           {keyset.name}
-        </p>
-        <p className="text-muted-foreground line-clamp-2 text-sm leading-normal font-normal text-balance">
-          {keyset.description}
-        </p>
+        </Link>
       </TableCell>
       <TableCell>
-        <Badge variant="outline" size="sm">
+        <Badge variant="outline">
           <KeysetAlgorithmName algorithm={keyset.algorithm} />
         </Badge>
       </TableCell>
       <TableCell>
-        <Badge variant="outline" size="sm">
-          <KeysetState state={keyset.state} />
-        </Badge>
+        <KeysetStateBadge state={keyset.state} />
       </TableCell>
       <TableCell>
-        <FormattedDate value={keyset.createdAt} />
+        <time dateTime={keyset.createdAt}>
+          <FormattedDate value={keyset.createdAt} />
+        </time>
       </TableCell>
       <TableCell>
-        <FormattedDate value={keyset.updatedAt} />
+        <time dateTime={keyset.updatedAt}>
+          <FormattedDate value={keyset.updatedAt} />
+        </time>
       </TableCell>
       <TableCell>
         <KeysetDropdownMenu
+          namespace={namespace}
           keyset={keyset}
           onOperationSelected={onOperationSelected}
         />
@@ -203,68 +214,71 @@ export function KeysetTable({ namespace, keysets, error, isPending }: {
   const [operation, setOperation] = useState<null | SelectedOperation>(null);
 
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-64">
-              <KeysetNameLabel />
-            </TableHead>
-            <TableHead className="w-48">
-              <KeysetAlgorithmLabel />
-            </TableHead>
-            <TableHead className="w-32">
-              <KeysetStateLabel />
-            </TableHead>
-            <TableHead className="w-32">
-              <CreatedAtLabel />
-            </TableHead>
-            <TableHead className="w-32">
-              <UpdatedAtLabel />
-            </TableHead>
-            <TableHead className="w-6"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isPending && (
-            <LoadingSkeleton />
-          )}
+    <Card className="border">
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-64">
+                <KeysetNameLabel />
+              </TableHead>
+              <TableHead className="w-48">
+                <KeysetAlgorithmLabel />
+              </TableHead>
+              <TableHead className="w-32">
+                <KeysetStateLabel />
+              </TableHead>
+              <TableHead className="w-32">
+                <CreatedAtLabel />
+              </TableHead>
+              <TableHead className="w-32">
+                <UpdatedAtLabel />
+              </TableHead>
+              <TableHead className="w-6"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isPending && (
+              <LoadingSkeleton />
+            )}
 
-          {error && (
-            <tr>
-              <td colSpan={6} className="p-6">
-                <ErrorState error={error} />
-              </td>
-            </tr>
-          )}
+            {error && (
+              <tr>
+                <td colSpan={6} className="p-6">
+                  <ErrorState error={error} />
+                </td>
+              </tr>
+            )}
 
-          {(keysets && keysets.length === 0) && (
-            <tr>
-              <td colSpan={6}>
-                <EmptyState
-                  icon={<FolderLockIcon size="2rem" />}
-                  title={<FormattedMessage
-                    defaultMessage="No keysets found"
-                    description="Empty state title when no KMS keysets are found."
-                  />}
-                  description={<FormattedMessage
-                    defaultMessage="We could not find any keysets matching your search criteria. Why don't you create one?"
-                    description="Empty state description when no KMS keysets are found."
-                  />}
-                />
-              </td>
-            </tr>
-          )}
+            {(keysets && keysets.length === 0) && (
+              <tr>
+                <td colSpan={6}>
+                  <EmptyState
+                    icon={<FolderLockIcon size="2rem" />}
+                    title={<FormattedMessage
+                      defaultMessage="No keysets found"
+                      description="Empty state title when no KMS keysets are found."
+                    />}
+                    description={<FormattedMessage
+                      defaultMessage="We could not find any keysets matching your search criteria. Why don't you create one?"
+                      description="Empty state description when no KMS keysets are found."
+                    />}
+                  />
+                </td>
+              </tr>
+            )}
 
-          {keysets?.map((keyset) => (
-            <KeysetRow
-              key={keyset.id}
-              keyset={keyset}
-              onOperationSelected={setOperation}
-            />
-          ))}
-        </TableBody>
-      </Table>
+            {keysets?.map((keyset) => (
+              <KeysetRow
+                key={keyset.id}
+                namespace={namespace}
+                keyset={keyset}
+                onOperationSelected={setOperation}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
 
       {operation && (
         <KeysetOperationDialog
@@ -274,7 +288,7 @@ export function KeysetTable({ namespace, keysets, error, isPending }: {
           onClose={() => setOperation(null)}
         />
       )}
-    </>
+    </Card>
   );
 
 }

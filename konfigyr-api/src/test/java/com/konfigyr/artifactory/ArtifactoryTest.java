@@ -42,7 +42,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.returns(coordinates.version().get(), VersionedArtifact::version)
 				.returns("Konfigyr Crypto API", VersionedArtifact::name)
 				.returns("Spring Boot Crypto API library", VersionedArtifact::description)
-				.returns("_dDqvCohLTXiFVbzK9EPgoFqx7LMj_PHtd_5ycpeV8s=", VersionedArtifact::checksum)
+				.returns("fdd0eabc2a212d35e21556f32bd10f82816ac7b2cc8ff3c7b5dff9c9ca5e57cb", VersionedArtifact::checksum)
 				.returns(null, VersionedArtifact::website)
 				.returns(URI.create("https://github.com/konfigyr/konfigyr-crypto"), VersionedArtifact::repository)
 				.satisfies(it -> assertThat(it.releasedAt())
@@ -88,7 +88,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.returns(artifact.website(), VersionedArtifact::website)
 				.returns(artifact.repository(), VersionedArtifact::repository)
 				.returns(ReleaseState.PENDING, VersionedArtifact::state)
-				.returns("jZ1Tz9XSf-v4K68PjYAVRTWMHPIePVTPnC5cW6F1S5g=", VersionedArtifact::checksum)
+				.returns("8d9d53cfd5d27febf82baf0f8d801545358c1cf21e3d54cf9c2e5c5ba1754b98", VersionedArtifact::checksum)
 				.satisfies(it -> assertThat(it.releasedAt())
 						.isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS))
 				);

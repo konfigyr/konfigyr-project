@@ -26,10 +26,6 @@
 				<constraints nullable="false"/>
 			</column>
 
-			<column name="state" type="varchar(64)">
-				<constraints nullable="false"/>
-			</column>
-
 			<column name="name" type="varchar(32)">
 				<constraints nullable="false"/>
 			</column>

@@ -2,19 +2,20 @@ import { afterAll, afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { Toaster } from '@konfigyr/components/ui/sonner';
-import { KeysetOperationDialog } from '@konfigyr/components/kms/operation/keyset-operation-dialog';
+import { KeyOperationDialog } from '@konfigyr/components/kms/operation/key-operation-dialog';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
-describe('components | kms | operation | <KeysetDisableOperation/>', () => {
+describe('components | kms | operation | <KeyRestoreOperation/>', () => {
   const onCancel = vi.fn();
 
   const result = renderWithQueryClient((
     <>
-      <KeysetOperationDialog
+      <KeyOperationDialog
         namespace={namespaces.konfigyr}
         keyset={kms.signingKeyset}
-        operation="disable"
+        value={kms.signingKeyset.keys[0]}
+        operation="restore"
         onClose={onCancel}
       />
       <Toaster />
@@ -24,25 +25,24 @@ describe('components | kms | operation | <KeysetDisableOperation/>', () => {
   afterAll(() => cleanup());
   afterEach(() => vi.clearAllMocks());
 
-  test('should render keyset disable confirmation dialog', () => {
+  test('should render restore key confirmation dialog', () => {
     expect(result.getByRole('dialog')).toBeInTheDocument();
-    expect(result.getByRole('dialog')).toHaveAccessibleName('Are you sure you want to disable this keyset?');
+    expect(result.getByRole('dialog')).toHaveAccessibleName('Restore key?');
     expect(result.getByRole('dialog')).toHaveAccessibleDescription(
-      'This operation would prevent any cryptographic operations using the keyset. The cryptographic material would not be removed from the system and can be re-enabled at any time.',
+      'This will cancel the scheduled destruction and move the key back to a disabled state. No data will be lost. The key will not resume operations until it is explicitly reactivated.',
     );
-    expect(result.getByRole('button', { name: 'I understand the risks' })).toBeInTheDocument();
+    expect(result.getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
-  test('should successfully disable keyset', async () => {
+  test('should successfully restore key from scheduled for destruction', async () => {
     await userEvents.click(
-      result.getByRole('button', { name: 'I understand the risks' }),
+      result.getByRole('button', { name: 'Yes, I am sure' }),
     );
 
     await waitFor(() => {
       expect(result.getByRole('alert')).toBeInTheDocument();
-      expect(result.getByRole('alert')).toHaveTextContent('Keyset has been successfully disabled');
+      expect(result.getByRole('alert')).toHaveTextContent('Key restored. Destruction was cancelled and the key is now disabled and will not be used for any operations until reactivated.');
     });
   });
 });

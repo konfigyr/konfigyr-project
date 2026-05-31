@@ -40,7 +40,7 @@ class PropertyDescriptorChecksumGeneratorTest {
 	@DisplayName("should generate checksum from required property metadata properties")
 	void generate() {
 		assertThat(generator.generate(charset()))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
 	}
 
@@ -52,19 +52,19 @@ class PropertyDescriptorChecksumGeneratorTest {
 		doReturn(null).when(metadata).defaultValue();
 
 		assertThat(generator.generate(metadata))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
 
 		doReturn("").when(metadata).defaultValue();
 
 		assertThat(generator.generate(metadata))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
 
 		doReturn("  ").when(metadata).defaultValue();
 
 		assertThat(generator.generate(metadata))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
 	}
 
@@ -76,7 +76,7 @@ class PropertyDescriptorChecksumGeneratorTest {
 		doReturn(StandardCharsets.UTF_8.name()).when(metadata).defaultValue();
 
 		assertThat(generator.generate(metadata))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("WPBXs76PtXbiRomHqPNDLnrmNGdK9D_KtmU0HzsMu3Y=");
 	}
 
@@ -88,19 +88,19 @@ class PropertyDescriptorChecksumGeneratorTest {
 		doReturn(new Deprecation(null, null)).when(metadata).deprecation();
 
 		assertThat(generator.generate(metadata))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
 
 		doReturn(new Deprecation("Some reason", null)).when(metadata).deprecation();
 
 		assertThat(generator.generate(metadata))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("CXAKZEwTR_JKuaJjhikfm__D7P_MRYkEg2v0Y_Cff5o=");
 
 		doReturn(new Deprecation("Some reason", "No replacement")).when(metadata).deprecation();
 
 		assertThat(generator.generate(metadata))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("aY7by7kFORCCs8GPCLmqN43Hjat40-3nwlsNwg19yLA=");
 	}
 
@@ -112,7 +112,7 @@ class PropertyDescriptorChecksumGeneratorTest {
 		doReturn(StringSchema.builder().format("charset").pattern("[a-z]").build()).when(metadata).schema();
 
 		assertThat(generator.generate(metadata))
-				.extracting(ByteArray::encode)
+				.extracting(ByteArray::encodeBase64Url)
 				.isEqualTo("SHljs6oOzyDuThdXWHsCRWEFhpe551WOtVnNcUj08D8=");
 	}
 

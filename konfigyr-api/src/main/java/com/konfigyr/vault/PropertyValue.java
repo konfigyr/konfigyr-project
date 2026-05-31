@@ -1,15 +1,16 @@
 package com.konfigyr.vault;
 
-import com.google.crypto.tink.subtle.Hex;
 import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
+import org.springframework.util.Assert;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -95,6 +96,8 @@ public abstract sealed class PropertyValue implements Supplier<ByteArray>, Seria
 	protected final ByteArray checksum;
 
 	protected PropertyValue(ByteArray value, ByteArray checksum) {
+		Assert.isTrue(!value.isEmpty(), "Property value can not be empty");
+		Assert.isTrue(!value.isEmpty(), "Property checksum can not be empty");
 		this.value = value;
 		this.checksum = checksum;
 	}
@@ -152,6 +155,16 @@ public abstract sealed class PropertyValue implements Supplier<ByteArray>, Seria
 	 */
 	public abstract PropertyValue unseal(KeysetOperations operations);
 
+	/**
+	 * Converts the underlying value to a {@link String} using the given {@link Charset}.
+	 *
+	 * @param charset the charset to use for conversion, cannot be {@literal null}.
+	 * @return the converted string, never {@literal null}.
+	 */
+	public final String toString(Charset charset) {
+		return value.toString(charset);
+	}
+
 	@Override
 	public final boolean equals(Object o) {
 		if (!(o instanceof PropertyValue that)) {
@@ -169,7 +182,7 @@ public abstract sealed class PropertyValue implements Supplier<ByteArray>, Seria
 
 	@Override
 	public String toString() {
-		return (isSealed() ? "Sealed" : "Unsealed") + '(' + Hex.encode(checksum.array()) + ')';
+		return (isSealed() ? "Sealed" : "Unsealed") + '(' + checksum.encodeHex() + ')';
 	}
 
 	/**
@@ -183,6 +196,8 @@ public abstract sealed class PropertyValue implements Supplier<ByteArray>, Seria
 	 * @return the generated checksum, never {@literal null}.
 	 */
 	private static ByteArray generateChecksum(EntityId profile, ConfigurationPropertyName name, ByteArray value) {
+		Assert.isTrue(!value.isEmpty(), "Can not generate property checksum on an empty property value");
+
 		final MessageDigest digest;
 
 		try {

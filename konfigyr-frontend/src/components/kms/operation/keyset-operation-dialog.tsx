@@ -4,7 +4,6 @@ import { useErrorNotification } from '@konfigyr/components/error';
 import {
   KeysetDecryptLabel,
   KeysetEncryptLabel,
-  KeysetReactivateLabel,
   KeysetSignLabel,
   KeysetVerifySignatureLabel,
 } from '@konfigyr/components/kms/messages';
@@ -17,9 +16,7 @@ import {
 } from '@konfigyr/components/ui/dialog';
 import { KeysetDecryptOperation } from './keyset-decrypt-operation';
 import { KeysetDestroyOperation } from './keyset-destroy-operation';
-import { KeysetDisableOperation } from './keyset-disable-operation';
 import { KeysetEncryptOperation } from './keyset-encrypt-operation';
-import { KeysetReactivateOperation } from './keyset-reactivate-operation';
 import { KeysetRotateOperation } from './keyset-rotate-operation';
 import { KeysetSigningOperation } from './keyset-sign-operation';
 import { KeysetVerifySignatureOperation } from './keyset-verify-operation';
@@ -27,7 +24,7 @@ import { KeysetVerifySignatureOperation } from './keyset-verify-operation';
 import type { Namespace } from '@konfigyr/hooks/namespace/types';
 import type { Keyset, KeysetOperation } from '@konfigyr/hooks/kms/types';
 
-export type OperationDialogOperation = KeysetOperation | 'rotate' | 'reactivate' | 'disable' | 'destroy';
+export type OperationDialogOperation = KeysetOperation | 'rotate' | 'destroy';
 
 function OperationDialogTitle({ operation }: { operation: OperationDialogOperation }) {
   switch (operation) {
@@ -39,17 +36,10 @@ function OperationDialogTitle({ operation }: { operation: OperationDialogOperati
       return <KeysetSignLabel />;
     case 'verify':
       return <KeysetVerifySignatureLabel />;
-    case 'reactivate':
-      return <KeysetReactivateLabel />;
     case 'rotate':
       return <FormattedMessage
         defaultMessage="Generate a new primary key now?"
         description="Title of the KMS key rotation operation confirmation dialog."
-      />;
-    case 'disable':
-      return <FormattedMessage
-        defaultMessage="Are you sure you want to disable this keyset?"
-        description="Title of the KMS keyset disable operation confirmation dialog."
       />;
     case 'destroy':
       return <FormattedMessage
@@ -91,25 +81,11 @@ function OperationDialogDescription({ operation }: { operation: OperationDialogO
           description="Description of the signature verification operation dialog."
         />
       );
-    case 'reactivate':
-      return (
-        <FormattedMessage
-          defaultMessage="This operation restores the keyset to an active state, permitting all associated cryptographic functions."
-          description="Description of the keyset reactivation operation dialog."
-        />
-      );
     case 'rotate':
       return (
         <FormattedMessage
           defaultMessage="Generates a new primary key for future operations. The previous key is retained for decryption and signature verification."
           description="Description of the key rotation operation dialog."
-        />
-      );
-    case 'disable':
-      return (
-        <FormattedMessage
-          defaultMessage="This operation would prevent any cryptographic operations using the keyset. The cryptographic material would not be removed from the system and can be re-enabled at any time."
-          description="Description of the keyset disable operation dialog."
         />
       );
     case 'destroy':
@@ -187,24 +163,8 @@ export function KeysetOperationDialog({ namespace, keyset, operation, onClose }:
           />
         )}
 
-        {operation === 'reactivate' && (
-          <KeysetReactivateOperation
-            namespace={namespace}
-            keyset={keyset}
-            onCancel={onCloseDialog}
-          />
-        )}
-
         {operation === 'rotate' && (
           <KeysetRotateOperation
-            namespace={namespace}
-            keyset={keyset}
-            onCancel={onCloseDialog}
-          />
-        )}
-
-        {operation === 'disable' && (
-          <KeysetDisableOperation
             namespace={namespace}
             keyset={keyset}
             onCancel={onCloseDialog}

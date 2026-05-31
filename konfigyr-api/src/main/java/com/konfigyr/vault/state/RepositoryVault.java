@@ -58,10 +58,9 @@ final class RepositoryVault implements Vault {
 		final Properties state = state();
 		final Map<String, String> properties = new LinkedHashMap<>(state.size());
 
-		state.forEachProperty((name, value) -> {
-			final PropertyValue unsealed = value.unseal(keysetOperations);
-			properties.put(name, new String(unsealed.get().array(), StandardCharsets.UTF_8));
-		});
+		state.forEachProperty((name, value) -> properties.put(
+				name, value.unseal(keysetOperations).toString(StandardCharsets.UTF_8)
+		));
 
 		return Collections.unmodifiableMap(properties);
 	}

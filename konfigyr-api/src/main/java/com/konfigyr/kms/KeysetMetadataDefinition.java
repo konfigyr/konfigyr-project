@@ -1,8 +1,5 @@
 package com.konfigyr.kms;
 
-import com.konfigyr.crypto.KeysetDefinition;
-import com.konfigyr.entity.EntityId;
-import com.konfigyr.support.Slug;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -19,7 +16,6 @@ import java.util.Set;
 /**
  * Record used to define a {@link KeysetMetadata} that would be created by the KMS.
  *
- * @param namespace The namespace identifier used as the owner of the keyset metadata, can't be {@literal null}.
  * @param algorithm The algorithm used by the keyset, can't be {@literal null}.
  * @param name The name of the keyset, can't be {@literal null}.
  * @param description The description of the keyset, can be {@literal null}.
@@ -32,7 +28,6 @@ import java.util.Set;
 @NullMarked
 @ValueObject
 public record KeysetMetadataDefinition(
-		EntityId namespace,
 		KeysetMetadataAlgorithm algorithm,
 		String name,
 		@Nullable String description,
@@ -42,21 +37,6 @@ public record KeysetMetadataDefinition(
 
 	@Serial
 	private static final long serialVersionUID = 283753676517870624L;
-
-	/**
-	 * Creates a {@link KeysetDefinition} from this {@link KeysetMetadataDefinition} that would create
-	 * a {@link com.konfigyr.crypto.Keyset} with cryptographic material that would be linked to the
-	 * {@link KeysetMetadata} when it is created.
-	 *
-	 * @return the keyset definition, never {@literal null}.
-	 * @see com.konfigyr.crypto.Keyset
-	 * @see com.konfigyr.crypto.KeysetStore
-	 */
-	KeysetDefinition toKeysetDefinition() {
-		// generates the name of the keyset based on the namespace and the slugified keyset name
-		final String name = "%019d-%s".formatted(namespace.get(), Slug.slugify(this.name));
-		return KeysetDefinition.of(name, algorithm.get(), rotationInterval);
-	}
 
 	/**
 	 * Creates a new {@link Builder fluent builder} instance used to create the {@link KeysetMetadataDefinition} record.
@@ -71,7 +51,6 @@ public record KeysetMetadataDefinition(
 	 * Fluent builder type used to create an {@link KeysetMetadataDefinition}.
 	 */
 	public static final class Builder {
-		@Nullable private EntityId namespace;
 		@Nullable private KeysetMetadataAlgorithm algorithm;
 		@Nullable private String name;
 		@Nullable private String description;
@@ -80,40 +59,6 @@ public record KeysetMetadataDefinition(
 
 		private Builder() {
 			this.tags = new LinkedHashSet<>();
-		}
-
-		/**
-		 * Specify the internal {@link EntityId} of the {@link com.konfigyr.namespace.Namespace} that would be
-		 * specified as the owner for this {@link KeysetMetadata}.
-		 *
-		 * @param namespace internal namespace identifier
-		 * @return keyset metadata definition builder
-		 */
-		public Builder namespace(@Nullable Long namespace) {
-			return namespace(namespace == null ? null : EntityId.from(namespace));
-		}
-
-		/**
-		 * Specify the external {@link EntityId} of the {@link com.konfigyr.namespace.Namespace} that would be
-		 * specified as the owner for this {@link KeysetMetadata}.
-		 *
-		 * @param namespace external namespace identifier
-		 * @return keyset metadata definition builder
-		 */
-		public Builder namespace(@Nullable String namespace) {
-			return namespace(namespace == null ? null : EntityId.from(namespace));
-		}
-
-		/**
-		 * Specify the {@link EntityId} of the {@link com.konfigyr.namespace.Namespace} that would be
-		 * specified as the owner for this {@link KeysetMetadata}.
-		 *
-		 * @param namespace namespace identifier
-		 * @return keyset metadata definition builder
-		 */
-		public Builder namespace(@Nullable EntityId namespace) {
-			this.namespace = namespace;
-			return this;
 		}
 
 		/**
@@ -194,11 +139,10 @@ public record KeysetMetadataDefinition(
 		 * @throws IllegalArgumentException when required fields are missing or invalid
 		 */
 		public KeysetMetadataDefinition build() {
-			Assert.notNull(namespace, "Namespace entity identifier can not be null");
 			Assert.notNull(algorithm, "Keyset metadata algorithm can not be null");
 			Assert.notNull(name, "Keyset metadata name can not be null");
 
-			return new KeysetMetadataDefinition(namespace, algorithm, name, description, Collections.unmodifiableSet(tags),
+			return new KeysetMetadataDefinition(algorithm, name, description, Collections.unmodifiableSet(tags),
 					rotationInterval == null ? Duration.ofDays(180) : rotationInterval);
 		}
 	}

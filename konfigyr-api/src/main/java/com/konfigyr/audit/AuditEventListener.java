@@ -356,31 +356,53 @@ class AuditEventListener {
 		);
 	}
 
-	@TransactionalEventListener(id = "audit.keyset-disabled", classes = KeysetManagementEvent.Disabled.class)
-	void on(KeysetManagementEvent.Disabled event) {
+	@TransactionalEventListener(id = "audit.keyset-deleted", classes = KeysetManagementEvent.Deleted.class)
+	void on(KeysetManagementEvent.Deleted event) {
 		insert(event, builder -> builder
 				.entityType("keyset")
 				.entityId(event.id())
-				.eventType("keyset.disabled")
+				.eventType("keyset.deleted")
 		);
 	}
 
-	@TransactionalEventListener(id = "audit.keyset-activated", classes = KeysetManagementEvent.Activated.class)
-	void on(KeysetManagementEvent.Activated event) {
+	@TransactionalEventListener(id = "audit.keyset-reactivated", classes = KeysetManagementEvent.Reactivated.class)
+	void on(KeysetManagementEvent.Reactivated event) {
 		insert(event, builder -> builder
 				.namespace(event.namespace())
 				.entityType("keyset")
 				.entityId(event.id())
-				.eventType("keyset.activated")
+				.eventType("keyset.reactivated")
+				.details("key", event.key())
 		);
 	}
 
-	@TransactionalEventListener(id = "audit.keyset-removed", classes = KeysetManagementEvent.Removed.class)
-	void on(KeysetManagementEvent.Removed event) {
+	@TransactionalEventListener(id = "audit.keyset-deactivated", classes = KeysetManagementEvent.Deactivated.class)
+	void on(KeysetManagementEvent.Deactivated event) {
 		insert(event, builder -> builder
 				.entityType("keyset")
 				.entityId(event.id())
-				.eventType("keyset.removed")
+				.eventType("keyset.deactivated")
+				.details("key", event.key())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.keyset-compromised", classes = KeysetManagementEvent.Compromised.class)
+	void on(KeysetManagementEvent.Compromised event) {
+		insert(event, builder -> builder
+				.entityType("keyset")
+				.entityId(event.id())
+				.eventType("keyset.compromised")
+				.details("key", event.key())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.keyset-restored", classes = KeysetManagementEvent.Restored.class)
+	void on(KeysetManagementEvent.Restored event) {
+		insert(event, builder -> builder
+				.entityType("keyset")
+				.entityId(event.id())
+				.eventType("keyset.restored")
+				.details("key", event.key())
 		);
 	}
 
@@ -390,6 +412,7 @@ class AuditEventListener {
 				.entityType("keyset")
 				.entityId(event.id())
 				.eventType("keyset.destroyed")
+				.details("key", event.key())
 		);
 	}
 

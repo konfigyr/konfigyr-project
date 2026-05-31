@@ -20,11 +20,9 @@ const alertVariants = cva(
   },
 );
 
-export function Alert({
-  className,
-  variant,
-  ...props
-}: React.ComponentProps<'div'> & VariantProps<typeof alertVariants>) {
+export type AlertProps = React.ComponentProps<'div'> & VariantProps<typeof alertVariants>;
+
+export function Alert({ className, variant, ...props }: AlertProps) {
   return (
     <div
       data-slot="alert"
@@ -68,5 +66,23 @@ export function AlertAction({ className, ...props }: React.ComponentProps<'div'>
       className={cn('absolute top-2 right-2', className)}
       {...props}
     />
+  );
+}
+
+export function SimpleAlert({ icon, title, description, ...props }: {
+  icon?: React.ReactNode,
+  title?: React.ReactNode,
+  description?: React.ReactNode,
+} & Omit<AlertProps, 'title'>) {
+  const id = React.useId();
+  const titleId = `${id}-alert-title`;
+  const descriptionId = `${id}-alert-description`;
+
+  return (
+    <Alert {...props} aria-labelledby={titleId} aria-describedby={descriptionId}>
+      {icon}
+      <AlertTitle id={titleId}>{title}</AlertTitle>
+      <AlertDescription id={descriptionId}>{description}</AlertDescription>
+    </Alert>
   );
 }

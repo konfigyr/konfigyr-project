@@ -4,13 +4,19 @@ import com.google.crypto.tink.*;
 import com.google.crypto.tink.aead.AeadConfig;
 import com.google.crypto.tink.aead.AesGcmKey;
 import com.google.crypto.tink.aead.AesGcmParameters;
+import com.google.crypto.tink.internal.MutableSerializationRegistry;
+import com.google.crypto.tink.internal.ProtoKeySerialization;
+import com.google.crypto.tink.proto.KeyData;
 import com.google.crypto.tink.util.SecretBytes;
 import com.konfigyr.crypto.*;
+import com.konfigyr.crypto.KeyStatus;
 import com.konfigyr.crypto.tink.TinkAlgorithm;
 import com.konfigyr.crypto.tink.TinkKeyEncryptionKey;
 import com.konfigyr.crypto.tink.TinkKeysetFactory;
 import com.konfigyr.io.ByteArray;
 import org.jspecify.annotations.NonNull;
+
+import java.time.Instant;
 
 /**
  * Utility class used to create an instance of {@link KeysetOperations} for testing purposes.
@@ -58,6 +64,9 @@ public final class TestKeysetOperations {
 		try {
 			AeadConfig.register();
 
+			final SimpleAlgorithmRegistry registry = new SimpleAlgorithmRegistry();
+			registry.register(TinkAlgorithm.AES128_GCM);
+
 			final KeysetDefinition definition = KeysetDefinition.of("test-keyset", TinkAlgorithm.AES128_GCM);
 
 			final AesGcmKey key = AesGcmKey.builder()
@@ -71,19 +80,31 @@ public final class TestKeysetOperations {
 					.setIdRequirement(1)
 					.build();
 
-			final KeysetHandle handle = KeysetHandle.newBuilder()
-					.addEntry(KeysetHandle.importKey(key).makePrimary())
+			final KeyEncryptionKey kek = TinkKeyEncryptionKey.builder("test-provider")
+					.from("test-kek", secret);
+
+			final ProtoKeySerialization serialization = MutableSerializationRegistry.globalInstance()
+					.serializeKey(key, ProtoKeySerialization.class, InsecureSecretKeyAccess.get());
+
+			final KeyData data = KeyData.newBuilder()
+					.setTypeUrl(serialization.getTypeUrl())
+					.setKeyMaterialType(serialization.getKeyMaterialType())
+					.setValue(serialization.getValue())
 					.build();
 
-			final KeyEncryptionKey kek = TinkKeyEncryptionKey.builder("test-provider").from("test-kek", handle);
+			final EncryptedKey encryptedKey = EncryptedKey.builder()
+					.id("94323357")
+					.primary(true)
+					.status(KeyStatus.ENABLED)
+					.algorithm(TinkAlgorithm.AES128_GCM)
+					.createdAt(Instant.now())
+					.build(kek.wrap(new ByteArray(data.toByteArray())));
+
 			final EncryptedKeyset encryptedKeyset = EncryptedKeyset.builder(definition)
 					.keyEncryptionKey(kek)
-					.build(new ByteArray(TinkProtoKeysetFormat.serializeEncryptedKeyset(
-							handle, handle.getPrimitive(RegistryConfiguration.get(), Aead.class),
-							null
-					)));
+					.build(encryptedKey);
 
-			return KeysetOperations.of(new TinkKeysetFactory().create(kek, encryptedKeyset));
+			return KeysetOperations.of(new TinkKeysetFactory(registry).create(kek, encryptedKeyset));
 		} catch (Exception ex) {
 			throw new IllegalStateException("Unexpected error occurred while creating testing Keyset operations", ex);
 		}

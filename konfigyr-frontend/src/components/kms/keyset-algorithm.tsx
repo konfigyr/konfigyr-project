@@ -12,10 +12,11 @@ import { cn } from '@konfigyr/components/utils';
 import { SupportedAlgorithm } from './supported-algorithms';
 
 import type { ComponentProps, ReactNode } from 'react';
+import type { KeysetPurpose } from '@konfigyr/hooks/kms/types';
 
 function AlgorithmItem({ algorithm, description, className, ...props }: {
-  algorithm?: string | SupportedAlgorithm | ReactNode,
-  description?: string | ReactNode,
+  algorithm?: ReactNode,
+  description?: ReactNode,
 } & ComponentProps<'div'>) {
   return (
     <div {...props}>
@@ -34,25 +35,12 @@ function AlgorithmItem({ algorithm, description, className, ...props }: {
   );
 }
 
-export function KeysetAlgorithmName({ algorithm }: { algorithm?: string | SupportedAlgorithm }) {
-  switch (algorithm) {
-    case SupportedAlgorithm.AES128_GCM:
-      return 'AES128-GCM';
-    case SupportedAlgorithm.AES256_GCM:
-      return 'AES256-GCM';
-    case SupportedAlgorithm.ECDSA_P256:
-      return 'ECDSA P-256';
-    case SupportedAlgorithm.ECDSA_P384:
-      return 'ECDSA P-384';
-    case SupportedAlgorithm.ECDSA_P521:
-      return 'ECDSA P-521';
-    default:
-      return null;
-  }
+export function KeysetAlgorithmName({ algorithm }: { algorithm?: string | SupportedAlgorithm | null }) {
+  return SupportedAlgorithm.valueOf(algorithm)?.label;
 }
 
-export function KeysetAlgorithmDescription({ algorithm }: { algorithm?: string | SupportedAlgorithm }) {
-  switch (algorithm) {
+export function KeysetAlgorithmDescription({ algorithm }: { algorithm?: string | SupportedAlgorithm | null }) {
+  switch (SupportedAlgorithm.valueOf(algorithm)) {
     case SupportedAlgorithm.AES128_GCM:
       return (
         <FormattedMessage
@@ -93,19 +81,31 @@ export function KeysetAlgorithmDescription({ algorithm }: { algorithm?: string |
   }
 }
 
-export function KeysetAlgorithmSelect({ value, reset = false, placeholder, detailed, onReset, onChange, ...props }: {
-  value?: string | SupportedAlgorithm,
+export function KeysetAlgorithmSelect({
+  value,
+  reset = false,
+  placeholder,
+  detailed,
+  purpose,
+  onReset,
+  onChange,
+  ...props
+}: {
+  value?: string,
   reset?: boolean,
   detailed?: boolean,
   placeholder?: string | ReactNode,
-  onChange?: (value: string | SupportedAlgorithm | null) => void,
+  purpose?: KeysetPurpose,
+  onChange?: (value: string | null) => void,
   onReset?: () => void,
 } & Omit<ComponentProps<typeof SelectTrigger>, 'onChange'>) {
+  const algorithm = SupportedAlgorithm.valueOf(value);
+
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={algorithm?.name} onValueChange={onChange}>
       <SelectTrigger {...props}>
         <SelectValue>
-          {value ? (<KeysetAlgorithmName algorithm={value} />) : placeholder}
+          {algorithm ? algorithm.label : placeholder}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -116,9 +116,9 @@ export function KeysetAlgorithmSelect({ value, reset = false, placeholder, detai
               description="Label for the KMS keyset algorithm select dropdown menu."
             />
           </SelectLabel>
-          {Object.values(SupportedAlgorithm).map((algorithm) => (
-            <SelectItem key={algorithm} value={algorithm}>
-              <KeysetAlgorithm algorithm={algorithm} detailed={detailed} />
+          {SupportedAlgorithm.values(purpose).map((it) => (
+            <SelectItem key={it.name} value={it.name}>
+              <KeysetAlgorithm algorithm={it} detailed={detailed} />
             </SelectItem>
           ))}
         </SelectGroup>
@@ -128,11 +128,13 @@ export function KeysetAlgorithmSelect({ value, reset = false, placeholder, detai
 }
 
 export function KeysetAlgorithm({ algorithm, detailed = false }: { algorithm?: string | SupportedAlgorithm, detailed?: boolean }) {
+  const value = SupportedAlgorithm.valueOf(algorithm);
+
   return (
     <AlgorithmItem
-      algorithm={<KeysetAlgorithmName algorithm={algorithm} />}
+      algorithm={value?.label}
       description={detailed && (
-        <KeysetAlgorithmDescription algorithm={algorithm} />
+        <KeysetAlgorithmDescription algorithm={value} />
       )}
       className={cn(detailed && 'font-medium')}
     />

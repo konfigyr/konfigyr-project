@@ -7,6 +7,7 @@ import com.konfigyr.kms.KeysetNotFoundException;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
+import org.assertj.core.api.AssertProvider;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,10 +15,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.json.JsonPathValueAssert;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
@@ -37,8 +40,8 @@ class KmsOperationControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.hasPath("ciphertext")
-				.hasPath("checksum");
+				.hasPathSatisfying("ciphertext", assertBase64())
+				.hasPathSatisfying("checksum", assertBase64());
 	}
 
 	@Test
@@ -69,7 +72,7 @@ class KmsOperationControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/kms/{id}/decrypt", "konfigyr", EntityId.from(2).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"ciphertext\": \"AZMmMUxIGE7mi3Ozd1bp_wwbrYKckMub9pubA8YJmnAPPsUqZ9D1gALW7lUk6c_HERMdHAOGm6KwZQ==\",\"aad\": \"additional authentication data\"}")
+				.content("{\"ciphertext\": \"AQALRfL98l+pQ/PN6uj6h6+9ju4cb4rOfIZcNMqYFSkvH8ElseN5DPeAoo3gNGUd1GbpJ+/qXJGpKw==\",\"aad\": \"additional authentication data\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -104,7 +107,7 @@ class KmsOperationControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/kms/{id}/decrypt", "konfigyr", EntityId.from(2).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"ciphertext\": \"AZMmMUxIGE7mi3Ozd1bp_wwbrYKckMub9pubA8YJmnAPPsUqZ9D1gALW7lUk6c_HERMdHAOGm6KwZQ==\"}")
+				.content("{\"ciphertext\": \"AQALRfL98l+pQ/PN6uj6h6+9ju4cb4rOfIZcNMqYFSkvH8ElseN5DPeAoo3gNGUd1GbpJ+/qXJGpKw==\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -150,7 +153,7 @@ class KmsOperationControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.hasPath("signature");
+				.hasPathSatisfying("signature", assertBase64());
 	}
 
 	@Test
@@ -181,17 +184,14 @@ class KmsOperationControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/kms/{id}/verify", "john-doe", EntityId.from(6).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"plaintext\": \"some data to be signed\",\"signature\": \"AUDrngEwRQIgOGOqDkChDCswWyb-a5zPu73A5ucODR4Qsslp6JytE0gCIQDCVDoCcofYm7mbZYiimcHqOAcnIRXp8gM2lSmzoml1vw==\"}")
+				.content("{\"plaintext\": \"some data to be signed\",\"signature\": \"AQALRfIwRQIhAKt/ekJLnejvxDurWvWXDy3odnzePkJGhmDYQvCZXisKAiB7XJQgKqMznXyHUoKXMh/s/CfI5AJmDj57yygaufLGgw==\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.hasPathSatisfying("valid", it -> it.assertThat()
-						.asBoolean()
-						.isTrue()
-				);
+				.hasPathSatisfying("valid", assertValid(true));
 	}
 
 	@Test
@@ -207,10 +207,7 @@ class KmsOperationControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.bodyJson()
-				.hasPathSatisfying("valid", it -> it.assertThat()
-						.asBoolean()
-						.isFalse()
-				);
+				.hasPathSatisfying("valid", assertValid(false));
 	}
 
 	@Test
@@ -420,6 +417,18 @@ class KmsOperationControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatus(HttpStatus.CONFLICT)
 				.satisfies(hasFailedWithException(InactiveKeysetException.class));
+	}
+
+	static Consumer<AssertProvider<JsonPathValueAssert>> assertBase64() {
+		return provider -> provider.assertThat()
+				.asString()
+				.isBase64();
+	}
+
+	static Consumer<AssertProvider<JsonPathValueAssert>> assertValid(boolean valid) {
+		return provider -> provider.assertThat()
+				.asBoolean()
+				.isEqualTo(valid);
 	}
 
 }

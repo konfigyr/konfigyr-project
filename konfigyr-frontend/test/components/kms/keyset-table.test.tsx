@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { KeysetTable } from '@konfigyr/components/kms/keyset-table';
-import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
+import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | <KeysetTable/>', () => {
   afterEach(() => cleanup());
 
   test('should render keyset table with pending state', () => {
-    const result = renderWithMessageProvider((
+    const result = renderComponentWithRouter((
       <KeysetTable namespace={namespaces.konfigyr} isPending={true} />
     ));
 
@@ -18,7 +18,7 @@ describe('components | kms | <KeysetTable/>', () => {
   });
 
   test('should render keyset table with an error state', () => {
-    const result = renderWithMessageProvider((
+    const result = renderComponentWithRouter((
       <KeysetTable namespace={namespaces.konfigyr} error={new Error('Failed to retrieve keysets')} />
     ));
 
@@ -29,7 +29,7 @@ describe('components | kms | <KeysetTable/>', () => {
   test('should render keysets', () => {
     const keysets = [kms.encryptingKeyset, kms.signingKeyset, kms.disabledKeyset, kms.destroyedKeyset];
 
-    const result = renderWithMessageProvider((
+    const result = renderComponentWithRouter((
       <KeysetTable namespace={namespaces.konfigyr} keysets={keysets} />
     ));
 

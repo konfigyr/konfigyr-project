@@ -68,7 +68,7 @@ class ProvenanceEvaluationWriter implements ItemWriter<@NonNull EvaluationResult
 				.execute();
 
 		log.info(MARKER, "Inserted new property definition for: [artifact={}, property={}, checksum={}]",
-				version.coordinates().format(), property.name(), provenance.checksum().encode());
+				version.coordinates().format(), property.name(), provenance.checksum().encodeHex());
 	}
 
 	private void update(EvaluationResult.Unused result) {
@@ -96,7 +96,7 @@ class ProvenanceEvaluationWriter implements ItemWriter<@NonNull EvaluationResult
 				.execute();
 
 		log.info(MARKER, "Updated property definition for: [artifact={}, property={}, checksum={}]",
-				version.coordinates().format(), result.property().name(), provenance.checksum().encode());
+				version.coordinates().format(), result.property().name(), provenance.checksum().encodeHex());
 	}
 
 	@SuppressWarnings("unchecked")

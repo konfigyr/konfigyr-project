@@ -1,5 +1,12 @@
 import { FormattedMessage } from 'react-intl';
 import {
+  SortByLabel,
+  SortByLeastRecentlyUpdated,
+  SortByMostRecentlyUpdated,
+  SortByNameAscending,
+  SortByNameDescending,
+} from '@konfigyr/components/messages/sort';
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -14,13 +21,33 @@ import { KeysetStateSelect } from './keyset-state';
 
 import type { KeysetSearchQuery, KeysetState } from '@konfigyr/hooks/types';
 
+enum SortBy {
+  MOST_RECENTLY_UPDATED = 'date',
+  LEAST_RECENTLY_UPDATED = 'date,desc',
+  NAME_ASCENDING = 'name',
+  NAME_DESCENDING = 'name,desc',
+}
+
+const sortByLabel = (value: SortBy) => {
+  switch(value) {
+    case SortBy.LEAST_RECENTLY_UPDATED:
+      return <SortByLeastRecentlyUpdated />;
+    case SortBy.MOST_RECENTLY_UPDATED:
+      return <SortByMostRecentlyUpdated />;
+    case SortBy.NAME_ASCENDING:
+      return <SortByNameAscending />;
+    case SortBy.NAME_DESCENDING:
+      return <SortByNameDescending />;
+  }
+};
+
 export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQuery, onQueryChange: (query: KeysetSearchQuery) => void }) {
   const form = useForm({
     defaultValues: {
       term: query.term || '',
       state: query.state || '',
       algorithm: query.algorithm || '',
-      sort: query.sort || 'date',
+      sort: query.sort || SortBy.MOST_RECENTLY_UPDATED,
     },
     listeners: {
       onChangeDebounceMs: 200,
@@ -96,16 +123,21 @@ export function KeysetFilters({ query, onQueryChange }: { query: KeysetSearchQue
           children={(field) => (
             <Select value={field.state.value} onValueChange={it => field.handleChange(it || '')}>
               <SelectTrigger className="w-52">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue>
+                  {sortByLabel(field.state.value as SortBy)}
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="min-w-52">
                 <SelectGroup>
-                  <SelectLabel>Sort by</SelectLabel>
-                  <SelectItem value="date">Recently updated</SelectItem>
-                  <SelectItem value="date,desc">Least recently updated</SelectItem>
-                  <SelectItem value="name">Name ascending</SelectItem>
-                  <SelectItem value="name,desc">Name descending</SelectItem>
-                  <SelectItem value="state">State</SelectItem>
+                  <SelectLabel>
+                    <SortByLabel />
+                  </SelectLabel>
+
+                  {Object.values(SortBy).map(value => (
+                    <SelectItem key={value} value={value}>
+                      {sortByLabel(value)}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>

@@ -1,15 +1,20 @@
 import { CheckCircle2Icon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
-import { useDisableKeyset } from '@konfigyr/hooks';
+import { useDisableKey } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { CancelLabel } from '@konfigyr/components/messages';
 import { Alert, AlertTitle } from '@konfigyr/components/ui/alert';
 import { Button } from '@konfigyr/components/ui/button';
 
-import type { Keyset, Namespace } from '@konfigyr/hooks/types';
+import type { Key, Keyset, Namespace } from '@konfigyr/hooks/types';
 
-export function KeysetDisableOperation({ namespace, keyset, onCancel }: { namespace: Namespace, keyset: Keyset, onCancel: () => void }) {
-  const { mutateAsync: disable, isSuccess, isError, error } = useDisableKeyset(namespace.slug, keyset);
+export function KeyDisableOperation({ namespace, keyset, value: key, onCancel }: {
+  namespace: Namespace;
+  value: Key;
+  keyset: Keyset;
+  onCancel: () => void;
+}) {
+  const { mutateAsync: disable, isSuccess, isError, error } = useDisableKey(namespace.slug, keyset);
 
   if (isSuccess) {
     return (
@@ -17,8 +22,8 @@ export function KeysetDisableOperation({ namespace, keyset, onCancel }: { namesp
         <CheckCircle2Icon/>
         <AlertTitle>
           <FormattedMessage
-            defaultMessage="Keyset has been successfully disabled"
-            description="Label for the alert that is shown when keyset was successfully disabled."
+            defaultMessage="Key has been successfully disabled"
+            description="Label for the alert that is shown when key within a KMS keyset was successfully disabled."
           />
         </AlertTitle>
       </Alert>
@@ -42,10 +47,10 @@ export function KeysetDisableOperation({ namespace, keyset, onCancel }: { namesp
         <Button variant="outline" onClick={onCancel}>
           <CancelLabel />
         </Button>
-        <Button variant="destructive" onClick={() => disable()}>
+        <Button variant="destructive" onClick={() => disable(key)}>
           <FormattedMessage
             defaultMessage="I understand the risks"
-            description="Label for the button that confirms the keyset disabling."
+            description="Label for the button that confirms the disabling of a key within a KMS keyset."
           />
         </Button>
       </div>
