@@ -91,10 +91,10 @@ VALUES
         (extract(epoch from now() - interval '8 days') * 1000)::bigint
     );
 
-INSERT INTO kms_keyset_metadata(id, namespace_id, keyset_id, name, description, tags, created_at, updated_at, destroyed_at) VALUES
-(1, 1, 'kms-john-doe-keyset', 'john-doe-keyset', 'John Doe keyset', 'private-key', now() - interval '3 days', now() - interval '1 days', NULL),
-(2, 2, 'kms-konfigyr-active', 'konfigyr-active', 'Active keyset', 'encryption,konfigyr', now() - interval '7 days', now() - interval '3 days', NULL),
-(3, 2, 'kms-konfigyr-inactive', 'konfigyr-inactive', 'Inactive keyset', 'signing,konfigyr', now() - interval '30 days', now() - interval '18 days', NULL),
-(4, 2, 'kms-konfigyr-deleted', 'konfigyr-deleted', 'Pending removal keyset', NULL, now() - interval '30 days', now() - interval '18 days', NULL),
-(5, 2, 'kms-konfigyr-destroyed', 'konfigyr-destroyed', 'Destroyed keyset', 'destroyed,konfigyr', now() - interval '10 days', now() - interval '8 days', now() - interval '7 days'),
-(6, 1, 'kms-john-doe-signing', 'signing keyset', NULL, NULL, now() - interval '1 days', now() - interval '8 hours', NULL);
+INSERT INTO kms_keyset_metadata(id, namespace_id, keyset_id, name, description, tags, created_at, updated_at) VALUES
+(1, 1, 'kms-john-doe-keyset', 'john-doe-keyset', 'John Doe keyset', 'private-key', now() - interval '3 days', now() - interval '1 days'),
+(2, 2, 'kms-konfigyr-active', 'konfigyr-active', 'Active keyset', 'encryption,konfigyr', now() - interval '7 days', now() - interval '3 days'),
+(3, 2, 'kms-konfigyr-inactive', 'konfigyr-inactive', 'Inactive keyset', 'signing,konfigyr', now() - interval '30 days', now() - interval '18 days'),
+(4, 2, 'kms-konfigyr-deleted', 'konfigyr-deleted', 'Pending removal keyset', NULL, now() - interval '30 days', now() - interval '18 days'),
+(5, 2, 'kms-konfigyr-destroyed', 'konfigyr-destroyed', 'Destroyed keyset', 'destroyed,konfigyr', now() - interval '10 days', now() - interval '8 days'),
+(6, 1, 'kms-john-doe-signing', 'signing keyset', NULL, NULL, now() - interval '1 days', now() - interval '8 hours');

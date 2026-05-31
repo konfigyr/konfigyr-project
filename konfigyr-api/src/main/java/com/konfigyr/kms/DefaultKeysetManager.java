@@ -51,8 +51,7 @@ class DefaultKeysetManager implements KeysetManager {
 			KEYSETS.ROTATION_INTERVAL,
 			KEYSETS.DESTRUCTION_GRACE_PERIOD,
 			KMS_KEYSET_METADATA.CREATED_AT,
-			KMS_KEYSET_METADATA.UPDATED_AT,
-			KMS_KEYSET_METADATA.DESTROYED_AT
+			KMS_KEYSET_METADATA.UPDATED_AT
 	);
 
 	static final Collection<Field<?>> KEYS_METADATA_FIELDS = List.of(
@@ -423,7 +422,6 @@ class DefaultKeysetManager implements KeysetManager {
 				.destructionGracePeriod(record.get(KEYSETS.DESTRUCTION_GRACE_PERIOD))
 				.createdAt(record.get(KMS_KEYSET_METADATA.CREATED_AT))
 				.updatedAt(record.get(KMS_KEYSET_METADATA.UPDATED_AT))
-				.destroyedAt(record.get(KMS_KEYSET_METADATA.DESTROYED_AT))
 				.build();
 	}
 

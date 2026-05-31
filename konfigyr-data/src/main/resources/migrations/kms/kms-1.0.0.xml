@@ -45,10 +45,6 @@
 			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
 				<constraints nullable="false"/>
 			</column>
-
-			<column name="destroyed_at" type="timestamptz">
-				<constraints nullable="true"/>
-			</column>
         </createTable>
 
 		<addUniqueConstraint

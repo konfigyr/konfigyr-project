@@ -33,7 +33,6 @@ import java.util.Set;
  * @param destructionGracePeriod The grace period for destruction of the keyset, can be {@literal null}.
  * @param createdAt When the keyset was created, can be {@literal null}.
  * @param updatedAt When the keyset was last updated, can be {@literal null}.
- * @param destroyedAt When the keyset was destroyed, can be {@literal null}.
  * @author Vladimir Spasic
  * @since 1.0.0
  */
@@ -48,8 +47,7 @@ public record KeysetMetadata(
 		@Nullable Duration rotationInterval,
 		@Nullable Duration destructionGracePeriod,
 		@Nullable OffsetDateTime createdAt,
-		@Nullable OffsetDateTime updatedAt,
-		@Nullable OffsetDateTime destroyedAt
+		@Nullable OffsetDateTime updatedAt
 ) implements Serializable {
 
 	@Serial
@@ -99,7 +97,6 @@ public record KeysetMetadata(
 		private Duration destructionGracePeriod;
 		private OffsetDateTime createdAt;
 		private OffsetDateTime updatedAt;
-		private OffsetDateTime destroyedAt;
 
 		private Builder() {
 			this.tags = new LinkedHashSet<>();
@@ -302,27 +299,6 @@ public record KeysetMetadata(
 		}
 
 		/**
-		 * Specify when this {@link KeysetMetadata} was destroyed.
-		 *
-		 * @param destroyedAt destroyed date
-		 * @return keyset metadata builder
-		 */
-		public Builder destroyedAt(Instant destroyedAt) {
-			return destroyedAt(OffsetDateTime.ofInstant(destroyedAt, ZoneOffset.UTC));
-		}
-
-		/**
-		 * Specify when this {@link KeysetMetadata} was destroyed.
-		 *
-		 * @param destroyedAt destroyed date
-		 * @return keyset metadata builder
-		 */
-		public Builder destroyedAt(OffsetDateTime destroyedAt) {
-			this.destroyedAt = destroyedAt;
-			return this;
-		}
-
-		/**
 		 * Creates a new instance of the {@link KeysetMetadata} using the values defined in the builder.
 		 *
 		 * @return keyset metadata instance, never {@literal null}
@@ -336,7 +312,7 @@ public record KeysetMetadata(
 			Assert.notNull(name, "Keyset metadata name can not be null");
 
 			return new KeysetMetadata(id, algorithm, state, name, description, Collections.unmodifiableSet(tags),
-					rotationInterval, destructionGracePeriod, createdAt, updatedAt, destroyedAt);
+					rotationInterval, destructionGracePeriod, createdAt, updatedAt);
 		}
 	}
 

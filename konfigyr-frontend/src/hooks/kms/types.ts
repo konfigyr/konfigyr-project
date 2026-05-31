@@ -33,7 +33,6 @@ export interface Keyset {
   destructionGracePeriod?: string;
   createdAt?: string;
   updatedAt?: string;
-  destroyedAt?: string;
 }
 
 export interface Key {

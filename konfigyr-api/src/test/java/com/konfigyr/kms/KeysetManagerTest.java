@@ -194,8 +194,7 @@ class KeysetManagerTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now().minusDays(1), within(5, ChronoUnit.MINUTES))
-				)
-				.returns(null, KeysetMetadata::destroyedAt);
+				);
 	}
 
 	@Test
@@ -294,8 +293,7 @@ class KeysetManagerTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.SECONDS))
-				)
-				.returns(null, KeysetMetadata::destroyedAt);
+				);
 
 		events.assertThat()
 				.contains(KeysetManagementEvent.Created.class)
@@ -441,8 +439,7 @@ class KeysetManagerTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.SECONDS))
-				)
-				.returns(null, KeysetMetadata::destroyedAt);
+				);
 
 		events.assertThat()
 				.contains(KeysetManagementEvent.Reactivated.class)
@@ -463,8 +460,7 @@ class KeysetManagerTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isNotNull()
 						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.SECONDS))
-				)
-				.returns(null, KeysetMetadata::destroyedAt);
+				);
 
 		events.assertThat()
 				.contains(KeysetManagementEvent.Restored.class)

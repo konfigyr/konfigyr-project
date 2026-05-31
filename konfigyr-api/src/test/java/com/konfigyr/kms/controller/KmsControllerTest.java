@@ -227,8 +227,7 @@ class KmsControllerTest extends AbstractControllerTest {
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isCloseTo(OffsetDateTime.now().minusDays(3), within(1, ChronoUnit.HOURS))
-				)
-				.returns(null, KeysetMetadata::destroyedAt);
+				);
 	}
 
 	@Test
