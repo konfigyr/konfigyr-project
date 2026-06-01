@@ -13,8 +13,8 @@ describe('components | kms | operation | <KeyRestoreOperation/>', () => {
     <>
       <KeyOperationDialog
         namespace={namespaces.konfigyr}
-        keyset={kms.signingKeyset}
-        value={kms.signingKeyset.keys[0]}
+        keyset={kms.destroyedKeyset}
+        value={kms.destroyedKeyset.keys[0]}
         operation="restore"
         onClose={onCancel}
       />

@@ -1,5 +1,5 @@
 import { HttpResponse, http } from 'msw';
-import { encryptingKeyset, signingKeyset } from '../mocks/kms';
+import { destroyedKeyset, encryptingKeyset, signingKeyset } from '../mocks/kms';
 import { johnDoe, konfigyr } from '../mocks/namespace';
 
 const list = http.get('http://localhost/api/namespaces/:namespace/kms', ({ params }) => {
@@ -308,7 +308,7 @@ const compromised = http.put('http://localhost/api/namespaces/:namespace/kms/:ke
 const restore = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset/keys/:key/restore', ({ params }) => {
   const { namespace, keyset } = params;
 
-  if (keyset !== signingKeyset.id) {
+  if (keyset !== destroyedKeyset.id) {
     return HttpResponse.json({
       status: 404,
       title: 'Keyset not found.',
@@ -317,7 +317,7 @@ const restore = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset
   }
 
   if (konfigyr.slug === namespace || johnDoe.slug === namespace) {
-    return HttpResponse.json({ ...signingKeyset, state: 'ACTIVE' });
+    return HttpResponse.json({ ...destroyedKeyset, state: 'ACTIVE' });
   }
 
   return HttpResponse.json({
