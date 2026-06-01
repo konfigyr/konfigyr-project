@@ -10,6 +10,12 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: 'bg-card text-card-foreground',
+        info:
+          'bg-card text-info *:data-[slot=alert-description]:text-info/90 *:[svg]:text-current',
+        success:
+          'bg-card text-success *:data-[slot=alert-description]:text-success/90 *:[svg]:text-current',
+        warning:
+          'bg-card text-warning *:data-[slot=alert-description]:text-warning/90 *:[svg]:text-current',
         destructive:
           'bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current',
       },
@@ -69,20 +75,39 @@ export function AlertAction({ className, ...props }: React.ComponentProps<'div'>
   );
 }
 
-export function SimpleAlert({ icon, title, description, ...props }: {
+export function SimpleAlert({ icon, title, description, action, children, ...props }: {
   icon?: React.ReactNode,
   title?: React.ReactNode,
   description?: React.ReactNode,
+  action?: React.ReactNode,
 } & Omit<AlertProps, 'title'>) {
   const id = React.useId();
   const titleId = `${id}-alert-title`;
   const descriptionId = `${id}-alert-description`;
 
   return (
-    <Alert {...props} aria-labelledby={titleId} aria-describedby={descriptionId}>
+    <Alert
+      {...props}
+      aria-labelledby={title ? titleId : undefined}
+      aria-describedby={description ? descriptionId : undefined}
+    >
       {icon}
-      <AlertTitle id={titleId}>{title}</AlertTitle>
-      <AlertDescription id={descriptionId}>{description}</AlertDescription>
+
+      {title && (
+        <AlertTitle id={titleId}>{title}</AlertTitle>
+      )}
+
+      {description && (
+        <AlertDescription id={descriptionId}>{description}</AlertDescription>
+      )}
+
+      {action && (
+        <AlertAction>
+          {action}
+        </AlertAction>
+      )}
+
+      {children}
     </Alert>
   );
 }

@@ -22,11 +22,11 @@ export function ChangeRequestStateIcon({ value, ...props }: { value: ChangeReque
   switch (value) {
     case ChangeRequestState.OPEN:
       return (
-        <GitPullRequestIcon className="text-emerald-600" {...props} />
+        <GitPullRequestIcon className="text-success" {...props} />
       );
     case ChangeRequestState.MERGED:
       return (
-        <GitMergeIcon className="text-blue-600" {...props} />
+        <GitMergeIcon className="text-info" {...props} />
       );
     case ChangeRequestState.DISCARDED:
       return (

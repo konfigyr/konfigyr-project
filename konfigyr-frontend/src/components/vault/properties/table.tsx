@@ -62,9 +62,9 @@ interface PropertyActionProps {
 
 const statusBorderColors: Record<ConfigurationPropertyState, string> = {
   [ConfigurationPropertyState.UNCHANGED]: 'border-l-transparent',
-  [ConfigurationPropertyState.UPDATED]: 'border-l-amber-500',
+  [ConfigurationPropertyState.UPDATED]: 'border-l-warning',
   [ConfigurationPropertyState.REMOVED]: 'border-l-destructive',
-  [ConfigurationPropertyState.ADDED]: 'border-l-emerald-500',
+  [ConfigurationPropertyState.ADDED]: 'border-l-success',
 };
 
 function PropertyNameCell<T>({ property }: { property: ConfigurationProperty<T> }) {

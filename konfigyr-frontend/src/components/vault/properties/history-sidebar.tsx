@@ -19,6 +19,7 @@ import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { ScrollArea } from '@konfigyr/components/ui/scroll-area';
 import { ErrorState } from '@konfigyr/components/error';
 import { useLabelForTransitionType } from '@konfigyr/components/vault/messages';
+import { PropertyTransitionValue } from '@konfigyr/components/vault/change-history/property-transition';
 import { PropertyTransitionTypeLabel } from '@konfigyr/components/vault/change-history/property-transition-type';
 import { PropertyValueLabel } from './messages';
 
@@ -36,7 +37,7 @@ function TimelineItem({ record, isLast }: { record: ChangeHistoryRecord, isLast:
   return (
     <li className="relative flex gap-3">
       {!isLast && (
-        <div className="absolute left-2.25 top-4 bottom-0 w-px bg-border" />
+        <div className="absolute left-2.25 top-5 bottom-0 w-px bg-border" />
       )}
 
       <PropertyTransitionTypeLabel
@@ -65,22 +66,12 @@ function TimelineItem({ record, isLast }: { record: ChangeHistoryRecord, isLast:
         </div>
 
         {(record.from || record.to) && (
-          <div className="mt-2 rounded-md border bg-muted/30 overflow-hidden text-xs font-mono">
+          <div className="mt-2 rounded-md border bg-muted/30 overflow-hidden">
             {record.from && (
-              <div className="flex items-start gap-2 px-3 py-1 bg-destructive/5 border-b border-border/50">
-                <span className="text-destructive/60 select-none shrink-0">-</span>
-                <span className="text-destructive/80 break-all">
-                  {record.from}
-                </span>
-              </div>
+              <PropertyTransitionValue variant="removal" value={record.from} />
             )}
             {record.to && (
-              <div className="flex items-start gap-2 px-3 py-1 bg-emerald-500/5">
-                <span className="text-emerald-600/60 dark:text-emerald-400/60 select-none shrink-0">+</span>
-                <span className="text-emerald-700 dark:text-emerald-300 break-all">
-                  {record.to}
-                </span>
-              </div>
+              <PropertyTransitionValue variant="addition" value={record.to} />
             )}
           </div>
         )}

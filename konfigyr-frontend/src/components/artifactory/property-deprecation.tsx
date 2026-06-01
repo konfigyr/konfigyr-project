@@ -1,11 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 import { MessageCircleWarningIcon } from 'lucide-react';
 import { cn } from '@konfigyr/components/utils';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@konfigyr/components/ui/alert';
+import { SimpleAlert } from '@konfigyr/components/ui/alert';
 import { Badge } from '@konfigyr/components/ui/badge';
 import {
   Tooltip,
@@ -74,18 +70,21 @@ export function PropertyDeprecationAlert({ deprecation, className }: { deprecati
   }
 
   return (
-    <Alert className={className}>
-      <MessageCircleWarningIcon />
-      <AlertTitle>
+    <SimpleAlert
+      icon={
+        <MessageCircleWarningIcon />
+      }
+      title={
         <FormattedMessage
           defaultMessage="Deprecated"
           description="Title used for property deprecation alert."
         />
-      </AlertTitle>
-      <AlertDescription>
+      }
+      description={
         <PropertyDeprecationContent deprecation={deprecation} />
-      </AlertDescription>
-    </Alert>
+      }
+      className={className}
+    />
   );
 }
 

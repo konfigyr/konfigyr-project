@@ -1,18 +1,20 @@
 import { useMemo } from 'react';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@konfigyr/components/ui/alert';
+import { SimpleAlert } from '@konfigyr/components/ui/alert';
 import { normalizeError } from './normalize';
 
-export function ErrorState({ error, ...props }: { error: Error } & React.ComponentProps<typeof Alert>) {
+import type { AlertProps } from '@konfigyr/components/ui/alert';
+
+export type ErrorStateProps = { error: Error } & Omit<AlertProps, 'title' | 'description'>;
+
+export function ErrorState({ error, ...props }: ErrorStateProps) {
   const normalized = useMemo(() => normalizeError(error), [error]);
 
   return (
-    <Alert variant="destructive" {...props}>
-      <AlertTitle>{normalized.title}</AlertTitle>
-      <AlertDescription>{normalized.detail}</AlertDescription>
-    </Alert>
+    <SimpleAlert
+      variant="destructive"
+      title={normalized.title}
+      description={normalized.detail}
+      {...props}
+    />
   );
 }

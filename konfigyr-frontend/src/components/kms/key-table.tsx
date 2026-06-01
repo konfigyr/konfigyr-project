@@ -171,7 +171,7 @@ function DestructionCell({ value: key }: { value: Key }) {
   if (key.status === 'PENDING_DESTRUCTION') {
     return (
       <>
-        <time className="font-medium text-amber-500" dateTime={key.destructionScheduledAt}>
+        <time className="font-medium text-warning" dateTime={key.destructionScheduledAt}>
           <FormattedDate value={key.destructionScheduledAt} />
         </time>
         <p className="text-xs text-muted-foreground">

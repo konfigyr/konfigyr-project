@@ -98,7 +98,7 @@
     --font-mono:    "JetBrains Mono", monospace;
 
     /* ── Neutral surface ─────────────────────────────────────────────────── */
-    --background:         210  20%  99%;
+    --background:         0    0%  100%;
     --foreground:         215  30%  14%;
 
     --muted:              210  25%  96%;
@@ -137,20 +137,17 @@
     --destructive:        0    72%  56%;
     --destructive-foreground: 0  0%  100%;
 
-    /* ── State: Warning  — pale straw, dark amber text ───────────────────── */
-    /*    surface tint: hsl(40 80% 95%)  |  foreground: hsl(32 70% 30%)      */
-    --warning:            40   80%  95%;
-    --warning-foreground: 32   70%  30%;
+    /* ── State: Warning  — vivid amber-gold, dark text on solid ───────────── */
+    --warning:            43   95%  45%;
+    --warning-foreground: 40   90%  25%;
 
-    /* ── State: Info  — pale sky, deep blue text ────────────────────────── */
-    /*    surface tint: hsl(210 70% 95%)  |  foreground: hsl(210 60% 30%)    */
-    --info:               210  70%  95%;
-    --info-foreground:    210  60%  30%;
+    /* ── State: Info  — muted blue signal, white text on solid ─────────────── */
+    --info:               210  60%  44%;
+    --info-foreground:    0    0%  100%;
 
-    /* ── State: Success  — pale sage, deep green text ───────────────────── */
-    /*    surface tint: hsl(148 45% 93%)  |  foreground: hsl(152 50% 26%)    */
-    --success:            148  45%  93%;
-    --success-foreground: 152  50%  26%;
+    /* ── State: Success  — sage green signal, white text on solid ───────────── */
+    --success:            152  52%  36%;
+    --success-foreground: 0    0%  100%;
 
     /* ── Radius ──────────────────────────────────────────────────────────── */
     --radius: 0.5rem;
@@ -232,17 +229,17 @@
     --destructive:        0    62%  48%;
     --destructive-foreground: 0  0%  100%;
 
-    /* ── State: Warning  — dark amber tint, warm text ───────────────────── */
-    --warning:            36   35%  18%;
-    --warning-foreground: 38   75%  72%;
+    /* ── State: Warning  — brighter amber-gold signal, dark text on solid ─────*/
+    --warning:            43   88%  62%;
+    --warning-foreground: 32   90%  12%;
 
-    /* ── State: Info  — dark blue tint, light sky text ──────────────────── */
-    --info:               210  40%  18%;
-    --info-foreground:    210  70%  75%;
+    /* ── State: Info  — brighter blue signal, dark text on solid ───────────── */
+    --info:               210  65%  62%;
+    --info-foreground:    222  38%   9%;
 
-    /* ── State: Success  — dark sage tint, soft green text ──────────────── */
-    --success:            148  30%  16%;
-    --success-foreground: 150  55%  65%;
+    /* ── State: Success  — brighter sage signal, white text on solid ─────────*/
+    --success:            150  55%  52%;
+    --success-foreground: 0    0%  100%;
 
     /* ── Charts ──────────────────────────────────────────────────────────── */
     --chart-1: oklch(0.600 0.190 255);
@@ -296,19 +293,6 @@
     h1, h2, h3, h4, h5, h6, .font-heading {
         font-family: var(--font-heading), sans-serif;
     }
-
-    /* ── Convenience state-color utility classes ─────────────────────────── */
-    .bg-warning     { background-color: hsl(var(--warning)); }
-    .text-warning   { color:            hsl(var(--warning-foreground)); }
-    .border-warning { border-color:     hsl(var(--warning-foreground)); }
-
-    .bg-info        { background-color: hsl(var(--info)); }
-    .text-info      { color:            hsl(var(--info-foreground)); }
-    .border-info    { border-color:     hsl(var(--info-foreground)); }
-
-    .bg-success     { background-color: hsl(var(--success)); }
-    .text-success   { color:            hsl(var(--success-foreground)); }
-    .border-success { border-color:     hsl(var(--success-foreground)); }
 
     /* ── PrismJS theme ───────────────────────────────────────────────────── */
     code[class*="language-"],
