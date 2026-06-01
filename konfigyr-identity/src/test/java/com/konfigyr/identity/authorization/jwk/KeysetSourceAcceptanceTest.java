@@ -65,7 +65,7 @@ class KeysetSourceAcceptanceTest {
 
 	static JwtEncoderParameters createParameters() {
 		return JwtEncoderParameters.from(
-				JwsHeader.with(SignatureAlgorithm.RS256).build(),
+				JwsHeader.with(SignatureAlgorithm.PS256).build(),
 				JwtClaimsSet.builder().subject("test-subject").build()
 		);
 	}
@@ -79,7 +79,7 @@ class KeysetSourceAcceptanceTest {
 
 	static NimbusJwtDecoder createDecoder(KeysetSource source) {
 		return NimbusJwtDecoder.withJwkSource(source)
-				.jwsAlgorithm(SignatureAlgorithm.RS256)
+				.jwsAlgorithm(SignatureAlgorithm.PS256)
 				.build();
 	}
 }
