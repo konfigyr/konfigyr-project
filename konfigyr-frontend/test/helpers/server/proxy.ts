@@ -79,6 +79,16 @@ export default [
     }, { status });
   }),
 
+  http.get('https://api.konfigyr.com/proxy-test/refresh-resource', ({ request }) => {
+    const authorizationHeader = request.headers.get('authorization');
+
+    if (authorizationHeader !== 'Bearer access-token-jwt') {
+      return HttpResponse.json({ status: 401, title: 'Unauthorized' }, { status: 401 });
+    }
+
+    return HttpResponse.json({ id: 'refresh-resource-id' }, { status: 200 });
+  }),
+
   http.delete('https://api.konfigyr.com/proxy-test/verify-headers', ({ request }) => {
     assertBearerToken(request);
 
