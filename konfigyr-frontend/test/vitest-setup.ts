@@ -39,25 +39,22 @@ if (typeof window !== 'undefined') {
     })),
   });
 
-  Object.defineProperty(window, 'clipboardData', {
+  Object.defineProperty(window, 'isSecureContext', {
+    value: true,
+    configurable: true,
+  });
+
+  Object.defineProperty(navigator, 'clipboard', {
     value: {
-      setData: vi.fn(),
-      clearData: vi.fn(),
+      writeText: vi.fn().mockResolvedValue(undefined),
+      write: vi.fn().mockResolvedValue(undefined),
     },
     configurable: true,
+    writable: true,
   });
 
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
   window.HTMLElement.prototype.releasePointerCapture = vi.fn();
   window.HTMLElement.prototype.hasPointerCapture = vi.fn();
   window.HTMLElement.prototype.getAnimations = vi.fn(() => []);
-}
-
-declare global {
-  interface Window {
-    clipboardData: {
-      setData: (format: string, data: string) => void,
-      clearData: () => void,
-    },
-  }
 }

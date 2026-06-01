@@ -36,7 +36,7 @@ export async function onDeleteAccount() {
     ),
   );
 
-  await http(request).json();
+  await http(request);
   await authentication.logout();
 
   return new Response(null, { status: 204 });

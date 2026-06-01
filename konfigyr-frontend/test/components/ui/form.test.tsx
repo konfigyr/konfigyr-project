@@ -6,7 +6,7 @@ import { useForm } from '@konfigyr/components/ui/form';
 
 const schema = z.object({
   name: z.string().min(2, 'Name has to be at least two characters long.'),
-  age: z.coerce.number().min(18, 'You have to be at least 18 years old to use this service.'),
+  age: z.coerce.number<number>().min(18, 'You have to be at least 18 years old to use this service.'),
   description: z.string(),
   enabled: z.boolean(),
 });

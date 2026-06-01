@@ -48,7 +48,7 @@ export const useGetAccountInvitation = (key: string) => {
 export const useAcceptInvitation = () => {
   return useMutation({
     mutationFn: async (key: string) => {
-      await request.post(`api/account/invitations/${key}`).json();
+      await request.post(`api/account/invitations/${key}`);
     },
   });
 };

@@ -27,7 +27,7 @@ describe('components | clipboard | <ClipboardButton/>', () => {
       expect(getByRole('button')).toHaveTextContent('Copied');
     });
 
-    expect(window.clipboardData.setData).toHaveBeenCalledExactlyOnceWith('text/plain', 'text to be copied');
+    expect(navigator.clipboard.writeText).toHaveBeenCalledExactlyOnceWith('text to be copied');
   });
 
   test('should render button with text to be copied and present state in the tooltip', async () => {
@@ -50,7 +50,7 @@ describe('components | clipboard | <ClipboardButton/>', () => {
       expect(getByRole('tooltip')).toHaveTextContent('Copied');
     });
 
-    expect(window.clipboardData.setData).toHaveBeenCalledExactlyOnceWith('text/plain', 'text to be copied');
+    expect(navigator.clipboard.writeText).toHaveBeenCalledExactlyOnceWith('text to be copied');
   });
 
 });

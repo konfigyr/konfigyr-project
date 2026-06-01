@@ -3,11 +3,12 @@ import clipboard from 'copy-to-clipboard';
 
 export interface UseClipboardOptions {
   format?: 'text/plain' | 'text/html';
-  onCopy?: () => void;
 }
 
-export const useClipboard = ({ format = 'text/plain', onCopy }: UseClipboardOptions = {}): (text: string) => void => {
-  return useCallback((text: string) => {
-    clipboard(text, { format, onCopy, debug: true });
-  }, [format, onCopy]);
+export const useClipboard = ({ format = 'text/plain' }: UseClipboardOptions = {}): (text: string) => Promise<boolean> => {
+  return useCallback(async (text: string) => {
+    // Omit the `format` configuration property for `text/plain` so `copy-to-clipboard`
+    // uses the simple `navigator.clipboard.writeText` path instead of the ClipboardItem path.
+    return clipboard(text, { format: format !== 'text/plain' ? format : undefined, debug: true });
+  }, [format]);
 };

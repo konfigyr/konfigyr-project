@@ -23,13 +23,14 @@ import {
 
 import type { Account } from '@konfigyr/hooks/types';
 
-const emailFormSchema = z.object({
-  email: z.string()
-    .email('You need to enter a valid email address')
+const emailFieldsSchema = z.object({
+  email: z.email('You need to enter a valid email address')
     .max(48, { message: 'Email must be at most 48 characters.' }),
   token: z.string(),
   code: z.string(),
-}).refine(schema => schema.token === '' || (schema.token && schema.code), {
+});
+
+const emailFormSchema = emailFieldsSchema.refine(schema => schema.token === '' || (schema.token && schema.code), {
   message: 'You need to enter a confirmation code',
   path: ['code'],
 });
@@ -44,7 +45,8 @@ export function AccountEmailForm({ account }: { account: Account }) {
   const form = useForm({
     defaultValues: { email: account.email, token: '', code: '' },
     validators: {
-      onChange: emailFormSchema,
+      onChange: emailFieldsSchema,
+      onSubmit: emailFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {

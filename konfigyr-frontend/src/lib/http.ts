@@ -1,11 +1,8 @@
-import ky from 'ky';
-import { createLogger } from '@konfigyr/logger';
+import ky, { isHTTPError } from 'ky';
 
-import type { HTTPError } from 'ky';
+import type { BeforeErrorState } from 'ky';
 
 export const PROBLEM_DETAIL_CONTENT_TYPE = 'application/problem+json';
-
-const logger = createLogger('services/http');
 
 /**
  * Interface that defines the structure of a validation error that would be present in the
@@ -31,17 +28,17 @@ export interface ProblemDetail extends Record<string, unknown> {
   errors?: Array<ValidationError>,
 }
 
-const adapt = async (error: HTTPError) => {
-  const { response, request } = error;
+const adapt = ({ error, request }: BeforeErrorState): Error => {
+  if (!isHTTPError(error)) {
+    return error;
+  }
 
   if (request.method === 'HEAD') {
     return error;
   }
 
-  try {
-    error.problem = await response.json();
-  } catch (e) {
-    logger.warn(e, 'Failed to parse error response as JSON');
+  if (error.data && typeof error.data === 'object') {
+    error.problem = error.data as ProblemDetail;
   }
 
   return error;
@@ -64,7 +61,7 @@ export function resolvePrefixUrl(): string {
  * Please note that this client is meant to be used with the Konfigyr REST API proxy route.
  */
 export default ky.extend({
-  prefixUrl: resolvePrefixUrl(),
+  prefix: resolvePrefixUrl(),
   hooks: {
     beforeError: [
       adapt,
