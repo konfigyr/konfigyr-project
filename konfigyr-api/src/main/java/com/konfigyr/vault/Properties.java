@@ -1,7 +1,6 @@
 package com.konfigyr.vault;
 
 
-import com.google.crypto.tink.subtle.Hex;
 import com.konfigyr.crypto.KeysetOperations;
 import com.konfigyr.io.ByteArray;
 import lombok.EqualsAndHashCode;
@@ -294,9 +293,9 @@ public final class Properties implements InputStreamSource, Iterable<String> {
 						"Attempted to serialize unsealed property value for property: " + iterator.getKey());
 
 				writer.write("{crypto:");
-				writer.write(encode(value.get()));
+				writer.write(value.get().encodeHex());
 				writer.write(",checksum:");
-				writer.write(encode(value.checksum()));
+				writer.write(value.checksum().encodeHex());
 				writer.write("}");
 				writer.newLine();
 			}
@@ -358,8 +357,8 @@ public final class Properties implements InputStreamSource, Iterable<String> {
 		if (matcher.matches()) {
 			try {
 				return PropertyValue.sealed(
-						decode(matcher.group("crypto")),
-						decode(matcher.group("checksum"))
+						ByteArray.fromHexString(matcher.group("crypto")),
+						ByteArray.fromHexString(matcher.group("checksum"))
 				);
 			} catch (Exception ex) {
 				throw new IllegalArgumentException("Invalid serialized property value of: " + value, ex);
@@ -367,14 +366,6 @@ public final class Properties implements InputStreamSource, Iterable<String> {
 		}
 
 		throw new IllegalArgumentException("Invalid serialized property value of: " + value);
-	}
-
-	private static String encode(ByteArray bytes) {
-		return Hex.encode(bytes.array());
-	}
-
-	private static ByteArray decode(String value) {
-		return new ByteArray(Hex.decode(value));
 	}
 
 	public static final class Builder {

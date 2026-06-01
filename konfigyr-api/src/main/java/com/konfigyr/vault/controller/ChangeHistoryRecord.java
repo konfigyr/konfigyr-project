@@ -52,8 +52,7 @@ record ChangeHistoryRecord(
 		if (value == null) {
 			return null;
 		}
-		final PropertyValue unsealed = vault.unseal(value);
-		return new String(unsealed.get().array(), StandardCharsets.UTF_8);
+		return vault.unseal(value).toString(StandardCharsets.UTF_8);
 	}
 
 }

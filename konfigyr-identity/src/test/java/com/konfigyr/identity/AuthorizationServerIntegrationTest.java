@@ -120,7 +120,7 @@ class AuthorizationServerIntegrationTest {
 						"private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"
 				))
 				.satisfies(assertOAuthScopes(OidcProviderConfiguration::getScopes))
-				.satisfies(assertElements(OidcProviderConfiguration::getIdTokenSigningAlgorithms, "RS256"))
+				.satisfies(assertElements(OidcProviderConfiguration::getIdTokenSigningAlgorithms, "RS256", "PS256"))
 				.satisfies(assertElements(
 						OidcProviderConfiguration::getDPoPSigningAlgorithms,
 						"RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"

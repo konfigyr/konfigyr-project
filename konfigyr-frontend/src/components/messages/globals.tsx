@@ -135,6 +135,13 @@ export const CloseLabel = () => (
   />
 );
 
+export const ViewLabel = () => (
+  <FormattedMessage
+    defaultMessage="View"
+    description="The label used for view buttons or links."
+  />
+);
+
 export const EditLabel = () => (
   <FormattedMessage
     defaultMessage="Edit"

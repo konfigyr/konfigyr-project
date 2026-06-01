@@ -1,7 +1,26 @@
 import type { Pageable } from '../hateoas/types';
 
+export type KeyType = 'EC' | 'RSA' | 'OCTET';
+export type KeyStatus =
+  'INITIALIZING' |
+  'INITIALIZATION_FAILED' |
+  'ENABLED' |
+  'COMPROMISED' |
+  'DISABLED' |
+  'PENDING_DESTRUCTION' |
+  'DESTROYED' |
+  'DESTRUCTION_FAILED';
+
+export type KeysetPurpose = 'ENCRYPTION' | 'SIGNING';
 export type KeysetState = 'ACTIVE' | 'INACTIVE' | 'PENDING_DESTRUCTION' | 'DESTROYED';
 export type KeysetOperation = 'encrypt' | 'decrypt' | 'sign' | 'verify';
+
+export interface KeysetAlgorithm {
+  name: string;
+  type: KeyType;
+  purpose: KeysetPurpose;
+  operations: Array<KeysetOperation>;
+}
 
 export interface Keyset {
   id: string;
@@ -10,8 +29,21 @@ export interface Keyset {
   name: string;
   description?: string;
   tags: Array<string>;
+  rotationInterval?: string;
+  destructionGracePeriod?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface Key {
+  id: string;
+  algorithm: string;
+  status: KeyStatus;
+  isPrimary: boolean;
+  createdAt?: string;
+  initializedAt?: string;
+  expiresAt?: string;
+  destructionScheduledAt?: string;
   destroyedAt?: string;
 }
 

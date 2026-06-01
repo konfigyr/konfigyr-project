@@ -55,6 +55,7 @@ class CryptographyAutoConfigurationTest {
 				"konfigyr.crypto.master-key.value=c7miwShcEQkZUcNQGqliVA=="
 		).run(ctx -> assertThat(ctx)
 				.hasNotFailed()
+				.hasBean("cryptographyJacksonModule")
 				.hasBean("konfigyrKeysetOperationsFactory")
 				.hasBean("konfigyrKekProvider")
 				.doesNotHaveBean("registryKeysetCache")
@@ -71,6 +72,7 @@ class CryptographyAutoConfigurationTest {
 				"konfigyr.crypto.master-key.shares[2]=AAAAA1-YWR3Dc8h40fykrtxy_hOs66v_9aIDtJ9oWD8gJ7eW"
 		).run(ctx -> assertThat(ctx)
 				.hasNotFailed()
+				.hasBean("cryptographyJacksonModule")
 				.hasBean("konfigyrKeysetOperationsFactory")
 				.hasBean("konfigyrKekProvider")
 				.doesNotHaveBean("registryKeysetCache")
@@ -85,6 +87,7 @@ class CryptographyAutoConfigurationTest {
 				"konfigyr.crypto.master-key.value=c7miwShcEQkZUcNQGqliVA=="
 		).run(ctx -> assertThat(ctx)
 				.hasNotFailed()
+				.hasBean("cryptographyJacksonModule")
 				.hasBean("konfigyrKeysetOperationsFactory")
 				.hasBean("konfigyrKekProvider")
 				.doesNotHaveBean("registryKeysetCache")
@@ -95,11 +98,12 @@ class CryptographyAutoConfigurationTest {
 	@DisplayName("should setup context with keyset cache")
 	void shouldCreateContextWithKeysetCache() {
 		runner.withPropertyValues(
-				"konfigyr.crypto.master-key.value=meITChyITJK_Z46MKXNN2LeSYJQdb1aGaLAWoy9-g3Y="
+				"konfigyr.crypto.master-key.value=meITChyITJK/Z46MKXNN2LeSYJQdb1aGaLAWoy9+g3Y="
 		).withBean(
 				CacheManager.class, NoOpCacheManager::new
 		).run(ctx -> assertThat(ctx)
 				.hasNotFailed()
+				.hasBean("cryptographyJacksonModule")
 				.hasBean("konfigyrKeysetOperationsFactory")
 				.hasBean("konfigyrKekProvider")
 				.hasBean("registryKeysetCache")

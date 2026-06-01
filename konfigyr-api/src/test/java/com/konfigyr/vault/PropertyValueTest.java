@@ -14,6 +14,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -32,6 +34,9 @@ class PropertyValueTest {
 				.returns(true, PropertyValue::isUnsealed)
 				.returns(false, PropertyValue::isSealed)
 				.returns(ByteArray.fromString("test"), PropertyValue::get);
+
+		assertThat(value.toString(StandardCharsets.UTF_8))
+				.isEqualTo("test");
 
 		assertThat(value.checksum())
 				.extracting(ByteArray::array)

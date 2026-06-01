@@ -159,7 +159,7 @@ class DefaultArtifactory implements Artifactory {
 				.id(artifactVersionId)
 				.artifact(artifactId)
 				.state(ReleaseState.PENDING)
-				.checksum(checksum.encode())
+				.checksum(checksum.encodeHex())
 				.releasedAt(Instant.now())
 				.build();
 	}
@@ -201,7 +201,7 @@ class DefaultArtifactory implements Artifactory {
 				.artifactId(record.get(ARTIFACTS.ARTIFACT_ID))
 				.version(record.get(ARTIFACT_VERSIONS.VERSION))
 				.state(record.get(ARTIFACT_VERSIONS.STATE, ReleaseState.class))
-				.checksum(record.get(ARTIFACT_VERSIONS.CHECKSUM, Converter.from(ByteArray.class, String.class, ByteArray::encode)))
+				.checksum(record.get(ARTIFACT_VERSIONS.CHECKSUM, Converter.from(ByteArray.class, String.class, ByteArray::encodeHex)))
 				.name(record.get(ARTIFACTS.NAME))
 				.description(record.get(ARTIFACTS.DESCRIPTION))
 				.website(record.get(ARTIFACTS.WEBSITE))

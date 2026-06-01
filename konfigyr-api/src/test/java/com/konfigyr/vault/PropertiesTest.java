@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
 class PropertiesTest {
 
 	static ResourceLoader resourceLoader = new DefaultResourceLoader();
-	static KeysetOperations keysetOperations = TestKeysetOperations.create(ByteArray.fromBase64String(
+	static KeysetOperations keysetOperations = TestKeysetOperations.create(ByteArray.fromBase64UrlString(
 			"CmHPIXcF8Dw8h5iEbk6W39vWaemo7nJTd4_4-pqSGto="
 	));
 

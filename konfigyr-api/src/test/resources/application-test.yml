@@ -29,7 +29,7 @@ konfigyr:
 
   crypto:
     master-key:
-      value: F95fYHXZgV1SFko-HZJShmF70ys8tXP9LGnW6cX5dmc=
+      value: F95fYHXZgV1SFko+HZJShmF70ys8tXP9LGnW6cX5dmc=
     jdbc:
       initialize-schema: never
 

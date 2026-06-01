@@ -1,6 +1,7 @@
 package com.konfigyr.identity.authorization.jwk;
 
 import com.konfigyr.crypto.*;
+import com.konfigyr.crypto.jose.JoseAlgorithm;
 import com.konfigyr.crypto.jose.JoseKeysetFactory;
 import com.konfigyr.crypto.tink.TinkKeyEncryptionKey;
 import com.konfigyr.identity.KonfigyrIdentityKeysets;
@@ -112,9 +113,12 @@ class KeysetSourceTest {
 	}
 
 	static KeysetStore setupStore() {
+		final var registry = new SimpleAlgorithmRegistry();
+		JoseAlgorithm.DEFAULT_ALGORITHMS.forEach(registry::register);
+
 		return spy(
 				KeysetStore.builder()
-						.factories(new JoseKeysetFactory())
+						.factories(new JoseKeysetFactory(registry))
 						.providers(KeyEncryptionKeyProvider.of(
 								CryptoProperties.PROVIDER_NAME,
 								TinkKeyEncryptionKey.builder(CryptoProperties.PROVIDER_NAME)

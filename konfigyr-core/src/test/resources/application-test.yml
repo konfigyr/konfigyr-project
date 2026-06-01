@@ -5,7 +5,7 @@ spring:
 konfigyr:
   crypto:
     master-key:
-      value: YOpMWt987wyXM-TC7VZoRAFwchWtHURdRJBY4yUpq2k=
+      value: meITChyITJK/Z46MKXNN2LeSYJQdb1aGaLAWoy9+g3Y=
 
 logging:
   level:

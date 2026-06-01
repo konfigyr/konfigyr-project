@@ -57,7 +57,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.returns(URI.create("konfigyr.api"), Release::website)
 				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), Release::repository)
 				.returns(List.of(), Release::errors)
-				.returns("7FTrQ6LxfT_s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=", Release::checksum)
+				.returns("ec54eb43a2f17d3fecf5062c987c794ea025da258de0b6ea6483542ef79e3f8a", Release::checksum)
 				.satisfies(it -> assertThat(it.releasedAt())
 						.isCloseTo(Instant.now().minus(1, ChronoUnit.HOURS), within(15, ChronoUnit.MINUTES))
 				);
@@ -146,7 +146,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.returns(artifact.repository(), Release::repository)
 				.returns(ReleaseState.PENDING, Release::state)
 				.returns(List.of(), Release::errors)
-				.returns("jZ1Tz9XSf-v4K68PjYAVRTWMHPIePVTPnC5cW6F1S5g=", Release::checksum)
+				.returns("8d9d53cfd5d27febf82baf0f8d801545358c1cf21e3d54cf9c2e5c5ba1754b98", Release::checksum)
 				.satisfies(it -> assertThat(it.releasedAt())
 						.isCloseTo(Instant.now(), within(10, ChronoUnit.SECONDS))
 				);

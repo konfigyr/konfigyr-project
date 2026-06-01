@@ -2,18 +2,19 @@ import { afterAll, afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { Toaster } from '@konfigyr/components/ui/sonner';
-import { KeysetOperationDialog } from '@konfigyr/components/kms/operation/keyset-operation-dialog';
+import { KeyOperationDialog } from '@konfigyr/components/kms/operation/key-operation-dialog';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
-describe('components | kms | operation | <KeysetReactivateOperation/>', () => {
+describe('components | kms | operation | <KeyReactivateOperation/>', () => {
   const onCancel = vi.fn();
 
   const result = renderWithQueryClient((
     <>
-      <KeysetOperationDialog
+      <KeyOperationDialog
         namespace={namespaces.konfigyr}
         keyset={kms.signingKeyset}
+        value={kms.signingKeyset.keys[0]}
         operation="reactivate"
         onClose={onCancel}
       />
@@ -24,25 +25,24 @@ describe('components | kms | operation | <KeysetReactivateOperation/>', () => {
   afterAll(() => cleanup());
   afterEach(() => vi.clearAllMocks());
 
-  test('should render keyset destroy confirmation dialog', () => {
+  test('should render reactivate key confirmation dialog', () => {
     expect(result.getByRole('dialog')).toBeInTheDocument();
-    expect(result.getByRole('dialog')).toHaveAccessibleName('Reactivate keyset');
+    expect(result.getByRole('dialog')).toHaveAccessibleName('Restore key?');
     expect(result.getByRole('dialog')).toHaveAccessibleDescription(
-      'This operation restores the keyset to an active state, permitting all associated cryptographic functions.',
+      'This key will resume being used for new cryptographic operations. Make sure it has not been compromised before reactivating. If you have any doubt, rotate the keyset instead.',
     );
     expect(result.getByRole('button', { name: 'Reactivate' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    expect(result.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
-  test('should successfully reactivate keyset', async () => {
+  test('should successfully reactivate key', async () => {
     await userEvents.click(
       result.getByRole('button', { name: 'Reactivate' }),
     );
 
     await waitFor(() => {
       expect(result.getByRole('alert')).toBeInTheDocument();
-      expect(result.getByRole('alert')).toHaveTextContent('Keyset has been successfully reactivated');
+      expect(result.getByRole('alert')).toHaveTextContent('Key has been successfully reactivated');
     });
   });
 });

@@ -26,6 +26,28 @@ class CryptoExceptionHandler {
 
 	private final MessageSource messageSource;
 
+	@ExceptionHandler(CryptoException.KeyNotFoundException.class)
+	ResponseEntity<ProblemDetail> handleKeyNotFoundException(CryptoException.KeyNotFoundException ex) {
+		return createResponse(
+				ErrorResponse.builder(ex, HttpStatus.NOT_FOUND, ex.getMessage())
+						.titleMessageCode("problemDetail.title.com.konfigyr.crypto.key-not-found")
+						.detailMessageCode("problemDetail.com.konfigyr.crypto.key-not-found")
+						.detailMessageArguments(ex.getName(), ex.getKeyId())
+						.property("key", ex.getKeyId())
+						.build()
+		);
+	}
+
+	@ExceptionHandler(CryptoException.UnsupportedAlgorithmException.class)
+	ResponseEntity<ProblemDetail> handleUnsupportedAlgorithmException(CryptoException.UnsupportedAlgorithmException ex) {
+		return createResponse(
+				ErrorResponse.builder(ex, HttpStatus.BAD_REQUEST, ex.getMessage())
+						.titleMessageCode("problemDetail.title.com.konfigyr.crypto.unsupported-algorithm")
+						.detailMessageCode("problemDetail.com.konfigyr.crypto.unsupported-algorithm")
+						.build()
+		);
+	}
+
 	@ExceptionHandler(CryptoException.KeysetOperationException.class)
 	ResponseEntity<ProblemDetail> handleKeysetOperationException(CryptoException.KeysetOperationException ex) {
 		final KeysetOperation operation = ex.attemptedOperation();

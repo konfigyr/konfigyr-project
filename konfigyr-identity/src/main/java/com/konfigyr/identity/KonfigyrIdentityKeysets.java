@@ -1,6 +1,7 @@
 package com.konfigyr.identity;
 
 import com.konfigyr.crypto.KeysetDefinition;
+import com.konfigyr.crypto.KeysetPurpose;
 import com.konfigyr.crypto.jose.JoseAlgorithm;
 import com.konfigyr.crypto.tink.TinkAlgorithm;
 
@@ -22,8 +23,12 @@ public interface KonfigyrIdentityKeysets {
 	 * <p>
 	 * The keys within this {@link com.konfigyr.crypto.Keyset} should be rotated on a {@code 90 day} period.
 	 */
-	KeysetDefinition AUTHORIZED_CLIENTS = KeysetDefinition.of("oauth-authorized-clients",
-			TinkAlgorithm.AES128_CTR_HMAC_SHA256, Duration.ofDays(90));
+	KeysetDefinition AUTHORIZED_CLIENTS = KeysetDefinition.builder()
+			.name("oauth-authorized-clients")
+			.purpose(KeysetPurpose.ENCRYPTION)
+			.algorithm(TinkAlgorithm.AES128_CTR_HMAC_SHA256)
+			.rotationInterval(Duration.ofDays(90))
+			.build();
 
 	/**
 	 * Keyset that uses the {@link TinkAlgorithm#AES128_CTR_HMAC_SHA256} algorithm to encrypt and decrypt
@@ -31,8 +36,12 @@ public interface KonfigyrIdentityKeysets {
 	 * <p>
 	 * The keys within this {@link com.konfigyr.crypto.Keyset} should be rotated on a {@code 90 day} period.
 	 */
-	KeysetDefinition AUTHORIZATIONS = KeysetDefinition.of("oauth-authorizations",
-			TinkAlgorithm.AES128_CTR_HMAC_SHA256, Duration.ofDays(90));
+	KeysetDefinition AUTHORIZATIONS = KeysetDefinition.builder()
+			.name("oauth-authorizations")
+			.purpose(KeysetPurpose.ENCRYPTION)
+			.algorithm(TinkAlgorithm.AES128_CTR_HMAC_SHA256)
+			.rotationInterval(Duration.ofDays(90))
+			.build();
 
 	/**
 	 * Keyset that uses the {@link JoseAlgorithm#RS256} algorithm to encrypt and decrypt
@@ -40,7 +49,11 @@ public interface KonfigyrIdentityKeysets {
 	 * <p>
 	 * The keys within this {@link com.konfigyr.crypto.Keyset} should be rotated on a {@code 180 day} period.
 	 */
-	KeysetDefinition WEB_KEYS = KeysetDefinition.of("oauth-keys",
-			JoseAlgorithm.RS256, Duration.ofDays(180));
+	KeysetDefinition WEB_KEYS = KeysetDefinition.builder()
+			.name("oauth-keys")
+			.purpose(KeysetPurpose.SIGNING)
+			.algorithm(JoseAlgorithm.PS256)
+			.rotationInterval(Duration.ofDays(180))
+			.build();
 
 }

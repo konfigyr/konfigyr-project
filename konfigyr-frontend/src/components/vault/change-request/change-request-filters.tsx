@@ -1,7 +1,12 @@
-import { useCallback } from 'react';
 import { useIntl } from 'react-intl';
 import { useGetProfiles } from '@konfigyr/hooks/vault/profiles';
 import { ChangeRequestState } from '@konfigyr/hooks/vault/types';
+import {
+  SortByLatest,
+  SortByLeastRecentlyUpdated,
+  SortByMostRecentlyUpdated,
+  SortByOldest,
+} from '@konfigyr/components/messages/sort';
 import {
   Select,
   SelectContent,
@@ -14,7 +19,6 @@ import {
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { ChangeRequestStateLabel } from './messages';
 
-import type { IntlShape } from 'react-intl';
 import type { ChangeRequestQuery, Namespace, Service } from '@konfigyr/hooks/types';
 
 enum SortBy {
@@ -24,33 +28,18 @@ enum SortBy {
   LEAST_RECENTLY_UPDATED = 'updated',
 }
 
-const useSortByLabel = (intl: IntlShape) => useCallback(
-  (value: SortBy) => {
-    switch(value) {
-      case SortBy.LATEST:
-        return intl.formatMessage({
-          defaultMessage: 'Latest',
-          description: 'Label for the latest sort option. This should force the page to load the latest resources first from the server.',
-        });
-      case SortBy.OLDEST:
-        return intl.formatMessage({
-          defaultMessage: 'Oldest',
-          description: 'Label for the oldest sort option. This should force the page to load the oldest resources first from the server.',
-        });
-      case SortBy.RECENTLY_UPDATED:
-        return intl.formatMessage({
-          defaultMessage: 'Recently updated',
-          description: 'Label for the most recently updated option. This should force the page to load the most recently updated resources first from the server.',
-        });
-      case SortBy.LEAST_RECENTLY_UPDATED:
-        return intl.formatMessage({
-          defaultMessage: 'Least recently updated',
-          description: 'Label for the least recently updated option. This should force the page to load the least recently updated resources first from the server.',
-        });
-    }
-  },
-  [intl],
-);
+const useSortByLabel = () => (value: SortBy) => {
+  switch(value) {
+    case SortBy.LATEST:
+      return <SortByLatest />;
+    case SortBy.OLDEST:
+      return <SortByOldest />;
+    case SortBy.RECENTLY_UPDATED:
+      return <SortByMostRecentlyUpdated />;
+    case SortBy.LEAST_RECENTLY_UPDATED:
+      return <SortByLeastRecentlyUpdated />;
+  }
+};
 
 export function ChangeRequestFilters({ namespace, service, query, onQueryChange }: {
   namespace: Namespace,
@@ -59,7 +48,7 @@ export function ChangeRequestFilters({ namespace, service, query, onQueryChange 
   onQueryChange: (query: ChangeRequestQuery) => void;
 }) {
   const intl = useIntl();
-  const sortByLabel = useSortByLabel(intl);
+  const sortByLabel = useSortByLabel();
   const { data } = useGetProfiles(namespace, service);
 
   const form = useForm({

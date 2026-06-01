@@ -31,6 +31,11 @@ public class CryptographyAutoConfiguration {
 	private final CryptoProperties properties;
 
 	@Bean
+	CryptographyJacksonModule cryptographyJacksonModule() {
+		return new CryptographyJacksonModule();
+	}
+
+	@Bean
 	KeyEncryptionKeyProvider konfigyrKekProvider() {
 		final ByteArray master = properties.getMasterKey().get();
 

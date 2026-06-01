@@ -1,5 +1,6 @@
 package com.konfigyr.kms;
 
+import com.konfigyr.namespace.Namespace;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.http.HttpStatus;
 
@@ -23,10 +24,11 @@ public class KeysetExistsException extends KeysetManagementException {
 	/**
 	 * Creates a new {@link KeysetExistsException} for the given {@link KeysetMetadataDefinition}.
 	 *
+	 * @param namespace the namespace where the keyset already exists, cannot be {@literal null}.
 	 * @param definition the definition of the keyset that already exists, cannot be {@literal null}.
 	 */
-	public KeysetExistsException(KeysetMetadataDefinition definition) {
-		super(HttpStatus.BAD_REQUEST, "Keyset with name '" + definition.name() + "' already exists in namespace:" + definition.namespace());
+	public KeysetExistsException(Namespace namespace, KeysetMetadataDefinition definition) {
+		super(HttpStatus.BAD_REQUEST, "Keyset with name '" + definition.name() + "' already exists in namespace:" + namespace.slug());
 		this.definition = definition;
 	}
 

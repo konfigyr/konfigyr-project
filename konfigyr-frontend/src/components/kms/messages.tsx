@@ -1,5 +1,14 @@
 import { FormattedMessage } from 'react-intl';
 
+export function KeyManagementServiceLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Key management"
+      description="Key management service (KMS) label text, used for page titles or navigation links."
+    />
+  );
+}
+
 export function CreateKeysetLabel() {
   return (
     <FormattedMessage
@@ -32,6 +41,42 @@ export function KeysetStateLabel() {
     <FormattedMessage
       defaultMessage="State"
       description="KMS keyset state label text, used in forms or table headers."
+    />
+  );
+}
+
+export function KeysetRotationIntervalLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Rotation interval"
+      description="KMS keyset rotation interval label text, used in forms or table headers."
+    />
+  );
+}
+
+export function KeysetRotationIntervalHelpText() {
+  return (
+    <FormattedMessage
+      defaultMessage="How often the primary key is automatically replaced with a new one."
+      description="KMS keyset rotation interval help text, used in forms or table headers."
+    />
+  );
+}
+
+export function KeysetDeletionGracePeriodLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Deletion grace period"
+      description="KMS keyset deletion grace period label text, used in forms or table headers."
+    />
+  );
+}
+
+export function KeysetDeletionGracePeriodHelpText() {
+  return (
+    <FormattedMessage
+      defaultMessage="How long a key stays pending deletion before its material is permanently erased."
+      description="KMS keyset deletion grace period help text, used in forms or table headers."
     />
   );
 }
@@ -81,29 +126,47 @@ export function KeysetVerifySignatureLabel() {
   );
 }
 
-export function KeysetDisableLabel() {
+export function KeyDeactivateLabel() {
   return (
     <FormattedMessage
-      defaultMessage="Disable keyset"
-      description="Label used on action links or buttons that would disable the KMS keyset."
+      defaultMessage="Disable key"
+      description="Label used on action links or buttons that would disable the key within a KMS keyset."
     />
   );
 }
 
-export function KeysetReactivateLabel() {
+export function KeyReactivateLabel() {
   return (
     <FormattedMessage
-      defaultMessage="Reactivate keyset"
-      description="Label used on action links or buttons that would reactivate the disabled KMS keyset."
+      defaultMessage="Reactivate key"
+      description="Label used on action links or buttons that would reactivate the disabled key within a KMS keyset."
     />
   );
 }
 
-export function KeysetDestroyLabel() {
+export function KeyCompromisedLabel() {
   return (
     <FormattedMessage
-      defaultMessage="Destroy"
-      description="Label used on action links or buttons that would destroy the KMS keyset."
+      defaultMessage="Mark as compromised"
+      description="Label used on action links or buttons that would mark the key in the KMS keyset as compromised."
+    />
+  );
+}
+
+export function KeyRestoreLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Restore key"
+      description="Label used on action links or buttons that would restore the key scheduled for destruction."
+    />
+  );
+}
+
+export function KeyDestroyLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Schedule for destruction"
+      description="Label used on action links or buttons that would either destroy KMS key or schedule its destruction."
     />
   );
 }

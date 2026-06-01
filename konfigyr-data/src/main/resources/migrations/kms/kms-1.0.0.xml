@@ -26,10 +26,6 @@
 				<constraints nullable="false"/>
 			</column>
 
-			<column name="state" type="varchar(64)">
-				<constraints nullable="false"/>
-			</column>
-
 			<column name="name" type="varchar(32)">
 				<constraints nullable="false"/>
 			</column>
@@ -48,10 +44,6 @@
 
 			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
 				<constraints nullable="false"/>
-			</column>
-
-			<column name="destroyed_at" type="timestamptz">
-				<constraints nullable="true"/>
 			</column>
         </createTable>
 

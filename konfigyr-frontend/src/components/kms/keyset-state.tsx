@@ -1,4 +1,5 @@
 import { FormattedMessage } from 'react-intl';
+import { Badge } from '@konfigyr/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -9,7 +10,7 @@ import {
   SelectValue,
 } from '@konfigyr/components/ui/select';
 
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import type { KeysetState } from '@konfigyr/hooks/types';
 
 const STATES: Array<KeysetState> = [
@@ -43,6 +44,39 @@ export function KeysetState({ state }: { state?: string | KeysetState }) {
       />;
     default:
       return null;
+  }
+}
+
+export function KeysetStateBadge({ state, ...props }: {
+  state?: string | KeysetState;
+} & Omit<ComponentProps<typeof Badge>, 'variant'>) {
+  const label = <KeysetState state={state} />;
+  const icon = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4" width="4" height="4">
+      <circle cx="2" cy="2" r="1" fill="currentColor" />
+    </svg>
+  );
+
+  switch (state) {
+    case 'ACTIVE':
+      return (
+        <Badge variant="success" {...props}>
+          {icon} {label}
+        </Badge>
+      );
+    case 'INACTIVE':
+      return (
+        <Badge variant="outline" {...props}>
+          {icon} {label}
+        </Badge>
+      );
+    case 'PENDING_DESTRUCTION':
+    case 'DESTROYED':
+      return (
+        <Badge variant="destructive" {...props}>
+          {icon} {label}
+        </Badge>
+      );
   }
 }
 

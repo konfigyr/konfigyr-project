@@ -51,7 +51,7 @@ public record Provenance(
 	@NonNull
 	@Override
 	public String toString() {
-		return "Provenance(checksum=" + checksum.encode() + ", firstSeen=" + firstSeen.get()
+		return "Provenance(checksum=" + checksum.encodeHex() + ", firstSeen=" + firstSeen.get()
 				+ ", lastSeen=" + lastSeen.get() + ", occurrences=" + occurrences + ")";
 	}
 }

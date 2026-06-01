@@ -1,9 +1,10 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { CollectionResponse, PageResponse } from '@konfigyr/hooks/hateoas/types';
 import type {
   CreateKeyset,
+  Key,
   Keyset,
   KeysetOperation,
   KeysetOperationRequests,
@@ -17,8 +18,8 @@ import type {
 export const kmsKeys = {
   getKeysets: (namespace: string, query: KeysetSearchQuery) => ['kms', namespace, 'keysets', query],
   getKeyset: (namespace: string, keyset: string) => ['kms', namespace, 'keyset', keyset],
+  getKeysetKeys: (namespace: string, keyset: string) => ['kms', namespace, 'keyset', keyset, 'keys'],
 };
-
 
 /**
  * Attempts to retrieve the Keysets from the Konfigyr API server for the given namespace.
@@ -43,6 +44,36 @@ export const getKeysetsQuery = (namespace: string, query: KeysetSearchQuery = {}
  */
 export const useGetKeysets = (namespace: string, query: KeysetSearchQuery = {}) => {
   return useQuery(getKeysetsQuery(namespace, query));
+};
+
+/**
+ * Attempts to retrieve a single Keyset by identifier from the Konfigyr API server for the given namespace.
+ *
+ * @returns TansStack query options to retrieve the keyset
+ */
+export const getKeysetQuery = (namespace: string, keyset: string) => {
+  return queryOptions({
+    queryKey: kmsKeys.getKeyset(namespace, keyset),
+    queryFn: async ({ signal }) => request
+      .get(`api/namespaces/${namespace}/kms/${keyset}`, { signal })
+      .json<Keyset>(),
+  });
+};
+
+/**
+ * Attempts to retrieve a collection of keys that belong to a Keyset from the Konfigyr API server
+ * for the given namespace.
+ *
+ * @returns TansStack query options to retrieve the keyset
+ */
+export const getKeysetKeysQuery = (namespace: string, keyset: string) => {
+  return queryOptions({
+    queryKey: kmsKeys.getKeysetKeys(namespace, keyset),
+    queryFn: async ({ signal }) => request
+      .get(`api/namespaces/${namespace}/kms/${keyset}/keys`, { signal })
+      .json<CollectionResponse<Key>>()
+      .then(response => response.data),
+  });
 };
 
 /**
@@ -84,21 +115,33 @@ const useKeysetLifecycleOperation = (namespace: string, keyset: Keyset, operatio
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: (): Promise<Keyset> => {
-      return request.put(`api/namespaces/${namespace}/kms/${keyset.id}/${operation}`).json<Keyset>();
+    mutationFn: (payload?: unknown): Promise<Keyset> => {
+      return request.put(`api/namespaces/${namespace}/kms/${keyset.id}/${operation}`, { json: payload })
+        .json<Keyset>();
     },
-    onSuccess(result: Keyset) {
+    onSuccess: (result: Keyset) => {
       keyset.state = result.state;
       client.setQueryData(kmsKeys.getKeyset(namespace, keyset.id), result);
+      client.removeQueries({
+        queryKey: kmsKeys.getKeysetKeys(namespace, keyset.id),
+      });
     },
   });
 };
 
-/**
- * Hook that reactivates the given Keyset in the Konfigyr API server for the given namespace.
- */
-export const useReactivateKeyset = (namespace: string, keyset: Keyset) => {
-  return useKeysetLifecycleOperation(namespace, keyset, 'reactivate');
+const useKeyLifecycleOperation = (namespace: string, keyset: Keyset, operation: string) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (key: Key): Promise<Key> => {
+      return request.put(`api/namespaces/${namespace}/kms/${keyset.id}/keys/${key.id}/${operation}`).json<Key>();
+    },
+    onSuccess: () => {
+      client.removeQueries({
+        queryKey: kmsKeys.getKeysetKeys(namespace, keyset.id),
+      });
+    },
+  });
 };
 
 /**
@@ -109,10 +152,52 @@ export const useRotateKeyset = (namespace: string, keyset: Keyset) => {
 };
 
 /**
- * Hook that disables the given Keyset in the Konfigyr API server for the given namespace.
+ * Hook that deactivates, or disables, a Key within the given Keyset in the Konfigyr API server
+ * for the given namespace.
  */
-export const useDisableKeyset = (namespace: string, keyset: Keyset) => {
-  return useKeysetLifecycleOperation(namespace, keyset, 'deactivate');
+export const useDisableKey = (namespace: string, keyset: Keyset) => {
+  return useKeyLifecycleOperation(namespace, keyset, 'deactivate');
+};
+
+/**
+ * Hook that reactivates a Key within the given Keyset in the Konfigyr API server for the given namespace.
+ */
+export const useReactivateKey = (namespace: string, keyset: Keyset) => {
+  return useKeyLifecycleOperation(namespace, keyset, 'reactivate');
+};
+
+/**
+ * Hook that reactivates a Key within the given Keyset in the Konfigyr API server for the given namespace.
+ */
+export const useCompromiseKey = (namespace: string, keyset: Keyset) => {
+  return useKeyLifecycleOperation(namespace, keyset, 'compromised');
+};
+
+/**
+ * Hook that restores a Key that was scheduled for destruction within the given Keyset in the
+ * Konfigyr API server for the given namespace.
+ */
+export const useRestoreKey = (namespace: string, keyset: Keyset) => {
+  return useKeyLifecycleOperation(namespace, keyset, 'restore');
+};
+
+/**
+ * Hook that schedules destruction of a Key within the given Keyset in the Konfigyr API server
+ * for the given namespace.
+ */
+export const useDestroyKey = (namespace: string, keyset: Keyset) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (key: Key): Promise<Key> => {
+      return request.delete(`api/namespaces/${namespace}/kms/${keyset.id}/keys/${key.id}`).json<Key>();
+    },
+    onSuccess: () => {
+      client.removeQueries({
+        queryKey: kmsKeys.getKeysetKeys(namespace, keyset.id),
+      });
+    },
+  });
 };
 
 /**
@@ -125,9 +210,12 @@ export const useDestroyKeyset = (namespace: string, keyset: Keyset) => {
     mutationFn: (): Promise<Keyset> => {
       return request.delete(`api/namespaces/${namespace}/kms/${keyset.id}`).json<Keyset>();
     },
-    onSuccess(result: Keyset) {
+    onSuccess: (result: Keyset) => {
       keyset.state = result.state;
-      client.setQueryData(kmsKeys.getKeyset(namespace, keyset.id), result);
+
+      client.removeQueries({
+        queryKey: kmsKeys.getKeyset(namespace, keyset.id),
+      });
     },
   });
 };

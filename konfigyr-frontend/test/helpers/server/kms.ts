@@ -1,5 +1,5 @@
 import { HttpResponse, http } from 'msw';
-import { encryptingKeyset, signingKeyset } from '../mocks/kms';
+import { destroyedKeyset, encryptingKeyset, signingKeyset } from '../mocks/kms';
 import { johnDoe, konfigyr } from '../mocks/namespace';
 
 const list = http.get('http://localhost/api/namespaces/:namespace/kms', ({ params }) => {
@@ -12,6 +12,30 @@ const list = http.get('http://localhost/api/namespaces/:namespace/kms', ({ param
   if (konfigyr.slug === namespace) {
     return HttpResponse.json({
       data: [encryptingKeyset, signingKeyset],
+    });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace with slug '${namespace}' not found.`,
+  }, { status: 404 });
+});
+
+const get = http.get('http://localhost/api/namespaces/:namespace/kms/:keyset', ({ params }) => {
+  const { namespace, keyset } = params;
+
+  if (johnDoe.slug === namespace) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Not found',
+      detail: `Keyset with id '${keyset}' not found.`,
+    }, { status: 404 });
+  }
+
+  if (konfigyr.slug === namespace) {
+    return HttpResponse.json({
+      ...signingKeyset,
     });
   }
 
@@ -36,6 +60,30 @@ const create = http.post('http://localhost/api/namespaces/:namespace/kms', async
 
   if (konfigyr.slug === namespace || johnDoe.slug === namespace) {
     return HttpResponse.json({ id: 'new-keyset-id', ...keyset });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace with slug '${namespace}' not found.`,
+  }, { status: 404 });
+});
+
+const keys = http.get('http://localhost/api/namespaces/:namespace/kms/:keyset/keys', ({ params }) => {
+  const { namespace, keyset } = params;
+
+  if (johnDoe.slug === namespace) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Not found',
+      detail: `Keyset with id '${keyset}' not found.`,
+    }, { status: 404 });
+  }
+
+  if (konfigyr.slug === namespace) {
+    return HttpResponse.json({
+      data: signingKeyset.keys,
+    });
   }
 
   return HttpResponse.json({
@@ -191,7 +239,7 @@ const rotate = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset/
   }, { status: 404 });
 });
 
-const disable = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset/deactivate', ({ params }) => {
+const disable = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset/keys/:key/deactivate', ({ params }) => {
   const { namespace, keyset } = params;
 
   if (keyset !== signingKeyset.id) {
@@ -213,7 +261,7 @@ const disable = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset
   }, { status: 404 });
 });
 
-const reactivate = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset/reactivate', ({ params }) => {
+const reactivate = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset/keys/:key/reactivate', ({ params }) => {
   const { namespace, keyset } = params;
 
   if (keyset !== signingKeyset.id) {
@@ -226,6 +274,72 @@ const reactivate = http.put('http://localhost/api/namespaces/:namespace/kms/:key
 
   if (konfigyr.slug === namespace || johnDoe.slug === namespace) {
     return HttpResponse.json({ ...signingKeyset, state: 'ACTIVE' });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace with slug '${namespace}' not found.`,
+  }, { status: 404 });
+});
+
+const compromised = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset/keys/:key/compromised', ({ params }) => {
+  const { namespace, keyset } = params;
+
+  if (keyset !== signingKeyset.id) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Keyset not found.',
+      detail: `Keyset with identifier '${keyset}' not found in namespace '${namespace}'.`,
+    }, { status: 404 });
+  }
+
+  if (konfigyr.slug === namespace || johnDoe.slug === namespace) {
+    return HttpResponse.json({ ...signingKeyset, state: 'ACTIVE' });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace with slug '${namespace}' not found.`,
+  }, { status: 404 });
+});
+
+const restore = http.put('http://localhost/api/namespaces/:namespace/kms/:keyset/keys/:key/restore', ({ params }) => {
+  const { namespace, keyset } = params;
+
+  if (keyset !== destroyedKeyset.id) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Keyset not found.',
+      detail: `Keyset with identifier '${keyset}' not found in namespace '${namespace}'.`,
+    }, { status: 404 });
+  }
+
+  if (konfigyr.slug === namespace || johnDoe.slug === namespace) {
+    return HttpResponse.json({ ...destroyedKeyset, state: 'ACTIVE' });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace with slug '${namespace}' not found.`,
+  }, { status: 404 });
+});
+
+const scheduleDestruction = http.delete('http://localhost/api/namespaces/:namespace/kms/:keyset/keys/:key', ({ params }) => {
+  const { namespace, keyset } = params;
+
+  if (keyset !== signingKeyset.id) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Keyset not found.',
+      detail: `Keyset with identifier '${keyset}' not found in namespace '${namespace}'.`,
+    }, { status: 404 });
+  }
+
+  if (konfigyr.slug === namespace || johnDoe.slug === namespace) {
+    return HttpResponse.json({ ...signingKeyset, state: 'PENDING_DESTRUCTION' });
   }
 
   return HttpResponse.json({
@@ -259,7 +373,9 @@ const destroy = http.delete('http://localhost/api/namespaces/:namespace/kms/:key
 
 export default [
   list,
+  get,
   create,
+  keys,
   encrypt,
   decrypt,
   sign,
@@ -267,5 +383,8 @@ export default [
   rotate,
   reactivate,
   disable,
+  compromised,
+  restore,
+  scheduleDestruction,
   destroy,
 ];

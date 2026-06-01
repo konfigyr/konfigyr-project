@@ -47,7 +47,7 @@ class ProvenanceEvaluatorTest extends AbstractIntegrationTest {
 				.returns(coordinates.version(), Provenance::firstSeen)
 				.returns(coordinates.version(), Provenance::lastSeen)
 				.returns(1, Provenance::occurrences)
-				.returns(ByteArray.fromBase64String("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY="), Provenance::checksum);
+				.returns(ByteArray.fromBase64UrlString("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY="), Provenance::checksum);
 	}
 
 	@Test

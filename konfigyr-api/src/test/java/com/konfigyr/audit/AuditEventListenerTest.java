@@ -676,42 +676,68 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should persist audit record for keyset disabled event")
-	void shouldAuditKeysetDisabled() {
+	@DisplayName("should persist audit record for keyset deleted event")
+	void shouldAuditKeysetDeleted() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new KeysetManagementEvent.Disabled(EntityId.from(1102), EntityId.from(30)));
+		listener.on(new KeysetManagementEvent.Deleted(EntityId.from(1102), EntityId.from(30)));
 
 		assertAuditRecord("keyset", EntityId.from(1102))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
-				.returns("keyset.disabled", AuditRecord::eventType)
+				.returns("keyset.deleted", AuditRecord::eventType)
 				.returns(Map.of(), AuditRecord::details);
 	}
 
 	@Test
-	@DisplayName("should persist audit record for keyset activated event")
-	void shouldAuditKeysetActivated() {
+	@DisplayName("should persist audit record for keyset reactivated event")
+	void shouldAuditKeysetReactivated() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new KeysetManagementEvent.Activated(EntityId.from(1103), EntityId.from(30)));
+		listener.on(new KeysetManagementEvent.Reactivated(EntityId.from(1103), "5767", EntityId.from(30)));
 
 		assertAuditRecord("keyset", EntityId.from(1103))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
-				.returns("keyset.activated", AuditRecord::eventType)
-				.returns(Map.of(), AuditRecord::details);
+				.returns("keyset.reactivated", AuditRecord::eventType)
+				.returns(Map.of("key", "5767"), AuditRecord::details);
 	}
 
 	@Test
-	@DisplayName("should persist audit record for keyset removed event")
-	void shouldAuditKeysetRemoved() {
+	@DisplayName("should persist audit record for keyset deactivated event")
+	void shouldAuditKeysetDeactivated() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new KeysetManagementEvent.Removed(EntityId.from(1104), EntityId.from(30)));
+		listener.on(new KeysetManagementEvent.Deactivated(EntityId.from(1104), "95672", EntityId.from(30)));
 
 		assertAuditRecord("keyset", EntityId.from(1104))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
-				.returns("keyset.removed", AuditRecord::eventType)
-				.returns(Map.of(), AuditRecord::details);
+				.returns("keyset.deactivated", AuditRecord::eventType)
+				.returns(Map.of("key", "95672"), AuditRecord::details);
+	}
+
+	@Test
+	@DisplayName("should persist audit record for keyset compromised event")
+	void shouldAuditKeysetCompromised() {
+		setSecurityContext(TestPrincipals.john());
+
+		listener.on(new KeysetManagementEvent.Compromised(EntityId.from(1105), "1245", EntityId.from(30)));
+
+		assertAuditRecord("keyset", EntityId.from(1105))
+				.returns(EntityId.from(30), AuditRecord::namespaceId)
+				.returns("keyset.compromised", AuditRecord::eventType)
+				.returns(Map.of("key", "1245"), AuditRecord::details);
+	}
+
+	@Test
+	@DisplayName("should persist audit record for keyset restored event")
+	void shouldAuditKeysetRestored() {
+		setSecurityContext(TestPrincipals.john());
+
+		listener.on(new KeysetManagementEvent.Restored(EntityId.from(1105), "53678124", EntityId.from(12)));
+
+		assertAuditRecord("keyset", EntityId.from(1105))
+				.returns(EntityId.from(12), AuditRecord::namespaceId)
+				.returns("keyset.restored", AuditRecord::eventType)
+				.returns(Map.of("key", "53678124"), AuditRecord::details);
 	}
 
 	@Test
@@ -719,12 +745,12 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditKeysetDestroyed() {
 		setSecurityContext(TestPrincipals.john());
 
-		listener.on(new KeysetManagementEvent.Destroyed(EntityId.from(1105), EntityId.from(30)));
+		listener.on(new KeysetManagementEvent.Destroyed(EntityId.from(1106), "596255", EntityId.from(30)));
 
-		assertAuditRecord("keyset", EntityId.from(1105))
+		assertAuditRecord("keyset", EntityId.from(1106))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
 				.returns("keyset.destroyed", AuditRecord::eventType)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of("key", "596255"), AuditRecord::details);
 	}
 
 	@Test

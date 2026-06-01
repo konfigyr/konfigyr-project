@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -28,23 +29,25 @@ import java.util.Set;
  * @param name The name of the keyset, can't be {@literal null}.
  * @param description The description of the keyset, can be {@literal null}.
  * @param tags The tags associated with the keyset, can't be {@literal null}.
+ * @param rotationInterval The rotation interval for the keyset, can be {@literal null}.
+ * @param destructionGracePeriod The grace period for destruction of the keyset, can be {@literal null}.
  * @param createdAt When the keyset was created, can be {@literal null}.
  * @param updatedAt When the keyset was last updated, can be {@literal null}.
- * @param destroyedAt When the keyset was destroyed, can be {@literal null}.
  * @author Vladimir Spasic
  * @since 1.0.0
  */
 @AggregateRoot
 public record KeysetMetadata(
 		@NonNull @Identity EntityId id,
-		@NonNull String algorithm,
+		@NonNull KeysetMetadataAlgorithm algorithm,
 		@NonNull KeysetMetadataState state,
 		@NonNull String name,
 		@Nullable String description,
 		@NonNull Set<String> tags,
+		@Nullable Duration rotationInterval,
+		@Nullable Duration destructionGracePeriod,
 		@Nullable OffsetDateTime createdAt,
-		@Nullable OffsetDateTime updatedAt,
-		@Nullable OffsetDateTime destroyedAt
+		@Nullable OffsetDateTime updatedAt
 ) implements Serializable {
 
 	@Serial
@@ -61,8 +64,8 @@ public record KeysetMetadata(
 	 * The {@link SearchQuery.Criteria} descriptor used to narrow down the search of {@link KeysetMetadata}
 	 * by their algorithm.
 	 */
-	public static final SearchQuery.Criteria<String> ALGORITHM_CRITERIA =
-			SearchQuery.criteria("kms-keyset-metadata.algorithm", String.class);
+	public static final SearchQuery.Criteria<KeysetMetadataAlgorithm> ALGORITHM_CRITERIA =
+			SearchQuery.criteria("kms-keyset-metadata.algorithm", KeysetMetadataAlgorithm.class);
 
 	/**
 	 * The {@link SearchQuery.Criteria} descriptor used to narrow down the search of {@link KeysetMetadata}
@@ -85,14 +88,15 @@ public record KeysetMetadata(
 	 */
 	public static final class Builder {
 		private EntityId id;
-		private String algorithm;
+		private KeysetMetadataAlgorithm algorithm;
 		private KeysetMetadataState state;
 		private String name;
 		private String description;
 		private final Set<String> tags;
+		private Duration rotationInterval;
+		private Duration destructionGracePeriod;
 		private OffsetDateTime createdAt;
 		private OffsetDateTime updatedAt;
-		private OffsetDateTime destroyedAt;
 
 		private Builder() {
 			this.tags = new LinkedHashSet<>();
@@ -137,16 +141,16 @@ public record KeysetMetadata(
 		 * @return keyset metadata builder
 		 */
 		public Builder algorithm(Algorithm algorithm) {
-			return algorithm(algorithm == null ? null : algorithm.name());
+			return algorithm(algorithm == null ? null : KeysetMetadataAlgorithm.fromAlgorithmName(algorithm.name()));
 		}
 
 		/**
-		 * Specify the name of algorithm that is used by this {@link KeysetMetadata}.
+		 * Specify the of algorithm that is used by this {@link KeysetMetadata}.
 		 *
-		 * @param algorithm algorithm name
+		 * @param algorithm the keyset algorithm
 		 * @return keyset metadata builder
 		 */
-		public Builder algorithm(String algorithm) {
+		public Builder algorithm(KeysetMetadataAlgorithm algorithm) {
 			this.algorithm = algorithm;
 			return this;
 		}
@@ -211,6 +215,48 @@ public record KeysetMetadata(
 		}
 
 		/**
+		 * Specify the rotation interval for this {@link KeysetMetadata} in milliseconds.
+		 *
+		 * @param rotationInterval the rotation interval
+		 * @return keyset metadata builder
+		 */
+		public Builder rotationInterval(Long rotationInterval) {
+			return rotationInterval(rotationInterval == null ? null : Duration.ofMillis(rotationInterval));
+		}
+
+		/**
+		 * Specify the rotation interval for this {@link KeysetMetadata}.
+		 *
+		 * @param rotationInterval the rotation interval
+		 * @return keyset metadata builder
+		 */
+		public Builder rotationInterval(Duration rotationInterval) {
+			this.rotationInterval = rotationInterval;
+			return this;
+		}
+
+		/**
+		 * Specify the destruction grace period for this {@link KeysetMetadata} in milliseconds.
+		 *
+		 * @param destructionGracePeriod the destruction grace period
+		 * @return keyset metadata builder
+		 */
+		public Builder destructionGracePeriod(Long destructionGracePeriod) {
+			return destructionGracePeriod(destructionGracePeriod == null ? null : Duration.ofMillis(destructionGracePeriod));
+		}
+
+		/**
+		 * Specify the destruction grace period for this {@link KeysetMetadata}.
+		 *
+		 * @param destructionGracePeriod the destruction grace period
+		 * @return keyset metadata builder
+		 */
+		public Builder destructionGracePeriod(Duration destructionGracePeriod) {
+			this.destructionGracePeriod = destructionGracePeriod;
+			return this;
+		}
+
+		/**
 		 * Specify when this {@link KeysetMetadata} was created.
 		 *
 		 * @param createdAt created date
@@ -253,27 +299,6 @@ public record KeysetMetadata(
 		}
 
 		/**
-		 * Specify when this {@link KeysetMetadata} was destroyed.
-		 *
-		 * @param destroyedAt destroyed date
-		 * @return keyset metadata builder
-		 */
-		public Builder destroyedAt(Instant destroyedAt) {
-			return destroyedAt(OffsetDateTime.ofInstant(destroyedAt, ZoneOffset.UTC));
-		}
-
-		/**
-		 * Specify when this {@link KeysetMetadata} was destroyed.
-		 *
-		 * @param destroyedAt destroyed date
-		 * @return keyset metadata builder
-		 */
-		public Builder destroyedAt(OffsetDateTime destroyedAt) {
-			this.destroyedAt = destroyedAt;
-			return this;
-		}
-
-		/**
 		 * Creates a new instance of the {@link KeysetMetadata} using the values defined in the builder.
 		 *
 		 * @return keyset metadata instance, never {@literal null}
@@ -287,7 +312,7 @@ public record KeysetMetadata(
 			Assert.notNull(name, "Keyset metadata name can not be null");
 
 			return new KeysetMetadata(id, algorithm, state, name, description, Collections.unmodifiableSet(tags),
-					createdAt, updatedAt, destroyedAt);
+					rotationInterval, destructionGracePeriod, createdAt, updatedAt);
 		}
 	}
 

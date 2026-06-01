@@ -87,7 +87,7 @@ public class DefaultProvenanceEvaluator implements ProvenanceEvaluator {
 		final ByteArray checksum = generator.generate(property);
 
 		log.debug("Evaluating provenance for artifact version '{}' and property '[name={}, checksum={}]'",
-				version.coordinates().format(), property.name(), checksum.encode());
+				version.coordinates().format(), property.name(), checksum.encodeHex());
 
 		final Optional<ProvenanceState> currentProvenance = retrieveCurrentProvenance(version, checksum);
 

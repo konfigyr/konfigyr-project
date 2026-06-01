@@ -22,6 +22,7 @@ import org.springframework.security.config.annotation.web.configurers.SessionMan
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.JwsAlgorithms;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationServerMetadataEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -73,6 +74,7 @@ public class SecurityConfiguration {
 										.providerConfigurationEndpoint(endpoint -> endpoint
 												.providerConfigurationCustomizer(customizer -> customizer
 														.scopes(AuthorizationServerScopes::register)
+														.idTokenSigningAlgorithm(JwsAlgorithms.PS256)
 												)
 										)
 								)

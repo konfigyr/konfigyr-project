@@ -4,8 +4,9 @@ import com.konfigyr.crypto.*;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.namespace.NamespaceNotFoundException;
+import com.konfigyr.namespace.Namespace;
 import com.konfigyr.support.SearchQuery;
+import com.konfigyr.support.Slug;
 import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.konfigyr.data.tables.Keysets.KEYSETS;
+import static com.konfigyr.data.tables.KeysetKeys.KEYSET_KEYS;
 import static com.konfigyr.data.tables.KmsKeysetMetadata.KMS_KEYSET_METADATA;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 
@@ -40,14 +43,34 @@ class DefaultKeysetManager implements KeysetManager {
 
 	static final Collection<Field<?>> KEYSET_METADATA_FIELDS = List.of(
 			KMS_KEYSET_METADATA.ID,
-			KEYSETS.KEYSET_ALGORITHM,
-			KMS_KEYSET_METADATA.STATE,
+			KEYSET_KEYS.KEY_STATUS,
+			KEYSET_KEYS.KEY_ALGORITHM,
 			KMS_KEYSET_METADATA.NAME,
 			KMS_KEYSET_METADATA.DESCRIPTION,
 			KMS_KEYSET_METADATA.TAGS,
+			KEYSETS.ROTATION_INTERVAL,
+			KEYSETS.DESTRUCTION_GRACE_PERIOD,
 			KMS_KEYSET_METADATA.CREATED_AT,
-			KMS_KEYSET_METADATA.UPDATED_AT,
-			KMS_KEYSET_METADATA.DESTROYED_AT
+			KMS_KEYSET_METADATA.UPDATED_AT
+	);
+
+	static final Collection<Field<?>> KEYS_METADATA_FIELDS = List.of(
+			KEYSET_KEYS.KEY_ID,
+			KEYSET_KEYS.KEY_STATUS,
+			KEYSET_KEYS.KEY_ALGORITHM,
+			KEYSET_KEYS.KEY_PRIMARY,
+			KEYSET_KEYS.CREATED_AT,
+			KEYSET_KEYS.INITIALIZED_AT,
+			KEYSET_KEYS.EXPIRES_AT,
+			KEYSET_KEYS.DESTRUCTION_SCHEDULED_AT,
+			KEYSET_KEYS.DESTROYED_AT
+	);
+
+	static final Converter<Long, Duration> durationConverter = Converter.of(
+			Long.class,
+			Duration.class,
+			Duration::ofMillis,
+			Duration::toMillis
 	);
 
 	@SuppressWarnings("rawtypes")
@@ -58,10 +81,21 @@ class DefaultKeysetManager implements KeysetManager {
 			StringUtils::collectionToCommaDelimitedString
 	);
 
+	static final Converter<String, KeysetMetadataAlgorithm> keysetMetadataAlgorithmConverter = Converter.from(
+			String.class,
+			KeysetMetadataAlgorithm.class,
+			KeysetMetadataAlgorithm::fromAlgorithmName
+	);
+
+	static final Converter<String, KeysetMetadataState> keysetMetadataStateConverter = Converter.from(
+			String.class,
+			KeysetMetadataState.class,
+			state -> KeysetMetadataState.valueOf(KeyStatus.valueOf(state.toUpperCase()))
+	);
+
 	static final PageableExecutor keysetMetadataExecutor = PageableExecutor.builder()
 			.defaultSortField(KMS_KEYSET_METADATA.UPDATED_AT.desc())
 			.sortField("name", KEYSETS.KEYSET_NAME)
-			.sortField("state", KMS_KEYSET_METADATA.STATE)
 			.sortField("date", KMS_KEYSET_METADATA.UPDATED_AT)
 			.build();
 
@@ -71,30 +105,27 @@ class DefaultKeysetManager implements KeysetManager {
 
 	@Override
 	@Transactional(readOnly = true, label = "kms.search")
-	public Page<KeysetMetadata> find(SearchQuery query) {
+	public Page<KeysetMetadata> find(Namespace namespace, SearchQuery query) {
 		final List<Condition> conditions = new ArrayList<>();
+		conditions.add(KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.id().get()));
 
-		query.term().map(term -> "%" + term + "%").ifPresent(term -> conditions.add(DSL.or(
-				KEYSETS.KEYSET_NAME.likeIgnoreCase(term),
-				KEYSETS.KEYSET_ALGORITHM.likeIgnoreCase(term),
-				KMS_KEYSET_METADATA.TAGS.likeIgnoreCase(term),
-				KMS_KEYSET_METADATA.DESCRIPTION.likeIgnoreCase(term)
+		query.term().ifPresent(term -> conditions.add(DSL.or(
+				KEYSETS.KEYSET_NAME.containsIgnoreCase(term),
+				KEYSET_KEYS.KEY_ALGORITHM.containsIgnoreCase(term),
+				KMS_KEYSET_METADATA.TAGS.containsIgnoreCase(term),
+				KMS_KEYSET_METADATA.DESCRIPTION.containsIgnoreCase(term)
 		)));
-
-		query.criteria(SearchQuery.NAMESPACE).ifPresent(namespace -> conditions.add(
-				NAMESPACES.SLUG.eq(namespace)
-		));
 
 		query.criteria(KeysetMetadata.ID_CRITERIA).ifPresent(id -> conditions.add(
 				KMS_KEYSET_METADATA.ID.eq(id.get())
 		));
 
 		query.criteria(KeysetMetadata.ALGORITHM_CRITERIA).ifPresent(algorithm -> conditions.add(
-				KEYSETS.KEYSET_ALGORITHM.eq(algorithm)
+				KEYSET_KEYS.KEY_ALGORITHM.eq(algorithm.get().name())
 		));
 
 		query.criteria(KeysetMetadata.STATE_CRITERIA).ifPresent(state -> conditions.add(
-				KMS_KEYSET_METADATA.STATE.eq(state.name())
+				KEYSET_KEYS.KEY_STATUS.in(state.getKeyStatuses())
 		));
 
 		if (log.isDebugEnabled()) {
@@ -111,54 +142,47 @@ class DefaultKeysetManager implements KeysetManager {
 
 	@Override
 	@Transactional(readOnly = true, label = "kms.find-by-id")
-	public Optional<KeysetMetadata> get(EntityId id) {
-		return createKeysetMetadataQuery(KMS_KEYSET_METADATA.ID.eq(id.get()))
-				.fetchOptional(DefaultKeysetManager::toKeysetMetadata);
-	}
-
-	@Override
-	@Transactional(readOnly = true, label = "kms.find-by-namespace")
-	public Optional<KeysetMetadata> get(EntityId namespace, EntityId id) {
+	public Optional<KeysetMetadata> get(Namespace namespace, EntityId id) {
 		return createKeysetMetadataQuery(DSL.and(
-				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.get()),
-				KMS_KEYSET_METADATA.ID.eq(id.get())
+				KMS_KEYSET_METADATA.ID.eq(id.get()),
+				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.id().get())
 		)).fetchOptional(DefaultKeysetManager::toKeysetMetadata);
 	}
 
 	@Override
-	@Transactional(readOnly = true, label = "kms.operations-by-id")
-	public KeysetOperations operations(EntityId id) {
-		return operations(KMS_KEYSET_METADATA.ID.eq(id.get()))
-				.orElseThrow(() -> new KeysetNotFoundException(id));
+	@Transactional(readOnly = true, label = "kms.operations-by-namespace")
+	public KeysetOperations operations(Namespace namespace, EntityId id) {
+		return operations(DSL.and(
+				KMS_KEYSET_METADATA.ID.eq(id.get()),
+				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.id().get())
+		)).orElseThrow(() -> new KeysetNotFoundException(id));
 	}
 
 	@Override
-	@Transactional(readOnly = true, label = "kms.operations-by-namespace")
-	public KeysetOperations operations(EntityId namespace, EntityId id) {
-		return operations(DSL.and(
-				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.get()),
-				KMS_KEYSET_METADATA.ID.eq(id.get())
-		)).orElseThrow(() -> new KeysetNotFoundException(id));
+	@Transactional(readOnly = true, label = "kms.keys-by-id")
+	public List<KeyMetadata> keys(KeysetMetadata keyset) {
+		return createKeyMetadataQuery(KMS_KEYSET_METADATA.ID.eq(keyset.id().get()))
+				.orderBy(KEYSET_KEYS.CREATED_AT.desc())
+				.fetch(DefaultKeysetManager::toKeyMetadata);
 	}
 
 	@Override
 	@Transactional(label = "kms.create")
 	@Observed(name = "konfigyr.kms.keyset.create")
-	public KeysetMetadata create(KeysetMetadataDefinition definition) {
+	public KeysetMetadata create(Namespace namespace, KeysetMetadataDefinition definition) {
 		log.debug("Creating KMS keyset with: {}", definition);
 
-		assertUniqueNamespaceKeysetMetadata(definition);
+		assertUniqueNamespaceKeysetMetadata(namespace, definition);
 
 		final Keyset keyset = keysetStore.create(CryptoProperties.PROVIDER_NAME, CryptoProperties.KEK_ID,
-				definition.toKeysetDefinition());
+				toKeysetDefinition(namespace, definition));
 
 		log.debug("Attempting to store KMS keyset metadata for: [keyset={}, definition={}]", keyset, definition);
 
 		final Record record = SettableRecord.of(context, KMS_KEYSET_METADATA)
 				.set(KMS_KEYSET_METADATA.ID, EntityId.generate().map(EntityId::get))
-				.set(KMS_KEYSET_METADATA.NAMESPACE_ID, definition.namespace().get())
+				.set(KMS_KEYSET_METADATA.NAMESPACE_ID, namespace.id().get())
 				.set(KMS_KEYSET_METADATA.KEYSET_ID, keyset.getName())
-				.set(KMS_KEYSET_METADATA.STATE, KeysetMetadataState.ACTIVE.name())
 				.set(KMS_KEYSET_METADATA.NAME, definition.name())
 				.set(KMS_KEYSET_METADATA.DESCRIPTION, definition.description())
 				.set(KMS_KEYSET_METADATA.TAGS, definition.tags(), tagsConverter)
@@ -172,27 +196,22 @@ class DefaultKeysetManager implements KeysetManager {
 		Assert.state(id != null, "Failed to insert new keyset metadata record");
 
 		log.info(CREATED, "Successfully created the keyset metadata with: (id={}, namespace={}, name={}, keyset={}, algorithm={})",
-				id, definition.namespace(), definition.name(), keyset.getName(), definition.algorithm());
+				id, namespace.id(), definition.name(), keyset.getName(), definition.algorithm());
 
-		eventPublisher.publishEvent(new KeysetManagementEvent.Created(
-				EntityId.from(id), definition.namespace()
-		));
+		eventPublisher.publishEvent(new KeysetManagementEvent.Created(EntityId.from(id), namespace.id()));
 
-		return get(EntityId.from(id)).orElseThrow(
+		return get(namespace, EntityId.from(id)).orElseThrow(
 				() -> new IllegalStateException("Failed to lookup newly created keyset metadata record with id: " + id)
 		);
 	}
 
 	@Override
-	public KeysetMetadata update(EntityId id, @Nullable String description, @Nullable Set<String> tags) {
-		final KeysetInformation information = lookupKeysetInformation(KMS_KEYSET_METADATA.ID.eq(id.get()))
-				.orElseThrow(() -> new KeysetNotFoundException(id));
-
+	public KeysetMetadata update(KeysetMetadata keyset, @Nullable String description, @Nullable Set<String> tags) {
 		log.debug("Attempting to update keyset metadata with: [keyset={}, description={}, tags={}]",
-				id, description, tags);
+				keyset.id(), description, tags);
 
-		if (!information.isActive()) {
-			throw new InactiveKeysetException(id);
+		if (keyset.state() != KeysetMetadataState.ACTIVE) {
+			throw new InactiveKeysetException(keyset.id());
 		}
 
 		context.update(KMS_KEYSET_METADATA)
@@ -201,82 +220,80 @@ class DefaultKeysetManager implements KeysetManager {
 				.set(KMS_KEYSET_METADATA.UPDATED_AT, OffsetDateTime.now())
 				.execute();
 
-		return lookup(id);
+		return lookup(keyset.id());
 	}
 
 	@Override
 	@Transactional(label = "kms.transition")
 	@Observed(name = "konfigyr.kms.keyset.transition")
-	public KeysetMetadata transition(EntityId id, KeysetMetadataState state) {
-		if (KeysetMetadataState.DESTROYED == state) {
-			throw new IllegalArgumentException("Can not transition keyset metadata to destroyed state");
-		}
+	public KeysetMetadata transition(Namespace namespace, KeyOperation operation) {
+		log.debug("Attempting to execute the following key operation: {}", operation);
 
-		log.debug("Attempting to transition keyset metadata with id: {} to state: {}", id, state);
+		final KeysetInformation information = lookupKeysetInformation(DSL.and(
+				KMS_KEYSET_METADATA.ID.eq(operation.keyset().get()),
+				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.id().get())
+		)).orElseThrow(() -> new KeysetNotFoundException(operation.keyset));
 
-		final KeysetInformation information = lookupKeysetInformation(KMS_KEYSET_METADATA.ID.eq(id.get()))
-				.orElseThrow(() -> new KeysetNotFoundException(id));
+		try {
+			switch (operation) {
+				case KeyOperation.DeactivateKey deactivate -> keysetStore.disable(information.name(), deactivate.key());
+				case KeyOperation.ReactivateKey reactivate -> keysetStore.enable(information.name(), reactivate.key());
+				case KeyOperation.CompromiseKey compromise -> keysetStore.compromise(information.name(), compromise.key());
+				case KeyOperation.RestoreKey restore -> keysetStore.cancelDestruction(information.name(), restore.key());
+				case KeyOperation.DestroyKey destroy -> keysetStore.scheduleDestruction(information.name(), destroy.key());
+			}
+		} catch (CryptoException.InvalidKeyStatusTransitionException ex) {
+			if (ex.getCurrentStatus() == ex.getAttemptedStatus()) {
+				return lookup(operation.keyset());
+			}
 
-		log.debug("Found keyset metadata that should be transitioned with: [id={}, state={}, target={}]",
-				id, information.state(), state);
-
-		if (information.isDestroyed()) {
-			throw new KeysetTransitionException(id, information.state(), state);
-		}
-
-		if (information.state() == state) {
-			return lookup(id);
-		}
-
-		if (!information.state().canTransitionTo(state)) {
-			throw new KeysetTransitionException(id, information.state(), state);
+			throw new KeysetTransitionException(operation.keyset(), information.state(), KeysetMetadataState.valueOf(ex.getAttemptedStatus()));
 		}
 
 		context.update(KMS_KEYSET_METADATA)
-				.set(KMS_KEYSET_METADATA.STATE, state.name())
 				.set(KMS_KEYSET_METADATA.UPDATED_AT, OffsetDateTime.now())
-				.where(KMS_KEYSET_METADATA.ID.eq(id.get()))
+				.where(KMS_KEYSET_METADATA.ID.eq(information.id().get()))
 				.execute();
 
-		log.info(TRANSITIONED, "Successfully transitioned keyset metadata with id: {} to state: {}", id, state);
+		final KeysetManagementEvent event = switch (operation) {
+			case KeyOperation.ReactivateKey reactivate -> new KeysetManagementEvent.Reactivated(reactivate, information.namespace());
+			case KeyOperation.DeactivateKey deactivate -> new KeysetManagementEvent.Deactivated(deactivate, information.namespace());
+			case KeyOperation.CompromiseKey compromise -> new KeysetManagementEvent.Compromised(compromise, information.namespace());
+			case KeyOperation.RestoreKey restore -> new KeysetManagementEvent.Restored(restore, information.namespace());
+			case KeyOperation.DestroyKey destroy -> new KeysetManagementEvent.Destroyed(destroy, information.namespace());
+		};
 
-		switch (state) {
-			case ACTIVE -> eventPublisher.publishEvent(
-					new KeysetManagementEvent.Activated(id, information.namespace())
-			);
-			case INACTIVE -> eventPublisher.publishEvent(
-					new KeysetManagementEvent.Disabled(id, information.namespace())
-			);
-			case PENDING_DESTRUCTION -> eventPublisher.publishEvent(
-					new KeysetManagementEvent.Removed(id, information.namespace())
-			);
-			default -> log.warn("Unexpected state transition detected: [keyset={}, target={}]", information, state);
-		}
+		eventPublisher.publishEvent(event);
 
-		return lookup(id);
+		log.info(TRANSITIONED, "Successfully performed keyset transition operation: {}", operation);
+
+		return lookup(operation.keyset);
 	}
 
 	@Override
 	@Transactional(label = "kms.rotate")
 	@Observed(name = "konfigyr.kms.keyset.rotate")
-	public KeysetMetadata rotate(EntityId id) {
-		final KeysetInformation information = lookupKeysetInformation(KMS_KEYSET_METADATA.ID.eq(id.get()))
+	public KeysetMetadata rotate(Namespace namespace, EntityId id) {
+		return rotate(namespace, id, null);
+	}
+
+	@Override
+	@Transactional(label = "kms.rotate")
+	@Observed(name = "konfigyr.kms.keyset.rotate")
+	public KeysetMetadata rotate(Namespace namespace, EntityId id, @Nullable KeysetMetadataAlgorithm algorithm) {
+		return lookupKeysetInformation(namespace, id)
+				.map(information -> rotate(information, algorithm == null ? information.algorithm() : algorithm))
 				.orElseThrow(() -> new KeysetNotFoundException(id));
+	}
 
-		log.debug("Attempting to rotate keyset metadata: {}", information);
+	private KeysetMetadata rotate(KeysetInformation information, KeysetMetadataAlgorithm algorithm) {
+		log.debug("Attempting to rotate keyset with: {}", information);
 
-		if (!information.isActive()) {
-			throw new InactiveKeysetException(id);
-		}
-
-		try {
-			final Keyset keyset = keysetStore.read(information.name());
-			keysetStore.rotate(keyset);
-		} catch (CryptoException ex) {
-			throw new KeysetManagementException("Keyset store failed to rotate keyset with id: " + id, ex);
-		} catch (Exception ex) {
-			throw new KeysetManagementException("Unexpected error occurred while rotating keyset with id: " + id, ex);
-		}
+		keysetStore.rotate(information.name(), KeyDefinition.builder()
+				.primary(true)
+				.algorithm(algorithm.get())
+				.rotationInterval(information.rotationInterval())
+				.build());
 
 		context.update(KMS_KEYSET_METADATA)
 				.set(KMS_KEYSET_METADATA.UPDATED_AT, OffsetDateTime.now())
@@ -284,16 +301,16 @@ class DefaultKeysetManager implements KeysetManager {
 
 		log.info(ROTATED, "Successfully rotated keyset: {}", information);
 
-		eventPublisher.publishEvent(new KeysetManagementEvent.Rotated(id, information.namespace()));
+		eventPublisher.publishEvent(new KeysetManagementEvent.Rotated(information.id(), information.namespace()));
 
-		return lookup(id);
+		return lookup(information.id());
 	}
 
 	@Override
 	@Transactional(label = "kms.delete")
 	@Observed(name = "konfigyr.kms.keyset.delete")
-	public void delete(EntityId id) {
-		final KeysetInformation information = lookupKeysetInformation(KMS_KEYSET_METADATA.ID.eq(id.get()))
+	public void delete(Namespace namespace, EntityId id) {
+		final KeysetInformation information = lookupKeysetInformation(namespace, id)
 				.orElseThrow(() -> new KeysetNotFoundException(id));
 
 		context.deleteFrom(KMS_KEYSET_METADATA)
@@ -302,7 +319,7 @@ class DefaultKeysetManager implements KeysetManager {
 
 		keysetStore.remove(information.name());
 
-		eventPublisher.publishEvent(new KeysetManagementEvent.Destroyed(id, information.namespace()));
+		eventPublisher.publishEvent(new KeysetManagementEvent.Deleted(id, information.namespace()));
 	}
 
 	// used internally to retrieve the metadata from the db, usually after a successful update...
@@ -321,19 +338,14 @@ class DefaultKeysetManager implements KeysetManager {
 		});
 	}
 
-	private void assertUniqueNamespaceKeysetMetadata(KeysetMetadataDefinition definition) {
-		// check if the namespace exists before we attempt to validate unique KMS keyset metadata
-		if (!context.fetchExists(NAMESPACES, NAMESPACES.ID.eq(definition.namespace().get()))) {
-			throw new NamespaceNotFoundException(definition.namespace());
-		}
-
+	private void assertUniqueNamespaceKeysetMetadata(Namespace namespace, KeysetMetadataDefinition definition) {
 		final Condition condition = DSL.and(
-				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(definition.namespace().get()),
+				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.id().get()),
 				KMS_KEYSET_METADATA.NAME.eq(definition.name())
 		);
 
 		if (context.fetchExists(KMS_KEYSET_METADATA, condition)) {
-			throw new KeysetExistsException(definition);
+			throw new KeysetExistsException(namespace, definition);
 		}
 	}
 
@@ -342,37 +354,88 @@ class DefaultKeysetManager implements KeysetManager {
 				.from(KMS_KEYSET_METADATA)
 				.innerJoin(KEYSETS)
 				.on(KEYSETS.KEYSET_NAME.eq(KMS_KEYSET_METADATA.KEYSET_ID))
+				.innerJoin(KEYSET_KEYS)
+				.on(KEYSET_KEYS.KEYSET_NAME.eq(KEYSETS.KEYSET_NAME).and(KEYSET_KEYS.KEY_PRIMARY.isTrue()))
 				.innerJoin(NAMESPACES)
 				.on(NAMESPACES.ID.eq(KMS_KEYSET_METADATA.NAMESPACE_ID))
 				.where(condition);
+	}
+
+	private SelectConditionStep<Record> createKeyMetadataQuery(Condition condition) {
+		return context.select(KEYS_METADATA_FIELDS)
+				.from(KMS_KEYSET_METADATA)
+				.innerJoin(KEYSETS)
+				.on(KEYSETS.KEYSET_NAME.eq(KMS_KEYSET_METADATA.KEYSET_ID))
+				.innerJoin(KEYSET_KEYS)
+				.on(KEYSET_KEYS.KEYSET_NAME.eq(KEYSETS.KEYSET_NAME))
+				.where(condition);
+	}
+
+	private Optional<KeysetInformation> lookupKeysetInformation(Namespace namespace, EntityId id) {
+		return lookupKeysetInformation(DSL.and(
+				KMS_KEYSET_METADATA.ID.eq(id.get()),
+				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.id().get())
+		));
 	}
 
 	private Optional<KeysetInformation> lookupKeysetInformation(Condition condition) {
 		return context.select(
 					KMS_KEYSET_METADATA.ID,
 					KMS_KEYSET_METADATA.NAMESPACE_ID,
-					KMS_KEYSET_METADATA.STATE,
-					KEYSETS.KEYSET_NAME
+					KEYSETS.KEYSET_NAME,
+					KEYSETS.ROTATION_INTERVAL,
+					KEYSET_KEYS.KEY_STATUS,
+					KEYSET_KEYS.KEY_ALGORITHM
 				)
 				.from(KMS_KEYSET_METADATA)
 				.innerJoin(KEYSETS)
 				.on(KEYSETS.KEYSET_NAME.eq(KMS_KEYSET_METADATA.KEYSET_ID))
+				.innerJoin(KEYSET_KEYS)
+				.on(KEYSET_KEYS.KEYSET_NAME.eq(KEYSETS.KEYSET_NAME).and(KEYSET_KEYS.KEY_PRIMARY.isTrue()))
 				.where(condition)
 				.fetchOptional(KeysetInformation::from);
+	}
+
+	private static String formatKeysetName(Namespace namespace, String name) {
+		return  "%019d-%s".formatted(namespace.id().get(), Slug.slugify(name));
+	}
+
+	private static KeysetDefinition toKeysetDefinition(Namespace namespace, KeysetMetadataDefinition definition) {
+		return KeysetDefinition.builder()
+				.name(formatKeysetName(namespace, definition.name()))
+				.purpose(definition.algorithm().purpose())
+				.algorithm(definition.algorithm().get())
+				.rotationInterval(definition.rotationInterval())
+				.build();
 	}
 
 	@SuppressWarnings("unchecked")
 	private static KeysetMetadata toKeysetMetadata(Record record) {
 		return KeysetMetadata.builder()
 				.id(record.get(KMS_KEYSET_METADATA.ID, EntityId.class))
-				.algorithm(record.get(KEYSETS.KEYSET_ALGORITHM))
-				.state(record.get(KMS_KEYSET_METADATA.STATE, KeysetMetadataState.class))
+				.algorithm(record.get(KEYSET_KEYS.KEY_ALGORITHM, keysetMetadataAlgorithmConverter))
+				.state(record.get(KEYSET_KEYS.KEY_STATUS, keysetMetadataStateConverter))
 				.name(record.get(KMS_KEYSET_METADATA.NAME))
 				.description(record.get(KMS_KEYSET_METADATA.DESCRIPTION))
 				.tags(record.get(KMS_KEYSET_METADATA.TAGS, tagsConverter))
+				.rotationInterval(record.get(KEYSETS.ROTATION_INTERVAL))
+				.destructionGracePeriod(record.get(KEYSETS.DESTRUCTION_GRACE_PERIOD))
 				.createdAt(record.get(KMS_KEYSET_METADATA.CREATED_AT))
 				.updatedAt(record.get(KMS_KEYSET_METADATA.UPDATED_AT))
-				.destroyedAt(record.get(KMS_KEYSET_METADATA.DESTROYED_AT))
+				.build();
+	}
+
+	private static KeyMetadata toKeyMetadata(Record record) {
+		return KeyMetadata.builder()
+				.id(record.get(KEYSET_KEYS.KEY_ID))
+				.algorithm(record.get(KEYSET_KEYS.KEY_ALGORITHM, keysetMetadataAlgorithmConverter))
+				.status(record.get(KEYSET_KEYS.KEY_STATUS, KeyStatus.class))
+				.isPrimary(record.get(KEYSET_KEYS.KEY_PRIMARY))
+				.createdAt(record.get(KEYSET_KEYS.CREATED_AT))
+				.initializedAt(record.get(KEYSET_KEYS.INITIALIZED_AT))
+				.expiresAt(record.get(KEYSET_KEYS.EXPIRES_AT))
+				.destructionScheduledAt(record.get(KEYSET_KEYS.DESTRUCTION_SCHEDULED_AT))
+				.destroyedAt(record.get(KEYSET_KEYS.DESTROYED_AT))
 				.build();
 	}
 
@@ -383,25 +446,32 @@ class DefaultKeysetManager implements KeysetManager {
 	 * @param id the unique identifier of the {@link KeysetMetadata}
 	 * @param namespace the unique identifier of the {@link com.konfigyr.namespace.Namespace}
 	 * @param name the name of the {@link Keyset}
-	 * @param state the current state of the {@link KeysetMetadata}
+	 * @param state the current state of the primary key in the keyset
+	 * @param algorithm the algorithm used by the primary key in the keyset
+	 * @param rotationInterval the rotation interval in milliseconds for keys in the keyset
 	 */
-	private record KeysetInformation(EntityId id, EntityId namespace, String name, KeysetMetadataState state) {
+	private record KeysetInformation(
+			EntityId id,
+			EntityId namespace,
+			String name,
+			KeysetMetadataState state,
+			KeysetMetadataAlgorithm algorithm,
+			@Nullable Duration rotationInterval
+	) {
 
 		static KeysetInformation from(Record record) {
 			return new KeysetInformation(
 					record.get(KMS_KEYSET_METADATA.ID, EntityId.class),
 					record.get(KMS_KEYSET_METADATA.NAMESPACE_ID, EntityId.class),
 					record.get(KEYSETS.KEYSET_NAME),
-					record.get(KMS_KEYSET_METADATA.STATE, KeysetMetadataState.class)
+					record.get(KEYSET_KEYS.KEY_STATUS, keysetMetadataStateConverter),
+					record.get(KEYSET_KEYS.KEY_ALGORITHM, keysetMetadataAlgorithmConverter),
+					record.get(KEYSETS.ROTATION_INTERVAL, durationConverter)
 			);
 		}
 
 		boolean isActive() {
 			return state == KeysetMetadataState.ACTIVE;
-		}
-
-		boolean isDestroyed() {
-			return state == KeysetMetadataState.DESTROYED;
 		}
 
 	}

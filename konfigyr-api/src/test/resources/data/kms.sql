@@ -1,15 +1,100 @@
-INSERT INTO keysets(keyset_name, keyset_algorithm, keyset_provider, keyset_kek, keyset_data, rotation_interval, next_rotation_time) VALUES
-('kms-john-doe-keyset', 'AES128_GCM', 'konfigyr-registry', 'master', decode('Eng4C+NGuV+tgfwsFaBKcadxjtn0e3IicDBqbjbrNEZShvWXtyxttYmHkWjf7W4M++Gh2xH2CzK6+9vKXsa/Xo+oIC0zvAnMMlZR56NqTVx8dxTu5qAQzaa+VrFOtmXwPefaNzcQmuBBWC+3UpnhosxVh2FJPNdCjYQ=', 'base64'), 31536000000, extract(epoch from now()) + 31536000000),
-('kms-john-doe-signing', 'ECDSA_P256', 'konfigyr-registry', 'master', decode('EuEB+QKAZ2IwhuWfDIqlRUWh5C59RQihyWZ6B8nHXfe/WTpNJX4eumlBLi9KiiT4dtDc4dK3xlUvOv6iHuMG8ix+1yhzP5w6NvPBdvrpRmDF4oBNSDNXCvmB0Q3nvnpvroR6tEXSUcTD+IkqDA8O1NFtH6w+YrdueddnH20O05Ep6DC1wOJOFlQiF0VpZcP0t8y0VfePymsNcNSzEHeXy8bLUz+ujcP8/GblBZh3DAT3p/fyi6TAEUjbeX+1Uw021V4FDlqArSZdEfY09EpZnYZayA85hqLupIJPu8fGL5xqCEWe', 'base64'), 31536000000, extract(epoch from now()) + 31536000000),
-('kms-konfigyr-active', 'AES256_GCM', 'konfigyr-registry', 'master', decode('EogBvqzMIcyaDOmC5LITEF04nvxaaU0frVGhVpz4nvDNfzz7auHW6JpNsOHGJ0ooUoALWqMZB0Q7fkItqwr3Pb3awLEgCRpFtjiHLmBbjvONbXMm2DMXNhNVAwhRUEw2C1eUyfkOxItIaU4pJOLHpIz6N5Nb5MQM1tXg1+N1VxJ6BOrYjy90/Y0fZg==', 'base64'), 31536000000, extract(epoch from now()) + 31536000000),
-('kms-konfigyr-inactive', 'ECDSA_P256', 'konfigyr-registry', 'master', decode('EuEBwME+y/ifs7lF5d4aLh9ZUT4l2PdChwbyZrY7glHQxaqERfM4/LnIrrygOqRpH9vnFaP/LI1OUzYrS9W1yQd5dc0Ds/7ze8gwKFHd6XYPQ8MLUHhBdzckdI8qZihCOCM1c5IczyZfRVut1KdybCkaz4f2AEPFsjW89RSnwZvNnETTXQJZFAL3KJXWA5OFHg2F21uvbKqGI5KsdfNWbcSRcqBLdQFelBw/To4GyDaix12Z//L3at++/dJD/T0kkPs+OmGGPt9dy5UlVo33W2jMADBkpmfhqbhmpYNAxQ/VfpqP', 'base64'), 31536000000, extract(epoch from now()) + 31536000000),
-('kms-konfigyr-deleted', 'ED25519', 'konfigyr-registry', 'master', decode('ErYBR0NjHHaEHIGBppJcBH2mFj+BqOPCo+yjqqPIYu+I/hiNiFt3e/kZQ+MKHUSwTXu4nP3tNxwVwotO7XJEh634EXRLi4fjNUY4mhQHDmBdbiUKzAd4lEmb92JkPT3UQi6ZfbJGDAvVdcVw3HkBBa+QaYksIV4+T4fBU1kClBH33KSwVqA1gcpeSksQFC4TczUQbuPlGWJAPsFVK9SvK4yZa5qh+4ZrH8jSZ38gpO3I3+Wu3mdmkUY=', 'base64'), 31536000000, extract(epoch from now()) + 31536000000),
-('kms-konfigyr-destroyed', 'AES128_GCM', 'konfigyr-registry', 'master', decode('EniTl5dqpsVpNO8qoaJZEc05bZfiTEJriSoTA1bIm3LcvdM85ztThQoAipAvAAiNKoVssj1KSzdoWon3Om8nXXWJlH/Q/1vH8UWZZaUi/tFSZQpxQihuU/5lpNV5xlWrXKn8zPLV8YRM4ocZv0fA7NwPxbaZsPa2WVQ=', 'base64'), 31536000000, extract(epoch from now()) + 31536000000);
+INSERT INTO KEYSETS (KEYSET_NAME, KEYSET_PURPOSE, KEYSET_FACTORY, KEYSET_VERSION, KEYSET_PROVIDER, KEYSET_KEK, ROTATION_INTERVAL, DESTRUCTION_GRACE_PERIOD)
+VALUES
+    ('kms-john-doe-keyset',    'ENCRYPTION', 'tink', 0, 'konfigyr-registry', 'master', 31536000000, 2592000000),
+    ('kms-john-doe-signing',   'SIGNING',    'tink', 0, 'konfigyr-registry', 'master', 31536000000, 2592000000),
+    ('kms-konfigyr-active',    'ENCRYPTION', 'tink', 0, 'konfigyr-registry', 'master', 31536000000, 2592000000),
+    ('kms-konfigyr-inactive',  'SIGNING',    'tink', 0, 'konfigyr-registry', 'master', 31536000000, 2592000000),
+    ('kms-konfigyr-deleted',   'SIGNING',    'tink', 0, 'konfigyr-registry', 'master', 31536000000, 2592000000),
+    ('kms-konfigyr-destroyed', 'ENCRYPTION', 'tink', 0, 'konfigyr-registry', 'master', 31536000000, 2592000000);
 
-INSERT INTO kms_keyset_metadata(id, namespace_id, keyset_id, state, name, description, tags, created_at, updated_at, destroyed_at) VALUES
-(1, 1, 'kms-john-doe-keyset', 'ACTIVE', 'john-doe-keyset', 'John Doe keyset', 'private-key', now() - interval '3 days', now() - interval '1 days', NULL),
-(2, 2, 'kms-konfigyr-active', 'ACTIVE', 'konfigyr-active', 'Active keyset', 'encryption,konfigyr', now() - interval '7 days', now() - interval '3 days', NULL),
-(3, 2, 'kms-konfigyr-inactive', 'INACTIVE', 'konfigyr-inactive', 'Inactive keyset', 'signing,konfigyr', now() - interval '30 days', now() - interval '18 days', NULL),
-(4, 2, 'kms-konfigyr-deleted', 'PENDING_DESTRUCTION', 'konfigyr-deleted', 'Pending removal keyset', NULL, now() - interval '30 days', now() - interval '18 days', NULL),
-(5, 2, 'kms-konfigyr-destroyed', 'DESTROYED', 'konfigyr-destroyed', 'Destroyed keyset', 'destroyed,konfigyr', now() - interval '10 days', now() - interval '8 days', now() - interval '7 days'),
-(6, 1, 'kms-john-doe-signing', 'ACTIVE', 'signing keyset', NULL, NULL, now() - interval '1 days', now() - interval '8 hours', NULL);
+INSERT INTO KEYSET_KEYS (KEYSET_NAME, KEY_ID, KEY_ALGORITHM, KEY_TYPE, KEY_STATUS, KEY_PRIMARY, KEY_DATA, CREATED_AT, INITIALIZED_AT, EXPIRES_AT, DESTRUCTION_SCHEDULED_AT, DESTROYED_AT)
+VALUES
+    (
+        'kms-john-doe-keyset',
+        '106475',
+        'tink:AES128_GCM', 'OCTET', 'ENABLED', true,
+        decode('Zum85eP4nvjCkbMmgwOmIdGUSIUChYSi8u7U7u0aoHnwiEYl2bJta2TgqZuZSdTbiHkuToduf46L4hsoqJtB9Rfysd0Jbdd7JlM471oqGxsrNIp60sj2YwfOpi72eezmAf7XSg==', 'base64'),
+        (extract(epoch from now() - interval '3 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '3 days') * 1000)::bigint,
+        (extract(epoch from now() + interval '87 days') * 1000)::bigint,
+        NULL, NULL
+    ),
+    (
+        'kms-john-doe-keyset',
+        '407725',
+        'tink:AES128_GCM', 'OCTET', 'ENABLED', false,
+        decode('Lsxu6hSYgJBHs/tAC5dc3HSBUrmCjR1ZaJFalEBSi9JVAJGkyXSwYA5zb8VUTpa5K3UyqBP8Y2cgUSWdNE8q6VxGZJ3cJybFutGPQiz8I9MxG+M3nOvi2cXgTQVe/W1J+oV2Kw==', 'base64'),
+        (extract(epoch from now() - interval '30 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '30 days') * 1000)::bigint,
+        (extract(epoch from now() + interval '60 days') * 1000)::bigint,
+        NULL, NULL
+    ),
+    (
+        'kms-john-doe-signing',
+        '738802',
+        'tink:ECDSA_P256', 'EC', 'ENABLED', true,
+        decode('8DCWORAE44LMZht5y2ktRalBmYaGHOFLLsDB2EEl9eagqLGn9TiYNJXC6K0e4Rsj1OSp4t+Dmfr8FBZnRuuroc1/TPpnNcHrjuHtbKr3zBuAEonMI8wMNPGSKztggk4vj1H7BuxwIfbjNUVaRU5DDpP6/UPuTLMqSCw5aqGwshaTnEEayKBQ4arAr2ZC5Migiue9DPYkgNSS4lsC+8QUTrLokC7z59/3OWR78p9opkPXLE3mq8A+kAwxET4KnWHaQWrLa9xgAlSE9Jo=', 'base64'),
+        (extract(epoch from now() - interval '1 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '1 days') * 1000)::bigint,
+        (extract(epoch from now() + interval '89 days') * 1000)::bigint,
+        NULL, NULL
+    ),
+    (
+        'kms-konfigyr-active',
+        '738802',
+        'tink:AES256_GCM', 'OCTET', 'ENABLED', true,
+        decode('tNtuoyY6WJUKDq0zmH2QVyDZthtMHTtlZNgRlnsTlYC+NFtjEiU2ZbrzemUZ+CYURY8dC7QgUkt3WFgQ0AH6yfBhN6vLLSfL9NlSs7TgPJrfWZZHldAJl/NYcbmpQlSjwvkF3gNLMzTNuKGABGTGVTw+Nq4=', 'base64'),
+        (extract(epoch from now() - interval '1 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '1 days') * 1000)::bigint,
+        (extract(epoch from now() + interval '89 days') * 1000)::bigint,
+        NULL, NULL
+    ),
+    (
+        'kms-konfigyr-active',
+        '604025',
+        'tink:AES128_GCM', 'OCTET', 'ENABLED', false,
+        decode('Lsxu6hSYgJBHs/tAC5dc3HSBUrmCjR1ZaJFalEBSi9JVAJGkyXSwYA5zb8VUTpa5K3UyqBP8Y2cgUSWdNE8q6VxGZJ3cJybFutGPQiz8I9MxG+M3nOvi2cXgTQVe/W1J+oV2Kw==', 'base64'),
+        (extract(epoch from now() - interval '7 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '7 days') * 1000)::bigint,
+        (extract(epoch from now() + interval '83 days') * 1000)::bigint,
+        NULL, NULL
+    ),
+    (
+        'kms-konfigyr-inactive',
+        '374108',
+        'tink:ECDSA_P256', 'EC', 'DISABLED', true,
+        decode('8DCWORAE44LMZht5y2ktRalBmYaGHOFLLsDB2EEl9eagqLGn9TiYNJXC6K0e4Rsj1OSp4t+Dmfr8FBZnRuuroc1/TPpnNcHrjuHtbKr3zBuAEonMI8wMNPGSKztggk4vj1H7BuxwIfbjNUVaRU5DDpP6/UPuTLMqSCw5aqGwshaTnEEayKBQ4arAr2ZC5Migiue9DPYkgNSS4lsC+8QUTrLokC7z59/3OWR78p9opkPXLE3mq8A+kAwxET4KnWHaQWrLa9xgAlSE9Jo=', 'base64'),
+        (extract(epoch from now() - interval '30 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '30 days') * 1000)::bigint,
+        NULL, NULL, NULL
+    ),
+    (
+        'kms-konfigyr-deleted',
+        '162009',
+        'tink:ED25519', 'EC', 'PENDING_DESTRUCTION', true,
+        decode('hGcL0wQd2hHZzW4LHV8LJqkB5Jc8+Ooq9Mlx51qhDW9cHERiSTrZJBfWyoq876+dL+iW++T6HZvULWJKBz+T4e3H0TMm6lTVXhFH8JXsJ27cJyiRSeUCeY+BTinpmZ6CbMToLxC55AB64gdI9OLNPQNP8S2M1oHXWfMkkVJFBzol54JEusXRZ3qLXbFB4S3R2N9bzkH94jAXnqfjibbiqA==', 'base64'),
+        (extract(epoch from now() - interval '30 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '30 days') * 1000)::bigint,
+        NULL,
+        (extract(epoch from now() + interval '8 hours') * 1000)::bigint,
+        NULL
+    ),
+    (
+        'kms-konfigyr-destroyed',
+        '431904',
+        'tink:AES128_GCM', 'OCTET', 'DESTROYED', true,
+        decode('Zum85eP4nvjCkbMmgwOmIdGUSIUChYSi8u7U7u0aoHnwiEYl2bJta2TgqZuZSdTbiHkuToduf46L4hsoqJtB9Rfysd0Jbdd7JlM471oqGxsrNIp60sj2YwfOpi72eezmAf7XSg==', 'base64'),
+        (extract(epoch from now() - interval '10 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '10 days') * 1000)::bigint,
+        NULL,
+        (extract(epoch from now() - interval '8 days') * 1000)::bigint,
+        (extract(epoch from now() - interval '8 days') * 1000)::bigint
+    );
+
+INSERT INTO kms_keyset_metadata(id, namespace_id, keyset_id, name, description, tags, created_at, updated_at) VALUES
+(1, 1, 'kms-john-doe-keyset', 'john-doe-keyset', 'John Doe keyset', 'private-key', now() - interval '3 days', now() - interval '1 days'),
+(2, 2, 'kms-konfigyr-active', 'konfigyr-active', 'Active keyset', 'encryption,konfigyr', now() - interval '7 days', now() - interval '3 days'),
+(3, 2, 'kms-konfigyr-inactive', 'konfigyr-inactive', 'Inactive keyset', 'signing,konfigyr', now() - interval '30 days', now() - interval '18 days'),
+(4, 2, 'kms-konfigyr-deleted', 'konfigyr-deleted', 'Pending removal keyset', NULL, now() - interval '30 days', now() - interval '18 days'),
+(5, 2, 'kms-konfigyr-destroyed', 'konfigyr-destroyed', 'Destroyed keyset', 'destroyed,konfigyr', now() - interval '10 days', now() - interval '8 days'),
+(6, 1, 'kms-john-doe-signing', 'signing keyset', NULL, NULL, now() - interval '1 days', now() - interval '8 hours');
