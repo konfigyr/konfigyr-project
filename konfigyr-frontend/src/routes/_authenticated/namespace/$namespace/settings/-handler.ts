@@ -46,7 +46,7 @@ export async function deleteNamespaceHandler({ data }: { data: DeleteNamespaceRe
     ),
   );
 
-  await http(request).json();
+  await http(request);
 
   if (data.redirect) {
     throw redirect({ to: '/namespace/$namespace', params: { namespace: data.redirect } });

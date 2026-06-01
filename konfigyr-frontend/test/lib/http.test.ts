@@ -74,6 +74,6 @@ describe('services | http', () => {
 
   test('should fail to execute request due to network error', async () => {
     await expect(request.get(new URL('https://api.konfigyr.com/proxy-test/network-error')).json())
-      .rejects.toThrow('Failed to fetch');
+      .rejects.toThrow('Request failed due to a network error');
   });
 });

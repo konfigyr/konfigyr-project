@@ -120,7 +120,17 @@ const inviteMember = http.post('http://localhost/api/namespaces/:slug/invitation
   }
 
   if (email === 'invitee@konfigyr.com' && role === 'ADMIN') {
-    return new HttpResponse(null, { status: 204 });
+    return HttpResponse.json({
+      key: 'new-invitation-key',
+      namespace: namespaces.konfigyr.id,
+      role: 'ADMIN',
+      sender: {
+        email: 'sender@konfigyr.com',
+      },
+      recipient: {
+        email: 'sender@konfigyr.com',
+      }
+    });
   }
 
   return HttpResponse.json({

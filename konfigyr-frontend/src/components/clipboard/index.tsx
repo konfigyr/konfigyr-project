@@ -14,10 +14,7 @@ import type { ComponentProps, ReactNode } from 'react';
 
 function useClipboardButton(text: string): [boolean, () => void] {
   const [copied, setCopied] = useState(false);
-
-  const clipboard = useClipboard({
-    onCopy: () => setCopied(true),
-  });
+  const clipboard = useClipboard();
 
   useEffect(() => {
     if (copied) {
@@ -26,7 +23,12 @@ function useClipboardButton(text: string): [boolean, () => void] {
     }
   }, [copied]);
 
-  const onCopy = useCallback(() => clipboard(text), [clipboard, text]);
+  const onCopy = useCallback(async () => {
+    const success = await clipboard(text);
+    if (success) {
+      setCopied(true);
+    }
+  }, [clipboard, text]);
 
   return [copied, onCopy];
 }
