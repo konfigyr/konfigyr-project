@@ -40,7 +40,7 @@ export const changesetStatusBarVariants = cva(
   {
     variants: {
       variant: {
-        inline: 'px-4 rounded-lg border border-dashed border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/10 dark:border-amber-800/30',
+        inline: 'px-4 rounded-lg border border-info/20 bg-info/5',
         sticky: null,
       },
     },
@@ -123,7 +123,7 @@ function ChangesetName({ changeset, onRenamed, onError }: {
               type="button"
               className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-foreground/80 transition-colors group/name truncate max-w-50"
             >
-              <SaveIcon className="size-3 text-amber-600 dark:text-amber-400 shrink-0" />
+              <SaveIcon className="size-3 text-info shrink-0" />
               <span className="truncate">{changeset.name}</span>
               <PencilIcon className="size-2.5 text-muted-foreground/50 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
             </button>
@@ -144,17 +144,17 @@ function StateCountLabel({ type, count }: { type: PropertyTransitionType, count:
   return (
     <p
       className={cn(
-        'flex items-center gap-1 text-xs',
-        type === PropertyTransitionType.ADDED && '[&>*:first-child]:bg-emerald-600',
-        type === PropertyTransitionType.UPDATED && '[&>*:first-child]:bg-amber-600',
+        'flex items-center gap-1 text-xs tabular-nums',
+        type === PropertyTransitionType.ADDED && '[&>*:first-child]:bg-success',
+        type === PropertyTransitionType.UPDATED && '[&>*:first-child]:bg-warning',
         type === PropertyTransitionType.REMOVED && '[&>*:first-child]:bg-destructive',
       )}
     >
       <span className="size-2 rounded-sm shrink-0" />
       {count && (
-        <span className="text-foreground font-medium tabular-nums">{count}</span>
+        <span className="font-medium">{count}</span>
       )}
-      <span className="text-muted-foreground hidden sm:inline">
+      <span className="hidden sm:inline">
         {label}
       </span>
     </p>
@@ -277,7 +277,7 @@ function ChangesetStatusBarContents({
       <div className="h-4 w-px bg-border shrink-0" />
 
       <div className="flex items-center gap-3">
-        <p className="text-[11px] text-muted-foreground tabular-nums">
+        <p className="text-xs tabular-nums">
           <ChangesCountLabel count={totalChanges} />
         </p>
         <div className="flex items-center gap-2.5">

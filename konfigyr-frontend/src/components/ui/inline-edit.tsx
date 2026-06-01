@@ -204,7 +204,7 @@ export function InlineEditContainer<T>({ className, children, ...props }: Compon
       <Button
         variant="ghost"
         size="icon"
-        className="size-7 shrink-0 text-des text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+        className="size-7 shrink-0 text-success hover:text-success/80 hover:bg-success/10 dark:hover:bg-success/20"
         onMouseDown={(e) => e.preventDefault()}
         loading={isPending}
         onClick={onSave}
@@ -217,7 +217,7 @@ export function InlineEditContainer<T>({ className, children, ...props }: Compon
       <Button
         variant="ghost"
         size="icon"
-        className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
+        className="size-7 shrink-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10 dark:hover:bg-destructive/20"
         onMouseDown={(e) => e.preventDefault()}
         onClick={onCancel}
       >

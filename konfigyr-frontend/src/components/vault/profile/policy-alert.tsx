@@ -3,11 +3,7 @@ import {
   ShieldCheckIcon,
   ShieldOffIcon,
 } from 'lucide-react';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@konfigyr/components/ui/alert';
+import { SimpleAlert } from '@konfigyr/components/ui/alert';
 import {
   ProfilePolicyDescription,
   ProfilePolicyLabel,
@@ -27,16 +23,19 @@ export function PolicyAlertIcon({ policy }: { policy: ProfilePolicy }) {
   }
 }
 
-export function PolicyAlert({ profile, ...props }: { profile: Profile } & ComponentProps<typeof Alert>) {
+export function PolicyAlert({ profile, ...props }: { profile: Profile } & ComponentProps<typeof SimpleAlert>) {
   return (
-    <Alert {...props}>
-      <PolicyAlertIcon policy={profile.policy} />
-      <AlertTitle>
+    <SimpleAlert
+      icon={
+        <PolicyAlertIcon policy={profile.policy} />
+      }
+      title={
         <ProfilePolicyLabel value={profile.policy} />
-      </AlertTitle>
-      <AlertDescription>
+      }
+      description={
         <ProfilePolicyDescription value={profile.policy} />
-      </AlertDescription>
-    </Alert>
+      }
+      {...props}
+    />
   );
 }

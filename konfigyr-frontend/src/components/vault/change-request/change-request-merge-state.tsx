@@ -42,7 +42,7 @@ function ChangeRequestMergeStateIcon({ value, className }: { value: ChangeReques
       );
     case ChangeRequestMergeStatus.MERGEABLE:
       return (
-        <CircleCheckIcon className={cn('text-emerald-500', className)} />
+        <CircleCheckIcon className={cn('text-success', className)} />
       );
   }
 }

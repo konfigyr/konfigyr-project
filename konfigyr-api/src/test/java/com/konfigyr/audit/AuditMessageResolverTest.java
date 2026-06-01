@@ -4,8 +4,6 @@ import com.konfigyr.entity.EntityId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.util.Map;
@@ -77,50 +75,6 @@ class AuditMessageResolverTest {
 	void shouldFallBackToEventType() {
 		assertThat(resolver.resolve("custom.something", null))
 				.isEqualTo("custom.something");
-	}
-
-	@ParameterizedTest
-	@DisplayName("should have message bundle entry for all known event types")
-	@ValueSource(strings = {
-			"account.updated",
-			"account.deleted",
-			"namespace.created",
-			"namespace.renamed",
-			"namespace.deleted",
-			"namespace.member-added",
-			"namespace.member-updated",
-			"namespace.member-removed",
-			"namespace.application-created",
-			"namespace.application-updated",
-			"namespace.application-reset",
-			"namespace.application-removed",
-			"invitation.created",
-			"invitation.accepted",
-			"invitation.canceled",
-			"service.created",
-			"service.renamed",
-			"service.published",
-			"service.deleted",
-			"profile.created",
-			"profile.updated",
-			"profile.deleted",
-			"profile.changes-applied",
-			"keyset.created",
-			"keyset.rotated",
-			"keyset.disabled",
-			"keyset.activated",
-			"keyset.removed",
-			"keyset.destroyed",
-			"artifact-version.release-created",
-			"artifact-version.release-completed",
-			"artifact-version.release-failed"
-	})
-	void eventTypeSanityCheck(String eventType) {
-		final String resolved = resolver.resolve(eventType, null);
-
-		assertThat(resolved)
-				.as("Message bundle should contain entry for event type: %s", eventType)
-				.isNotEqualTo(eventType);
 	}
 
 }

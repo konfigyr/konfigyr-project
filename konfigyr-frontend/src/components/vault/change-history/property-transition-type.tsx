@@ -9,13 +9,13 @@ const iconForTransitionType = (type: PropertyTransitionType, className?: string)
   switch (type) {
     case PropertyTransitionType.ADDED:
       return (
-        <i className={cn('bg-emerald-500/20 text-emerald-500', className)}>
+        <i className={cn('bg-success/20 text-success', className)}>
           <PlusIcon />
         </i>
       );
     case PropertyTransitionType.UPDATED:
       return (
-        <i className={cn('bg-amber-500/20 text-amber-500', className)}>
+        <i className={cn('bg-warning/20 text-warning', className)}>
           <PencilIcon />
         </i>
       );

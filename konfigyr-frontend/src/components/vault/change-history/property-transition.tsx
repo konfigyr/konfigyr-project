@@ -50,9 +50,9 @@ export function PropertyTransitionValue({ variant, value, className, ...props }:
     <div
       data-slot="property-transition-value"
       className={cn(
-        'flex items-center gap-2 px-3 py-1 leading-loose',
-        variant === 'removal' && 'bg-destructive/5 text-destructive/80',
-        variant === 'addition' && 'bg-emerald-500/5 text-emerald-700',
+        'flex items-center gap-2 px-3 py-1 text-xs leading-loose',
+        variant === 'removal' && 'bg-destructive/10 text-destructive',
+        variant === 'addition' && 'bg-success/10 text-success',
         className,
       )}
       {...props}
@@ -80,33 +80,36 @@ export function PropertyTransitionItem({ transition, className, ...props }: {
         title={transition.name}
       />
 
-      {transition.action === PropertyTransitionType.ADDED && (
-        <PropertyTransitionValue
-          variant="addition"
-          value={transition.to}
-        />
-      )}
+      <span className="overflow-hidden border rounded-md">
 
-      {transition.action === PropertyTransitionType.UPDATED && (
-        <span className="overflow-hidden border rounded-md">
-          <PropertyTransitionValue
-            className="border-b border-border/50"
-            variant="removal"
-            value={transition.from}
-          />
+        {transition.action === PropertyTransitionType.ADDED && (
           <PropertyTransitionValue
             variant="addition"
             value={transition.to}
           />
-        </span>
-      )}
+        )}
 
-      {transition.action === PropertyTransitionType.REMOVED && (
-        <PropertyTransitionValue
-          variant="removal"
-          value={transition.from}
-        />
-      )}
+        {transition.action === PropertyTransitionType.UPDATED && (
+          <>
+            <PropertyTransitionValue
+              className="border-b border-border/50"
+              variant="removal"
+              value={transition.from}
+            />
+            <PropertyTransitionValue
+              variant="addition"
+              value={transition.to}
+            />
+          </>
+        )}
+
+        {transition.action === PropertyTransitionType.REMOVED && (
+          <PropertyTransitionValue
+            variant="removal"
+            value={transition.from}
+          />
+        )}
+      </span>
     </div>
   );
 }

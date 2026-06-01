@@ -87,6 +87,22 @@ export async function proxy(request: Request): Promise<Response> {
     });
   }
 
+  if (authentication.expired) {
+    try {
+      await authentication.refresh();
+    } catch (ex) {
+      logger.warn('Failed to refresh OAuth2 Access Token, session is no longer valid: %s', ex);
+
+      await authentication.reset();
+
+      return renderErrorResponse({
+        status: 401,
+        title: 'Session expired',
+        detail: 'Your session has expired. Please log in again.',
+      });
+    }
+  }
+
   const outgoing = new Request(
     createProxyTargetUrl(new URL(request.url)),
     {

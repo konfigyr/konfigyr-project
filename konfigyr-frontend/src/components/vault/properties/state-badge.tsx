@@ -2,13 +2,12 @@ import { useIntl } from 'react-intl';
 import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 import { labelForTransitionType } from '@konfigyr/components/vault/messages';
 import { Badge } from '@konfigyr/components/ui/badge';
-import { cn } from '@konfigyr/components/utils';
 
 import type { BadgeProps } from '@konfigyr/components/ui/badge';
 
 export type StateBadgeProps = { variant: ConfigurationPropertyState } & Omit<BadgeProps, 'variant'>;
 
-export function StateBadge({ className, variant, ...props }: StateBadgeProps) {
+export function StateBadge({ variant, ...props }: StateBadgeProps) {
   const intl = useIntl();
 
   switch (variant) {
@@ -16,8 +15,7 @@ export function StateBadge({ className, variant, ...props }: StateBadgeProps) {
       return (
         <Badge
           size="sm"
-          variant="outline"
-          className={cn('border-emerald-400/40 text-emerald-600 dark:text-emerald-400', className)}
+          variant="success"
           {...props}
         >
           {labelForTransitionType(intl, variant)}
@@ -27,8 +25,7 @@ export function StateBadge({ className, variant, ...props }: StateBadgeProps) {
       return (
         <Badge
           size="sm"
-          variant="outline"
-          className={cn('border-amber-400/40 text-amber-600 dark:text-amber-400', className)}
+          variant="warning"
           {...props}
         >
           {labelForTransitionType(intl, variant)}
@@ -38,8 +35,7 @@ export function StateBadge({ className, variant, ...props }: StateBadgeProps) {
       return (
         <Badge
           size="sm"
-          variant="outline"
-          className={cn('border-destructive/40 text-destructive', className)}
+          variant="destructive"
           {...props}
         >
           {labelForTransitionType(intl, variant)}

@@ -14,7 +14,7 @@ describe('components | vault | change-request | <ChangeRequestStateBadge/>', () 
 
     expect(getByText('Open')).toBeInTheDocument();
     expect(container.querySelector('svg')).toBeInTheDocument();
-    expect(container.querySelector('svg')).toHaveClass('lucide-git-pull-request', 'text-emerald-600');
+    expect(container.querySelector('svg')).toHaveClass('lucide-git-pull-request', 'text-success');
   });
 
   test('should render <ChangeRequestStateBadge/> component for merged state', () => {
@@ -24,7 +24,7 @@ describe('components | vault | change-request | <ChangeRequestStateBadge/>', () 
 
     expect(getByText('Merged')).toBeInTheDocument();
     expect(container.querySelector('svg')).toBeInTheDocument();
-    expect(container.querySelector('svg')).toHaveClass('lucide-git-merge', 'text-blue-600');
+    expect(container.querySelector('svg')).toHaveClass('lucide-git-merge', 'text-info');
   });
 
   test('should render <ChangeRequestStateBadge/> component for discarded state', () => {
