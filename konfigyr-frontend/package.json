@@ -32,6 +32,7 @@
     "clsx": "^2.1.1",
     "copy-to-clipboard": "^4.0.2",
     "date-fns": "^4.4.0",
+    "duration-fns": "^3.0.2",
     "ky": "^2.0.2",
     "lru-cache": "^11.5.1",
     "lucide-react": "^1.17.0",
