@@ -129,7 +129,7 @@ const inviteMember = http.post('http://localhost/api/namespaces/:slug/invitation
       },
       recipient: {
         email: 'sender@konfigyr.com',
-      }
+      },
     });
   }
 
