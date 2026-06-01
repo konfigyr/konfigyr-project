@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -94,7 +95,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 				.returns(null, AuditRecord::namespaceId)
 				.returns("account", AuditRecord::entityType)
 				.returns(EntityId.from(600), AuditRecord::entityId)
-				.returns("account.updated", AuditRecord::eventType);
+				.returns("account.updated", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Account was updated"));
 	}
 
 	@Test
@@ -106,7 +108,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("account", EntityId.from(601))
 				.returns(null, AuditRecord::namespaceId)
-				.returns("account.deleted", AuditRecord::eventType);
+				.returns("account.deleted", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Account was deleted"));
 	}
 
 	@Test
@@ -146,6 +149,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 				.returns("namespace", AuditRecord::entityType)
 				.returns(EntityId.from(701), AuditRecord::entityId)
 				.returns("namespace.renamed", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Namespace was renamed from '%s' to '%s'", "old-name", "new-name"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("from", "old-name")
 						.containsEntry("to", "new-name")
@@ -165,7 +169,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("namespace", EntityId.from(701))
 				.returns(EntityId.from(701), AuditRecord::namespaceId)
 				.returns("namespace.deleted", AuditRecord::eventType)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of(), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Namespace was deleted"));
 	}
 
 	@Test
@@ -180,6 +185,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("namespace", EntityId.from(702), "namespace.member-added")
 				.returns(EntityId.from(702), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("Member was added with %s role", NamespaceRole.ADMIN))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("account", EntityId.from(50))
 						.containsEntry("role", "ADMIN")
@@ -197,6 +203,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		listener.on(new NamespaceEvent.MemberUpdated(namespace, EntityId.from(50), NamespaceRole.USER));
 
 		assertAuditRecord("namespace", EntityId.from(703), "namespace.member-updated")
+				.satisfies(assertAuditRecordMessage("Member role was changed to %s", NamespaceRole.USER))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("account", EntityId.from(50))
 						.containsEntry("role", "USER")
@@ -214,6 +221,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		listener.on(new NamespaceEvent.MemberRemoved(namespace, EntityId.from(51)));
 
 		assertAuditRecord("namespace", EntityId.from(703), "namespace.member-removed")
+				.satisfies(assertAuditRecordMessage("Member was removed"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("account", EntityId.from(51))
 				);
@@ -235,6 +243,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("invitation", EntityId.from(800))
 				.returns(EntityId.from(800), AuditRecord::namespaceId)
 				.returns("invitation.created", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Invitation was sent"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("key", "inv-key-123")
 				);
@@ -255,6 +264,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("invitation", EntityId.from(801))
 				.returns("invitation.accepted", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Invitation was accepted"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("key", "inv-key-456")
 						.containsEntry("recipient", "Jane Doe")
@@ -276,6 +286,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("invitation", EntityId.from(801))
 				.returns("invitation.declined", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Invitation was declined"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("key", "inv-key-456")
 						.containsEntry("recipient", "John Doe")
@@ -294,6 +305,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("invitation", EntityId.from(801))
 				.returns("invitation.canceled", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Invitation was canceled"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("key", "inv-key-789")
 				);
@@ -316,7 +328,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("namespace-application", EntityId.from(9001))
 				.returns("namespace.application-created", AuditRecord::eventType)
 				.returns(EntityId.from(900), AuditRecord::namespaceId)
-				.returns(Map.of("name", "created app"), AuditRecord::details);
+				.returns(Map.of("name", "created app"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Application '%s' was created", application.name()));
 	}
 
 	@Test
@@ -336,7 +349,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("namespace-application", EntityId.from(9002))
 				.returns("namespace.application-updated", AuditRecord::eventType)
 				.returns(EntityId.from(900), AuditRecord::namespaceId)
-				.returns(Map.of("name", "updated app"), AuditRecord::details);
+				.returns(Map.of("name", "updated app"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Application '%s' was updated", application.name()));
 	}
 
 	@Test
@@ -356,7 +370,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("namespace-application", EntityId.from(9003))
 				.returns("namespace.application-reset", AuditRecord::eventType)
 				.returns(EntityId.from(900), AuditRecord::namespaceId)
-				.returns(Map.of("name", "namespace app"), AuditRecord::details);
+				.returns(Map.of("name", "namespace app"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Credentials were reset for '%s' application", application.name()));
 	}
 
 	@Test
@@ -376,7 +391,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("namespace-application", EntityId.from(9004))
 				.returns("namespace.application-removed", AuditRecord::eventType)
 				.returns(EntityId.from(900), AuditRecord::namespaceId)
-				.returns(Map.of("name", "removed app"), AuditRecord::details);
+				.returns(Map.of("name", "removed app"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Application '%s' was removed", application.name()));
 	}
 
 	@Test
@@ -397,7 +413,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 				.returns(EntityId.from(10), AuditRecord::namespaceId)
 				.returns("service", AuditRecord::entityType)
 				.returns(EntityId.from(900), AuditRecord::entityId)
-				.returns("service.created", AuditRecord::eventType);
+				.returns("service.created", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Service was created"));
 	}
 
 	@Test
@@ -416,6 +433,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("service", EntityId.from(901))
 				.returns("service.renamed", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Service was renamed from '%s' to '%s'", "old-slug", "new-slug"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("from", "old-slug")
 						.containsEntry("to", "new-slug")
@@ -441,6 +459,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("service", EntityId.from(902))
 				.returns(EntityId.from(10), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("Service artifacts were published"))
 				.returns("service.published", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("artifacts", List.of())
@@ -470,6 +489,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("service", EntityId.from(902))
 				.returns(EntityId.from(10), AuditRecord::namespaceId)
 				.returns("service.published", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Service artifacts were published"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("artifacts", List.of(
 								"com.konfigyr:konfigyr-api:1.0.0",
@@ -494,7 +514,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("service", EntityId.from(903))
 				.returns(EntityId.from(10), AuditRecord::namespaceId)
-				.returns("service.deleted", AuditRecord::eventType);
+				.returns("service.deleted", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Service was deleted"));
 	}
 
 	@Test
@@ -517,6 +538,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 				.returns("profile", AuditRecord::entityType)
 				.returns(EntityId.from(1000), AuditRecord::entityId)
 				.returns("profile.created", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Profile '%s' was created", profile.slug()))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("name", "production")
 				);
@@ -542,6 +564,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 				.returns("profile", AuditRecord::entityType)
 				.returns(EntityId.from(1001), AuditRecord::entityId)
 				.returns("profile.updated", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Profile '%s' was updated", profile.slug()))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("name", "production")
 				);
@@ -567,6 +590,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 				.returns("profile", AuditRecord::entityType)
 				.returns(EntityId.from(1001), AuditRecord::entityId)
 				.returns("profile.deleted", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Profile '%s' was deleted", profile.slug()))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("name", "staging")
 				);
@@ -659,7 +683,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 				.returns("keyset", AuditRecord::entityType)
 				.returns(EntityId.from(1100), AuditRecord::entityId)
 				.returns("keyset.created", AuditRecord::eventType)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of(), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Keyset was created"));
 	}
 
 	@Test
@@ -672,7 +697,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("keyset", EntityId.from(1101))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
 				.returns("keyset.rotated", AuditRecord::eventType)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of(), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Keyset was rotated"));
 	}
 
 	@Test
@@ -685,7 +711,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("keyset", EntityId.from(1102))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
 				.returns("keyset.deleted", AuditRecord::eventType)
-				.returns(Map.of(), AuditRecord::details);
+				.returns(Map.of(), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Keyset was successfully removed"));
 	}
 
 	@Test
@@ -698,7 +725,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("keyset", EntityId.from(1103))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
 				.returns("keyset.reactivated", AuditRecord::eventType)
-				.returns(Map.of("key", "5767"), AuditRecord::details);
+				.returns(Map.of("key", "5767"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Key '%s' within a keyset was reactivated", "5767"));
 	}
 
 	@Test
@@ -711,7 +739,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("keyset", EntityId.from(1104))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
 				.returns("keyset.deactivated", AuditRecord::eventType)
-				.returns(Map.of("key", "95672"), AuditRecord::details);
+				.returns(Map.of("key", "95672"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Key '%s' within a keyset was disabled", "95672"));
 	}
 
 	@Test
@@ -724,7 +753,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("keyset", EntityId.from(1105))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
 				.returns("keyset.compromised", AuditRecord::eventType)
-				.returns(Map.of("key", "1245"), AuditRecord::details);
+				.returns(Map.of("key", "1245"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Key '%s' within a keyset was marked as compromised", "1245"));
 	}
 
 	@Test
@@ -737,7 +767,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("keyset", EntityId.from(1105))
 				.returns(EntityId.from(12), AuditRecord::namespaceId)
 				.returns("keyset.restored", AuditRecord::eventType)
-				.returns(Map.of("key", "53678124"), AuditRecord::details);
+				.returns(Map.of("key", "53678124"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Key '%s' within a keyset was restored", "53678124"));
 	}
 
 	@Test
@@ -750,7 +781,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		assertAuditRecord("keyset", EntityId.from(1106))
 				.returns(EntityId.from(30), AuditRecord::namespaceId)
 				.returns("keyset.destroyed", AuditRecord::eventType)
-				.returns(Map.of("key", "596255"), AuditRecord::details);
+				.returns(Map.of("key", "596255"), AuditRecord::details)
+				.satisfies(assertAuditRecordMessage("Key '%s' within a keyset was scheduled for destruction", "596255"));
 	}
 
 	@Test
@@ -773,7 +805,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 						.returns("test-oauth-application", Actor::id)
 						.returns(PrincipalType.OAUTH_CLIENT.name(), Actor::type)
 						.returns("Test application: test-oauth-application", Actor::name)
-				);
+				)
+				.satisfies(assertAuditRecordMessage("Artifact release started for %s", coordinates.format()));
 	}
 
 	@Test
@@ -785,7 +818,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("artifact-version", EntityId.from(1201))
 				.returns("artifact-version.release-completed", AuditRecord::eventType)
-				.returns(AuditEventListener.SYSTEM_ACTOR, AuditRecord::actor);
+				.returns(AuditEventListener.SYSTEM_ACTOR, AuditRecord::actor)
+				.satisfies(assertAuditRecordMessage("Artifact release completed for %s", coordinates.format()));
 	}
 
 	@Test
@@ -797,7 +831,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("artifact-version", EntityId.from(1202))
 				.returns("artifact-version.release-failed", AuditRecord::eventType)
-				.returns(AuditEventListener.SYSTEM_ACTOR, AuditRecord::actor);
+				.returns(AuditEventListener.SYSTEM_ACTOR, AuditRecord::actor)
+				.satisfies(assertAuditRecordMessage("Artifact release failed for %s", coordinates.format()));
 	}
 
 	@Test
@@ -864,6 +899,18 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 	private static void setSecurityContext(Authentication principal) {
 		SecurityContextHolder.getContext().setAuthentication(principal);
+	}
+
+	private static Consumer<AuditRecord> assertAuditRecordMessage(String message, Object... args) {
+		return record -> {
+			assertThat(record.message())
+					.as("Message bundle should contain an entry for event type: %s", record.eventType())
+					.isNotEqualTo(record.eventType());
+
+			assertThat(record.message())
+					.as("Audit record message bundle value mismatch")
+					.isEqualTo(message, args);
+		};
 	}
 
 }
