@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ErrorRouteImport } from './routes/error'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthScopesRouteImport } from './routes/auth/scopes'
@@ -44,6 +45,11 @@ import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIn
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history'
 
+const ErrorRoute = ErrorRouteImport.update({
+  id: '/error',
+  path: '/error',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -273,6 +279,7 @@ const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute 
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/error': typeof ErrorRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
@@ -307,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace/services/$service/requests/$number/': typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute
 }
 export interface FileRoutesByTo {
+  '/error': typeof ErrorRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
@@ -338,6 +346,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/error': typeof ErrorRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/error'
     | '/api/$'
     | '/auth/code'
     | '/auth/scopes'
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/services/$service/requests/$number/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/error'
     | '/api/$'
     | '/auth/code'
     | '/auth/scopes'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/error'
     | '/api/$'
     | '/auth/code'
     | '/auth/scopes'
@@ -477,6 +489,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ErrorRoute: typeof ErrorRoute
   ApiSplatRoute: typeof ApiSplatRoute
   AuthCodeRoute: typeof AuthCodeRoute
   AuthScopesRoute: typeof AuthScopesRoute
@@ -484,6 +497,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/error': {
+      id: '/error'
+      path: '/error'
+      fullPath: '/error'
+      preLoaderRoute: typeof ErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -894,6 +914,7 @@ const AuthenticatedRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ErrorRoute: ErrorRoute,
   ApiSplatRoute: ApiSplatRoute,
   AuthCodeRoute: AuthCodeRoute,
   AuthScopesRoute: AuthScopesRoute,
