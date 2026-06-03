@@ -9,7 +9,9 @@ import type { AnyRequestMiddleware } from '@tanstack/react-start';
 const logger = createLogger('middleware/authentication');
 
 const ALLOWED_PATTERNS = [
-  /^\/(api|auth|error|favicon.ico)\/.+$/, // allows /api/*, /auth/*, /error/*, favicon.ico
+  /^\/favicon\.ico$/, // allows /favicon.ico
+  /^\/error(?:\/.*)?$/, // allows /error and /error/*
+  /^\/(api|auth|favicon.ico)\/.+$/, // allows /api/*, /auth/*
 ];
 
 const authorize = async (authentication: Authentication, url: URL) => {
@@ -32,7 +34,14 @@ export function authenticationMiddleware(): AnyRequestMiddleware {
         }
       }
 
-      const authentication = await Authentication.get();
+      let authentication: Authentication;
+
+      try {
+        authentication = await Authentication.get();
+      } catch (error) {
+        logger.error(error, 'Unexpected error occurred while initializing Authentication instance');
+        throw redirect({ to: '/error' });
+      }
 
       if (authentication.expired) {
         try {
