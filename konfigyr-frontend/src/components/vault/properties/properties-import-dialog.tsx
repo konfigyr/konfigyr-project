@@ -16,7 +16,9 @@ import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { Input } from '@konfigyr/components/ui/input';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
+import { FetchConfigSchema } from '@konfigyr/hooks/vault/-handler';
 import { ImportPropertiesLabel } from './messages';
+import type { FetchConfigRequest } from '@konfigyr/hooks/vault/-handler';
 import type { ConfigurationProperty, Profile } from '@konfigyr/hooks/types';
 
 type ConfigurationImporterStatusProps = {
@@ -30,15 +32,6 @@ type ConfigurationImporterStatusProps = {
 type ImporterType = 'file' | 'api';
 
 const DEFAULT_IMPORTER_TYPE: ImporterType = 'file';
-
-const springCloudImporterSchema = z.object({
-  username: z.string().trim().min(1, { message: 'User name is required' }),
-  password: z.string().trim().min(1, { message: 'Password is required' }),
-  configServerUrl: z.string()
-    .trim()
-    .min(1, { message: 'Config server URL is required' })
-    .url({ message: 'Config server URL must be a valid URL' }),
-});
 
 export function FileConfigurationImporter ({ onChange }: {
   onChange: (file: File) => void,
@@ -75,7 +68,7 @@ export function FileConfigurationImporter ({ onChange }: {
 }
 
 export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
-  onFetchConfig: (username: string, password: string, url: string) => void | Promise<unknown>
+  onFetchConfig: (payload: FetchConfigRequest) => void | Promise<unknown>
 }) {
   const form = useForm({
     defaultValues: {
@@ -84,12 +77,17 @@ export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
       configServerUrl: '',
     },
     validators: {
-      onSubmit: springCloudImporterSchema,
+      onSubmit: FetchConfigSchema,
     },
     onSubmit: async ({ value }) => {
-      await onFetchConfig(value.username.trim(), value.password, value.configServerUrl.trim());
+      await onFetchConfig({
+        username: value.username.trim(),
+        password: value.password.trim(),
+        configServerUrl: value.configServerUrl.trim(),
+      });
     },
   });
+
   const onSubmit = useFormSubmit(form);
 
   return (

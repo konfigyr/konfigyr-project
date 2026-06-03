@@ -1,7 +1,14 @@
 import { useRef, useState } from 'react';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { parse } from 'yaml';
+import { createServerFn } from '@tanstack/react-start';
+import { FetchConfigSchema, fetchSpringConfigHandler } from '@konfigyr/hooks/vault/-handler';
+import type { FetchConfigRequest } from '@konfigyr/hooks/vault/-handler';
 import type { ConfigurationProperty } from '@konfigyr/hooks/vault/types';
+
+const fetchSpringConfig = createServerFn({ method: 'GET' })
+  .inputValidator(FetchConfigSchema)
+  .handler(fetchSpringConfigHandler);
 
 /**
  * Builds a configuration property object from a name/value pair.
@@ -301,23 +308,12 @@ export function useConfigFileParser () {
     });
   };
 
-  const fetchConfig = async (username: string, password: string, url: string) => {
+  const fetchConfig = async (payload: FetchConfigRequest) => {
     await runParseTask(async () => {
-      const auth = btoa(`${username}:${password}`);
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Authorization: `Basic ${auth}`,
-          Accept: 'application/json',
-        },
+      const response = await fetchSpringConfig({
+        data: payload,
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch configuration: ${response.status}`);
-      }
-
-      const parsedJsonObject = await response.json();
-      return parseSpringCloudConfigResponse(parsedJsonObject);
+      return parseSpringCloudConfigResponse(response);
     });
   };
 

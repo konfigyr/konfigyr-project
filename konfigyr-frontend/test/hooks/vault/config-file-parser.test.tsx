@@ -232,7 +232,11 @@ describe('hooks | vault | useConfigFileParser', () => {
     const { result } = renderHook(() => useConfigFileParser());
 
     await act(async () => {
-      await result.current.fetchConfig('user', 'password', 'https://config.example.test');
+      await result.current.fetchConfig({
+        username: 'user',
+        password: 'password',
+        configServerUrl: 'https://config.example.test',
+      });
     });
 
     expect(result.current.properties).toMatchObject([
@@ -254,7 +258,11 @@ describe('hooks | vault | useConfigFileParser', () => {
     const { result } = renderHook(() => useConfigFileParser());
 
     await act(async () => {
-      await result.current.fetchConfig('user', 'pass', 'https://config.example.test');
+      await result.current.fetchConfig({
+        username: 'user',
+        password: 'pass',
+        configServerUrl: 'https://config.example.test',
+      });
     });
 
     expect(result.current.properties).toStrictEqual([]);
@@ -275,7 +283,11 @@ describe('hooks | vault | useConfigFileParser', () => {
     const { result } = renderHook(() => useConfigFileParser());
 
     await act(async () => {
-      await result.current.fetchConfig('user', 'wrong-password', 'https://config.example.test');
+      await result.current.fetchConfig({
+        username: 'user',
+        password: 'wrong-password',
+        configServerUrl: 'https://config.example.test',
+      });
     });
 
     expect(result.current.properties).toStrictEqual([]);
