@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -205,8 +206,8 @@ class OAuthScopesTest {
 	@Test
 	@DisplayName("should parse granted authority")
 	void parseGrantedAuthority() {
-		assertThat(OAuthScopes.forGrantedAuthority(null, scope -> true)).isFalse();
-		assertThat(OAuthScopes.forGrantedAuthority(new SimpleGrantedAuthority("SCOPE_"), scope -> true)).isFalse();
+		assertThat(OAuthScopes.forGrantedAuthority(null, ignore -> true)).isFalse();
+		assertThat(OAuthScopes.forGrantedAuthority(new SimpleGrantedAuthority("SCOPE_"), ignore -> true)).isFalse();
 
 		assertThat(OAuthScopes.forGrantedAuthority(
 				OAuthScope.READ_NAMESPACES,
@@ -235,6 +236,45 @@ class OAuthScopesTest {
 				.returns(OAuth2ErrorCodes.INVALID_SCOPE, OAuth2Error::getErrorCode)
 				.returns("Invalid OAuth scope of: unknown", OAuth2Error::getDescription)
 				.returns(null, OAuth2Error::getUri);
+	}
+
+	@Test
+	@DisplayName("transfers all scopes into the target collection")
+	void toCollectionTransfersScopes() {
+		final var target = new ArrayList<OAuthScope>();
+		final var result = OAuthScopes.of(OAuthScope.OPENID, OAuthScope.READ_NAMESPACES).to(target);
+
+		assertThat(result)
+				.isSameAs(target)
+				.containsExactlyInAnyOrder(OAuthScope.OPENID, OAuthScope.READ_NAMESPACES);
+	}
+
+	@Test
+	@DisplayName("recursively transfer included scopes to the target collection without duplicates")
+	void toCollectionTransfersIncludedScopesRecursively() {
+		assertThat(OAuthScopes.of(OAuthScope.NAMESPACES).to(new ArrayList<>()))
+				.containsExactlyInAnyOrder(
+						OAuthScope.NAMESPACES,
+						OAuthScope.READ_NAMESPACES,
+						OAuthScope.WRITE_NAMESPACES,
+						OAuthScope.DELETE_NAMESPACES,
+						OAuthScope.INVITE_MEMBERS,
+						OAuthScope.PUBLISH_MANIFESTS
+				)
+				.doesNotHaveDuplicates();
+	}
+
+	@Test
+	@DisplayName("transfers converted scopes into the target collection")
+	void toCollectionWithConverterTransfersConvertedScopes() {
+		final var target = new ArrayList<String>();
+
+		final var result = OAuthScopes.of(OAuthScope.OPENID, OAuthScope.WRITE_NAMESPACES)
+				.to(target, OAuthScope::getAuthority);
+
+		assertThat(result)
+				.isSameAs(target)
+				.containsExactlyInAnyOrder("openid", "namespaces:read", "namespaces:write");
 	}
 
 	@MethodSource("scopes")
@@ -284,6 +324,10 @@ class OAuthScopesTest {
 				Arguments.of(
 						List.of("namespaces:delete", "namespaces:read", "namespaces:invite"),
 						OAuthScopes.of(OAuthScope.DELETE_NAMESPACES, OAuthScope.READ_NAMESPACES, OAuthScope.INVITE_MEMBERS)
+				),
+				Arguments.of(
+						List.of("mcp", "namespaces:invite"),
+						OAuthScopes.of(OAuthScope.MCP, OAuthScope.INVITE_MEMBERS)
 				)
 		);
 	}

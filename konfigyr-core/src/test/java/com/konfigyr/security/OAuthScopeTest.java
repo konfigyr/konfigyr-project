@@ -114,6 +114,17 @@ class OAuthScopeTest {
 				)),
 				Arguments.of(OAuthScope.PROFILES, "profiles", Set.of(
 						OAuthScope.READ_PROFILES, OAuthScope.WRITE_PROFILES, OAuthScope.DELETE_PROFILES
+				)),
+
+				/* MCP scope group */
+				Arguments.of(OAuthScope.MCP_READ, "mcp:read", Set.of(
+						OAuthScope.READ_NAMESPACES
+				)),
+				Arguments.of(OAuthScope.MCP_WRITE, "mcp:write", Set.of(
+						OAuthScope.READ_NAMESPACES, OAuthScope.MCP_READ
+				)),
+				Arguments.of(OAuthScope.MCP, "mcp", Set.of(
+						OAuthScope.READ_NAMESPACES, OAuthScope.MCP_READ, OAuthScope.MCP_WRITE
 				))
 		);
 	}

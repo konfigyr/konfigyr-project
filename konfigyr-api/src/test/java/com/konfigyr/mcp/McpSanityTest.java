@@ -6,6 +6,7 @@ import com.konfigyr.test.KeyGenerator;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
+import io.modelcontextprotocol.client.transport.McpHttpClientTransportAuthorizationException;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jspecify.annotations.Nullable;
@@ -54,7 +55,23 @@ class McpSanityTest extends AbstractControllerTest {
 		try (var client = mcpClient(null)) {
 			assertThatThrownBy(client::initialize)
 					.as("Spring Security must reject the SSE connection with 401")
-					.isInstanceOf(Exception.class);
+					.hasRootCauseInstanceOf(McpHttpClientTransportAuthorizationException.class);
+		}
+	}
+
+	@Test
+	@DisplayName("MCP client is rejected due to missing OAuth mcp:read scope")
+	void unauthorizedClientIsRejected() {
+		final String token = generateAccessToken(builder -> builder
+				.subject("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
+				.claim(StandardClaimNames.EMAIL, "sanity@konfigyr.com")
+				.claim(OAuth2ParameterNames.SCOPE, OAuthScope.PROFILES.getAuthority())
+		);
+
+		try (var client = mcpClient(token)) {
+			assertThatThrownBy(client::initialize)
+					.as("Spring Security must reject the SSE connection with 403")
+					.hasRootCauseInstanceOf(McpHttpClientTransportAuthorizationException.class);
 		}
 	}
 
@@ -64,7 +81,7 @@ class McpSanityTest extends AbstractControllerTest {
 		final String token = generateAccessToken(builder -> builder
 				.subject("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
 				.claim(StandardClaimNames.EMAIL, "sanity@konfigyr.com")
-				.claim(OAuth2ParameterNames.SCOPE, OAuthScope.READ_NAMESPACES.getAuthority())
+				.claim(OAuth2ParameterNames.SCOPE, OAuthScope.MCP.getAuthority())
 		);
 
 		try (var client = mcpClient(token)) {
@@ -86,7 +103,7 @@ class McpSanityTest extends AbstractControllerTest {
 									.hasInputSchemaProperty("artifacts")
 									.hasInputSchemaProperty("includeDeprecated")
 									.hasInputSchemaProperty("limit")
-									.hasRequiredInputProperty("query")
+									.hasRequiredInputProperties("query", "includeDeprecated", "limit")
 					);
 
 			assertSearchProperties(client);

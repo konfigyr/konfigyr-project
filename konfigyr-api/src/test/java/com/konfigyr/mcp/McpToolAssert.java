@@ -2,13 +2,13 @@ package com.konfigyr.mcp;
 
 import io.modelcontextprotocol.spec.McpSchema;
 import org.assertj.core.api.AbstractObjectAssert;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactory;
 import org.assertj.core.error.BasicErrorMessageFactory;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * AssertJ custom assertion for {@link McpSchema.Tool} values.
@@ -150,6 +150,7 @@ public final class McpToolAssert extends AbstractObjectAssert<McpToolAssert, Mcp
 	 * @return this MCP tool assert instance for chaining, never {@literal null}
 	 */
 	@NonNull
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public McpToolAssert hasRequiredInputProperty(@NonNull String propertyName) {
 		isNotNull();
 
@@ -165,7 +166,7 @@ public final class McpToolAssert extends AbstractObjectAssert<McpToolAssert, Mcp
 
 		final Object requiredNode = schema.get("required");
 
-		if (!(requiredNode instanceof Iterable<?> required) || required.iterator().hasNext()) {
+		if (!(requiredNode instanceof Iterable required)) {
 			throwAssertionError(new BasicErrorMessageFactory(
 					"Expected MCP tool input schema to have <%s> as a required property but 'required' was <%s>",
 					propertyName, requiredNode
@@ -173,20 +174,58 @@ public final class McpToolAssert extends AbstractObjectAssert<McpToolAssert, Mcp
 			return myself;
 		}
 
-		boolean found = false;
-		for (Object item : required) {
-			if (propertyName.equals(item)) {
-				found = true;
-				break;
-			}
+		Assertions.assertThat(required)
+				.as("Expected MCP tool input schema to have contain required property: <%s>", propertyName)
+				.contains(propertyName);
+
+		return myself;
+	}
+
+	/**
+	 * Asserts that the given input schema properties are listed in the {@code required} array.
+	 *
+	 * @param propertyNames names of the property expected to be required, never {@literal null}
+	 * @return this MCP tool assert instance for chaining, never {@literal null}
+	 */
+	@NonNull
+	public McpToolAssert hasRequiredInputProperties(@NonNull String... propertyNames) {
+		return hasRequiredInputProperties(Arrays.asList(propertyNames));
+	}
+
+	/**
+	 * Asserts that the given input schema properties are listed in the {@code required} array.
+	 *
+	 * @param propertyNames names of the property expected to be required, never {@literal null}
+	 * @return this MCP tool assert instance for chaining, never {@literal null}
+	 */
+	@NonNull
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public McpToolAssert hasRequiredInputProperties(@NonNull Collection<String> propertyNames) {
+		isNotNull();
+
+		final Map<String, Object> schema = actual.inputSchema();
+
+		if (schema == null) {
+			throwAssertionError(new BasicErrorMessageFactory(
+					"Expected MCP tool to have required input properties <%s> but input schema was null",
+					String.join(", ", propertyNames)
+			));
+			return myself;
 		}
 
-		if (!found) {
+		final Object requiredNode = schema.get("required");
+
+		if (!(requiredNode instanceof Iterable required)) {
 			throwAssertionError(new BasicErrorMessageFactory(
 					"Expected MCP tool input schema to have <%s> as a required property but 'required' was <%s>",
-					propertyName, requiredNode
+					String.join(", ", propertyNames), requiredNode
 			));
+			return myself;
 		}
+
+		Assertions.assertThat(required)
+				.as("Expected MCP tool input schema to have following required properties: <%s>", String.join(", ", propertyNames))
+				.containsExactlyInAnyOrderElementsOf(propertyNames);
 
 		return myself;
 	}

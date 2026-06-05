@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
@@ -175,6 +177,35 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		assertThatRequest(token)
 				.hasStatus(HttpStatus.UNAUTHORIZED)
 				.matches(SecurityMockMvcResultMatchers.unauthenticated());
+	}
+
+	@Test
+	@DisplayName("should expose OAuth 2.0 Protected Resource Metadata without authentication")
+	void shouldExposeProtectedResourceMetadata() {
+		mvc.get().uri("/.well-known/oauth-protected-resource")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.hasPathSatisfying("$.resource", resource -> resource.assertThat()
+						.asString()
+						.isNotBlank())
+				.hasPathSatisfying("$.resource_name", name -> name.assertThat()
+						.asString()
+						.isEqualTo("Konfigyr REST API"))
+				.hasPathSatisfying("$.bearer_methods_supported", servers -> servers.assertThat()
+						.asArray()
+						.containsExactly("header"))
+				.hasPathSatisfying("$.authorization_servers", servers -> servers.assertThat()
+						.asArray()
+						.containsExactly(wiremock.baseUrl()))
+				.hasPathSatisfying("$.scopes_supported", servers -> servers.assertThat()
+						.asArray()
+						.containsExactlyInAnyOrderElementsOf(
+								ResourceServerScopes.get().to(new ArrayList<>(), OAuthScope::getAuthority)
+						));
 	}
 
 	static MvcTestResultAssert assertThatRequest(String token) {
