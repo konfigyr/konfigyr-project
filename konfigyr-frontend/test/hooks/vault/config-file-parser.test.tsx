@@ -2,21 +2,9 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 
-vi.mock('@tanstack/react-start', () => {
-  return {
-    createServerFn: () => {
-      const chain = {
-        inputValidator() {
-          return chain;
-        },
-        handler(handler: (...args: Array<any>) => Promise<any> | any) {
-          return async (...args: Array<any>) => await handler(...args);
-        },
-      };
-
-      return chain;
-    },
-  };
+vi.mock('@tanstack/react-start', async () => {
+  const { mockTanstackReactStart } = await import('@konfigyr/test/helpers/mocks/tanstack-react-start');
+  return mockTanstackReactStart();
 });
 
 function deferred<T>() {
