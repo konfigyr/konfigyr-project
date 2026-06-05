@@ -2,9 +2,11 @@ package com.konfigyr.artifactory;
 
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.data.Keys;
+import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.support.SearchQuery;
 import io.micrometer.observation.annotation.ObservationKeyValue;
 import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +16,13 @@ import org.jooq.Condition;
 import org.jooq.Converter;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -26,6 +30,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +42,10 @@ import static com.konfigyr.data.tables.PropertyDefinitions.PROPERTY_DEFINITIONS;
 @Slf4j
 @RequiredArgsConstructor
 class DefaultArtifactory implements Artifactory {
+
+	static final PageableExecutor propertySearchExecutor = PageableExecutor.builder()
+			.defaultSortField(PROPERTY_DEFINITIONS.NAME.asc())
+			.build();
 
 	private final DSLContext context;
 	private final MetadataStore store;
@@ -66,6 +75,37 @@ class DefaultArtifactory implements Artifactory {
 				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
 				.where(toCondition(coordinates))
 				.fetchOptional(DefaultArtifactory::toVersionedArtifact);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "artifactory.search-properties")
+	public Page<PropertyDefinition> search(@NonNull SearchQuery query) {
+		final List<Condition> conditions = new ArrayList<>();
+
+		query.term().ifPresent(term -> conditions.add(DSL.or(
+				PROPERTY_DEFINITIONS.NAME.containsIgnoreCase(term),
+				PROPERTY_DEFINITIONS.DESCRIPTION.containsIgnoreCase(term)
+		)));
+
+		if (!query.criteria(PropertyDefinition.INCLUDE_DEPRECATED_CRITERIA).orElse(true)) {
+			conditions.add(PROPERTY_DEFINITIONS.DEPRECATION.isNull());
+		}
+
+		final Optional<ArtifactCoordinates> artifactCoordinates = query.criteria(PropertyDefinition.ARTIFACT_CRITERIA);
+
+		artifactCoordinates.ifPresent(coordinates -> conditions.add(DSL.and(
+				ARTIFACTS.GROUP_ID.eq(coordinates.groupId()),
+				ARTIFACTS.ARTIFACT_ID.eq(coordinates.artifactId()),
+				ARTIFACT_VERSIONS.VERSION.eq(coordinates.version().get())
+		)));
+
+		return propertySearchExecutor.execute(
+				createPropertySearchQuery(conditions, artifactCoordinates.isPresent()),
+				record -> DefaultArtifactory.toPropertyDefinition(record, converters),
+				query.pageable(),
+				() -> context.fetchCount(createPropertySearchQuery(conditions, artifactCoordinates.isPresent()))
+		);
 	}
 
 	@Override
@@ -191,6 +231,28 @@ class DefaultArtifactory implements Artifactory {
 				ARTIFACTS.ARTIFACT_ID.eq(coordinates.artifactId()),
 				ARTIFACT_VERSIONS.VERSION.eq(coordinates.version().get())
 		);
+	}
+
+	@NonNull
+	private SelectConditionStep<Record> createPropertySearchQuery(
+			@NonNull List<Condition> conditions,
+			boolean joinArtifactVersions
+	) {
+		if (joinArtifactVersions) {
+			return context.select(PROPERTY_DEFINITIONS.fields())
+					.from(PROPERTY_DEFINITIONS)
+					.innerJoin(ARTIFACT_VERSION_PROPERTIES)
+					.on(ARTIFACT_VERSION_PROPERTIES.PROPERTY_DEFINITION_ID.eq(PROPERTY_DEFINITIONS.ID))
+					.innerJoin(ARTIFACT_VERSIONS)
+					.on(ARTIFACT_VERSIONS.ID.eq(ARTIFACT_VERSION_PROPERTIES.ARTIFACT_VERSION_ID))
+					.innerJoin(ARTIFACTS)
+					.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
+					.where(DSL.and(conditions));
+		}
+
+		return context.select(PROPERTY_DEFINITIONS.fields())
+				.from(PROPERTY_DEFINITIONS)
+				.where(conditions.isEmpty() ? DSL.trueCondition() : DSL.and(conditions));
 	}
 
 	static VersionedArtifact toVersionedArtifact(Record record) {

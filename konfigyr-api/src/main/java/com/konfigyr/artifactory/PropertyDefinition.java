@@ -2,6 +2,7 @@ package com.konfigyr.artifactory;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.support.SearchQuery;
 import com.konfigyr.version.Version;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
@@ -56,6 +57,31 @@ public record PropertyDefinition(
 
 	@Serial
 	private static final long serialVersionUID = 3702255252059270913L;
+
+	/**
+	 * Search criteria used to filter {@link PropertyDefinition property definitions} by the
+	 * {@link ArtifactCoordinates} of the artifact version that contributes them.
+	 * <p>
+	 * When this criteria is present in a {@link SearchQuery}, search implementations must restrict
+	 * results to properties that belong to the artifact version identified by those coordinates.
+	 * When absent, no artifact-level filtering is applied.
+	 *
+	 * @see Artifactory#search(SearchQuery)
+	 */
+	public static final SearchQuery.Criteria<ArtifactCoordinates> ARTIFACT_CRITERIA =
+			SearchQuery.criteria("property-artifact", ArtifactCoordinates.class);
+
+	/**
+	 * Search criteria that controls whether deprecated {@link PropertyDefinition property definitions}
+	 * are included in search results.
+	 * <p>
+	 * When set to {@code true}, properties with non-{@literal null} {@link Deprecation} metadata are
+	 * included. When set to {@code false} or absent, deprecated properties are excluded.
+	 *
+	 * @see Artifactory#search(SearchQuery)
+	 */
+	public static final SearchQuery.Criteria<Boolean> INCLUDE_DEPRECATED_CRITERIA =
+			SearchQuery.criteria("property-include-deprecated", Boolean.class);
 
 	/**
 	 * Creates a new {@code Builder}.

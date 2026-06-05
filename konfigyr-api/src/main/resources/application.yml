@@ -35,6 +35,18 @@ spring:
           audiences:
             - konfigyr-api
 
+  ai:
+    mcp:
+      server:
+        name: konfigyr-mcp-server
+        version: 1.0.0
+        instructions: >
+          Konfigyr MCP Server provides tools for managing configuration namespaces,
+          vault operations, and service configuration. All tools require a valid
+          OAuth2 Bearer token scoped to the appropriate Konfigyr namespace.
+        protocol: streamable
+        streamable-http:
+          mcp-endpoint: /mcp
 
   mvc:
     problemdetails:

@@ -2,11 +2,8 @@ package com.konfigyr.security;
 
 import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
 import com.konfigyr.test.*;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jwt.JWTClaimsSet;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -155,9 +152,9 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 	@DisplayName("should fail to validate the OAuth Access token when audience is missing")
 	void missingAudience() {
 		final String token = generateAccessToken(claims -> claims
-				.issuer(wiremock.baseUrl())
 				.subject(TestPrincipals.john().getName())
 				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
+				.audience(List.of())
 		);
 
 		assertThatRequest(token)
@@ -186,17 +183,6 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log());
-	}
-
-	static String generateAccessToken(@NonNull Consumer<JWTClaimsSet.Builder> customizer) {
-		return generateAccessToken(KeyGenerator.getInstance().get(), customizer);
-	}
-
-	static String generateAccessToken(@NonNull JWK key, @NonNull Consumer<JWTClaimsSet.Builder> customizer) {
-		final var builder = new JWTClaimsSet.Builder();
-		customizer.accept(builder);
-
-		return KeyGenerator.getInstance().sign(key, builder.build()).serialize();
 	}
 
 	static ResultMatcher authorities(OAuthScope... scopes) {

@@ -274,6 +274,18 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 	@NonNull
 	@Override
+	@Transactional(label = "namespace-find-by-client-id", readOnly = true)
+	public Optional<Namespace> findNamespaceByClientId(@NonNull String clientId) {
+		return context.select(NAMESPACES.fields())
+				.from(NAMESPACES)
+				.innerJoin(OAUTH_APPLICATIONS)
+				.on(OAUTH_APPLICATIONS.NAMESPACE_ID.eq(NAMESPACES.ID))
+				.where(OAUTH_APPLICATIONS.CLIENT_ID.eq(clientId))
+				.fetchOptional(DefaultNamespaceManager::toNamespace);
+	}
+
+	@NonNull
+	@Override
 	@Transactional(label = "namespace-get-application", readOnly = true)
 	public Optional<NamespaceApplication> getApplication(@NonNull EntityId application) {
 		return createApplicationsQuery(OAUTH_APPLICATIONS.ID.eq(application.get()))

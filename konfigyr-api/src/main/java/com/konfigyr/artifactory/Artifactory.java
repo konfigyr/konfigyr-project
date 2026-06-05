@@ -1,7 +1,9 @@
 package com.konfigyr.artifactory;
 
+import com.konfigyr.support.SearchQuery;
 import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +57,25 @@ public interface Artifactory {
 	 */
 	@NonNull
 	List<PropertyDefinition> properties(@NonNull ArtifactCoordinates coordinates);
+
+	/**
+	 * Searches for {@link PropertyDefinition property definitions} matching the given query.
+	 * <p>
+	 * The search considers the property {@link PropertyDefinition#name() name} and
+	 * {@link PropertyDefinition#description() description} fields against the
+	 * {@link SearchQuery#TERM} criteria. Callers may additionally narrow results by providing:
+	 * <ul>
+	 *   <li>{@link PropertyDefinition#ARTIFACT_CRITERIA}: restricts results to properties
+	 *       contributed by the artifact version identified by those coordinates</li>
+	 *   <li>{@link PropertyDefinition#INCLUDE_DEPRECATED_CRITERIA}: when {@code true}, includes
+	 *       properties that carry {@link Deprecation} metadata; defaults to {@code false}</li>
+	 * </ul>
+	 *
+	 * @param query the search query containing filter criteria and pagination hints, never {@literal null}
+	 * @return a page of matching property definitions, never {@literal null}
+	 */
+	@NonNull
+	Page<PropertyDefinition> search(@NonNull SearchQuery query);
 
 	/**
 	 * Determines whether an artifact version exists for the given coordinates.
