@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createServerFn } from '@tanstack/react-start';
 
 export const FetchConfigSchema = z.object({
   username: z.string().trim().min(1, { message: 'User name is required' }),
@@ -11,7 +12,7 @@ export const FetchConfigSchema = z.object({
 
 export type FetchConfigRequest = z.infer<typeof FetchConfigSchema>;
 
-export async function fetchSpringConfigHandler({ data }: { data: FetchConfigRequest }) {
+async function fetchSpringConfig({ data }: { data: FetchConfigRequest }) {
   const auth = btoa(`${data.username}:${data.password}`);
   const response = await fetch(data.configServerUrl, {
     method: 'GET',
@@ -27,3 +28,7 @@ export async function fetchSpringConfigHandler({ data }: { data: FetchConfigRequ
 
   return await response.json();
 }
+
+export const fetchSpringConfigHandler = createServerFn({ method: 'GET' })
+  .inputValidator(FetchConfigSchema)
+  .handler(fetchSpringConfig);

@@ -1,14 +1,9 @@
 import { useRef, useState } from 'react';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { parse } from 'yaml';
-import { createServerFn } from '@tanstack/react-start';
-import { FetchConfigSchema, fetchSpringConfigHandler } from '@konfigyr/hooks/vault/-handler';
+import { fetchSpringConfigHandler } from '@konfigyr/hooks/vault/-handler';
 import type { FetchConfigRequest } from '@konfigyr/hooks/vault/-handler';
 import type { ConfigurationProperty } from '@konfigyr/hooks/vault/types';
-
-const fetchSpringConfig = createServerFn({ method: 'GET' })
-  .inputValidator(FetchConfigSchema)
-  .handler(fetchSpringConfigHandler);
 
 /**
  * Builds a configuration property object from a name/value pair.
@@ -310,7 +305,7 @@ export function useConfigFileParser () {
 
   const fetchConfig = async (payload: FetchConfigRequest) => {
     await runParseTask(async () => {
-      const response = await fetchSpringConfig({
+      const response = await fetchSpringConfigHandler({
         data: payload,
       });
       return parseSpringCloudConfigResponse(response);

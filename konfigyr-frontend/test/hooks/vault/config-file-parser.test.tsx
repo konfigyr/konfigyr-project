@@ -2,6 +2,23 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 
+vi.mock('@tanstack/react-start', () => {
+  return {
+    createServerFn: () => {
+      const chain = {
+        inputValidator() {
+          return chain;
+        },
+        handler(handler: (...args: Array<any>) => Promise<any> | any) {
+          return async (...args: Array<any>) => await handler(...args);
+        },
+      };
+
+      return chain;
+    },
+  };
+});
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -17,6 +34,16 @@ const mockFile = (name: string, text: string | Promise<string>): File => {
     name,
     text: () => typeof text === 'string' ? Promise.resolve(text) : text,
   } as File;
+};
+
+const mockJsonFetch = (body: unknown, init: ResponseInit = {}) => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(() => {
+    return Promise.resolve(
+      new Response(JSON.stringify(body), {
+        ...init,
+      }),
+    );
+  });
 };
 
 describe('hooks | vault | useConfigFileParser', () => {
@@ -219,15 +246,12 @@ describe('hooks | vault | useConfigFileParser', () => {
   });
 
   test('should fetch config from config server and merge propertySources in one object', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        propertySources: [
-          { name: 'high', source: { 'feature.flag': true } },
-          { name: 'low', source: { 'feature.flag': false, 'service.name': 'api' } },
-        ],
-      }),
-    } as Response);
+    mockJsonFetch({
+      propertySources: [
+        { name: 'high', source: { 'feature.flag': true } },
+        { name: 'low', source: { 'feature.flag': false, 'service.name': 'api' } },
+      ],
+    });
 
     const { result } = renderHook(() => useConfigFileParser());
 
@@ -239,10 +263,12 @@ describe('hooks | vault | useConfigFileParser', () => {
       });
     });
 
-    expect(result.current.properties).toMatchObject([
-      { name: 'feature.flag', value: { encoded: 'true', decoded: 'true' } },
-      { name: 'service.name', value: { encoded: 'api', decoded: 'api' } },
-    ]);
+    await waitFor(() => {
+      expect(result.current.properties).toMatchObject([
+        { name: 'feature.flag', value: { encoded: 'true', decoded: 'true' } },
+        { name: 'service.name', value: { encoded: 'api', decoded: 'api' } },
+      ]);
+    });
     expect(result.current.error).toBeUndefined();
     expect(result.current.isParsing).toBe(false);
     expect(result.current.isError).toBe(false);
@@ -250,10 +276,7 @@ describe('hooks | vault | useConfigFileParser', () => {
   });
 
   test('should expose error when config server response does not contain propertySources', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ name: 'broken-payload' }),
-    } as Response);
+    mockJsonFetch({ name: 'broken-payload' });
 
     const { result } = renderHook(() => useConfigFileParser());
 
@@ -265,20 +288,18 @@ describe('hooks | vault | useConfigFileParser', () => {
       });
     });
 
-    expect(result.current.properties).toStrictEqual([]);
-    expect(result.current.error).toBeDefined();
-    expect(result.current.error?.message).toContain('Invalid configuration response: missing propertySources');
+    await waitFor(() => {
+      expect(result.current.properties).toStrictEqual([]);
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toContain('Invalid configuration response: missing propertySources');
+    });
     expect(result.current.isParsing).toBe(false);
     expect(result.current.isError).toBe(true);
     expect(result.current.isReady).toBe(false);
   });
 
   test('should expose error when Config Server request returns 401', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: () => Promise.resolve({}),
-    } as Response);
+    mockJsonFetch('Failed to fetch configuration: 401', { status: 401 });
 
     const { result } = renderHook(() => useConfigFileParser());
 
@@ -290,9 +311,11 @@ describe('hooks | vault | useConfigFileParser', () => {
       });
     });
 
-    expect(result.current.properties).toStrictEqual([]);
-    expect(result.current.error).toBeDefined();
-    expect(result.current.error?.message).toBe('Failed to fetch configuration: 401');
+    await waitFor(() => {
+      expect(result.current.properties).toStrictEqual([]);
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe('Failed to fetch configuration: 401');
+    });
     expect(result.current.isParsing).toBe(false);
     expect(result.current.isError).toBe(true);
     expect(result.current.isReady).toBe(false);
