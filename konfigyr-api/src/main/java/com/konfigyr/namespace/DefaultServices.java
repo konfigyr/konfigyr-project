@@ -37,7 +37,7 @@ import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 
 @Slf4j
 @RequiredArgsConstructor
-public class DefaultServices implements Services {
+class DefaultServices implements Services {
 
 	private static final Name SERVICE_ARTIFACTS_ALIAS = DSL.name("artifacts");
 

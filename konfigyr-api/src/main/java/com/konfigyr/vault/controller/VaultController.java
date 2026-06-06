@@ -25,7 +25,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/namespaces/{namespace}/services/{service}")
-public class VaultController extends AbstractVaultController {
+class VaultController extends AbstractVaultController {
 
 	private final VaultAccessor accessor;
 	private final VaultChronicle chronicle;

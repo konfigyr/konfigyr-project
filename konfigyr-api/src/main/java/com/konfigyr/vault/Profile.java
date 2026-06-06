@@ -2,11 +2,13 @@ package com.konfigyr.vault;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
-import lombok.Builder;
+import com.konfigyr.support.Slug;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.util.Assert;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -22,7 +24,7 @@ import java.time.OffsetDateTime;
  * Users can choose which {@link ProfilePolicy} their {@link Profile}s should use depending on their internal
  * process and security policies. Protected profiles require that {@code ChangeSet}s must go through a review
  * and an approval process, represented by the {@code ChangeRequest}, before changes can be applied.
- * Unprotected {@link Profile}s allow users to apply tiehr {@code ChangeSet}s directly without going
+ * Unprotected {@link Profile}s allow users to apply their {@code ChangeSet}s directly without going
  * through a review process.
  * <p>
  * When working with {@link Profile}s, it is important to understand the following principles:
@@ -75,24 +77,205 @@ import java.time.OffsetDateTime;
  * @see ProfilePolicy
  */
 @Entity
-@Builder
 public record Profile(
 		@Identity EntityId id,
 		@Association(aggregateType = Service.class) EntityId service,
 		String slug,
 		String name,
 		ProfilePolicy policy,
-		String description,
+		@Nullable String description,
 		int position,
-		OffsetDateTime createdAt,
-		OffsetDateTime updatedAt
+		@Nullable OffsetDateTime createdAt,
+		@Nullable OffsetDateTime updatedAt
 ) implements Comparable<Profile>, Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 2657983964397225835L;
 
+	/**
+	 * Creates a new {@link Builder fluent profile builder} instance used to create the {@link Profile}.
+	 *
+	 * @return profile builder, never {@literal null}
+	 */
+	@NonNull
+	public static Builder builder() {
+		return new Builder();
+	}
+
 	@Override
 	public int compareTo(@NonNull Profile o) {
 		return Integer.compare(position, o.position);
 	}
+
+	/**
+	 * Fluent builder type used to create a {@link Profile}.
+	 */
+	public static final class Builder {
+
+		private EntityId id;
+		private EntityId service;
+		private String slug;
+		private String name;
+		private ProfilePolicy policy;
+		private String description;
+		private int position = 1;
+		private OffsetDateTime createdAt;
+		private OffsetDateTime updatedAt;
+
+		private Builder() {
+		}
+
+		/**
+		 * Specify the {@link EntityId} of this {@link Profile}.
+		 *
+		 * @param id profile entity identifier, can't be {@literal null}
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder id(@NonNull EntityId id) {
+			this.id = id;
+			return this;
+		}
+
+		/**
+		 * Specify the internal {@link EntityId} of this {@link Profile}.
+		 *
+		 * @param id internal profile entity identifier
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder id(long id) {
+			return id(EntityId.from(id));
+		}
+
+		/**
+		 * Specify the {@link EntityId} of the {@link Service} this {@link Profile} belongs to.
+		 *
+		 * @param service service entity identifier, can't be {@literal null}
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder service(@NonNull EntityId service) {
+			this.service = service;
+			return this;
+		}
+
+		/**
+		 * Specify the internal {@link EntityId} of the {@link Service} this {@link Profile} belongs to.
+		 *
+		 * @param service internal service entity identifier
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder service(long service) {
+			return service(EntityId.from(service));
+		}
+
+		/**
+		 * Specify the slug that uniquely identifies this {@link Profile} within its {@link Service}.
+		 *
+		 * @param slug profile slug, can't be {@literal null}
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder slug(@NonNull String slug) {
+			this.slug = slug;
+			return this;
+		}
+
+		/**
+		 * Specify the human-readable name of this {@link Profile}.
+		 *
+		 * @param name profile name, can't be {@literal null}
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder name(@NonNull String name) {
+			this.name = name;
+			return this;
+		}
+
+		/**
+		 * Specify the {@link ProfilePolicy} of this {@link Profile}.
+		 *
+		 * @param policy profile access policy, can't be {@literal null}
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder policy(@NonNull ProfilePolicy policy) {
+			this.policy = policy;
+			return this;
+		}
+
+		/**
+		 * Describe this {@link Profile}.
+		 *
+		 * @param description profile description, can be {@literal null}
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder description(@Nullable String description) {
+			this.description = description;
+			return this;
+		}
+
+		/**
+		 * Specify the display order of this {@link Profile} within the UI.
+		 *
+		 * @param position display position, must be greater than zero
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder position(int position) {
+			this.position = position;
+			return this;
+		}
+
+		/**
+		 * Specify when this {@link Profile} was created.
+		 *
+		 * @param createdAt created date, can be {@literal null}
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder createdAt(@Nullable OffsetDateTime createdAt) {
+			this.createdAt = createdAt;
+			return this;
+		}
+
+		/**
+		 * Specify when this {@link Profile} was last updated.
+		 *
+		 * @param updatedAt updated date, can be {@literal null}
+		 * @return profile builder
+		 */
+		@NonNull
+		public Builder updatedAt(@Nullable OffsetDateTime updatedAt) {
+			this.updatedAt = updatedAt;
+			return this;
+		}
+
+		/**
+		 * Creates a new instance of the {@link Profile} using the values defined in the builder.
+		 *
+		 * @return profile instance, never {@literal null}
+		 * @throws IllegalArgumentException when required fields are missing or invalid
+		 */
+		@NonNull
+		public Profile build() {
+			Assert.notNull(id, "Profile entity identifier can not be null");
+			Assert.notNull(service, "Profile service identifier can not be null");
+			Assert.hasText(name, "Profile name can not be blank");
+			Assert.notNull(policy, "Profile policy can not be null");
+			Assert.isTrue(position > 0, "Profile position must be greater than zero");
+
+			if (slug == null) {
+				slug = Slug.slugify(name).get();
+			}
+
+			return new Profile(id, service, slug, name, policy, description, position, createdAt, updatedAt);
+		}
+
+	}
+
 }

@@ -62,7 +62,7 @@ import static com.konfigyr.data.tables.ArtifactVersionProperties.ARTIFACT_VERSIO
  */
 @Slf4j
 @RequiredArgsConstructor
-public class DefaultProvenanceEvaluator implements ProvenanceEvaluator {
+class DefaultProvenanceEvaluator implements ProvenanceEvaluator {
 
 	private static final List<SelectField<?>> SELECTABLE_PROVENANCE_FIELDS = List.of(
 			PROPERTY_DEFINITIONS.CHECKSUM,

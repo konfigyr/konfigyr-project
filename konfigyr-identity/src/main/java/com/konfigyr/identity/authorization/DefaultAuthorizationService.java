@@ -56,7 +56,7 @@ import static com.konfigyr.data.tables.OauthAuthorizationsConsents.OAUTH_AUTHORI
  */
 @Slf4j
 @SuppressWarnings("rawtypes")
-public class DefaultAuthorizationService implements AuthorizationService {
+class DefaultAuthorizationService implements AuthorizationService {
 
 	static final OAuth2TokenType AUTHORIZATION_STATE_TOKEN_TYPE = new OAuth2TokenType(OAuth2ParameterNames.STATE);
 	static final OAuth2TokenType AUTHORIZATION_CODE_TOKEN_TYPE = new OAuth2TokenType(OAuth2ParameterNames.CODE);
@@ -89,7 +89,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 			StringUtils::collectionToCommaDelimitedString
 	);
 
-	public DefaultAuthorizationService(
+	DefaultAuthorizationService(
 			DSLContext context, ApplicationEventPublisher publisher, ObjectMapper mapper,
 			KeysetOperations operations, RegisteredClientRepository repository
 	) {
