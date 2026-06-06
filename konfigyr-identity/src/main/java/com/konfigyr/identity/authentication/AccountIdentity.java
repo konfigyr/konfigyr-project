@@ -13,6 +13,8 @@ import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.Assert;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonPOJOBuilder;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -39,6 +41,7 @@ import java.util.Objects;
 @NullMarked
 @AggregateRoot
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonDeserialize(builder = AccountIdentity.Builder.class)
 public final class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Identifiable<EntityId>, Serializable {
 
 	@Serial
@@ -197,6 +200,7 @@ public final class AccountIdentity implements UserDetails, AuthenticatedPrincipa
 	/**
 	 * Fluent builder type used to create an {@link AccountIdentity}.
 	 */
+	@JsonPOJOBuilder(withPrefix = "")
 	public static final class Builder {
 
 		private @Nullable EntityId id;
