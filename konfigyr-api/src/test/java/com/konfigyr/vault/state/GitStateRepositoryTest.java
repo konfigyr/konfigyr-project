@@ -3,7 +3,6 @@ package com.konfigyr.vault.state;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.security.AuthenticatedPrincipal;
-import com.konfigyr.support.Slug;
 import com.konfigyr.vault.Profile;
 import com.konfigyr.vault.ProfilePolicy;
 import com.konfigyr.vault.Properties;
@@ -30,15 +29,15 @@ import static org.mockito.Mockito.*;
 
 class GitStateRepositoryTest {
 
-	Path root;
-	GitStateRepository repository;
-
-	final Service service = Service.builder()
+	static final Service service = Service.builder()
 			.id(123567L)
 			.namespace(1L)
 			.slug("test-service")
 			.name("test service")
 			.build();
+
+	Path root;
+	GitStateRepository repository;
 
 	@BeforeEach
 	void setup(@TempDir(cleanup = CleanupMode.ALWAYS) Path parent) {
@@ -403,7 +402,7 @@ class GitStateRepositoryTest {
 	static Profile createProfile(long id, String name, ProfilePolicy policy) {
 		return Profile.builder()
 				.id(EntityId.from(id))
-				.slug(Slug.slugify(name).get())
+				.service(service.id())
 				.name(name)
 				.policy(policy)
 				.build();

@@ -2,6 +2,7 @@ package com.konfigyr.vault;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
+import com.konfigyr.support.Slug;
 import org.jmolecules.ddd.annotation.Association;
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
@@ -264,10 +265,14 @@ public record Profile(
 		public Profile build() {
 			Assert.notNull(id, "Profile entity identifier can not be null");
 			Assert.notNull(service, "Profile service identifier can not be null");
-			Assert.hasText(slug, "Profile slug can not be blank");
 			Assert.hasText(name, "Profile name can not be blank");
 			Assert.notNull(policy, "Profile policy can not be null");
 			Assert.isTrue(position > 0, "Profile position must be greater than zero");
+
+			if (slug == null) {
+				slug = Slug.slugify(name).get();
+			}
+
 			return new Profile(id, service, slug, name, policy, description, position, createdAt, updatedAt);
 		}
 
