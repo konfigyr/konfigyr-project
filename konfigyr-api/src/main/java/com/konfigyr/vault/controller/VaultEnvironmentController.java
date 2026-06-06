@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/configs")
-public class VaultEnvironmentController extends AbstractVaultController {
+class VaultEnvironmentController extends AbstractVaultController {
 
 	private final ConfigurationEnvironmentLocator locator;
 
