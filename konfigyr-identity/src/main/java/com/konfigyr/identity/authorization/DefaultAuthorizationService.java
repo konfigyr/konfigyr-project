@@ -89,7 +89,7 @@ class DefaultAuthorizationService implements AuthorizationService {
 			StringUtils::collectionToCommaDelimitedString
 	);
 
-	public DefaultAuthorizationService(
+	DefaultAuthorizationService(
 			DSLContext context, ApplicationEventPublisher publisher, ObjectMapper mapper,
 			KeysetOperations operations, RegisteredClientRepository repository
 	) {

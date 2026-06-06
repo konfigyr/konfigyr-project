@@ -39,7 +39,7 @@ import java.util.Objects;
 @NullMarked
 @AggregateRoot
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Identifiable<EntityId>, Serializable {
+public final class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Identifiable<EntityId>, Serializable {
 
 	@Serial
 	private static final long serialVersionUID = -4208974779066630762L;
@@ -175,8 +175,12 @@ public class AccountIdentity implements UserDetails, AuthenticatedPrincipal, Ide
 
 	@Override
 	public boolean equals(@Nullable Object o) {
-		if (this == o) return true;
-		if (!(o instanceof AccountIdentity that)) return false;
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof AccountIdentity that)) {
+			return false;
+		}
 		return Objects.equals(id, that.id);
 	}
 
