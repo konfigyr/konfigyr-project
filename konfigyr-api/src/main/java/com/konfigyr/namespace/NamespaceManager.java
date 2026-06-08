@@ -108,6 +108,24 @@ public interface NamespaceManager {
 	Page<NamespaceApplication> findApplications(SearchQuery query);
 
 	/**
+	 * Retrieves the {@link Namespace} that owns the {@link NamespaceApplication} identified by the given
+	 * OAuth2 {@code client_id}.
+	 * <p>
+	 * This method is the primary entry-point for resolving the operational namespace from a JWT
+	 * {@code sub} claim whose value follows the Konfigyr {@code kfg-...} client-id format. It is
+	 * intentionally scoped to the namespace (not the application) because callers, particularly
+	 * MCP tools and security filters, need the namespace context, not the application metadata.
+	 * <p>
+	 * The lookup performs a single query that joins {@code oauth_applications} with {@code namespaces}
+	 * on the foreign-key relationship, so no second round-trip is required.
+	 *
+	 * @param clientId the OAuth2 {@code client_id} of the application, can't be {@literal null}
+	 * @return namespace that owns the matching application, or empty if no application with
+	 *         the given {@code client_id} exists, never {@literal null}
+	 */
+	Optional<Namespace> findNamespaceByClientId(String clientId);
+
+	/**
 	 * Retrieves the {@link NamespaceApplication} with given entity identifier in the {@link Namespace}.
 	 *
 	 * @param application entity identifier of the {@link NamespaceApplication} to be retrieved, can't be {@literal null}

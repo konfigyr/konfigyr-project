@@ -499,6 +499,24 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should find namespace by application client ID")
+	void shouldFindNamespaceByClientId() {
+		assertThat(manager.findNamespaceByClientId("kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD"))
+				.isPresent()
+				.get()
+				.returns(EntityId.from(2), Namespace::id)
+				.returns("konfigyr", Namespace::slug)
+				.returns("Konfigyr", Namespace::name);
+	}
+
+	@Test
+	@DisplayName("should return empty when no application matches the given client ID")
+	void shouldReturnEmptyForUnknownClientId() {
+		assertThat(manager.findNamespaceByClientId("kfg-does-not-exist"))
+				.isNotPresent();
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should create namespace application without expiration")
 	void shouldCreateApplicationWithoutExpiration(AssertablePublishedEvents events) {

@@ -2,11 +2,10 @@ package com.konfigyr.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.ClaimAccessor;
 import org.springframework.util.CollectionUtils;
@@ -26,13 +25,13 @@ import java.util.stream.Stream;
  * @see OAuthScope
  */
 @EqualsAndHashCode
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 
 	private static final Set<String> SCOPE_NAMES = Set.of("scope", "scp");
 	private static final OAuthScopes EMPTY = new OAuthScopes(Collections.emptyList());
 
 	private final List<OAuthScope> scopes;
+	private final Set<GrantedAuthority> authorities;
 
 	/**
 	 * Creates an empty {@link OAuthScopes OAuth scope set}.
@@ -112,6 +111,14 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 		return CollectionUtils.isEmpty(scopes) ? EMPTY : new OAuthScopes(collect(scopes.stream()));
 	}
 
+	private OAuthScopes(List<OAuthScope> scopes) {
+		this.scopes = Collections.unmodifiableList(scopes);
+		this.authorities = scopes.stream()
+				.map(OAuthScope::aggregate)
+				.flatMap(Collection::stream)
+				.collect(Collectors.toUnmodifiableSet());
+	}
+
 	/**
 	 * Method that would return a collection of {@link GrantedAuthority granted authorities} out of
 	 * this {@link OAuthScopes OAuth scope set}.
@@ -119,10 +126,33 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 	 * @return granted authorities, never {@literal null}
 	 */
 	public Collection<? extends GrantedAuthority> toAuthorities() {
-		return scopes.stream()
-				.map(OAuthScope::aggregate)
-				.flatMap(Collection::stream)
-				.collect(Collectors.toUnmodifiableSet());
+		return authorities;
+	}
+
+	/**
+	 * Transfers the scopes contained within this {@link OAuthScopes OAuth scope set} to the given collection.
+	 *
+	 * @param target the target collection to transfer the scopes to, can't be {@literal null}
+	 * @return the target collection, never {@literal null}
+	 */
+	public Collection<OAuthScope> to(Collection<OAuthScope> target) {
+		return to(target, scope -> scope);
+	}
+
+	/**
+	 * Transfers the scopes contained within this {@link OAuthScopes OAuth scope set} to the given collection
+	 * by converting them using the given {@link Converter}.
+	 *
+	 * @param target the target collection to transfer the scopes to, can't be {@literal null}
+	 * @param converter the converter to use to convert the scopes, can't be {@literal null}
+	 * @param <T> the target collection type
+	 * @return the target collection, never {@literal null}
+	 */
+	public <T> Collection<T> to(Collection<T> target, Converter<OAuthScope, T> converter) {
+		for (OAuthScope scope : this) {
+			transfer(target, scope, converter);
+		}
+		return target;
 	}
 
 	/**
@@ -313,5 +343,17 @@ public class OAuthScopes implements Iterable<OAuthScope>, Serializable {
 
 	private static List<OAuthScope> collect(@NonNull Stream<OAuthScope> stream) {
 		return stream.filter(Objects::nonNull).sorted().toList();
+	}
+
+	private <T> void transfer(Collection<T> target, OAuthScope scope, Converter<OAuthScope, T> converter) {
+		final T converted = converter.convert(scope);
+
+		if (target.contains(converted)) {
+			return;
+		}
+
+		target.add(converted);
+
+		scope.getIncluded().forEach(included -> transfer(target, included, converter));
 	}
 }

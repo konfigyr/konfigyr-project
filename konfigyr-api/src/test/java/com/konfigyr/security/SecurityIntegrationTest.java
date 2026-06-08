@@ -2,15 +2,13 @@ package com.konfigyr.security;
 
 import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
 import com.konfigyr.test.*;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jwt.JWTClaimsSet;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers;
@@ -18,6 +16,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
@@ -155,9 +154,9 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 	@DisplayName("should fail to validate the OAuth Access token when audience is missing")
 	void missingAudience() {
 		final String token = generateAccessToken(claims -> claims
-				.issuer(wiremock.baseUrl())
 				.subject(TestPrincipals.john().getName())
 				.claim("scp", OAuthScope.NAMESPACES.getAuthority())
+				.audience(List.of())
 		);
 
 		assertThatRequest(token)
@@ -180,23 +179,41 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 				.matches(SecurityMockMvcResultMatchers.unauthenticated());
 	}
 
+	@Test
+	@DisplayName("should expose OAuth 2.0 Protected Resource Metadata without authentication")
+	void shouldExposeProtectedResourceMetadata() {
+		mvc.get().uri("/.well-known/oauth-protected-resource")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.hasPathSatisfying("$.resource", resource -> resource.assertThat()
+						.asString()
+						.isNotBlank())
+				.hasPathSatisfying("$.resource_name", name -> name.assertThat()
+						.asString()
+						.isEqualTo("Konfigyr REST API"))
+				.hasPathSatisfying("$.bearer_methods_supported", servers -> servers.assertThat()
+						.asArray()
+						.containsExactly("header"))
+				.hasPathSatisfying("$.authorization_servers", servers -> servers.assertThat()
+						.asArray()
+						.containsExactly(wiremock.baseUrl()))
+				.hasPathSatisfying("$.scopes_supported", servers -> servers.assertThat()
+						.asArray()
+						.containsExactlyInAnyOrderElementsOf(
+								ResourceServerScopes.get().to(new ArrayList<>(), OAuthScope::getAuthority)
+						));
+	}
+
 	static MvcTestResultAssert assertThatRequest(String token) {
 		return mvc.get().uri("/namespaces")
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
 				.exchange()
 				.assertThat()
 				.apply(log());
-	}
-
-	static String generateAccessToken(@NonNull Consumer<JWTClaimsSet.Builder> customizer) {
-		return generateAccessToken(KeyGenerator.getInstance().get(), customizer);
-	}
-
-	static String generateAccessToken(@NonNull JWK key, @NonNull Consumer<JWTClaimsSet.Builder> customizer) {
-		final var builder = new JWTClaimsSet.Builder();
-		customizer.accept(builder);
-
-		return KeyGenerator.getInstance().sign(key, builder.build()).serialize();
 	}
 
 	static ResultMatcher authorities(OAuthScope... scopes) {

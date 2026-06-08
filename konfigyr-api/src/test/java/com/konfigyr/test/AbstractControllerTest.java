@@ -370,25 +370,59 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	@NonNull
 	protected static RequestPostProcessor authentication(@NonNull Consumer<JWTClaimsSet.Builder> customizer) {
 		return request -> {
-			final var instant = Instant.now();
-
-			final var claims = new JWTClaimsSet.Builder()
-					.jwtID(String.valueOf(instant.toEpochMilli()))
-					.notBeforeTime(Date.from(instant))
-					.issueTime(Date.from(instant))
-					.issuer(wiremock.baseUrl())
-					.audience(List.of("konfigyr-api"));
-
-			customizer.accept(claims);
-
-			final var token = KeyGenerator.getInstance()
-					.sign(claims.build())
-					.serialize();
+			final var token = generateAccessToken(customizer);
 
 			request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
 
 			return request;
 		};
+	}
+
+	/**
+	 * Generates a JWT OAuth2 Access Token using the default key from {@link KeyGenerator}.
+	 * <p>
+	 * The JWT contains default claims such as {@code jti}, {@code nbf}, {@code iat}, {@code iss},
+	 * and {@code aud}. Additional claims can be added using the customizer function.
+	 *
+	 * @param customizer consumer function that is used to customize JWT claims, can't be {@literal null}
+	 * @return the serialized JWT access token, never {@literal null}
+	 */
+	protected static String generateAccessToken(@NonNull Consumer<JWTClaimsSet.Builder> customizer) {
+		return generateAccessToken(KeyGenerator.getInstance().get(), customizer);
+	}
+
+	/**
+	 * Generates a JWT OAuth2 Access Token using the provided signing key.
+	 * <p>
+	 * The JWT contains default claims:
+	 * <ul>
+	 *     <li>{@code jti} - JWT ID set to current epoch milliseconds</li>
+	 *     <li>{@code nbf} - Not Before Time set to the current instant</li>
+	 *     <li>{@code iat} - Issue Time set to the current instant</li>
+	 *     <li>{@code iss} - Issuer set to the Wiremock server base URL</li>
+	 *     <li>{@code aud} - Audience set to "konfigyr-api"</li>
+	 * </ul>
+	 * Additional claims can be added, or default claims can be overridden using the customizer function.
+	 *
+	 * @param key        the JWK used to sign the JWT, can't be {@literal null}
+	 * @param customizer consumer function that is used to customize JWT claims, can't be {@literal null}
+	 * @return the serialized JWT access token, never {@literal null}
+	 */
+	protected static String generateAccessToken(@NonNull JWK key, @NonNull Consumer<JWTClaimsSet.Builder> customizer) {
+		final var instant = Instant.now();
+
+		final var claims = new JWTClaimsSet.Builder()
+				.jwtID(String.valueOf(instant.toEpochMilli()))
+				.notBeforeTime(Date.from(instant))
+				.issueTime(Date.from(instant))
+				.issuer(wiremock.baseUrl())
+				.audience(List.of("konfigyr-api"));
+
+		customizer.accept(claims);
+
+		return KeyGenerator.getInstance()
+				.sign(key, claims.build())
+				.serialize();
 	}
 
 }

@@ -3,11 +3,14 @@ package com.konfigyr.artifactory;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.transaction.annotation.Transactional;
@@ -166,6 +169,182 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.returns(coordinates, ArtifactVersionNotFoundException::getCoordinates)
 				.returns(HttpStatus.NOT_FOUND, ArtifactVersionNotFoundException::getStatusCode)
 				.withNoCause();
+	}
+
+	@Test
+	@DisplayName("should search all property definitions matching a term globally")
+	void shouldSearchPropertiesByTermGlobally() {
+		final var query = SearchQuery.builder()
+				.term("spring.profiles")
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		final var page = artifactory.search(query);
+
+		assertThatObject(page)
+				.returns(3L, Page::getTotalElements)
+				.returns(1, Page::getTotalPages);
+
+		assertThat(page)
+				.map(PropertyDefinition::name)
+				.containsExactly(
+						"spring.profiles.active",
+						"spring.profiles.default",
+						"spring.profiles.validate"
+				);
+	}
+
+	@Test
+	@DisplayName("should search property definitions by description term globally")
+	void shouldSearchPropertiesByDescriptionTermGlobally() {
+		final var query = SearchQuery.builder()
+				.term("Application name")
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		assertThat(artifactory.search(query))
+				.extracting(PropertyDefinition::name)
+				.containsExactly("spring.application.name");
+	}
+
+	@Test
+	@DisplayName("should return an empty page when no property definition matches the search term")
+	void shouldReturnEmptyPageForUnmatchedSearchTerm() {
+		final var query = SearchQuery.builder()
+				.term("com.nonexistent.property.that.does.not.exist")
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		assertThatObject(artifactory.search(query))
+				.returns(0L, Page::getTotalElements)
+				.returns(0, Page::getTotalPages)
+				.returns(true, Page::isEmpty);
+	}
+
+	@Test
+	@DisplayName("should search property definitions scoped to a specific artifact version")
+	void shouldSearchPropertiesByArtifactCoordinates() {
+		final var coordinates = ArtifactCoordinates.parse("org.springframework.boot:spring-boot:4.0.4");
+
+		final var query = SearchQuery.builder()
+				.criteria(PropertyDefinition.ARTIFACT_CRITERIA, coordinates)
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		assertThat(artifactory.search(query))
+				.map(PropertyDefinition::name)
+				.containsExactly(
+						"spring.profiles.active",
+						"spring.profiles.default",
+						"spring.profiles.validate"
+				);
+	}
+
+	@Test
+	@DisplayName("should combine artifact scope with a search term")
+	void shouldSearchPropertiesByArtifactCoordinatesAndTerm() {
+		final var coordinates = ArtifactCoordinates.parse("org.springframework.boot:spring-boot-autoconfigure:4.0.4");
+
+		final var query = SearchQuery.builder()
+				.term("messages")
+				.criteria(PropertyDefinition.ARTIFACT_CRITERIA, coordinates)
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		assertThat(artifactory.search(query))
+				.map(PropertyDefinition::name)
+				.containsExactly(
+						"spring.messages.basename",
+						"spring.messages.cache-duration",
+						"spring.messages.encoding"
+				);
+	}
+
+	@Test
+	@DisplayName("should return an empty page when the artifact version has no properties")
+	void shouldReturnEmptyPageWhenArtifactVersionHasNoProperties() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:1.0.0");
+
+		final var query = SearchQuery.builder()
+				.criteria(PropertyDefinition.ARTIFACT_CRITERIA, coordinates)
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		assertThatObject(artifactory.search(query))
+				.satisfies(page -> {
+					assertThat(page.getTotalElements()).isZero();
+					assertThat(page.getContent()).isEmpty();
+				});
+	}
+
+	@Test
+	@DisplayName("should return an empty page for unknown artifact coordinates")
+	void shouldReturnEmptyPageForUnknownArtifactCoordinates() {
+		final var coordinates = ArtifactCoordinates.parse("com.nonexistent:artifact:9.9.9");
+
+		final var query = SearchQuery.builder()
+				.criteria(PropertyDefinition.ARTIFACT_CRITERIA, coordinates)
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		assertThatObject(artifactory.search(query))
+				.returns(0L, Page::getTotalElements)
+				.returns(0, Page::getTotalPages)
+				.returns(true, Page::isEmpty);
+	}
+
+	@Test
+	@DisplayName("should return paged results with correct total element count and page metadata")
+	void shouldReturnPagedResultsWithCorrectMetadata() {
+		final var query = SearchQuery.builder()
+				.pageable(Pageable.ofSize(5))
+				.build();
+
+		assertThatObject(artifactory.search(query))
+				.returns(5, Page::getNumberOfElements)
+				.returns(16L, Page::getTotalElements)
+				.returns(4, Page::getTotalPages)
+				.returns(5, Page::getSize)
+				.returns(0, Page::getNumber)
+				.extracting(Page::getContent, InstanceOfAssertFactories.iterable(PropertyDefinition.class))
+				.hasSize(5);
+	}
+
+	@Test
+	@DisplayName("should exclude deprecated property definitions when INCLUDE_DEPRECATED_CRITERIA is false")
+	void shouldExcludeDeprecatedPropertiesWhenRequested() {
+		final var coordinates = ArtifactCoordinates.parse("org.springframework.boot:spring-boot-actuator:4.0.4");
+
+		final var query = SearchQuery.builder()
+				.criteria(PropertyDefinition.ARTIFACT_CRITERIA, coordinates)
+				.criteria(PropertyDefinition.INCLUDE_DEPRECATED_CRITERIA, false)
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		assertThat(artifactory.search(query))
+				.extracting(PropertyDefinition::deprecation)
+				.containsOnlyNulls();
+	}
+
+	@Test
+	@DisplayName("should include all property definitions when INCLUDE_DEPRECATED_CRITERIA is true")
+	void shouldIncludeDeprecatedPropertiesWhenRequested() {
+		final var coordinates = ArtifactCoordinates.parse("org.springframework.boot:spring-boot-actuator:4.0.4");
+
+		final var query = SearchQuery.builder()
+				.criteria(PropertyDefinition.ARTIFACT_CRITERIA, coordinates)
+				.criteria(PropertyDefinition.INCLUDE_DEPRECATED_CRITERIA, true)
+				.pageable(Pageable.ofSize(20))
+				.build();
+
+		assertThat(artifactory.search(query))
+				.map(PropertyDefinition::name)
+				.containsExactly(
+						"management.endpoint.sbom.access",
+						"management.endpoint.sbom.application.media-type",
+						"management.endpoint.shutdown.access",
+						"management.endpoint.startup.access"
+				);
 	}
 
 }

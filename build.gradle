@@ -47,6 +47,7 @@ subprojects {
             mavenBom "org.springframework.modulith:spring-modulith-bom:${findProperty('versions.spring.modulith')}"
             mavenBom "org.jmolecules:jmolecules-bom:${findProperty('versions.spring.jmolecules')}"
             mavenBom "com.konfigyr:konfigyr-crypto-dependencies:${findProperty('versions.konfigyr.crypto')}"
+            mavenBom "org.springframework.ai:spring-ai-bom:${findProperty('versions.spring.ai')}"
         }
 
         dependencies {

@@ -631,6 +631,7 @@ class ServiceControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@Transactional
 	@DisplayName("should publish the namespace service manifest")
 	void publishServiceManifest() {
 		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-api/manifest")

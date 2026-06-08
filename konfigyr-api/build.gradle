@@ -26,6 +26,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
     implementation 'io.micrometer:micrometer-observation'
 
+    /* Spring AI MCP Server */
+    implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
+
     /* Spring Common libraries */
     implementation 'org.springframework.retry:spring-retry'
 
@@ -52,6 +55,7 @@ dependencies {
     testImplementation project(':konfigyr-test')
     testImplementation 'com.icegreen:greenmail'
     testImplementation 'org.wiremock.integrations:wiremock-spring-boot'
+    testImplementation 'org.springframework.ai:spring-ai-starter-mcp-client'
     testImplementation 'org.springframework.boot:spring-boot-starter-batch-jdbc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-micrometer-metrics-test'
 }

@@ -3,11 +3,13 @@ package com.konfigyr.security;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.konfigyr.security.basic.NamespaceApplicationDetailsService;
 import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
+import com.konfigyr.security.oauth.OAuthProtectedResourceCustomizer;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
 import com.konfigyr.web.WebExceptionHandler;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.security.oauth2.server.resource.autoconfigure.OAuth2ResourceServerProperties;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -89,15 +91,22 @@ public class WebSecurityConfiguration {
 
 	@Bean
 	@Order(2)
-	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, ProblemDetailsAuthenticationExceptionHandler exceptionHandler) {
+	SecurityFilterChain konfigyrSecurityFilterChain(
+			HttpSecurity http,
+			OAuth2ResourceServerProperties properties,
+			ProblemDetailsAuthenticationExceptionHandler exceptionHandler
+	) {
 		final BearerTokenResolver bearerTokenResolver = new RequestAttributeBearerTokenResolver();
 
 		return http
 				.authorizeHttpRequests(requests -> requests
-						.anyRequest()
-						.authenticated()
+						// we need to explicitly define access rights for the MCP server as
+						// it is not possible @RequiresScope annotation on those endpoints
+						.requestMatchers("/mcp/**").hasAuthority(OAuthScope.MCP_READ.getAuthority())
+						// require that every incoming request is authenticated
+						.anyRequest().authenticated()
 				)
-//				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 				.cors(Customizer.withDefaults())
 				.csrf(AbstractHttpConfigurer::disable)
 				.logout(AbstractHttpConfigurer::disable)
@@ -108,6 +117,9 @@ public class WebSecurityConfiguration {
 				.oauth2ResourceServer(server -> server
 						.jwt(jwt -> jwt
 								.jwtAuthenticationConverter(AuthenticatedPrincipalAuthenticationToken::of)
+						)
+						.protectedResourceMetadata(metadata -> metadata
+								.protectedResourceMetadataCustomizer(new OAuthProtectedResourceCustomizer(properties))
 						)
 						.bearerTokenResolver(bearerTokenResolver)
 						.authenticationEntryPoint(exceptionHandler)

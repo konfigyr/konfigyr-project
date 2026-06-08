@@ -1,6 +1,7 @@
 package com.konfigyr.namespace.catalog;
 
 import com.konfigyr.artifactory.ArtifactoryConverters;
+import com.konfigyr.artifactory.PropertyDefinition;
 import com.konfigyr.artifactory.PropertyDescriptor;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.entity.EntityId;
@@ -89,6 +90,10 @@ class ConfigurationCatalogService implements ServiceCatalogSource {
 				SERVICE_CONFIGURATION_CATALOG.NAME.likeIgnoreCase(term),
 				DSL.condition("search_vector @@ plainto_tsquery('simple', ?)", term)
 		)));
+
+		if (!query.criteria(PropertyDefinition.INCLUDE_DEPRECATED_CRITERIA).orElse(true)) {
+			conditions.add(SERVICE_CONFIGURATION_CATALOG.DEPRECATION.isNull());
+		}
 
 		return serviceCatalogExecutor.execute(
 				createServiceCatalogQuery(DSL.and(conditions)),

@@ -80,7 +80,26 @@ public enum OAuthScope implements GrantedAuthority {
 	/**
 	 * Grants full access to profile operations like read, write, and delete.
 	 */
-	PROFILES("profiles", READ_PROFILES, WRITE_PROFILES, DELETE_PROFILES);
+	PROFILES("profiles", READ_PROFILES, WRITE_PROFILES, DELETE_PROFILES),
+
+	/**
+	 * Grants read-only access to the Konfigyr MCP server.
+	 * <p>
+	 * Implicitly includes {@link #READ_NAMESPACES} since all MCP operations operate
+	 * within an authenticated namespace.
+	 */
+	MCP_READ("mcp:read", READ_NAMESPACES),
+
+	/**
+	 * Grants full access to the Konfigyr MCP server tools, including operations that
+	 * perform write operations such as creating change requests.
+	 */
+	MCP_WRITE("mcp:write", MCP_READ),
+
+	/**
+	 * Grants full access to all Konfigyr MCP server operations.
+	 */
+	MCP("mcp", MCP_READ, MCP_WRITE);
 
 	private final String value;
 	private final Set<OAuthScope> included;
