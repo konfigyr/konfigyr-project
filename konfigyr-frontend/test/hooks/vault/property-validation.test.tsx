@@ -1,7 +1,9 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-
 import { usePropertyValidation } from '@konfigyr/hooks/vault/property-validation';
+import { MessagesProvider } from '@konfigyr/test/helpers/messages';
+import type { ReactNode } from 'react';
+
 import type { PropertyJsonSchema } from '@konfigyr/hooks/artifactory/types';
 
 import type { ValidationResult } from '@konfigyr/hooks/vault/types';
@@ -12,6 +14,7 @@ interface ValidationCase {
   value: unknown;
   keyword?: string;
   format?: string;
+  message?: string;
 }
 
 const COMPLEX_OBJECT_SCHEMA: PropertyJsonSchema = {
@@ -37,78 +40,119 @@ const COMPLEX_OBJECT_SCHEMA: PropertyJsonSchema = {
 };
 
 const VALIDATION_FAIL_CASES: Array<ValidationCase> = [
-  { label: 'type', schema: { type: 'string' }, value: null, keyword: 'type' },
-  { label: 'enum', schema: { type: 'string', enum: ['alpha', 'beta'] }, value: 'gamma', keyword: 'enum' },
-  { label: 'minimum', schema: { type: 'number', minimum: 3 }, value: 2, keyword: 'minimum' },
   {
+    label: 'type',
+    schema: { type: 'string' },
+    value: null,
+    keyword: 'type',
+    message: 'Must be a valid string',
+  }, {
+    label: 'enum',
+    schema: { type: 'string', enum: ['alpha', 'beta'] },
+    value: 'gamma',
+    keyword: 'enum',
+    message: 'Must be one of: alpha, beta',
+  }, {
+    label: 'minimum',
+    schema: { type: 'number', minimum: 3 },
+    value: 2,
+    keyword: 'minimum',
+    message: 'Must be greater than or equal to 3',
+  }, {
     label: 'exclusiveMinimum',
     schema: { type: 'number', exclusiveMinimum: 3 },
     value: 3,
     keyword: 'exclusiveMinimum',
-  },
-  { label: 'maximum', schema: { type: 'number', maximum: 3 }, value: 4, keyword: 'maximum' },
-  {
+    message: 'Must be greater than 3',
+  }, {
+    label: 'maximum',
+    schema: { type: 'number', maximum: 3 },
+    value: 4,
+    keyword: 'maximum',
+    message: 'Must be less than or equal to 3',
+  }, {
     label: 'exclusiveMaximum',
     schema: { type: 'number', exclusiveMaximum: 3 },
     value: 3,
     keyword: 'exclusiveMaximum',
-  },
-  { label: 'multipleOf', schema: { type: 'number', multipleOf: 2 }, value: 3, keyword: 'multipleOf' },
-  { label: 'minLength', schema: { type: 'string', minLength: 3 }, value: 'ab', keyword: 'minLength' },
-  { label: 'maxLength', schema: { type: 'string', maxLength: 2 }, value: 'abc', keyword: 'maxLength' },
-  { label: 'pattern', schema: { type: 'string', pattern: '^abc$' }, value: 'abd', keyword: 'pattern' },
-  {
+    message: 'Must be less than 3',
+  }, {
+    label: 'multipleOf',
+    schema: { type: 'number', multipleOf: 2 },
+    value: 3,
+    keyword: 'multipleOf',
+    message: 'Must be a multiple of 2',
+  }, {
+    label: 'minLength',
+    schema: { type: 'string', minLength: 3 },
+    value: 'ab',
+    keyword: 'minLength',
+    message: 'Must be at least 3 character(s)',
+  }, {
+    label: 'maxLength',
+    schema: { type: 'string', maxLength: 2 },
+    value: 'abc',
+    keyword: 'maxLength',
+    message: 'Must be at most 2 character(s)',
+  }, {
+    label: 'pattern',
+    schema: { type: 'string', pattern: '^abc$' },
+    value: 'abd',
+    keyword: 'pattern',
+    message: 'Must match the required format',
+  }, {
     label: 'minItems',
     schema: { type: 'array', minItems: 2, items: { type: 'string' } },
     value: ['one'],
     keyword: 'minItems',
-  },
-  {
+    message: 'Must contain at least 2 item(s)',
+  }, {
     label: 'maxItems',
     schema: { type: 'array', maxItems: 2, items: { type: 'string' } },
     value: ['one', 'two', 'three'],
     keyword: 'maxItems',
-  },
-  {
+    message: 'Must contain at most 2 item(s)',
+  }, {
     label: 'uniqueItems',
     schema: { type: 'array', uniqueItems: true, items: { type: 'string' } },
     value: ['dup', 'dup'],
     keyword: 'uniqueItems',
-  },
-  {
+    message: 'All items must be unique',
+  }, {
     label: 'format: date',
     schema: { type: 'string', format: 'date' },
     value: 'not-a-date',
     keyword: 'format',
     format: 'date',
-  },
-  {
+    message: 'Must be a valid date',
+  }, {
     label: 'format: time',
     schema: { type: 'string', format: 'time' },
     value: '25:61:61',
     keyword: 'format',
     format: 'time',
-  },
-  {
+    message: 'Must be a valid time',
+  }, {
     label: 'format: date-time',
     schema: { type: 'string', format: 'date-time' },
     value: 'not-a-datetime',
     keyword: 'format',
     format: 'date-time',
-  },
-  {
+    message: 'Must be a valid date-time',
+  }, {
     label: 'format: duration',
     schema: { type: 'string', format: 'duration' },
     value: '1h30m',
     keyword: 'format',
     format: 'duration',
-  },
-  {
+    message: 'Must be a valid duration',
+  }, {
     label: 'format: data-size',
     schema: { type: 'string', format: 'data-size' },
     value: '10MiB',
     keyword: 'format',
     format: 'data-size',
+    message: 'Must be a valid data-size',
   },
 ];
 
@@ -173,9 +217,12 @@ const VALIDATION_PASS_CASES: Array<ValidationCase> = [
 ];
 
 describe('hooks | vault | usePropertyValidation', () => {
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <MessagesProvider>{children}</MessagesProvider>
+  );
 
-  test.each(VALIDATION_FAIL_CASES)('should fail validation for $label', ({ schema, value, keyword, format }) => {
-    const { result } = renderHook(() => usePropertyValidation(schema));
+  test.each(VALIDATION_FAIL_CASES)('should fail validation for $label', ({ schema, value, keyword, format, message }) => {
+    const { result } = renderHook(() => usePropertyValidation(schema), { wrapper });
 
     let validation!: ValidationResult;
 
@@ -187,14 +234,14 @@ describe('hooks | vault | usePropertyValidation', () => {
     expect(validation.errors.length).toBe(1);
     expect(validation.errors[0]).toMatchObject({
       keyword,
-      message: expect.any(String),
+      message,
       ...(format ? { params: { format } } : {}),
     });
     expect(result.current.result).toEqual(validation);
   });
 
   test.each(VALIDATION_PASS_CASES)('should pass validation for $label', ({ schema, value }) => {
-    const { result } = renderHook(() => usePropertyValidation(schema));
+    const { result } = renderHook(() => usePropertyValidation(schema), { wrapper });
 
     let validation!: ValidationResult;
 
@@ -208,8 +255,7 @@ describe('hooks | vault | usePropertyValidation', () => {
   });
 
   test('should fail validation for complex object', () => {
-
-    const { result } = renderHook(() => usePropertyValidation(COMPLEX_OBJECT_SCHEMA));
+    const { result } = renderHook(() => usePropertyValidation(COMPLEX_OBJECT_SCHEMA), { wrapper });
 
     let validation!: ValidationResult;
 
@@ -217,32 +263,31 @@ describe('hooks | vault | usePropertyValidation', () => {
       validation = result.current.validate({
         username: 'ab',
         password: 'this-password-is-way-too-long',
-        url: 12345,
       });
     });
 
     expect(validation.isValid).toBe(false);
-    expect(validation.errors.length).toBe(3);
-
-    expect(validation.errors[0], 'username validation').toMatchObject({
-      keyword: 'minLength',
-      message: expect.any(String),
-    });
-
-    expect(validation.errors[1], 'password validation').toMatchObject({
-      keyword: 'maxLength',
-      message: expect.any(String),
-    });
-
-    expect(validation.errors[2], 'url validation').toMatchObject({
-      keyword: 'type',
-      message: expect.any(String),
-    });
+    expect(validation.errors).toHaveLength(3);
+    expect(validation.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          keyword: 'minLength',
+          message: 'Must be at least 3 character(s)',
+        }),
+        expect.objectContaining({
+          keyword: 'maxLength',
+          message: 'Must be at most 16 character(s)',
+        }),
+        expect.objectContaining({
+          keyword: 'required',
+          message: 'Missing required property: url',
+        }),
+      ]),
+    );
   });
 
   test('should passe validation for complex object', () => {
-
-    const { result } = renderHook(() => usePropertyValidation(COMPLEX_OBJECT_SCHEMA));
+    const { result } = renderHook(() => usePropertyValidation(COMPLEX_OBJECT_SCHEMA), { wrapper });
 
     let validation!: ValidationResult;
 
