@@ -1,6 +1,7 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.NamespaceApplicationSettings;
 import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.support.SearchQuery;
@@ -59,6 +60,7 @@ import java.time.ZoneOffset;
  *                     and once on rotation, then never again. Always {@literal null} for
  *                     {@link NamespaceClientType#AGENT}, which is a public client running on a
  *                     user's device where a secret cannot be stored securely.
+ * @param settings     type-specific configuration for this application.
  * @param scopes set of OAuth2 scopes granted to this application, can't be {@literal null}.
  * @param expiresAt expiration timestamp for this application’s credentials. When defined, the client credentials
  *                  automatically become invalid after the specified point in time. May be {@code null} for
@@ -76,6 +78,7 @@ public record NamespaceApplication(
 		@NonNull String name,
 		@NonNull String clientId,
 		@Nullable String clientSecret,
+		@Nullable NamespaceApplicationSettings settings,
 		@NonNull OAuthScopes scopes,
 		@Nullable OffsetDateTime expiresAt,
 		@Nullable OffsetDateTime createdAt,
@@ -138,6 +141,7 @@ public record NamespaceApplication(
 		private String name;
 		private String clientId;
 		private String clientSecret;
+		private NamespaceApplicationSettings settings;
 		private OAuthScopes scopes;
 		private OffsetDateTime expiresAt;
 		private OffsetDateTime createdAt;
@@ -263,6 +267,18 @@ public record NamespaceApplication(
 		}
 
 		/**
+		 * Specify the type-specific {@link NamespaceApplicationSettings} for this application.
+		 *
+		 * @param settings type-specific application settings, or {@literal null}
+		 * @return namespace application builder
+		 */
+		@NonNull
+		public Builder settings(@Nullable NamespaceApplicationSettings settings) {
+			this.settings = settings;
+			return this;
+		}
+
+		/**
 		 * Specify which OAuth {@code scope} should be granted to this {@link NamespaceApplication}.
 		 *
 		 * @param scopes the OAuth scopes to be granted
@@ -370,7 +386,7 @@ public record NamespaceApplication(
 			Assert.notNull(scopes, "OAuth scopes can not be null");
 
 			return new NamespaceApplication(id, namespace, type, name, clientId, clientSecret,
-					scopes, expiresAt, createdAt, updatedAt);
+					settings, scopes, expiresAt, createdAt, updatedAt);
 		}
 
 	}

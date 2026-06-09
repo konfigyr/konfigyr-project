@@ -23,6 +23,7 @@ class NamespaceApplicationCredentialsTest {
 				NamespaceClientType.SERVICE_ACCOUNT,
 				"Test application",
 				OAuthScopes.empty(),
+				null,
 				null
 		);
 

@@ -4,6 +4,7 @@ package com.konfigyr.namespace;
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.membership.Member;
+import com.konfigyr.security.NamespaceApplicationSettings;
 import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -526,6 +528,29 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should retrieve agent application settings from the database")
+	void shouldRetrieveAgentApplicationSettings() {
+		assertThat(manager.getApplication(EntityId.from(5)))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(NamespaceApplication.class))
+				.returns(NamespaceClientType.AGENT, NamespaceApplication::type)
+				.extracting(NamespaceApplication::settings, InstanceOfAssertFactories.type(NamespaceApplicationSettings.AgentSettings.class))
+				.returns(List.of("http://localhost/callback", "http://localhost:56789/callback"), NamespaceApplicationSettings.AgentSettings::redirectUris);
+	}
+
+	@Test
+	@DisplayName("should retrieve pipeline application settings from the database")
+	void shouldRetrievePipelineApplicationSettings() {
+		assertThat(manager.getApplication(EntityId.from(6)))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(NamespaceApplication.class))
+				.returns(NamespaceClientType.PIPELINE, NamespaceApplication::type)
+				.extracting(NamespaceApplication::settings, InstanceOfAssertFactories.type(NamespaceApplicationSettings.PipelineSettings.class))
+				.returns("https://token.actions.githubusercontent.com", NamespaceApplicationSettings.PipelineSettings::issuerUri)
+				.returns("repo:konfigyr/*:ref:refs/heads/main", NamespaceApplicationSettings.PipelineSettings::subjectPattern);
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should create namespace application without expiration")
 	void shouldCreateApplicationWithoutExpiration(AssertablePublishedEvents events) {
@@ -652,6 +677,76 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(application.updatedAt())
 				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		events.assertThat()
+				.contains(NamespaceEvent.ApplicationCreated.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.ApplicationCreated::application, application);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should create agent application and persist its settings")
+	void shouldCreateAgentApplicationWithSettings(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+		final var settings = new NamespaceApplicationSettings.AgentSettings(
+				List.of("http://localhost:8080/callback", "http://127.0.0.1:8080/callback")
+		);
+		final var definition = NamespaceApplicationDefinition.builder()
+				.namespace(namespace)
+				.type(NamespaceClientType.AGENT)
+				.name("Test AI Agent application with settings")
+				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
+				.settings(settings)
+				.build();
+
+		final var application = manager.createApplication(namespace, definition);
+
+		assertThat(application)
+				.returns(null, NamespaceApplication::clientSecret)
+				.returns(settings, NamespaceApplication::settings);
+
+		assertThat(manager.getApplication(application.id()))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(NamespaceApplication.class))
+				.returns(settings, NamespaceApplication::settings);
+
+		events.assertThat()
+				.contains(NamespaceEvent.ApplicationCreated.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.ApplicationCreated::application, application);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should create pipeline application and persist its settings")
+	void shouldCreatePipelineApplicationWithSettings(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+		final var settings = new NamespaceApplicationSettings.PipelineSettings(
+				"https://gitlab.example.com",
+				"project_path:konfigyr/api:ref_type:branch:ref:main"
+		);
+		final var definition = NamespaceApplicationDefinition.builder()
+				.namespace(namespace)
+				.type(NamespaceClientType.PIPELINE)
+				.name("Test GitLab CI pipeline application")
+				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
+				.settings(settings)
+				.build();
+
+		final var application = manager.createApplication(namespace, definition);
+
+		assertThat(application.clientSecret())
+				.isNotBlank()
+				.hasSize(43);
+
+		assertThat(application)
+				.returns(settings, NamespaceApplication::settings);
+
+		assertThat(manager.getApplication(application.id()))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(NamespaceApplication.class))
+				.returns(settings, NamespaceApplication::settings);
 
 		events.assertThat()
 				.contains(NamespaceEvent.ApplicationCreated.class)

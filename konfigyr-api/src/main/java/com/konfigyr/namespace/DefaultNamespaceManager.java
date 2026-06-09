@@ -4,7 +4,6 @@ import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.security.NamespaceClientId;
-import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
 import lombok.RequiredArgsConstructor;
@@ -64,14 +63,10 @@ class DefaultNamespaceManager implements NamespaceManager {
 			.sortField("date", OAUTH_APPLICATIONS.UPDATED_AT)
 			.build();
 
-	/** jOOQ converter between the {@code client_id} database column and {@link NamespaceClientId}. */
-	static final Converter<String, NamespaceClientId> NAMESPACE_CLIENT_ID_CONVERTER = Converter.of(
-			String.class, NamespaceClientId.class, NamespaceClientId::parse, NamespaceClientId::get
-	);
-
 	private final DSLContext context;
 	private final PasswordEncoder passwordEncoder;
 	private final ApplicationEventPublisher publisher;
+	private final NamespaceConverters converters;
 
 	@NonNull
 	@Override
@@ -275,7 +270,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 
 		return applicationsExecutor.execute(
 				createApplicationsQuery(DSL.and(conditions)),
-				DefaultNamespaceManager::toApplication,
+				this::toApplication,
 				query.pageable(),
 				() -> context.fetchCount(createApplicationsQuery(DSL.and(conditions)))
 		);
@@ -287,7 +282,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@Transactional(label = "namespace-get-application", readOnly = true)
 	public Optional<NamespaceApplication> getApplication(@NonNull EntityId application) {
 		return createApplicationsQuery(OAUTH_APPLICATIONS.ID.eq(application.get()))
-				.fetchOptional(DefaultNamespaceManager::toApplication);
+				.fetchOptional(this::toApplication);
 	}
 
 	@NonNull
@@ -308,12 +303,13 @@ class DefaultNamespaceManager implements NamespaceManager {
 		final Record record = SettableRecord.of(context, OAUTH_APPLICATIONS)
 				.set(OAUTH_APPLICATIONS.ID, EntityId.generate().map(EntityId::get))
 				.set(OAUTH_APPLICATIONS.NAMESPACE_ID, definition.namespace().get())
-				.set(OAUTH_APPLICATIONS.TYPE, definition.type().name())
+				.set(OAUTH_APPLICATIONS.TYPE, definition.type(), converters.clientType())
 				.set(OAUTH_APPLICATIONS.NAME, definition.name())
-				.set(OAUTH_APPLICATIONS.CLIENT_ID, clientId, NAMESPACE_CLIENT_ID_CONVERTER)
+				.set(OAUTH_APPLICATIONS.CLIENT_ID, clientId, converters.clientId())
 				.set(OAUTH_APPLICATIONS.CLIENT_SECRET, clientSecret == null ? null : passwordEncoder.encode(clientSecret))
 				.set(OAUTH_APPLICATIONS.SCOPES, definition.scopes().toString())
 				.set(OAUTH_APPLICATIONS.EXPIRES_AT, definition.expiration())
+				.set(OAUTH_APPLICATIONS.SETTINGS, definition.settings(), converters.settings())
 				.set(OAUTH_APPLICATIONS.CREATED_AT, clientId.timestamp().atOffset(ZoneOffset.UTC))
 				.set(OAUTH_APPLICATIONS.UPDATED_AT, clientId.timestamp().atOffset(ZoneOffset.UTC))
 				.get();
@@ -357,7 +353,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.set(OAUTH_APPLICATIONS.UPDATED_AT, OffsetDateTime.now())
 				.where(OAUTH_APPLICATIONS.ID.eq(id.get()))
 				.returning(OAUTH_APPLICATIONS.fields())
-				.fetchOne(DefaultNamespaceManager::toApplication);
+				.fetchOne(this::toApplication);
 
 		if (application == null) {
 			throw new NamespaceApplicationNotFoundException(id);
@@ -382,7 +378,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 		final Record record = lookupApplication(namespace.id(), id)
 				.orElseThrow(() -> new NamespaceApplicationNotFoundException(id));
 
-		final NamespaceClientId clientId = record.get(OAUTH_APPLICATIONS.CLIENT_ID, NAMESPACE_CLIENT_ID_CONVERTER);
+		final NamespaceClientId clientId = record.get(OAUTH_APPLICATIONS.CLIENT_ID, converters.clientId());
 		final String clientSecret = NamespaceApplicationDefinition.generateClientSecret(clientId);
 
 		// create a new record so we can reuse it for the update query and mapper
@@ -409,7 +405,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@Transactional(label = "namespace-remove-application")
 	public void removeApplication(@NonNull Namespace namespace, @NonNull EntityId id) {
 		final NamespaceApplication application = lookupApplication(namespace.id(), id)
-				.map(DefaultNamespaceManager::toApplication)
+				.map(this::toApplication)
 				.orElseThrow(() -> new NamespaceApplicationNotFoundException(id));
 
 		context.deleteFrom(OAUTH_APPLICATIONS)
@@ -479,6 +475,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 						OAUTH_APPLICATIONS.TYPE,
 						OAUTH_APPLICATIONS.NAME,
 						OAUTH_APPLICATIONS.CLIENT_ID,
+						OAUTH_APPLICATIONS.SETTINGS,
 						OAUTH_APPLICATIONS.SCOPES,
 						OAUTH_APPLICATIONS.EXPIRES_AT,
 						OAUTH_APPLICATIONS.CREATED_AT,
@@ -499,6 +496,28 @@ class DefaultNamespaceManager implements NamespaceManager {
 	}
 
 	@NonNull
+	private NamespaceApplication toApplication(@NonNull Record record) {
+		return toApplication(record, null);
+	}
+
+	@NonNull
+	private NamespaceApplication toApplication(@NonNull Record record, @Nullable String secret) {
+		return NamespaceApplication.builder()
+				.id(record.get(OAUTH_APPLICATIONS.ID))
+				.namespace(record.get(OAUTH_APPLICATIONS.NAMESPACE_ID))
+				.type(record.get(OAUTH_APPLICATIONS.TYPE, converters.clientType()))
+				.name(record.get(OAUTH_APPLICATIONS.NAME))
+				.clientId(record.get(OAUTH_APPLICATIONS.CLIENT_ID))
+				.clientSecret(secret)
+				.settings(record.get(OAUTH_APPLICATIONS.SETTINGS, converters.settings()))
+				.scopes(record.get(OAUTH_APPLICATIONS.SCOPES))
+				.expiresAt(record.get(OAUTH_APPLICATIONS.EXPIRES_AT))
+				.createdAt(record.get(OAUTH_APPLICATIONS.CREATED_AT))
+				.updatedAt(record.get(OAUTH_APPLICATIONS.UPDATED_AT))
+				.build();
+	}
+
+	@NonNull
 	private static Namespace toNamespace(@NonNull Record record) {
 		return Namespace.builder()
 				.id(record.get(NAMESPACES.ID))
@@ -508,27 +527,6 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.avatar(record.get(NAMESPACES.AVATAR))
 				.createdAt(record.get(NAMESPACES.CREATED_AT))
 				.updatedAt(record.get(NAMESPACES.UPDATED_AT))
-				.build();
-	}
-
-	@NonNull
-	private static NamespaceApplication toApplication(@NonNull Record record) {
-		return toApplication(record, null);
-	}
-
-	@NonNull
-	private static NamespaceApplication toApplication(@NonNull Record record, @Nullable String secret) {
-		return NamespaceApplication.builder()
-				.id(record.get(OAUTH_APPLICATIONS.ID))
-				.namespace(record.get(OAUTH_APPLICATIONS.NAMESPACE_ID))
-				.type(record.get(OAUTH_APPLICATIONS.TYPE, NamespaceClientType.class))
-				.name(record.get(OAUTH_APPLICATIONS.NAME))
-				.clientId(record.get(OAUTH_APPLICATIONS.CLIENT_ID))
-				.clientSecret(secret)
-				.scopes(record.get(OAUTH_APPLICATIONS.SCOPES))
-				.expiresAt(record.get(OAUTH_APPLICATIONS.EXPIRES_AT))
-				.createdAt(record.get(OAUTH_APPLICATIONS.CREATED_AT))
-				.updatedAt(record.get(OAUTH_APPLICATIONS.UPDATED_AT))
 				.build();
 	}
 }

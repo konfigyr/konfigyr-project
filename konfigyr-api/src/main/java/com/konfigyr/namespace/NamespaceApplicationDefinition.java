@@ -3,6 +3,7 @@ package com.konfigyr.namespace;
 import com.google.crypto.tink.subtle.Base64;
 import com.google.crypto.tink.subtle.Hkdf;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.NamespaceApplicationSettings;
 import com.konfigyr.security.NamespaceClientId;
 import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScopes;
@@ -22,16 +23,18 @@ import java.time.OffsetDateTime;
 /**
  * Record used to define one {@link NamespaceApplication} that would be created via {@link NamespaceManager}.
  *
- * @param namespace entity identifier of the {@link Namespace} used as the {@link NamespaceApplication} owner
- * @param type      the intended purpose of the application; determines the OAuth2 grant types,
- *                  client authentication methods, and security constraints applied at registration
- * @param name      human friendly name for the namespace application; can't be null
- * @param scopes    OAuth2 scopes that are granted to the {@link NamespaceApplication}; can't be null
+ * @param namespace  entity identifier of the {@link Namespace} used as the {@link NamespaceApplication} owner
+ * @param type       the intended purpose of the application; determines the OAuth2 grant types,
+ *                   client authentication methods, and security constraints applied at registration
+ * @param name       human friendly name for the namespace application; can't be null
+ * @param scopes     OAuth2 scopes that are granted to the {@link NamespaceApplication}; can't be null
  * @param expiration the expiration date for {@link NamespaceApplication}; can be null
+ * @param settings   type-specific configuration for the application
  * @author Vladimir Spasic
  * @since 1.0.0
  * @see NamespaceApplication
  * @see NamespaceClientType
+ * @see NamespaceApplicationSettings
  **/
 @ValueObject
 public record NamespaceApplicationDefinition(
@@ -39,7 +42,8 @@ public record NamespaceApplicationDefinition(
 		@NonNull NamespaceClientType type,
 		@NonNull String name,
 		@NonNull OAuthScopes scopes,
-		@Nullable OffsetDateTime expiration
+		@Nullable OffsetDateTime expiration,
+		@Nullable NamespaceApplicationSettings settings
 ) implements Serializable {
 
 	@Serial
@@ -127,6 +131,7 @@ public record NamespaceApplicationDefinition(
 		private String name;
 		private OAuthScopes scopes;
 		private OffsetDateTime expiration;
+		private NamespaceApplicationSettings settings;
 
 		private Builder() {
 		}
@@ -206,6 +211,21 @@ public record NamespaceApplicationDefinition(
 		}
 
 		/**
+		 * Specify the type-specific {@link NamespaceApplicationSettings} for this application.
+		 * <p>
+		 * Required for {@link NamespaceClientType#AGENT} and {@link NamespaceClientType#PIPELINE};
+		 * leave {@literal null} for {@link NamespaceClientType#SERVICE_ACCOUNT}.
+		 *
+		 * @param settings type-specific application settings, or {@literal null}
+		 * @return namespace application definition builder
+		 */
+		@NonNull
+		public Builder settings(@Nullable NamespaceApplicationSettings settings) {
+			this.settings = settings;
+			return this;
+		}
+
+		/**
 		 * Creates a new instance of the {@link NamespaceApplicationDefinition} using the values defined in the builder.
 		 *
 		 * @return namespace application definition instance, never {@literal null}
@@ -218,7 +238,7 @@ public record NamespaceApplicationDefinition(
 			Assert.hasText(name, "Namespace application name can not be blank");
 			Assert.notNull(scopes, "OAuth scopes can not be null");
 
-			return new NamespaceApplicationDefinition(namespace.id(), type, name, scopes, expiration);
+			return new NamespaceApplicationDefinition(namespace.id(), type, name, scopes, expiration, settings);
 		}
 
 	}

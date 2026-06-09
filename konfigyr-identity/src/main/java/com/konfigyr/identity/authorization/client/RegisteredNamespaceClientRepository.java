@@ -1,21 +1,27 @@
 package com.konfigyr.identity.authorization.client;
 
+import com.konfigyr.data.converter.JsonbConverter;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authorization.AuthorizationProperties;
+import com.konfigyr.security.NamespaceApplicationSettings;
 import com.konfigyr.security.NamespaceClientId;
 import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScopes;
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.Condition;
+import org.jooq.Converter;
 import org.jooq.DSLContext;
+import org.jooq.JSONB;
 import org.jooq.Record;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -23,12 +29,35 @@ import static com.konfigyr.data.tables.OauthApplications.OAUTH_APPLICATIONS;
 
 public class RegisteredNamespaceClientRepository implements RegisteredClientRepository {
 
+	/**
+	 * Key under which the {@link NamespaceApplicationSettings.PipelineSettings#issuerUri()} is stored
+	 * as a custom attribute on the Spring Security
+	 * {@link org.springframework.security.oauth2.server.authorization.settings.ClientSettings} of the
+	 * {@link org.springframework.security.oauth2.server.authorization.client.RegisteredClient}.
+	 */
+	static final String PIPELINE_ISSUER_URI = "konfigyr.pipeline.issuer-uri";
+
+	/**
+	 * Key under which the {@link NamespaceApplicationSettings.PipelineSettings#subjectPattern()} is stored
+	 * as a custom attribute on the Spring Security
+	 * {@link org.springframework.security.oauth2.server.authorization.settings.ClientSettings} of the
+	 * {@link org.springframework.security.oauth2.server.authorization.client.RegisteredClient}.
+	 */
+	static final String PIPELINE_SUBJECT_PATTERN = "konfigyr.pipeline.subject-pattern";
+
+	private static final List<String> DEFAULT_AGENT_REDIRECT_URIS = List.of(
+			"http://localhost/callback",
+			"http://127.0.0.1/callback"
+	);
+
 	private final DSLContext context;
 	private final AuthorizationProperties properties;
+	private final Converter<JSONB, NamespaceApplicationSettings> settingsConverter;
 
-	public RegisteredNamespaceClientRepository(AuthorizationProperties properties, DSLContext context) {
+	public RegisteredNamespaceClientRepository(AuthorizationProperties properties, DSLContext context, JsonMapper jsonMapper) {
 		this.properties = properties;
 		this.context = context;
+		this.settingsConverter = JsonbConverter.create(jsonMapper, NamespaceApplicationSettings.class);
 	}
 
 	@Override
@@ -70,7 +99,8 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 						OAUTH_APPLICATIONS.CLIENT_SECRET,
 						OAUTH_APPLICATIONS.SCOPES,
 						OAUTH_APPLICATIONS.EXPIRES_AT,
-						OAUTH_APPLICATIONS.CREATED_AT
+						OAUTH_APPLICATIONS.CREATED_AT,
+						OAUTH_APPLICATIONS.SETTINGS
 				)
 				.from(OAUTH_APPLICATIONS)
 				.where(condition)
@@ -113,19 +143,49 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 				.requireAuthorizationConsent(true)
 				.build();
 
-		return createRegisteredClient(type, record)
-				.clientSettings(clientSettings)
-				.redirectUri("http://localhost/callback")
-				.redirectUri("http://127.0.0.1/callback")
-				.build();
+		final List<String> redirectUris = resolveAgentRedirectUris(
+				record.get(OAUTH_APPLICATIONS.SETTINGS, settingsConverter)
+		);
+
+		final RegisteredClient.Builder builder = createRegisteredClient(type, record)
+				.clientSettings(clientSettings);
+
+		redirectUris.forEach(builder::redirectUri);
+
+		return builder.build();
 	}
 
 	private RegisteredClient fromPipeline(NamespaceClientType type, Record record) {
+		final ClientSettings.Builder clientSettingsBuilder = RegisteredClientSettings.createClientSettings();
+
+		applyPipelineSettings(clientSettingsBuilder,
+				record.get(OAUTH_APPLICATIONS.SETTINGS, settingsConverter)
+		);
+
 		return createRegisteredClient(type, record)
-				.clientSettings(RegisteredClientSettings.createClientSettings().build())
+				.clientSettings(clientSettingsBuilder.build())
 				.redirectUris(Set::clear)
 				.postLogoutRedirectUris(Set::clear)
 				.build();
+	}
+
+	private static List<String> resolveAgentRedirectUris(NamespaceApplicationSettings settings) {
+		if (settings instanceof NamespaceApplicationSettings.AgentSettings(List<String> redirectUris)) {
+			return redirectUris;
+		}
+		return DEFAULT_AGENT_REDIRECT_URIS;
+	}
+
+	private static void applyPipelineSettings(ClientSettings.Builder builder, NamespaceApplicationSettings settings) {
+		if (settings instanceof NamespaceApplicationSettings.PipelineSettings(String issuerUri, String subjectPattern)) {
+			RegisteredClientSettings.mapper().from(issuerUri)
+					.whenHasText()
+					.to(uri -> builder.setting(PIPELINE_ISSUER_URI, uri));
+
+			RegisteredClientSettings.mapper().from(subjectPattern)
+					.whenHasText()
+					.to(pattern -> builder.setting(PIPELINE_SUBJECT_PATTERN, pattern));
+		}
 	}
 
 	private static Consumer<Set<String>> registerScopes(Record record) {

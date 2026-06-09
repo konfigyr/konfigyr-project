@@ -70,7 +70,7 @@ public class AuthorizationConfiguration implements InitializingBean {
 	}
 
 	@Bean
-	RegisteredClientRepository registeredClientRepository(DSLContext context, CacheMetricsRegistrar registrar) {
+	RegisteredClientRepository registeredClientRepository(DSLContext context, JsonMapper jsonMapper, CacheMetricsRegistrar registrar) {
 		Assert.notNull(properties.getCache().getSpec(), "Cache specification must not be null");
 
 		final CaffeineCache cache = new CaffeineCache(
@@ -82,7 +82,7 @@ public class AuthorizationConfiguration implements InitializingBean {
 
 		return new DelegatingRegisteredClientRepository(List.of(
 				new KonfigyrRegisteredClientRepository(properties),
-				new CachingRegisteredClientRepository(cache, new RegisteredNamespaceClientRepository(properties, context))
+				new CachingRegisteredClientRepository(cache, new RegisteredNamespaceClientRepository(properties, context, jsonMapper))
 		));
 	}
 

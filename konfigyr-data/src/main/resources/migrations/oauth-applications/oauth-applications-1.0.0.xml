@@ -44,6 +44,9 @@
 			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
 				<constraints nullable="false" />
 			</column>
+			<column name="settings" type="jsonb">
+				<constraints nullable="true"/>
+			</column>
 		</createTable>
 
 		<addForeignKeyConstraint
