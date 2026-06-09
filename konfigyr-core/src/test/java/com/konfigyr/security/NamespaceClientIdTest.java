@@ -11,6 +11,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -156,6 +157,29 @@ class NamespaceClientIdTest {
 
 		assertThat(id).isEqualTo(reparsed);
 		assertThat(id).hasSameHashCodeAs(reparsed);
+	}
+
+	@Test
+	@DisplayName("should order by namespace entity ID then by creation timestamp")
+	void comparable() {
+		// namespace: 1, instant: 2026-06-09T10:40:21Z
+		final var first = NamespaceClientId.parse("kfg-AQIAAAAAAAAAAQAAAABqJ-2Vmx5jMjxhAaed6BrSiYE");
+		// namespace: 2, instant: 2026-06-09T10:40:21Z
+		final var second = NamespaceClientId.parse("kfg-AQIAAAAAAAAAAgAAAABqJ-2Vmx5jMjxhAaed6BrSiYE");
+		// namespace: 1, instant: 2026-06-09T10:52:18Z
+		final var third = NamespaceClientId.parse("kfg-AQIAAAAAAAAAAQAAAABqJ_Biw4Jls__8PuubUYeTk1Y");
+
+		// same namespace: earlier timestamp sorts before later timestamp
+		assertThat(first).isLessThan(third);
+		assertThat(third).isGreaterThan(first);
+
+//		// namespace ordering takes priority, regardless of whether its timestamp is earlier
+		assertThat(third).isLessThan(second);
+		assertThat(second).isGreaterThan(third);
+
+		// sort all three in a list
+		assertThat(List.of(first, third, second))
+				.isSorted();
 	}
 
 	@Test
