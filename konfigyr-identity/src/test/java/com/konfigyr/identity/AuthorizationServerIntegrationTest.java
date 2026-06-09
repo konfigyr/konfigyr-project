@@ -11,6 +11,7 @@ import com.konfigyr.identity.authorization.jwk.KeysetSource;
 import com.konfigyr.test.TestContainers;
 import com.konfigyr.test.TestProfile;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,16 +20,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.FactorGrantedAuthority;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.*;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
+import org.springframework.security.oauth2.core.http.converter.OAuth2ErrorHttpMessageConverter;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationServerMetadata;
 import org.springframework.security.oauth2.server.authorization.http.converter.OAuth2AuthorizationServerMetadataHttpMessageConverter;
 import org.springframework.security.oauth2.server.authorization.oidc.OidcProviderConfiguration;
@@ -38,10 +39,15 @@ import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -109,15 +115,21 @@ class AuthorizationServerIntegrationTest {
 				.satisfies(assertUri("/connect/logout", OidcProviderConfiguration::getEndSessionEndpoint))
 				.satisfies(assertElements(
 						OidcProviderConfiguration::getGrantTypes,
-						"authorization_code", "client_credentials", "refresh_token",
-						"urn:ietf:params:oauth:grant-type:token-exchange"
+						AuthorizationGrantType.AUTHORIZATION_CODE.getValue(),
+						AuthorizationGrantType.CLIENT_CREDENTIALS.getValue(),
+						AuthorizationGrantType.REFRESH_TOKEN.getValue(),
+						AuthorizationGrantType.TOKEN_EXCHANGE.getValue()
 				))
 				.satisfies(assertElements(OidcProviderConfiguration::getResponseTypes, "code"))
 				.satisfies(assertElements(OidcProviderConfiguration::getCodeChallengeMethods, "S256"))
 				.satisfies(assertElements(
 						OidcProviderConfiguration::getTokenEndpointAuthenticationMethods,
-						"client_secret_basic", "client_secret_post", "client_secret_jwt",
-						"private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"
+						ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue(),
+						ClientAuthenticationMethod.CLIENT_SECRET_POST.getValue(),
+						ClientAuthenticationMethod.CLIENT_SECRET_JWT.getValue(),
+						ClientAuthenticationMethod.PRIVATE_KEY_JWT.getValue(),
+						ClientAuthenticationMethod.TLS_CLIENT_AUTH.getValue(),
+						ClientAuthenticationMethod.SELF_SIGNED_TLS_CLIENT_AUTH.getValue()
 				))
 				.satisfies(assertOAuthScopes(OidcProviderConfiguration::getScopes))
 				.satisfies(assertElements(OidcProviderConfiguration::getIdTokenSigningAlgorithms, "RS256", "PS256"))
@@ -151,15 +163,21 @@ class AuthorizationServerIntegrationTest {
 				.satisfies(assertUri("/oauth/introspect", OAuth2AuthorizationServerMetadata::getTokenIntrospectionEndpoint))
 				.satisfies(assertElements(
 						OAuth2AuthorizationServerMetadata::getGrantTypes,
-						"authorization_code", "client_credentials", "refresh_token",
-						"urn:ietf:params:oauth:grant-type:token-exchange"
+						AuthorizationGrantType.AUTHORIZATION_CODE.getValue(),
+						AuthorizationGrantType.CLIENT_CREDENTIALS.getValue(),
+						AuthorizationGrantType.REFRESH_TOKEN.getValue(),
+						AuthorizationGrantType.TOKEN_EXCHANGE.getValue()
 				))
 				.satisfies(assertElements(OAuth2AuthorizationServerMetadata::getResponseTypes, "code"))
 				.satisfies(assertElements(OAuth2AuthorizationServerMetadata::getCodeChallengeMethods, "S256"))
 				.satisfies(assertElements(
 						OAuth2AuthorizationServerMetadata::getTokenEndpointAuthenticationMethods,
-						"client_secret_basic", "client_secret_post", "client_secret_jwt",
-						"private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"
+						ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue(),
+						ClientAuthenticationMethod.CLIENT_SECRET_POST.getValue(),
+						ClientAuthenticationMethod.CLIENT_SECRET_JWT.getValue(),
+						ClientAuthenticationMethod.PRIVATE_KEY_JWT.getValue(),
+						ClientAuthenticationMethod.TLS_CLIENT_AUTH.getValue(),
+						ClientAuthenticationMethod.SELF_SIGNED_TLS_CLIENT_AUTH.getValue()
 				))
 				.satisfies(assertElements(
 						OAuth2AuthorizationServerMetadata::getDPoPSigningAlgorithms,
@@ -231,30 +249,118 @@ class AuthorizationServerIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should fail to authorize request for OAuth client that does not support authorization_code")
-	void authorizationForUnsupportedClient() {
+	@DisplayName("should fail to authorize Agent namespace client request without code_challenge")
+	void authorizationForNamespaceClientWithoutPkce() {
 		mvc.get().uri("/oauth/authorize")
-				.queryParam(OAuth2ParameterNames.CLIENT_ID, "kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
-				.queryParam(OAuth2ParameterNames.CLIENT_SECRET, "4b6dHEXXnAEMM1AD4b6RhqamjFwMdhIRgpyBVJRu-Zk")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY")
 				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
 				.queryParam(OAuth2ParameterNames.SCOPE, "namespaces")
 				.queryParam(OAuth2ParameterNames.STATE, "state")
-				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://127.0.0.1/callback")
 				.exchange()
 				.assertThat()
 				.apply(log())
 				.satisfies(assertRedirect(uri -> assertThat(uri)
-						.hasPath("/oauth/client/code")
-						.hasParameter(OAuth2ParameterNames.ERROR, OAuth2ErrorCodes.UNAUTHORIZED_CLIENT)
-						.hasParameter(OAuth2ParameterNames.ERROR_DESCRIPTION, "OAuth 2.0 Parameter: client_id")
+						.hasPath("/callback")
+						.hasParameter(OAuth2ParameterNames.ERROR, OAuth2ErrorCodes.INVALID_REQUEST)
+						.hasParameter(OAuth2ParameterNames.ERROR_DESCRIPTION, "OAuth 2.0 Parameter: code_challenge")
 						.hasParameter(OAuth2ParameterNames.STATE, "state")
 				));
 	}
 
 	@Test
+	@DisplayName("should deny authorization code to user who is not a member of the namespace")
+	void authorizationDeniedForNonMember()  {
+		final var verifier = PkceGenerator.generateCodeVerifier();
+
+		// jane (id=2) is NOT a member of namespace_id=1 (Agent app)
+		mvc.get().uri("/oauth/authorize")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "kfg-AQIAAAAAAAAAAQAAAABqJ8Ep0uAEZ3m_IJpKeL8_2Zk")
+				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "namespaces")
+				.queryParam(OAuth2ParameterNames.STATE, "state")
+				.queryParam(PkceParameterNames.CODE_CHALLENGE, PkceGenerator.generateCodeChallenge(verifier))
+				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://127.0.0.1:3000/callback")
+				.with(rememberMe(rememberMeServices, identityService, 2))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(assertRedirect(uri -> assertThat(uri)
+						.hasPath("/callback")
+						.hasParameter(OAuth2ParameterNames.ERROR, OAuth2ErrorCodes.ACCESS_DENIED)
+						.hasParameter(OAuth2ParameterNames.STATE, "state")
+				));
+	}
+
+	@Test
+	@DisplayName("should issue authorization code and embed namespace claim for namespace member")
+	void authorizationCodeIssuedForMemberUsingAgentClient()  {
+		final var verifier = PkceGenerator.generateCodeVerifier();
+		final var session = new MockHttpSession();
+
+		MvcTestResult result = mvc.get().uri("/oauth/authorize")
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY")
+				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "namespaces")
+				.queryParam(OAuth2ParameterNames.STATE, "state")
+				.queryParam(PkceParameterNames.CODE_CHALLENGE, PkceGenerator.generateCodeChallenge(verifier))
+				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/callback")
+				.with(rememberMe(rememberMeServices, identityService, 1))
+				.session(session)
+				.exchange();
+
+		// redirected to the OAuth consents page
+		result.assertThat()
+				.apply(log())
+				.satisfies(assertRedirect(uri -> assertThat(uri)
+						.hasPath("/oauth/consents")
+						.hasParameter(OAuth2ParameterNames.CLIENT_ID, "kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY")
+						.hasParameter(OAuth2ParameterNames.SCOPE, "namespaces")
+				));
+
+		// send the consents and continue the OAuth authorization process
+		result = mvc.post()
+				.uri("/oauth/authorize")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.formFields(extractUriParameters(result.getResponse().getRedirectedUrl()))
+				.with(rememberMe(rememberMeServices, identityService, 1))
+				.session(session)
+				.exchange();
+
+		result.assertThat()
+				.apply(log())
+				.satisfies(assertRedirect(uri -> assertThat(uri)
+						.hasPath("/callback")
+						.hasParameter(OAuth2ParameterNames.STATE, "state")
+						.hasParameter(OAuth2ParameterNames.CODE)
+				));
+
+		final String code = extractUriParameters(result.getResponse().getRedirectedUrl())
+				.getFirst(OAuth2ParameterNames.CODE);
+
+		mvc.post().uri("/oauth/token")
+				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/callback")
+				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
+				.param(PkceParameterNames.CODE_VERIFIER, verifier)
+				.param(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
+				.param(OAuth2ParameterNames.CODE, code)
+				.formField(OAuth2ParameterNames.CLIENT_ID, "kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.hasPathSatisfying("$.access_token", it -> it.assertThat().isNotNull())
+				.hasPathSatisfying("$.scope", it -> it.assertThat().isEqualTo("namespaces"));
+	}
+
+	@Test
 	@DisplayName("should fail to obtain token for unknown client")
 	void tokenForUnknownClient() {
-		mvc.post().uri("/oauth/token")
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
 				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
 				.param(OAuth2ParameterNames.CODE, "some authorization code")
@@ -269,11 +375,12 @@ class AuthorizationServerIntegrationTest {
 	@Test
 	@DisplayName("should fail to obtain token for client that had expired")
 	void tokenForExpiringClient() {
-		mvc.post().uri("/oauth/token")
-				.param(OAuth2ParameterNames.GRANT_TYPE, "client_credentials")
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
+				.param(OAuth2ParameterNames.GRANT_TYPE, AuthorizationGrantType.CLIENT_CREDENTIALS.getValue())
 				.param(OAuth2ParameterNames.SCOPE, "namespaces")
 				.with(httpBasic(
-						"kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD",
+						"kfg-AQEAAAAAAAAAAgAAAABqJToWfXkWbVML9iZbEPVai4o",
 						"10S6cd0JgdO6WCLmOLB46d-Enx7K20hKSF1qicfev5g"
 				))
 				.exchange()
@@ -286,7 +393,8 @@ class AuthorizationServerIntegrationTest {
 	@Test
 	@DisplayName("should fail to obtain token for invalid client credentials")
 	void tokenForInvalidClientCredentials() {
-		mvc.post().uri("/oauth/token")
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
 				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
 				.param(OAuth2ParameterNames.CODE, "some authorization code")
@@ -301,7 +409,8 @@ class AuthorizationServerIntegrationTest {
 	@Test
 	@DisplayName("should fail to obtain token for unsupported grant type")
 	void tokenForInvalidGrantType() {
-		mvc.post().uri("/oauth/token")
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
 				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.param(OAuth2ParameterNames.GRANT_TYPE, "password")
 				.param(OAuth2ParameterNames.CODE, "some authorization code")
@@ -316,7 +425,8 @@ class AuthorizationServerIntegrationTest {
 	@Test
 	@DisplayName("should fail to obtain token for invalid authorization code")
 	void tokenForInvalidAuthorizationCode() {
-		mvc.post().uri("/oauth/token")
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
 				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
 				.param(OAuth2ParameterNames.CODE, "some authorization code")
@@ -435,9 +545,7 @@ class AuthorizationServerIntegrationTest {
 		assertThat(result.getResponse().getRedirectedUrl())
 				.isNotNull();
 
-		final String code = UriComponentsBuilder.fromUriString(result.getResponse().getRedirectedUrl())
-				.build()
-				.getQueryParams()
+		final String code = extractUriParameters(result.getResponse().getRedirectedUrl())
 				.getFirst(OAuth2ParameterNames.CODE);
 
 		mvc.post().uri("/oauth/token")
@@ -512,12 +620,11 @@ class AuthorizationServerIntegrationTest {
 		assertThat(result.getResponse().getRedirectedUrl())
 				.isNotNull();
 
-		final String code = UriComponentsBuilder.fromUriString(result.getResponse().getRedirectedUrl())
-				.build()
-				.getQueryParams()
+		final String code = extractUriParameters(result.getResponse().getRedirectedUrl())
 				.getFirst(OAuth2ParameterNames.CODE);
 
-		mvc.post().uri("/oauth/token")
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
 				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
 				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
 				.param(PkceParameterNames.CODE_VERIFIER, "invalid verifier")
@@ -535,10 +642,10 @@ class AuthorizationServerIntegrationTest {
 	@DisplayName("should issue OAuth Access Token for client_credentials grant type")
 	void issueAccessTokenForClientCredentials()  {
 		mvc.post().uri("/oauth/token")
-				.param(OAuth2ParameterNames.GRANT_TYPE, "client_credentials")
+				.param(OAuth2ParameterNames.GRANT_TYPE, AuthorizationGrantType.CLIENT_CREDENTIALS.getValue())
 				.param(OAuth2ParameterNames.SCOPE, "namespaces")
 				.with(httpBasic(
-						"kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG",
+						"kfg-AQEAAAAAAAAAAQAAAABqJTlV2OXTvVveqnbXJ21wbPw",
 						"n0obEPw2_5DoDNkxyXhW5Ul1TgC-t2r3H8_wj7PDqFc"
 				))
 				.exchange()
@@ -560,13 +667,33 @@ class AuthorizationServerIntegrationTest {
 						.uri("/oauth/introspect")
 						.param("token", it.assertThat().actual().toString())
 						.with(httpBasic(
-								"kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG",
+								"kfg-AQEAAAAAAAAAAQAAAABqJTlV2OXTvVveqnbXJ21wbPw",
 								"n0obEPw2_5DoDNkxyXhW5Ul1TgC-t2r3H8_wj7PDqFc"
 						))
 						.exchange()
 						.assertThat()
 						.hasStatus(HttpStatus.OK)
 				);
+	}
+
+	@Test
+	@DisplayName("should fail to exchange Pipeline namespace client request without subject_token")
+	void exchangeTokenWithoutSubjectToken() {
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
+				.param(OAuth2ParameterNames.GRANT_TYPE, AuthorizationGrantType.TOKEN_EXCHANGE.getValue())
+				.param(OAuth2ParameterNames.SCOPE, "namespaces")
+				.with(httpBasic(
+						"kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0",
+						"iHZFaUowdtm2R9-7jOBuMucYj-E2jHlDPsaZlgUEUK4"
+				))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.satisfies(assertOAuthErrorResponse(OAuth2ErrorCodes.INVALID_REQUEST, error -> assertThat(error)
+						.returns("OAuth 2.0 Parameter: subject_token", OAuth2Error::getDescription)
+				));
 	}
 
 	static Consumer<MvcTestResult> assertOAuthError(String code) {
@@ -589,12 +716,16 @@ class AuthorizationServerIntegrationTest {
 	}
 
 	static Consumer<MvcTestResult> assertOAuthErrorResponse(String code) {
+		return assertOAuthErrorResponse(code, ignore -> { /* noop */ });
+	}
+
+	static Consumer<MvcTestResult> assertOAuthErrorResponse(String code, ThrowingConsumer<OAuth2Error> assertion) {
 		return result -> result.assertThat()
 				.bodyJson()
 				.as("OAuth error be present in the response: %s", code)
-				.hasPathSatisfying("$.error", it -> it.assertThat()
-						.isEqualTo(code)
-				);
+				.convertTo(OAuth2Error.class)
+				.returns(code, OAuth2Error::getErrorCode)
+				.satisfies(assertion);
 	}
 
 	static Consumer<MvcTestResult> assertRedirect(Consumer<URI> assertion) {
@@ -644,6 +775,22 @@ class AuthorizationServerIntegrationTest {
 
 			return request;
 		};
+	}
+
+	static MultiValueMap<String, String> extractUriParameters(String uri) {
+		final var parameters = new LinkedMultiValueMap<String, String>();
+
+		final UriComponents consentsUri = UriComponentsBuilder
+				.fromUriString(uri)
+				.build();
+
+		consentsUri.getQueryParams().forEach((name, values) -> {
+			for (final var value : values) {
+				parameters.add(name, URLDecoder.decode(value, StandardCharsets.UTF_8));
+			}
+		});
+
+		return parameters;
 	}
 
 }

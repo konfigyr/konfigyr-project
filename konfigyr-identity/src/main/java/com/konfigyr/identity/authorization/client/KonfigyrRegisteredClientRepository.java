@@ -2,14 +2,15 @@ package com.konfigyr.identity.authorization.client;
 
 import com.konfigyr.identity.authorization.AuthorizationProperties;
 import com.konfigyr.identity.authorization.AuthorizationServerScopes;
-import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 
-import java.util.Collection;
 import java.util.Set;
+import java.util.function.Function;
 
-public class KonfigyrRegisteredClientRepository extends AbstractRegisteredClientRepository {
+public final class KonfigyrRegisteredClientRepository implements RegisteredClientRepository {
 
 	private static final Set<AuthorizationGrantType> SUPPORTED_GRANT_TYPES = Set.of(
 			AuthorizationGrantType.AUTHORIZATION_CODE,
@@ -17,12 +18,15 @@ public class KonfigyrRegisteredClientRepository extends AbstractRegisteredClient
 			AuthorizationGrantType.REFRESH_TOKEN
 	);
 
+	private static final Set<ClientAuthenticationMethod> SUPPORTED_AUTHENTICATION_METHODS = Set.of(
+			ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
+			ClientAuthenticationMethod.CLIENT_SECRET_POST
+	);
+
 	private final RegisteredClient client;
 
 	public KonfigyrRegisteredClientRepository(AuthorizationProperties properties) {
-		super(properties);
-
-		client = createRegisteredClient("konfigyr")
+		client = RegisteredClient.withId("konfigyr")
 				.clientName(properties.getClientName())
 				.clientId(properties.getClientId())
 				.clientSecret(properties.getClientSecret())
@@ -30,29 +34,40 @@ public class KonfigyrRegisteredClientRepository extends AbstractRegisteredClient
 					AuthorizationServerScopes.register(scopes);
 					scope.getIncluded().forEach(it -> scopes.add(it.getAuthority()));
 				}))
-				.clientSettings(
-						createClientSettings()
-								.requireAuthorizationConsent(false)
-								.build()
+				.authorizationGrantTypes(types -> types
+						.addAll(SUPPORTED_GRANT_TYPES)
 				)
-				.tokenSettings(createTokenSettings().build())
+				.clientAuthenticationMethods(methods -> methods
+						.addAll(SUPPORTED_AUTHENTICATION_METHODS)
+				)
+				.clientSettings(RegisteredClientSettings.createClientSettings().build())
+				.tokenSettings(RegisteredClientSettings.createTokenSettings(properties).build())
+				.redirectUris(uris -> properties.getRedirectUris().forEach(uri ->
+						RegisteredClientSettings.mapper().from(uri).whenHasText().to(uris::add)
+				))
+				.postLogoutRedirectUris(uris -> properties.getPostLogoutRedirectUris().forEach(uri ->
+						RegisteredClientSettings.mapper().from(uri).whenHasText().to(uris::add)
+				))
 				.build();
 	}
 
 	@Override
+	public void save(RegisteredClient registeredClient) {
+		throw new UnsupportedOperationException("Registering OAuth clients is not supported");
+	}
+
+	@Override
 	public RegisteredClient findById(String id) {
-		return client.getId().equals(id) ? client : null;
+		return find(RegisteredClient::getId, id);
 	}
 
 	@Override
 	public RegisteredClient findByClientId(String clientId) {
-		return client.getClientId().equals(clientId) ? client : null;
+		return find(RegisteredClient::getClientId, clientId);
 	}
 
-	@NonNull
-	@Override
-	protected Collection<AuthorizationGrantType> getAuthorizationGrantTypes() {
-		return SUPPORTED_GRANT_TYPES;
+	private RegisteredClient find(Function<RegisteredClient, String> supplier, String id) {
+		return supplier.apply(client).equals(id) ? client : null;
 	}
 
 }

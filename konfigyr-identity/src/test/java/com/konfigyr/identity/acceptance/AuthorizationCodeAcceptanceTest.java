@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -27,9 +26,11 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.test.json.JsonContent;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.htmlunit.webdriver.MockMvcHtmlUnitDriverBuilder;
+import org.springframework.util.Assert;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -86,11 +87,16 @@ class AuthorizationCodeAcceptanceTest {
 	}
 
 	@Test
-	@DisplayName("should process authorization request with `code` response type")
-	void processAuthorizationRequest() {
+	@DisplayName("should process authorization request with `code` response type without providing consents")
+	void processAuthorizationCodeRequestWithoutConsent() {
 		final String verifier = PkceGenerator.generateCodeVerifier();
 
-		final UriComponents uri = authorizationUri(verifier).build();
+		final UriComponents uri = authorizationUri(verifier)
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.queryParam(OAuth2ParameterNames.SCOPE, "openid namespaces")
+				.build();
+
 		final Cookie cookie = generateRememberMeCookie(AccountIdentities.jane().build());
 
 		driver.get(uri.toUriString());
@@ -106,7 +112,58 @@ class AuthorizationCodeAcceptanceTest {
 
 		driver.get(uri.toUriString());
 
-		/* Should be kept in case we introduce 3rd party OAuth Clients with a `client_credentials` grant type
+		assertThatCurrentUri(driver)
+				.as("Should redirect to client with authorization code")
+				.hasPath("/oauth/client/code")
+				.hasParameter(OAuth2ParameterNames.STATE, "test-state")
+				.hasParameter(OAuth2ParameterNames.CODE);
+
+		exchangeTokenRequestBuilder(mvc, driver.getCurrentUrl())
+				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
+				.param(PkceParameterNames.CODE_VERIFIER, verifier)
+				.contentType(MediaType.APPLICATION_JSON)
+				.headers(headers -> headers.setBasicAuth("konfigyr", "secret"))
+				.exchange()
+				.assertThat()
+				.satisfies()
+				.hasStatusOk()
+				.bodyJson()
+				.satisfies(assertAccessTokenResponse())
+				.hasPathSatisfying("$.scope", it -> it.assertThat()
+						.isEqualTo("openid namespaces")
+				)
+				.hasPathSatisfying("$.id_token", it -> it.assertThat()
+						.isNotNull()
+				)
+				.hasPathSatisfying("$.refresh_token", it -> it.assertThat()
+						.isNotNull()
+				);
+	}
+
+	@Test
+	@DisplayName("should process authorization request with `code` response type with providing consents")
+	void processAuthorizationCodeRequestWithConsent() {
+		final String verifier = PkceGenerator.generateCodeVerifier();
+
+		final UriComponents uri = authorizationUri(verifier)
+				.queryParam(OAuth2ParameterNames.CLIENT_ID, "kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/callback")
+				.queryParam(OAuth2ParameterNames.SCOPE, "namespaces")
+				.build();
+
+		final Cookie cookie = generateRememberMeCookie(AccountIdentities.jane().build());
+
+		driver.get(uri.toUriString());
+
+		assertThatCurrentUri(driver)
+				.as("Should redirect to login page when not authenticated")
+				.hasScheme(uri.getScheme())
+				.hasHost(uri.getHost())
+				.hasPort(uri.getPort())
+				.hasPath("/login");
+
+		driver.manage().addCookie(cookie);
+		driver.get(uri.toUriString());
 
 		assertThatCurrentUri(driver)
 				.as("Should redirect to consent page to authorize scopes")
@@ -114,8 +171,8 @@ class AuthorizationCodeAcceptanceTest {
 				.hasHost(uri.getHost())
 				.hasPort(uri.getPort())
 				.hasPath("/oauth/consents")
-				.hasParameter(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
-				.hasParameter(OAuth2ParameterNames.SCOPE, "openid namespaces")
+				.hasParameter(OAuth2ParameterNames.CLIENT_ID, "kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY")
+				.hasParameter(OAuth2ParameterNames.SCOPE, "namespaces")
 				.hasParameter(OAuth2ParameterNames.STATE);
 
 		assertThatElement(driver, "#consents input[name=\"_csrf\"]")
@@ -127,7 +184,7 @@ class AuthorizationCodeAcceptanceTest {
 				.isNotBlank();
 
 		assertThatElement(driver, "#consents input[name=\"client_id\"]")
-				.satisfies(elementHasValue("konfigyr"));
+				.satisfies(elementHasValue("kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY"));
 
 		assertThatElement(driver, "#consents input[name=\"scope\"]")
 				.satisfies(elementHasValue("namespaces"))
@@ -136,16 +193,26 @@ class AuthorizationCodeAcceptanceTest {
 		assertThatElement(driver, "#consents button[type=\"submit\"]")
 				.satisfies(WebElement::submit);
 
-		 */
-
 		assertThatCurrentUri(driver)
 				.as("Should redirect to client with authorization code")
-				.hasPath("/oauth/client/code")
+				.hasPath("/callback")
 				.hasParameter(OAuth2ParameterNames.STATE, "test-state")
-				.hasParameter(OAuth2ParameterNames.CODE)
-				.extracting(UriComponentsBuilder::fromUri)
-				.extracting(UriComponentsBuilder::build)
-				.satisfies(obtainToken(mvc, verifier));
+				.hasParameter(OAuth2ParameterNames.CODE);
+
+		exchangeTokenRequestBuilder(mvc, driver.getCurrentUrl())
+				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/callback")
+				.param(PkceParameterNames.CODE_VERIFIER, verifier)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.formField(OAuth2ParameterNames.CLIENT_ID, "kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY")
+				.exchange()
+				.assertThat()
+				.satisfies()
+				.hasStatusOk()
+				.bodyJson()
+				.satisfies(assertAccessTokenResponse())
+				.hasPathSatisfying("$.scope", it -> it.assertThat().isEqualTo("namespaces"))
+				.doesNotHavePath("$.id_token")
+				.doesNotHavePath("$.refresh_token");
 	}
 
 	static UriComponentsBuilder uri() {
@@ -156,9 +223,6 @@ class AuthorizationCodeAcceptanceTest {
 		return uri()
 				.path("/oauth/authorize")
 				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
-				.queryParam(OAuth2ParameterNames.CLIENT_ID, "konfigyr")
-				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
-				.queryParam(OAuth2ParameterNames.SCOPE, "openid namespaces")
 				.queryParam(OAuth2ParameterNames.STATE, "test-state")
 				.queryParam(PkceParameterNames.CODE_CHALLENGE, PkceGenerator.generateCodeChallenge(verifier))
 				.queryParam(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256");
@@ -204,33 +268,24 @@ class AuthorizationCodeAcceptanceTest {
 				.isEqualTo(value);
 	}
 
-	static ThrowingConsumer<UriComponents> obtainToken(MockMvcTester mvc, String verifier) {
-		final var headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.setBasicAuth("konfigyr", "secret");
+	static MockMvcTester.MockMvcRequestBuilder exchangeTokenRequestBuilder(MockMvcTester mvc, String uri) {
+		final String code = UriComponentsBuilder.fromUriString(uri).build().getQueryParams().getFirst("code");
+		Assert.hasText(code, "Authorization code query parameter should not be empty: " + uri);
 
-		return uri -> mvc.post()
+		return mvc.post()
 				.uri("/oauth/token")
+				.param(OAuth2ParameterNames.CODE, code)
 				.param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
-				.param(OAuth2ParameterNames.REDIRECT_URI, "http://localhost/oauth/client/code")
-				.param(OAuth2ParameterNames.CODE, uri.getQueryParams().getFirst("code"))
-				.param(PkceParameterNames.CODE_VERIFIER, verifier)
-				.param(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256")
-				.headers(headers)
-				.exchange()
-				.assertThat()
-				.hasStatusOk()
-				.bodyJson()
+				.param(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256");
+	}
+
+	static ThrowingConsumer<JsonContent> assertAccessTokenResponse() {
+		return response -> assertThat(response)
 				.hasPathSatisfying("$.token_type", it -> it.assertThat()
 						.isEqualTo(OAuth2AccessToken.TokenType.BEARER.getValue())
 				)
-				.hasPathSatisfying("$.scope", it -> it.assertThat()
-						.isEqualTo("openid namespaces")
-				)
 				.hasPathSatisfying("$.expires_in", it -> it.assertThat().isNotNull())
-				.hasPathSatisfying("$.access_token", it -> it.assertThat().isNotNull())
-				.hasPathSatisfying("$.refresh_token", it -> it.assertThat().isNotNull())
-				.hasPathSatisfying("$.id_token", it -> it.assertThat().isNotNull());
+				.hasPathSatisfying("$.access_token", it -> it.assertThat().isNotNull());
 	}
 
 }

@@ -1,8 +1,12 @@
 package com.konfigyr.identity.authorization;
 
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.AccountIdentities;
 import com.konfigyr.identity.authentication.AccountIdentity;
+import com.konfigyr.security.KonfigyrClaimNames;
+import com.konfigyr.security.NamespaceClientId;
 import com.konfigyr.identity.authentication.OAuthAccountIdentityUser;
+import com.konfigyr.security.NamespaceClientType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
@@ -79,6 +83,7 @@ class TokenCustomizerTest {
 		final var context = createContextFor(OAuth2TokenType.ACCESS_TOKEN, authentication);
 
 		doReturn("Test client name").when(client).getClientName();
+		doReturn("konfigyr").when(client).getClientId();
 		doReturn(client).when(authentication).getRegisteredClient();
 
 		assertThatNoException().isThrownBy(() -> customizer.customize(context));
@@ -87,7 +92,41 @@ class TokenCustomizerTest {
 				.hasSize(3)
 				.containsEntry(StandardClaimNames.SUB, "test-subject")
 				.containsEntry(StandardClaimNames.NAME, "Test client name")
-				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"));
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"))
+				.doesNotContainKey(KonfigyrClaimNames.NAMESPACE);
+	}
+
+	@Test
+	@DisplayName("should add namespace claim when registered client is a namespace application")
+	void customizeAccessTokenForNamespaceClient() {
+		final var namespaceId = EntityId.from(42L);
+		final var clientId = NamespaceClientId.of(namespaceId, NamespaceClientType.SERVICE_ACCOUNT);
+
+		final var client = mock(RegisteredClient.class);
+		doReturn("Namespace app").when(client).getClientName();
+		doReturn(clientId.get()).when(client).getClientId();
+
+		final var authentication = mock(OAuth2ClientAuthenticationToken.class);
+		doReturn(client).when(authentication).getRegisteredClient();
+
+		// Build the context with the namespace client wired in as the registered client
+		// so that the Optional.ofNullable(context.getRegisteredClient()) chain fires.
+		final var claims = JwtClaimsSet.builder().subject("test-subject");
+		final var context = JwtEncodingContext.with(JwsHeader.with(SignatureAlgorithm.RS256), claims)
+				.principal(authentication)
+				.tokenType(OAuth2TokenType.ACCESS_TOKEN)
+				.registeredClient(client)
+				.authorizedScopes(Set.of())
+				.build();
+
+		assertThatNoException().isThrownBy(() -> customizer.customize(context));
+
+		assertThat(context.getClaims().build().getClaims())
+				.hasSize(4)
+				.containsEntry(StandardClaimNames.SUB, "test-subject")
+				.containsEntry(StandardClaimNames.NAME, "Namespace app")
+				.containsEntry(OAuth2TokenClaimNames.AUD, List.of("konfigyr-api", "konfigyr-identity"))
+				.containsEntry(KonfigyrClaimNames.NAMESPACE, namespaceId.serialize());
 	}
 
 	@Test

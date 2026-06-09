@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 
 import java.time.Duration;
 
@@ -62,13 +64,13 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 	}
 
 	@Test
-	@DisplayName("should retrieve client by client_id")
+	@DisplayName("should retrieve agent client by client_id")
 	void retrieveByClientId() {
-		assertThat(repository.findByClientId("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp"))
+		assertThat(repository.findByClientId("kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY"))
 				.isNotNull()
-				.returns("Konfigyr active app", RegisteredClient::getClientName)
-				.satisfies(assertClientId(EntityId.from(2).serialize(), "kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp", Duration.ofDays(7)))
-				.satisfies(assertClientSecret("4b6dHEXXnAEMM1AD4b6RhqamjFwMdhIRgpyBVJRu-Zk", Duration.ofDays(3)))
+				.returns("Konfigyr agent app", RegisteredClient::getClientName)
+				.satisfies(assertClientId(EntityId.from(5).serialize(), "kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY", Duration.ofDays(1)))
+				.satisfies(assertNoClientSecret())
 				.satisfies(assertScopes(
 						"namespaces:read",
 						"namespaces:delete",
@@ -77,22 +79,30 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						"namespaces:invite",
 						"namespaces"
 				))
-				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.CLIENT_CREDENTIALS))
-				.satisfies(assertClientAuthenticationMethods())
-				.satisfies(assertTokenSettings())
+				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.AUTHORIZATION_CODE))
+				.satisfies(assertClientAuthenticationMethods(ClientAuthenticationMethod.NONE))
+				.satisfies(it -> assertThat(it.getTokenSettings())
+						.isNotNull()
+						.returns(Duration.ofHours(1), TokenSettings::getAccessTokenTimeToLive)
+						.returns(Duration.ofDays(7), TokenSettings::getRefreshTokenTimeToLive)
+						.returns(false, TokenSettings::isReuseRefreshTokens)
+				)
 				.satisfies(assertClientSettings(true))
-				.satisfies(assertRedirectUris())
+				.satisfies(assertRedirectUris(
+						"http://localhost/callback",
+						"http://127.0.0.1/callback"
+				))
 				.satisfies(assertLogoutRedirectUris());
 	}
 
 	@Test
-	@DisplayName("should retrieve client by client registration identifier")
-	void retrieveByRegistrationId() {
+	@DisplayName("should retrieve service account client by client registration identifier")
+	void retrieveServiceAccountByRegistrationId() {
 		final var id = EntityId.from(1).serialize();
 
 		assertThat(repository.findById(id))
 				.returns("Konfigyr expired app", RegisteredClient::getClientName)
-				.satisfies(assertClientId(id, "kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD", Duration.ofDays(30)))
+				.satisfies(assertClientId(id, "kfg-AQEAAAAAAAAAAgAAAABqJToWfXkWbVML9iZbEPVai4o", Duration.ofDays(30)))
 				.satisfies(assertClientSecret("10S6cd0JgdO6WCLmOLB46d-Enx7K20hKSF1qicfev5g", Duration.ofDays(3).negated()))
 				.satisfies(assertScopes(
 						"namespaces:read",
@@ -104,8 +114,39 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 				))
 				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.CLIENT_CREDENTIALS))
 				.satisfies(assertClientAuthenticationMethods())
-				.satisfies(assertTokenSettings())
-				.satisfies(assertClientSettings(true))
+				.satisfies(it -> assertThat(it.getTokenSettings())
+						.isNotNull()
+						.returns(Duration.ofMinutes(20), TokenSettings::getAccessTokenTimeToLive)
+						.returns(Duration.ofDays(7), TokenSettings::getRefreshTokenTimeToLive)
+						.returns(false, TokenSettings::isReuseRefreshTokens)
+				)
+				.satisfies(assertClientSettings(false))
+				.satisfies(assertRedirectUris())
+				.satisfies(assertLogoutRedirectUris());
+	}
+
+	@Test
+	@DisplayName("should retrieve pipeline client by client registration identifier")
+	void retrievePipelineClientByRegistrationId() {
+		final var id = EntityId.from(6).serialize();
+
+		assertThat(repository.findById(id))
+				.returns("Konfigyr pipeline app", RegisteredClient::getClientName)
+				.satisfies(assertClientId(id, "kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", Duration.ofHours(15)))
+				.satisfies(assertClientSecret("iHZFaUowdtm2R9-7jOBuMucYj-E2jHlDPsaZlgUEUK4", Duration.ofDays(7)))
+				.satisfies(assertScopes(
+						"namespaces:read",
+						"namespaces:publish-manifests"
+				))
+				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.TOKEN_EXCHANGE))
+				.satisfies(assertClientAuthenticationMethods())
+				.satisfies(it -> assertThat(it.getTokenSettings())
+						.isNotNull()
+						.returns(Duration.ofMinutes(30), TokenSettings::getAccessTokenTimeToLive)
+						.returns(Duration.ofDays(1), TokenSettings::getRefreshTokenTimeToLive)
+						.returns(false, TokenSettings::isReuseRefreshTokens)
+				)
+				.satisfies(assertClientSettings(false))
 				.satisfies(assertRedirectUris())
 				.satisfies(assertLogoutRedirectUris());
 	}

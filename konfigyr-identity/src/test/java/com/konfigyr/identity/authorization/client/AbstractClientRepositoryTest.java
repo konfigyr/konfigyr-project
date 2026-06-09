@@ -43,6 +43,18 @@ abstract class AbstractClientRepositoryTest {
 		};
 	}
 
+	static Consumer<RegisteredClient> assertNoClientSecret() {
+		return client -> {
+			assertThat(client.getClientSecret())
+					.as("Registered client_secret should not be set")
+					.isNull();
+
+			assertThat(client.getClientSecretExpiresAt())
+					.as("Registered client_secret expiry date should not be set")
+					.isNull();
+		};
+	}
+
 	static Consumer<RegisteredClient> assertClientSecret(String secret, Duration expiry) {
 		return client -> {
 			assertThat(client.getClientSecret())
@@ -74,22 +86,30 @@ abstract class AbstractClientRepositoryTest {
 	}
 
 	static Consumer<RegisteredClient> assertClientAuthenticationMethods() {
+		return assertClientAuthenticationMethods(
+				ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
+				ClientAuthenticationMethod.CLIENT_SECRET_POST
+		);
+	}
+
+	static Consumer<RegisteredClient> assertClientAuthenticationMethods(ClientAuthenticationMethod... methods) {
 		return client -> assertThat(client.getClientAuthenticationMethods())
-				.containsExactlyInAnyOrder(
-						ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
-						ClientAuthenticationMethod.CLIENT_SECRET_POST
-				);
+				.containsExactlyInAnyOrder(methods);
 	}
 
 	static Consumer<RegisteredClient> assertTokenSettings() {
+		return assertTokenSettings(true);
+	}
+
+	static Consumer<RegisteredClient> assertTokenSettings(boolean reuseRefreshTokens) {
 		return client -> assertThat(client.getTokenSettings())
 				.isNotNull()
 				.returns(OAuth2TokenFormat.SELF_CONTAINED, TokenSettings::getAccessTokenFormat)
 				.returns(Duration.ofMinutes(15), TokenSettings::getAccessTokenTimeToLive)
 				.returns(Duration.ofDays(7), TokenSettings::getRefreshTokenTimeToLive)
 				.returns(Duration.ofMinutes(5), TokenSettings::getDeviceCodeTimeToLive)
-				.returns(SignatureAlgorithm.RS256, TokenSettings::getIdTokenSignatureAlgorithm)
-				.returns(true, TokenSettings::isReuseRefreshTokens);
+				.returns(SignatureAlgorithm.PS256, TokenSettings::getIdTokenSignatureAlgorithm)
+				.returns(reuseRefreshTokens, TokenSettings::isReuseRefreshTokens);
 	}
 
 	static Consumer<RegisteredClient> assertClientSettings(boolean requireAuthorizationConsent) {
@@ -103,19 +123,15 @@ abstract class AbstractClientRepositoryTest {
 	}
 
 	static Consumer<RegisteredClient> assertRedirectUris(String... uris) {
-		return client -> {
-			assertThat(client.getRedirectUris())
-					.as("Registered client should have following redirect URIs: %s", Arrays.toString(uris))
-					.containsExactlyInAnyOrder(uris);
-		};
+		return client -> assertThat(client.getRedirectUris())
+				.as("Registered client should have following redirect URIs: %s", Arrays.toString(uris))
+				.containsExactlyInAnyOrder(uris);
 	}
 
 	static Consumer<RegisteredClient> assertLogoutRedirectUris(String... uris) {
-		return client -> {
-			assertThat(client.getPostLogoutRedirectUris())
-					.as("Registered client should have following post-logout redirect URIs: %s", Arrays.toString(uris))
-					.containsExactlyInAnyOrder(uris);
-		};
+		return client -> assertThat(client.getPostLogoutRedirectUris())
+				.as("Registered client should have following post-logout redirect URIs: %s", Arrays.toString(uris))
+				.containsExactlyInAnyOrder(uris);
 	}
 
 }

@@ -67,7 +67,9 @@ class AccessControlRepositoryTest extends AbstractIntegrationTest {
 				.containsExactlyInAnyOrder(
 						AccessGrant.forNamespaceMember(EntityId.from(1), NamespaceRole.ADMIN),
 						AccessGrant.forNamespaceMember(EntityId.from(2), NamespaceRole.USER),
-						AccessGrant.forNamespaceApplication("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
+						AccessGrant.forNamespaceApplication("kfg-AQEAAAAAAAAAAgAAAABqJTnoOdowT1b42n8N2q5ZQBo"),
+						AccessGrant.forNamespaceApplication("kfg-AQIAAAAAAAAAAgAAAABqJToWEdz4oFXK7fpp_88p_yY"),
+						AccessGrant.forNamespaceApplication("kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0")
 				);
 
 		assertThatObservation()
@@ -86,8 +88,9 @@ class AccessControlRepositoryTest extends AbstractIntegrationTest {
 				.asInstanceOf(InstanceOfAssertFactories.iterable(AccessGrant.class))
 				.containsExactlyInAnyOrder(
 						AccessGrant.forNamespaceMember(EntityId.from(1), NamespaceRole.ADMIN),
-						AccessGrant.forNamespaceApplication("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG"),
-						AccessGrant.forNamespaceApplication("kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq")
+						AccessGrant.forNamespaceApplication("kfg-AQEAAAAAAAAAAQAAAABqJTlV2OXTvVveqnbXJ21wbPw"),
+						AccessGrant.forNamespaceApplication("kfg-AQEAAAAAAAAAAQAAAABqJTlVR1CkT_FEO73p4fHqlYM"),
+						AccessGrant.forNamespaceApplication("kfg-AQIAAAAAAAAAAQAAAABqJ8Ep0uAEZ3m_IJpKeL8_2Zk")
 				);
 
 		assertThatObservation()
@@ -106,8 +109,9 @@ class AccessControlRepositoryTest extends AbstractIntegrationTest {
 				.asInstanceOf(InstanceOfAssertFactories.iterable(AccessGrant.class))
 				.containsExactlyInAnyOrder(
 						AccessGrant.forNamespaceMember(EntityId.from(1), NamespaceRole.ADMIN),
-						AccessGrant.forNamespaceApplication("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG"),
-						AccessGrant.forNamespaceApplication("kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq")
+						AccessGrant.forNamespaceApplication("kfg-AQEAAAAAAAAAAQAAAABqJTlV2OXTvVveqnbXJ21wbPw"),
+						AccessGrant.forNamespaceApplication("kfg-AQEAAAAAAAAAAQAAAABqJTlVR1CkT_FEO73p4fHqlYM"),
+						AccessGrant.forNamespaceApplication("kfg-AQIAAAAAAAAAAQAAAABqJ8Ep0uAEZ3m_IJpKeL8_2Zk")
 				);
 
 		assertThatObservation()

@@ -4,6 +4,7 @@ import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import com.konfigyr.identity.authorization.AuthorizationServerScopes;
+import com.konfigyr.identity.authorization.NamespaceMembershipValidator;
 import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
@@ -23,6 +24,8 @@ import org.springframework.security.config.annotation.web.configurers.oauth2.ser
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.JwsAlgorithms;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationProvider;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationValidator;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationServerMetadataEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -61,7 +64,10 @@ public class SecurityConfiguration {
 
 	@Bean
 	@Order(1)
-	SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http, RequestCache requestCache) {
+	SecurityFilterChain authorizationServerSecurityFilterChain(
+			HttpSecurity http,
+			RequestCache requestCache,
+			NamespaceMembershipValidator namespaceMembershipValidator) {
 		final OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
 		return http
@@ -82,6 +88,14 @@ public class SecurityConfiguration {
 								.authorizationEndpoint(endpoint -> endpoint
 										.consentPage(KonfigyrIdentityRequestMatchers.CONSENTS_PAGE)
 										.errorResponseHandler(new AuthorizationFailureHandler())
+										.authenticationProviders(providers -> providers.stream()
+												.filter(OAuth2AuthorizationCodeRequestAuthenticationProvider.class::isInstance)
+												.map(OAuth2AuthorizationCodeRequestAuthenticationProvider.class::cast)
+												.forEach(provider -> provider.setAuthenticationValidator(
+														new OAuth2AuthorizationCodeRequestAuthenticationValidator()
+																.andThen(namespaceMembershipValidator)
+												))
+										)
 								)
 								.authorizationServerMetadataEndpoint(metadata -> metadata
 										.authorizationServerMetadataCustomizer(customizer -> customizer

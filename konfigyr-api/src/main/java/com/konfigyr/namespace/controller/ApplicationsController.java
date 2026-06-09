@@ -4,6 +4,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.*;
+import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.security.oauth.RequiresScope;
@@ -37,12 +38,14 @@ class ApplicationsController {
 			@PathVariable @NonNull String slug,
 			@RequestParam(required = false) @Nullable String term,
 			@RequestParam(required = false) @Nullable Boolean active,
+			@RequestParam(required = false) @Nullable NamespaceClientType type,
 			@NonNull Pageable pageable
 	) {
 		final Namespace namespace = lookupNamespace(slug);
 		final SearchQuery query = SearchQuery.builder()
 				.term(term)
 				.criteria(SearchQuery.NAMESPACE, namespace.slug())
+				.criteria(NamespaceApplication.TYPE_CRITERIA, type)
 				.criteria(NamespaceApplication.ACTIVE_CRITERIA, active)
 				.pageable(pageable)
 				.build();
@@ -100,9 +103,13 @@ class ApplicationsController {
 		final Namespace namespace = lookupNamespace(slug);
 		final NamespaceApplication application = lookupNamespaceApplication(namespace, id);
 
-		return Assemblers.application(namespace).assemble(
-				namespaces.resetApplication(namespace, application.id())
-		);
+		if (application.type().requiresSecret()) {
+			return Assemblers.application(namespace).assemble(
+					namespaces.resetApplication(namespace, application.id())
+			);
+		}
+
+		throw new NamespaceApplicationTypeException(application.type());
 	}
 
 	@DeleteMapping("{id}")
@@ -150,6 +157,7 @@ class ApplicationsController {
 		NamespaceApplicationDefinition create(Namespace namespace) {
 			return NamespaceApplicationDefinition.builder()
 					.namespace(namespace)
+					.type(NamespaceClientType.SERVICE_ACCOUNT)
 					.name(name())
 					.scopes(scopes())
 					.expiration(expiresAt)

@@ -25,7 +25,7 @@
                 </h1>
 
                 <form id="consents" name="consents" th:method="post" th:action="@{/oauth/authorize}">
-                    <input type="hidden" name="client_id" th:value="${client.id}" />
+                    <input type="hidden" name="client_id" th:value="${client.clientId}" />
                     <input type="hidden" name="state" th:value="${state}" />
 
                     <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
