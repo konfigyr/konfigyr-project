@@ -21,12 +21,7 @@ const mapAjvErrors = (errors: Array<ErrorObject>): Array<ValidationError> => {
   }));
 };
 
-const buildValidationResult = (isValid: boolean, errors: Array<ValidationError>) => {
-  return {
-    isValid,
-    errors,
-  };
-};
+const buildValidationResult = (isValid: boolean, errors: Array<ValidationError>) => ({ isValid, errors });
 
 export function usePropertyValidation (schema: PropertyJsonSchema): {
   validate: (value: unknown) => ValidationResult;
