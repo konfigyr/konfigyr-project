@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor, within } from '@testing-library/react';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { PropertiesImportDialog } from '@konfigyr/components/vault/properties/properties-import-dialog';
@@ -13,14 +13,22 @@ const YAML_FILE = `
     port: 8080
 `;
 
+vi.mock('@tanstack/react-start', async () => {
+  const { mockTanstackReactStart } = await import('@konfigyr/test/helpers/mocks/tanstack-react-start');
+  return mockTanstackReactStart();
+});
+
 describe('components | vault | properties | <PropertiesImportDialog/>', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
   afterEach(() => cleanup());
 
   test('should render disabled Import button for the immutable profile', () => {
-    const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport} profile={profiles.deprecated} />,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.deprecated}/>,
     );
 
     expect(result.getByRole('button', { name: 'Import' })).toBeDisabled();
@@ -30,7 +38,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport} profile={profiles.development} />,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development}/>,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
@@ -45,7 +53,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport} profile={profiles.development} />,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development}/>,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
@@ -89,7 +97,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport} profile={profiles.development} />,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development}/>,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
@@ -109,7 +117,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     await user.click(importButton);
 
     await waitFor(() => {
-      expect(onImport).toHaveBeenCalledExactlyOnceWith( [
+      expect(onImport).toHaveBeenCalledExactlyOnceWith([
         {
           name: 'server.port',
           schema: {
@@ -131,7 +139,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport} profile={profiles.development} />,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development}/>,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
@@ -152,4 +160,108 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     expect(onImport).not.toHaveBeenCalled();
   });
 
+  test('should validate config server URL on submit', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development}/>,
+    );
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+    await user.click(within(result.getByRole('dialog')).getByRole('tab', { name: 'From config server' }));
+
+    await user.type(result.getByLabelText('User name'), 'test-user');
+    await user.type(result.getByLabelText('Password'), 'test-pwd');
+    await user.type(result.getByLabelText('Config server URL'), 'not-a-url');
+
+    await user.click(result.getByRole('button', { name: 'Fetch config' }));
+
+    await waitFor(() => {
+      expect(result.getByText('Config server URL must be a valid URL')).toBeInTheDocument();
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  test('should fetch properties from config server and submit import', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        propertySources: [
+          { name: 'highest', source: { 'app.log.level': 'warn' } },
+          { name: 'lowest', source: { 'app.environment': 'dev', 'app.log.level': 'info' } },
+        ],
+      }),
+    } as Response);
+
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development}/>,
+    );
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+
+    await user.click(within(result.getByRole('dialog')).getByRole('tab', { name: 'From config server' }));
+
+    await user.type(result.getByLabelText('User name'), 'test-user');
+    await user.type(result.getByLabelText('Password'), 'test-pwd');
+    await user.type(result.getByLabelText('Config server URL'), 'http://config.com/api/configs/test-app/dev/master');
+
+    const fetchButton = result.getByRole('button', { name: 'Fetch config' });
+    expect(fetchButton).toBeEnabled();
+    await user.click(fetchButton);
+
+    await waitFor(() => {
+      expect(result.getByText('Ready for import')).toBeInTheDocument();
+      expect(result.getByText(/there are 2 new configuration properties ready for import/i)).toBeInTheDocument();
+    });
+
+    const importButton = within(result.getByRole('dialog')).getByRole('button', { name: 'Import' });
+    await user.click(importButton);
+
+    await waitFor(() => {
+      expect(onImport).toHaveBeenCalledExactlyOnceWith(
+        [
+          {
+            'name': 'app.environment',
+            'schema': {
+              'type': 'string',
+            },
+            'state': 'ADDED',
+            'typeName': 'string',
+            'value': {
+              'decoded': 'dev',
+              'encoded': 'dev',
+            },
+          },
+          {
+            'name': 'app.log.level',
+            'schema': {
+              'type': 'string',
+            },
+            'state': 'ADDED',
+            'typeName': 'string',
+            'value': {
+              'decoded': 'warn',
+              'encoded': 'warn',
+            },
+          },
+        ],
+      );
+    });
+
+    expect(fetchSpy).toHaveBeenCalledExactlyOnceWith(
+      'http://config.com/api/configs/test-app/dev/master',
+      {
+        method: 'GET',
+        'headers': {
+          'Accept': 'application/json',
+          'Authorization': 'Basic dGVzdC11c2VyOnRlc3QtcHdk',
+        },
+      },
+    );
+  });
 });

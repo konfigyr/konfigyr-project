@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { FileCog, ImportIcon } from 'lucide-react';
+import { z } from 'zod';
+import { DatabaseBackup, FileCog, ImportIcon } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -11,9 +12,13 @@ import {
   DialogTrigger,
 } from '@konfigyr/components/ui/dialog';
 import { Field, FieldDescription, FieldLabel } from '@konfigyr/components/ui/field';
+import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { Input } from '@konfigyr/components/ui/input';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
+import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
+import { FetchConfigSchema } from '@konfigyr/hooks/vault/-handler';
 import { ImportPropertiesLabel } from './messages';
+import type { FetchConfigRequest } from '@konfigyr/hooks/vault/-handler';
 import type { ConfigurationProperty, Profile } from '@konfigyr/hooks/types';
 
 type ConfigurationImporterStatusProps = {
@@ -24,7 +29,11 @@ type ConfigurationImporterStatusProps = {
   amount: number;
 };
 
-export function ConfigurationImporter ({ onChange }: {
+type ImporterType = 'file' | 'api';
+
+const DEFAULT_IMPORTER_TYPE: ImporterType = 'file';
+
+export function FileConfigurationImporter ({ onChange }: {
   onChange: (file: File) => void,
 }) {
   const inputId = React.useId();
@@ -58,16 +67,106 @@ export function ConfigurationImporter ({ onChange }: {
   );
 }
 
+export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
+  onFetchConfig: (payload: FetchConfigRequest) => void | Promise<unknown>
+}) {
+  const form = useForm({
+    defaultValues: {
+      username: '',
+      password: '',
+      configServerUrl: '',
+    },
+    validators: {
+      onSubmit: FetchConfigSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await onFetchConfig({
+        username: value.username.trim(),
+        password: value.password.trim(),
+        configServerUrl: value.configServerUrl.trim(),
+      });
+    },
+  });
+
+  const onSubmit = useFormSubmit(form);
+
+  return (
+    <form.AppForm>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <form.AppField
+          name="username"
+          children={(field) => (
+            <field.Control
+              label={(
+                <FormattedMessage
+                  defaultMessage="User name"
+                  description="Label for username input in Spring Cloud configuration importer."
+                />
+              )}
+              render={<field.Input type="text" autoComplete="username" />}
+            />
+          )}
+        />
+
+        <form.AppField
+          name="password"
+          children={(field) => (
+            <field.Control
+              label={(
+                <FormattedMessage
+                  defaultMessage="Password"
+                  description="Label for password input in Spring Cloud configuration importer."
+                />
+              )}
+              render={<field.Input type="password" autoComplete="current-password" />}
+            />
+          )}
+        />
+
+        <form.AppField
+          name="configServerUrl"
+          children={(field) => (
+            <field.Control
+              label={(
+                <FormattedMessage
+                  defaultMessage="Config server URL"
+                  description="Label for config server URL input in Spring Cloud configuration importer."
+                />
+              )}
+              render={<field.Input type="text" placeholder="https://config.com/api/configs/app/profile/label" />}
+            />
+          )}
+        />
+
+        <form.Submit variant="default">
+          <DatabaseBackup/>
+          <FormattedMessage
+            defaultMessage="Fetch config"
+            description="Button label for fetching configuration from Spring Cloud Config server."
+          />
+        </form.Submit>
+      </form>
+    </form.AppForm>
+  );
+}
+
 export function PropertiesImportDialog ({ profile, onImport }: {
   onImport: (properties: Array<ConfigurationProperty<any>>) => void | Promise<unknown>
   profile: Profile
 }) {
   const [open, setOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const { properties, reset, error, parseFile, isParsing, isError } = useConfigFileParser();
+  const [importerType, setImporterType] = useState<ImporterType>(DEFAULT_IMPORTER_TYPE);
+  const { properties, reset, error, parseFile, fetchConfig, isParsing, isError } = useConfigFileParser();
 
   const onOpenChange = useCallback((state: boolean) => {
     setOpen(state);
+    setImporterType(DEFAULT_IMPORTER_TYPE);
+    reset();
+  }, [reset]);
+
+  const handleImporterTypeChange = useCallback((type: ImporterType) => {
+    setImporterType(type);
     reset();
   }, [reset]);
 
@@ -79,7 +178,6 @@ export function PropertiesImportDialog ({ profile, onImport }: {
   }, [onImport, properties]);
 
   const isImportDisabled = properties.length === 0 || isImporting;
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -102,7 +200,44 @@ export function PropertiesImportDialog ({ profile, onImport }: {
           </DialogTitle>
         </DialogHeader>
 
-        <ConfigurationImporter onChange={parseFile}/>
+        <Tabs>
+          <TabItem
+            render={
+              <button
+                type="button"
+                data-state={importerType === 'file' ? 'active' : undefined}
+                onClick={() => handleImporterTypeChange('file')}
+              >
+                <FormattedMessage
+                  defaultMessage="From file"
+                  description="Tab label for importing configuration properties from a file."
+                />
+              </button>
+            }
+          />
+          <TabItem
+            render={
+              <button
+                type="button"
+                data-state={importerType === 'api' ? 'active' : undefined}
+                onClick={() => handleImporterTypeChange('api')}
+              >
+                <FormattedMessage
+                  defaultMessage="From config server"
+                  description="Tab label for importing configuration properties from an Config Server."
+                />
+              </button>
+            }
+          />
+        </Tabs>
+
+        {importerType === 'file' && (
+          <FileConfigurationImporter onChange={parseFile}/>
+        )}
+
+        {importerType === 'api' && (
+          <SpringCloudConfigurationImporter onFetchConfig={fetchConfig} />
+        )}
 
         <ConfigurationImporterStatus
           isParsing={isParsing}
