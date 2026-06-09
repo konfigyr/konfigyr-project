@@ -197,3 +197,14 @@ export interface ChangeHistoryQuery extends Record<string, string | number | boo
   size?: number;
   token?: string;
 }
+
+export interface ValidationError {
+  keyword: string;
+  message: string;
+  params: Record<string, unknown>;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: Array<ValidationError>;
+}
