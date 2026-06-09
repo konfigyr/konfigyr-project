@@ -95,7 +95,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						.returns(false, TokenSettings::isReuseRefreshTokens)
 				)
 				.satisfies(assertClientSettings(true))
-				.satisfies(assertRedirectUris("http://localhost:56789/callback"))
+				.satisfies(assertRedirectUris("http://localhost/callback", "http://localhost:56789/callback"))
 				.satisfies(assertLogoutRedirectUris());
 	}
 

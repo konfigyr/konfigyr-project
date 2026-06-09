@@ -256,7 +256,7 @@ class AuthorizationServerIntegrationTest {
 				.queryParam(OAuth2ParameterNames.RESPONSE_TYPE, "code")
 				.queryParam(OAuth2ParameterNames.SCOPE, "namespaces")
 				.queryParam(OAuth2ParameterNames.STATE, "state")
-				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://127.0.0.1/callback")
+				.queryParam(OAuth2ParameterNames.REDIRECT_URI, "http://localhost:56789/callback")
 				.exchange()
 				.assertThat()
 				.apply(log())

@@ -535,7 +535,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 				.get(InstanceOfAssertFactories.type(NamespaceApplication.class))
 				.returns(NamespaceClientType.AGENT, NamespaceApplication::type)
 				.extracting(NamespaceApplication::settings, InstanceOfAssertFactories.type(NamespaceApplicationSettings.AgentSettings.class))
-				.returns(List.of("http://localhost:56789/callback"), NamespaceApplicationSettings.AgentSettings::redirectUris);
+				.returns(List.of("http://localhost/callback", "http://localhost:56789/callback"), NamespaceApplicationSettings.AgentSettings::redirectUris);
 	}
 
 	@Test
