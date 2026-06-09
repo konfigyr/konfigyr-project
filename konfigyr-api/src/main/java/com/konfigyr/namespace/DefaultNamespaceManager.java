@@ -3,14 +3,14 @@ package com.konfigyr.namespace;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.NamespaceClientId;
+import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
 import org.jooq.Record;
-import org.jooq.SelectConditionStep;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Marker;
@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +63,11 @@ class DefaultNamespaceManager implements NamespaceManager {
 			.sortField("name", OAUTH_APPLICATIONS.NAME)
 			.sortField("date", OAUTH_APPLICATIONS.UPDATED_AT)
 			.build();
+
+	/** jOOQ converter between the {@code client_id} database column and {@link NamespaceClientId}. */
+	static final Converter<String, NamespaceClientId> NAMESPACE_CLIENT_ID_CONVERTER = Converter.of(
+			String.class, NamespaceClientId.class, NamespaceClientId::parse, NamespaceClientId::get
+	);
 
 	private final DSLContext context;
 	private final PasswordEncoder passwordEncoder;
@@ -243,6 +249,10 @@ class DefaultNamespaceManager implements NamespaceManager {
 				OAUTH_APPLICATIONS.ID.eq(id.get())
 		));
 
+		query.criteria(NamespaceApplication.TYPE_CRITERIA).ifPresent(type -> conditions.add(
+				OAUTH_APPLICATIONS.TYPE.eq(type.name())
+		));
+
 		query.criteria(NamespaceApplication.ACTIVE_CRITERIA).ifPresent(active -> {
 			if (active) {
 				conditions.add(DSL.or(
@@ -291,19 +301,21 @@ class DefaultNamespaceManager implements NamespaceManager {
 			log.debug("Attempting to create namespace OAuth application from: {}", definition);
 		}
 
-		final String clientId = NamespaceApplicationDefinition.generateClientId(definition);
-		final String clientSecret = NamespaceApplicationDefinition.generateClientSecret(clientId);
+		final NamespaceClientId clientId = NamespaceApplicationDefinition.generateClientId(definition);
+		final String clientSecret = clientId.type().requiresSecret() ?
+				NamespaceApplicationDefinition.generateClientSecret(clientId) : null;
 
 		final Record record = SettableRecord.of(context, OAUTH_APPLICATIONS)
 				.set(OAUTH_APPLICATIONS.ID, EntityId.generate().map(EntityId::get))
 				.set(OAUTH_APPLICATIONS.NAMESPACE_ID, definition.namespace().get())
+				.set(OAUTH_APPLICATIONS.TYPE, definition.type().name())
 				.set(OAUTH_APPLICATIONS.NAME, definition.name())
-				.set(OAUTH_APPLICATIONS.CLIENT_ID, clientId)
-				.set(OAUTH_APPLICATIONS.CLIENT_SECRET, passwordEncoder.encode(clientSecret))
+				.set(OAUTH_APPLICATIONS.CLIENT_ID, clientId, NAMESPACE_CLIENT_ID_CONVERTER)
+				.set(OAUTH_APPLICATIONS.CLIENT_SECRET, clientSecret == null ? null : passwordEncoder.encode(clientSecret))
 				.set(OAUTH_APPLICATIONS.SCOPES, definition.scopes().toString())
 				.set(OAUTH_APPLICATIONS.EXPIRES_AT, definition.expiration())
-				.set(OAUTH_APPLICATIONS.CREATED_AT, OffsetDateTime.now())
-				.set(OAUTH_APPLICATIONS.UPDATED_AT, OffsetDateTime.now())
+				.set(OAUTH_APPLICATIONS.CREATED_AT, clientId.timestamp().atOffset(ZoneOffset.UTC))
+				.set(OAUTH_APPLICATIONS.UPDATED_AT, clientId.timestamp().atOffset(ZoneOffset.UTC))
 				.get();
 
 		final NamespaceApplication application;
@@ -370,7 +382,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 		final Record record = lookupApplication(namespace.id(), id)
 				.orElseThrow(() -> new NamespaceApplicationNotFoundException(id));
 
-		final String clientId = record.get(OAUTH_APPLICATIONS.CLIENT_ID);
+		final NamespaceClientId clientId = record.get(OAUTH_APPLICATIONS.CLIENT_ID, NAMESPACE_CLIENT_ID_CONVERTER);
 		final String clientSecret = NamespaceApplicationDefinition.generateClientSecret(clientId);
 
 		// create a new record so we can reuse it for the update query and mapper
@@ -464,6 +476,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 		return context.select(
 						OAUTH_APPLICATIONS.ID,
 						OAUTH_APPLICATIONS.NAMESPACE_ID,
+						OAUTH_APPLICATIONS.TYPE,
 						OAUTH_APPLICATIONS.NAME,
 						OAUTH_APPLICATIONS.CLIENT_ID,
 						OAUTH_APPLICATIONS.SCOPES,
@@ -508,6 +521,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 		return NamespaceApplication.builder()
 				.id(record.get(OAUTH_APPLICATIONS.ID))
 				.namespace(record.get(OAUTH_APPLICATIONS.NAMESPACE_ID))
+				.type(record.get(OAUTH_APPLICATIONS.TYPE, NamespaceClientType.class))
 				.name(record.get(OAUTH_APPLICATIONS.NAME))
 				.clientId(record.get(OAUTH_APPLICATIONS.CLIENT_ID))
 				.clientSecret(secret)

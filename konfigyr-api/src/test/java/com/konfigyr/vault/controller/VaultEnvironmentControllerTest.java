@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 
 public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 
-	private static final String CLIENT = "kfg-BAQp6u2ElYmuPyoa2Hj766ju0PPvL2Iq";
+	private static final String CLIENT = "kfg-AQEAAAAAAAAAAQAAAABqJTlVR1CkT_FEO73p4fHqlYM";
 	private static final String SECRET = "nryjshWX-PdDHdR8yqyu1u5A2KBFgH-O_ljxbQODo-Y";
 
 	@Autowired
@@ -66,7 +66,7 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 	@DisplayName("should not retrieve configs due expired application credentials")
 	void retrieveConfigsWithExpiredApplicationCredentials() {
 		mvc.get().uri("/configs/{service}/{profiles}",  "konfigyr", "development")
-				.with(httpBasic("kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD", "10S6cd0JgdO6WCLmOLB46d-Enx7K20hKSF1qicfev5g"))
+				.with(httpBasic("kfg-AQEAAAAAAAAAAgAAAABqJToWfXkWbVML9iZbEPVai4o", "10S6cd0JgdO6WCLmOLB46d-Enx7K20hKSF1qicfev5g"))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -77,7 +77,7 @@ public class VaultEnvironmentControllerTest extends AbstractControllerTest {
 	@DisplayName("should not retrieve configs due insufficient permissions")
 	void retrieveConfigsWithoutPermission() {
 		mvc.get().uri("/configs/{service}/{profiles}", "john-doe-blog", "live")
-				.with(httpBasic("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG", "n0obEPw2_5DoDNkxyXhW5Ul1TgC-t2r3H8_wj7PDqFc"))
+				.with(httpBasic("kfg-AQEAAAAAAAAAAQAAAABqJTlV2OXTvVveqnbXJ21wbPw", "n0obEPw2_5DoDNkxyXhW5Ul1TgC-t2r3H8_wj7PDqFc"))
 				.exchange()
 				.assertThat()
 				.apply(log())

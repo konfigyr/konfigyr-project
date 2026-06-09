@@ -3,6 +3,8 @@ package com.konfigyr.namespace;
 import com.google.crypto.tink.subtle.Base64;
 import com.google.crypto.tink.subtle.Hkdf;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.NamespaceClientId;
+import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScopes;
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.jmolecules.ddd.annotation.ValueObject;
@@ -13,7 +15,6 @@ import org.springframework.util.Assert;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
@@ -22,16 +23,20 @@ import java.time.OffsetDateTime;
  * Record used to define one {@link NamespaceApplication} that would be created via {@link NamespaceManager}.
  *
  * @param namespace entity identifier of the {@link Namespace} used as the {@link NamespaceApplication} owner
- * @param name human friendly name for the namespace application; can't be null
- * @param scopes OAuth2 scopes that are granted to the {@link NamespaceApplication}; can't be null
+ * @param type      the intended purpose of the application; determines the OAuth2 grant types,
+ *                  client authentication methods, and security constraints applied at registration
+ * @param name      human friendly name for the namespace application; can't be null
+ * @param scopes    OAuth2 scopes that are granted to the {@link NamespaceApplication}; can't be null
  * @param expiration the expiration date for {@link NamespaceApplication}; can be null
  * @author Vladimir Spasic
  * @since 1.0.0
  * @see NamespaceApplication
+ * @see NamespaceClientType
  **/
 @ValueObject
 public record NamespaceApplicationDefinition(
 		@NonNull EntityId namespace,
+		@NonNull NamespaceClientType type,
 		@NonNull String name,
 		@NonNull OAuthScopes scopes,
 		@Nullable OffsetDateTime expiration
@@ -40,34 +45,17 @@ public record NamespaceApplicationDefinition(
 	@Serial
 	private static final long serialVersionUID = 4546458573827169841L;
 
-	static final String CLIENT_ID_PREFIX = "kfg-";
 	static final byte[] CLIENT_SECRET_VERSION = "konfigyr-v1".getBytes(StandardCharsets.UTF_8);
 
 	/**
-	 * Generates a random {@code client_id} for the given {@link NamespaceApplicationDefinition}.
-	 * <p>
-	 * The value is generated using the following parts:
-	 * <ul>
-	 *     <li>
-	 *         Namespace prefix (8 bytes): deterministic, ensures uniqueness across namespaces.
-	 *     </li>
-	 *     <li>
-	 *         Random part (16 bytes): 128 bits of entropy (≈ 3.4×10³⁸ possibilities).
-	 *     </li>
-	 * </ul>
-	 *
-	 * This makes sure that the generated {@code client_id} is cryptographically strong and non-colliding
-	 * in any realistic lifetime.
+	 * Generates a random {@link NamespaceClientId} for the given {@link NamespaceApplicationDefinition}.
 	 *
 	 * @param definition the namespace application definition to generate the client id for, can't be {@literal null}.
-	 * @return the generated {@code client_id} that is {@code Base64 URL} encoded, never {@literal null}
+	 * @return the generated {@code client_id} value for a {@link Namespace}, never {@literal null}
+	 * @see NamespaceClientId
 	 */
-	static String generateClientId(@NonNull NamespaceApplicationDefinition definition) {
-		final ByteBuffer buffer = ByteBuffer.allocate(24)
-				.putLong(definition.namespace().get())
-				.put(KeyGenerators.secureRandom(16).generateKey());
-
-		return CLIENT_ID_PREFIX + Base64.urlSafeEncode(buffer.array());
+	static NamespaceClientId generateClientId(@NonNull NamespaceApplicationDefinition definition) {
+		return NamespaceClientId.of(definition.namespace(), definition.type());
 	}
 
 	/**
@@ -80,7 +68,7 @@ public record NamespaceApplicationDefinition(
 	 *         Input key material: 32 bytes random that provides 256 bits of entropy.
 	 *     </li>
 	 *     <li>
-	 *         Salt: 24 bytes derived from the {@code client_id} that ensures per-client uniqueness.
+	 *         Salt: 32 bytes decoded from the {@code client_id} that ensures per-client uniqueness.
 	 *     </li>
 	 *     <li>
 	 *         Info: Version bytes used for future-proofing of different derivation contexts.
@@ -90,15 +78,17 @@ public record NamespaceApplicationDefinition(
 	 *     </li>
 	 * </ul>
 	 *
-	 * This makes sure that the generated {@code client_id} is cryptographically strong and non-colliding
+	 * This makes sure that the generated {@code client_secret} is cryptographically strong and non-colliding
 	 * in any realistic lifetime.
 	 *
-	 * @param clientId the {@code client_id} for which the secret is generated for, can't be {@literal null}.
-	 * @return the generated {@code client_id} that is {@code Base64 URL} encoded, never {@literal null}
+	 * @param clientId the {@link NamespaceClientId} for which the secret is generated, can't be {@literal null}.
+	 * @return the generated {@code client_secret} that is {@code Base64 URL} encoded, never {@literal null}
+	 * @throws NamespaceApplicationTypeException when the {@link NamespaceClientType} does not support client secrets.
 	 */
-	static String generateClientSecret(@NonNull String clientId) {
-		Assert.hasText(clientId, "The OAuth client_id can not be blank");
-		Assert.state(clientId.startsWith(CLIENT_ID_PREFIX), "The OAuth client_id is invalid");
+	static String generateClientSecret(@NonNull NamespaceClientId clientId) {
+		if (!clientId.type().requiresSecret()) {
+			throw new NamespaceApplicationTypeException(clientId.type());
+		}
 
 		final byte[] bytes;
 
@@ -106,7 +96,7 @@ public record NamespaceApplicationDefinition(
 			bytes = Hkdf.computeHkdf(
 					HmacAlgorithms.HMAC_SHA_256.getName(),
 					KeyGenerators.secureRandom(32).generateKey(),
-					Base64.urlSafeDecode(clientId.replace(CLIENT_ID_PREFIX, "")),
+					clientId.bytes().array(),
 					CLIENT_SECRET_VERSION,
 					32
 			);
@@ -133,6 +123,7 @@ public record NamespaceApplicationDefinition(
 	public static final class Builder {
 
 		private Namespace namespace;
+		private NamespaceClientType type;
 		private String name;
 		private OAuthScopes scopes;
 		private OffsetDateTime expiration;
@@ -149,6 +140,20 @@ public record NamespaceApplicationDefinition(
 		@NonNull
 		public Builder namespace(Namespace namespace) {
 			this.namespace = namespace;
+			return this;
+		}
+
+		/**
+		 * Specify the {@link NamespaceClientType type} of this application. The type determines
+		 * the OAuth2 grant types, client authentication methods, and security constraints
+		 * applied when the application is registered with the authorization server.
+		 *
+		 * @param type the intended purpose of the application
+		 * @return namespace application definition builder
+		 */
+		@NonNull
+		public Builder type(NamespaceClientType type) {
+			this.type = type;
 			return this;
 		}
 
@@ -209,10 +214,11 @@ public record NamespaceApplicationDefinition(
 		@NonNull
 		public NamespaceApplicationDefinition build() {
 			Assert.notNull(namespace, "Namespace can not be null");
+			Assert.notNull(type, "Namespace client type can not be null");
 			Assert.hasText(name, "Namespace application name can not be blank");
 			Assert.notNull(scopes, "OAuth scopes can not be null");
 
-			return new NamespaceApplicationDefinition(namespace.id(), name, scopes, expiration);
+			return new NamespaceApplicationDefinition(namespace.id(), type, name, scopes, expiration);
 		}
 
 	}

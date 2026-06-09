@@ -1,14 +1,21 @@
 package com.konfigyr.identity.authorization;
 
+import com.konfigyr.security.NamespaceClientType;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.cache.autoconfigure.CacheProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.boot.convert.DurationUnit;
 import org.springframework.boot.security.oauth2.server.authorization.autoconfigure.servlet.OAuth2AuthorizationServerProperties;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -67,7 +74,15 @@ public class AuthorizationProperties {
 	 * This configuration is used by both Namespace OAuth Applications and the built-in Konfigyr OAuth client.
 	 */
 	@NestedConfigurationProperty
-	OAuth2AuthorizationServerProperties.Token token = new OAuth2AuthorizationServerProperties.Token();
+	private OAuth2AuthorizationServerProperties.Token token = new OAuth2AuthorizationServerProperties.Token();
+
+	/**
+	 * Per-type token settings overrides for namespace OAuth applications. Each entry overrides
+	 * specific token properties for that client type; fields left unset fall back to the values
+	 * defined in the global token settings. Types with no entry inherit all values from the
+	 * global token settings without modification.
+	 */
+	private Map<NamespaceClientType, NamespaceTokenSettings> namespaceTokenSettings = new LinkedHashMap<>();
 
 	/**
 	 * Customize how the Authorization Server caches registered OAuth clients.
@@ -76,6 +91,35 @@ public class AuthorizationProperties {
 	 * and therefore we recommend using the following specification: {@code expireAfterWrite=5m}.
 	 */
 	@NestedConfigurationProperty
-	CacheProperties.Caffeine cache = new CacheProperties.Caffeine();
+	private CacheProperties.Caffeine cache = new CacheProperties.Caffeine();
+
+	/**
+	 * Token settings overrides for a specific namespace client type. Fields left unset fall
+	 * back to the global token settings defined in the enclosing authorization properties.
+	 * Platform-level constraints such as refresh token rotation policy are always enforced
+	 * by the authorization server regardless of what is configured here.
+	 */
+	@Data
+	public static class NamespaceTokenSettings {
+
+		/**
+		 * Maximum lifetime of an access token issued to this client type. When not set, the
+		 * global token access-token-time-to-live value is used. For Pipeline Integration
+		 * applications this should be kept short to match the expected execution time of a
+		 * single CI pipeline run.
+		 */
+		@DurationUnit(ChronoUnit.MINUTES)
+		Duration accessTokenTimeToLive;
+
+		/**
+		 * Maximum lifetime of a refresh token issued to this client type. When not set, the
+		 * global token refresh-token-time-to-live value is used. Has no effect on client types
+		 * that do not support refresh tokens, such as Service Account and Pipeline Integration
+		 * applications.
+		 */
+		@DurationUnit(ChronoUnit.MINUTES)
+		Duration refreshTokenTimeToLive;
+
+	}
 
 }

@@ -46,6 +46,17 @@ konfigyr:
       token:
         access-token-time-to-live: 15m
         refresh-token-time-to-live: 7d
+        id-token-signature-algorithm: PS256
+      namespace-token-settings:
+        agent:
+          access-token-time-to-live: 1h
+          refresh-token-time-to-live: 7d
+        service-account:
+          access-token-time-to-live: 20m
+          refresh-token-time-to-live: 7d
+        pipeline:
+          access-token-time-to-live: 30m
+          refresh-token-time-to-live: 1d
 
 management:
   info:

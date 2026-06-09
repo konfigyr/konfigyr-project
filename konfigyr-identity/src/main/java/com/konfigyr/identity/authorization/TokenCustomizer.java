@@ -1,7 +1,10 @@
 package com.konfigyr.identity.authorization;
 
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authentication.AccountIdentityUser;
+import com.konfigyr.security.KonfigyrClaimNames;
+import com.konfigyr.security.NamespaceClientId;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -16,10 +19,10 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 
-import java.util.Set;
-
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
@@ -39,6 +42,13 @@ final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext>
 
 		if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
 			context.getClaims().audience(audiences);
+
+			Optional.ofNullable(context.getRegisteredClient())
+					.map(RegisteredClient::getClientId)
+					.flatMap(NamespaceClientId::tryParse)
+					.map(NamespaceClientId::namespace)
+					.map(EntityId::serialize)
+					.ifPresent(namespace -> context.getClaims().claim(KonfigyrClaimNames.NAMESPACE, namespace));
 
 			final Authentication authentication = context.getPrincipal();
 			final Set<String> authorizedScopes = context.getAuthorizedScopes();

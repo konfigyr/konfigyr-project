@@ -48,7 +48,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vspasic" id="1.0.0-create-namespace-members-table" context="api">
+	<changeSet author="vspasic" id="1.0.0-create-namespace-members-table" context="identity or api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="namespace_members" />

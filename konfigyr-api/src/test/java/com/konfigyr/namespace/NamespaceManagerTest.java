@@ -4,6 +4,7 @@ package com.konfigyr.namespace;
 import com.konfigyr.entity.EntityEvent;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.membership.Member;
+import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.support.Avatar;
@@ -398,11 +399,14 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.findApplications(query))
 				.isNotNull()
-				.hasSize(4)
+				.hasSize(7)
 				.extracting(NamespaceApplication::id, NamespaceApplication::name)
 				.containsExactly(
+						tuple(EntityId.from(7), "Agent application"),
 						tuple(EntityId.from(2), "Konfigyr active app"),
+						tuple(EntityId.from(5), "Konfigyr agent app"),
 						tuple(EntityId.from(1), "Konfigyr expired app"),
+						tuple(EntityId.from(6), "Konfigyr pipeline app"),
 						tuple(EntityId.from(3), "Personal app"),
 						tuple(EntityId.from(4), "Shop app")
 				);
@@ -460,6 +464,28 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(manager.findApplications(query))
 				.isNotNull()
+				.hasSize(6)
+				.extracting(NamespaceApplication::id)
+				.containsExactlyInAnyOrder(
+						EntityId.from(2),
+						EntityId.from(3),
+						EntityId.from(4),
+						EntityId.from(5),
+						EntityId.from(6),
+						EntityId.from(7)
+				);
+	}
+
+	@Test
+	@DisplayName("should search service account namespace applications that are currently active")
+	void shouldSearchActiveApplicationsByType() {
+		final var query = SearchQuery.builder()
+				.criteria(NamespaceApplication.ACTIVE_CRITERIA, true)
+				.criteria(NamespaceApplication.TYPE_CRITERIA, NamespaceClientType.SERVICE_ACCOUNT)
+				.build();
+
+		assertThat(manager.findApplications(query))
+				.isNotNull()
 				.hasSize(3)
 				.extracting(NamespaceApplication::id)
 				.containsExactlyInAnyOrder(EntityId.from(2), EntityId.from(3), EntityId.from(4));
@@ -473,7 +499,8 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 				.get(InstanceOfAssertFactories.type(NamespaceApplication.class))
 				.returns(EntityId.from(1), NamespaceApplication::id)
 				.returns(EntityId.from(2), NamespaceApplication::namespace)
-				.returns("kfg-A2c7mvoxEP1AW1BUqzQXbS3NAivjfAqD", NamespaceApplication::clientId)
+				.returns(NamespaceClientType.SERVICE_ACCOUNT, NamespaceApplication::type)
+				.returns("kfg-AQEAAAAAAAAAAgAAAABqJToWfXkWbVML9iZbEPVai4o", NamespaceApplication::clientId)
 				.returns(null, NamespaceApplication::clientSecret)
 				.returns(OAuthScopes.of(OAuthScope.NAMESPACES), NamespaceApplication::scopes)
 				.satisfies(it -> assertThat(it.expiresAt())
@@ -505,7 +532,8 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 		final var namespace = lookupNamespace("konfigyr");
 		final var definition = NamespaceApplicationDefinition.builder()
 				.namespace(namespace)
-				.name("Test expiring OAuth application")
+				.type(NamespaceClientType.SERVICE_ACCOUNT)
+				.name("Test expiring service account application")
 				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
 				.build();
 
@@ -516,8 +544,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(application.clientId())
 				.isNotBlank()
-				.startsWith(NamespaceApplicationDefinition.CLIENT_ID_PREFIX)
-				.hasSize(36);
+				.hasSize(47);
 
 		assertThat(application.clientSecret())
 				.isNotBlank()
@@ -525,6 +552,50 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(application)
 				.returns(definition.namespace(), NamespaceApplication::namespace)
+				.returns(definition.type(), NamespaceApplication::type)
+				.returns(definition.name(), NamespaceApplication::name)
+				.returns(definition.scopes(), NamespaceApplication::scopes)
+				.returns(null, NamespaceApplication::expiresAt);
+
+		assertThat(application.createdAt())
+				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		assertThat(application.updatedAt())
+				.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		events.assertThat()
+				.contains(NamespaceEvent.ApplicationCreated.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.ApplicationCreated::application, application);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should create namespace application without client_secret")
+	void shouldCreateApplicationWithoutSecret(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+		final var definition = NamespaceApplicationDefinition.builder()
+				.namespace(namespace)
+				.type(NamespaceClientType.AGENT)
+				.name("Test expiring AI Agent application")
+				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
+				.build();
+
+		final var application = manager.createApplication(namespace, definition);
+
+		assertThat(application.id())
+				.isNotNull();
+
+		assertThat(application.clientId())
+				.isNotBlank()
+				.hasSize(47);
+
+		assertThat(application.clientSecret())
+				.isNull();
+
+		assertThat(application)
+				.returns(definition.namespace(), NamespaceApplication::namespace)
+				.returns(definition.type(), NamespaceApplication::type)
 				.returns(definition.name(), NamespaceApplication::name)
 				.returns(definition.scopes(), NamespaceApplication::scopes)
 				.returns(null, NamespaceApplication::expiresAt);
@@ -547,6 +618,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldCreateApplicationWithExpiration(AssertablePublishedEvents events) {
 		final var namespace = lookupNamespace("konfigyr");
 		final var definition = NamespaceApplicationDefinition.builder()
+				.type(NamespaceClientType.SERVICE_ACCOUNT)
 				.namespace(namespace)
 				.name("Test OAuth application")
 				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
@@ -560,8 +632,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(application.clientId())
 				.isNotBlank()
-				.startsWith(NamespaceApplicationDefinition.CLIENT_ID_PREFIX)
-				.hasSize(36);
+				.hasSize(47);
 
 		assertThat(application.clientSecret())
 				.isNotBlank()
@@ -569,6 +640,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 		assertThat(application)
 				.returns(definition.namespace(), NamespaceApplication::namespace)
+				.returns(definition.type(), NamespaceApplication::type)
 				.returns(definition.name(), NamespaceApplication::name)
 				.returns(definition.scopes(), NamespaceApplication::scopes);
 
@@ -593,6 +665,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	void shouldUpdateApplication(AssertablePublishedEvents events) {
 		final var namespace = lookupNamespace("konfigyr");
 		final var definition = NamespaceApplicationDefinition.builder()
+				.type(NamespaceClientType.SERVICE_ACCOUNT)
 				.namespace(namespace)
 				.name("Updated OAuth application")
 				.scopes(OAuthScopes.of(OAuthScope.PROFILES, OAuthScope.INVITE_MEMBERS))
@@ -604,8 +677,9 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 		assertThat(application)
 				.returns(EntityId.from(3), NamespaceApplication::id)
 				.returns(EntityId.from(1), NamespaceApplication::namespace)
+				.returns(NamespaceClientType.SERVICE_ACCOUNT, NamespaceApplication::type)
 				.returns("Updated OAuth application", NamespaceApplication::name)
-				.returns("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG", NamespaceApplication::clientId)
+				.returns("kfg-AQEAAAAAAAAAAQAAAABqJTlV2OXTvVveqnbXJ21wbPw", NamespaceApplication::clientId)
 				.returns(null, NamespaceApplication::clientSecret)
 				.returns(OAuthScopes.of(OAuthScope.PROFILES, OAuthScope.INVITE_MEMBERS), NamespaceApplication::scopes);
 
@@ -634,8 +708,9 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 		assertThat(application)
 				.returns(EntityId.from(3), NamespaceApplication::id)
 				.returns(EntityId.from(1), NamespaceApplication::namespace)
+				.returns(NamespaceClientType.SERVICE_ACCOUNT, NamespaceApplication::type)
 				.returns("Personal app", NamespaceApplication::name)
-				.returns("kfg-A2c7mvoxEP346BQCSuwnJ5ZNQIEsgCBG", NamespaceApplication::clientId)
+				.returns("kfg-AQEAAAAAAAAAAQAAAABqJTlV2OXTvVveqnbXJ21wbPw", NamespaceApplication::clientId)
 				.returns(OAuthScopes.of(OAuthScope.NAMESPACES), NamespaceApplication::scopes)
 				.returns(null, NamespaceApplication::expiresAt);
 

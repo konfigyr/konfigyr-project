@@ -20,6 +20,9 @@
 			<column name="namespace_id" type="bigint">
 				<constraints nullable="false"/>
 			</column>
+			<column name="type" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
 			<column name="name" type="varchar(100)">
 				<constraints nullable="false"/>
 			</column>
@@ -27,7 +30,7 @@
 				<constraints nullable="false"/>
 			</column>
 			<column name="client_secret" type="text">
-				<constraints nullable="false"/>
+				<constraints nullable="true"/>
 			</column>
 			<column name="scopes" type="varchar(1000)">
 				<constraints nullable="false"/>

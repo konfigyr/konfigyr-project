@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
 import java.time.Duration;
@@ -27,6 +28,7 @@ class KonfigyrRegisteredClientRepositoryTest extends AbstractClientRepositoryTes
 		properties.setClientSecret("{noop}konfigyr-secret");
 		properties.setRedirectUris(Set.of("http://localhost/callback", "https://konfigyr.com/callback"));
 		properties.setPostLogoutRedirectUris(Set.of("http://localhost/logout-callback"));
+		properties.getToken().setIdTokenSignatureAlgorithm(SignatureAlgorithm.PS256.getName());
 		properties.getToken().setAccessTokenTimeToLive(Duration.ofMinutes(15));
 		properties.getToken().setRefreshTokenTimeToLive(Duration.ofDays(7));
 

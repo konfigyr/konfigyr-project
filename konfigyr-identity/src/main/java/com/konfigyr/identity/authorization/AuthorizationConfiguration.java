@@ -112,6 +112,11 @@ public class AuthorizationConfiguration implements InitializingBean {
 	}
 
 	@Bean
+	NamespaceMembershipValidator namespaceMembershipValidator(DSLContext context) {
+		return new NamespaceMembershipValidator(context);
+	}
+
+	@Bean
 	OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
 		return new TokenCustomizer(
 				properties.getAudiences()

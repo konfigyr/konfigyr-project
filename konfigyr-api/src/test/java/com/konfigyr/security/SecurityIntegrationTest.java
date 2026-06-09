@@ -53,7 +53,7 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		final String token = generateAccessToken(claims -> claims
 				.issuer(wiremock.baseUrl())
 				.audience(List.of("konfigyr-api"))
-				.subject("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
+				.subject("kfg-AQEAAAAAAAAAAgAAAABqJTnoOdowT1b42n8N2q5ZQBo")
 				.claim(StandardClaimNames.NAME, "OAuth application")
 				.claim("scp", OAuthScopes.of(OAuthScope.NAMESPACES, OAuthScope.PROFILES).toString())
 		);
@@ -63,7 +63,7 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 				.matches(authorities(OAuthScope.NAMESPACES, OAuthScope.PROFILES))
 				.matches(principal(principal -> principal
 						.isClient()
-						.hasSubject("kfg-A2c7mvoxEP1rb-_NQLvaZ5KJNTGR-oOp")
+						.hasSubject("kfg-AQEAAAAAAAAAAgAAAABqJTnoOdowT1b42n8N2q5ZQBo")
 						.hasDisplayName("OAuth application")
 						.hasNoEmail()
 				));

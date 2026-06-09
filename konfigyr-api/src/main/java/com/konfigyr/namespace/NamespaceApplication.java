@@ -1,6 +1,7 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.support.SearchQuery;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -39,16 +40,25 @@ import java.time.ZoneOffset;
  * <b>Security characteristics:</b>
  * <ul>
  *   <li>Client credentials are generated using cryptographically secure random material and HKDF-derived secrets.</li>
- *   <li>All secrets are stored in hashed using {@code Argon2id} and displayed only once upon creation.</li>
- *   <li>Supports confidential and public client types, depending on deployment context.</li>
+ *   <li>All secrets are stored hashed using {@code Argon2id} and displayed only once upon creation.</li>
+ *   <li>The {@link NamespaceClientType} determines the OAuth2 grant types and authentication methods.
+ *       {@link NamespaceClientType#SERVICE_ACCOUNT} applications use a long-lived client secret;
+ *       {@link NamespaceClientType#AGENT} and {@link NamespaceClientType#PIPELINE} are public clients
+ *       that authenticate via PKCE or OIDC federation and carry no client secret.</li>
  * </ul>
  *
  * @param id unique identifier of this application, can't be {@literal null}.
  * @param namespace unique identifier of the {@link Namespace} that owns this application, can't be {@literal null}.
+ * @param type the intended purpose of the application; determines the OAuth2 grant types,
+ *             client authentication methods, and security constraints applied at registration
  * @param name Human-readable name of the application, can't be {@literal null}.
  * @param clientId public identifier of the OAuth2 client associated with this application, can't be {@literal null}.
- * @param clientSecret confidential secret associated with the OAuth2 client. This value is only returned upon
- *                     creation or when the client secret is rotated. Can be {@literal null}.
+ * @param clientSecret confidential secret associated with the OAuth2 client. Present for
+ *                     {@link NamespaceClientType#SERVICE_ACCOUNT} and
+ *                     {@link NamespaceClientType#PIPELINE} applications, returned once on creation
+ *                     and once on rotation, then never again. Always {@literal null} for
+ *                     {@link NamespaceClientType#AGENT}, which is a public client running on a
+ *                     user's device where a secret cannot be stored securely.
  * @param scopes set of OAuth2 scopes granted to this application, can't be {@literal null}.
  * @param expiresAt expiration timestamp for this application’s credentials. When defined, the client credentials
  *                  automatically become invalid after the specified point in time. May be {@code null} for
@@ -62,6 +72,7 @@ import java.time.ZoneOffset;
 public record NamespaceApplication(
 		@NonNull @Identity EntityId id,
 		@NonNull @Association(aggregateType = Namespace.class) EntityId namespace,
+		@NonNull NamespaceClientType type,
 		@NonNull String name,
 		@NonNull String clientId,
 		@Nullable String clientSecret,
@@ -79,6 +90,12 @@ public record NamespaceApplication(
 	 * {@link NamespaceApplication applications} by their {@link EntityId entity identifier}.
 	 */
 	public static final SearchQuery.Criteria<EntityId> ID_CRITERIA = SearchQuery.criteria("oauth-application.id", EntityId.class);
+
+	/**
+	 * The {@link SearchQuery.Criteria} descriptor used to filter {@link NamespaceApplication applications}
+	 * by their {@link NamespaceClientType}.
+	 */
+	public static final SearchQuery.Criteria<NamespaceClientType> TYPE_CRITERIA = SearchQuery.criteria("oauth-application.type", NamespaceClientType.class);
 
 	/**
 	 * The {@link SearchQuery.Criteria} descriptor used to filter {@link NamespaceApplication applications}
@@ -102,6 +119,7 @@ public record NamespaceApplication(
 		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
 				.append("id", id)
 				.append("namespace", namespace)
+				.append("type", type)
 				.append("name", name)
 				.append("scopes", scopes)
 				.append("expiresAt", expiresAt)
@@ -116,6 +134,7 @@ public record NamespaceApplication(
 	public static final class Builder {
 		private EntityId id;
 		private EntityId namespace;
+		private NamespaceClientType type;
 		private String name;
 		private String clientId;
 		private String clientSecret;
@@ -192,6 +211,18 @@ public record NamespaceApplication(
 		@NonNull
 		public Builder namespace(EntityId id) {
 			this.namespace = id;
+			return this;
+		}
+
+		/**
+		 * Specify the {@link NamespaceClientType type} of this application.
+		 *
+		 * @param type the intended purpose of the application
+		 * @return namespace application builder
+		 */
+		@NonNull
+		public Builder type(NamespaceClientType type) {
+			this.type = type;
 			return this;
 		}
 
@@ -333,11 +364,13 @@ public record NamespaceApplication(
 		public NamespaceApplication build() {
 			Assert.notNull(id, "Namespace application identifier can not be blank");
 			Assert.notNull(namespace, "Namespace identifier can not be blank");
+			Assert.notNull(type, "Namespace client type can not be null");
 			Assert.hasText(name, "Namespace application name can not be blank");
 			Assert.hasText(clientId, "OAuth client_id can not be blank");
 			Assert.notNull(scopes, "OAuth scopes can not be null");
 
-			return new NamespaceApplication(id, namespace, name, clientId, clientSecret, scopes, expiresAt, createdAt, updatedAt);
+			return new NamespaceApplication(id, namespace, type, name, clientId, clientSecret,
+					scopes, expiresAt, createdAt, updatedAt);
 		}
 
 	}

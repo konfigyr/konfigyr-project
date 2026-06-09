@@ -33,8 +33,7 @@ class AuthorizationConsentController {
 			@NonNull Model model,
 			@NonNull Authentication authentication
 	) {
-
-		final RegisteredClient client = repository.findById(clientId);
+		final RegisteredClient client = repository.findByClientId(clientId);
 		Assert.notNull(client, "OAuth 2.0 client registration not found");
 
 		final OAuth2AuthorizationConsent consent = service.findById(clientId, authentication.getName());
