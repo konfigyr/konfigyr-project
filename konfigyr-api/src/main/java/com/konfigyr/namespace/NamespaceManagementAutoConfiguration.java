@@ -15,6 +15,7 @@ import org.springframework.boot.jooq.autoconfigure.JooqAutoConfiguration;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collection;
 
@@ -39,9 +40,10 @@ public class NamespaceManagementAutoConfiguration implements FeatureDefinitionCo
 
 	@Bean
 	@ConditionalOnMissingBean(NamespaceManager.class)
-	NamespaceManager defaultNamespaceManager(ObjectProvider<@NonNull PasswordEncoder> passwordEncoder) {
+	NamespaceManager defaultNamespaceManager(ObjectProvider<@NonNull PasswordEncoder> passwordEncoder, JsonMapper jsonMapper) {
 		final PasswordEncoder encoder = passwordEncoder.getIfAvailable(PasswordEncoders::get);
-		return new DefaultNamespaceManager(context, encoder, applicationEventPublisher);
+		final NamespaceConverters converters = new NamespaceConverters(jsonMapper);
+		return new DefaultNamespaceManager(context, encoder, applicationEventPublisher, converters);
 	}
 
 	@Bean

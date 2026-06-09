@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -21,6 +22,9 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+import static com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository.PIPELINE_ISSUER_URI;
+import static com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository.PIPELINE_SUBJECT_PATTERN;
 
 @TestProfile
 @SpringBootTest
@@ -33,11 +37,14 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 	@Autowired
 	AuthorizationProperties properties;
 
+	@Autowired
+	JsonMapper jsonMapper;
+
 	RegisteredNamespaceClientRepository repository;
 
 	@BeforeEach
 	void setup() {
-		repository = new RegisteredNamespaceClientRepository(properties, context);
+		repository = new RegisteredNamespaceClientRepository(properties, context, jsonMapper);
 	}
 
 	@Test
@@ -88,10 +95,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						.returns(false, TokenSettings::isReuseRefreshTokens)
 				)
 				.satisfies(assertClientSettings(true))
-				.satisfies(assertRedirectUris(
-						"http://localhost/callback",
-						"http://127.0.0.1/callback"
-				))
+				.satisfies(assertRedirectUris("http://localhost:56789/callback"))
 				.satisfies(assertLogoutRedirectUris());
 	}
 
@@ -147,6 +151,10 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						.returns(false, TokenSettings::isReuseRefreshTokens)
 				)
 				.satisfies(assertClientSettings(false))
+				.satisfies(it -> assertThat(it.getClientSettings())
+						.returns("https://token.actions.githubusercontent.com", settings -> settings.getSetting(PIPELINE_ISSUER_URI))
+						.returns("repo:konfigyr/*:ref:refs/heads/main", settings -> settings.getSetting(PIPELINE_SUBJECT_PATTERN))
+				)
 				.satisfies(assertRedirectUris())
 				.satisfies(assertLogoutRedirectUris());
 	}
