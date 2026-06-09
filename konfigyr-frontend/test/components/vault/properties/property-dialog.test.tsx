@@ -51,6 +51,21 @@ const changeset: ChangesetState = {
 const catalog: ServiceCatalog = {
   service: services.konfigyrApi,
   properties: [
+    {
+      artifact: 'io.konfigyr:konfigyr-test:1.0.0',
+      name: 'konfigyr.test.constrained',
+      typeName: 'java.lang.String',
+      schema: { type: 'string', minLength: 5, maxLength: 20 },
+      description: 'Test property with string length constraints',
+    },
+    {
+      artifact: 'io.konfigyr:konfigyr-test:1.0.0',
+      name: 'konfigyr.test.valid-default',
+      typeName: 'java.lang.String',
+      schema: { type: 'string', minLength: 5, maxLength: 20 },
+      description: 'Test property with a valid default value',
+      defaultValue: 'default-value',
+    },
     ...propertyDescriptors.springAopProperties,
     ...propertyDescriptors.springConfigProperties,
     ...propertyDescriptors.springLoggingProperties,
@@ -328,6 +343,147 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     await waitFor(() => {
       expect(queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  test('should disable the Add button without showing an error when the initial value violates schema constraints', async () => {
+    const { getAllByRole, getByRole, queryByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
+
+    await userEvents.type(
+      getByRole('combobox', { name: 'Property name' }),
+      'konfigyr.test.constrained',
+    );
+
+    await waitFor(() => {
+      expect(getAllByRole('option')).toHaveLength(1);
+    });
+
+    await userEvents.keyboard('[Enter]');
+
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Add property' })).toBeDisabled();
+    });
+
+    expect(queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('should show a validation error after typing an invalid value', async () => {
+    const { getAllByRole, getByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
+
+    await userEvents.type(
+      getByRole('combobox', { name: 'Property name' }),
+      'konfigyr.test.constrained',
+    );
+
+    await waitFor(() => {
+      expect(getAllByRole('option')).toHaveLength(1);
+    });
+
+    await userEvents.keyboard('[Enter]');
+
+    await userEvents.type(
+      getByRole('textbox', { name: 'konfigyr.test.constrained' }),
+      'ab',
+    );
+
+    expect(getByRole('alert')).toBeInTheDocument();
+    expect(getByRole('alert')).toHaveTextContent('Must be at least 5 character(s)');
+    expect(getByRole('textbox', { name: 'konfigyr.test.constrained' })).toHaveAttribute('aria-invalid', 'true');
+    expect(getByRole('button', { name: 'Add property' })).toBeDisabled();
+  });
+
+  test('should clear the validation error and enable Add button after correcting the value', async () => {
+    const { getAllByRole, getByRole, queryByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
+
+    await userEvents.type(
+      getByRole('combobox', { name: 'Property name' }),
+      'konfigyr.test.constrained',
+    );
+
+    await waitFor(() => {
+      expect(getAllByRole('option')).toHaveLength(1);
+    });
+
+    await userEvents.keyboard('[Enter]');
+
+    await userEvents.type(
+      getByRole('textbox', { name: 'konfigyr.test.constrained' }),
+      'ab',
+    );
+
+    expect(getByRole('alert')).toBeInTheDocument();
+
+    await userEvents.clear(getByRole('textbox', { name: 'konfigyr.test.constrained' }));
+    await userEvents.type(
+      getByRole('textbox', { name: 'konfigyr.test.constrained' }),
+      'valid-value',
+    );
+
+    expect(queryByRole('alert')).not.toBeInTheDocument();
+    expect(getByRole('textbox', { name: 'konfigyr.test.constrained' })).toHaveAttribute('aria-invalid', 'false');
+    expect(getByRole('button', { name: 'Add property' })).not.toBeDisabled();
+  });
+
+  test('should not call onAdd when pressing Enter with an invalid value', async () => {
+    const { getAllByRole, getByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
+
+    await userEvents.type(
+      getByRole('combobox', { name: 'Property name' }),
+      'konfigyr.test.constrained',
+    );
+
+    await waitFor(() => {
+      expect(getAllByRole('option')).toHaveLength(1);
+    });
+
+    await userEvents.keyboard('[Enter]');
+
+    await userEvents.type(
+      getByRole('textbox', { name: 'konfigyr.test.constrained' }),
+      'ab',
+    );
+
+    await userEvents.keyboard('[Enter]');
+
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  test('should enable the Add button for a property whose default value satisfies schema constraints', async () => {
+    const { getAllByRole, getByRole } = renderWithQueryClient((
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+    ));
+
+    await userEvents.click(getByRole('button', { name: 'Add property' }));
+
+    await userEvents.type(
+      getByRole('combobox', { name: 'Property name' }),
+      'konfigyr.test.valid-default',
+    );
+
+    await waitFor(() => {
+      expect(getAllByRole('option')).toHaveLength(1);
+    });
+
+    await userEvents.keyboard('[Enter]');
+
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Add property' })).not.toBeDisabled();
     });
   });
 
