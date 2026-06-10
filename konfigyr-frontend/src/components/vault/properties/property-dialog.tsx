@@ -25,6 +25,7 @@ import { PropertyDeprecation, PropertyDeprecationAlert } from '@konfigyr/compone
 import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
 import { PropertySchema } from '@konfigyr/components/artifactory/property-schema';
 import { InputField } from '@konfigyr/components/vault/input';
+import { usePropertyValidation } from '@konfigyr/hooks/vault/property-validation';
 import { Button } from '@konfigyr/components/ui/button';
 import {
   Combobox,
@@ -346,19 +347,29 @@ function PropertyDescriptorInput({ catalog, onChange }: {
   );
 }
 
-export function PropertyValueInput<T>({ property, value, onChange, onSubmit }: {
+export function PropertyValueInput<T>({ property, value, onChange, onSubmit, onValidationChange }: {
   property: PropertyDescriptor,
   value: ConfigurationPropertyValue<T> | null
   onChange: (value: ConfigurationPropertyValue<T> | null) => void,
   onSubmit: () => void,
+  onValidationChange?: (isValid: boolean) => void,
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  const { validate, result } = usePropertyValidation(property.schema);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  const handleChange = useCallback((newValue: ConfigurationPropertyValue<T>) => {
+    setHasInteracted(true);
+    const validationResult = validate(newValue.decoded);
+    onValidationChange?.(validationResult.isValid);
+    onChange(newValue);
+  }, [validate, onChange, onValidationChange]);
 
   const onKeyDown = useCallback((event: KeyboardEvent<HTMLElement>) => {
-    if (value && event.key === 'Enter') {
+    if (value && event.key === 'Enter' && result.isValid) {
       onSubmit();
     }
-  }, [onSubmit]);
+  }, [onSubmit, value, result.isValid]);
 
   useEffect(() => {
     if (ref.current) {
@@ -366,15 +377,29 @@ export function PropertyValueInput<T>({ property, value, onChange, onSubmit }: {
     }
   }, [property, ref.current]);
 
+  // Validate the initial value on mount to initialize the parent's isValid state.
+  // key={property.name} on the parent ensures this component remounts with fresh
+  // props whenever the descriptor changes, so the captured values are always current.
+  useEffect(() => {
+    const validationResult = validate(value?.decoded);
+    onValidationChange?.(validationResult.isValid);
+  }, []);
+
+  const showErrors = hasInteracted && result.errors.length > 0;
+
   return (
-    <InputField
-      id={property.name}
-      ref={ref}
-      property={property}
-      value={value || undefined}
-      onChange={onChange}
-      onKeyDown={onKeyDown}
-    />
+    <>
+      <InputField
+        id={property.name}
+        ref={ref}
+        property={property}
+        value={value || undefined}
+        onChange={handleChange}
+        onKeyDown={onKeyDown}
+        errors={showErrors ? result.errors.map(e => e.message) : undefined}
+      />
+      {showErrors && <FieldError errors={result.errors} />}
+    </>
   );
 }
 
@@ -386,6 +411,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
   const [open, onOpenChange] = useState(false);
   const [value, onValueChange] = useState<ConfigurationPropertyValue<any> | null>(null);
   const [descriptor, onDescriptorChange] = useState<PropertyDescriptor | null>(null);
+  const [isValid, setIsValid] = useState(true);
 
   const canAdd = changeset.properties
     .filter(it => it.name === descriptor?.name)
@@ -395,6 +421,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
     if (selected == null) {
       onDescriptorChange(null);
       onValueChange(null);
+      setIsValid(true);
       return;
     }
 
@@ -414,11 +441,12 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
       onOpenChange(false);
       onDescriptorChange(null);
       onValueChange(null);
+      setIsValid(true);
     }
   }, [onOpenChange, onDescriptorChange, onValueChange]);
 
   const handleSubmit = useCallback(() => {
-    if (canAdd && descriptor?.name && value) {
+    if (canAdd && isValid && descriptor?.name && value) {
       onAdd({
         ...descriptor,
         value: value,
@@ -427,7 +455,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
 
       handleOpenChange(false);
     }
-  }, [canAdd, descriptor, value, handleOpenChange]);
+  }, [canAdd, isValid, descriptor, value, handleOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -483,10 +511,12 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
                 <PropertyValueLabel />
               </Label>
               <PropertyValueInput
+                key={descriptor.name}
                 property={descriptor}
                 value={value}
                 onChange={onValueChange}
                 onSubmit={handleSubmit}
+                onValidationChange={setIsValid}
               />
               <FieldDescription className="text-xs">
                 <PropertyDescription value={descriptor.description} />
@@ -504,7 +534,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
 
         <DialogFooter showCloseButton={true}>
           <Button
-            disabled={!canAdd}
+            disabled={!canAdd || !isValid}
             onClick={handleSubmit}
           >
             <PlusIcon />
