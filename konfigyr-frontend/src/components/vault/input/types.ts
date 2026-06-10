@@ -73,7 +73,7 @@ export interface InputFieldProps<TElement extends HTMLElement, TValue> {
   onBlur?: (event?: FocusEvent<TElement>) => void,
 
   /**
-   * Error message for the current value. When truthy, the input is marked as aria-invalid.
+   * Error messages for the current value. When non-empty, the input is marked as aria-invalid.
    */
-  error?: string,
+  errors?: Array<string>,
 }

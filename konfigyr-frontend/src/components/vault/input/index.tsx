@@ -70,7 +70,7 @@ export function InputField<T>({
   onChange,
   onBlur,
   onKeyDown,
-  error,
+  errors,
 }: InputFieldProps<HTMLElement, ConfigurationPropertyValue<T>>) {
   const InputComponent = useSchemaInputComponent(property.schema);
   const transform = useJsonSchemeTransform<T>(property.schema);
@@ -95,7 +95,7 @@ export function InputField<T>({
         onKeyDown={onKeyDown}
         aria-label={property.schema.title || property.name}
         aria-description={property.schema.description || property.description}
-        aria-invalid={!!error}
+        aria-invalid={!!errors?.length}
       />
 
       {hints && (

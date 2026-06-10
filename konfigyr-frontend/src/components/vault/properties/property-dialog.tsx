@@ -396,7 +396,7 @@ export function PropertyValueInput<T>({ property, value, onChange, onSubmit, onV
         value={value || undefined}
         onChange={handleChange}
         onKeyDown={onKeyDown}
-        error={showErrors ? result.errors[0]?.message : undefined}
+        errors={showErrors ? result.errors.map(e => e.message) : undefined}
       />
       {showErrors && <FieldError errors={result.errors} />}
     </>
