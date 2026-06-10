@@ -20,13 +20,15 @@ ajv.addFormat('data-size', /^[+-]?\d+(B|KB|MB|GB|TB)$/);
 // Converts to uppercase and removes separators (-, _, whitespace) so values
 // like ACTIVE, active, in-progress, in_progress, and inProgress
 // are treated as equivalent.
-const normalizeEnumValue = (value: string): string => value.toUpperCase().replace(/[-_\s]/g, '');
+const NORMALIZE_ENUM_PATTERN = /[-_\s]/g;
+const normalizeEnumValue = (value: string): string => value.replace(NORMALIZE_ENUM_PATTERN, '').toUpperCase();
 
 const resolveRelaxedEnumValue = (enumValues: Array<string>, value: unknown): unknown => {
   if (typeof value !== 'string') {
     return value;
   }
-  return enumValues.find(e => normalizeEnumValue(e) === normalizeEnumValue(value)) ?? value;
+  const normalized = normalizeEnumValue(value);
+  return enumValues.find(it => normalizeEnumValue(it) === normalized) ?? value;
 };
 
 const toValueList = (params: Record<string, any>): string => {
