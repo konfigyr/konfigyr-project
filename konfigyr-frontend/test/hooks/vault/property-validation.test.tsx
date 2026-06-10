@@ -159,6 +159,12 @@ const VALIDATION_FAIL_CASES: Array<ValidationCase> = [
 const VALIDATION_PASS_CASES: Array<ValidationCase> = [
   { label: 'type', schema: { type: 'string' }, value: 'abs' },
   { label: 'enum', schema: { type: 'string', enum: ['alpha', 'beta'] }, value: 'alpha' },
+  { label: 'enum relaxed: uppercase', schema: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] }, value: 'ACTIVE' },
+  { label: 'enum relaxed: lowercase', schema: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] }, value: 'active' },
+  { label: 'enum relaxed: mixed case', schema: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] }, value: 'Active' },
+  { label: 'enum relaxed: snake_case', schema: { type: 'string', enum: ['IN_PROGRESS', 'DONE'] }, value: 'in_progress' },
+  { label: 'enum relaxed: kebab-case', schema: { type: 'string', enum: ['IN_PROGRESS', 'DONE'] }, value: 'in-progress' },
+  { label: 'enum relaxed: camelCase', schema: { type: 'string', enum: ['IN_PROGRESS', 'DONE'] }, value: 'inProgress' },
   { label: 'minimum', schema: { type: 'number', minimum: 3 }, value: 5 },
   {
     label: 'exclusiveMinimum',

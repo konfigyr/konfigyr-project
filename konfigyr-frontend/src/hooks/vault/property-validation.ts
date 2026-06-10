@@ -16,6 +16,19 @@ addFormats(ajv);
 ajv.addFormat('duration', /^[+-]?\d+(ns|us|ms|s|m|h|d)$/);
 ajv.addFormat('data-size', /^[+-]?\d+(B|KB|MB|GB|TB)$/);
 
+// Normalizes enum values to support Spring Boot relaxed binding.
+// Converts to uppercase and removes separators (-, _, whitespace) so values
+// like ACTIVE, active, in-progress, in_progress, and inProgress
+// are treated as equivalent.
+const normalizeEnumValue = (value: string): string => value.toUpperCase().replace(/[-_\s]/g, '');
+
+const resolveRelaxedEnumValue = (enumValues: Array<string>, value: unknown): unknown => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+  return enumValues.find(e => normalizeEnumValue(e) === normalizeEnumValue(value)) ?? value;
+};
+
 const toValueList = (params: Record<string, any>): string => {
   const values = params.allowedValues ?? [];
 
@@ -115,7 +128,9 @@ export function usePropertyValidation (schema: PropertyJsonSchema): {
   const [result, setResult] = useState<ValidationResult>(() => buildValidationResult(true, []));
 
   const validate = useCallback((value: unknown): ValidationResult => {
-    const isValid = validator(value);
+    const isValid = schema.enum?.length
+      ? validator(resolveRelaxedEnumValue(schema.enum, value))
+      : validator(value);
 
     const nextResult: ValidationResult = isValid
       ? buildValidationResult(true, [])
