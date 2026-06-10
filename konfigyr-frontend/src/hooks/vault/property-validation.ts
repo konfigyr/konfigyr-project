@@ -3,6 +3,7 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { useIntl } from 'react-intl';
 import { VALIDATION_MESSAGES } from '@konfigyr/hooks/vault/messages';
+import { DATA_SIZE_ENCODED_PATTERN, DURATION_ENCODED_PATTERN } from '@konfigyr/hooks/transforms';
 import type { ErrorObject, ValidateFunction } from 'ajv';
 import type { IntlShape } from 'react-intl';
 
@@ -13,8 +14,8 @@ const ajv = new Ajv({ allErrors: true, coerceTypes: false });
 
 addFormats(ajv);
 
-ajv.addFormat('duration', /^[+-]?\d+(ns|us|ms|s|m|h|d)$/);
-ajv.addFormat('data-size', /^[+-]?\d+(B|KB|MB|GB|TB)$/);
+ajv.addFormat('duration', DURATION_ENCODED_PATTERN);
+ajv.addFormat('data-size', DATA_SIZE_ENCODED_PATTERN);
 
 const toValueList = (params: Record<string, any>): string => {
   const values = params.allowedValues ?? [];
