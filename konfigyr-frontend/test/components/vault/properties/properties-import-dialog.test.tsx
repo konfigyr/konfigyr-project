@@ -178,7 +178,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
 
     await waitFor(() => {
       expect(result.getByText('Could not read your configuration')).toBeInTheDocument();
-      expect(result.getByText("Error: Expected property name or '}' in JSON at position 1 (line 1 column 2)")).toBeInTheDocument();
+      expect(result.getByText('Error: Expected property name or \'}\' in JSON at position 1 (line 1 column 2)')).toBeInTheDocument();
     });
     expect(
       within(
@@ -326,7 +326,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
             type: 'string',
           },
           state: 'ADDED',
-          typeName: 'string',
+          typeName: 'java.lang.String',
           value: {
             decoded: 'konfigyr',
             encoded: 'konfigyr',

@@ -64,15 +64,18 @@ export function categorizePropertiesByValidation (
 
     const isValid = isPropertyValueValid(descriptor.schema, property.value?.encoded);
 
-    property.description = descriptor.description;
-    property.schema = descriptor.schema;
+    const { artifact: _artifact, ...descriptorData } = descriptor;
+    const importedProperty: ConfigurationProperty<any> = {
+      ...property,
+      ...descriptorData,
+    };
 
     if (isValid) {
-      valid.push(property);
+      valid.push(importedProperty);
       continue;
     }
 
-    invalid.push(property);
+    invalid.push(importedProperty);
   }
 
   return { valid, invalid };
