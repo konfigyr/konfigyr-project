@@ -54,9 +54,12 @@ describe('hooks | transforms', () => {
     expect(dataSizeTransform.decode('016GB')).toStrictEqual({ value: 16, unit: DataUnit.GIGABYTES });
     expect(dataSizeTransform.decode('1024TB')).toStrictEqual({ value: 1024, unit: DataUnit.TERABYTES });
 
+    expect(dataSizeTransform.decode('5712b')).toBeNull();
+    expect(dataSizeTransform.decode('5712kb')).toBeNull();
     expect(dataSizeTransform.decode('11')).toBeNull();
     expect(dataSizeTransform.decode('11M')).toBeNull();
     expect(dataSizeTransform.decode('11mm')).toBeNull();
+    expect(dataSizeTransform.decode('11mb')).toBeNull();
     expect(dataSizeTransform.decode('GB')).toBeNull();
     expect(dataSizeTransform.decode('1.11GB')).toBeNull();
     expect(dataSizeTransform.decode('1,11TB')).toBeNull();

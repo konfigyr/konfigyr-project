@@ -1,3 +1,6 @@
+export const DURATION_ENCODED_PATTERN = /^([+-]?\d+)(ns|us|ms|s|m|h|d)$/;
+export const DATA_SIZE_ENCODED_PATTERN = /^([+-]?\d+)(B|KB|MB|GB|TB)$/;
+
 /**
  * Interface that defines the structure of a Transform that would be used to transform
  * strings into a more convenient format.
@@ -116,19 +119,20 @@ export interface Duration {
 export const durationTransform: Transform<Duration> = {
   encode: (duration) => `${duration.value}${duration.unit}`,
   decode: (value) => {
-    const match = value.match(/^([+-]?\d+)([a-zA-Z]{0,2})$/);
+    const match = value.match(DURATION_ENCODED_PATTERN);
 
-    if (match && Object.values(DurationUnit).includes(match[2] as DurationUnit)) {
-      const duration = numberTransform.decode(match[1]);
-
-      if (duration === null) {
-        return null;
-      }
-
-      return { value: duration, unit: match[2] as DurationUnit };
+    if (!match) {
+      return null;
     }
 
-    return null;
+    const [, encodedDuration, suffix] = match;
+    const duration = numberTransform.decode(encodedDuration);
+
+    if (duration === null) {
+      return null;
+    }
+
+    return { value: duration, unit: suffix as DurationUnit };
   },
 };
 
@@ -175,18 +179,19 @@ export interface DataSize {
 export const dataSizeTransform: Transform<DataSize> = {
   encode: (size) => `${size.value}${size.unit}`,
   decode: (value) => {
-    const match = value.match(/^([+-]?\d+)([a-zA-Z]{0,2})$/);
+    const match = value.match(DATA_SIZE_ENCODED_PATTERN);
 
-    if (match && Object.values(DataUnit).includes(match[2] as DataUnit)) {
-      const size = numberTransform.decode(match[1]);
-
-      if (size === null) {
-        return null;
-      }
-
-      return { value: size, unit: match[2] as DataUnit };
+    if (!match) {
+      return null;
     }
 
-    return null;
+    const [, encodedSize, suffix] = match;
+    const size = numberTransform.decode(encodedSize);
+
+    if (size === null) {
+      return null;
+    }
+
+    return { value: size, unit: suffix as DataUnit };
   },
 };
