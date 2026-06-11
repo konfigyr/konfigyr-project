@@ -664,7 +664,10 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 						.hasTitle("Client secret is not supported")
 						.hasDetailContaining("Client secret reset is not available for %s applications.", NamespaceClientType.AGENT.displayName())
 				))
-				.satisfies(hasFailedWithException(NamespaceApplicationTypeException.class));
+				.satisfies(hasFailedWithException(NamespaceApplicationTypeException.class, ex -> ex
+				.extracting(NamespaceApplicationTypeException::getErrorCode)
+				.isEqualTo(NamespaceApplicationTypeException.ErrorCode.SECRET_NOT_SUPPORTED)
+		));
 	}
 
 	@Test

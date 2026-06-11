@@ -54,7 +54,7 @@ class NimbusTrustedIssuerRegistryTest {
 		wiremock.addStubMapping(stubs.createMetadataStub());
 		wiremock.addStubMapping(stubs.createKeysetStub());
 
-		registry = new NimbusTrustedIssuerRegistry(repository, new RestTemplate(),"expireAfterWrite=1h");
+		registry = new NimbusTrustedIssuerRegistry(repository, new RestTemplate(), "expireAfterWrite=1h");
 	}
 
 	@Test
