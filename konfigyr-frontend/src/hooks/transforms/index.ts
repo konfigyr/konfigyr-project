@@ -1,5 +1,5 @@
-export const DURATION_ENCODED_PATTERN = /^[+-]?\d+(ns|us|ms|s|m|h|d)$/;
-export const DATA_SIZE_ENCODED_PATTERN = /^[+-]?\d+(B|KB|MB|GB|TB)$/;
+export const DURATION_ENCODED_PATTERN = /^([+-]?\d+)(ns|us|ms|s|m|h|d)$/;
+export const DATA_SIZE_ENCODED_PATTERN = /^([+-]?\d+)(B|KB|MB|GB|TB)$/;
 
 /**
  * Interface that defines the structure of a Transform that would be used to transform
@@ -120,20 +120,19 @@ export const durationTransform: Transform<Duration> = {
   encode: (duration) => `${duration.value}${duration.unit}`,
   decode: (value) => {
     const match = value.match(DURATION_ENCODED_PATTERN);
-    const suffix = match ? match[0].replace(/^[+-]?\d+/, '') : '';
 
-    if (match && Object.values(DurationUnit).includes(suffix as DurationUnit)) {
-      const encodedDuration = match[0];
-      const duration = numberTransform.decode(encodedDuration.slice(0, -suffix.length));
-
-      if (duration === null) {
-        return null;
-      }
-
-      return { value: duration, unit: suffix as DurationUnit };
+    if (!match) {
+      return null;
     }
 
-    return null;
+    const [, encodedDuration, suffix] = match;
+    const duration = numberTransform.decode(encodedDuration);
+
+    if (duration === null) {
+      return null;
+    }
+
+    return { value: duration, unit: suffix as DurationUnit };
   },
 };
 
@@ -181,19 +180,18 @@ export const dataSizeTransform: Transform<DataSize> = {
   encode: (size) => `${size.value}${size.unit}`,
   decode: (value) => {
     const match = value.match(DATA_SIZE_ENCODED_PATTERN);
-    const suffix = match ? match[0].replace(/^[+-]?\d+/, '') : '';
 
-    if (match && Object.values(DataUnit).includes(suffix as DataUnit)) {
-      const encodedSize = match[0];
-      const size = numberTransform.decode(encodedSize.slice(0, -suffix.length));
-
-      if (size === null) {
-        return null;
-      }
-
-      return { value: size, unit: suffix as DataUnit };
+    if (!match) {
+      return null;
     }
 
-    return null;
+    const [, encodedSize, suffix] = match;
+    const size = numberTransform.decode(encodedSize);
+
+    if (size === null) {
+      return null;
+    }
+
+    return { value: size, unit: suffix as DataUnit };
   },
 };
