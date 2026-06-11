@@ -60,7 +60,6 @@ export function categorizePropertiesByValidation (
 
     property.description = descriptor.description;
     property.schema = descriptor.schema;
-    property.typeName = descriptor.schema.type;
 
     if (isValid) {
       valid.push(property);
