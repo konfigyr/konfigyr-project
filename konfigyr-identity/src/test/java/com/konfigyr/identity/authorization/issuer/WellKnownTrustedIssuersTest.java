@@ -34,9 +34,9 @@ class WellKnownTrustedIssuersTest {
 
 		assertThat(issuer)
 				.isNotNull()
-				.returns("https://token.actions.githubusercontent.com", TrustedIssuer::issuerUri)
-				.returns("GitHub Actions", TrustedIssuer::name)
-				.returns(null, TrustedIssuer::jwksUri)
+				.returns("https://token.actions.githubusercontent.com", TrustedIssuerRegistration::issuerUri)
+				.returns("GitHub Actions", TrustedIssuerRegistration::name)
+				.returns(null, TrustedIssuerRegistration::jwksUri)
 				.satisfies(it -> assertThat(it.allowedAudiences()).isEmpty());
 	}
 
@@ -47,9 +47,9 @@ class WellKnownTrustedIssuersTest {
 
 		assertThat(issuer)
 				.isNotNull()
-				.returns("https://gitlab.com", TrustedIssuer::issuerUri)
-				.returns("GitLab", TrustedIssuer::name)
-				.returns(null, TrustedIssuer::jwksUri)
+				.returns("https://gitlab.com", TrustedIssuerRegistration::issuerUri)
+				.returns("GitLab", TrustedIssuerRegistration::name)
+				.returns(null, TrustedIssuerRegistration::jwksUri)
 				.satisfies(it -> assertThat(it.allowedAudiences()).isEmpty());
 	}
 

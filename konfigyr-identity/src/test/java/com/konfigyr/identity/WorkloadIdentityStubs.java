@@ -12,6 +12,8 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationServerMetadataClaimNames;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -83,7 +85,10 @@ final public class WorkloadIdentityStubs {
 
 	public String issue(JWTClaimsSet.Builder claims) {
 		final var jwt = new SignedJWT(
-				new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(key.getKeyID()).build(),
+				new JWSHeader.Builder(JWSAlgorithm.RS256)
+						.keyID(key.getKeyID())
+						.x509CertChain(key.getX509CertChain())
+						.build(),
 				claims.issuer(issuerUri()).build()
 		);
 
@@ -103,13 +108,12 @@ final public class WorkloadIdentityStubs {
 	}
 
 	private StubMapping createStubMappingFor(String path, String response) {
-		final var url = UriComponentsBuilder.fromPath("/")
-				.path(issuer.getPath())
-				.pathSegment(path)
-				.toUriString();
-
-		return WireMock.get(WireMock.urlPathEqualTo(url))
-				.willReturn(WireMock.aResponse().withStatus(200).withBody(response))
+		return WireMock.get(WireMock.urlPathEqualTo("/" + issuer.getPath() + "/" + path))
+				.willReturn(WireMock.aResponse()
+						.withStatus(200)
+						.withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+						.withBody(response)
+				)
 				.build();
 	}
 

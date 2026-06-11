@@ -5,7 +5,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Strategy interface for resolving a {@link TrustedIssuer} given a namespace and an
+ * Strategy interface for resolving a {@link TrustedIssuerRegistration} given a namespace and an
  * issuer URI.
  * <p>
  * Implementations may back the registry with static well-known issuers, a database
@@ -28,15 +28,15 @@ import org.jspecify.annotations.Nullable;
 public interface TrustedIssuerRepository {
 
 	/**
-	 * Looks up the {@link TrustedIssuer} for the given namespace and issuer URI.
+	 * Looks up the {@link TrustedIssuerRegistration} for the given namespace and issuer URI.
 	 *
 	 * @param namespace the namespace on whose behalf the lookup is performed
 	 * @param issuerUri the OIDC issuer URI to resolve, taken from the workload
 	 *                  application's client settings
-	 * @return the matching {@link TrustedIssuer}, or {@code null} if this repository
+	 * @return the matching {@link TrustedIssuerRegistration}, or {@code null} if this repository
 	 *         has no entry for the given combination
 	 */
 	@Nullable
-	TrustedIssuer lookup(EntityId namespace, String issuerUri);
+	TrustedIssuerRegistration lookup(EntityId namespace, String issuerUri);
 
 }

@@ -11,9 +11,6 @@ import com.konfigyr.identity.authorization.client.CachingRegisteredClientReposit
 import com.konfigyr.identity.authorization.client.DelegatingRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.KonfigyrRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository;
-import com.konfigyr.identity.authorization.issuer.CompositeTrustedIssuerRepository;
-import com.konfigyr.identity.authorization.issuer.TrustedIssuerRepository;
-import com.konfigyr.identity.authorization.issuer.WellKnownTrustedIssuers;
 import com.konfigyr.identity.authorization.jwk.KeysetSource;
 import com.konfigyr.identity.authorization.jwk.SigningJwkSelector;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -125,13 +122,6 @@ public class AuthorizationConfiguration implements InitializingBean {
 						.stream()
 						.filter(StringUtils::hasText)
 						.toList()
-		);
-	}
-
-	@Bean
-	TrustedIssuerRepository trustedIssuerRepository() {
-		return new CompositeTrustedIssuerRepository(
-				WellKnownTrustedIssuers.getInstance()
 		);
 	}
 

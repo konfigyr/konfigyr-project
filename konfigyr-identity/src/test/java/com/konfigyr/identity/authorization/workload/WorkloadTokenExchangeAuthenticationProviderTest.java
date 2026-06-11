@@ -1,14 +1,11 @@
 package com.konfigyr.identity.authorization.workload;
 
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.identity.WorkloadIdentityStubs;
 import com.konfigyr.identity.authorization.NamespaceClientSettingNames;
 import com.konfigyr.identity.authorization.issuer.TrustedIssuer;
-import com.konfigyr.identity.authorization.issuer.TrustedIssuerRepository;
+import com.konfigyr.identity.authorization.issuer.TrustedIssuerRegistration;
+import com.konfigyr.identity.authorization.issuer.TrustedIssuerRegistry;
 import com.konfigyr.test.OAuth2AccessTokens;
-import com.nimbusds.jwt.JWTClaimsSet;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.ObjectAssert;
 import org.junit.jupiter.api.AfterEach;
@@ -16,12 +13,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.core.*;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken;
@@ -35,8 +32,6 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,20 +44,21 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class WorkloadTokenExchangeAuthenticationProviderTest {
 
-	@RegisterExtension
-	static WireMockExtension wiremock = WireMockExtension.newInstance()
-			.options(WireMockConfiguration.wireMockConfig().dynamicPort())
-			.configureStaticDsl(true)
-			.build();
-
 	static final String SUBJECT = "repo:acme/api:ref:refs/heads/main";
+	static final String ISSUER_URI = "https://token.actions.githubusercontent.com";
 	static final EntityId NAMESPACE = EntityId.from(7L);
 
 	static final String JWT_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:jwt";
 	static final String ACCESS_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
 
 	@Mock
-	TrustedIssuerRepository trustedIssuerRepository;
+	TrustedIssuerRegistry registry;
+
+	@Mock
+	JwtDecoder jwtDecoder;
+
+	@Mock(strictness = Mock.Strictness.LENIENT)
+	Jwt jwt;
 
 	@Mock
 	OAuth2AuthorizationService authorizationService;
@@ -73,26 +69,23 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	@Mock(strictness = Mock.Strictness.LENIENT)
 	AuthorizationServerContext authorizationServerContext;
 
-	WorkloadIdentityStubs identityStubs;
 	WorkloadTokenExchangeAuthenticationProvider provider;
 
 	@BeforeEach
 	void setup() {
 		provider = new WorkloadTokenExchangeAuthenticationProvider(
-				trustedIssuerRepository, authorizationService, tokenGenerator);
+				registry, authorizationService, tokenGenerator);
+
+		doReturn(SUBJECT).when(jwt).getSubject();
 
 		final var settings = AuthorizationServerSettings.builder()
-				.issuer(wiremock.baseUrl())
+				.issuer("https://auth.konfigyr.com")
 				.build();
 
-		doReturn(wiremock.baseUrl()).when(authorizationServerContext).getIssuer();
+		doReturn("https://auth.konfigyr.com").when(authorizationServerContext).getIssuer();
 		doReturn(settings).when(authorizationServerContext).getAuthorizationServerSettings();
 
 		AuthorizationServerContextHolder.setContext(authorizationServerContext);
-
-		identityStubs = new WorkloadIdentityStubs(wiremock.baseUrl(), "test-workload-identity-server");
-		wiremock.addStubMapping(identityStubs.createMetadataStub());
-		wiremock.addStubMapping(identityStubs.createKeysetStub());
 	}
 
 	@AfterEach
@@ -110,14 +103,14 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	@Test
 	@DisplayName("should throw invalid_request for unsupported subject_token_type")
 	void throwsForUnsupportedSubjectTokenType() {
-		final var client = workloadClient(identityStubs.issuerUri(), null);
+		final var client = workloadClient(null);
 		final var exchange = tokenExchange(client, "any-token", ACCESS_TOKEN_TYPE);
 
 		assertOAuthError(exchange, OAuth2ErrorCodes.INVALID_REQUEST)
 				.extracting(OAuth2Error::getDescription, InstanceOfAssertFactories.STRING)
 				.isEqualTo("Unsupported subject_token_type: %s", ACCESS_TOKEN_TYPE);
 
-		verify(trustedIssuerRepository, never()).lookup(any(), any());
+		verify(registry, never()).get(any(), any());
 	}
 
 	@Test
@@ -125,7 +118,7 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	void throwsWhenNamespaceMissing() {
 		final var client = createClient(
 				ClientSettings.builder()
-						.setting(NamespaceClientSettingNames.WORKLOAD_ISSUER_URI, identityStubs.issuerUri())
+						.setting(NamespaceClientSettingNames.WORKLOAD_ISSUER_URI, ISSUER_URI)
 						.build()
 		);
 
@@ -149,29 +142,33 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 		assertOAuthError(exchange, OAuth2ErrorCodes.INVALID_CLIENT)
 				.returns("Trusted issuer is not specified for this OAuth2 Client", OAuth2Error::getDescription);
 
-		verify(trustedIssuerRepository, never()).lookup(any(), any());
+		verify(registry, never()).get(any(), any());
 	}
 
 	@Test
-	@DisplayName("should throw invalid_client when issuer is not in the trusted repository")
+	@DisplayName("should throw invalid_client when issuer is not in the trusted registry")
 	void throwsWhenIssuerNotTrusted() {
-		doReturn(null).when(trustedIssuerRepository).lookup(NAMESPACE, identityStubs.issuerUri());
+		doThrow(new OAuth2AuthenticationException(new OAuth2Error(
+				OAuth2ErrorCodes.INVALID_CLIENT,
+				"Can't find any trusted issuer for this OAuth2 Client that matches this issuer URI: " + ISSUER_URI,
+				null
+		))).when(registry).get(NAMESPACE, ISSUER_URI);
 
-		final var exchange = tokenExchange(workloadClient(identityStubs.issuerUri(), null), "any-token", JWT_TOKEN_TYPE);
+		final var exchange = tokenExchange(workloadClient(null), "any-token", JWT_TOKEN_TYPE);
 
 		assertOAuthError(exchange, OAuth2ErrorCodes.INVALID_CLIENT)
 				.extracting(OAuth2Error::getDescription, InstanceOfAssertFactories.STRING)
-				.isEqualTo("Can't find any trusted issuer for this OAuth2 Client that matches this issuer URI: %s", identityStubs.issuerUri());
+				.isEqualTo("Can't find any trusted issuer for this OAuth2 Client that matches this issuer URI: %s", ISSUER_URI);
 	}
 
 	@Test
 	@DisplayName("should throw invalid_request for a malformed subject_token that cannot be parsed as JWT")
 	void throwsForMalformedSubjectToken() {
-		doReturn(trustedIssuer(null)).when(trustedIssuerRepository).lookup(NAMESPACE, identityStubs.issuerUri());
+		doReturn(trustedIssuer()).when(registry).get(NAMESPACE, ISSUER_URI);
+		doThrow(new JwtException("Malformed token")).when(jwtDecoder).decode("not-a-jwt");
 
-		final var exchange = tokenExchange(workloadClient(identityStubs.issuerUri(), null), "not-a-jwt", JWT_TOKEN_TYPE);
+		final var exchange = tokenExchange(workloadClient(null), "not-a-jwt", JWT_TOKEN_TYPE);
 
-		// Decode fails at JWT parsing before any JWKS fetch
 		assertOAuthError(exchange, OAuth2ErrorCodes.INVALID_REQUEST)
 				.extracting(OAuth2Error::getDescription, InstanceOfAssertFactories.STRING)
 				.contains("Invalid subject_token", "Malformed token");
@@ -182,14 +179,17 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	@Test
 	@DisplayName("should throw invalid_request when subject_token audience does not match trusted issuer")
 	void throwsForAudienceMismatch() {
-		// Trusted issuer requires "konfigyr-api" audience but token has a different one
-		doReturn(trustedIssuer(Set.of("konfigyr-api"))).when(trustedIssuerRepository).lookup(NAMESPACE, identityStubs.issuerUri());
+		doReturn(trustedIssuer()).when(registry).get(NAMESPACE, ISSUER_URI);
 
-		final var token = signToken(SUBJECT, Instant.now().plusSeconds(300), "wrong-audience");
-		final var exchange = tokenExchange(workloadClient(identityStubs.issuerUri(), null), token, JWT_TOKEN_TYPE);
+		final var audError = new OAuth2Error("invalid_token", "The aud claim is not valid", null);
+		doThrow(new JwtValidationException("Validation failed", List.of(audError)))
+				.when(jwtDecoder).decode(any());
+
+		final var exchange = tokenExchange(workloadClient(null), "any-token", JWT_TOKEN_TYPE);
 
 		assertOAuthError(exchange, OAuth2ErrorCodes.INVALID_REQUEST)
-				.returns("Subject token audience does not match any of the required audiences", OAuth2Error::getDescription);
+				.extracting(OAuth2Error::getDescription, InstanceOfAssertFactories.STRING)
+				.contains("Invalid subject_token: The aud claim is not valid");
 
 		verify(authorizationService, never()).save(any());
 	}
@@ -197,11 +197,11 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	@Test
 	@DisplayName("should throw invalid_request when subject_token sub claim does not match the configured pattern")
 	void throwsForSubjectPatternMismatch() {
-		doReturn(trustedIssuer(null)).when(trustedIssuerRepository).lookup(NAMESPACE, identityStubs.issuerUri());
+		doReturn(trustedIssuer()).when(registry).get(NAMESPACE, ISSUER_URI);
+		doReturn(jwt).when(jwtDecoder).decode(any());
+		doReturn("repo:other/repo:ref:refs/heads/main").when(jwt).getSubject();
 
-		// Client requires sub to match "repo:acme/*" but the token has a different subject
-		final var token = signToken("repo:other/repo:ref:refs/heads/main", Instant.now().plusSeconds(300));
-		final var exchange = tokenExchange(workloadClient(identityStubs.issuerUri(), "repo:acme/.*"), token, JWT_TOKEN_TYPE);
+		final var exchange = tokenExchange(workloadClient("repo:acme/.*"), "any-token", JWT_TOKEN_TYPE);
 
 		assertOAuthError(exchange, OAuth2ErrorCodes.INVALID_REQUEST)
 				.returns("Subject token sub claim does not match the required pattern", OAuth2Error::getDescription);
@@ -212,11 +212,11 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	@Test
 	@DisplayName("should throw server_error when the token generator returns null")
 	void throwsWhenTokenGeneratorReturnsNull() {
-		doReturn(trustedIssuer(null)).when(trustedIssuerRepository).lookup(NAMESPACE, identityStubs.issuerUri());
+		doReturn(trustedIssuer()).when(registry).get(NAMESPACE, ISSUER_URI);
+		doReturn(jwt).when(jwtDecoder).decode(any());
 		doReturn(null).when(tokenGenerator).generate(any());
 
-		final var token = signToken(SUBJECT, Instant.now().plusSeconds(300));
-		final var exchange = tokenExchange(workloadClient(identityStubs.issuerUri(), null), token, JWT_TOKEN_TYPE);
+		final var exchange = tokenExchange(workloadClient(null), "any-token", JWT_TOKEN_TYPE);
 
 		assertOAuthError(exchange, OAuth2ErrorCodes.SERVER_ERROR)
 				.returns("Unexpected error occurred while generating the access token", OAuth2Error::getDescription);
@@ -227,12 +227,11 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	@Test
 	@DisplayName("should issue access token with requested scopes on successful exchange")
 	void issuesAccessTokenWithRequestedScopes() {
-		doReturn(trustedIssuer(null)).when(trustedIssuerRepository).lookup(NAMESPACE, identityStubs.issuerUri());
+		doReturn(trustedIssuer()).when(registry).get(NAMESPACE, ISSUER_URI);
+		doReturn(jwt).when(jwtDecoder).decode(any());
 		doReturn(mockAccessToken("namespaces")).when(tokenGenerator).generate(any());
 
-		final var token = signToken(SUBJECT, Instant.now().plusSeconds(300));
-		final var exchange = tokenExchange(workloadClient(identityStubs.issuerUri(), null), token, JWT_TOKEN_TYPE, "namespaces");
-
+		final var exchange = tokenExchange(workloadClient(null), "any-token", JWT_TOKEN_TYPE, "namespaces");
 		final var result = provider.authenticate(exchange);
 
 		assertThat(result)
@@ -258,25 +257,23 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	@Test
 	@DisplayName("should fall back to all client scopes when none are requested in the exchange")
 	void usesClientScopesWhenNoneRequested() {
-		doReturn(trustedIssuer(null)).when(trustedIssuerRepository).lookup(NAMESPACE, identityStubs.issuerUri());
+		doReturn(trustedIssuer()).when(registry).get(NAMESPACE, ISSUER_URI);
+		doReturn(jwt).when(jwtDecoder).decode(any());
 		doReturn(mockAccessToken("namespaces", "namespaces:read")).when(tokenGenerator).generate(any());
 
-		final var token = signToken(SUBJECT, Instant.now().plusSeconds(300));
-
-		// Client has two scopes; exchange requests none — should use both
 		final var client = RegisteredClient.withId("multi-scope")
 				.clientId("kfg-multi-scope")
 				.clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
 				.authorizationGrantType(AuthorizationGrantType.TOKEN_EXCHANGE)
 				.clientSettings(ClientSettings.builder()
 						.setting(NamespaceClientSettingNames.NAMESPACE, NAMESPACE)
-						.setting(NamespaceClientSettingNames.WORKLOAD_ISSUER_URI, identityStubs.issuerUri())
+						.setting(NamespaceClientSettingNames.WORKLOAD_ISSUER_URI, ISSUER_URI)
 						.build())
 				.scope("namespaces")
 				.scope("namespaces:read")
 				.build();
 
-		final var exchange = tokenExchange(client, token, JWT_TOKEN_TYPE);
+		final var exchange = tokenExchange(client, "any-token", JWT_TOKEN_TYPE);
 		final var result = (OAuth2AccessTokenAuthenticationToken) provider.authenticate(exchange);
 
 		assertThat(result.getAccessToken().getScopes())
@@ -286,10 +283,10 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 	@Test
 	@DisplayName("should throw invalid_scope when requested scope is not registered on the client")
 	void throwsForUnregisteredScope() {
-		doReturn(trustedIssuer(null)).when(trustedIssuerRepository).lookup(NAMESPACE, identityStubs.issuerUri());
+		doReturn(trustedIssuer()).when(registry).get(NAMESPACE, ISSUER_URI);
+		doReturn(jwt).when(jwtDecoder).decode(any());
 
-		final var token = signToken(SUBJECT, Instant.now().plusSeconds(300));
-		final var exchange = tokenExchange(workloadClient(identityStubs.issuerUri(), null), token, JWT_TOKEN_TYPE, "vaults:write");
+		final var exchange = tokenExchange(workloadClient(null), "any-token", JWT_TOKEN_TYPE, "vaults:write");
 
 		assertOAuthError(exchange, OAuth2ErrorCodes.INVALID_SCOPE)
 				.returns(null, OAuth2Error::getDescription);
@@ -304,26 +301,18 @@ class WorkloadTokenExchangeAuthenticationProviderTest {
 				.returns(expectedErrorCode, OAuth2Error::getErrorCode);
 	}
 
-	private TrustedIssuer trustedIssuer(Set<String> allowedAudiences) {
-		return new TrustedIssuer(identityStubs.issuerUri(), "Test Issuer", identityStubs.keysetUri(), allowedAudiences != null ? allowedAudiences : Set.of());
+	private TrustedIssuer trustedIssuer() {
+		final var registration = TrustedIssuerRegistration.withId("test-issuer")
+				.issuerUri(ISSUER_URI)
+				.name("Test Issuer")
+				.build();
+		return new TrustedIssuer(registration, jwtDecoder);
 	}
 
-	private String signToken(String subject, Instant expiry, String... audiences) {
-		final var claims = new JWTClaimsSet.Builder()
-				.subject(subject)
-				.expirationTime(Date.from(expiry));
-
-		if (audiences.length > 0) {
-			claims.audience(List.of(audiences));
-		}
-
-		return identityStubs.issue(claims);
-	}
-
-	private static RegisteredClient workloadClient(String issuerUri, String subjectPattern) {
+	private static RegisteredClient workloadClient(String subjectPattern) {
 		final var settings = ClientSettings.builder()
 				.setting(NamespaceClientSettingNames.NAMESPACE, NAMESPACE)
-				.setting(NamespaceClientSettingNames.WORKLOAD_ISSUER_URI, issuerUri);
+				.setting(NamespaceClientSettingNames.WORKLOAD_ISSUER_URI, ISSUER_URI);
 
 		if (subjectPattern != null) {
 			settings.setting(NamespaceClientSettingNames.WORKLOAD_SUBJECT_PATTERN, subjectPattern);
