@@ -39,6 +39,12 @@ export interface PropertyValidationSummary {
   invalid: Array<ConfigurationProperty<any>>;
 }
 
+/**
+ * Splits imported properties into valid and invalid groups using the service catalog.
+ *
+ * Properties without a matching catalog descriptor are treated as valid so they can
+ * still be imported.
+ */
 export function categorizePropertiesByValidation (
   properties: Array<ConfigurationProperty<any>>,
   catalog: ServiceCatalog,
@@ -72,6 +78,9 @@ export function categorizePropertiesByValidation (
   return { valid, invalid };
 }
 
+/**
+ * Renders the file-based configuration importer.
+ */
 export function FileConfigurationImporter ({ onChange }: {
   onChange: (file: File) => void,
 }) {
@@ -106,6 +115,9 @@ export function FileConfigurationImporter ({ onChange }: {
   );
 }
 
+/**
+ * Renders the Spring Cloud Config importer form.
+ */
 export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
   onFetchConfig: (payload: FetchConfigRequest) => void | Promise<unknown>
 }) {
@@ -189,6 +201,9 @@ export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
   );
 }
 
+/**
+ * Opens the import dialog and coordinates parsing, validation, and submission.
+ */
 export function PropertiesImportDialog ({ catalog, profile, onImport }: {
   onImport: (properties: Array<ConfigurationProperty<any>>) => void | Promise<unknown>
   catalog: ServiceCatalog
@@ -333,6 +348,9 @@ export function PropertiesImportDialog ({ catalog, profile, onImport }: {
   );
 }
 
+/**
+ * Renders the current parser and validation status.
+ */
 function ConfigurationImporterStatus ({ valid, invalid, isParsing, isError, error }: ConfigurationImporterStatusProps) {
   const hasProperties = !!valid || !!invalid;
   return (
@@ -359,6 +377,9 @@ function ConfigurationImporterStatus ({ valid, invalid, isParsing, isError, erro
   );
 }
 
+/**
+ * Shows the warning state for invalid imported properties.
+ */
 function InvalidPropertiesAlert ({ count }: { count: number }) {
   if (!count) {
     return;
@@ -383,6 +404,9 @@ function InvalidPropertiesAlert ({ count }: { count: number }) {
   );
 }
 
+/**
+ * Shows the success state for valid imported properties.
+ */
 function ValidPropertiesAlert ({ count }: { count: number }) {
   if (!count) {
     return;
@@ -407,6 +431,9 @@ function ValidPropertiesAlert ({ count }: { count: number }) {
   );
 }
 
+/**
+ * Shows the empty-state message when no properties were parsed.
+ */
 function EmptyAlert () {
   return (
     <SimpleAlert
@@ -427,6 +454,9 @@ function EmptyAlert () {
   );
 }
 
+/**
+ * Shows the loading state while configuration is being parsed.
+ */
 function ReadingConfigurationAlert () {
   return (
     <SimpleAlert
@@ -447,6 +477,9 @@ function ReadingConfigurationAlert () {
   );
 }
 
+/**
+ * Shows the parse failure message.
+ */
 function ParsingErrorAlert ({ error }: { error?: string }) {
   return (
     <SimpleAlert
@@ -467,4 +500,3 @@ function ParsingErrorAlert ({ error }: { error?: string }) {
     />
   );
 }
-
