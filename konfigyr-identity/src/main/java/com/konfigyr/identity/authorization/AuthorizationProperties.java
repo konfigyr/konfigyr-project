@@ -104,9 +104,9 @@ public class AuthorizationProperties {
 
 		/**
 		 * Maximum lifetime of an access token issued to this client type. When not set, the
-		 * global token access-token-time-to-live value is used. For Pipeline Integration
+		 * global token access-token-time-to-live value is used. For Workload Identity
 		 * applications this should be kept short to match the expected execution time of a
-		 * single CI pipeline run.
+		 * single CI/CD job.
 		 */
 		@DurationUnit(ChronoUnit.MINUTES)
 		Duration accessTokenTimeToLive;
@@ -114,7 +114,7 @@ public class AuthorizationProperties {
 		/**
 		 * Maximum lifetime of a refresh token issued to this client type. When not set, the
 		 * global token refresh-token-time-to-live value is used. Has no effect on client types
-		 * that do not support refresh tokens, such as Service Account and Pipeline Integration
+		 * that do not support refresh tokens, such as Service Account and Workload Identity
 		 * applications.
 		 */
 		@DurationUnit(ChronoUnit.MINUTES)

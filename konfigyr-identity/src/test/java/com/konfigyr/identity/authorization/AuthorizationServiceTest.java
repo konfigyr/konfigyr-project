@@ -1,15 +1,12 @@
 package com.konfigyr.identity.authorization;
 
-import com.konfigyr.test.TestContainers;
-import com.konfigyr.test.TestProfile;
+import com.konfigyr.identity.AbstractIntegrationTest;
 import com.konfigyr.test.assertions.OAuth2TokenAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -38,12 +35,9 @@ import java.util.function.Consumer;
 import static com.konfigyr.identity.authorization.DefaultAuthorizationService.*;
 import static org.assertj.core.api.Assertions.*;
 
-@TestProfile
 @Transactional
-@SpringBootTest
 @ExtendWith(PublishedEventsExtension.class)
-@ImportTestcontainers(TestContainers.class)
-class AuthorizationServiceTest {
+class AuthorizationServiceTest extends AbstractIntegrationTest {
 
 	@Autowired
 	AuthorizationService authorizationService;

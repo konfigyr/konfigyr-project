@@ -3,6 +3,7 @@ package com.konfigyr.identity.authorization.client;
 import com.konfigyr.data.converter.JsonbConverter;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authorization.AuthorizationProperties;
+import com.konfigyr.identity.authorization.NamespaceClientSettingNames;
 import com.konfigyr.security.NamespaceApplicationSettings;
 import com.konfigyr.security.NamespaceClientId;
 import com.konfigyr.security.NamespaceClientType;
@@ -28,22 +29,6 @@ import java.util.function.Consumer;
 import static com.konfigyr.data.tables.OauthApplications.OAUTH_APPLICATIONS;
 
 public class RegisteredNamespaceClientRepository implements RegisteredClientRepository {
-
-	/**
-	 * Key under which the {@link NamespaceApplicationSettings.PipelineSettings#issuerUri()} is stored
-	 * as a custom attribute on the Spring Security
-	 * {@link org.springframework.security.oauth2.server.authorization.settings.ClientSettings} of the
-	 * {@link org.springframework.security.oauth2.server.authorization.client.RegisteredClient}.
-	 */
-	static final String PIPELINE_ISSUER_URI = "konfigyr.pipeline.issuer-uri";
-
-	/**
-	 * Key under which the {@link NamespaceApplicationSettings.PipelineSettings#subjectPattern()} is stored
-	 * as a custom attribute on the Spring Security
-	 * {@link org.springframework.security.oauth2.server.authorization.settings.ClientSettings} of the
-	 * {@link org.springframework.security.oauth2.server.authorization.client.RegisteredClient}.
-	 */
-	static final String PIPELINE_SUBJECT_PATTERN = "konfigyr.pipeline.subject-pattern";
 
 	private static final List<String> DEFAULT_AGENT_REDIRECT_URIS = List.of(
 			"http://localhost/callback",
@@ -94,7 +79,6 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 		return context.select(
 						OAUTH_APPLICATIONS.ID,
 						OAUTH_APPLICATIONS.NAME,
-						OAUTH_APPLICATIONS.TYPE,
 						OAUTH_APPLICATIONS.CLIENT_ID,
 						OAUTH_APPLICATIONS.CLIENT_SECRET,
 						OAUTH_APPLICATIONS.SCOPES,
@@ -108,38 +92,38 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 	}
 
 	private RegisteredClient toRegisteredClient(Record record) {
-		final NamespaceClientType type = record.get(OAUTH_APPLICATIONS.TYPE, NamespaceClientType.class);
+		final NamespaceClientId clientId = NamespaceClientId.parse(record.get(OAUTH_APPLICATIONS.CLIENT_ID));
 
-		return switch (type) {
-			case AGENT -> fromAgent(type, record);
-			case PIPELINE -> fromPipeline(type, record);
-			case SERVICE_ACCOUNT -> fromServiceAccount(type, record);
+		return switch (clientId.type()) {
+			case AGENT -> fromAgent(clientId, record);
+			case WORKLOAD -> fromWorkload(clientId, record);
+			case SERVICE_ACCOUNT -> fromServiceAccount(clientId, record);
 		};
 	}
 
-	private RegisteredClient.Builder createRegisteredClient(NamespaceClientType type, Record record) {
+	private RegisteredClient.Builder createRegisteredClient(NamespaceClientId clientId, Record record) {
 		return RegisteredClient.withId(record.get(OAUTH_APPLICATIONS.ID, EntityId.class).serialize())
 				.clientName(record.get(OAUTH_APPLICATIONS.NAME))
-				.clientId(record.get(OAUTH_APPLICATIONS.CLIENT_ID))
+				.clientId(clientId.get())
 				.clientIdIssuedAt(record.get(OAUTH_APPLICATIONS.CREATED_AT, Instant.class))
-				.clientSecret(record.get(OAUTH_APPLICATIONS.CLIENT_SECRET))
-				.clientSecretExpiresAt(record.get(OAUTH_APPLICATIONS.EXPIRES_AT, Instant.class))
-				.authorizationGrantTypes(registerAuthorizationGrantTypes(type))
-				.clientAuthenticationMethods(registerClientAuthenticationMethods(type))
-				.tokenSettings(RegisteredClientSettings.createTokenSettings(properties, type).build())
+				.authorizationGrantTypes(registerAuthorizationGrantTypes(clientId.type()))
+				.clientAuthenticationMethods(registerClientAuthenticationMethods(clientId.type()))
+				.tokenSettings(RegisteredClientSettings.createTokenSettings(properties, clientId.type()).build())
 				.scopes(registerScopes(record));
 	}
 
-	private RegisteredClient fromServiceAccount(NamespaceClientType type, Record record) {
-		return createRegisteredClient(type, record)
-				.clientSettings(RegisteredClientSettings.createClientSettings().build())
+	private RegisteredClient fromServiceAccount(NamespaceClientId clientId, Record record) {
+		return createRegisteredClient(clientId, record)
+				.clientSecret(record.get(OAUTH_APPLICATIONS.CLIENT_SECRET))
+				.clientSecretExpiresAt(record.get(OAUTH_APPLICATIONS.EXPIRES_AT, Instant.class))
+				.clientSettings(RegisteredClientSettings.createClientSettings(clientId).build())
 				.redirectUris(Set::clear)
 				.postLogoutRedirectUris(Set::clear)
 				.build();
 	}
 
-	private RegisteredClient fromAgent(NamespaceClientType type, Record record) {
-		final ClientSettings clientSettings = RegisteredClientSettings.createClientSettings()
+	private RegisteredClient fromAgent(NamespaceClientId clientId, Record record) {
+		final ClientSettings clientSettings = RegisteredClientSettings.createClientSettings(clientId)
 				.requireAuthorizationConsent(true)
 				.build();
 
@@ -147,7 +131,7 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 				record.get(OAUTH_APPLICATIONS.SETTINGS, settingsConverter)
 		);
 
-		final RegisteredClient.Builder builder = createRegisteredClient(type, record)
+		final RegisteredClient.Builder builder = createRegisteredClient(clientId, record)
 				.clientSettings(clientSettings);
 
 		redirectUris.forEach(builder::redirectUri);
@@ -155,14 +139,14 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 		return builder.build();
 	}
 
-	private RegisteredClient fromPipeline(NamespaceClientType type, Record record) {
-		final ClientSettings.Builder clientSettingsBuilder = RegisteredClientSettings.createClientSettings();
+	private RegisteredClient fromWorkload(NamespaceClientId clientId, Record record) {
+		final ClientSettings.Builder clientSettingsBuilder = RegisteredClientSettings.createClientSettings(clientId);
 
-		applyPipelineSettings(clientSettingsBuilder,
+		applyWorkloadSettings(clientSettingsBuilder,
 				record.get(OAUTH_APPLICATIONS.SETTINGS, settingsConverter)
 		);
 
-		return createRegisteredClient(type, record)
+		return createRegisteredClient(clientId, record)
 				.clientSettings(clientSettingsBuilder.build())
 				.redirectUris(Set::clear)
 				.postLogoutRedirectUris(Set::clear)
@@ -176,15 +160,15 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 		return DEFAULT_AGENT_REDIRECT_URIS;
 	}
 
-	private static void applyPipelineSettings(ClientSettings.Builder builder, NamespaceApplicationSettings settings) {
-		if (settings instanceof NamespaceApplicationSettings.PipelineSettings(String issuerUri, String subjectPattern)) {
+	private static void applyWorkloadSettings(ClientSettings.Builder builder, NamespaceApplicationSettings settings) {
+		if (settings instanceof NamespaceApplicationSettings.WorkloadSettings(String issuerUri, String subjectPattern)) {
 			RegisteredClientSettings.mapper().from(issuerUri)
 					.whenHasText()
-					.to(uri -> builder.setting(PIPELINE_ISSUER_URI, uri));
+					.to(uri -> builder.setting(NamespaceClientSettingNames.WORKLOAD_ISSUER_URI, uri));
 
 			RegisteredClientSettings.mapper().from(subjectPattern)
 					.whenHasText()
-					.to(pattern -> builder.setting(PIPELINE_SUBJECT_PATTERN, pattern));
+					.to(pattern -> builder.setting(NamespaceClientSettingNames.WORKLOAD_SUBJECT_PATTERN, pattern));
 		}
 	}
 
@@ -197,7 +181,7 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 	private static Consumer<Set<AuthorizationGrantType>> registerAuthorizationGrantTypes(NamespaceClientType type) {
 		final Set<AuthorizationGrantType> grantTypes = switch (type) {
 			case AGENT -> Set.of(AuthorizationGrantType.AUTHORIZATION_CODE);
-			case PIPELINE -> Set.of(AuthorizationGrantType.TOKEN_EXCHANGE);
+			case WORKLOAD -> Set.of(AuthorizationGrantType.TOKEN_EXCHANGE);
 			case SERVICE_ACCOUNT -> Set.of(AuthorizationGrantType.CLIENT_CREDENTIALS);
 		};
 
@@ -205,16 +189,13 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 	}
 
 	private static Consumer<Set<ClientAuthenticationMethod>> registerClientAuthenticationMethods(NamespaceClientType type) {
-		final Set<ClientAuthenticationMethod> authenticationMethods;
-
-		if (type == NamespaceClientType.AGENT) {
-			authenticationMethods = Set.of(ClientAuthenticationMethod.NONE);
-		} else {
-			authenticationMethods = Set.of(
+		final Set<ClientAuthenticationMethod> authenticationMethods = switch (type) {
+			case AGENT, WORKLOAD -> Set.of(ClientAuthenticationMethod.NONE);
+			case SERVICE_ACCOUNT -> Set.of(
 					ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
 					ClientAuthenticationMethod.CLIENT_SECRET_POST
 			);
-		}
+		};
 
 		return collection -> collection.addAll(authenticationMethods);
 	}

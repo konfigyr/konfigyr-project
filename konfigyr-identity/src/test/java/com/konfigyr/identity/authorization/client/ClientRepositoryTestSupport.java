@@ -18,9 +18,9 @@ import java.util.function.Consumer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
-abstract class AbstractClientRepositoryTest {
+interface ClientRepositoryTestSupport {
 
-	static Consumer<RegisteredClient> assertClientId(String id, String clientId, Duration issuedBefore) {
+	default Consumer<RegisteredClient> assertClientId(String id, String clientId, Duration issuedBefore) {
 		return client -> {
 			assertThat(client.getId())
 					.as("Registered client registration identifier should be: %s", id)
@@ -43,7 +43,7 @@ abstract class AbstractClientRepositoryTest {
 		};
 	}
 
-	static Consumer<RegisteredClient> assertNoClientSecret() {
+	default Consumer<RegisteredClient> assertNoClientSecret() {
 		return client -> {
 			assertThat(client.getClientSecret())
 					.as("Registered client_secret should not be set")
@@ -55,7 +55,7 @@ abstract class AbstractClientRepositoryTest {
 		};
 	}
 
-	static Consumer<RegisteredClient> assertClientSecret(String secret, Duration expiry) {
+	default Consumer<RegisteredClient> assertClientSecret(String secret, Duration expiry) {
 		return client -> {
 			assertThat(client.getClientSecret())
 					.as("Registered client_secret should match: %s", secret)
@@ -74,34 +74,34 @@ abstract class AbstractClientRepositoryTest {
 		};
 	}
 
-	static Consumer<RegisteredClient> assertScopes(String... scopes) {
+	default Consumer<RegisteredClient> assertScopes(String... scopes) {
 		return client -> assertThat(client.getScopes())
 				.as("Registered client should have following scopes: %s", Arrays.toString(scopes))
 				.containsExactlyInAnyOrder(scopes);
 	}
 
-	static Consumer<RegisteredClient> assertAuthorizationGrantTypes(AuthorizationGrantType... types) {
+	default Consumer<RegisteredClient> assertAuthorizationGrantTypes(AuthorizationGrantType... types) {
 		return client -> assertThat(client.getAuthorizationGrantTypes())
 				.containsExactlyInAnyOrder(types);
 	}
 
-	static Consumer<RegisteredClient> assertClientAuthenticationMethods() {
+	default Consumer<RegisteredClient> assertClientAuthenticationMethods() {
 		return assertClientAuthenticationMethods(
 				ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
 				ClientAuthenticationMethod.CLIENT_SECRET_POST
 		);
 	}
 
-	static Consumer<RegisteredClient> assertClientAuthenticationMethods(ClientAuthenticationMethod... methods) {
+	default Consumer<RegisteredClient> assertClientAuthenticationMethods(ClientAuthenticationMethod... methods) {
 		return client -> assertThat(client.getClientAuthenticationMethods())
 				.containsExactlyInAnyOrder(methods);
 	}
 
-	static Consumer<RegisteredClient> assertTokenSettings() {
+	default Consumer<RegisteredClient> assertTokenSettings() {
 		return assertTokenSettings(true);
 	}
 
-	static Consumer<RegisteredClient> assertTokenSettings(boolean reuseRefreshTokens) {
+	default Consumer<RegisteredClient> assertTokenSettings(boolean reuseRefreshTokens) {
 		return client -> assertThat(client.getTokenSettings())
 				.isNotNull()
 				.returns(OAuth2TokenFormat.SELF_CONTAINED, TokenSettings::getAccessTokenFormat)
@@ -112,7 +112,7 @@ abstract class AbstractClientRepositoryTest {
 				.returns(reuseRefreshTokens, TokenSettings::isReuseRefreshTokens);
 	}
 
-	static Consumer<RegisteredClient> assertClientSettings(boolean requireAuthorizationConsent) {
+	default Consumer<RegisteredClient> assertClientSettings(boolean requireAuthorizationConsent) {
 		return client -> assertThat(client.getClientSettings())
 				.isNotNull()
 				.returns(null, ClientSettings::getJwkSetUrl)
@@ -122,13 +122,13 @@ abstract class AbstractClientRepositoryTest {
 				.returns(true, ClientSettings::isRequireProofKey);
 	}
 
-	static Consumer<RegisteredClient> assertRedirectUris(String... uris) {
+	default Consumer<RegisteredClient> assertRedirectUris(String... uris) {
 		return client -> assertThat(client.getRedirectUris())
 				.as("Registered client should have following redirect URIs: %s", Arrays.toString(uris))
 				.containsExactlyInAnyOrder(uris);
 	}
 
-	static Consumer<RegisteredClient> assertLogoutRedirectUris(String... uris) {
+	default Consumer<RegisteredClient> assertLogoutRedirectUris(String... uris) {
 		return client -> assertThat(client.getPostLogoutRedirectUris())
 				.as("Registered client should have following post-logout redirect URIs: %s", Arrays.toString(uris))
 				.containsExactlyInAnyOrder(uris);

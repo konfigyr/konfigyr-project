@@ -52,6 +52,7 @@ dependencies {
 
     testImplementation project(':konfigyr-test')
     testImplementation 'org.seleniumhq.selenium:htmlunit3-driver'
+    testImplementation 'org.wiremock.integrations:wiremock-spring-boot'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 }
 

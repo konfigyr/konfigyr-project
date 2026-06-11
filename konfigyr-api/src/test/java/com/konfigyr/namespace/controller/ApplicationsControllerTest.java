@@ -73,8 +73,8 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 								app -> assertThat(app)
 										.returns(EntityId.from(6L), NamespaceApplication::id)
 										.returns(EntityId.from(2L), NamespaceApplication::namespace)
-										.returns(NamespaceClientType.PIPELINE, NamespaceApplication::type)
-										.returns("Konfigyr pipeline app", NamespaceApplication::name)
+										.returns(NamespaceClientType.WORKLOAD, NamespaceApplication::type)
+										.returns("Konfigyr workload app", NamespaceApplication::name)
 										.returns("kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", NamespaceApplication::clientId)
 										.returns(null, NamespaceApplication::clientSecret)
 										.returns(OAuthScopes.of(OAuthScope.PUBLISH_MANIFESTS), NamespaceApplication::scopes)
@@ -137,10 +137,10 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should retrieve pipeline applications for namespace")
-	void searchPipelineApplications() {
+	@DisplayName("should retrieve workload applications for namespace")
+	void searchWorkloadApplications() {
 		mvc.get().uri("/namespaces/{slug}/applications", "konfigyr")
-				.queryParam("type", NamespaceClientType.PIPELINE.name())
+				.queryParam("type", NamespaceClientType.WORKLOAD.name())
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -155,8 +155,8 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 								app -> assertThat(app)
 										.returns(EntityId.from(6L), NamespaceApplication::id)
 										.returns(EntityId.from(2L), NamespaceApplication::namespace)
-										.returns(NamespaceClientType.PIPELINE, NamespaceApplication::type)
-										.returns("Konfigyr pipeline app", NamespaceApplication::name)
+										.returns(NamespaceClientType.WORKLOAD, NamespaceApplication::type)
+										.returns("Konfigyr workload app", NamespaceApplication::name)
 										.returns("kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", NamespaceApplication::clientId)
 										.returns(null, NamespaceApplication::clientSecret)
 										.returns(OAuthScopes.of(OAuthScope.PUBLISH_MANIFESTS), NamespaceApplication::scopes)
@@ -196,8 +196,8 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 								app -> assertThat(app)
 										.returns(EntityId.from(6L), NamespaceApplication::id)
 										.returns(EntityId.from(2L), NamespaceApplication::namespace)
-										.returns(NamespaceClientType.PIPELINE, NamespaceApplication::type)
-										.returns("Konfigyr pipeline app", NamespaceApplication::name)
+										.returns(NamespaceClientType.WORKLOAD, NamespaceApplication::type)
+										.returns("Konfigyr workload app", NamespaceApplication::name)
 										.returns("kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", NamespaceApplication::clientId)
 										.returns(null, NamespaceApplication::clientSecret)
 										.returns(OAuthScopes.of(OAuthScope.PUBLISH_MANIFESTS), NamespaceApplication::scopes),

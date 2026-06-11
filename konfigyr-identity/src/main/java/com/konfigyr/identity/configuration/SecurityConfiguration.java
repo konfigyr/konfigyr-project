@@ -5,6 +5,7 @@ import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import com.konfigyr.identity.authorization.AuthorizationServerScopes;
 import com.konfigyr.identity.authorization.NamespaceMembershipValidator;
+import com.konfigyr.identity.authorization.workload.WorkloadTokenExchangeAuthenticationConfigurer;
 import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
@@ -67,7 +68,8 @@ public class SecurityConfiguration {
 	SecurityFilterChain authorizationServerSecurityFilterChain(
 			HttpSecurity http,
 			RequestCache requestCache,
-			NamespaceMembershipValidator namespaceMembershipValidator) {
+			NamespaceMembershipValidator namespaceMembershipValidator
+	) {
 		final OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
 		return http
@@ -103,6 +105,7 @@ public class SecurityConfiguration {
 										)
 								)
 				)
+				.with(new WorkloadTokenExchangeAuthenticationConfigurer(authorizationServerConfigurer))
 				.authorizeHttpRequests((authorize) -> authorize
 						.anyRequest().authenticated()
 				)

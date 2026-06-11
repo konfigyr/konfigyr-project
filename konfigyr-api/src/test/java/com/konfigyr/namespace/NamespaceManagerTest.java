@@ -408,7 +408,7 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 						tuple(EntityId.from(2), "Konfigyr active app"),
 						tuple(EntityId.from(5), "Konfigyr agent app"),
 						tuple(EntityId.from(1), "Konfigyr expired app"),
-						tuple(EntityId.from(6), "Konfigyr pipeline app"),
+						tuple(EntityId.from(6), "Konfigyr workload app"),
 						tuple(EntityId.from(3), "Personal app"),
 						tuple(EntityId.from(4), "Shop app")
 				);
@@ -539,15 +539,15 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should retrieve pipeline application settings from the database")
-	void shouldRetrievePipelineApplicationSettings() {
+	@DisplayName("should retrieve workload application settings from the database")
+	void shouldRetrieveWorkloadApplicationSettings() {
 		assertThat(manager.getApplication(EntityId.from(6)))
 				.isPresent()
 				.get(InstanceOfAssertFactories.type(NamespaceApplication.class))
-				.returns(NamespaceClientType.PIPELINE, NamespaceApplication::type)
-				.extracting(NamespaceApplication::settings, InstanceOfAssertFactories.type(NamespaceApplicationSettings.PipelineSettings.class))
-				.returns("https://token.actions.githubusercontent.com", NamespaceApplicationSettings.PipelineSettings::issuerUri)
-				.returns("repo:konfigyr/*:ref:refs/heads/main", NamespaceApplicationSettings.PipelineSettings::subjectPattern);
+				.returns(NamespaceClientType.WORKLOAD, NamespaceApplication::type)
+				.extracting(NamespaceApplication::settings, InstanceOfAssertFactories.type(NamespaceApplicationSettings.WorkloadSettings.class))
+				.returns("https://token.actions.githubusercontent.com", NamespaceApplicationSettings.WorkloadSettings::issuerUri)
+				.returns("repo:konfigyr/*:ref:refs/heads/main", NamespaceApplicationSettings.WorkloadSettings::subjectPattern);
 	}
 
 	@Test
@@ -719,28 +719,25 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should create pipeline application and persist its settings")
-	void shouldCreatePipelineApplicationWithSettings(AssertablePublishedEvents events) {
+	@DisplayName("should create workload application and persist its settings")
+	void shouldCreateWorkloadApplicationWithSettings(AssertablePublishedEvents events) {
 		final var namespace = lookupNamespace("konfigyr");
-		final var settings = new NamespaceApplicationSettings.PipelineSettings(
+		final var settings = new NamespaceApplicationSettings.WorkloadSettings(
 				"https://gitlab.example.com",
 				"project_path:konfigyr/api:ref_type:branch:ref:main"
 		);
 		final var definition = NamespaceApplicationDefinition.builder()
 				.namespace(namespace)
-				.type(NamespaceClientType.PIPELINE)
-				.name("Test GitLab CI pipeline application")
+				.type(NamespaceClientType.WORKLOAD)
+				.name("Test GitLab CI workload application")
 				.scopes(OAuthScopes.of(OAuthScope.NAMESPACES))
 				.settings(settings)
 				.build();
 
 		final var application = manager.createApplication(namespace, definition);
 
-		assertThat(application.clientSecret())
-				.isNotBlank()
-				.hasSize(43);
-
 		assertThat(application)
+				.returns(null, NamespaceApplication::clientSecret)
 				.returns(settings, NamespaceApplication::settings);
 
 		assertThat(manager.getApplication(application.id()))

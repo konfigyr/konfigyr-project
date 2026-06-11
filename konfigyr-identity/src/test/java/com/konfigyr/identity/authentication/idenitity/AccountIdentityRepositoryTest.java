@@ -1,20 +1,17 @@
 package com.konfigyr.identity.authentication.idenitity;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.identity.AbstractIntegrationTest;
 import com.konfigyr.identity.TestClients;
 import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authentication.AccountIdentityEvent;
 import com.konfigyr.identity.authentication.AccountIdentityExistsException;
 import com.konfigyr.identity.authentication.AccountIdentityStatus;
 import com.konfigyr.support.Avatar;
-import com.konfigyr.test.TestContainers;
-import com.konfigyr.test.TestProfile;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -26,11 +23,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@TestProfile
-@SpringBootTest
 @ExtendWith(PublishedEventsExtension.class)
-@ImportTestcontainers(TestContainers.class)
-class AccountIdentityRepositoryTest {
+class AccountIdentityRepositoryTest extends AbstractIntegrationTest {
 
 	@Autowired
 	AccountIdentityRepository repository;

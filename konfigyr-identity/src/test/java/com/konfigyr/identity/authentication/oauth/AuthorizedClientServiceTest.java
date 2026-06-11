@@ -1,21 +1,18 @@
 package com.konfigyr.identity.authentication.oauth;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.identity.AbstractIntegrationTest;
 import com.konfigyr.identity.AccountIdentities;
 import com.konfigyr.identity.authentication.AccountIdentity;
 import com.konfigyr.identity.authentication.OAuthAccountIdentityUser;
 import com.konfigyr.test.OAuth2AccessTokens;
-import com.konfigyr.test.TestContainers;
-import com.konfigyr.test.TestProfile;
 import com.konfigyr.test.assertions.OAuth2AccessTokenAssert;
 import com.konfigyr.test.assertions.OAuth2TokenAssert;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
-import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.Authentication;
@@ -24,7 +21,10 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.core.*;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,12 +33,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@TestProfile
-@SpringBootTest
-@ImportTestcontainers(TestContainers.class)
-class AuthorizedClientServiceTest {
+class AuthorizedClientServiceTest extends AbstractIntegrationTest {
 
 	static final String CLIENT_REGISTRATION = "oauth-test";
 

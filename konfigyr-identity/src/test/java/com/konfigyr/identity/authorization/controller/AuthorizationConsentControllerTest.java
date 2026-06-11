@@ -1,34 +1,21 @@
 package com.konfigyr.identity.authorization.controller;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.identity.AbstractControllerIntegrationTest;
 import com.konfigyr.security.OAuthScope;
-import com.konfigyr.test.TestContainers;
-import com.konfigyr.test.TestProfile;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-@TestProfile
-@SpringBootTest
-@AutoConfigureMockMvc
-@ImportTestcontainers(TestContainers.class)
-class AuthorizationConsentControllerTest {
-
-	@Autowired
-	MockMvcTester mvc;
+class AuthorizationConsentControllerTest extends AbstractControllerIntegrationTest {
 
 	@Test
 	@DisplayName("should redirect to login page when not authenticated")

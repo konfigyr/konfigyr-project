@@ -47,14 +47,15 @@ class NamespaceApplicationCredentialsTest {
 	}
 
 	@Test
-	@DisplayName("should generate unique client_secret for OAuth client_id using Pipeline application type")
-	void shouldGeneratePipelineSecret() {
+	@DisplayName("should fail to generate unique client_secret for Workload application type")
+	void shouldNotGenerateClientSecretForWorkloadApplicationType() {
 		final var clientId = NamespaceClientId.parse("kfg-AQMDZzua-jEQ_QAAAABqJTdzkqoWr2y8UHktoN5S5IY");
 
-		assertThat(NamespaceApplicationDefinition.generateClientSecret(clientId))
-				.isNotBlank()
-				.hasSize(43)
-				.isNotEqualTo(NamespaceApplicationDefinition.generateClientSecret(clientId));
+		assertThatExceptionOfType(NamespaceApplicationTypeException.class)
+				.isThrownBy(() -> NamespaceApplicationDefinition.generateClientSecret(clientId))
+				.withMessageContaining("Cannot reset client secret: %s applications do not use client secrets", clientId.type())
+				.returns(clientId.type(), NamespaceApplicationTypeException::getClientType)
+				.returns(NamespaceApplicationTypeException.ErrorCode.SECRET_NOT_SUPPORTED, NamespaceApplicationTypeException::getErrorCode);
 	}
 
 	@Test

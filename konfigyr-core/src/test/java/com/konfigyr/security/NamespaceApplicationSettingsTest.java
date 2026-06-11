@@ -31,9 +31,9 @@ class NamespaceApplicationSettingsTest {
 	}
 
 	@Test
-	@DisplayName("should serialize and deserialize PipelineSettings with issuer URI and subject pattern")
-	void shouldSerializeAndDeserializePipelineSettingsWithSubjectPattern() {
-		final var settings = new NamespaceApplicationSettings.PipelineSettings(
+	@DisplayName("should serialize and deserialize WorkloadSettings with issuer URI and subject pattern")
+	void shouldSerializeAndDeserializeWorkloadSettingsWithSubjectPattern() {
+		final var settings = new NamespaceApplicationSettings.WorkloadSettings(
 				"https://token.actions.githubusercontent.com",
 				"repo:acme/*:ref:refs/heads/main"
 		);
@@ -41,19 +41,19 @@ class NamespaceApplicationSettingsTest {
 		final var json = mapper.writeValueAsString(settings);
 
 		assertThat(json)
-				.contains("\"type\":\"pipeline\"")
+				.contains("\"type\":\"workload\"")
 				.contains("\"issuerUri\":\"https://token.actions.githubusercontent.com\"")
 				.contains("\"subjectPattern\":\"repo:acme/*:ref:refs/heads/main\"");
 
 		assertThat(mapper.readValue(json, NamespaceApplicationSettings.class))
-				.isInstanceOf(NamespaceApplicationSettings.PipelineSettings.class)
+				.isInstanceOf(NamespaceApplicationSettings.WorkloadSettings.class)
 				.isEqualTo(settings);
 	}
 
 	@Test
-	@DisplayName("should serialize and deserialize PipelineSettings with issuer URI only")
-	void shouldSerializeAndDeserializePipelineSettingsWithoutSubjectPattern() {
-		final var settings = new NamespaceApplicationSettings.PipelineSettings(
+	@DisplayName("should serialize and deserialize WorkloadSettings with issuer URI only")
+	void shouldSerializeAndDeserializeWorkloadSettingsWithoutSubjectPattern() {
+		final var settings = new NamespaceApplicationSettings.WorkloadSettings(
 				"https://token.actions.githubusercontent.com",
 				null
 		);
@@ -61,11 +61,11 @@ class NamespaceApplicationSettingsTest {
 		final var json = mapper.writeValueAsString(settings);
 
 		assertThat(json)
-				.contains("\"type\":\"pipeline\"")
+				.contains("\"type\":\"workload\"")
 				.contains("\"issuerUri\":\"https://token.actions.githubusercontent.com\"");
 
 		assertThat(mapper.readValue(json, NamespaceApplicationSettings.class))
-				.isInstanceOf(NamespaceApplicationSettings.PipelineSettings.class)
+				.isInstanceOf(NamespaceApplicationSettings.WorkloadSettings.class)
 				.isEqualTo(settings);
 	}
 

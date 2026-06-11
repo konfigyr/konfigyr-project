@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-class KonfigyrRegisteredClientRepositoryTest extends AbstractClientRepositoryTest {
+class KonfigyrRegisteredClientRepositoryTest implements ClientRepositoryTestSupport {
 
 	AuthorizationProperties properties;
 	KonfigyrRegisteredClientRepository repository;
@@ -74,7 +74,7 @@ class KonfigyrRegisteredClientRepositoryTest extends AbstractClientRepositoryTes
 				.satisfies(assertBuiltInClient());
 	}
 
-	static Consumer<RegisteredClient> assertBuiltInClient() {
+	Consumer<RegisteredClient> assertBuiltInClient() {
 		return client -> assertThat(client)
 				.isNotNull()
 				.returns("Konfigyr OAuth Client", RegisteredClient::getClientName)

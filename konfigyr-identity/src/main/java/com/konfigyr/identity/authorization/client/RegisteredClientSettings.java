@@ -1,6 +1,8 @@
 package com.konfigyr.identity.authorization.client;
 
 import com.konfigyr.identity.authorization.AuthorizationProperties;
+import com.konfigyr.identity.authorization.NamespaceClientSettingNames;
+import com.konfigyr.security.NamespaceClientId;
 import com.konfigyr.security.NamespaceClientType;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.boot.context.properties.PropertyMapper;
@@ -30,6 +32,12 @@ final class RegisteredClientSettings {
 		return ClientSettings.builder()
 				.requireProofKey(true)
 				.requireAuthorizationConsent(false);
+	}
+
+	static ClientSettings.Builder createClientSettings(NamespaceClientId clientId) {
+		return createClientSettings()
+				.setting(NamespaceClientSettingNames.NAMESPACE, clientId.namespace())
+				.setting(NamespaceClientSettingNames.CLIENT_TYPE, clientId.type());
 	}
 
 	static TokenSettings.Builder createTokenSettings(AuthorizationProperties properties) {

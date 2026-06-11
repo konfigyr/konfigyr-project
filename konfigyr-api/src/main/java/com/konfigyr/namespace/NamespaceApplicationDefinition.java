@@ -213,7 +213,7 @@ public record NamespaceApplicationDefinition(
 		/**
 		 * Specify the type-specific {@link NamespaceApplicationSettings} for this application.
 		 * <p>
-		 * Required for {@link NamespaceClientType#AGENT} and {@link NamespaceClientType#PIPELINE};
+		 * Required for {@link NamespaceClientType#AGENT} and {@link NamespaceClientType#WORKLOAD};
 		 * leave {@literal null} for {@link NamespaceClientType#SERVICE_ACCOUNT}.
 		 *
 		 * @param settings type-specific application settings, or {@literal null}
