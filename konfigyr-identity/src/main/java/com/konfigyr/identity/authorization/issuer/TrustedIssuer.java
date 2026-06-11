@@ -1,49 +1,72 @@
 package com.konfigyr.identity.authorization.issuer;
 
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-import org.springframework.util.Assert;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.Set;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.jwt.JwtClaimAccessor;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 /**
- * Immutable value object describing an external OIDC identity provider that this
- * authorization server trusts as a source of subject tokens during token exchange.
+ * Represents a trusted external OIDC identity provider and serves as the verification
+ * entry point for JWT subject tokens during an OAuth 2.0 Token Exchange (RFC 8693).
  * <p>
- * A trusted issuer records everything the authorization server needs to validate an
- * inbound JWT without going through the full OIDC login flow: where to fetch the
- * signing keys, and which audience values are acceptable. It is intentionally
- * decoupled from any particular use-case (Pipeline Integration, Service Accounts,
- * future workload-identity flows) so that the same registry can serve multiple grant
- * types as the platform evolves.
+ * In the workload identity token exchange flow a client presents a JWT issued by an
+ * external provider (such as GitHub Actions or GitLab) as the {@code subject_token}.
+ * This class validates that token, verifying its signature against the issuer's public
+ * keys, asserting the {@code iss} and timestamp claims, and optionally enforcing
+ * {@code aud} constraints, before the authorization server issues a scoped Konfigyr
+ * access token in exchange.
+ * <p>
+ * A {@link TrustedIssuer} combines the static configuration in a
+ * {@link TrustedIssuerRegistration} with a pre-configured verifier backed by the
+ * issuer's live JWK source. Instances are produced by {@link TrustedIssuerRegistry}
+ * and are not constructed directly. Equality and hash code are based solely on the
+ * underlying {@link TrustedIssuerRegistration}.
  *
- * @param issuerUri the OIDC issuer URI; must match the {@code iss} claim of subject
- *                  tokens issued by this provider
- * @param name human-readable display name, used in audit logs and the management UI
- * @param jwksUri explicit JWKS endpoint URI; when {@code null} the authorization server
- *                resolves the endpoint via OIDC discovery ({@code /.well-known/openid-configuration})
- * @param allowedAudiences set of accepted {@code aud} claim values; an empty set
- *                          disables audience validation for this issuer
  * @author Vladimir Spasic
  * @since 1.0.0
+ * @see TrustedIssuerRegistry
+ * @see TrustedIssuerRegistration
  */
 @NullMarked
-public record TrustedIssuer(
-		String issuerUri,
-		String name,
-		@Nullable String jwksUri,
-		Set<String> allowedAudiences
-) implements Serializable {
+@RequiredArgsConstructor
+@EqualsAndHashCode(of = "registration")
+public final class TrustedIssuer {
 
-	@Serial
-	private static final long serialVersionUID = 102723649959045957L;
+	private final TrustedIssuerRegistration registration;
+	private final JwtDecoder delegate;
 
-	public TrustedIssuer {
-		Assert.hasText(issuerUri, "Trusted issuer URI must not be blank");
-		Assert.hasText(name, "Trusted issuer name must not be blank");
-		allowedAudiences = Set.copyOf(allowedAudiences);
+	/**
+	 * Returns the stored registration data for this issuer.
+	 *
+	 * @return the {@link TrustedIssuerRegistration}, never {@code null}
+	 */
+	public TrustedIssuerRegistration registration() {
+		return registration;
 	}
 
+	/**
+	 * Decodes and validates the given compact JWT string, applying the issuer timestamp
+	 * and audience constraints configured in the {@link TrustedIssuerRegistration}.
+	 *
+	 * @param token the compact JWT string to verify
+	 * @return the validated JWT claims
+	 * @throws AuthenticationException if the token is malformed, expired, or fails
+	 *         issuer or audience validation
+	 */
+	public JwtClaimAccessor verify(String token) throws AuthenticationException {
+		return delegate.decode(token);
+	}
+
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE)
+				.append("id", registration.id())
+				.append("name", registration.name())
+				.append("issuer", registration.issuerUri())
+				.toString();
+	}
 }

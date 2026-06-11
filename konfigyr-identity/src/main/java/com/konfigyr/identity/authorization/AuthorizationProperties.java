@@ -94,6 +94,13 @@ public class AuthorizationProperties {
 	private CacheProperties.Caffeine cache = new CacheProperties.Caffeine();
 
 	/**
+	 * Configuration for the trusted issuer registry that resolves and caches the JWK
+	 * sources used to verify JWT subject tokens during OAuth 2.0 Token Exchange.
+	 */
+	@NestedConfigurationProperty
+	private TrustedIssuersProperties trustedIssuers = new TrustedIssuersProperties();
+
+	/**
 	 * Token settings overrides for a specific namespace client type. Fields left unset fall
 	 * back to the global token settings defined in the enclosing authorization properties.
 	 * Platform-level constraints such as refresh token rotation policy are always enforced
@@ -119,6 +126,29 @@ public class AuthorizationProperties {
 		 */
 		@DurationUnit(ChronoUnit.MINUTES)
 		Duration refreshTokenTimeToLive;
+
+	}
+
+	/**
+	 * Configuration properties for the trusted issuer registry cache. Controls how long
+	 * inactive JWK source entries are retained and the maximum number of issuers held
+	 * concurrently. Use a Caffeine specification string to configure both constraints,
+	 * for example: {@code "maximumSize=1000,expireAfterAccess=7d"}.
+	 */
+	@Data
+	public static class TrustedIssuersProperties {
+
+		/**
+		 * Caffeine cache specification for the JWK source cache. Controls the maximum
+		 * number of trusted issuers and the inactivity TTL after which an entry is evicted
+		 * and its JWK source session torn down. The entry is rebuilt transparently on the
+		 * next token exchange request for that issuer.
+		 * <p>
+		 * It is recommended to set a long inactivity TTL relative to the expected interval
+		 * between token exchange requests, for example: {@code "maximumSize=1000,expireAfterAccess=7d"}.
+		 */
+		@NestedConfigurationProperty
+		private CacheProperties.Caffeine cache = new CacheProperties.Caffeine();
 
 	}
 

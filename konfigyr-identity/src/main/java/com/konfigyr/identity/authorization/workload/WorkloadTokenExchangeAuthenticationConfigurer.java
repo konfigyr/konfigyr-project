@@ -1,6 +1,6 @@
 package com.konfigyr.identity.authorization.workload;
 
-import com.konfigyr.identity.authorization.issuer.TrustedIssuerRepository;
+import com.konfigyr.identity.authorization.issuer.TrustedIssuerRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -56,7 +56,7 @@ public final class WorkloadTokenExchangeAuthenticationConfigurer
 
 		builder.authenticationProvider(
 				postProcess(new WorkloadTokenExchangeAuthenticationProvider(
-						getSharedObject(builder, TrustedIssuerRepository.class),
+						getSharedObject(builder, TrustedIssuerRegistry.class),
 						getSharedObject(builder, OAuth2AuthorizationService.class),
 						getSharedObject(builder, OAuth2TokenGenerator.class)
 				))

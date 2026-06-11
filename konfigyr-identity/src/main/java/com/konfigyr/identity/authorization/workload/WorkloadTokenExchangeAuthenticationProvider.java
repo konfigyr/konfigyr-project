@@ -3,6 +3,7 @@ package com.konfigyr.identity.authorization.workload;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authorization.NamespaceClientSettingNames;
 import com.konfigyr.identity.authorization.issuer.TrustedIssuer;
+import com.konfigyr.identity.authorization.issuer.TrustedIssuerRegistry;
 import com.konfigyr.identity.authorization.issuer.TrustedIssuerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
@@ -54,16 +55,16 @@ class WorkloadTokenExchangeAuthenticationProvider implements AuthenticationProvi
 	private static final String ID_TOKEN_TYPE_URI = "urn:ietf:params:oauth:token-type:id_token";
 	private static final Set<String> SUPPORTED_TOKEN_TYPES = Set.of(JWT_TOKEN_TYPE_URI, ID_TOKEN_TYPE_URI);
 
-	private final TrustedIssuerRepository trustedIssuerRepository;
+	private final TrustedIssuerRegistry trustedIssuerRegistry;
 	private final OAuth2AuthorizationService authorizationService;
 	private final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
 
 	WorkloadTokenExchangeAuthenticationProvider(
-			TrustedIssuerRepository trustedIssuerRepository,
+			TrustedIssuerRegistry trustedIssuerRegistry,
 			OAuth2AuthorizationService authorizationService,
 			OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator
 	) {
-		this.trustedIssuerRepository = trustedIssuerRepository;
+		this.trustedIssuerRegistry = trustedIssuerRegistry;
 		this.authorizationService = authorizationService;
 		this.tokenGenerator = tokenGenerator;
 	}
@@ -94,15 +95,7 @@ class WorkloadTokenExchangeAuthenticationProvider implements AuthenticationProvi
 					registeredClient.getClientId(), trustedIssuer);
 		}
 
-		final Jwt subjectJwt = decodeSubjectToken(trustedIssuer, tokenExchange);
-
-		if (!hasAllowedAudience(trustedIssuer, subjectJwt)) {
-			throw new OAuth2AuthenticationException(new OAuth2Error(
-					OAuth2ErrorCodes.INVALID_REQUEST,
-					"Subject token audience does not match any of the required audiences",
-					ERROR_URI
-			));
-		}
+		final JwtClaimAccessor subjectJwt = decodeSubjectToken(trustedIssuer, tokenExchange);
 
 		if (!hasMatchingSubject(registeredClient, subjectJwt)) {
 			throw new OAuth2AuthenticationException(new OAuth2Error(
@@ -195,30 +188,19 @@ class WorkloadTokenExchangeAuthenticationProvider implements AuthenticationProvi
 			));
 		}
 
-		final TrustedIssuer trustedIssuer = trustedIssuerRepository.lookup(namespace, issuerUri);
-
-		if (trustedIssuer == null) {
-			throw new OAuth2AuthenticationException(new OAuth2Error(
-					OAuth2ErrorCodes.INVALID_CLIENT,
-					"Can't find any trusted issuer for this OAuth2 Client that matches this issuer URI: %s".formatted(issuerUri),
-					ERROR_URI
-			));
-		}
-
-		return trustedIssuer;
+		return trustedIssuerRegistry.get(namespace, issuerUri);
 	}
 
-	private static Jwt decodeSubjectToken(TrustedIssuer issuer, OAuth2TokenExchangeAuthenticationToken exchange) {
-		final JwtDecoder decoder;
-
-		if (StringUtils.hasText(issuer.jwksUri())) {
-			decoder = NimbusJwtDecoder.withJwkSetUri(issuer.jwksUri()).build();
-		} else {
-			decoder = JwtDecoders.fromIssuerLocation(issuer.issuerUri());
-		}
-
+	private static JwtClaimAccessor decodeSubjectToken(TrustedIssuer issuer, OAuth2TokenExchangeAuthenticationToken exchange) {
 		try {
-			return decoder.decode(exchange.getSubjectToken());
+			return issuer.verify(exchange.getSubjectToken());
+		} catch (JwtValidationException ex) {
+			final OAuth2Error error = ex.getErrors().iterator().next();
+			throw new OAuth2AuthenticationException(new OAuth2Error(
+					OAuth2ErrorCodes.INVALID_REQUEST,
+					"Invalid subject_token: " + error.getDescription(),
+					error.getUri()
+			), ex);
 		} catch (JwtException ex) {
 			throw new OAuth2AuthenticationException(new OAuth2Error(
 					OAuth2ErrorCodes.INVALID_REQUEST,
@@ -228,21 +210,7 @@ class WorkloadTokenExchangeAuthenticationProvider implements AuthenticationProvi
 		}
 	}
 
-	private static boolean hasAllowedAudience(TrustedIssuer issuer, Jwt jwt) {
-		if (CollectionUtils.isEmpty(issuer.allowedAudiences())) {
-			return true;
-		}
-
-		final List<String> audience = jwt.getAudience();
-
-		if (CollectionUtils.isEmpty(audience)) {
-			return false;
-		}
-
-		return issuer.allowedAudiences().stream().anyMatch(audience::contains);
-	}
-
-	private static boolean hasMatchingSubject(RegisteredClient registeredClient, Jwt jwt) {
+	private static boolean hasMatchingSubject(RegisteredClient registeredClient, JwtClaimAccessor jwt) {
 		final String subjectPattern = registeredClient.getClientSettings().getSetting(
 				NamespaceClientSettingNames.WORKLOAD_SUBJECT_PATTERN
 		);

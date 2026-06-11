@@ -18,7 +18,7 @@ import java.util.List;
  */
 @NullMarked
 @RequiredArgsConstructor
-public final class CompositeTrustedIssuerRepository implements TrustedIssuerRepository {
+final class CompositeTrustedIssuerRepository implements TrustedIssuerRepository {
 
 	private final Iterable<TrustedIssuerRepository> repositories;
 
@@ -27,14 +27,14 @@ public final class CompositeTrustedIssuerRepository implements TrustedIssuerRepo
 	 *
 	 * @param repositories ordered repositories to delegate to
 	 */
-	public CompositeTrustedIssuerRepository(TrustedIssuerRepository... repositories) {
+	CompositeTrustedIssuerRepository(TrustedIssuerRepository... repositories) {
 		this(List.of(repositories));
 	}
 
 	@Override
-	public @Nullable TrustedIssuer lookup(EntityId namespace, String issuerUri) {
+	public @Nullable TrustedIssuerRegistration lookup(EntityId namespace, String issuerUri) {
 		for (TrustedIssuerRepository repository : repositories) {
-			final TrustedIssuer issuer = repository.lookup(namespace, issuerUri);
+			final TrustedIssuerRegistration issuer = repository.lookup(namespace, issuerUri);
 
 			if (issuer != null) {
 				return issuer;

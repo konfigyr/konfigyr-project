@@ -6,7 +6,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.util.function.SingletonSupplier;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -34,7 +33,7 @@ import java.util.stream.Stream;
  * @since 1.0.0
  */
 @NullMarked
-public final class WellKnownTrustedIssuers implements TrustedIssuerRepository {
+final class WellKnownTrustedIssuers implements TrustedIssuerRepository {
 
 	private static final Supplier<TrustedIssuerRepository> INSTANCE = SingletonSupplier.of(WellKnownTrustedIssuers::new);
 
@@ -43,27 +42,36 @@ public final class WellKnownTrustedIssuers implements TrustedIssuerRepository {
 	 *
 	 * @return the singleton repository
 	 */
-	public static TrustedIssuerRepository getInstance() {
+	static TrustedIssuerRepository getInstance() {
 		return INSTANCE.get();
 	}
 
-	private final Map<String, TrustedIssuer> issuers;
+	private final Map<String, TrustedIssuerRegistration> issuers;
 
 	private WellKnownTrustedIssuers() {
 		this.issuers = Stream.of(
-				new TrustedIssuer("https://token.actions.githubusercontent.com", "GitHub Actions", null, Set.of()),
-				new TrustedIssuer("https://gitlab.com", "GitLab", null, Set.of())
-		).collect(Collectors.toUnmodifiableMap(TrustedIssuer::issuerUri, Function.identity()));
+				TrustedIssuerRegistration.withId("github-actions")
+						.name("GitHub Actions")
+						.issuerUri("https://token.actions.githubusercontent.com")
+						.build(),
+				TrustedIssuerRegistration.withId("gitlab")
+						.name("GitLab")
+						.issuerUri("https://gitlab.com")
+						.build()
+		).collect(Collectors.toUnmodifiableMap(
+				TrustedIssuerRegistration::issuerUri,
+				Function.identity()
+		));
 	}
 
 	/**
-	 * Returns the well-known {@link TrustedIssuer} for the given issuer URI, or
+	 * Returns the well-known {@link TrustedIssuerRegistration} for the given issuer URI, or
 	 * {@code null} if the URI does not match any of the built-in entries. The namespace
 	 * parameter is ignored because these issuers are globally trusted regardless of
 	 * which namespace is requesting the lookup.
 	 */
 	@Override
-	public @Nullable TrustedIssuer lookup(EntityId namespace, String issuerUri) {
+	public @Nullable TrustedIssuerRegistration lookup(EntityId namespace, String issuerUri) {
 		return issuers.get(issuerUri);
 	}
 

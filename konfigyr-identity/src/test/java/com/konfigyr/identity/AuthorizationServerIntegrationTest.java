@@ -8,7 +8,7 @@ import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import com.konfigyr.identity.authorization.AuthorizationServerScopes;
-import com.konfigyr.identity.authorization.issuer.TrustedIssuer;
+import com.konfigyr.identity.authorization.issuer.TrustedIssuerRegistration;
 import com.konfigyr.identity.authorization.jwk.KeysetSource;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -50,7 +50,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -332,6 +331,8 @@ class AuthorizationServerIntegrationTest extends AbstractControllerIntegrationTe
 		result.assertThat()
 				.apply(log())
 				.satisfies(assertRedirect(uri -> assertThat(uri)
+						.hasScheme("http")
+						.hasHost("localhost")
 						.hasPath("/callback")
 						.hasParameter(OAuth2ParameterNames.STATE, "state")
 						.hasParameter(OAuth2ParameterNames.CODE)
@@ -739,8 +740,11 @@ class AuthorizationServerIntegrationTest extends AbstractControllerIntegrationTe
 
 		// The spy is configured to return a TrustedIssuer whose `jwksUri` points to WireMock,
 		// so token validation never makes real network calls to external OIDC providers.
-		final var trustedIssuer = new TrustedIssuer(configuredIssuerUri, "Stubbed issuer", workloadIdentityStubs.keysetUri(), Set.of());
-		doReturn(trustedIssuer).when(trustedIssuerRepository).lookup(EntityId.from(2), configuredIssuerUri);
+		doReturn(TrustedIssuerRegistration.withId(configuredIssuerUri)
+				.name("Stubbed issuer")
+				.issuerUri(workloadIdentityStubs.issuerUri())
+				.jwksUri(workloadIdentityStubs.keysetUri())
+				.build()).when(trustedIssuerRepository).lookup(EntityId.from(2), configuredIssuerUri);
 
 		// Subject must satisfy the regex subjectPattern "repo:konfigyr/*:ref:refs/heads/main"
 		// configured on the workload test client: "/*" matches zero or more trailing slashes,

@@ -47,6 +47,9 @@ konfigyr:
         access-token-time-to-live: 15m
         refresh-token-time-to-live: 7d
         id-token-signature-algorithm: PS256
+      trusted-issuers:
+        cache:
+          spec: expireAfterAccess=7d,maximumSize=100
       namespace-token-settings:
         agent:
           access-token-time-to-live: 1h

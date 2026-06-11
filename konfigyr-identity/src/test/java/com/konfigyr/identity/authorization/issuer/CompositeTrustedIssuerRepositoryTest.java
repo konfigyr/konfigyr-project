@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -21,7 +20,10 @@ class CompositeTrustedIssuerRepositoryTest {
 	static final EntityId NAMESPACE = EntityId.from(5L);
 	static final String ISSUER_URI = "https://token.test.example.com";
 
-	static final TrustedIssuer TRUSTED_ISSUER = new TrustedIssuer(ISSUER_URI, "Test", null, Set.of());
+	static final TrustedIssuerRegistration TRUSTED_ISSUER = TrustedIssuerRegistration.withId("test-issuer")
+			.name("Test issuer")
+			.issuerUri(ISSUER_URI)
+			.build();
 
 	@Mock
 	TrustedIssuerRepository first;
