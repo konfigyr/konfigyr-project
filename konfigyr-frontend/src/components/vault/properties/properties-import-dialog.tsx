@@ -1,8 +1,8 @@
-import React, { useCallback, useState } from 'react';
-import { z } from 'zod';
+import React, { useCallback, useMemo, useState } from 'react';
 import { DatabaseBackup, FileCog, ImportIcon } from 'lucide-react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { Button } from '@konfigyr/components/ui/button';
+import { SimpleAlert } from '@konfigyr/components/ui/alert';
 import {
   Dialog,
   DialogContent,
@@ -15,23 +15,63 @@ import { Field, FieldDescription, FieldLabel } from '@konfigyr/components/ui/fie
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { Input } from '@konfigyr/components/ui/input';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
+import { isPropertyValueValid } from '@konfigyr/hooks/vault/property-validation';
 import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
 import { FetchConfigSchema } from '@konfigyr/hooks/vault/-handler';
 import { ImportPropertiesLabel } from './messages';
 import type { FetchConfigRequest } from '@konfigyr/hooks/vault/-handler';
-import type { ConfigurationProperty, Profile } from '@konfigyr/hooks/types';
+import type { ConfigurationProperty, Profile, ServiceCatalog, ValidationResult } from '@konfigyr/hooks/types';
+
+type ImporterType = 'file' | 'api';
+
+const DEFAULT_IMPORTER_TYPE: ImporterType = 'file';
 
 type ConfigurationImporterStatusProps = {
   isParsing: boolean;
   isError: boolean;
   error?: Error;
-  hasProperties: boolean;
-  amount: number;
+  valid: number;
+  invalid: number;
 };
 
-type ImporterType = 'file' | 'api';
+export interface PropertyValidationSummary {
+  valid: Array<ConfigurationProperty<any>>;
+  invalid: Array<ConfigurationProperty<any>>;
+}
 
-const DEFAULT_IMPORTER_TYPE: ImporterType = 'file';
+export function categorizePropertiesByValidation (
+  properties: Array<ConfigurationProperty<any>>,
+  catalog: ServiceCatalog,
+): PropertyValidationSummary {
+  const valid: Array<ConfigurationProperty<any>> = [];
+  const invalid: Array<ConfigurationProperty<any>> = [];
+
+  const descriptors = new Map(catalog.properties.map(property => [property.name, property]));
+
+  for (const property of properties) {
+    const descriptor = descriptors.get(property.name);
+
+    if (!descriptor) {
+      valid.push(property);
+      continue;
+    }
+
+    const isValid = isPropertyValueValid(descriptor.schema, property.value?.encoded);
+
+    property.description = descriptor.description;
+    property.schema = descriptor.schema;
+    property.typeName = descriptor.schema.type;
+
+    if (isValid) {
+      valid.push(property);
+      continue;
+    }
+
+    invalid.push(property);
+  }
+
+  return { valid, invalid };
+}
 
 export function FileConfigurationImporter ({ onChange }: {
   onChange: (file: File) => void,
@@ -103,7 +143,7 @@ export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
                   description="Label for username input in Spring Cloud configuration importer."
                 />
               )}
-              render={<field.Input type="text" autoComplete="username" />}
+              render={<field.Input type="text" autoComplete="username"/>}
             />
           )}
         />
@@ -118,7 +158,7 @@ export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
                   description="Label for password input in Spring Cloud configuration importer."
                 />
               )}
-              render={<field.Input type="password" autoComplete="current-password" />}
+              render={<field.Input type="password" autoComplete="current-password"/>}
             />
           )}
         />
@@ -133,7 +173,7 @@ export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
                   description="Label for config server URL input in Spring Cloud configuration importer."
                 />
               )}
-              render={<field.Input type="text" placeholder="https://config.com/api/configs/app/profile/label" />}
+              render={<field.Input type="text" placeholder="https://config.com/api/configs/app/profile/label"/>}
             />
           )}
         />
@@ -150,14 +190,20 @@ export function SpringCloudConfigurationImporter ({ onFetchConfig }: {
   );
 }
 
-export function PropertiesImportDialog ({ profile, onImport }: {
+export function PropertiesImportDialog ({ catalog, profile, onImport }: {
   onImport: (properties: Array<ConfigurationProperty<any>>) => void | Promise<unknown>
+  catalog: ServiceCatalog
   profile: Profile
 }) {
   const [open, setOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importerType, setImporterType] = useState<ImporterType>(DEFAULT_IMPORTER_TYPE);
   const { properties, reset, error, parseFile, fetchConfig, isParsing, isError } = useConfigFileParser();
+
+  const categorizedProperties = useMemo(() => categorizePropertiesByValidation(properties, catalog), [properties, catalog]);
+
+  const hasValidationErrors = categorizedProperties.invalid.length > 0;
+  const needsImportModeSelection = properties.length > 0 && !isParsing && !isError && hasValidationErrors;
 
   const onOpenChange = useCallback((state: boolean) => {
     setOpen(state);
@@ -170,12 +216,15 @@ export function PropertiesImportDialog ({ profile, onImport }: {
     reset();
   }, [reset]);
 
-  const handleSubmit = useCallback(async () => {
+  const handleImport = useCallback(async (importedProperties: Array<ConfigurationProperty<any>>) => {
     setIsImporting(true);
-    await onImport(properties);
-    setOpen(false);
-    setIsImporting(false);
-  }, [onImport, properties]);
+    try {
+      await onImport(importedProperties);
+      setOpen(false);
+    } finally {
+      setIsImporting(false);
+    }
+  }, [onImport]);
 
   const isImportDisabled = properties.length === 0 || isImporting;
 
@@ -236,108 +285,187 @@ export function PropertiesImportDialog ({ profile, onImport }: {
         )}
 
         {importerType === 'api' && (
-          <SpringCloudConfigurationImporter onFetchConfig={fetchConfig} />
+          <SpringCloudConfigurationImporter onFetchConfig={fetchConfig}/>
         )}
 
         <ConfigurationImporterStatus
           isParsing={isParsing}
-          hasProperties={properties.length > 0}
-          amount={properties.length}
+          valid={categorizedProperties.valid.length}
+          invalid={categorizedProperties.invalid.length}
           isError={isError}
           error={error}
         />
 
         <DialogFooter showCloseButton={true}>
-          <Button disabled={isImportDisabled} onClick={handleSubmit}>
-            <ImportIcon/>
-            <ImportPropertiesLabel/>
-          </Button>
+          {needsImportModeSelection ? (
+            <>
+              <Button
+                disabled={isImporting || categorizedProperties.valid.length === 0}
+                onClick={() => handleImport(categorizedProperties.valid)}
+              >
+                <ImportIcon/>
+                <FormattedMessage
+                  defaultMessage="Import valid only"
+                  description="Button label that imports only the properties that passed validation during the import review step."
+                />
+              </Button>
+
+              <Button
+                variant="destructive"
+                disabled={isImporting}
+                onClick={() => handleImport(properties)}
+              >
+                <ImportIcon/>
+                <FormattedMessage
+                  defaultMessage="Import all anyway"
+                  description="Button label that imports all properties during the import review step, including properties that failed validation."
+                />
+              </Button>
+            </>
+          ) : (
+            <Button disabled={isImportDisabled} onClick={() => handleImport(properties)}>
+              <ImportIcon/>
+              <ImportPropertiesLabel/>
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-function ConfigurationImporterStatus ({ hasProperties, amount, isParsing, isError, error }: ConfigurationImporterStatusProps ) {
-  const intl = useIntl();
-
-  const noPropertiesTitle = intl.formatMessage({
-    defaultMessage: 'No configuration properties for import',
-    description: 'Empty state description shown when parsed configuration has no properties.',
-  });
-
+function ConfigurationImporterStatus ({ valid, invalid, isParsing, isError, error }: ConfigurationImporterStatusProps) {
+  const hasProperties = !!valid || !!invalid;
   return (
     <>
       {isParsing && (
-        <ParseStatus
-          title={
-            intl.formatMessage({
-              defaultMessage: 'Reading configuration',
-              description: 'Status title shown while configuration file is being parsed.',
-            })
-          }
-          description={
-            intl.formatMessage({
-              defaultMessage: 'Reading your configuration',
-              description: 'Status description shown while configuration file is being parsed',
-            })
-          }
-        />
+        <ReadingConfigurationAlert />
       )}
 
       {isError && (
-        <ParseStatus
-          title={noPropertiesTitle}
-          description={
-            intl.formatMessage({
-              defaultMessage: 'Could not read your configuration: {error}',
-              description: 'Error message shown when configuration parsing fails',
-            }, {
-              error: error?.message,
-            })
-          }
-        />
+        <ParsingErrorAlert error={error?.message}/>
       )}
 
       {!hasProperties && !isError && (
-        <ParseStatus
-          title={noPropertiesTitle}
-          description={
-            intl.formatMessage({
-              defaultMessage: 'Your configuration is empty',
-              description: 'Empty state title shown when parsed configuration has no properties',
-            })
-          }
-        />
+        <EmptyAlert />
       )}
 
       {hasProperties && !isError && (
-        <ParseStatus
-          title={
-            intl.formatMessage({
-              defaultMessage: 'Ready for import',
-              description: 'State title shown when parsed configuration properties are ready',
-            })
-          }
-          description={
-            intl.formatMessage({
-              defaultMessage: 'Your configuration was parsed. There are {amount} new configuration properties ready for import.',
-              description: 'State description shown when parsed configuration properties are ready',
-            }, {
-              amount: amount,
-            })
-          }
-        />
+        <>
+          <InvalidPropertiesAlert count={invalid}/>
+          <ValidPropertiesAlert count={valid}/>
+        </>
       )}
     </>
   );
 }
 
-function ParseStatus ({ title, description }: { title: string, description: string }) {
+function InvalidPropertiesAlert ({ count }: { count: number }) {
+  if (!count) {
+    return;
+  }
   return (
-    <div className="mx-auto flex max-w-sm flex-col items-center gap-2 text-center">
-      <div className="text-lg font-medium">{title}</div>
-      <div className="text-sm/relaxed">{description}</div>
-    </div>
+    <SimpleAlert
+      variant="warning"
+      title={(
+        <FormattedMessage
+          defaultMessage="Review imported properties"
+          description="Title shown when imported configuration contains validation errors and requires user review before import."
+        />
+      )}
+      description={(
+        <FormattedMessage
+          defaultMessage="Found {count} invalid properties. Continue with valid properties only, or import all and resolve issues afterward."
+          description="Description shown in the import review warning when imported configuration contains invalid values."
+          values={{ count }}
+        />
+      )}
+    />
   );
 }
+
+function ValidPropertiesAlert ({ count }: { count: number }) {
+  if (!count) {
+    return;
+  }
+  return (
+    <SimpleAlert
+      variant="default"
+      title={(
+        <FormattedMessage
+          defaultMessage="Ready for import"
+          description="Title shown when valiad and ready for import properties"
+        />
+      )}
+      description={(
+        <FormattedMessage
+          defaultMessage="The configuration was parsed, and {count} new configuration properties are available for import."
+          description="Success message shown when the configuration is parsed and new properties are available for import."
+          values={{ count }}
+        />
+      )}
+    />
+  );
+}
+
+function EmptyAlert () {
+  return (
+    <SimpleAlert
+      variant="default"
+      title={(
+        <FormattedMessage
+          defaultMessage="No configuration properties for import"
+          description="Empty state description shown when parsed configuration has no properties."
+        />
+      )}
+      description={(
+        <FormattedMessage
+          defaultMessage="Your configuration is empty"
+          description="Empty state title shown when parsed configuration has no properties."
+        />
+      )}
+    />
+  );
+}
+
+function ReadingConfigurationAlert () {
+  return (
+    <SimpleAlert
+      variant="default"
+      title={(
+        <FormattedMessage
+          defaultMessage="Reading configuration"
+          description="Status title shown while configuration file is being parsed."
+        />
+      )}
+      description={(
+        <FormattedMessage
+          defaultMessage="Reading your configuration"
+          description="Status description shown while configuration file is being parsed"
+        />
+      )}
+    />
+  );
+}
+
+function ParsingErrorAlert ({ error }: { error?: string }) {
+  return (
+    <SimpleAlert
+      variant="destructive"
+      title={(
+        <FormattedMessage
+          defaultMessage="Could not read your configuration"
+          description="Error message shown when configuration parsing fails"
+        />
+      )}
+      description={(
+        <FormattedMessage
+          defaultMessage="Error: {error}"
+          description="Error message shown when configuration parsing fails'"
+          values={{ error }}
+        />
+      )}
+    />
+  );
+}
+
