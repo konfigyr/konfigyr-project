@@ -119,7 +119,7 @@ public class NamespaceApplicationTypeException extends NamespaceException {
 		 * <p>
 		 * Only {@link NamespaceClientType#AGENT} triggers this, it is a true public client
 		 * running on a user's device where a secret cannot be stored securely.
-		 * {@link NamespaceClientType#SERVICE_ACCOUNT} and {@link NamespaceClientType#PIPELINE}
+		 * {@link NamespaceClientType#SERVICE_ACCOUNT} and {@link NamespaceClientType#WORKLOAD}
 		 * are confidential clients and always carry a secret.
 		 */
 		SECRET_NOT_SUPPORTED(HttpStatus.UNPROCESSABLE_CONTENT,

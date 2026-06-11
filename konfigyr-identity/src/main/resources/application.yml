@@ -54,7 +54,7 @@ konfigyr:
         service-account:
           access-token-time-to-live: 20m
           refresh-token-time-to-live: 7d
-        pipeline:
+        workload:
           access-token-time-to-live: 30m
           refresh-token-time-to-live: 1d
 

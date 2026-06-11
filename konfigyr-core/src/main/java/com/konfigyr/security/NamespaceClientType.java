@@ -27,8 +27,8 @@ public enum NamespaceClientType {
 	 * authenticates directly with its {@code client_id} and {@code client_secret} and
 	 * receives an access token scoped to the owning namespace.
 	 * <p>
-	 * Prefer {@link #PIPELINE} for CI/CD environments that support OIDC token
-	 * issuance, as that eliminates the operational burden of secret rotation.
+	 * Prefer {@link #WORKLOAD} for any environment that can issue OIDC tokens, as
+	 * workload identity federation eliminates the operational burden of secret rotation.
 	 */
 	SERVICE_ACCOUNT((byte) 0x01, "Service Account"),
 
@@ -46,27 +46,22 @@ public enum NamespaceClientType {
 	AGENT((byte) 0x02, "AI Agent"),
 
 	/**
-	 * <strong>Pipeline Integration</strong>: for CI/CD pipelines and build tooling
-	 * (GitHub Actions, GitLab CI, CircleCI, the Konfigyr Gradle and Maven plugins).
+	 * <strong>Workload Identity</strong>: for any workload that can obtain a
+	 * platform-issued OIDC token as proof of identity — CI/CD pipelines (GitHub
+	 * Actions, GitLab CI, CircleCI), cloud runtimes (AWS Lambda, GCP Cloud Run,
+	 * Azure Container Apps), Kubernetes pods, and build tooling.
 	 * <p>
-	 * Uses <em>OIDC federation</em> via the token exchange grant (RFC 8693). The
-	 * pipeline presents its own platform-issued OIDC token (e.g., from
+	 * Uses <em>Workload Identity Federation</em> via the token exchange grant (RFC 8693).
+	 * The workload presents its OIDC token (e.g. from
 	 * {@code token.actions.githubusercontent.com}), which the authorization server
-	 * validates against a configured external issuer and exchanges for a scoped
-	 * Konfigyr access token.
-	 * <p>
-	 * Unlike {@link #AGENT}, this is a <em>confidential client</em>: the CI runner
-	 * operates on server-side infrastructure that can securely store a client secret.
-	 * Requiring the secret alongside the OIDC token provides defense in depth;
-	 * an intercepted {@code subject_token} alone is not enough to retrieve a
-	 * Konfigyr token; and ensures every exchange is attributed to a specific,
-	 * named pipeline application in the audit log.
+	 * validates against a configured trusted issuer and exchanges for a scoped
+	 * Konfigyr access token. No client secret is required or generated.
 	 * <p>
 	 * Prefer this type over {@link #SERVICE_ACCOUNT} for any environment that can
 	 * issue OIDC tokens, as the external token replaces the need for a static,
-	 * long-lived credential while the client secret remains the identity anchor.
+	 * long-lived credential.
 	 */
-	PIPELINE((byte) 0x03, "Pipeline Integration");
+	WORKLOAD((byte) 0x03, "Workload Identity");
 
 	/** The stable single-byte encoding of this type embedded in every {@link NamespaceClientId}. */
 	private final byte code;
@@ -95,22 +90,17 @@ public enum NamespaceClientType {
 	 * Returns {@code true} when this client type requires a client secret to be generated
 	 * at creation time and presented with every token request.
 	 * <p>
-	 * {@link #SERVICE_ACCOUNT} and {@link #PIPELINE} are confidential clients that
-	 * authenticate with a secret, {@link #SERVICE_ACCOUNT} exclusively via
-	 * {@code client_credentials}, and {@link #PIPELINE} as a second factor alongside the
-	 * external OIDC token in the token exchange flow. Requiring a secret for
-	 * {@link #PIPELINE} prevents an intercepted {@code subject_token} from being
-	 * redeemed by an attacker and ensures each exchange is attributed to a specific
-	 * named application in the audit log.
-	 * <p>
-	 * Only {@link #AGENT} returns {@code false}, it is a true public client running on
-	 * a user's device where a secret cannot be stored securely. Its {@code client_secret}
-	 * is always {@literal null} in the database.
+	 * Only {@link #SERVICE_ACCOUNT} authenticates via a shared secret
+	 * ({@code client_credentials} grant). {@link #AGENT} and {@link #WORKLOAD} are public
+	 * clients whose {@code client_secret} is always {@literal null} in the database:
+	 * {@link #AGENT} runs on a user's device where a secret cannot be stored securely, and
+	 * {@link #WORKLOAD} relies on a cryptographically signed external OIDC token as its
+	 * sole credential during token exchange.
 	 *
 	 * @return {@code true} if a client secret must be generated for this type
 	 */
 	public boolean requiresSecret() {
-		return this == SERVICE_ACCOUNT || this == PIPELINE;
+		return this == SERVICE_ACCOUNT;
 	}
 
 	/**

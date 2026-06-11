@@ -74,7 +74,7 @@ class NamespaceClientIdTest {
 		assertThat(NamespaceClientId.isPotentialClientId("konfigyr")).isFalse();
 		assertThat(NamespaceClientId.isPotentialClientId("kfg-tooshort")).isTrue();
 		assertThat(NamespaceClientId.isPotentialClientId(
-				NamespaceClientId.of(namespaceId, NamespaceClientType.PIPELINE).get())).isTrue();
+				NamespaceClientId.of(namespaceId, NamespaceClientType.WORKLOAD).get())).isTrue();
 	}
 
 	@Test
@@ -193,7 +193,7 @@ class NamespaceClientIdTest {
 	@Test
 	@DisplayName("should be compatible with Jackson")
 	void jacksonCompatibility() {
-		final var id = NamespaceClientId.of(namespaceId, NamespaceClientType.PIPELINE);
+		final var id = NamespaceClientId.of(namespaceId, NamespaceClientType.WORKLOAD);
 		final var mapper = JsonMapper.shared();
 
 		final var json = mapper.writeValueAsString(id);

@@ -1,18 +1,19 @@
 package com.konfigyr.identity.authorization;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.konfigyr.crypto.KeysetOperationsFactory;
 import com.konfigyr.crypto.KeysetStore;
 import com.konfigyr.crypto.jose.JoseAutoConfiguration;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.KonfigyrIdentityKeysets;
 import com.konfigyr.identity.authentication.AccountIdentity;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.konfigyr.identity.authorization.client.CachingRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.DelegatingRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.KonfigyrRegisteredClientRepository;
 import com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository;
-import org.springframework.boot.cache.metrics.CacheMetricsRegistrar;
-import org.springframework.cache.caffeine.CaffeineCache;
+import com.konfigyr.identity.authorization.issuer.CompositeTrustedIssuerRepository;
+import com.konfigyr.identity.authorization.issuer.TrustedIssuerRepository;
+import com.konfigyr.identity.authorization.issuer.WellKnownTrustedIssuers;
 import com.konfigyr.identity.authorization.jwk.KeysetSource;
 import com.konfigyr.identity.authorization.jwk.SigningJwkSelector;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -20,7 +21,9 @@ import org.jooq.DSLContext;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.cache.metrics.CacheMetricsRegistrar;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,8 +33,7 @@ import org.springframework.security.jackson.SecurityJacksonModules;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.authorization.token.*;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
@@ -123,6 +125,13 @@ public class AuthorizationConfiguration implements InitializingBean {
 						.stream()
 						.filter(StringUtils::hasText)
 						.toList()
+		);
+	}
+
+	@Bean
+	TrustedIssuerRepository trustedIssuerRepository() {
+		return new CompositeTrustedIssuerRepository(
+				WellKnownTrustedIssuers.getInstance()
 		);
 	}
 

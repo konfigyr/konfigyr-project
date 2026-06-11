@@ -1,17 +1,16 @@
 package com.konfigyr.identity.authorization.client;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.identity.AbstractIntegrationTest;
 import com.konfigyr.identity.authorization.AuthorizationProperties;
-import com.konfigyr.test.TestContainers;
-import com.konfigyr.test.TestProfile;
+import com.konfigyr.identity.authorization.NamespaceClientSettingNames;
+import com.konfigyr.security.NamespaceClientType;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import tools.jackson.databind.json.JsonMapper;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -19,17 +18,12 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 
 import java.time.Duration;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import static com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository.PIPELINE_ISSUER_URI;
-import static com.konfigyr.identity.authorization.client.RegisteredNamespaceClientRepository.PIPELINE_SUBJECT_PATTERN;
-
-@TestProfile
-@SpringBootTest
-@ImportTestcontainers(TestContainers.class)
-class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTest {
+class RegisteredNamespaceClientRepositoryTest extends AbstractIntegrationTest implements ClientRepositoryTestSupport {
 
 	@Autowired
 	DSLContext context;
@@ -95,6 +89,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						.returns(false, TokenSettings::isReuseRefreshTokens)
 				)
 				.satisfies(assertClientSettings(true))
+				.satisfies(assertClientSettings(2, NamespaceClientType.AGENT))
 				.satisfies(assertRedirectUris("http://localhost/callback", "http://localhost:56789/callback"))
 				.satisfies(assertLogoutRedirectUris());
 	}
@@ -125,25 +120,26 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						.returns(false, TokenSettings::isReuseRefreshTokens)
 				)
 				.satisfies(assertClientSettings(false))
+				.satisfies(assertClientSettings(2, NamespaceClientType.SERVICE_ACCOUNT))
 				.satisfies(assertRedirectUris())
 				.satisfies(assertLogoutRedirectUris());
 	}
 
 	@Test
-	@DisplayName("should retrieve pipeline client by client registration identifier")
-	void retrievePipelineClientByRegistrationId() {
+	@DisplayName("should retrieve workload client by client registration identifier")
+	void retrieveWorkloadClientByRegistrationId() {
 		final var id = EntityId.from(6).serialize();
 
 		assertThat(repository.findById(id))
-				.returns("Konfigyr pipeline app", RegisteredClient::getClientName)
+				.returns("Konfigyr workload app", RegisteredClient::getClientName)
 				.satisfies(assertClientId(id, "kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", Duration.ofHours(15)))
-				.satisfies(assertClientSecret("iHZFaUowdtm2R9-7jOBuMucYj-E2jHlDPsaZlgUEUK4", Duration.ofDays(7)))
+				.satisfies(assertNoClientSecret())
 				.satisfies(assertScopes(
 						"namespaces:read",
 						"namespaces:publish-manifests"
 				))
 				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.TOKEN_EXCHANGE))
-				.satisfies(assertClientAuthenticationMethods())
+				.satisfies(assertClientAuthenticationMethods(ClientAuthenticationMethod.NONE))
 				.satisfies(it -> assertThat(it.getTokenSettings())
 						.isNotNull()
 						.returns(Duration.ofMinutes(30), TokenSettings::getAccessTokenTimeToLive)
@@ -151,12 +147,21 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractClientRepositoryTe
 						.returns(false, TokenSettings::isReuseRefreshTokens)
 				)
 				.satisfies(assertClientSettings(false))
+				.satisfies(assertClientSettings(2, NamespaceClientType.WORKLOAD))
 				.satisfies(it -> assertThat(it.getClientSettings())
-						.returns("https://token.actions.githubusercontent.com", settings -> settings.getSetting(PIPELINE_ISSUER_URI))
-						.returns("repo:konfigyr/*:ref:refs/heads/main", settings -> settings.getSetting(PIPELINE_SUBJECT_PATTERN))
+						.returns("https://token.actions.githubusercontent.com",
+								settings -> settings.getSetting(NamespaceClientSettingNames.WORKLOAD_ISSUER_URI))
+						.returns("repo:konfigyr/*:ref:refs/heads/main",
+								settings -> settings.getSetting(NamespaceClientSettingNames.WORKLOAD_SUBJECT_PATTERN))
 				)
 				.satisfies(assertRedirectUris())
 				.satisfies(assertLogoutRedirectUris());
+	}
+
+	static Consumer<RegisteredClient> assertClientSettings(long namespace, NamespaceClientType type) {
+		return client -> assertThat(client.getClientSettings())
+				.returns(EntityId.from(namespace), settings -> settings.getSetting(NamespaceClientSettingNames.NAMESPACE))
+				.returns(type, settings -> settings.getSetting(NamespaceClientSettingNames.CLIENT_TYPE));
 	}
 
 }

@@ -1,8 +1,7 @@
 package com.konfigyr.identity.authentication.controller;
 
+import com.konfigyr.identity.AbstractControllerIntegrationTest;
 import com.konfigyr.identity.KonfigyrIdentityRequestMatchers;
-import com.konfigyr.test.TestContainers;
-import com.konfigyr.test.TestProfile;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterAll;
@@ -13,9 +12,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -23,7 +19,6 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.htmlunit.webdriver.MockMvcHtmlUnitDriverBuilder;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -35,16 +30,9 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-@TestProfile
-@SpringBootTest
-@AutoConfigureMockMvc
-@ImportTestcontainers(TestContainers.class)
-class LoginControllerTest {
+class LoginControllerTest extends AbstractControllerIntegrationTest {
 
 	static WebDriver driver;
-
-	@Autowired
-	MockMvcTester mvc;
 
 	@Autowired
 	RequestCache requestCache;

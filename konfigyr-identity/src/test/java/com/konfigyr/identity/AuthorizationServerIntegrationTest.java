@@ -1,5 +1,6 @@
 package com.konfigyr.identity;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import com.konfigyr.crypto.KeysetStore;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.identity.authentication.AccountIdentity;
@@ -7,18 +8,15 @@ import com.konfigyr.identity.authentication.AccountIdentityService;
 import com.konfigyr.identity.authentication.rememberme.AccountRememberMeServices;
 import com.konfigyr.identity.authorization.AuthorizationFailureHandler;
 import com.konfigyr.identity.authorization.AuthorizationServerScopes;
+import com.konfigyr.identity.authorization.issuer.TrustedIssuer;
 import com.konfigyr.identity.authorization.jwk.KeysetSource;
-import com.konfigyr.test.TestContainers;
-import com.konfigyr.test.TestProfile;
+import com.nimbusds.jwt.JWTClaimsSet;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -36,13 +34,14 @@ import org.springframework.security.oauth2.server.authorization.oidc.OidcProvide
 import org.springframework.security.oauth2.server.authorization.oidc.http.converter.OidcProviderConfigurationHttpMessageConverter;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.savedrequest.SavedRequest;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.wiremock.spring.EnableWireMock;
+import org.wiremock.spring.InjectWireMock;
 
 import java.net.URI;
 import java.net.URL;
@@ -51,22 +50,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
-@TestProfile
-@SpringBootTest
-@AutoConfigureMockMvc
-@ImportTestcontainers(TestContainers.class)
-class AuthorizationServerIntegrationTest {
+@EnableWireMock
+class AuthorizationServerIntegrationTest extends AbstractControllerIntegrationTest {
 
-	@Autowired
-	MockMvcTester mvc;
+	@InjectWireMock
+	static WireMockServer wireMock;
 
 	@Autowired
 	AccountIdentityService identityService;
@@ -79,6 +77,8 @@ class AuthorizationServerIntegrationTest {
 
 	@Autowired
 	KeysetSource keysetSource;
+
+	WorkloadIdentityStubs workloadIdentityStubs;
 
 	@BeforeEach
 	void rotate() {
@@ -677,16 +677,13 @@ class AuthorizationServerIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should fail to exchange Pipeline namespace client request without subject_token")
+	@DisplayName("should fail to exchange Workload namespace client request without subject_token")
 	void exchangeTokenWithoutSubjectToken() {
 		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
 				.post().uri("/oauth/token")
-				.param(OAuth2ParameterNames.GRANT_TYPE, AuthorizationGrantType.TOKEN_EXCHANGE.getValue())
-				.param(OAuth2ParameterNames.SCOPE, "namespaces")
-				.with(httpBasic(
-						"kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0",
-						"iHZFaUowdtm2R9-7jOBuMucYj-E2jHlDPsaZlgUEUK4"
-				))
+				.formField(OAuth2ParameterNames.GRANT_TYPE, AuthorizationGrantType.TOKEN_EXCHANGE.getValue())
+				.formField(OAuth2ParameterNames.SCOPE, "namespaces")
+				.formField(OAuth2ParameterNames.CLIENT_ID, "kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -694,6 +691,82 @@ class AuthorizationServerIntegrationTest {
 				.satisfies(assertOAuthErrorResponse(OAuth2ErrorCodes.INVALID_REQUEST, error -> assertThat(error)
 						.returns("OAuth 2.0 Parameter: subject_token", OAuth2Error::getDescription)
 				));
+	}
+
+	@Test
+	@DisplayName("should fail Workload token exchange when client is unknown")
+	void workloadTokenExchangeWithUnknownClient() {
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
+				.formField(OAuth2ParameterNames.GRANT_TYPE, AuthorizationGrantType.TOKEN_EXCHANGE.getValue())
+				.formField(OAuth2ParameterNames.CLIENT_ID, "unknown")
+				.formField("subject_token", "any.token.value")
+				.formField("subject_token_type", "urn:ietf:params:oauth:token-type:jwt")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.satisfies(assertOAuthErrorResponse(OAuth2ErrorCodes.INVALID_CLIENT));
+	}
+
+	@Test
+	@DisplayName("should fail Workload token exchange when subject_token is not a valid JWT")
+	void workloadTokenExchangeWithInvalidSubjectToken() {
+		mvc.withHttpMessageConverters(List.of(new OAuth2ErrorHttpMessageConverter()))
+				.post().uri("/oauth/token")
+				.formField(OAuth2ParameterNames.GRANT_TYPE, AuthorizationGrantType.TOKEN_EXCHANGE.getValue())
+				.formField(OAuth2ParameterNames.CLIENT_ID, "kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0")
+				.formField("subject_token", "not-a-valid-jwt")
+				.formField("subject_token_type", "urn:ietf:params:oauth:token-type:jwt")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.satisfies(assertOAuthErrorResponse(OAuth2ErrorCodes.INVALID_REQUEST));
+	}
+
+	@Test
+	@DisplayName("should issue Konfigyr access token for a valid workload identity token exchange")
+	void workloadTokenExchangeSuccess() {
+		// Register a mock OIDC discovery and JWKS endpoint for the workload identity stubs.
+		workloadIdentityStubs = new WorkloadIdentityStubs(wireMock.baseUrl(), "workload-identity");
+		wireMock.addStubMapping(workloadIdentityStubs.createMetadataStub());
+		wireMock.addStubMapping(workloadIdentityStubs.createKeysetStub());
+
+		// this issuer is configured for this client, we need to mock it to load
+		// the JWK set from the `WorkloadIdentityStubs` to verify JWS signature
+		final var configuredIssuerUri = "https://token.actions.githubusercontent.com";
+
+		// The spy is configured to return a TrustedIssuer whose `jwksUri` points to WireMock,
+		// so token validation never makes real network calls to external OIDC providers.
+		final var trustedIssuer = new TrustedIssuer(configuredIssuerUri, "Stubbed issuer", workloadIdentityStubs.keysetUri(), Set.of());
+		doReturn(trustedIssuer).when(trustedIssuerRepository).lookup(EntityId.from(2), configuredIssuerUri);
+
+		// Subject must satisfy the regex subjectPattern "repo:konfigyr/*:ref:refs/heads/main"
+		// configured on the workload test client: "/*" matches zero or more trailing slashes,
+		// so "repo:konfigyr/:ref:refs/heads/main" (no repo name segment) satisfies the pattern.
+		final var subjectToken = workloadIdentityStubs.issue(
+				new JWTClaimsSet.Builder()
+						.subject("repo:konfigyr/:ref:refs/heads/main")
+		);
+
+		mvc.post().uri("/oauth/token")
+				.formField(OAuth2ParameterNames.GRANT_TYPE, AuthorizationGrantType.TOKEN_EXCHANGE.getValue())
+				.formField(OAuth2ParameterNames.CLIENT_ID, "kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0")
+				.formField("subject_token", subjectToken)
+				.formField("subject_token_type", "urn:ietf:params:oauth:token-type:jwt")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.hasPathSatisfying("$.token_type", it -> it.assertThat()
+						.isEqualTo(OAuth2AccessToken.TokenType.BEARER.getValue()))
+				.hasPathSatisfying("$.scope", it -> it.assertThat()
+						.isEqualTo("namespaces:read namespaces:publish-manifests"))
+				.hasPathSatisfying("$.access_token", it -> it.assertThat().isNotNull())
+				.doesNotHavePath("$.refresh_token")
+				.doesNotHavePath("$.id_token");
 	}
 
 	static Consumer<MvcTestResult> assertOAuthError(String code) {

@@ -22,11 +22,11 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
 		@JsonSubTypes.Type(value = NamespaceApplicationSettings.AgentSettings.class, name = "agent"),
-		@JsonSubTypes.Type(value = NamespaceApplicationSettings.PipelineSettings.class, name = "pipeline")
+		@JsonSubTypes.Type(value = NamespaceApplicationSettings.WorkloadSettings.class, name = "workload")
 })
 public sealed interface NamespaceApplicationSettings
 		permits NamespaceApplicationSettings.AgentSettings,
-				NamespaceApplicationSettings.PipelineSettings {
+				NamespaceApplicationSettings.WorkloadSettings {
 
 	/**
 	 * Settings for {@link NamespaceClientType#AGENT} applications.
@@ -47,7 +47,7 @@ public sealed interface NamespaceApplicationSettings
 	}
 
 	/**
-	 * Settings for {@link NamespaceClientType#PIPELINE} applications.
+	 * Settings for {@link NamespaceClientType#WORKLOAD} applications.
 	 *
 	 * @param issuerUri      the OIDC issuer URI of the external identity provider (e.g. GitLab,
 	 *                       GitHub Actions, Buildkite) whose tokens are accepted in the RFC 8693
@@ -60,11 +60,11 @@ public sealed interface NamespaceApplicationSettings
 	 *                       (e.g. {@code "repo:acme/api:ref:refs/heads/main"} for GitHub Actions).
 	 *                       When {@literal null}, any {@code sub} value from the trusted issuer is accepted.
 	 */
-	record PipelineSettings(@NonNull String issuerUri, @Nullable String subjectPattern)
+	record WorkloadSettings(@NonNull String issuerUri, @Nullable String subjectPattern)
 			implements NamespaceApplicationSettings {
 
-		public PipelineSettings {
-			Assert.hasText(issuerUri, "PipelineSettings requires a non-blank issuer URI");
+		public WorkloadSettings {
+			Assert.hasText(issuerUri, "WorkloadSettings requires a non-blank issuer URI");
 		}
 
 	}

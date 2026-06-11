@@ -44,7 +44,7 @@ import java.time.ZoneOffset;
  *   <li>All secrets are stored hashed using {@code Argon2id} and displayed only once upon creation.</li>
  *   <li>The {@link NamespaceClientType} determines the OAuth2 grant types and authentication methods.
  *       {@link NamespaceClientType#SERVICE_ACCOUNT} applications use a long-lived client secret;
- *       {@link NamespaceClientType#AGENT} and {@link NamespaceClientType#PIPELINE} are public clients
+ *       {@link NamespaceClientType#AGENT} and {@link NamespaceClientType#WORKLOAD} are public clients
  *       that authenticate via PKCE or OIDC federation and carry no client secret.</li>
  * </ul>
  *
@@ -56,7 +56,7 @@ import java.time.ZoneOffset;
  * @param clientId public identifier of the OAuth2 client associated with this application, can't be {@literal null}.
  * @param clientSecret confidential secret associated with the OAuth2 client. Present for
  *                     {@link NamespaceClientType#SERVICE_ACCOUNT} and
- *                     {@link NamespaceClientType#PIPELINE} applications, returned once on creation
+ *                     {@link NamespaceClientType#WORKLOAD} applications, returned once on creation
  *                     and once on rotation, then never again. Always {@literal null} for
  *                     {@link NamespaceClientType#AGENT}, which is a public client running on a
  *                     user's device where a secret cannot be stored securely.
