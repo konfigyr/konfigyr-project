@@ -4,6 +4,7 @@ import userEvents from '@testing-library/user-event';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { PropertyStatusFilters, StatusFilter } from '@konfigyr/components/vault/properties/status-filters';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
+import { deprecated } from '@konfigyr/test/helpers/mocks/profile';
 
 const changeset = {
   namespace: namespaces.konfigyr,
@@ -15,6 +16,11 @@ const changeset = {
   added: 1,
   modified: 2,
   deleted: 3,
+};
+
+const immutableChangeset = {
+  ...changeset,
+  profile: profiles.deprecated,
 };
 
 describe('components | vault | properties | <StatusFilters/>', () => {
@@ -61,5 +67,19 @@ describe('components | vault | properties | <StatusFilters/>', () => {
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledExactlyOnceWith(StatusFilter.UPDATED);
     });
+  });
+
+  test('should not render property filter for immutable profile', () => {
+    const result = renderWithMessageProvider(
+      <PropertyStatusFilters
+        changeset={immutableChangeset}
+        value={StatusFilter.ALL}
+        onChange={onChange}
+      />,
+    );
+
+    expect(
+      result.queryByRole('radiogroup', { name: 'Property status filters' }),
+    ).not.toBeInTheDocument();
   });
 });

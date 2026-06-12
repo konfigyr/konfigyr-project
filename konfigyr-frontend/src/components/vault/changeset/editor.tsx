@@ -56,6 +56,7 @@ const useFilteredProperties = (
 };
 
 export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: ServiceCatalog } & ChangesetStatusBarProps) {
+  const isImmutable = changeset.profile.policy === 'IMMUTABLE';
   const [propertyStatusFilter, onPropertyStatusFilterChanged] = useState<StatusFilter>(StatusFilter.ALL);
   const [propertyTermFilter, onPropertyTermFilterChanged] = useState<string>('');
 
@@ -140,6 +141,7 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
 
       <PropertiesTable
         properties={properties}
+        isImmutable={isImmutable}
         onHistory={onHistory}
         onRestore={onRestore}
         onDelete={onDelete}
