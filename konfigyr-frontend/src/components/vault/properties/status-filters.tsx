@@ -65,7 +65,7 @@ export function PropertyStatusFilters({ changeset, value = 'all', onChange }: {
   value?: StatusFilter,
   onChange: (value: StatusFilter) => void,
 }) {
-  const isImmutable = changeset.profile.policy === 'IMMUTABLE';
+  const readOnly = changeset.profile.policy === 'IMMUTABLE';
   const states: Array<StatusFilterState> = useMemo(() => [{
     key: StatusFilter.ALL,
     count: changeset.properties.length,
@@ -80,7 +80,7 @@ export function PropertyStatusFilters({ changeset, value = 'all', onChange }: {
     count: changeset.deleted,
   }], [changeset]);
 
-  if (isImmutable) {
+  if (readOnly) {
     return null;
   }
 

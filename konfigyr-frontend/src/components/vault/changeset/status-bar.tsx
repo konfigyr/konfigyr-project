@@ -211,7 +211,6 @@ function ChangesetStatusBarContents({
   onChangesetRenamed,
   onChangeRequestCreated,
 }: ChangesetStatusBarProps & VariantProps<typeof changesetStatusBarVariants> & { ref?: RefObject<HTMLDivElement | null> }) {
-  const isImmutable = changeset.profile.policy === 'IMMUTABLE';
   const [opened, setOpened] = useState(false);
   const errorNotification = useErrorNotification();
 
@@ -266,10 +265,6 @@ function ChangesetStatusBarContents({
   }, []);
 
   const totalChanges = changeset.added + changeset.modified + changeset.deleted;
-
-  if (isImmutable) {
-    return null;
-  }
 
   return (
     <div ref={ref} className={changesetStatusBarVariants({ variant })}>

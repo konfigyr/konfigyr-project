@@ -77,8 +77,8 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
     await waitFor(() => {
       expect(queryByRole('button', { name: 'Apply' })).not.toBeInTheDocument();
       expect(queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument();
-      expect(getByRole('button', { name: 'Discard' })).not.toBeInTheDocument();
-      expect(getByRole('button', { name: 'Changeset draft' })).not.toBeInTheDocument();
+      expect(getByRole('button', { name: 'Discard' })).toBeInTheDocument();
+      expect(getByRole('button', { name: 'Changeset draft' })).toBeInTheDocument();
     });
   });
 
