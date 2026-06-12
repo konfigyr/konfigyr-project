@@ -1,5 +1,14 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 
+export function NamespaceApplicationTitle() {
+  return (
+    <FormattedMessage
+      defaultMessage="Namespace applications"
+      description="Namespace application page title"
+    />
+  );
+}
+
 export function CreateNamespaceApplicationLabel() {
   return (
     <FormattedMessage

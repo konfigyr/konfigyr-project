@@ -5,9 +5,7 @@ import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.*;
-import com.konfigyr.security.NamespaceClientType;
-import com.konfigyr.security.OAuthScope;
-import com.konfigyr.security.OAuthScopes;
+import com.konfigyr.security.*;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -22,6 +20,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -358,7 +357,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/applications", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces:read namespaces:invite\"}")
+				.content("{\"name\":\"Agent app\",\"type\":\"AGENT\",\"scopes\":\"namespaces:read namespaces:invite\",\"settings\":{\"type\":\"agent\",\"redirectUris\":[\"https://127.0.0.1/callback\"]}}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -366,14 +365,17 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 				.bodyJson()
 				.convertTo(NamespaceApplication.class)
 				.returns(EntityId.from(2L), NamespaceApplication::namespace)
-				.returns("New app", NamespaceApplication::name)
+				.returns("Agent app", NamespaceApplication::name)
+				.returns(NamespaceClientType.AGENT, NamespaceApplication::type)
 				.returns(OAuthScopes.of(OAuthScope.READ_NAMESPACES, OAuthScope.INVITE_MEMBERS), NamespaceApplication::scopes)
 				.returns(null, NamespaceApplication::expiresAt)
 				.satisfies(it -> assertThat(it.clientId())
 						.isNotBlank()
 				)
-				.satisfies(it -> assertThat(it.clientSecret())
-						.isNotBlank()
+				.returns(null, NamespaceApplication::clientSecret)
+				.satisfies(it -> assertThat(it.settings())
+						.asInstanceOf(InstanceOfAssertFactories.type(NamespaceApplicationSettings.AgentSettings.class))
+						.returns(List.of("https://127.0.0.1/callback"), NamespaceApplicationSettings.AgentSettings::redirectUris)
 				)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
@@ -392,7 +394,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/applications", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces:read namespaces:invite\", \"expiresAt\":\"" + expiresAt + "\"}")
+				.content("{\"name\":\"New app\",\"type\":\"SERVICE_ACCOUNT\",\"scopes\":\"namespaces:read namespaces:invite\",\"expiresAt\":\"" + expiresAt + "\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -401,6 +403,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 				.convertTo(NamespaceApplication.class)
 				.returns(EntityId.from(2L), NamespaceApplication::namespace)
 				.returns("New app", NamespaceApplication::name)
+				.returns(NamespaceClientType.SERVICE_ACCOUNT, NamespaceApplication::type)
 				.returns(OAuthScopes.of(OAuthScope.READ_NAMESPACES, OAuthScope.INVITE_MEMBERS), NamespaceApplication::scopes)
 				.satisfies(it -> assertThat(it.expiresAt())
 						.isNotNull()
@@ -438,7 +441,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 								.isInstanceOf(Collection.class)
 								.asInstanceOf(InstanceOfAssertFactories.collection(Map.class))
 								.extracting("pointer")
-								.containsExactlyInAnyOrder("scopes", "name")
+								.containsExactlyInAnyOrder("scopes", "name", "type")
 						)
 				));
 	}
@@ -449,7 +452,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/applications", "unknown-namespace")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces\"}")
+				.content("{\"name\":\"New app\",\"type\":\"AGENT\",\"scopes\":\"namespaces\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -462,7 +465,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/applications", "konfigyr")
 				.with(authentication(TestPrincipals.john()))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces\"}")
+				.content("{\"name\":\"New app\",\"type\":\"WORKLOAD\",\"scopes\":\"namespaces\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -475,7 +478,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/{slug}/applications", "john-doe")
 				.with(authentication(TestPrincipals.jane(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces\"}")
+				.content("{\"name\":\"New app\",\"type\":\"SERVICE_ACCOUNT\",\"scopes\":\"namespaces\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -489,7 +492,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/applications/{id}", "konfigyr", EntityId.from(1).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"removed expiry\", \"scopes\":\"namespaces\"}")
+				.content("{\"name\":\"removed expiry\",\"type\":\"WORKLOAD\",\"scopes\":\"namespaces\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -521,7 +524,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/applications/{id}", "john-doe", EntityId.from(3).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"Updated\", \"scopes\":\"namespaces:invite\", \"expiresAt\":\"" + expiry + "\"}")
+				.content("{\"name\":\"Updated\",\"type\":\"AGENT\",\"scopes\":\"namespaces:invite\", \"expiresAt\":\"" + expiry + "\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -531,6 +534,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 				.returns(EntityId.from(3L), NamespaceApplication::id)
 				.returns(EntityId.from(1L), NamespaceApplication::namespace)
 				.returns("Updated", NamespaceApplication::name)
+				.returns(NamespaceClientType.SERVICE_ACCOUNT, NamespaceApplication::type)
 				.returns(OAuthScopes.of(OAuthScope.INVITE_MEMBERS), NamespaceApplication::scopes)
 				.returns("kfg-AQEAAAAAAAAAAQAAAABqJTlV2OXTvVveqnbXJ21wbPw", NamespaceApplication::clientId)
 				.returns(null, NamespaceApplication::clientSecret)
@@ -539,6 +543,41 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 				)
 				.satisfies(it -> assertThat(it.createdAt())
 						.isCloseTo(OffsetDateTime.now().minusDays(2), within(1, ChronoUnit.HOURS))
+				)
+				.satisfies(it -> assertThat(it.updatedAt())
+						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
+				);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should update namespace Workload OAuth application settings")
+	void updateApplicationSettings() {
+		mvc.put().uri("/namespaces/{slug}/applications/{id}", "konfigyr", EntityId.from(6).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"Updated app\",\"type\":\"AGENT\",\"scopes\":\"namespaces:read\",\"settings\":{\"type\":\"workload\",\"issuerUri\":\"https://issuer.com\"}}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.convertTo(NamespaceApplication.class)
+				.returns(EntityId.from(6L), NamespaceApplication::id)
+				.returns(EntityId.from(2L), NamespaceApplication::namespace)
+				.returns(NamespaceClientType.WORKLOAD, NamespaceApplication::type)
+				.returns("Updated app", NamespaceApplication::name)
+				.returns(OAuthScopes.of(OAuthScope.READ_NAMESPACES), NamespaceApplication::scopes)
+				.returns("kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", NamespaceApplication::clientId)
+				.returns(null, NamespaceApplication::clientSecret)
+				.returns(null, NamespaceApplication::expiresAt)
+				.satisfies(it -> assertThat(it.settings())
+						.asInstanceOf(InstanceOfAssertFactories.type(NamespaceApplicationSettings.WorkloadSettings.class))
+						.returns("https://issuer.com", NamespaceApplicationSettings.WorkloadSettings::issuerUri)
+						.returns(null, NamespaceApplicationSettings.WorkloadSettings::subjectPattern)
+				)
+				.satisfies(it -> assertThat(it.createdAt())
+						.isCloseTo(OffsetDateTime.now().minusHours(15), within(1, ChronoUnit.HOURS))
 				)
 				.satisfies(it -> assertThat(it.updatedAt())
 						.isCloseTo(OffsetDateTime.now(), within(5, ChronoUnit.MINUTES))
@@ -563,7 +602,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 								.isInstanceOf(Collection.class)
 								.asInstanceOf(InstanceOfAssertFactories.collection(Map.class))
 								.extracting("pointer")
-								.containsExactlyInAnyOrder("scopes", "name")
+								.containsExactlyInAnyOrder("scopes", "name", "type")
 						)
 				));
 	}
@@ -574,7 +613,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/applications/{id}", "unknown-namespace", EntityId.from(2).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces\"}")
+				.content("{\"name\":\"New app\",\"type\":\"WORKLOAD\",\"scopes\":\"namespaces\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -587,7 +626,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/applications/{id}", "konfigyr", EntityId.from(3).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces\"}")
+				.content("{\"name\":\"New app\",\"type\":\"AGENT\",\"scopes\":\"namespaces\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -601,7 +640,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/applications/{id}", "konfigyr", EntityId.from(2).serialize())
 				.with(authentication(TestPrincipals.john()))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces\"}")
+				.content("{\"name\":\"New app\",\"type\":\"SERVICE_ACCOUNT\",\"scopes\":\"namespaces\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -614,7 +653,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 		mvc.put().uri("/namespaces/{slug}/applications/{id}", "john-doe", EntityId.from(3).serialize())
 				.with(authentication(TestPrincipals.jane(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"name\":\"New app\", \"scopes\":\"namespaces\"}")
+				.content("{\"name\":\"New app\",\"type\":\"AGENT\",\"scopes\":\"namespaces\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())

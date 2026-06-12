@@ -1,5 +1,4 @@
 import { useCallback, useId } from 'react';
-import { MonitorCloud } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { useNavigate } from '@tanstack/react-router';
 import { ClipboardIconButton } from '@konfigyr/components/clipboard';
@@ -27,14 +26,21 @@ import {
   ConfirmNamespaceApplicationDeleteAction,
   ConfirmNamespaceApplicationResetAction,
 } from './confirm-application-action';
+import {
+  ApplicationTypeBadge,
+  ApplicationTypeIcon,
+  ApplicationTypeInstruction,
+} from './application-type';
 
 import type { ReactNode } from 'react';
-import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
+import type { AgentApplicationSettings, Namespace, NamespaceApplication, WorkloadApplicationSettings } from '@konfigyr/hooks/types';
 
 export type ApplicationDetailsProps = {
   namespace: Namespace,
   application: NamespaceApplication,
 };
+
+
 
 function FieldGroup({ label, value, description, copy = true }: {
   label: string | ReactNode,
@@ -76,21 +82,38 @@ function FieldGroup({ label, value, description, copy = true }: {
   );
 }
 
+function CopyableUri({ value }: { value: string }) {
+  const id = useId();
+  return (
+    <InputGroup>
+      <InputGroupInput
+        value={value}
+        aria-labelledby={id}
+        readOnly
+      />
+      <InputGroupAddon align="inline-end">
+        <ClipboardIconButton text={value} size="xs" variant="link" className="cursor-pointer" />
+      </InputGroupAddon>
+    </InputGroup>
+  );
+}
+
 export function ApplicationDetails ({ namespace, application }: ApplicationDetailsProps) {
+  const agentSettings = application.settings as AgentApplicationSettings | null;
+  const workloadSettings = application.settings as WorkloadApplicationSettings | null;
+
   return (
     <Card className="border">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CardIcon>
-            <MonitorCloud size="1.25rem"/>
+            <ApplicationTypeIcon type={application.type} />
           </CardIcon>
           {application.name}
+          <ApplicationTypeBadge type={application.type} />
         </CardTitle>
         <CardDescription>
-          <FormattedMessage
-            defaultMessage="Use the credentials below to authenticate this application against the Konfigyr Identity Provider and access the API according to its assigned scopes."
-            description="Description of the application details card"
-          />
+          <ApplicationTypeInstruction type={application.type} />
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -105,21 +128,25 @@ export function ApplicationDetails ({ namespace, application }: ApplicationDetai
             description="Description for OAuth application client identifier of the token for an application"
           />}
         />
-        <FieldGroup
-          value={application.clientSecret ?? '***********'}
-          copy={!!application.clientSecret}
-          label={<FormattedMessage
-            defaultMessage="Client secret"
-            description="Label for OAuth application client secret for an application"
-          />}
-          description={application.clientSecret ? <FormattedMessage
-            defaultMessage="Confidential credential used to authenticate this application with the Identity Provider. Store it securely. You can reset it at any time if compromised."
-            description="Description for OAuth application client secret for an application"
-          /> : <FormattedMessage
-            defaultMessage="For security reasons, the client secret is never persisted. It is shown only once upon creation or reset. If lost, you must reset the application to generate a new secret."
-            description="Description for OAuth application client secret for an application when it is not available and should inform the user to reset the application"
-          />}
-        />
+
+        {application.type === 'SERVICE_ACCOUNT' && (
+          <FieldGroup
+            value={application.clientSecret ?? '***********'}
+            copy={!!application.clientSecret}
+            label={<FormattedMessage
+              defaultMessage="Client secret"
+              description="Label for OAuth application client secret for an application"
+            />}
+            description={application.clientSecret ? <FormattedMessage
+              defaultMessage="Confidential credential used to authenticate this application with the Identity Provider. Store it securely. You can reset it at any time if compromised."
+              description="Description for OAuth application client secret for an application"
+            /> : <FormattedMessage
+              defaultMessage="For security reasons, the client secret is never persisted. It is shown only once upon creation or reset. If lost, you must reset the application to generate a new secret."
+              description="Description for OAuth application client secret for an application when it is not available and should inform the user to reset the application"
+            />}
+          />
+        )}
+
         <FieldGroup
           value={application.scopes}
           label={<FormattedMessage
@@ -131,6 +158,59 @@ export function ApplicationDetails ({ namespace, application }: ApplicationDetai
             description="Description for OAuth application scopes for an application"
           />}
         />
+
+        {application.type === 'AGENT' && agentSettings?.redirectUris && agentSettings.redirectUris.length > 0 && (
+          <Field>
+            <FieldLabel>
+              <FormattedMessage
+                defaultMessage="Redirect URIs"
+                description="Label for registered redirect URIs in application details"
+              />
+            </FieldLabel>
+            <ul className="grid gap-2">
+              {agentSettings.redirectUris.map((uri) => (
+                <li key={uri}>
+                  <CopyableUri value={uri} />
+                </li>
+              ))}
+            </ul>
+            <FieldDescription>
+              <FormattedMessage
+                defaultMessage="Registered callback URLs that the authorization server may redirect to after authentication."
+                description="Description for redirect URIs in application details"
+              />
+            </FieldDescription>
+          </Field>
+        )}
+
+        {application.type === 'WORKLOAD' && workloadSettings?.issuerUri && (
+          <>
+            <FieldGroup
+              value={workloadSettings.issuerUri}
+              label={<FormattedMessage
+                defaultMessage="Issuer URI"
+                description="Label for the OIDC token issuer URI in workload application details"
+              />}
+              description={<FormattedMessage
+                defaultMessage="The OIDC token issuer URL that this workload identity trusts for token exchange."
+                description="Description for the issuer URI in workload application details"
+              />}
+            />
+            {workloadSettings.subjectPattern && (
+              <FieldGroup
+                value={workloadSettings.subjectPattern}
+                label={<FormattedMessage
+                  defaultMessage="Subject pattern"
+                  description="Label for the subject pattern in workload application details"
+                />}
+                description={<FormattedMessage
+                  defaultMessage="The pattern used to restrict which token subjects are accepted."
+                  description="Description for the subject pattern in workload application details"
+                />}
+              />
+            )}
+          </>
+        )}
       </CardContent>
       <CardFooter className="justify-end border-t">
         <ApplicationDetails.Actions application={application} namespace={namespace} />
@@ -162,6 +242,7 @@ ApplicationDetails.Actions = function Actions({ namespace, application }: Applic
         <ConfirmNamespaceApplicationResetAction
           namespace={namespace}
           application={application}
+          disabled={application.type !== 'SERVICE_ACCOUNT'}
           onConfirm={onReset}
         />
       </CardAction>

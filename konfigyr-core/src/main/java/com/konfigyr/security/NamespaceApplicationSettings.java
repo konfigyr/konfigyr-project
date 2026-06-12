@@ -2,6 +2,9 @@ package com.konfigyr.security;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import org.hibernate.validator.constraints.URL;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -37,7 +40,7 @@ public sealed interface NamespaceApplicationSettings
 	 *                     values are loopback addresses such as {@code http://localhost/callback}
 	 *                     for CLI agents running on a developer's machine.
 	 */
-	record AgentSettings(@NonNull List<String> redirectUris) implements NamespaceApplicationSettings {
+	record AgentSettings(@NonNull @NotEmpty List<@NotBlank @URL String> redirectUris) implements NamespaceApplicationSettings {
 
 		public AgentSettings {
 			Assert.notEmpty(redirectUris, "AgentSettings requires at least one redirect URI");
@@ -60,7 +63,7 @@ public sealed interface NamespaceApplicationSettings
 	 *                       (e.g. {@code "repo:acme/api:ref:refs/heads/main"} for GitHub Actions).
 	 *                       When {@literal null}, any {@code sub} value from the trusted issuer is accepted.
 	 */
-	record WorkloadSettings(@NonNull String issuerUri, @Nullable String subjectPattern)
+	record WorkloadSettings(@NonNull @NotBlank @URL String issuerUri, @Nullable String subjectPattern)
 			implements NamespaceApplicationSettings {
 
 		public WorkloadSettings {

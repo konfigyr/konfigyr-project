@@ -40,7 +40,7 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
     });
   });
 
-  test('should render <NamespaceApplicationArticle /> component  ', async () => {
+  test('should render <NamespaceApplicationArticle /> component', async () => {
     const { getByText } = renderComponentWithRouter(
       <NamespaceApplicationArticle namespace={namespaces.konfigyr} application={applications.konfigyr} />,
     );
@@ -49,5 +49,29 @@ describe('components | namespace | applications | <NamespaceApplications/>', () 
       expect(getByText(applications.konfigyr.name)).toBeInTheDocument();
       expect(getByText('This application has no expiration date')).toBeInTheDocument();
     });
+  });
+
+  test('should show SERVICE_ACCOUNT badge in list item', () => {
+    const { getByText } = renderComponentWithRouter(
+      <NamespaceApplicationArticle namespace={namespaces.konfigyr} application={applications.konfigyr} />,
+    );
+
+    expect(getByText('Service Account')).toBeInTheDocument();
+  });
+
+  test('should show AGENT badge in list item', () => {
+    const { getByText } = renderComponentWithRouter(
+      <NamespaceApplicationArticle namespace={namespaces.konfigyr} application={applications.agentApplication} />,
+    );
+
+    expect(getByText('AI Agent')).toBeInTheDocument();
+  });
+
+  test('should show WORKLOAD badge in list item', () => {
+    const { getByText } = renderComponentWithRouter(
+      <NamespaceApplicationArticle namespace={namespaces.konfigyr} application={applications.workloadApplication} />,
+    );
+
+    expect(getByText('Workload Identity')).toBeInTheDocument();
   });
 });

@@ -24,6 +24,7 @@ import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 type Props = {
   namespace: Namespace,
   application: NamespaceApplication,
+  disabled?: boolean,
   onConfirm: (app: NamespaceApplication) => void
 };
 
@@ -96,7 +97,12 @@ export function ConfirmNamespaceApplicationDeleteAction ({ namespace, applicatio
   );
 }
 
-export function ConfirmNamespaceApplicationResetAction ({ namespace, application, onConfirm }: Props) {
+export function ConfirmNamespaceApplicationResetAction ({
+  namespace,
+  application,
+  disabled = false,
+  onConfirm,
+}: Props) {
   const errorNotification = useErrorNotification();
 
   const {
@@ -123,7 +129,7 @@ export function ConfirmNamespaceApplicationResetAction ({ namespace, application
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button variant="outline">
+          <Button variant="outline" disabled={disabled}>
             <FormattedMessage
               defaultMessage="Reset application"
               description="Button label that triggers application reset confirmation dialog when clicked"

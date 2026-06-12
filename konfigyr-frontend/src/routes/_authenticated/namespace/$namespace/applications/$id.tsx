@@ -12,6 +12,7 @@ import {
   useNamespace,
 } from '@konfigyr/hooks';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
+import { ApplicationsBreadcrumbs } from '@konfigyr/components/namespace/applications/breadcrumbs';
 import { ApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
 import { ErrorState } from '@konfigyr/components/error';
 import { EmptyState } from '@konfigyr/components/ui/empty';
@@ -45,42 +46,49 @@ function RouteComponent() {
   };
 
   return (
-    <div className="lg:w-2/3 xl:w-3/5 space-y-6  mx-auto">
-      {isPending && (
-        <article data-slot="namespace-application-skeleton">
-          <EmptyState
-            title="Namespase application"
-            description="Namespace application is loading. Please wait"
-            icon={<MonitorCloud />}
-          />
-        </article>
-      )}
+    <div className="mx-4 space-y-6">
+      <ApplicationsBreadcrumbs namespace={namespace}>
+        {application?.name}
+      </ApplicationsBreadcrumbs>
 
-      {isError && (
-        <ErrorState error={error} className="border-none" />
-      )}
+      <div className="lg:w-2/3 xl:w-3/5 space-y-6  mx-auto">
+        {isPending && (
+          <article data-slot="namespace-application-skeleton">
+            <EmptyState
+              title="Namespase application"
+              description="Namespace application is loading. Please wait"
+              icon={<MonitorCloud />}
+            />
+          </article>
+        )}
 
-      {application && (
-        <>
-          <ApplicationDetails
-            namespace={namespace}
-            application={{
-              ...application,
-              clientSecret: state.clientSecret,
-            }}
-          />
+        {isError && (
+          <ErrorState error={error} className="border-none" />
+        )}
 
-          <Card className="border">
-            <CardContent>
-              <NamespaceApplicationForm
-                namespace={namespace}
-                namespaceApplication={application}
-                handleSubmit={onNamespaceApplicationUpdate}
-              />
-            </CardContent>
-          </Card>
-        </>
-      )}
+        {application && (
+          <>
+            <ApplicationDetails
+              namespace={namespace}
+              application={{
+                ...application,
+                clientSecret: state.clientSecret,
+              }}
+            />
+
+            <Card className="border">
+              <CardContent>
+                <NamespaceApplicationForm
+                  namespace={namespace}
+                  namespaceApplication={application}
+                  type={application.type}
+                  handleSubmit={onNamespaceApplicationUpdate}
+                />
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
     </div>
   );
 }

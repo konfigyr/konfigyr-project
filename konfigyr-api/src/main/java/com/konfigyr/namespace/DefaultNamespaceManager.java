@@ -353,11 +353,16 @@ class DefaultNamespaceManager implements NamespaceManager {
 			log.debug("Attempting to update namespace OAuth application with: [id={}, definition={}]", id, definition);
 		}
 
-		final NamespaceApplication application = context.update(OAUTH_APPLICATIONS)
+		final Record record = SettableRecord.of(context, OAUTH_APPLICATIONS)
 				.set(OAUTH_APPLICATIONS.NAME, definition.name())
 				.set(OAUTH_APPLICATIONS.SCOPES, definition.scopes().toString())
+				.set(OAUTH_APPLICATIONS.SETTINGS, definition.settings(), converters.settings())
 				.set(OAUTH_APPLICATIONS.EXPIRES_AT, definition.expiration())
 				.set(OAUTH_APPLICATIONS.UPDATED_AT, OffsetDateTime.now())
+				.get();
+
+		final NamespaceApplication application = context.update(OAUTH_APPLICATIONS)
+				.set(record)
 				.where(OAUTH_APPLICATIONS.ID.eq(id.get()))
 				.returning(OAUTH_APPLICATIONS.fields())
 				.fetchOne(this::toApplication);
