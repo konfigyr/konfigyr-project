@@ -16,8 +16,12 @@ import java.util.function.Supplier;
  * @since 1.0.0
  **/
 public abstract sealed class NamespaceEvent extends EntityEvent implements Supplier<Namespace>
-		permits NamespaceEvent.Created, NamespaceEvent.Renamed, NamespaceEvent.Deleted,
-			NamespaceEvent.ApplicationEvent, NamespaceEvent.MembershipEvent {
+		permits NamespaceEvent.Created,
+		NamespaceEvent.Renamed,
+		NamespaceEvent.Deleted,
+		NamespaceEvent.ApplicationEvent,
+		NamespaceEvent.MembershipEvent,
+		NamespaceEvent.TrustedIssuerEvent {
 
 	/**
 	 * The namespace that is the subject of the event.
@@ -323,6 +327,87 @@ public abstract sealed class NamespaceEvent extends EntityEvent implements Suppl
 		 */
 		public ApplicationRemoved(Namespace namespace, NamespaceApplication application) {
 			super(namespace, application);
+		}
+	}
+
+	/**
+	 * Abstract event for all {@link NamespaceTrustedIssuer} changes within a {@link Namespace}.
+	 */
+	public static abstract sealed class TrustedIssuerEvent extends NamespaceEvent
+			permits TrustedIssuerCreated, TrustedIssuerUpdated, TrustedIssuerRemoved {
+
+		private final NamespaceTrustedIssuer issuer;
+
+		protected TrustedIssuerEvent(Namespace namespace, NamespaceTrustedIssuer issuer) {
+			super(namespace);
+			Assert.notNull(issuer, "NamespaceTrustedIssuer can not be null");
+			this.issuer = issuer;
+		}
+
+		/**
+		 * The {@link NamespaceTrustedIssuer} that was the subject of this event.
+		 *
+		 * @return the trusted issuer, never {@literal null}
+		 */
+		@NonNull
+		public NamespaceTrustedIssuer issuer() {
+			return issuer;
+		}
+
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + "[id=" + id + ", issuer=" + issuer.id() + ", timestamp=" + timestamp + ']';
+		}
+	}
+
+	/**
+	 * Event published when a new {@link NamespaceTrustedIssuer} is registered for a {@link Namespace}.
+	 */
+	@DomainEvent(name = "trusted-issuer-created", namespace = "namespaces")
+	public static final class TrustedIssuerCreated extends TrustedIssuerEvent {
+
+		/**
+		 * Creates a new trusted issuer created event for the namespace and the issuer that was added.
+		 *
+		 * @param namespace the namespace to which the issuer was added
+		 * @param issuer the created trusted issuer
+		 */
+		public TrustedIssuerCreated(Namespace namespace, NamespaceTrustedIssuer issuer) {
+			super(namespace, issuer);
+		}
+	}
+
+	/**
+	 * Event published when a {@link NamespaceTrustedIssuer} is updated within a {@link Namespace}.
+	 */
+	@DomainEvent(name = "trusted-issuer-updated", namespace = "namespaces")
+	public static final class TrustedIssuerUpdated extends TrustedIssuerEvent {
+
+		/**
+		 * Creates a new trusted issuer updated event for the namespace and the issuer that was modified.
+		 *
+		 * @param namespace the namespace that owns the updated issuer
+		 * @param issuer the updated trusted issuer
+		 */
+		public TrustedIssuerUpdated(Namespace namespace, NamespaceTrustedIssuer issuer) {
+			super(namespace, issuer);
+		}
+	}
+
+	/**
+	 * Event published when a {@link NamespaceTrustedIssuer} is removed from a {@link Namespace}.
+	 */
+	@DomainEvent(name = "trusted-issuer-removed", namespace = "namespaces")
+	public static final class TrustedIssuerRemoved extends TrustedIssuerEvent {
+
+		/**
+		 * Creates a new trusted issuer removed event for the namespace and the issuer that was removed.
+		 *
+		 * @param namespace the namespace from which the issuer was removed
+		 * @param issuer the removed trusted issuer
+		 */
+		public TrustedIssuerRemoved(Namespace namespace, NamespaceTrustedIssuer issuer) {
+			super(namespace, issuer);
 		}
 	}
 

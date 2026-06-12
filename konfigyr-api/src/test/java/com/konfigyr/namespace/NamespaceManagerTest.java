@@ -868,6 +868,237 @@ class NamespaceManagerTest extends AbstractIntegrationTest {
 				.isFalse();
 	}
 
+	@Test
+	@DisplayName("should retrieve all trusted issuers for namespace")
+	void shouldFindTrustedIssuers() {
+		final var namespace = lookupNamespace("konfigyr");
+		final var query = SearchQuery.builder()
+				.pageable(PageRequest.of(0, 10, Sort.by("name").ascending()))
+				.build();
+
+		assertThat(manager.findTrustedIssuers(namespace, query))
+				.isNotNull()
+				.hasSize(3)
+				.extracting(NamespaceTrustedIssuer::id, NamespaceTrustedIssuer::name)
+				.containsExactly(
+						tuple(EntityId.from(3), "Disabled issuer"),
+						tuple(EntityId.from(1), "Konfigyr CI"),
+						tuple(EntityId.from(2), "Konfigyr staging CI")
+				);
+	}
+
+	@Test
+	@DisplayName("should retrieve only active trusted issuers for namespace")
+	void shouldFindActiveTrustedIssuers() {
+		final var namespace = lookupNamespace("konfigyr");
+		final var query = SearchQuery.builder()
+				.criteria(NamespaceTrustedIssuer.ACTIVE_CRITERIA, true)
+				.build();
+
+		assertThat(manager.findTrustedIssuers(namespace, query))
+				.isNotNull()
+				.hasSize(2)
+				.extracting(NamespaceTrustedIssuer::id)
+				.containsExactlyInAnyOrder(EntityId.from(1), EntityId.from(2));
+	}
+
+	@Test
+	@DisplayName("should retrieve trusted issuers for namespace matching the search term")
+	void shouldRetrieveMatchingTrustedIssuers() {
+		final var namespace = lookupNamespace("john-doe");
+		final var query = SearchQuery.builder()
+				.term("john-doe.example")
+				.build();
+
+		assertThat(manager.findTrustedIssuers(namespace, query))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(NamespaceTrustedIssuer::id)
+				.containsExactlyInAnyOrder(EntityId.from(4));
+	}
+
+	@Test
+	@DisplayName("should retrieve trusted issuers belonging to the requested namespace only")
+	void shouldFindTrustedIssuersForNamespaceOnly() {
+		final var namespace = lookupNamespace("john-doe");
+		final var query = SearchQuery.builder().build();
+
+		assertThat(manager.findTrustedIssuers(namespace, query))
+				.isNotNull()
+				.hasSize(1)
+				.extracting(NamespaceTrustedIssuer::id)
+				.containsExactly(EntityId.from(4));
+	}
+
+	@Test
+	@DisplayName("should retrieve trusted issuer by entity identifier")
+	void shouldGetTrustedIssuer() {
+		final var namespace = lookupNamespace("konfigyr");
+
+		assertThat(manager.getTrustedIssuer(namespace, EntityId.from(1)))
+				.isPresent()
+				.get()
+				.returns(EntityId.from(1), NamespaceTrustedIssuer::id)
+				.returns(EntityId.from(2), NamespaceTrustedIssuer::namespace)
+				.returns("Konfigyr CI", NamespaceTrustedIssuer::name)
+				.returns("GitHub Actions for Konfigyr org", NamespaceTrustedIssuer::description)
+				.returns("https://ci.konfigyr.com", NamespaceTrustedIssuer::issuerUri)
+				.returns("https://ci.konfigyr.com/jwks.json", NamespaceTrustedIssuer::jwksUri)
+				.returns(true, NamespaceTrustedIssuer::active)
+				.satisfies(it -> assertThat(it.allowedAudiences()).containsExactly("konfigyr-api"))
+				.satisfies(it -> assertThat(it.customClaims()).containsEntry("environment", "production"));
+	}
+
+	@Test
+	@DisplayName("should return empty when trusted issuer belongs to a different namespace")
+	void shouldNotGetTrustedIssuerFromDifferentNamespace() {
+		final var namespace = lookupNamespace("konfigyr");
+
+		assertThat(manager.getTrustedIssuer(namespace, EntityId.from(4)))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should return empty when trusted issuer does not exist")
+	void shouldNotGetUnknownTrustedIssuer() {
+		final var namespace = lookupNamespace("konfigyr");
+
+		assertThat(manager.getTrustedIssuer(namespace, EntityId.from(9999)))
+				.isEmpty();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should create trusted issuer for namespace")
+	void shouldCreateTrustedIssuer(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+		final var definition = NamespaceTrustedIssuerDefinition.builder()
+				.name("New Jenkins CI")
+				.description("Self-hosted Jenkins instance")
+				.issuerUri("https://jenkins.konfigyr.com")
+				.allowedAudience("konfigyr-api")
+				.customClaim("environment", "production")
+				.build();
+
+		final var issuer = manager.createTrustedIssuer(namespace, definition);
+
+		assertThat(issuer.id()).isNotNull();
+		assertThat(issuer)
+				.returns(namespace.id(), NamespaceTrustedIssuer::namespace)
+				.returns("New Jenkins CI", NamespaceTrustedIssuer::name)
+				.returns("Self-hosted Jenkins instance", NamespaceTrustedIssuer::description)
+				.returns("https://jenkins.konfigyr.com", NamespaceTrustedIssuer::issuerUri)
+				.returns(null, NamespaceTrustedIssuer::jwksUri)
+				.returns(true, NamespaceTrustedIssuer::active)
+				.satisfies(it -> assertThat(it.allowedAudiences()).containsExactly("konfigyr-api"))
+				.satisfies(it -> assertThat(it.customClaims()).containsEntry("environment", "production"));
+
+		assertThat(issuer.createdAt()).isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+		assertThat(issuer.updatedAt()).isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		assertThat(manager.getTrustedIssuer(namespace, issuer.id())).isPresent();
+
+		events.assertThat()
+				.contains(NamespaceEvent.TrustedIssuerCreated.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.TrustedIssuerCreated::issuer, issuer);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should update trusted issuer")
+	void shouldUpdateTrustedIssuer(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+		final var definition = NamespaceTrustedIssuerDefinition.builder()
+				.name("Konfigyr CI updated")
+				.issuerUri("https://ci.konfigyr.com")
+				.jwksUri("https://ci.konfigyr.com/updated-jwks.json")
+				.allowedAudience("konfigyr-api")
+				.allowedAudience("konfigyr-cli")
+				.build();
+
+		final var issuer = manager.updateTrustedIssuer(namespace, EntityId.from(1), definition);
+
+		assertThat(issuer)
+				.returns(EntityId.from(1), NamespaceTrustedIssuer::id)
+				.returns(namespace.id(), NamespaceTrustedIssuer::namespace)
+				.returns("Konfigyr CI updated", NamespaceTrustedIssuer::name)
+				.returns(null, NamespaceTrustedIssuer::description)
+				.returns("https://ci.konfigyr.com", NamespaceTrustedIssuer::issuerUri)
+				.returns("https://ci.konfigyr.com/updated-jwks.json", NamespaceTrustedIssuer::jwksUri)
+				.satisfies(it -> assertThat(it.allowedAudiences())
+						.containsExactlyInAnyOrder("konfigyr-api", "konfigyr-cli"))
+				.satisfies(it -> assertThat(it.customClaims()).isEmpty());
+
+		assertThat(issuer.updatedAt()).isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+
+		events.assertThat()
+				.contains(NamespaceEvent.TrustedIssuerUpdated.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(NamespaceEvent.TrustedIssuerUpdated::issuer, issuer);
+	}
+
+	@Test
+	@DisplayName("should fail to update trusted issuer from a different namespace")
+	void shouldNotUpdateTrustedIssuerFromDifferentNamespace(AssertablePublishedEvents events) {
+		final var definition = NamespaceTrustedIssuerDefinition.builder()
+				.name("Attempt")
+				.issuerUri("https://ci.konfigyr.com")
+				.build();
+
+		assertThatExceptionOfType(NamespaceTrustedIssuerNotFoundException.class)
+				.isThrownBy(() -> manager.updateTrustedIssuer(lookupNamespace("john-doe"), EntityId.from(1), definition));
+
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.TrustedIssuerUpdated.class)).isFalse();
+	}
+
+	@Test
+	@DisplayName("should fail to update unknown trusted issuer")
+	void shouldNotUpdateUnknownTrustedIssuer(AssertablePublishedEvents events) {
+		final var definition = NamespaceTrustedIssuerDefinition.builder()
+				.name("Attempt")
+				.issuerUri("https://unknown.example.com")
+				.build();
+
+		assertThatExceptionOfType(NamespaceTrustedIssuerNotFoundException.class)
+				.isThrownBy(() -> manager.updateTrustedIssuer(lookupNamespace("konfigyr"), EntityId.from(9999), definition));
+
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.TrustedIssuerUpdated.class)).isFalse();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should delete trusted issuer")
+	void shouldRemoveTrustedIssuer(AssertablePublishedEvents events) {
+		final var namespace = lookupNamespace("konfigyr");
+		assertThatNoException().isThrownBy(() -> manager.removeTrustedIssuer(namespace, EntityId.from(1)));
+
+		assertThat(manager.getTrustedIssuer(namespace, EntityId.from(1))).isEmpty();
+
+		events.assertThat()
+				.contains(NamespaceEvent.TrustedIssuerRemoved.class)
+				.matching(NamespaceEvent::get, namespace)
+				.matching(event -> event.issuer().id(), EntityId.from(1));
+	}
+
+	@Test
+	@DisplayName("should fail to delete trusted issuer from a different namespace")
+	void shouldNotRemoveTrustedIssuerFromDifferentNamespace(AssertablePublishedEvents events) {
+		assertThatExceptionOfType(NamespaceTrustedIssuerNotFoundException.class)
+				.isThrownBy(() -> manager.removeTrustedIssuer(lookupNamespace("john-doe"), EntityId.from(1)));
+
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.TrustedIssuerRemoved.class)).isFalse();
+	}
+
+	@Test
+	@DisplayName("should fail to delete unknown trusted issuer")
+	void shouldNotRemoveUnknownTrustedIssuer(AssertablePublishedEvents events) {
+		assertThatExceptionOfType(NamespaceTrustedIssuerNotFoundException.class)
+				.isThrownBy(() -> manager.removeTrustedIssuer(lookupNamespace("konfigyr"), EntityId.from(9999)));
+
+		assertThat(events.eventOfTypeWasPublished(NamespaceEvent.TrustedIssuerRemoved.class)).isFalse();
+	}
+
 	private Namespace lookupNamespace(String slug) {
 		return assertThat(manager.findBySlug(slug))
 				.as("Namespace with slug '%s' not found", slug)

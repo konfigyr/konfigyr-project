@@ -33,6 +33,7 @@ import java.util.Optional;
 
 import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
 import static com.konfigyr.data.tables.NamespaceMembers.NAMESPACE_MEMBERS;
+import static com.konfigyr.data.tables.NamespaceTrustedIssuers.NAMESPACE_TRUSTED_ISSUERS;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 import static com.konfigyr.data.tables.OauthApplications.OAUTH_APPLICATIONS;
 
@@ -61,6 +62,12 @@ class DefaultNamespaceManager implements NamespaceManager {
 			.defaultSortField(OAUTH_APPLICATIONS.UPDATED_AT.desc())
 			.sortField("name", OAUTH_APPLICATIONS.NAME)
 			.sortField("date", OAUTH_APPLICATIONS.UPDATED_AT)
+			.build();
+
+	static final PageableExecutor trustedIssuersExecutor = PageableExecutor.builder()
+			.defaultSortField(NAMESPACE_TRUSTED_ISSUERS.UPDATED_AT.desc())
+			.sortField("name", NAMESPACE_TRUSTED_ISSUERS.NAME)
+			.sortField("date", NAMESPACE_TRUSTED_ISSUERS.UPDATED_AT)
 			.build();
 
 	private final DSLContext context;
@@ -413,6 +420,159 @@ class DefaultNamespaceManager implements NamespaceManager {
 				.execute();
 
 		publisher.publishEvent(new NamespaceEvent.ApplicationRemoved(namespace, application));
+	}
+
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "namespace-find-trusted-issuers")
+	public Page<@NonNull NamespaceTrustedIssuer> findTrustedIssuers(@NonNull Namespace namespace, @NonNull SearchQuery query) {
+		final List<Condition> conditions = new ArrayList<>();
+		conditions.add(NAMESPACE_TRUSTED_ISSUERS.NAMESPACE_ID.eq(namespace.id().get()));
+
+		query.criteria(NamespaceTrustedIssuer.ACTIVE_CRITERIA).ifPresent(active ->
+				conditions.add(NAMESPACE_TRUSTED_ISSUERS.IS_ACTIVE.eq(active))
+		);
+
+		query.term().map(term -> "%" + term + "%").ifPresent(term -> conditions.add(DSL.or(
+				NAMESPACE_TRUSTED_ISSUERS.ISSUER_URI.likeIgnoreCase(term),
+				NAMESPACE_TRUSTED_ISSUERS.NAME.likeIgnoreCase(term),
+				NAMESPACE_TRUSTED_ISSUERS.DESCRIPTION.likeIgnoreCase(term)
+		)));
+
+		return trustedIssuersExecutor.execute(
+				createTrustedIssuersQuery(DSL.and(conditions)),
+				this::toTrustedIssuer,
+				query.pageable(),
+				() -> context.fetchCount(createTrustedIssuersQuery(DSL.and(conditions)))
+		);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "namespace-get-trusted-issuer")
+	public Optional<NamespaceTrustedIssuer> getTrustedIssuer(@NonNull Namespace namespace, @NonNull EntityId id) {
+		return createTrustedIssuersQuery(DSL.and(
+				NAMESPACE_TRUSTED_ISSUERS.NAMESPACE_ID.eq(namespace.id().get()),
+				NAMESPACE_TRUSTED_ISSUERS.ID.eq(id.get())
+		)).fetchOptional(this::toTrustedIssuer);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(label = "namespace-create-trusted-issuer")
+	public NamespaceTrustedIssuer createTrustedIssuer(
+			@NonNull Namespace namespace,
+			@NonNull NamespaceTrustedIssuerDefinition definition
+	) {
+		if (log.isDebugEnabled()) {
+			log.debug("Attempting to create namespace trusted issuer from: {}", definition);
+		}
+
+		final NamespaceTrustedIssuer issuer;
+
+		try {
+			issuer = context.insertInto(NAMESPACE_TRUSTED_ISSUERS)
+					.set(
+							SettableRecord.of(context, NAMESPACE_TRUSTED_ISSUERS)
+									.set(NAMESPACE_TRUSTED_ISSUERS.ID, EntityId.generate().map(EntityId::get))
+									.set(NAMESPACE_TRUSTED_ISSUERS.NAMESPACE_ID, namespace.id().get())
+									.set(NAMESPACE_TRUSTED_ISSUERS.NAME, definition.name())
+									.set(NAMESPACE_TRUSTED_ISSUERS.DESCRIPTION, definition.description())
+									.set(NAMESPACE_TRUSTED_ISSUERS.ISSUER_URI, definition.issuerUri())
+									.set(NAMESPACE_TRUSTED_ISSUERS.JWKS_URI, definition.jwksUri())
+									.set(NAMESPACE_TRUSTED_ISSUERS.IS_ACTIVE, true)
+									.set(NAMESPACE_TRUSTED_ISSUERS.ALLOWED_AUDIENCES, definition.allowedAudiences(), converters.stringList())
+									.set(NAMESPACE_TRUSTED_ISSUERS.CUSTOM_CLAIMS, definition.customClaims(), converters.stringMap())
+									.set(NAMESPACE_TRUSTED_ISSUERS.CREATED_AT, OffsetDateTime.now())
+									.set(NAMESPACE_TRUSTED_ISSUERS.UPDATED_AT, OffsetDateTime.now())
+									.get()
+					)
+					.returning(NAMESPACE_TRUSTED_ISSUERS.fields())
+					.fetchOne(this::toTrustedIssuer);
+		} catch (DataIntegrityViolationException ex) {
+			throw new NamespaceNotFoundException(namespace.id());
+		}
+
+		if (issuer == null) {
+			throw new IllegalStateException("Failed to create trusted issuer");
+		}
+
+		publisher.publishEvent(new NamespaceEvent.TrustedIssuerCreated(namespace, issuer));
+
+		return issuer;
+	}
+
+	@NonNull
+	@Override
+	@Transactional(label = "namespace-update-trusted-issuer")
+	public NamespaceTrustedIssuer updateTrustedIssuer(
+			@NonNull Namespace namespace,
+			@NonNull EntityId id,
+			@NonNull NamespaceTrustedIssuerDefinition definition
+	) {
+		if (log.isDebugEnabled()) {
+			log.debug("Attempting to update namespace trusted issuer with: [id={}, definition={}]", id, definition);
+		}
+
+		final NamespaceTrustedIssuer issuer = context.update(NAMESPACE_TRUSTED_ISSUERS)
+				.set(NAMESPACE_TRUSTED_ISSUERS.NAME, definition.name())
+				.set(NAMESPACE_TRUSTED_ISSUERS.DESCRIPTION, definition.description())
+				.set(NAMESPACE_TRUSTED_ISSUERS.ISSUER_URI, definition.issuerUri())
+				.set(NAMESPACE_TRUSTED_ISSUERS.JWKS_URI, definition.jwksUri())
+				.set(NAMESPACE_TRUSTED_ISSUERS.ALLOWED_AUDIENCES, converters.stringList().to(definition.allowedAudiences()))
+				.set(NAMESPACE_TRUSTED_ISSUERS.CUSTOM_CLAIMS, converters.stringMap().to(definition.customClaims()))
+				.set(NAMESPACE_TRUSTED_ISSUERS.UPDATED_AT, OffsetDateTime.now())
+				.where(DSL.and(
+						NAMESPACE_TRUSTED_ISSUERS.ID.eq(id.get()),
+						NAMESPACE_TRUSTED_ISSUERS.NAMESPACE_ID.eq(namespace.id().get())
+				))
+				.returning(NAMESPACE_TRUSTED_ISSUERS.fields())
+				.fetchOne(this::toTrustedIssuer);
+
+		if (issuer == null) {
+			throw new NamespaceTrustedIssuerNotFoundException(id);
+		}
+
+		publisher.publishEvent(new NamespaceEvent.TrustedIssuerUpdated(namespace, issuer));
+
+		return issuer;
+	}
+
+	@Override
+	@Transactional(label = "namespace-remove-trusted-issuer")
+	public void removeTrustedIssuer(@NonNull Namespace namespace, @NonNull EntityId id) {
+		final NamespaceTrustedIssuer issuer = getTrustedIssuer(namespace, id)
+				.orElseThrow(() -> new NamespaceTrustedIssuerNotFoundException(id));
+
+		context.deleteFrom(NAMESPACE_TRUSTED_ISSUERS)
+				.where(NAMESPACE_TRUSTED_ISSUERS.ID.eq(issuer.id().get()))
+				.execute();
+
+		publisher.publishEvent(new NamespaceEvent.TrustedIssuerRemoved(namespace, issuer));
+	}
+
+	@NonNull
+	private SelectConditionStep<? extends Record> createTrustedIssuersQuery(@NonNull Condition condition) {
+		return context.select(NAMESPACE_TRUSTED_ISSUERS.fields())
+				.from(NAMESPACE_TRUSTED_ISSUERS)
+				.where(condition);
+	}
+
+	@NonNull
+	private NamespaceTrustedIssuer toTrustedIssuer(@NonNull Record record) {
+		return NamespaceTrustedIssuer.builder()
+				.id(record.get(NAMESPACE_TRUSTED_ISSUERS.ID))
+				.namespace(record.get(NAMESPACE_TRUSTED_ISSUERS.NAMESPACE_ID))
+				.name(record.get(NAMESPACE_TRUSTED_ISSUERS.NAME))
+				.description(record.get(NAMESPACE_TRUSTED_ISSUERS.DESCRIPTION))
+				.issuerUri(record.get(NAMESPACE_TRUSTED_ISSUERS.ISSUER_URI))
+				.jwksUri(record.get(NAMESPACE_TRUSTED_ISSUERS.JWKS_URI))
+				.active(record.get(NAMESPACE_TRUSTED_ISSUERS.IS_ACTIVE))
+				.allowedAudiences(record.get(NAMESPACE_TRUSTED_ISSUERS.ALLOWED_AUDIENCES, converters.stringList()))
+				.customClaims(record.get(NAMESPACE_TRUSTED_ISSUERS.CUSTOM_CLAIMS, converters.stringMap()))
+				.createdAt(record.get(NAMESPACE_TRUSTED_ISSUERS.CREATED_AT))
+				.updatedAt(record.get(NAMESPACE_TRUSTED_ISSUERS.UPDATED_AT))
+				.build();
 	}
 
 	@NonNull

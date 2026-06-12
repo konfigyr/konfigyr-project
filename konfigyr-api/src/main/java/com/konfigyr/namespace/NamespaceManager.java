@@ -161,4 +161,56 @@ public interface NamespaceManager {
 	@DomainEventPublisher(publishes = "namespaces.application-removed")
 	void removeApplication(Namespace namespace, EntityId application);
 
+	/**
+	 * Retrieves a page of {@link NamespaceTrustedIssuer trusted issuers} for the given {@link Namespace}
+	 * that match the criteria specified by the {@link SearchQuery}.
+	 *
+	 * @param namespace namespace whose trusted issuers to search, can't be {@literal null}
+	 * @param query search query to be executed, can't be {@literal null}
+	 * @return trusted issuers page, never {@literal null}
+	 */
+	Page<NamespaceTrustedIssuer> findTrustedIssuers(Namespace namespace, SearchQuery query);
+
+	/**
+	 * Retrieves the {@link NamespaceTrustedIssuer} with the given entity identifier scoped to the
+	 * given {@link Namespace}.
+	 *
+	 * @param namespace namespace that owns the trusted issuer, can't be {@literal null}
+	 * @param id entity identifier of the trusted issuer, can't be {@literal null}
+	 * @return the matching trusted issuer or an empty {@link Optional}, never {@literal null}
+	 */
+	Optional<NamespaceTrustedIssuer> getTrustedIssuer(Namespace namespace, EntityId id);
+
+	/**
+	 * Creates a new {@link NamespaceTrustedIssuer} for the given {@link Namespace}.
+	 *
+	 * @param namespace namespace for which the issuer is created, can't be {@literal null}
+	 * @param definition definition used to create the trusted issuer, can't be {@literal null}
+	 * @return created trusted issuer, never {@literal null}
+	 */
+	@DomainEventPublisher(publishes = "namespaces.trusted-issuer-created")
+	NamespaceTrustedIssuer createTrustedIssuer(Namespace namespace, NamespaceTrustedIssuerDefinition definition);
+
+	/**
+	 * Updates the {@link NamespaceTrustedIssuer} with the given entity identifier in the {@link Namespace}.
+	 *
+	 * @param namespace namespace for which the issuer is updated, can't be {@literal null}
+	 * @param id entity identifier of the trusted issuer to be updated, can't be {@literal null}
+	 * @param definition the new definition to be applied, can't be {@literal null}
+	 * @return updated trusted issuer, never {@literal null}
+	 * @throws NamespaceTrustedIssuerNotFoundException when the trusted issuer does not exist
+	 */
+	@DomainEventPublisher(publishes = "namespaces.trusted-issuer-updated")
+	NamespaceTrustedIssuer updateTrustedIssuer(Namespace namespace, EntityId id, NamespaceTrustedIssuerDefinition definition);
+
+	/**
+	 * Removes the {@link NamespaceTrustedIssuer} with the given entity identifier from the {@link Namespace}.
+	 *
+	 * @param namespace namespace for which the issuer is removed, can't be {@literal null}
+	 * @param id entity identifier of the trusted issuer to be removed, can't be {@literal null}
+	 * @throws NamespaceTrustedIssuerNotFoundException when the trusted issuer does not exist
+	 */
+	@DomainEventPublisher(publishes = "namespaces.trusted-issuer-removed")
+	void removeTrustedIssuer(Namespace namespace, EntityId id);
+
 }

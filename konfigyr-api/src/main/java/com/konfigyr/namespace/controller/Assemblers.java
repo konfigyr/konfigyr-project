@@ -23,6 +23,12 @@ interface Assemblers {
 				.add(linkBuilder(namespace, application).method(HttpMethod.DELETE).rel("delete"));
 	}
 
+	static RepresentationModelAssembler<NamespaceTrustedIssuer, EntityModel<NamespaceTrustedIssuer>> trustedIssuer(Namespace namespace) {
+		return issuer -> EntityModel.of(issuer, linkBuilder(namespace, issuer).selfRel())
+				.add(linkBuilder(namespace, issuer).method(HttpMethod.PUT).rel("update"))
+				.add(linkBuilder(namespace, issuer).method(HttpMethod.DELETE).rel("delete"));
+	}
+
 	static RepresentationModelAssembler<Service, EntityModel<Service>> service(Namespace namespace) {
 		return service -> EntityModel.of(service, linkBuilder(namespace, service).selfRel())
 				.add(linkBuilder(namespace, service).path("manifest").rel("manifest"))
@@ -62,6 +68,12 @@ interface Assemblers {
 		return linkBuilder(namespace)
 				.path("applications")
 				.path(application.id().serialize());
+	}
+
+	static LinkBuilder linkBuilder(Namespace namespace, NamespaceTrustedIssuer issuer) {
+		return linkBuilder(namespace)
+				.path("trusted-issuers")
+				.path(issuer.id().serialize());
 	}
 
 	static LinkBuilder linkBuilder(Namespace namespace, ServiceCatalog catalog) {

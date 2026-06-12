@@ -10,6 +10,7 @@
 		<sqlFile path="data/users.sql" />
 		<sqlFile path="data/namespaces.sql" />
 		<sqlFile path="data/namespace-members.sql" />
+		<sqlFile path="data/namespace-trusted-issuers.sql" />
 		<sqlFile path="data/oauth-applications.sql" />
 	</changeSet>
 
