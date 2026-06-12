@@ -396,6 +396,81 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should persist audit record for namespace trusted issuer created event")
+	void shouldAuditNamespaceTrustedIssuerCreatedEvent() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(900)).when(namespace).id();
+
+		final var issuer = mock(NamespaceTrustedIssuer.class);
+		doReturn(EntityId.from(9010)).when(issuer).id();
+		doReturn("Konfigyr CI").when(issuer).name();
+		doReturn("https://ci.konfigyr.com").when(issuer).issuerUri();
+
+		listener.on(new NamespaceEvent.TrustedIssuerCreated(namespace, issuer));
+
+		assertAuditRecord("namespace-trusted-issuer", EntityId.from(9010))
+				.returns("namespace.trusted-issuer-created", AuditRecord::eventType)
+				.returns(EntityId.from(900), AuditRecord::namespaceId)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("name", "Konfigyr CI")
+						.containsEntry("issuerUri", "https://ci.konfigyr.com")
+				)
+				.satisfies(assertAuditRecordMessage("Trusted issuer '%s' has been registered with issuer URI: %s", issuer.name(), issuer.issuerUri()));
+	}
+
+	@Test
+	@DisplayName("should persist audit record for namespace trusted issuer updated event")
+	void shouldAuditNamespaceTrustedIssuerUpdatedEvent() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(900)).when(namespace).id();
+
+		final var issuer = mock(NamespaceTrustedIssuer.class);
+		doReturn(EntityId.from(9011)).when(issuer).id();
+		doReturn("Konfigyr CI updated").when(issuer).name();
+		doReturn("https://ci.konfigyr.com").when(issuer).issuerUri();
+
+		listener.on(new NamespaceEvent.TrustedIssuerUpdated(namespace, issuer));
+
+		assertAuditRecord("namespace-trusted-issuer", EntityId.from(9011))
+				.returns("namespace.trusted-issuer-updated", AuditRecord::eventType)
+				.returns(EntityId.from(900), AuditRecord::namespaceId)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("name", "Konfigyr CI updated")
+						.containsEntry("issuerUri", "https://ci.konfigyr.com")
+				)
+				.satisfies(assertAuditRecordMessage("Trusted issuer '%s' has been updated with issuer URI: %s", issuer.name(), issuer.issuerUri()));
+	}
+
+	@Test
+	@DisplayName("should persist audit record for namespace trusted issuer removed event")
+	void shouldAuditNamespaceTrustedIssuerRemovedEvent() {
+		setSecurityContext(TestPrincipals.john());
+
+		final var namespace = mock(Namespace.class);
+		doReturn(EntityId.from(900)).when(namespace).id();
+
+		final var issuer = mock(NamespaceTrustedIssuer.class);
+		doReturn(EntityId.from(9012)).when(issuer).id();
+		doReturn("Disabled issuer").when(issuer).name();
+		doReturn("https://disabled.konfigyr.com").when(issuer).issuerUri();
+
+		listener.on(new NamespaceEvent.TrustedIssuerRemoved(namespace, issuer));
+
+		assertAuditRecord("namespace-trusted-issuer", EntityId.from(9012))
+				.returns("namespace.trusted-issuer-removed", AuditRecord::eventType)
+				.returns(EntityId.from(900), AuditRecord::namespaceId)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("name", "Disabled issuer")
+						.containsEntry("issuerUri", "https://disabled.konfigyr.com")
+				)
+				.satisfies(assertAuditRecordMessage("Trusted issuer '%s' has been removed (issuer URI: %s)", issuer.name(), issuer.issuerUri()));
+	}
+
+	@Test
 	@DisplayName("should persist audit record for service created event")
 	void shouldAuditServiceCreated() {
 		setSecurityContext(TestPrincipals.john());

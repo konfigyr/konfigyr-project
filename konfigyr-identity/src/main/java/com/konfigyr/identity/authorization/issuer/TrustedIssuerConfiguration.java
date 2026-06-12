@@ -1,10 +1,13 @@
 package com.konfigyr.identity.authorization.issuer;
 
 import com.konfigyr.identity.authorization.AuthorizationProperties;
+import org.jooq.DSLContext;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Spring configuration that registers the trusted issuer infrastructure beans. All
@@ -28,9 +31,18 @@ import org.springframework.util.Assert;
 @Configuration(proxyBeanMethods = false)
 class TrustedIssuerConfiguration {
 
+	private static final String NAMESPACE_TRUSTED_ISSUER_REPOSITORY = "namespaceTrustedIssuerRepository";
+
+	@Bean(name = NAMESPACE_TRUSTED_ISSUER_REPOSITORY, defaultCandidate = false)
+	NamespaceTrustedIssuerRepository namespaceTrustedIssuerRepository(DSLContext context, JsonMapper jsonMapper) {
+		return new NamespaceTrustedIssuerRepository(context, jsonMapper);
+	}
+
 	@Bean
-	TrustedIssuerRepository trustedIssuerRepository() {
-		return new CompositeTrustedIssuerRepository(WellKnownTrustedIssuers.getInstance());
+	TrustedIssuerRepository trustedIssuerRepository(
+			@Qualifier(NAMESPACE_TRUSTED_ISSUER_REPOSITORY) TrustedIssuerRepository namespaceRepository
+	) {
+		return new CompositeTrustedIssuerRepository(WellKnownTrustedIssuers.getInstance(), namespaceRepository);
 	}
 
 	@Bean

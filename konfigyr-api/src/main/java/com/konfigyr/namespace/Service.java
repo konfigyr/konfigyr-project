@@ -22,7 +22,7 @@ import java.time.ZoneOffset;
  * and access control features associated with that application.
  * <p>
  * Each service is uniquely identified by its {@code id} and scoped within a namespace through
- * {@code namespaceId}. The {@code slug} provides a human-readable, URL-safe identifier suitable for
+ * {@code namespace}. The {@code slug} provides a human-readable, URL-safe identifier suitable for
  * referencing services in APIs or UI routes.
  * <p>
  * In Domain-Driven Design terms, {@code Service} is an aggregate root within the {@code namespace} bounded

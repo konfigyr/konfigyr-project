@@ -486,4 +486,76 @@
 			CREATE TABLE service_configuration_catalog_default PARTITION OF service_configuration_catalog DEFAULT;
 		</sql>
 	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-namespace-trusted-issuers-table" context="identity or api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="namespace_trusted_issuers" />
+			</not>
+		</preConditions>
+
+		<comment>Per-namespace OIDC issuer allowlist for Workload Identity token exchange</comment>
+
+		<createTable tableName="namespace_trusted_issuers" remarks="Per-namespace OIDC issuer allowlist for Workload Identity token exchange.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="name" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="description" type="text">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="issuer_uri" type="varchar(2048)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="jwks_uri" type="varchar(2048)">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="is_active" type="boolean" defaultValueBoolean="true">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="allowed_audiences" type="jsonb">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="custom_claims" type="jsonb">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="namespace_trusted_issuers"
+				baseColumnNames="namespace_id"
+				constraintName="fk_namespace_trusted_issuer"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addUniqueConstraint
+				tableName="namespace_trusted_issuers"
+				columnNames="namespace_id, issuer_uri"
+				constraintName="unique_namespace_issuer"
+		/>
+	</changeSet>
+
 </databaseChangeLog>

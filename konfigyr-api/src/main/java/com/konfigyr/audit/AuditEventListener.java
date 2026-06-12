@@ -243,6 +243,44 @@ class AuditEventListener {
 		);
 	}
 
+	// ── Namespace trusted issuer events ─────────────────────────────────────────────────
+
+	@TransactionalEventListener(id = "audit.trusted-issuer-created", classes = NamespaceEvent.TrustedIssuerCreated.class)
+	void on(NamespaceEvent.TrustedIssuerCreated event) {
+		insert(event, builder -> builder
+				.namespace(event.id())
+				.entityType("namespace-trusted-issuer")
+				.entityId(event.issuer().id())
+				.eventType("namespace.trusted-issuer-created")
+				.details("name", event.issuer().name())
+				.details("issuerUri", event.issuer().issuerUri())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.trusted-issuer-updated", classes = NamespaceEvent.TrustedIssuerUpdated.class)
+	void on(NamespaceEvent.TrustedIssuerUpdated event) {
+		insert(event, builder -> builder
+				.namespace(event.id())
+				.entityType("namespace-trusted-issuer")
+				.entityId(event.issuer().id())
+				.eventType("namespace.trusted-issuer-updated")
+				.details("name", event.issuer().name())
+				.details("issuerUri", event.issuer().issuerUri())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.trusted-issuer-removed", classes = NamespaceEvent.TrustedIssuerRemoved.class)
+	void on(NamespaceEvent.TrustedIssuerRemoved event) {
+		insert(event, builder -> builder
+				.namespace(event.id())
+				.entityType("namespace-trusted-issuer")
+				.entityId(event.issuer().id())
+				.eventType("namespace.trusted-issuer-removed")
+				.details("name", event.issuer().name())
+				.details("issuerUri", event.issuer().issuerUri())
+		);
+	}
+
 	// ── Service events ──────────────────────────────────────────────────────
 
 	@TransactionalEventListener(id = "audit.service-created", classes = ServiceEvent.Created.class)
