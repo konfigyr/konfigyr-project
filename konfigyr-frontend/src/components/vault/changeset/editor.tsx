@@ -134,11 +134,13 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
           <PropertiesImportDialog catalog={catalog} onImport={onImport} profile={changeset.profile} />
         </div>
 
-        <PropertyStatusFilters
-          changeset={changeset}
-          value={propertyStatusFilter}
-          onChange={onPropertyStatusFilterChanged}
-        />
+        {!readOnly && (
+          <PropertyStatusFilters
+            changeset={changeset}
+            value={propertyStatusFilter}
+            onChange={onPropertyStatusFilterChanged}
+          />
+        )}
       </div>
 
       <PropertiesTable
