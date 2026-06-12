@@ -89,8 +89,9 @@ function PropertyNameCell<T>({ property }: { property: ConfigurationProperty<T> 
   );
 }
 
-function ValueCell<T>({ property, onSave }: {
+function ValueCell<T>({ property, readOnly, onSave }: {
   property: ConfigurationProperty<T>,
+  readOnly?: boolean,
   onSave: (property: ConfigurationProperty<T>, value: ConfigurationPropertyValue<T>) => void,
 }) {
   const isDeleted = property.state === ConfigurationPropertyState.REMOVED;
@@ -98,7 +99,7 @@ function ValueCell<T>({ property, onSave }: {
   return (
     <InlineEdit value={property.value} onChange={value => onSave(property, value!)}>
       <InlineEditPlaceholder
-        disabled={isDeleted}
+        disabled={isDeleted || readOnly}
         className={cn(
           'font-mono text-sm font-medium text-muted-foreground rounded-md px-1.5 py-0.5 -mx-1.5 -my-0.5 transition-colors',
           isDeleted ? 'cursor-default line-through opacity-60' : 'hover:bg-muted/80',
@@ -176,10 +177,11 @@ function ActionButton({ tooltip, destructive = false, className, children, onCli
 
 function ActionsCell<T>({
   property,
+  readOnly,
   onDelete,
   onRestore,
   onHistory,
-}: { property: ConfigurationProperty<T> } & PropertyActionProps) {
+}: { property: ConfigurationProperty<T>, readOnly?: boolean } & PropertyActionProps) {
   if (property.state === ConfigurationPropertyState.REMOVED) {
     return (
       <div className="flex items-center justify-end gap-0.5">
@@ -210,7 +212,7 @@ function ActionsCell<T>({
         </ActionButton>
       )}
 
-      {onDelete && (
+      {onDelete && !readOnly && (
         <ActionButton destructive tooltip={<DeleteLabel />} onClick={() => onDelete(property)}>
           <TrashIcon /><span className="sr-only"><DeleteLabel /></span>
         </ActionButton>
@@ -221,12 +223,14 @@ function ActionsCell<T>({
 
 export function PropertiesTable({
   properties,
+  readOnly,
   onHistory,
   onDelete,
   onRestore,
   onUpdate,
 }: {
   properties: Array<ConfigurationProperty<any>>,
+  readOnly?: boolean,
   onUpdate: (property: ConfigurationProperty<any>, value?: ConfigurationPropertyValue<any>) => void | Promise<void>,
 } & PropertyActionProps) {
   return (
@@ -288,12 +292,14 @@ export function PropertiesTable({
                 <TableCell className="py-3">
                   <ValueCell
                     property={property}
+                    readOnly={readOnly}
                     onSave={onUpdate}
                   />
                 </TableCell>
                 <TableCell className="py-3 text-right pr-3">
                   <ActionsCell
                     property={property}
+                    readOnly={readOnly}
                     onDelete={onDelete}
                     onHistory={onHistory}
                     onRestore={onRestore}

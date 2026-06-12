@@ -56,6 +56,7 @@ const useFilteredProperties = (
 };
 
 export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: ServiceCatalog } & ChangesetStatusBarProps) {
+  const readOnly = changeset.profile.policy === 'IMMUTABLE';
   const [propertyStatusFilter, onPropertyStatusFilterChanged] = useState<StatusFilter>(StatusFilter.ALL);
   const [propertyTermFilter, onPropertyTermFilterChanged] = useState<string>('');
 
@@ -110,9 +111,11 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
         profile={changeset.profile}
       />
 
-      <div className="mb-6">
-        <ChangesetStatusBar changeset={changeset} {...props} />
-      </div>
+      {!readOnly && (
+        <div className="mb-6">
+          <ChangesetStatusBar changeset={changeset} {...props} />
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2 flex-1">
@@ -131,15 +134,18 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
           <PropertiesImportDialog catalog={catalog} onImport={onImport} profile={changeset.profile} />
         </div>
 
-        <PropertyStatusFilters
-          changeset={changeset}
-          value={propertyStatusFilter}
-          onChange={onPropertyStatusFilterChanged}
-        />
+        {!readOnly && (
+          <PropertyStatusFilters
+            changeset={changeset}
+            value={propertyStatusFilter}
+            onChange={onPropertyStatusFilterChanged}
+          />
+        )}
       </div>
 
       <PropertiesTable
         properties={properties}
+        readOnly={readOnly}
         onHistory={onHistory}
         onRestore={onRestore}
         onDelete={onDelete}
