@@ -461,7 +461,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="outline">
+          <Button variant="outline" disabled={ changeset.profile.policy === 'IMMUTABLE'}>
             <PlusIcon />
             <AddPropertyLabel />
           </Button>
