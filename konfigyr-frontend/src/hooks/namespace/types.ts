@@ -54,17 +54,36 @@ export interface ServiceCatalog {
   properties: Array<ServiceCatalogProperty>
 }
 
+export type NamespaceApplicationType = 'SERVICE_ACCOUNT' | 'AGENT' | 'WORKLOAD';
+
+export interface AgentApplicationSettings {
+  type: 'agent';
+  redirectUris: Array<string>;
+}
+
+export interface WorkloadApplicationSettings {
+  type: 'workload';
+  issuerUri: string;
+  subjectPattern?: string;
+}
+
+export type NamespaceApplicationSettings = AgentApplicationSettings | WorkloadApplicationSettings | null;
+
 export interface NamespaceApplication {
   id: string,
   name: string;
   clientId: string;
   clientSecret?: string;
   scopes: string;
-  expiresAt?: string
+  expiresAt?: string;
+  type: NamespaceApplicationType;
+  settings: NamespaceApplicationSettings;
 }
 
 export interface CreateNamespaceApplication {
   name: string;
+  type: NamespaceApplicationType;
   scopes?: string;
-  expiresAt?: string
+  expiresAt?: string;
+  settings: NamespaceApplicationSettings;
 }

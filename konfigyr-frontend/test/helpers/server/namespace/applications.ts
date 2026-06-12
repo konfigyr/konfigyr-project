@@ -2,12 +2,14 @@ import { HttpResponse, http } from 'msw';
 import { applications, namespaces } from '../../mocks';
 
 const create = http.post('http://localhost/api/namespaces/:slug/applications', async ({ request }) => {
-  const body= await request.clone().json() as Record<string, unknown>;
+  const body = await request.clone().json() as Record<string, unknown>;
 
   return HttpResponse.json({
     id: 'created-application-id',
     clientSecret: 'created-secret',
-    ...body ,
+    type: body['type'] ?? 'SERVICE_ACCOUNT',
+    settings: body['settings'] ?? null,
+    ...body,
   }, { status: 201 });
 });
 
@@ -25,12 +27,20 @@ const getAll = http.get('http://localhost/api/namespaces/:slug/applications', ({
 const get = http.get('http://localhost/api/namespaces/:slug/applications/:id', ({ params }) => {
   const { slug, id } = params;
 
-  if (slug === namespaces.konfigyr.slug && id === applications.konfigyr.id ) {
+  if (slug === namespaces.konfigyr.slug && id === applications.konfigyr.id) {
     return HttpResponse.json(applications.konfigyr);
   }
 
-  if (slug === namespaces.konfigyr.slug && id === applications.createdApplication.id ) {
+  if (slug === namespaces.konfigyr.slug && id === applications.createdApplication.id) {
     return HttpResponse.json(applications.createdApplication);
+  }
+
+  if (slug === namespaces.konfigyr.slug && id === applications.agentApplication.id) {
+    return HttpResponse.json(applications.agentApplication);
+  }
+
+  if (slug === namespaces.konfigyr.slug && id === applications.workloadApplication.id) {
+    return HttpResponse.json(applications.workloadApplication);
   }
 
   return HttpResponse.json({
@@ -45,6 +55,28 @@ const remove = http.delete('http://localhost/api/namespaces/:slug/applications/:
 
   if (slug === namespaces.konfigyr.slug && id === 'existing-application-id') {
     return new HttpResponse(null, { status: 204 });
+  }
+
+  return HttpResponse.json({
+    status: 404,
+    title: 'Not found',
+    detail: `Namespace application with identifier '${id}' not found.`,
+  }, { status: 404 });
+});
+
+const update = http.put('http://localhost/api/namespaces/:slug/applications/:id', async ({ request, params }) => {
+  const { slug, id } = params;
+  const body = await request.clone().json() as Record<string, unknown>;
+
+  if (slug === namespaces.konfigyr.slug) {
+    switch (id) {
+      case applications.konfigyr.id:
+        return HttpResponse.json({ ...applications.konfigyr, ...body });
+      case applications.agentApplication.id:
+        return HttpResponse.json({ ...applications.agentApplication, ...body });
+      case applications.workloadApplication.id:
+        return HttpResponse.json({ ...applications.workloadApplication, ...body });
+    }
   }
 
   return HttpResponse.json({
@@ -75,6 +107,7 @@ const reset = http.put('http://localhost/api/namespaces/:slug/applications/:id/r
 export default [
   getAll,
   get,
+  update,
   remove,
   reset,
   create,

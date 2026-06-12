@@ -17,10 +17,12 @@ import {
   ItemContent,
   ItemDescription,
   ItemGroup,
+  ItemMedia,
   ItemTitle,
 } from '@konfigyr/components/ui/item';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import { CreateExpirationDateLabel } from './messages';
+import { CreateExpirationDateLabel, NamespaceApplicationTitle } from './messages';
+import { ApplicationTypeBadge, ApplicationTypeIcon } from './application-type';
 
 import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
 
@@ -50,9 +52,13 @@ export function NamespaceApplicationArticle({ application, namespace }: {
             namespace: namespace.slug,
             id: application.id,
           }}>
+          <ItemMedia>
+            <ApplicationTypeIcon type={application.type} />
+          </ItemMedia>
           <ItemContent>
             <ItemTitle>
               {application.name}
+              <ApplicationTypeBadge type={application.type} />
             </ItemTitle>
             <ItemDescription>
               <CreateExpirationDateLabel expiresAt={application.expiresAt} />
@@ -78,10 +84,7 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
             <CardIcon>
               <MonitorCloud size="1.25rem"/>
             </CardIcon>
-            <FormattedMessage
-              defaultMessage="Namespace applications"
-              description="Title used in the card that lists all namespace applications."
-            />
+            <NamespaceApplicationTitle />
           </CardTitle>
         </CardHeader>
         <CardContent>

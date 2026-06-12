@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { cleanup, waitFor } from '@testing-library/react';
+import { cleanup, queries, waitFor } from '@testing-library/react';
 import { renderWithRouter } from '@konfigyr/test/helpers/router';
+import { applications } from '@konfigyr/test/helpers/mocks';
+import userEvents from '@testing-library/user-event/dist/cjs/index.js';
 
 describe('routes | namespace | application details', () => {
   afterEach(() => cleanup());
@@ -23,7 +25,7 @@ describe('routes | namespace | application details', () => {
     });
   });
 
-  test('should render namespace application form with prefiled values', async () => {
+  test('should render namespace application form with prefilled values', async () => {
     const { getByLabelText, getByRole, getAllByRole } = renderWithRouter('/namespace/konfigyr/applications/existing-application-id');
 
     await waitFor(() => {
@@ -35,4 +37,49 @@ describe('routes | namespace | application details', () => {
     });
   });
 
+  test('should render AGENT application details with redirect URIs', async () => {
+    const { getByRole, getByText } = renderWithRouter(`/namespace/konfigyr/applications/${applications.agentApplication.id}`);
+
+    await waitFor(() => {
+      expect(getByText('AI Agent')).toBeInTheDocument();
+
+      const form = getByRole('form');
+      const uriInputs = queries.getAllByRole(form, 'textbox').filter(
+        (el) => el.getAttribute('value')?.startsWith('https://'),
+      );
+
+      expect(uriInputs).toHaveLength(2);
+      expect(uriInputs[0]).toHaveValue('https://example.com/callback');
+      expect(uriInputs[1]).toHaveValue('https://other.example.com/callback');
+    });
+  });
+
+  test('should prefill WORKLOAD form with existing issuer URI and subject pattern', async () => {
+    const { getByRole } = renderWithRouter(`/namespace/konfigyr/applications/${applications.workloadApplication.id}`);
+
+    await waitFor(() => {
+      const form = getByRole('form');
+      expect(queries.getByLabelText(form, 'Issuer URI')).toHaveValue('https://token.actions.githubusercontent.com');
+      expect(queries.getByLabelText(form, 'Subject pattern')).toHaveValue('repo:owner/name:ref:refs/heads/main');
+    });
+  });
+
+  test('should show success toast after updating an application', async () => {
+    const { getByLabelText, getByText } = renderWithRouter('/namespace/konfigyr/applications/existing-application-id');
+
+    await waitFor(() => {
+      expect(getByLabelText('Application name')).toHaveValue('konfigyr test');
+    });
+
+    await userEvents.clear(getByLabelText('Application name'));
+    await userEvents.type(getByLabelText('Application name'), 'updated name');
+
+    await userEvents.click(
+      getByText(/update application/i),
+    );
+
+    await waitFor(() => {
+      expect(getByText(/successfully updated/i)).toBeInTheDocument();
+    });
+  });
 });

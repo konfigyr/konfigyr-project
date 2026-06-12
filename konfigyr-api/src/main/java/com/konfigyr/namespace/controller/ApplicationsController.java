@@ -4,6 +4,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.*;
+import com.konfigyr.security.NamespaceApplicationSettings;
 import com.konfigyr.security.NamespaceClientType;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.OAuthScopes;
@@ -150,16 +151,19 @@ class ApplicationsController {
 
 	record CreateApplicationAttributes(
 			@NotBlank String name,
+			@NotNull NamespaceClientType type,
 			@NotNull OAuthScopes scopes,
+			@Validated NamespaceApplicationSettings settings,
 			@Future OffsetDateTime expiresAt
 	) {
 
 		NamespaceApplicationDefinition create(Namespace namespace) {
 			return NamespaceApplicationDefinition.builder()
 					.namespace(namespace)
-					.type(NamespaceClientType.SERVICE_ACCOUNT)
+					.type(type())
 					.name(name())
 					.scopes(scopes())
+					.settings(settings())
 					.expiration(expiresAt)
 					.build();
 		}

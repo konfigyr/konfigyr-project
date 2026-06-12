@@ -17,7 +17,7 @@ import { cn } from '@konfigyr/components/utils';
 import { SearchToggle } from './search-toggle';
 import { ThemeSwitcher } from './theme-switcher';
 
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import type { VariantProps } from 'class-variance-authority';
 import type { Account, Namespace } from '@konfigyr/hooks/types';
 
@@ -50,7 +50,7 @@ export function Layout({ children }: ComponentProps<'div'>) {
   );
 }
 
-export function LayoutNavbar({ title, children }: { title: string } & ComponentProps<'div'>) {
+export function LayoutNavbar({ title, children }: { title: ReactNode } & Omit<ComponentProps<'div'>, 'title'>) {
   const isMobile = useIsMobile();
 
   if (isMobile) {

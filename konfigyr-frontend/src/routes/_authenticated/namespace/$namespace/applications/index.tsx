@@ -4,7 +4,10 @@ import { useNamespace } from '@konfigyr/hooks';
 import { buttonVariants } from '@konfigyr/components/ui/button';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { NamespaceApplications } from '@konfigyr/components/namespace/applications/applications';
-import { CreateNamespaceApplicationLabel } from '@konfigyr/components/namespace/applications/messages';
+import {
+  CreateNamespaceApplicationLabel,
+  NamespaceApplicationTitle,
+} from '@konfigyr/components/namespace/applications/messages';
 
 export const Route = createFileRoute(
   '/_authenticated/namespace/$namespace/applications/',

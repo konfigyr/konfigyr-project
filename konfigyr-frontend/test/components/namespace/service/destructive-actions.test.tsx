@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { namespaces, services } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
-import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructiive-actions';
+import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructive-actions';
 import userEvents from '@testing-library/user-event/dist/cjs/index.js';
 import type { RenderResult } from '@testing-library/react';
 

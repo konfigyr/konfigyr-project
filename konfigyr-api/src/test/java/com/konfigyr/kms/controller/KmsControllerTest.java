@@ -321,7 +321,7 @@ class KmsControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should fail to create keyset metadata with invalid data")
 	void createKeysetInvalidPayload() {
-		mvc.post().uri("/namespaces/{slug}/applications", "konfigyr")
+		mvc.post().uri("/namespaces/{slug}/kms", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{}")
@@ -336,7 +336,7 @@ class KmsControllerTest extends AbstractControllerTest {
 								.isInstanceOf(Collection.class)
 								.asInstanceOf(InstanceOfAssertFactories.collection(Map.class))
 								.extracting("pointer")
-								.containsExactlyInAnyOrder("scopes", "name")
+								.containsExactlyInAnyOrder("algorithm", "name")
 						)
 				));
 	}
