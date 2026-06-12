@@ -1,6 +1,6 @@
 import { ServiceUpdateForm } from '@konfigyr/components/namespace/service/update-form';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructiive-actions';
+import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructive-actions';
 import {
   ServiceConfigurationProfiles,
 } from '@konfigyr/components/namespace/service/settings/profiles/configuration-profiles';
