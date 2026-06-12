@@ -121,19 +121,32 @@ const mapAjvErrors = (errors: Array<ErrorObject>, intl: IntlShape): Array<Valida
 
 const buildValidationResult = (isValid: boolean, errors: Array<ValidationError>) => ({ isValid, errors });
 
+function createPropertyValidator (schema: PropertyJsonSchema): ValidateFunction {
+  return ajv.compile(schema);
+}
+
+function validatePropertyValue(validator: ValidateFunction, schema: PropertyJsonSchema, value: unknown): boolean {
+  return schema.enum?.length
+    ? validator(resolveRelaxedEnumValue(schema.enum, value))
+    : validator(value);
+}
+
+export function isPropertyValueValid(schema: PropertyJsonSchema, value: unknown): boolean {
+  const validator = createPropertyValidator(schema);
+  return validatePropertyValue(validator, schema, value);
+}
+
 export function usePropertyValidation (schema: PropertyJsonSchema): {
   validate: (value: unknown) => ValidationResult;
   result: ValidationResult;
 } {
   const intl: IntlShape = useIntl();
-  const validator = useMemo<ValidateFunction<unknown>>(() => ajv.compile(schema), [schema]);
+  const validator = useMemo<ValidateFunction>(() => createPropertyValidator(schema), [schema]);
 
   const [result, setResult] = useState<ValidationResult>(() => buildValidationResult(true, []));
 
   const validate = useCallback((value: unknown): ValidationResult => {
-    const isValid = schema.enum?.length
-      ? validator(resolveRelaxedEnumValue(schema.enum, value))
-      : validator(value);
+    const isValid = validatePropertyValue(validator, schema, value);
 
     const nextResult: ValidationResult = isValid
       ? buildValidationResult(true, [])
