@@ -121,7 +121,7 @@ const mapAjvErrors = (errors: Array<ErrorObject>, intl: IntlShape): Array<Valida
 
 const buildValidationResult = (isValid: boolean, errors: Array<ValidationError>) => ({ isValid, errors });
 
-function getDefaultValidator (schema: PropertyJsonSchema): ValidateFunction {
+function createPropertyValidator (schema: PropertyJsonSchema): ValidateFunction {
   return ajv.compile(schema);
 }
 
@@ -132,7 +132,7 @@ function validatePropertyValue(validator: ValidateFunction, schema: PropertyJson
 }
 
 export function isPropertyValueValid(schema: PropertyJsonSchema, value: unknown): boolean {
-  const validator = getDefaultValidator(schema);
+  const validator = createPropertyValidator(schema);
   return validatePropertyValue(validator, schema, value);
 }
 
@@ -141,7 +141,7 @@ export function usePropertyValidation (schema: PropertyJsonSchema): {
   result: ValidationResult;
 } {
   const intl: IntlShape = useIntl();
-  const validator = useMemo<ValidateFunction>(() => getDefaultValidator(schema), [schema]);
+  const validator = useMemo<ValidateFunction>(() => createPropertyValidator(schema), [schema]);
 
   const [result, setResult] = useState<ValidationResult>(() => buildValidationResult(true, []));
 
