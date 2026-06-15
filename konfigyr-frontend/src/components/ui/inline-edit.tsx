@@ -10,13 +10,17 @@ import {
 } from 'react';
 import { mergeProps } from '@base-ui/react/merge-props';
 import { useRender } from '@base-ui/react/use-render';
-import { CheckIcon, XIcon } from 'lucide-react';
+import { AlertCircleIcon, CheckIcon, XIcon } from 'lucide-react';
 import { CancelLabel, SaveLabel } from '@konfigyr/components/messages';
 import { Button } from '@konfigyr/components/ui/button';
-import { FieldError } from '@konfigyr/components/ui/field';
 import { Input } from '@konfigyr/components/ui/input';
 import { Switch } from '@konfigyr/components/ui/switch';
 import { Textarea } from '@konfigyr/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@konfigyr/components/ui/tooltip';
 import { cn } from '@konfigyr/components/utils';
 
 import type { ComponentProps, KeyboardEvent, ReactNode, RefObject } from 'react';
@@ -208,6 +212,29 @@ export const useKeyboardEvents = (context: EditingContext<any>) => useCallback((
   }
 }, [context.onCancel, context.onSave]);
 
+function InlineEditErrors({ errors }: { errors: Array<string> }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        <span className="flex items-center text-destructive cursor-default">
+          <AlertCircleIcon className="size-4" />
+        </span>
+      </TooltipTrigger>
+
+      <TooltipContent
+        side="left"
+        className="bg-destructive text-destructive-foreground"
+      >
+        <ul className="list-disc pl-3 space-y-1">
+          {errors.map((msg, i) => (
+            <li key={i}>{msg}</li>
+          ))}
+        </ul>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function InlineEditContainer<T>({ className, children, ...props }: ComponentProps<'div'>) {
   const { isEditing, isPending, errors, onCancel, onSave }: EditingContext<T> = useContext(InlineEditContext);
 
@@ -224,7 +251,19 @@ export function InlineEditContainer<T>({ className, children, ...props }: Compon
       )}
       {...props}
     >
-      {children}
+      <span
+        className={cn(
+          'relative flex items-center gap-1.5',
+          errors?.length && 'pl-7',
+        )}
+      >
+        {children}
+        {errors?.length ? (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2">
+            <InlineEditErrors errors={errors}/>
+          </span>
+        ) : null}
+      </span>
 
       <Button
         variant="ghost"
