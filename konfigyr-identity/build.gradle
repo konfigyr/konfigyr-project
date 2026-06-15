@@ -64,7 +64,7 @@ node {
     npmCommand = String.valueOf(getProperty('node.npm'))
 
     /* use the CI NPM command when executing Github actions */
-    npmInstallCommand = System.getenv('CI') ? 'ci' : 'install'
+    npmInstallCommand = providers.environmentVariable('CI').isPresent() ? 'ci' : 'install'
 }
 
 tasks.register('rollup', NpmTask) {
