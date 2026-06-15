@@ -13,6 +13,7 @@ import { useRender } from '@base-ui/react/use-render';
 import { CheckIcon, XIcon } from 'lucide-react';
 import { CancelLabel, SaveLabel } from '@konfigyr/components/messages';
 import { Button } from '@konfigyr/components/ui/button';
+import { FieldError } from '@konfigyr/components/ui/field';
 import { Input } from '@konfigyr/components/ui/input';
 import { Switch } from '@konfigyr/components/ui/switch';
 import { Textarea } from '@konfigyr/components/ui/textarea';
@@ -24,7 +25,10 @@ type EditingContext<T> = {
   value?: T,
   isEditing: boolean,
   isPending: boolean,
+  errors?: Array<string>,
   setValue: (value: T) => void,
+  setErrors: (errors: Array<string> | undefined) => void,
+  setValidate: (fn: ((value: T) => Array<string> | undefined) | undefined) => void,
   onEdit: () => void,
   onCancel: () => void,
   onSave: () => void,
@@ -34,6 +38,8 @@ const InlineEditContext = createContext<EditingContext<any>>({
   isEditing: false,
   isPending: false,
   setValue: () => {},
+  setErrors: () => {},
+  setValidate: () => {},
   onEdit: () => {},
   onCancel: () => {},
   onSave: () => {},
@@ -51,6 +57,8 @@ export function InlineEdit<T>({ value, children, onChange, onError }: {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [editValue, setEditValue] = useState(value);
+  const [errors, setErrors] = useState<Array<string> | undefined>(undefined);
+  const validateRef = useRef<((value: T) => string[] | undefined) | undefined>(undefined);
 
   // update the edit value state when the value changes from the outside
   useEffect(() => {
@@ -67,9 +75,19 @@ export function InlineEdit<T>({ value, children, onChange, onError }: {
   const onCancel = useCallback(() => {
     setEditValue(value);
     setIsEditing(false);
+    setErrors(undefined);
   }, [value]);
 
   const onSave = useCallback(async () => {
+    if (validateRef.current) {
+      const validationErrors = validateRef.current(editValue);
+      if (validationErrors && validationErrors.length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+      setErrors(undefined);
+    }
+
     if (editValue !== value) {
       setIsPending(true);
 
@@ -90,11 +108,18 @@ export function InlineEdit<T>({ value, children, onChange, onError }: {
     }
   }, [editValue, value, onChange]);
 
+  const setValidate = useCallback((fn: ((value: T) => Array<string> | undefined) | undefined) => {
+    validateRef.current = fn;
+  }, []);
+
   const context: EditingContext<T> = {
     isEditing,
     isPending,
+    errors,
     value: editValue,
     setValue: setEditValue,
+    setErrors,
+    setValidate,
     onEdit,
     onCancel,
     onSave,
@@ -184,7 +209,7 @@ export const useKeyboardEvents = (context: EditingContext<any>) => useCallback((
 }, [context.onCancel, context.onSave]);
 
 export function InlineEditContainer<T>({ className, children, ...props }: ComponentProps<'div'>) {
-  const { isEditing, isPending, onCancel, onSave }: EditingContext<T> = useContext(InlineEditContext);
+  const { isEditing, isPending, errors, onCancel, onSave }: EditingContext<T> = useContext(InlineEditContext);
 
   if (!isEditing) {
     return null;
