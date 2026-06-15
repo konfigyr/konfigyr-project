@@ -71,7 +71,7 @@ subprojects {
 
             /* JSoup HTML test support */
             dependency('org.jsoup:jsoup:1.22.2')
-            dependency('com.icegreen:greenmail:2.1.8')
+            dependency('com.icegreen:greenmail:2.1.9')
 
             /* Wiremock Spring Boot integration */
             dependency('org.wiremock.integrations:wiremock-spring-boot:4.2.1')
