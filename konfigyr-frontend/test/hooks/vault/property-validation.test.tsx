@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { usePropertyValidation } from '@konfigyr/hooks/vault/property-validation';
 import { MessagesProvider } from '@konfigyr/test/helpers/messages';
+import { DataUnit, DurationUnit } from '@konfigyr/hooks/transforms';
 import type { ReactNode } from 'react';
 
 import type { PropertyJsonSchema } from '@konfigyr/hooks/artifactory/types';
@@ -15,6 +16,7 @@ interface ValidationCase {
   keyword?: string;
   format?: string;
   message?: string;
+  params?: object;
 }
 
 const COMPLEX_OBJECT_SCHEMA: PropertyJsonSchema = {
@@ -139,20 +141,50 @@ const VALIDATION_FAIL_CASES: Array<ValidationCase> = [
     keyword: 'format',
     format: 'date-time',
     message: 'Must be a valid date-time',
-  }, {
-    label: 'format: duration',
+  },
+  {
+    label: 'format: duration string',
     schema: { type: 'string', format: 'duration' },
-    value: '1h30m',
-    keyword: 'format',
+    value: '1hour',
     format: 'duration',
+    keyword: 'format',
     message: 'Must be a valid duration',
-  }, {
-    label: 'format: data-size',
+  },
+  {
+    label: 'format: data-size string',
     schema: { type: 'string', format: 'data-size' },
     value: '10MiB',
-    keyword: 'format',
     format: 'data-size',
+    keyword: 'format',
     message: 'Must be a valid data-size',
+  },
+  {
+    label: 'format: Duration object',
+    schema: { type: 'object', format: 'duration' },
+    value: {
+      value: 1,
+      unit: 'hour',
+    },
+    format: 'duration',
+    keyword: 'enum',
+    message: 'Must be one of: ns, us, ms, s, m, h, d',
+    params: {
+      allowedValues: Object.values(DurationUnit),
+    },
+  },
+  {
+    label: 'format: DataSize object',
+    schema: { type: 'object', format: 'data-size' },
+    value: {
+      value: 1,
+      unit: '10MiB',
+    },
+    format: 'data-size',
+    keyword: 'enum',
+    message: 'Must be one of: B, KB, MB, GB, TB',
+    params: {
+      allowedValues: Object.values(DataUnit),
+    },
   },
 ];
 
@@ -211,14 +243,30 @@ const VALIDATION_PASS_CASES: Array<ValidationCase> = [
     value: '2024-01-01T12:30:45.123Z',
   },
   {
-    label: 'format: duration',
+    label: 'format: duration string',
     schema: { type: 'string', format: 'duration' },
     value: '1h',
   },
   {
-    label: 'format: data-size',
+    label: 'format: data-size string',
     schema: { type: 'string', format: 'data-size' },
     value: '10MB',
+  },
+  {
+    label: 'format: Duration object',
+    schema: { type: 'object', format: 'duration' },
+    value: {
+      value: 1,
+      unit: 'h',
+    },
+  },
+  {
+    label: 'format: DataSize object',
+    schema: { type: 'object', format: 'data-size' },
+    value: {
+      value: 1,
+      unit: 'MB',
+    },
   },
 ];
 
@@ -227,7 +275,7 @@ describe('hooks | vault | usePropertyValidation', () => {
     <MessagesProvider>{children}</MessagesProvider>
   );
 
-  test.each(VALIDATION_FAIL_CASES)('should fail validation for $label', ({ schema, value, keyword, format, message }) => {
+  test.each(VALIDATION_FAIL_CASES)('should fail validation for $label', ({ schema, value, keyword, format, message, params }) => {
     const { result } = renderHook(() => usePropertyValidation(schema), { wrapper });
 
     let validation!: ValidationResult;
@@ -241,7 +289,7 @@ describe('hooks | vault | usePropertyValidation', () => {
     expect(validation.errors[0]).toMatchObject({
       keyword,
       message,
-      ...(format ? { params: { format } } : {}),
+      ...(format ? { params: { ...params } } : {}),
     });
     expect(result.current.result).toEqual(validation);
   });

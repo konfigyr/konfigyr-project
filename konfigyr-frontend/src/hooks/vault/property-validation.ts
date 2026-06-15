@@ -3,7 +3,7 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { useIntl } from 'react-intl';
 import { VALIDATION_MESSAGES } from '@konfigyr/hooks/vault/messages';
-import { DATA_SIZE_ENCODED_PATTERN, DURATION_ENCODED_PATTERN } from '@konfigyr/hooks/transforms';
+import { DATA_SIZE_ENCODED_PATTERN, DURATION_ENCODED_PATTERN, DataUnit, DurationUnit } from '@konfigyr/hooks/transforms';
 import type { ErrorObject, ValidateFunction } from 'ajv';
 import type { IntlShape } from 'react-intl';
 
@@ -11,11 +11,52 @@ import type { PropertyJsonSchema } from '@konfigyr/hooks/artifactory/types';
 import type { ValidationError, ValidationResult } from '@konfigyr/hooks/vault/types';
 
 const ajv = new Ajv({ allErrors: true, coerceTypes: false });
-
 addFormats(ajv);
 
-ajv.addFormat('duration', DURATION_ENCODED_PATTERN);
-ajv.addFormat('data-size', DATA_SIZE_ENCODED_PATTERN);
+const [ DURATION_FORMAT, DATA_SIZE_FORMAT ] = ['duration', 'data-size'];
+
+ajv.addFormat(DURATION_FORMAT, DURATION_ENCODED_PATTERN);
+ajv.addFormat(DATA_SIZE_FORMAT, DATA_SIZE_ENCODED_PATTERN);
+
+/**
+ * Builds a JSON Schema for unit-based scalar objects.
+ *
+ * The schema validates a shape with:
+ * - `value`: numeric amount
+ * - `unit`: one of the supplied unit values
+ */
+const buildUnitSchema = (units: Array<string>): object => ({
+  type: 'object',
+  properties: {
+    value: {
+      type: 'number',
+    },
+    unit: {
+      type: 'string',
+      enum: units,
+    },
+  },
+  required: ['value', 'unit'],
+  additionalProperties: false,
+});
+
+/**
+ * JSON Schema that validates a duration object consisting of:
+ * - `value`: the duration amount
+ * - `unit`: one of the supported {@link DurationUnit} values
+ *
+ * @see Duration
+ */
+const DURATION_SCHEMA = buildUnitSchema(Object.values(DurationUnit));
+
+/**
+ * JSON Schema that validates a data size object consisting of:
+ * - `value`: the data size amount
+ * - `unit`: one of the supported {@link DataUnit} values
+ *
+ * @see DataSize
+ */
+const DATA_SIZE_SCHEMA = buildUnitSchema(Object.values(DataUnit));
 
 // Normalizes enum values to support Spring Boot relaxed binding.
 // Converts to uppercase and removes separators (-, _, whitespace) so values
@@ -122,6 +163,18 @@ const mapAjvErrors = (errors: Array<ErrorObject>, intl: IntlShape): Array<Valida
 const buildValidationResult = (isValid: boolean, errors: Array<ValidationError>) => ({ isValid, errors });
 
 function createPropertyValidator (schema: PropertyJsonSchema): ValidateFunction {
+  if (schema.type === 'string' && (schema.format === DURATION_FORMAT || schema.format === DATA_SIZE_FORMAT)) {
+    return ajv.compile(schema);
+  }
+
+  if (schema.type === 'object' && schema.format === DURATION_FORMAT) {
+    return ajv.compile(DURATION_SCHEMA);
+  }
+
+  if (schema.type === 'object' && schema.format === DATA_SIZE_FORMAT) {
+    return ajv.compile(DATA_SIZE_SCHEMA);
+  }
+
   return ajv.compile(schema);
 }
 
