@@ -1,14 +1,44 @@
+import { useEffect } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import userEvents from '@testing-library/user-event';
 import {
   InlineEdit,
+  InlineEditContainer,
   InlineEditInput,
   InlineEditPlaceholder,
   InlineEditSwitch,
   InlineEditTextarea,
+  useFocusEffect,
+  useInlineEdit,
+  useKeyboardEvents,
 } from '@konfigyr/components/ui/inline-edit';
+import { Input } from '@konfigyr/components/ui/input';
+
+function ValidatedInlineEditInput({ validate }: { validate: (value: string) => string[] | undefined }) {
+  const context = useInlineEdit<string>();
+  const ref = useFocusEffect<HTMLInputElement>(context);
+  const onKeyDown = useKeyboardEvents(context);
+
+  useEffect(() => {
+    context.setValidate(validate);
+    return () => context.setValidate(undefined);
+  }, [context.setValidate, validate]);
+
+  return (
+    <InlineEditContainer>
+      <Input
+        ref={ref}
+        value={context.value ?? ''}
+        onChange={e => context.setValue(e.target.value)}
+        onBlur={context.onCancel}
+        onKeyDown={onKeyDown}
+        aria-invalid={!!context.errors?.length}
+      />
+    </InlineEditContainer>
+  );
+}
 
 describe('components | UI | <InlineEdit/>', () => {
   const onChange: (value?: any) => void = vi.fn();
@@ -175,6 +205,75 @@ describe('components | UI | <InlineEdit/>', () => {
     await userEvents.click(result.getByRole('button', { name: 'Save' }));
 
     expect(onChange).toBeCalledWith('text area value, appended text');
+  });
+
+  test('should block save when validation fails', async () => {
+    const validate = (value: string) => value.length < 3 ? ['Value must be at least 3 characters'] : undefined;
+
+    const result = renderWithMessageProvider(
+      <InlineEdit value="valid" onChange={onChange}>
+        <InlineEditPlaceholder />
+        <ValidatedInlineEditInput validate={validate} />
+      </InlineEdit>,
+    );
+
+    await userEvents.click(result.getByRole('button'));
+    await userEvents.clear(result.getByRole('textbox'));
+    await userEvents.type(result.getByRole('textbox'), 'x');
+    await userEvents.keyboard('{Enter}');
+
+    expect(onChange).not.toBeCalled();
+    expect(result.getByRole('textbox')).toBeInTheDocument();
+    expect(result.getByRole('textbox')).toBeInvalid();
+  });
+
+  test('should save when validation passes', async () => {
+    const validate = (value: string) => value.length < 3 ? ['Value must be at least 3 characters'] : undefined;
+
+    const result = renderWithMessageProvider(
+      <InlineEdit value="old" onChange={onChange}>
+        <InlineEditPlaceholder />
+        <ValidatedInlineEditInput validate={validate} />
+      </InlineEdit>,
+    );
+
+    await userEvents.click(result.getByRole('button'));
+    await userEvents.clear(result.getByRole('textbox'));
+    await userEvents.type(result.getByRole('textbox'), 'new valid value');
+
+    expect(result.getByRole('textbox')).toBeValid();
+
+    await userEvents.keyboard('{Enter}');
+
+    await waitFor(() => {
+      expect(onChange).toBeCalledWith('new valid value');
+    });
+  });
+
+  test('should clear validation errors on cancel', async () => {
+    const validate = (value: string) => value.length < 3 ? ['Value must be at least 3 characters'] : undefined;
+
+    const result = renderWithMessageProvider(
+      <InlineEdit value="valid" onChange={onChange}>
+        <InlineEditPlaceholder />
+        <ValidatedInlineEditInput validate={validate} />
+      </InlineEdit>,
+    );
+
+    await userEvents.click(result.getByRole('button'));
+    await userEvents.clear(result.getByRole('textbox'));
+    await userEvents.type(result.getByRole('textbox'), 'x');
+    await userEvents.keyboard('{Enter}');
+    expect(onChange).not.toBeCalled();
+    expect(result.getByRole('textbox')).toBeInvalid();
+
+    await userEvents.click(result.getByRole('button', { name: 'Cancel' }));
+    expect(result.queryByRole('textbox')).toBeNull();
+
+    await userEvents.click(result.getByRole('button'));
+    expect(result.getByRole('textbox')).toBeInTheDocument();
+    expect(result.getByRole('textbox')).toHaveValue('valid');
+    expect(result.getByRole('textbox')).toBeValid();
   });
 
   test('should render inline edit with switch field', async () => {
