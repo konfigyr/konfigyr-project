@@ -1,5 +1,4 @@
 import {
-  startTransition,
   useCallback,
   useEffect,
   useMemo,
@@ -425,13 +424,11 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
       return;
     }
 
-    startTransition(() => {
-      const encoded = resolveDefaultPropertyValue(selected);
-      const decoded = useJsonSchemeTransform(selected.schema).decode(encoded);
+    const encoded = resolveDefaultPropertyValue(selected);
+    const decoded = useJsonSchemeTransform(selected.schema).decode(encoded);
 
-      onDescriptorChange(selected);
-      onValueChange({ encoded, decoded });
-    });
+    onDescriptorChange(selected);
+    onValueChange({ encoded, decoded });
   }, [onDescriptorChange, onValueChange]);
 
   const handleOpenChange = useCallback((state: boolean) => {
