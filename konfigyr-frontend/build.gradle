@@ -19,7 +19,7 @@ node {
     npmCommand = String.valueOf(getProperty('node.npm'))
 
     /* use the CI NPM command when executing Github actions */
-    npmInstallCommand = providers.environmentVariable('CI').isPresent() ? 'ci' : 'install'
+    npmInstallCommand = 'ci'
 }
 
 tasks.register('npmBuild', NpmTask) {
@@ -45,7 +45,7 @@ tasks.register('npmTest', NpmTask) {
 
     description = 'Runs the frontend application tests'
 
-    args = providers.environmentVariable('CI').isPresent() ? ['run', 'test:ci'] : ['run', 'test:coverage']
+    args = ['run', 'test:ci']
 
     /* define inputs for the test task in order to run only when the related files change */
     inputs.files('package.json', 'package-lock.json', 'eslint.config.mjs', 'vitest.config.mts')
