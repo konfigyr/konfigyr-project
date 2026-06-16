@@ -215,16 +215,11 @@ export const useKeyboardEvents = (context: EditingContext<any>) => useCallback((
 function InlineEditErrors({ errors }: { errors: Array<string> }) {
   return (
     <Tooltip>
-      <TooltipTrigger>
-        <span className="flex items-center text-destructive cursor-default">
-          <AlertCircleIcon className="size-4" />
-        </span>
+      <TooltipTrigger className="flex items-center text-destructive cursor-default">
+        <AlertCircleIcon className="size-4" />
       </TooltipTrigger>
 
-      <TooltipContent
-        side="left"
-        className="bg-destructive text-destructive-foreground"
-      >
+      <TooltipContent side="left">
         <ul className="list-disc pl-3 space-y-1">
           {errors.map((msg, i) => (
             <li key={i}>{msg}</li>
