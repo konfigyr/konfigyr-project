@@ -552,7 +552,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
 
     const { getByRole } = renderWithMessageProvider(
       <InlineEdit value={{ encoded: '5', decoded: 5 }} onChange={onChange}>
-        <InlineEditPlaceholder />
+        <InlineEditPlaceholder>5</InlineEditPlaceholder>
         <InlineInputField property={property} />
       </InlineEdit>,
     );
@@ -570,7 +570,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
 
     const { getByRole } = renderWithMessageProvider(
       <InlineEdit value={valueFor('valid value')} onChange={onChange}>
-        <InlineEditPlaceholder />
+        <InlineEditPlaceholder>valid value</InlineEditPlaceholder>
         <InlineInputField property={property} />
       </InlineEdit>,
     );
@@ -593,7 +593,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
 
     const { getByRole } = renderWithMessageProvider(
       <InlineEdit value={valueFor('old')} onChange={onChange}>
-        <InlineEditPlaceholder />
+        <InlineEditPlaceholder>old</InlineEditPlaceholder>
         <InlineInputField property={property} />
       </InlineEdit>,
     );
@@ -616,7 +616,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
 
     const { getByRole, queryByRole } = renderWithMessageProvider(
       <InlineEdit value={valueFor('valid value')} onChange={onChange}>
-        <InlineEditPlaceholder />
+        <InlineEditPlaceholder>valid value</InlineEditPlaceholder>
         <InlineInputField property={property} />
       </InlineEdit>,
     );
