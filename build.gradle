@@ -34,7 +34,7 @@ subprojects {
         annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-        implementation 'com.github.spotbugs:spotbugs-annotations:4.9.8'
+        implementation 'com.github.spotbugs:spotbugs-annotations:4.10.2'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -71,7 +71,7 @@ subprojects {
 
             /* JSoup HTML test support */
             dependency('org.jsoup:jsoup:1.22.2')
-            dependency('com.icegreen:greenmail:2.1.8')
+            dependency('com.icegreen:greenmail:2.1.9')
 
             /* Wiremock Spring Boot integration */
             dependency('org.wiremock.integrations:wiremock-spring-boot:4.2.1')
