@@ -16,7 +16,7 @@ import {
 } from '@konfigyr/components/ui/inline-edit';
 import { Input } from '@konfigyr/components/ui/input';
 
-function ValidatedInlineEditInput({ validate }: { validate: (value: string) => string[] | undefined }) {
+function ValidatedInlineEditInput({ validate }: { validate: (value: string) => Array<string> | undefined }) {
   const context = useInlineEdit<string>();
   const ref = useFocusEffect<HTMLInputElement>(context);
   const onKeyDown = useKeyboardEvents(context);

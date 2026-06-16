@@ -62,7 +62,7 @@ export function InlineEdit<T>({ value, children, onChange, onError }: {
   const [isPending, setIsPending] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [errors, setErrors] = useState<Array<string> | undefined>(undefined);
-  const validateRef = useRef<((value: T) => string[] | undefined) | undefined>(undefined);
+  const validateRef = useRef<((value: T) => Array<string> | undefined) | undefined>(undefined);
 
   // update the edit value state when the value changes from the outside
   useEffect(() => {

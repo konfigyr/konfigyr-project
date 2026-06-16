@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
-import { InputField, InlineInputField } from '@konfigyr/components/vault/input';
+import { InlineInputField, InputField } from '@konfigyr/components/vault/input';
 import { InlineEdit, InlineEditPlaceholder } from '@konfigyr/components/ui/inline-edit';
 
 import type {
