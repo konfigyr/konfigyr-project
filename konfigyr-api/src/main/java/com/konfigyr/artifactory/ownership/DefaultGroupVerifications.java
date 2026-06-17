@@ -70,6 +70,7 @@ class DefaultGroupVerifications implements GroupVerifications {
                 .from(GROUP_VERIFICATIONS)
                 .join(NAMESPACES).on(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(NAMESPACES.ID))
                 .where(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get()))
+                .and(GROUP_VERIFICATIONS.GROUP_ID.eq(groupId))
                 .fetchOptional(DefaultGroupVerifications::toGroupVerification);
     }
 
@@ -87,7 +88,12 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Transactional(label = "group-verifications.save")
     public GroupVerification save(GroupVerification verification) {
         try {
-            final Record record = context.insertInto(GROUP_VERIFICATIONS)
+            var insert = context.insertInto(GROUP_VERIFICATIONS);
+            if (verification.id() != null) {
+                insert.set(GROUP_VERIFICATIONS.ID, verification.id().get());
+            }
+
+            final Record record = insert
                     .set(SettableRecord.of(context, GROUP_VERIFICATIONS)
                             .set(GROUP_VERIFICATIONS.NAMESPACE_ID, verification.owner().id().get())
                             .set(GROUP_VERIFICATIONS.GROUP_ID, verification.groupId())
@@ -117,7 +123,12 @@ class DefaultGroupVerifications implements GroupVerifications {
         Assert.notNull(challenge.verificationId(), "Verification challenge must be attached to a verification before saving");
 
         try {
-            final Record record = context.insertInto(GROUP_VERIFICATION_CHALLENGES)
+            var insert = context.insertInto(GROUP_VERIFICATION_CHALLENGES);
+            if (challenge.id() != null) {
+                insert.set(GROUP_VERIFICATION_CHALLENGES.ID, challenge.id().get());
+            }
+
+            final Record record = insert
                     .set(SettableRecord.of(context, GROUP_VERIFICATION_CHALLENGES)
                             .set(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, challenge.verificationId().get())
                             .set(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, challenge.method().name())
