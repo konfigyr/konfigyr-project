@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +27,7 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-active-covering")
     public Optional<GroupVerification> findActiveCovering(String groupId, Owner owner) {
-        return context.select(GROUP_VERIFICATIONS.fields())
-                .select(NAMESPACES.SLUG)
+        return context.select(GROUP_VERIFICATIONS.asterisk(), NAMESPACES.SLUG)
                 .from(GROUP_VERIFICATIONS)
                 .join(NAMESPACES)
                 .on(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(NAMESPACES.ID))
@@ -87,34 +85,26 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(label = "group-verifications.save")
     public GroupVerification save(GroupVerification verification) {
-        try {
-            var insert = context.insertInto(GROUP_VERIFICATIONS);
-            if (verification.id() != null) {
-                insert.set(GROUP_VERIFICATIONS.ID, verification.id().get());
-            }
+        final Record record = context.insertInto(GROUP_VERIFICATIONS)
+                .set(SettableRecord.of(context, GROUP_VERIFICATIONS)
+                        .set(GROUP_VERIFICATIONS.NAMESPACE_ID, verification.owner().id().get())
+                        .set(GROUP_VERIFICATIONS.GROUP_ID, verification.groupId())
+                        .set(GROUP_VERIFICATIONS.STATE, verification.state().name())
+                        .set(GROUP_VERIFICATIONS.CREATED_AT, verification.createdAt())
+                        .set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
+                        .set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
+                        .get())
+                .onConflict(GROUP_VERIFICATIONS.NAMESPACE_ID, GROUP_VERIFICATIONS.GROUP_ID)
+                .doUpdate()
+                .set(GROUP_VERIFICATIONS.STATE, verification.state().name())
+                .set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
+                .set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
+                .returning(GROUP_VERIFICATIONS.fields())
+                .fetchOne();
 
-            final Record record = insert
-                    .set(SettableRecord.of(context, GROUP_VERIFICATIONS)
-                            .set(GROUP_VERIFICATIONS.NAMESPACE_ID, verification.owner().id().get())
-                            .set(GROUP_VERIFICATIONS.GROUP_ID, verification.groupId())
-                            .set(GROUP_VERIFICATIONS.STATE, verification.state().name())
-                            .set(GROUP_VERIFICATIONS.CREATED_AT, verification.createdAt())
-                            .set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
-                            .set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
-                            .get())
-                    .onConflict(GROUP_VERIFICATIONS.NAMESPACE_ID, GROUP_VERIFICATIONS.GROUP_ID)
-                    .doUpdate()
-                    .set(GROUP_VERIFICATIONS.STATE, verification.state().name())
-                    .set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
-                    .set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
-                    .returning(GROUP_VERIFICATIONS.fields())
-                    .fetchOne();
+        Assert.state(record != null, "Could not save group verification: " + verification.groupId());
+        return toGroupVerification(record, verification.owner());
 
-            Assert.state(record != null, "Could not save group verification: " + verification.groupId());
-            return toGroupVerification(record, verification.owner());
-        } catch (DataAccessException ex) {
-            throw ex;
-        }
     }
 
     @Override
@@ -122,45 +112,43 @@ class DefaultGroupVerifications implements GroupVerifications {
     public VerificationChallenge saveChallenge(VerificationChallenge challenge) {
         Assert.notNull(challenge.verificationId(), "Verification challenge must be attached to a verification before saving");
 
-        try {
-            var insert = context.insertInto(GROUP_VERIFICATION_CHALLENGES);
-            if (challenge.id() != null) {
-                insert.set(GROUP_VERIFICATION_CHALLENGES.ID, challenge.id().get());
-            }
-
-            final Record record = insert
-                    .set(SettableRecord.of(context, GROUP_VERIFICATION_CHALLENGES)
-                            .set(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, challenge.verificationId().get())
-                            .set(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, challenge.method().name())
-                            .set(GROUP_VERIFICATION_CHALLENGES.CHALLENGE_TOKEN, challenge.token())
-                            .set(GROUP_VERIFICATION_CHALLENGES.STATE, challenge.state().name())
-                            .set(GROUP_VERIFICATION_CHALLENGES.CREATED_AT, challenge.createdAt())
-                            .set(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT, challenge.verifiedAt())
-                            .set(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT, challenge.expiresAt())
-                            .get())
-                    .onConflict(GROUP_VERIFICATION_CHALLENGES.ID)
-                    .doUpdate()
-                    .set(GROUP_VERIFICATION_CHALLENGES.STATE, challenge.state().name())
-                    .set(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT, challenge.verifiedAt())
-                    .set(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT, challenge.expiresAt())
-                    .returning(GROUP_VERIFICATION_CHALLENGES.fields())
-                    .fetchOne();
-
-            Assert.state(record != null, "Could not save verification challenge: " + challenge.id());
-            return toVerificationChallenge(record);
-        } catch (DataAccessException ex) {
-            throw ex;
+        var insert = context.insertInto(GROUP_VERIFICATION_CHALLENGES);
+        if (challenge.id() != null) {
+            insert.set(GROUP_VERIFICATION_CHALLENGES.ID, challenge.id().get());
         }
+
+        final Record record = insert
+                .set(SettableRecord.of(context, GROUP_VERIFICATION_CHALLENGES)
+                        .set(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, challenge.verificationId().get())
+                        .set(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, challenge.method().name())
+                        .set(GROUP_VERIFICATION_CHALLENGES.CHALLENGE_TOKEN, challenge.token())
+                        .set(GROUP_VERIFICATION_CHALLENGES.STATE, challenge.state().name())
+                        .set(GROUP_VERIFICATION_CHALLENGES.CREATED_AT, challenge.createdAt())
+                        .set(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT, challenge.verifiedAt())
+                        .set(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT, challenge.expiresAt())
+                        .get())
+                .onConflict(GROUP_VERIFICATION_CHALLENGES.ID)
+                .doUpdate()
+                .set(GROUP_VERIFICATION_CHALLENGES.STATE, challenge.state().name())
+                .set(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT, challenge.verifiedAt())
+                .set(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT, challenge.expiresAt())
+                .returning(GROUP_VERIFICATION_CHALLENGES.fields())
+                .fetchOne();
+
+        Assert.state(record != null, "Could not save verification challenge: " + challenge.id());
+        return toVerificationChallenge(record);
+
     }
 
     private static Condition prefixOf(String groupId) {
-        return DSL.inline(groupId).like(DSL.concat(GROUP_VERIFICATIONS.GROUP_ID, DSL.inline(".%")))
+        return DSL.val(groupId)
+                .like(DSL.concat(GROUP_VERIFICATIONS.GROUP_ID, DSL.val(".%")))
                 .or(GROUP_VERIFICATIONS.GROUP_ID.eq(groupId));
     }
 
     private static Condition overlaps(String groupId) {
         return prefixOf(groupId)
-                .or(GROUP_VERIFICATIONS.GROUP_ID.like(DSL.concat(DSL.inline(groupId), DSL.inline(".%"))));
+                .or(GROUP_VERIFICATIONS.GROUP_ID.like(DSL.concat(DSL.val(groupId), DSL.val(".%"))));
     }
 
     private static GroupVerification toGroupVerification(Record record) {
