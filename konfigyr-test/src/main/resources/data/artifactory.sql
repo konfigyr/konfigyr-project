@@ -72,3 +72,4 @@ INSERT INTO artifact_version_properties(artifact_version_id, property_definition
 ALTER SEQUENCE artifacts_id_seq RESTART with 1000;
 ALTER SEQUENCE artifact_versions_id_seq RESTART with 1000;
 ALTER SEQUENCE property_definitions_id_seq RESTART with 1000;
+
