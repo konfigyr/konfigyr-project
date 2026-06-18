@@ -59,7 +59,7 @@ class VerificationChallengeTest {
 				.build();
 
 		assertThatThrownBy(() -> challenge.applyResult(VerificationResult.success(VerificationMethod.DNS)))
-				.isInstanceOf(GroupVerificationException.class)
+				.isInstanceOf(IllegalStateException.class)
 				.hasMessageContaining("Cannot apply a result to a EXPIRED challenge");
 	}
 

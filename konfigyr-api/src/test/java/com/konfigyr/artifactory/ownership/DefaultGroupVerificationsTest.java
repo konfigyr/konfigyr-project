@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -232,5 +233,27 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
                 .returns(null, VerificationChallenge::expiresAt);
     }
 
+    @Test
+    @Transactional
+    @DisplayName("should allow only one verification challenge in unverified state")
+    void shouldAllowOnlyOneActiveChallenge() {
+        final var owner = Owner.of(EntityId.from(1), "john-doe");
+        final var groupVerification = GroupVerification.claim(owner, "com.my-new-company");
 
+        final var pendingResult = verifications.save(groupVerification);
+        assertThat(pendingResult).isNotNull();
+
+        final var challenge = VerificationChallenge.issue(VerificationMethod.DNS)
+                .toBuilder()
+                .verificationId(pendingResult.id())
+                .build();
+
+        final var unverifiedChallenge = verifications.saveChallenge(challenge);
+        assertThat(unverifiedChallenge)
+                .satisfies(it -> assertThat(it.id()).isNotNull())
+                .returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
+
+        assertThatThrownBy(() -> verifications.saveChallenge(challenge))
+                .isInstanceOf(DuplicateKeyException.class);
+    }
 }
