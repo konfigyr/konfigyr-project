@@ -221,7 +221,7 @@
 		/>
 	</changeSet>
 
-	<changeSet author="vitalii kushnir" id="1.0.0-create-group-verifications-table" context="api">
+	<changeSet author="vitalii.kushnir" id="1.0.0-create-group-verifications-table" context="api">
 		<preConditions onFail="MARK_RAN">
 			<not>
 				<tableExists tableName="group_verifications" />
@@ -331,7 +331,7 @@
 		</createIndex>
 	</changeSet>
 
-	<changeSet author="vitalii kushnir" id="1.0.0-group-verifications-active-unique-idx" context="api">
+	<changeSet author="vitalii.kushnir" id="1.0.0-group-verifications-active-unique-idx" context="api">
 		<sql>
 			CREATE UNIQUE INDEX group_verifications_active_group_id_idx
 				ON group_verifications (group_id)
@@ -339,10 +339,18 @@
 		</sql>
 	</changeSet>
 
-	<changeSet author="vitalii kushnir" id="1.0.0-group-verifications-namespace-group-id-unique-idx" context="api">
+	<changeSet author="vitalii.kushnir" id="1.0.0-group-verifications-namespace-group-id-unique-idx" context="api">
 		<sql>
 			CREATE UNIQUE INDEX group_verifications_namespace_group_id_idx
 				ON group_verifications (namespace_id, group_id);
+		</sql>
+	</changeSet>
+
+	<changeSet author="vitalii.kushnir" id="1.0.0-group_verification_challenges_unverified_group_verification_id_idx" context="api">
+		<sql>
+			CREATE UNIQUE INDEX group_verification_challenges_unverified_group_verification_id_idx
+				ON group_verification_challenges (group_verification_id)
+				WHERE state = 'UNVERIFIED';
 		</sql>
 	</changeSet>
 

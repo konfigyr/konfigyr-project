@@ -14,60 +14,57 @@ import java.util.Base64;
 
 @Builder(toBuilder = true)
 public record VerificationChallenge(
-        @Nullable EntityId id,
-        @Nullable EntityId verificationId,
-        @NonNull VerificationMethod method,
-        @NonNull String token,
-        @NonNull ChallengeState state,
-        @Nullable OffsetDateTime createdAt,
-        @Nullable OffsetDateTime verifiedAt,
-        @Nullable OffsetDateTime expiresAt
+		@Nullable EntityId id,
+		@Nullable EntityId verificationId,
+		@NonNull VerificationMethod method,
+		@NonNull String token,
+		@NonNull ChallengeState state,
+		@Nullable OffsetDateTime createdAt,
+		@Nullable OffsetDateTime verifiedAt,
+		@Nullable OffsetDateTime expiresAt
 ) implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 8383658221756321454L;
+	@Serial
+	private static final long serialVersionUID = 8383658221756321454L;
 
-    private static final SecureRandom RANDOM = new SecureRandom();
+	private static final SecureRandom RANDOM = new SecureRandom();
 
-    @NonNull
-    public static VerificationChallenge issue(@NonNull VerificationMethod method) {
-        Assert.notNull(method, "Verification method is required");
+	@NonNull
+	public static VerificationChallenge issue(@NonNull VerificationMethod method) {
+		Assert.notNull(method, "Verification method is required");
 
-        final byte[] seed = new byte[20];
-        RANDOM.nextBytes(seed);
+		final byte[] seed = new byte[20];
+		RANDOM.nextBytes(seed);
 
-        return VerificationChallenge.builder()
-                .method(method)
-                .token(Base64.getUrlEncoder().withoutPadding().encodeToString(seed))
-                .state(ChallengeState.UNVERIFIED)
-                .createdAt(OffsetDateTime.now())
-                .build();
-    }
+		return VerificationChallenge.builder()
+				.method(method)
+				.token(Base64.getUrlEncoder().withoutPadding().encodeToString(seed))
+				.state(ChallengeState.UNVERIFIED)
+				.createdAt(OffsetDateTime.now())
+				.build();
+	}
 
-    @NonNull
-    public VerificationChallenge applyResult(@NonNull VerificationResult result) {
-        Assert.notNull(result, "Verification result is required");
-        if (state != ChallengeState.UNVERIFIED) {
-            throw new GroupVerificationException("Cannot apply a result to a " + state + " challenge");
-        }
+	@NonNull
+	public VerificationChallenge applyResult(@NonNull VerificationResult result) {
+		Assert.notNull(result, "Verification result is required");
 
-        if (result instanceof VerificationResult.Success success) {
-            if (success.method() != method) {
-                throw new GroupVerificationException(
-                        "Cannot apply a " + success.method() + " success to a " + method + " challenge"
-                );
-            }
+		if (state != ChallengeState.UNVERIFIED) {
+			throw new GroupVerificationException("Cannot apply a result to a " + state + " challenge");
+		}
 
-            return toBuilder()
-                    .state(ChallengeState.VERIFIED)
-                    .verifiedAt(OffsetDateTime.now())
-                    .build();
-        }
+		if (result instanceof VerificationResult.Success success) {
+			Assert.state(success.method() == method, "Cannot apply a " + success.method() + " success to a " + method + " challenge");
 
-        return toBuilder()
-                .state(ChallengeState.EXPIRED)
-                .verifiedAt(null)
-                .build();
-    }
+			return toBuilder()
+					.state(ChallengeState.VERIFIED)
+					.verifiedAt(OffsetDateTime.now())
+					.build();
+		}
+
+		return toBuilder()
+				.state(ChallengeState.EXPIRED)
+				.verifiedAt(null)
+				.build();
+	}
 
 }

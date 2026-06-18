@@ -20,7 +20,7 @@ public class InactiveKeysetException extends KeysetManagementException {
 	private static final long serialVersionUID = 3024070458455989992L;
 
 	/**
-     * Creates a new {@link InactiveKeysetException} for the given {@link EntityId entity identifier}.
+	 * Creates a new {@link InactiveKeysetException} for the given {@link EntityId entity identifier}.
 	 *
 	 * @param id the identifier of the keyset that was inactive, cannot be {@literal null}.
 	 */
