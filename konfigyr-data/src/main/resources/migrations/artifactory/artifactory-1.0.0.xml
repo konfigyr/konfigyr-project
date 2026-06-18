@@ -220,4 +220,138 @@
 				onDelete="CASCADE"
 		/>
 	</changeSet>
+
+	<changeSet author="vitalii.kushnir" id="1.0.0-create-group-verifications-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="group_verifications" />
+			</not>
+		</preConditions>
+
+		<comment>Initial group verifications table migration</comment>
+
+		<createTable tableName="group_verifications">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="group_id" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="state" type="varchar(16)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="verified_at" type="timestamptz">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="revoked_at" type="timestamptz">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="group_verifications"
+				baseColumnNames="namespace_id"
+				constraintName="fk_group_verification_namespace"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="group_verifications" indexName="idx_group_verifications_namespace_id">
+			<column name="namespace_id" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet author="vitalii.kushnir" id="1.0.0-create-group-verification-challenges-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="group_verification_challenges" />
+			</not>
+		</preConditions>
+
+		<comment>Initial group verification challenges table migration</comment>
+
+		<createTable tableName="group_verification_challenges">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="group_verification_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="verification_method" type="varchar(16)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="challenge_token" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="state" type="varchar(16)">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="verified_at" type="timestamptz">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="expires_at" type="timestamptz">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="group_verification_challenges"
+				baseColumnNames="group_verification_id"
+				constraintName="fk_group_verification_challenge_verification"
+				referencedTableName="group_verifications"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="group_verification_challenges" indexName="idx_group_verification_challenges_verification_id">
+			<column name="group_verification_id" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet author="vitalii.kushnir" id="1.0.0-group-verifications-active-unique-idx" context="api">
+		<sql>
+			CREATE UNIQUE INDEX group_verifications_active_group_id_idx
+				ON group_verifications (group_id)
+				WHERE state = 'ACTIVE';
+		</sql>
+	</changeSet>
+
+	<changeSet author="vitalii.kushnir" id="1.0.0-group-verifications-namespace-group-id-unique-idx" context="api">
+		<sql>
+			CREATE UNIQUE INDEX group_verifications_namespace_group_id_idx
+				ON group_verifications (namespace_id, group_id);
+		</sql>
+	</changeSet>
+
+	<changeSet author="vitalii.kushnir" id="1.0.0-group_verification_challenges_unverified_group_verification_id_idx" context="api">
+		<sql>
+			CREATE UNIQUE INDEX group_verification_challenges_unverified_group_verification_id_idx
+				ON group_verification_challenges (group_verification_id)
+				WHERE state = 'UNVERIFIED';
+		</sql>
+	</changeSet>
+
 </databaseChangeLog>
