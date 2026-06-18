@@ -12,11 +12,11 @@ import org.springframework.context.annotation.Bean;
 @RequiredArgsConstructor
 @AutoConfigureAfter(JooqAutoConfiguration.class)
 public class GroupVerificationAutoConfiguration {
-    private final DSLContext context;
+	private final DSLContext context;
 
-    @Bean
-    @ConditionalOnMissingBean(GroupVerifications.class)
-    GroupVerifications defaultGroupVerifications() {
-        return new DefaultGroupVerifications(context);
-    }
+	@Bean
+	@ConditionalOnMissingBean(GroupVerifications.class)
+	GroupVerifications defaultGroupVerifications() {
+		return new DefaultGroupVerifications(context);
+	}
 }
