@@ -10,6 +10,11 @@ public sealed interface VerificationResult permits VerificationResult.Success, V
     }
 
     @NonNull
+    static Failure failure(@NonNull FailureReason reason) {
+        return new Failure(reason.name());
+    }
+
+    @NonNull
     static Failure failure(@NonNull String reason) {
         return new Failure(reason);
     }
@@ -18,6 +23,13 @@ public sealed interface VerificationResult permits VerificationResult.Success, V
     }
 
     record Failure(@NonNull String reason) implements VerificationResult {
+    }
+
+    enum FailureReason {
+        TOKEN_MISMATCH,
+        TARGET_NOT_FOUND,
+        SERVICE_UNAVAILABLE,
+        INTERNAL_ERROR,
     }
 
 }

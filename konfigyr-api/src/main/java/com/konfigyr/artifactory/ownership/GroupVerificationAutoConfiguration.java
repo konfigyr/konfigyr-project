@@ -19,4 +19,9 @@ public class GroupVerificationAutoConfiguration {
     GroupVerifications defaultGroupVerifications() {
         return new DefaultGroupVerifications(context);
     }
+
+	@Bean
+	DnsTxtVerificationStrategy dnsTxtVerificationStrategy() {
+		return new DnsTxtVerificationStrategy();
+	}
 }
