@@ -47,7 +47,10 @@ public record VerificationChallenge(
 	@NonNull
 	public VerificationChallenge applyResult(@NonNull VerificationResult result) {
 		Assert.notNull(result, "Verification result is required");
-		Assert.state(state == ChallengeState.UNVERIFIED, "Cannot apply a result to a " + state + " challenge");
+
+		if (state != ChallengeState.UNVERIFIED) {
+			throw new GroupVerificationException("Cannot apply a result to a " + state + " challenge");
+		}
 
 		if (result instanceof VerificationResult.Success success) {
 			Assert.state(success.method() == method, "Cannot apply a " + success.method() + " success to a " + method + " challenge");
