@@ -1,7 +1,7 @@
 package com.konfigyr.artifactory.ownership;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.util.Assert;
@@ -13,6 +13,7 @@ import javax.naming.directory.InitialDirContext;
 import java.util.Hashtable;
 
 @Slf4j
+@NullMarked
 class DnsTxtVerificationStrategy implements VerificationStrategy {
 	private static final Marker MARKER = MarkerFactory.getMarker("DNS_VERIFIER");
 
@@ -26,7 +27,7 @@ class DnsTxtVerificationStrategy implements VerificationStrategy {
 	}
 
 	@Override
-	public VerificationResult verify(@NonNull GroupVerification verification, @NonNull VerificationChallenge challenge) {
+	public VerificationResult verify(GroupVerification verification, VerificationChallenge challenge) {
 		final String domain = toDomain(verification.groupId());
 
 		try (CloseableDirContext ctx = new CloseableDirContext()) {
