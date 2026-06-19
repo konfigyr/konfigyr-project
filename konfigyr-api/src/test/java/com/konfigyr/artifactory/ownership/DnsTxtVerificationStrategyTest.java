@@ -110,6 +110,18 @@ class DnsTxtVerificationStrategyTest {
 	}
 
 	@Test
+	@DisplayName("should return SERVICE_UNAVAILABLE when DNS service is unavailable")
+	void verifyServiceUnavailable() {
+		final GroupVerification verification = verification("com.mycompany");
+		final VerificationChallenge challenge = challenge("abc123");
+
+		try (MockedConstruction<InitialDirContext> ignored = mockDnsException(new ServiceUnavailableException("DNS service unavailable"))) {
+			assertThat(strategy.verify(verification, challenge))
+					.isEqualTo(VerificationResult.failure(SERVICE_UNAVAILABLE));
+		}
+	}
+
+	@Test
 	@DisplayName("should return INTERNAL_ERROR when a NamingException is raised")
 	void verifyNamingException() {
 		final GroupVerification verification = verification("com.mycompany");

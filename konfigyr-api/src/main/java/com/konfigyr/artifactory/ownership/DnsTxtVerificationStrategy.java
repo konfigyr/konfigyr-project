@@ -6,10 +6,7 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.util.Assert;
 
-import javax.naming.CommunicationException;
-import javax.naming.NameNotFoundException;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
+import javax.naming.*;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
@@ -52,7 +49,7 @@ class DnsTxtVerificationStrategy implements VerificationStrategy {
 			return VerificationResult.failure(VerificationResult.FailureReason.TOKEN_MISMATCH);
 		} catch (NameNotFoundException e) {
 			return VerificationResult.failure(VerificationResult.FailureReason.TARGET_NOT_FOUND);
-		} catch (CommunicationException e) {
+		} catch (CommunicationException | ServiceUnavailableException e) {
 			log.error(MARKER, "DNS lookup failed for domain {} due communication failure", domain, e);
 			return VerificationResult.failure(VerificationResult.FailureReason.SERVICE_UNAVAILABLE);
 		} catch (NamingException e) {
