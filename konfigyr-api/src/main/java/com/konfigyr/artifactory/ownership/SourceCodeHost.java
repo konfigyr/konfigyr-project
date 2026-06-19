@@ -12,8 +12,11 @@ import java.util.Optional;
 @NullMarked
 public enum SourceCodeHost {
 
+	/** GitHub source code host. */
 	GITHUB("github", "https://api.github.com/repos/%s/%s"),
+	/** GitLab source code host. */
 	GITLAB("gitlab", "https://gitlab.com/api/v4/projects/%s"),
+	/** Bitbucket source code host. */
 	BITBUCKET("bitbucket", "https://api.bitbucket.org/2.0/repositories/%s/%s");
 
 	private final String hostKey;

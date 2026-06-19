@@ -14,7 +14,7 @@ class SourceCodeHostTest {
 	@CsvSource({
 			"io.github.alice,    GITHUB",
 			"io.gitlab.alice,    GITLAB",
-			"io.bitbucket.alice, BITBUCKET",
+			"io.bitbucket.alice, BITBUCKET"
 	})
 	@DisplayName("should resolve host from groupId")
 	void fromGroupId(String groupId, SourceCodeHost expected) {
@@ -28,7 +28,7 @@ class SourceCodeHostTest {
 			"io.unknown.alice",
 			"io.github.alice.utils",
 			"github.io.alice",
-			"io.github.",
+			"io.github."
 	})
 	@DisplayName("should return empty for groupIds that do not match io.{host}.{username}")
 	void fromGroupIdUnknown(String groupId) {
@@ -39,7 +39,7 @@ class SourceCodeHostTest {
 	@CsvSource({
 			"GITHUB,    io.github.alice,    alice",
 			"GITLAB,    io.gitlab.alice,    alice",
-			"BITBUCKET, io.bitbucket.alice, alice",
+			"BITBUCKET, io.bitbucket.alice, alice"
 	})
 	@DisplayName("should extract username from groupId")
 	void ownerPath(SourceCodeHost host, String groupId, String expected) {
@@ -57,7 +57,7 @@ class SourceCodeHostTest {
 	@CsvSource({
 			"GITHUB,    alice, kfgyr-abc, https://api.github.com/repos/alice/kfgyr-abc",
 			"GITLAB,    alice, kfgyr-abc, https://gitlab.com/api/v4/projects/alice%2Fkfgyr-abc",
-			"BITBUCKET, alice, kfgyr-abc, https://api.bitbucket.org/2.0/repositories/alice/kfgyr-abc",
+			"BITBUCKET, alice, kfgyr-abc, https://api.bitbucket.org/2.0/repositories/alice/kfgyr-abc"
 	})
 	@DisplayName("should format repository URL per host")
 	void repoURI(SourceCodeHost host, String username, String repoName, String expectedUrl) {

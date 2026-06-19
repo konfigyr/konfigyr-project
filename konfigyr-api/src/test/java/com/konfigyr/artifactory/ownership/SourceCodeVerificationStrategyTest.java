@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
+import java.io.IOException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
@@ -104,7 +106,9 @@ class SourceCodeVerificationStrategyTest {
 	@DisplayName("should return INTERNAL_ERROR on connection failure")
 	void verifyInternalErrorOnConnectionFailure() {
 		server.expect(requestTo("https://api.github.com/repos/alice/test-token"))
-				.andRespond(request -> { throw new java.io.IOException("Connection refused"); });
+				.andRespond(_ -> {
+					throw new IOException("Connection refused");
+				});
 
 		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
 				.isEqualTo(VerificationResult.failure(VerificationResult.FailureReason.INTERNAL_ERROR));
