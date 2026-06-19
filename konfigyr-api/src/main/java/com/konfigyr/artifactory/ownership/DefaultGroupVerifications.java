@@ -83,6 +83,17 @@ class DefaultGroupVerifications implements GroupVerifications {
 	}
 
 	@Override
+	@Transactional(readOnly = true, label = "group-verifications.find-challenges")
+	public List<VerificationChallenge> findChallenges(EntityId verificationId, Owner owner) {
+		return context.select(GROUP_VERIFICATION_CHALLENGES.fields())
+				.from(GROUP_VERIFICATION_CHALLENGES)
+				.join(GROUP_VERIFICATIONS).on(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(GROUP_VERIFICATIONS.ID))
+				.where(GROUP_VERIFICATIONS.ID.eq(verificationId.get())).and(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get()))
+				.orderBy(GROUP_VERIFICATION_CHALLENGES.CREATED_AT.asc())
+				.fetch(DefaultGroupVerifications::toVerificationChallenge);
+	}
+
+	@Override
 	@Transactional(label = "group-verifications.save")
 	public GroupVerification save(GroupVerification verification) {
 		final Record record = context.insertInto(GROUP_VERIFICATIONS)

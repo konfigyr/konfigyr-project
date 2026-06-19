@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
+import com.konfigyr.entity.EntityId;
 import org.jmolecules.ddd.annotation.Repository;
 import org.jspecify.annotations.NullMarked;
 
@@ -56,6 +57,15 @@ public interface GroupVerifications {
 	 * @return the active challenge if one exists
 	 */
 	Optional<VerificationChallenge> findActiveChallenge(GroupVerification verification);
+
+	/**
+	 * Lists all challenges attached to a verification within the given namespace.
+	 *
+	 * @param verificationId the verification identifier to look up
+	 * @param owner the namespace owner
+	 * @return the challenge history for the claim
+	 */
+	List<VerificationChallenge> findChallenges(EntityId verificationId, Owner owner);
 
 	/**
 	 * Saves a new verification claim.

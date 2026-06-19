@@ -54,7 +54,7 @@ public record GroupVerification(
 
 	@NonNull
 	public GroupVerification revoke() {
-		if (state != VerificationState.ACTIVE) {
+		if (state != VerificationState.ACTIVE && state != VerificationState.PENDING) {
 			throw new GroupVerificationException("Cannot revoke a " + state + " verification");
 		}
 
