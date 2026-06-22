@@ -24,6 +24,8 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	private final DSLContext context;
 
+	private final VerificationStrategy dnsTxtVerificationStrategy;
+
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-active-covering")
 	public Optional<GroupVerification> findActiveCovering(String groupId, Owner owner) {
@@ -118,6 +120,40 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	}
 
+
+	@Override
+	@Transactional(label = "group-verifications.claim")
+	public GroupVerification claim(Owner owner, String groupId, VerificationMethod method) {
+		final GroupVerification verification = save(
+				GroupVerification.claim(owner, groupId)
+		);
+
+		VerificationChallenge verificationChallenge = VerificationChallenge.issue(method)
+				.toBuilder()
+				.verificationId(verification.id())
+				.build();
+		saveChallenge(verificationChallenge);
+
+		return verification;
+	}
+
+	@Override
+	@Transactional(label = "group-verifications.verify")
+	public GroupVerification verify(Owner owner, String groupId) {
+		final GroupVerification verification = findByGroupId(groupId, owner)
+				.orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
+
+		final VerificationChallenge challenge = findActiveChallenge(verification)
+				.orElseThrow(() -> new VerificationChallengeNotFoundException("No active challenge to verify for groupId " + groupId));
+
+		final VerificationStrategy strategy = resolveStrategy(challenge.method());
+
+		final VerificationResult result = strategy.verify(verification, challenge);
+		saveChallenge(challenge.applyResult(result));
+
+		return result instanceof VerificationResult.Success ? save(verification.activate()) : verification;
+	}
+
 	@Override
 	@Transactional(label = "group-verifications.save-challenge")
 	public VerificationChallenge saveChallenge(VerificationChallenge challenge) {
@@ -205,6 +241,13 @@ class DefaultGroupVerifications implements GroupVerifications {
 				.verifiedAt(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT))
 				.expiresAt(record.get(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT))
 				.build();
+	}
+
+	private VerificationStrategy resolveStrategy(VerificationMethod model) {
+		return switch (model) {
+			case DNS -> dnsTxtVerificationStrategy;
+			case GITHUB -> throw new IllegalArgumentException("Not implemented");
+		};
 	}
 
 }

@@ -62,7 +62,7 @@ public interface GroupVerifications {
 	 * Lists all challenges attached to a verification within the given namespace.
 	 *
 	 * @param verificationId the verification identifier to look up
-	 * @param owner the namespace owner
+	 * @param owner          the namespace owner
 	 * @return the challenge history for the claim
 	 */
 	List<VerificationChallenge> findChallenges(EntityId verificationId, Owner owner);
@@ -74,6 +74,18 @@ public interface GroupVerifications {
 	 * @return the saved claim
 	 */
 	GroupVerification save(GroupVerification verification);
+
+	/**
+	 * Claims a new group verification for the supplied namespace owner.
+	 *
+	 * @param owner   the namespace owner that claims the group
+	 * @param groupId the group identifier to claim
+	 * @param method  the verification method used to prove ownership
+	 * @return the created verification claim
+	 */
+	GroupVerification claim(Owner owner, String groupId, VerificationMethod method);
+
+	GroupVerification verify(Owner owner, String groupId);
 
 	/**
 	 * Saves a new verification challenge.

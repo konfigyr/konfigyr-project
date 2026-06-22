@@ -16,8 +16,8 @@ public class GroupVerificationAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(GroupVerifications.class)
-	GroupVerifications defaultGroupVerifications() {
-		return new DefaultGroupVerifications(context);
+	GroupVerifications defaultGroupVerifications(DnsTxtVerificationStrategy dnsTxtVerificationStrategy) {
+		return new DefaultGroupVerifications(context, dnsTxtVerificationStrategy);
 	}
 
 	@Bean

@@ -1,7 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
 import com.konfigyr.artifactory.ArtifactoryException;
-import com.konfigyr.namespace.Namespace;
 import org.springframework.http.HttpStatus;
 
 import java.io.Serial;

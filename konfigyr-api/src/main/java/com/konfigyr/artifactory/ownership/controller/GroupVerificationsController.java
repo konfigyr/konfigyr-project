@@ -8,8 +8,6 @@ import com.konfigyr.artifactory.ownership.Owner;
 import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
 import com.konfigyr.artifactory.ownership.VerificationChallenge;
 import com.konfigyr.artifactory.ownership.VerificationMethod;
-import com.konfigyr.artifactory.ownership.VerificationResult;
-import com.konfigyr.artifactory.ownership.VerificationStrategy;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
@@ -41,7 +39,6 @@ import java.util.List;
 public class GroupVerificationsController {
 
 	private final GroupVerifications groupVerifications;
-	private final VerificationStrategy dnsTxtVerificationStrategy;
 
 	@GetMapping
 	@PreAuthorize("isAdmin(#namespace)")
@@ -73,15 +70,7 @@ public class GroupVerificationsController {
 			throw new GroupIdAlreadyClaimedException(request.groupId());
 		});
 
-		final GroupVerification verification = groupVerifications.save(
-				GroupVerification.claim(owner, request.groupId())
-		);
-
-		VerificationChallenge verificationChallenge = VerificationChallenge.issue(request.verificationMethod())
-				.toBuilder()
-				.verificationId(verification.id())
-				.build();
-		groupVerifications.saveChallenge(verificationChallenge);
+		final GroupVerification verification = groupVerifications.claim(owner, request.groupId(), request.verificationMethod());
 
 		return assembler.groupVerification().assemble(verification);
 	}
@@ -104,17 +93,8 @@ public class GroupVerificationsController {
 	) {
 		final Owner owner = resolveOwner(namespace);
 		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
-		final GroupVerification verification = lookup(owner, groupId);
-		final VerificationChallenge challenge = groupVerifications.findActiveChallenge(verification)
-				.orElseThrow(() -> new VerificationChallengeNotFoundException("No active challenge to verify for groupId " + groupId));
 
-		final VerificationStrategy strategy = resolveStrategy(challenge.method());
-
-		final VerificationResult result = strategy.verify(verification, challenge);
-		groupVerifications.saveChallenge(challenge.applyResult(result));
-
-		final GroupVerification updated = result instanceof VerificationResult.Success ? groupVerifications.save(verification.activate()) : verification;
-
+		final GroupVerification updated = groupVerifications.verify(owner, groupId);
 		return assembler.groupVerification().assemble(updated);
 	}
 
@@ -132,13 +112,6 @@ public class GroupVerificationsController {
 	private Owner resolveOwner(String slug) {
 		return groupVerifications.findOwner(slug)
 				.orElseThrow(() -> new OwnerNotFoundException(slug));
-	}
-
-	private VerificationStrategy resolveStrategy(VerificationMethod model) {
-		return switch (model) {
-			case DNS -> dnsTxtVerificationStrategy;
-			case GITHUB -> dnsTxtVerificationStrategy;
-		};
 	}
 
 	private GroupVerification lookup(Owner owner, String groupId) {
