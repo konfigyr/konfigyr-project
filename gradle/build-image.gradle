@@ -1,9 +1,8 @@
 apply plugin: 'org.springframework.boot'
 
 tasks.named('bootBuildImage') {
-    imageName = providers.environmentVariable('NIGHTLY')
-            .map { Boolean.parseBoolean(it) ? 'latest' : project.version.toString() }
-            .orElse(project.version.toString())
+    imageName = nightly
+            .map { it ? 'latest' : project.version.toString() }
             .map { "konfigyr/${project.name}:${it}" }
 
     docker {

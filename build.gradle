@@ -11,6 +11,12 @@ subprojects {
             .map { Boolean.parseBoolean(it) }
             .orElse(false)
 
+    /* Resolves to true when the NIGHTLY environment variable is set, used to determine whether
+     * Docker images should be tagged as 'latest' or with the project version. */
+    ext.nightly = providers.environmentVariable('NIGHTLY')
+            .map { Boolean.parseBoolean(it) }
+            .orElse(false)
+
     apply plugin: 'idea'
     apply plugin: 'java'
     apply plugin: 'jacoco'
