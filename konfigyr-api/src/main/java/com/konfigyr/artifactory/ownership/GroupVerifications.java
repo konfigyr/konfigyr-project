@@ -82,4 +82,12 @@ public interface GroupVerifications {
 	 * @return the saved challenge
 	 */
 	VerificationChallenge saveChallenge(VerificationChallenge challenge);
+
+	/**
+	 * Resolves the group owner for the given namespace slug.
+	 *
+	 * @param namespace the namespace slug to resolve
+	 * @return group owner if one exists
+	 */
+	Optional<Owner> findOwner(String namespace);
 }

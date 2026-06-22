@@ -6,6 +6,7 @@ import com.konfigyr.artifactory.ownership.GroupVerificationException;
 import com.konfigyr.artifactory.ownership.GroupVerificationNotFoundException;
 import com.konfigyr.artifactory.ownership.GroupVerifications;
 import com.konfigyr.artifactory.ownership.Owner;
+import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
 import com.konfigyr.artifactory.ownership.VerificationChallenge;
 import com.konfigyr.artifactory.ownership.VerificationMethod;
 import com.konfigyr.artifactory.ownership.VerificationResult;
@@ -13,8 +14,6 @@ import com.konfigyr.artifactory.ownership.VerificationStrategy;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
-import com.konfigyr.namespace.NamespaceManager;
-import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +39,6 @@ import java.util.List;
 @RequestMapping("/namespaces/{namespace}/group-verifications")
 public class GroupVerificationsController {
 
-	private final NamespaceManager namespaces;
 	private final GroupVerifications groupVerifications;
 	private final VerificationStrategy dnsTxtVerificationStrategy;
 
@@ -131,9 +129,8 @@ public class GroupVerificationsController {
 	}
 
 	private Owner resolveOwner(String slug) {
-		return namespaces.findBySlug(slug)
-				.map(ns -> Owner.of(ns.id(), ns.slug()))
-				.orElseThrow(() -> new NamespaceNotFoundException(slug));
+		return groupVerifications.findOwner(slug)
+				.orElseThrow(() -> new OwnerNotFoundException(slug));
 	}
 
 	private VerificationStrategy resolveStrategy(VerificationMethod model) {

@@ -3,10 +3,10 @@ package com.konfigyr.artifactory.ownership.controller;
 import com.konfigyr.artifactory.ownership.ChallengeState;
 import com.konfigyr.artifactory.ownership.GroupIdAlreadyClaimedException;
 import com.konfigyr.artifactory.ownership.GroupVerification;
+import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
 import com.konfigyr.artifactory.ownership.VerificationChallenge;
 import com.konfigyr.artifactory.ownership.VerificationMethod;
 import com.konfigyr.artifactory.ownership.VerificationState;
-import com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
@@ -27,25 +27,39 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 
 class GroupVerificationsControllerTest extends AbstractControllerTest {
 
-    @Test
-    @DisplayName("should list claims for a namespace")
-    @Transactional
-    void shouldListClaimsForNamespace() {
-        mvc.get().uri("/namespaces/{namespace}/group-verifications", "john-doe")
-                .with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
-                .exchange()
-                .assertThat()
-                .apply(log())
-                .hasStatusOk()
-                .bodyJson()
-                .convertTo(collectionModel(GroupVerification.class))
-                .satisfies(it -> assertThat(it.getContent())
-                        .extracting(GroupVerification::groupId, GroupVerification::state)
-                        .containsExactlyInAnyOrder(
-                                tuple("org.springframework.ai", VerificationState.FAILED),
-                                tuple("org.springframework.boot", VerificationState.PENDING)
-                        ));
-    }
+	@Test
+	@DisplayName("should fail to list claims for an unknown namespace")
+	@Transactional
+	void shouldFailFindOwner() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications", "fake-namespace")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND)
+				.satisfies(hasFailedWithException(OwnerNotFoundException.class, ex -> ex
+						.hasMessageContaining("Could not find an owner with the following name: fake-namespace")));
+	}
+
+	@Test
+	@DisplayName("should list claims for a namespace")
+	@Transactional
+	void shouldListClaimsForNamespace() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications", "john-doe")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(collectionModel(GroupVerification.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(GroupVerification::groupId, GroupVerification::state)
+						.containsExactlyInAnyOrder(
+								tuple("org.springframework.ai", VerificationState.FAILED),
+								tuple("org.springframework.boot", VerificationState.PENDING)
+						));
+	}
 
 	@Test
 	@DisplayName("should submit a new verification claim")
@@ -67,22 +81,21 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.satisfies(hasFailedWithException(GroupIdAlreadyClaimedException.class));
 	}
 
-    @Test
-    @DisplayName("should fetch claim by group id")
-    @Transactional
-    void shouldFetchClaimByGroupId() {
-        mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}", "john-doe", "org.springframework.ai")
-                .with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
-                .exchange()
-                .assertThat()
-                .apply(log())
-                .hasStatusOk()
-                .bodyJson()
-                .convertTo(GroupVerification.class)
-                .returns("org.springframework.ai", GroupVerification::groupId)
-                .returns(VerificationState.FAILED, GroupVerification::state);
-    }
-
+	@Test
+	@DisplayName("should fetch claim by group id")
+	@Transactional
+	void shouldFetchClaimByGroupId() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}", "john-doe", "org.springframework.ai")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(GroupVerification.class)
+				.returns("org.springframework.ai", GroupVerification::groupId)
+				.returns(VerificationState.FAILED, GroupVerification::state);
+	}
 
 	@Test
 	@DisplayName("should retrieve verification challenge history for the given claim")

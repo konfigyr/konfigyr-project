@@ -1,5 +1,7 @@
 package com.konfigyr.artifactory.ownership;
 
+import org.springframework.http.HttpStatus;
+
 import java.io.Serial;
 
 public class GroupIdAlreadyClaimedException extends GroupVerificationException {
@@ -8,11 +10,7 @@ public class GroupIdAlreadyClaimedException extends GroupVerificationException {
 	private static final long serialVersionUID = 8131982906551778580L;
 
 	public GroupIdAlreadyClaimedException(String groupId) {
-		super("Could not claim. The groupId " + groupId + "already owned by another namespace.");
-	}
-
-	public GroupIdAlreadyClaimedException(String groupId, Throwable cause) {
-		super("Could not claim. The groupId " + groupId + "already owned by another namespace.", cause);
+		super(HttpStatus.BAD_REQUEST, "Could not claim. The groupId " + groupId + " already owned by another namespace.");
 	}
 
 }

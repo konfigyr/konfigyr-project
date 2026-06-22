@@ -151,6 +151,18 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	}
 
+	@Override
+	@Transactional(readOnly = true, label = "group-verifications.find-owner")
+	public Optional<Owner> findOwner(String namespace) {
+		return context.select(NAMESPACES.ID, NAMESPACES.SLUG)
+				.from(NAMESPACES)
+				.where(NAMESPACES.SLUG.eq(namespace))
+				.fetchOptional(record -> Owner.of(
+						EntityId.from(record.get(NAMESPACES.ID)),
+						record.get(NAMESPACES.SLUG)
+				));
+	}
+
 	private static Condition prefixOf(String groupId) {
 		return DSL.val(groupId)
 				.like(DSL.concat(GROUP_VERIFICATIONS.GROUP_ID, DSL.val(".%")))
