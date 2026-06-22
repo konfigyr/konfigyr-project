@@ -15,7 +15,7 @@ import org.springframework.web.client.RestClientException;
 @RequiredArgsConstructor
 class SourceCodeVerificationStrategy implements VerificationStrategy {
 	private static final Marker MARKER = MarkerFactory.getMarker("SOURCE_CODE_VERIFIER");
-	private static final String REPO_NAME_PREFIX = "kfg-";
+	private static final String REPO_NAME_PREFIX = "kfgyr-";
 
 	private final RestClient restClient;
 

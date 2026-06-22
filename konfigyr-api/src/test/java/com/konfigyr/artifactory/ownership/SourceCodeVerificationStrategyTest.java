@@ -35,7 +35,7 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return success when repository exists on GitHub")
 	void verifyGitHubSuccess() {
-		server.expect(requestTo("https://api.github.com/repos/alice/test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
 				.andRespond(withSuccess());
 
 		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
@@ -45,7 +45,7 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return success when repository exists on GitLab")
 	void verifyGitLabSuccess() {
-		server.expect(requestTo("https://gitlab.com/api/v4/projects/alice%2Ftest-token"))
+		server.expect(requestTo("https://gitlab.com/api/v4/projects/alice%2Fkfgyr-test-token"))
 				.andRespond(withSuccess());
 
 		assertThat(strategy.verify(verification("io.gitlab.alice"), challenge("test-token")))
@@ -55,7 +55,7 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return success when repository exists on Bitbucket")
 	void verifyBitbucketSuccess() {
-		server.expect(requestTo("https://api.bitbucket.org/2.0/repositories/alice/test-token"))
+		server.expect(requestTo("https://api.bitbucket.org/2.0/repositories/alice/kfgyr-test-token"))
 				.andRespond(withSuccess());
 
 		assertThat(strategy.verify(verification("io.bitbucket.alice"), challenge("test-token")))
@@ -65,7 +65,7 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return TARGET_NOT_FOUND when repository does not exist")
 	void verifyRepoNotFound() {
-		server.expect(requestTo("https://api.github.com/repos/alice/test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
 				.andRespond(withStatus(HttpStatus.NOT_FOUND));
 
 		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
@@ -75,7 +75,7 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return SERVICE_UNAVAILABLE when the host API returns 503")
 	void verifyServiceUnavailable() {
-		server.expect(requestTo("https://api.github.com/repos/alice/test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
 				.andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
 
 		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
@@ -85,7 +85,7 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return SERVICE_UNAVAILABLE on any 5xx error")
 	void verifyInternalErrorOn5xx() {
-		server.expect(requestTo("https://api.github.com/repos/alice/test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
 				.andRespond(withServerError());
 
 		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
@@ -95,7 +95,7 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return INTERNAL_ERROR on unexpected 4xx error")
 	void verifyInternalErrorOn4xx() {
-		server.expect(requestTo("https://api.github.com/repos/alice/test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
 				.andRespond(withStatus(HttpStatus.FORBIDDEN));
 
 		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
@@ -105,7 +105,7 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return INTERNAL_ERROR on connection failure")
 	void verifyInternalErrorOnConnectionFailure() {
-		server.expect(requestTo("https://api.github.com/repos/alice/test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
 				.andRespond(_ -> {
 					throw new IOException("Connection refused");
 				});
