@@ -2,8 +2,7 @@ package com.konfigyr.artifactory.ownership.controller;
 
 import com.konfigyr.artifactory.ownership.GroupIdAlreadyClaimedException;
 import com.konfigyr.artifactory.ownership.GroupVerification;
-import com.konfigyr.artifactory.ownership.GroupVerificationException;
-import com.konfigyr.artifactory.ownership.GroupVerificationNotFoundException;
+import com.konfigyr.artifactory.ownership.VerificationChallengeNotFoundException;
 import com.konfigyr.artifactory.ownership.GroupVerifications;
 import com.konfigyr.artifactory.ownership.Owner;
 import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
@@ -16,6 +15,8 @@ import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.http.HttpStatus;
@@ -57,14 +58,14 @@ public class GroupVerificationsController {
 		final Owner owner = resolveOwner(namespace);
 		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(groupId, owner)
-				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
+				.orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
 		return assembler.groupVerification().assemble(verification);
 	}
 
 	@PostMapping
 	@PreAuthorize("isAdmin(#namespace)")
 	@ResponseStatus(HttpStatus.CREATED)
-	public EntityModel<GroupVerification> claim(@PathVariable String namespace, @RequestBody @Validated GroupVerificationRequest request) {
+	public EntityModel<GroupVerification> claim(@PathVariable String namespace, @RequestBody @Validated ClaimRequest request) {
 		final Owner owner = resolveOwner(namespace);
 		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
 
@@ -105,7 +106,7 @@ public class GroupVerificationsController {
 		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
 		final GroupVerification verification = lookup(owner, groupId);
 		final VerificationChallenge challenge = groupVerifications.findActiveChallenge(verification)
-				.orElseThrow(() -> new GroupVerificationException("No active challenge to verify for groupId " + groupId));
+				.orElseThrow(() -> new VerificationChallengeNotFoundException("No active challenge to verify for groupId " + groupId));
 
 		final VerificationStrategy strategy = resolveStrategy(challenge.method());
 
@@ -123,7 +124,7 @@ public class GroupVerificationsController {
 	public void revoke(@PathVariable String namespace, @PathVariable String groupId) {
 		final Owner owner = resolveOwner(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(groupId, owner)
-				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
+				.orElseThrow(() -> new VerificationChallengeNotFoundException("Could not find a verification for groupId '" + groupId + "' owned by namespace " + owner.slug()));
 
 		groupVerifications.save(verification.revoke());
 	}
@@ -142,7 +143,12 @@ public class GroupVerificationsController {
 
 	private GroupVerification lookup(Owner owner, String groupId) {
 		return groupVerifications.findByGroupId(groupId, owner)
-				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
+				.orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
+	}
+
+	public record ClaimRequest(
+			@NotBlank String groupId,
+			@NotNull VerificationMethod verificationMethod) {
 	}
 
 }

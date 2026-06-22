@@ -65,11 +65,11 @@ class GroupVerificationTest {
 		final var revoked = active.revoke();
 
 		assertThatThrownBy(active::activate)
-				.isInstanceOf(GroupVerificationException.class)
+				.isInstanceOf(VerificationChallengeNotFoundException.class)
 				.hasMessageContaining("Cannot activate a ACTIVE verification");
 
 		assertThatThrownBy(revoked::activate)
-				.isInstanceOf(GroupVerificationException.class)
+				.isInstanceOf(VerificationChallengeNotFoundException.class)
 				.hasMessageContaining("Cannot activate a REVOKED verification");
 	}
 
@@ -81,7 +81,7 @@ class GroupVerificationTest {
 				.revoke();
 
 		assertThatThrownBy(revoked::revoke)
-				.isInstanceOf(GroupVerificationException.class)
+				.isInstanceOf(VerificationChallengeNotFoundException.class)
 				.hasMessageContaining("Cannot revoke a REVOKED verification");
 	}
 

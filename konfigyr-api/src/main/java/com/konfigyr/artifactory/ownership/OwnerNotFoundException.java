@@ -1,6 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
-import com.konfigyr.namespace.NamespaceException;
+import com.konfigyr.artifactory.ArtifactoryException;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 
@@ -11,7 +11,7 @@ import java.io.Serial;
  *
  * @author Vitalii Kushnir
  **/
-public class OwnerNotFoundException extends NamespaceException {
+public class OwnerNotFoundException extends ArtifactoryException {
 
 	@Serial
 	private static final long serialVersionUID = -30756960861487345L;

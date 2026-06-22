@@ -43,7 +43,7 @@ public record GroupVerification(
 	@NonNull
 	public GroupVerification activate() {
 		if (state != VerificationState.PENDING) {
-			throw new GroupVerificationException("Cannot activate a " + state + " verification");
+			throw new VerificationChallengeNotFoundException("Cannot activate a " + state + " verification");
 		}
 
 		return toBuilder()
@@ -55,7 +55,7 @@ public record GroupVerification(
 	@NonNull
 	public GroupVerification revoke() {
 		if (state != VerificationState.ACTIVE && state != VerificationState.PENDING) {
-			throw new GroupVerificationException("Cannot revoke a " + state + " verification");
+			throw new VerificationChallengeNotFoundException("Cannot revoke a " + state + " verification");
 		}
 
 		return toBuilder()

@@ -49,7 +49,7 @@ public record VerificationChallenge(
 		Assert.notNull(result, "Verification result is required");
 
 		if (state != ChallengeState.UNVERIFIED) {
-			throw new GroupVerificationException("Cannot apply a result to a " + state + " challenge");
+			throw new VerificationChallengeNotFoundException("Cannot apply a result to a " + state + " challenge");
 		}
 
 		if (result instanceof VerificationResult.Success success) {
