@@ -5,6 +5,12 @@ plugins {
 }
 
 subprojects {
+    /* Resolves to true when running inside GitHub Actions (CI=true is set automatically by the runner).
+     * Used to switch between npm install strategies and test commands appropriate for CI vs local development. */
+    ext.ci = providers.environmentVariable('CI')
+            .map { Boolean.parseBoolean(it) }
+            .orElse(false)
+
     apply plugin: 'idea'
     apply plugin: 'java'
     apply plugin: 'jacoco'

@@ -1,15 +1,15 @@
 apply plugin: 'org.springframework.boot'
 
 tasks.named('bootBuildImage') {
-    def nightly = providers.environmentVariable('NIGHTLY').map { Boolean.parseBoolean(it) }.orElse(false).get()
-    def tag = nightly ? 'latest' : project.version
-
-    imageName = "konfigyr/${project.name}:${tag}"
+    imageName = providers.environmentVariable('NIGHTLY')
+            .map { Boolean.parseBoolean(it) ? 'latest' : project.version.toString() }
+            .orElse(project.version.toString())
+            .map { "konfigyr/${project.name}:${it}" }
 
     docker {
         publishRegistry {
             username = 'konfigyr'
-            password = providers.environmentVariable('DOCKER_HUB_TOKEN').orElse('').get()
+            password = providers.environmentVariable('DOCKER_HUB_TOKEN').orElse('')
         }
     }
 }
