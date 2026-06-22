@@ -35,32 +35,21 @@ class SourceCodeHostTest {
 		assertThat(SourceCodeHost.fromGroupId(groupId)).isEmpty();
 	}
 
-	@ParameterizedTest(name = "{0} + {1} → {2}")
+	@ParameterizedTest(name = "{0}: {1} + {2} → {3}")
 	@CsvSource({
-			"GITHUB,    io.github.alice,    alice",
-			"GITLAB,    io.gitlab.alice,    alice",
-			"BITBUCKET, io.bitbucket.alice, alice"
+			"GITHUB,    io.github.alice,    abc, https://api.github.com/repos/alice/kfgyr-abc",
+			"GITLAB,    io.gitlab.alice,    abc, https://gitlab.com/api/v4/projects/alice%2Fkfgyr-abc",
+			"BITBUCKET, io.bitbucket.alice, abc, https://api.bitbucket.org/2.0/repositories/alice/kfgyr-abc"
 	})
-	@DisplayName("should extract username from groupId")
-	void ownerPath(SourceCodeHost host, String groupId, String expected) {
-		assertThat(host.ownerPath(groupId)).isEqualTo(expected);
+	@DisplayName("should build repository URL from groupId and token per host")
+	void toURI(SourceCodeHost host, String groupId, String token, String expectedUrl) {
+		assertThat(host.toURI(groupId, token)).hasToString(expectedUrl);
 	}
 
 	@Test
-	@DisplayName("should throw for groupId with more than 3 components in ownerPath")
-	void ownerPathInvalid() {
+	@DisplayName("should throw for groupId with more than 3 components")
+	void toURIInvalidGroupId() {
 		assertThatIllegalStateException()
-				.isThrownBy(() -> SourceCodeHost.GITHUB.ownerPath("io.github.alice.utils"));
-	}
-
-	@ParameterizedTest(name = "{0}: {1}/{2} → {3}")
-	@CsvSource({
-			"GITHUB,    alice, kfgyr-abc, https://api.github.com/repos/alice/kfgyr-abc",
-			"GITLAB,    alice, kfgyr-abc, https://gitlab.com/api/v4/projects/alice%2Fkfgyr-abc",
-			"BITBUCKET, alice, kfgyr-abc, https://api.bitbucket.org/2.0/repositories/alice/kfgyr-abc"
-	})
-	@DisplayName("should format repository URL per host")
-	void repoURI(SourceCodeHost host, String username, String repoName, String expectedUrl) {
-		assertThat(host.repoURI(username, repoName)).hasToString(expectedUrl);
+				.isThrownBy(() -> SourceCodeHost.GITHUB.toURI("io.github.alice.utils", "abc"));
 	}
 }

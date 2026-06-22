@@ -2,22 +2,28 @@ package com.konfigyr.artifactory.ownership;
 
 import org.jspecify.annotations.NullMarked;
 import org.springframework.util.Assert;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 
 @NullMarked
 public enum SourceCodeHost {
 
 	/** GitHub source code host. */
-	GITHUB("github", "https://api.github.com/repos/%s/%s"),
-	/** GitLab source code host. */
-	GITLAB("gitlab", "https://gitlab.com/api/v4/projects/%s"),
+	GITHUB("github", "https://api.github.com/repos/{owner}/kfgyr-{token}"),
+	/**
+	 * GitLab source code host.
+	 * <p>The {@code encodedProject} must be URL-encoded as a single path segment
+	 * (i.e. {@code project/repository} → {@code test-project%2Ftest-repo}).
+	 */
+	GITLAB("gitlab", "https://gitlab.com/api/v4/projects/{encodedProject}"),
 	/** Bitbucket source code host. */
-	BITBUCKET("bitbucket", "https://api.bitbucket.org/2.0/repositories/%s/%s");
+	BITBUCKET("bitbucket", "https://api.bitbucket.org/2.0/repositories/{owner}/kfgyr-{token}");
+
+	private static final String REPO_NAME_PREFIX = "kfgyr-";
 
 	private final String hostKey;
 	private final String repoUrlTemplate;
@@ -27,22 +33,22 @@ public enum SourceCodeHost {
 		this.repoUrlTemplate = repoUrlTemplate;
 	}
 
-	public URI repoURI(String codeOwner, String repoName) {
+	public URI toURI(String groupId, String token) {
+		final String owner = resolveOwner(groupId);
+
 		return switch (this) {
-			case GITLAB -> URI.create(String.format(
-					repoUrlTemplate,
-					URLEncoder.encode(codeOwner + "/" + repoName, StandardCharsets.UTF_8)
-			));
-			default -> URI.create(String.format(repoUrlTemplate, codeOwner, repoName));
+			case GITLAB -> {
+				final String project = owner + "/" + REPO_NAME_PREFIX + token;
+				yield UriComponentsBuilder.fromUriString(repoUrlTemplate)
+						.uriVariables(Map.of("encodedProject", project))
+						.encode()
+						.build()
+						.toUri();
+			}
+			default -> UriComponentsBuilder.fromUriString(repoUrlTemplate)
+					.buildAndExpand(Map.of("owner", owner, "token", token))
+					.toUri();
 		};
-	}
-
-	public String ownerPath(String groupId) {
-		final String[] parts = groupId.split("\\.");
-
-		Assert.state(parts.length == 3, "Invalid groupId: " + groupId);
-
-		return parts[2];
 	}
 
 	public static Optional<SourceCodeHost> fromGroupId(String groupId) {
@@ -57,5 +63,13 @@ public enum SourceCodeHost {
 		return Arrays.stream(values())
 				.filter(h -> h.hostKey.equals(hostKey))
 				.findFirst();
+	}
+
+	private String resolveOwner(String groupId) {
+		final String[] parts = groupId.split("\\.");
+
+		Assert.state(parts.length == 3, "Invalid groupId: " + groupId);
+
+		return parts[2];
 	}
 }

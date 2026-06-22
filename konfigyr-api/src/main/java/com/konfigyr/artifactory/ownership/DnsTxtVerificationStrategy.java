@@ -12,6 +12,30 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 import java.util.Hashtable;
 
+/**
+ * {@link VerificationStrategy} that proves ownership of a groupId by resolving a DNS {@code TXT}
+ * record on the domain derived from it.
+ * <p>
+ * The lookup domain is built by reversing the first two components of the groupId, so
+ * {@code com.konfigyr.app} is verified against {@code konfigyr.com}. Ownership is confirmed when one
+ * of the domain's {@code TXT} records exactly matches {@code konfigyr-verification=<challenge token>}.
+ * <p>
+ * Lookup outcomes are mapped to {@link VerificationResult.FailureReason failure reasons} as follows:
+ * <ul>
+ *     <li>{@link VerificationResult.FailureReason#TARGET_NOT_FOUND TARGET_NOT_FOUND} – the domain has
+ *     no {@code TXT} records or does not exist;</li>
+ *     <li>{@link VerificationResult.FailureReason#TOKEN_MISMATCH TOKEN_MISMATCH} – {@code TXT} records
+ *     exist but none carry the expected token;</li>
+ *     <li>{@link VerificationResult.FailureReason#SERVICE_UNAVAILABLE SERVICE_UNAVAILABLE} – the DNS
+ *     lookup could not be completed due to a communication or service failure;</li>
+ *     <li>{@link VerificationResult.FailureReason#INTERNAL_ERROR INTERNAL_ERROR} – any other naming
+ *     failure.</li>
+ * </ul>
+ *
+ * @author Mila Zarkovic
+ * @see VerificationStrategy
+ * @see VerificationMethod#DNS
+ */
 @Slf4j
 @NullMarked
 class DnsTxtVerificationStrategy implements VerificationStrategy {
