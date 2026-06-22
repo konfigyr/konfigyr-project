@@ -51,7 +51,7 @@ class DnsTxtVerificationStrategy implements VerificationStrategy {
 		} catch (NameNotFoundException e) {
 			return VerificationResult.failure(VerificationResult.FailureReason.TARGET_NOT_FOUND);
 		} catch (CommunicationException | ServiceUnavailableException e) {
-			log.error(MARKER, "DNS lookup failed for domain {} due communication failure", domain, e);
+			log.warn(MARKER, "DNS lookup failed for domain {} due communication failure", domain, e);
 			return VerificationResult.failure(VerificationResult.FailureReason.SERVICE_UNAVAILABLE);
 		} catch (NamingException e) {
 			log.error(MARKER, "DNS lookup failed for domain {}", domain, e);
