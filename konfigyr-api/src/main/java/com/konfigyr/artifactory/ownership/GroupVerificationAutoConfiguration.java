@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.jooq.autoconfigure.JooqAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestClient;
 
 @AutoConfiguration
 @RequiredArgsConstructor
@@ -23,5 +24,10 @@ public class GroupVerificationAutoConfiguration {
 	@Bean
 	DnsTxtVerificationStrategy dnsTxtVerificationStrategy() {
 		return new DnsTxtVerificationStrategy();
+	}
+
+	@Bean
+	SourceCodeVerificationStrategy sourceCodeVerificationStrategy(RestClient.Builder builder) {
+		return new SourceCodeVerificationStrategy(builder.build());
 	}
 }
