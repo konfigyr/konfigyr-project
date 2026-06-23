@@ -205,7 +205,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
         final String txtRecord = "konfigyr-verification=" + unverifiedChallenge.token();
         try (MockedConstruction<InitialDirContext> ignored = mockDns(domain, "some-other-record", txtRecord)) {
             final var activeVerification = assertThat(verifications.verify(owner, groupId))
-                    .returns(unverifiedChallenge.id(), GroupVerification::id)
+                    .returns(pendingVerification.id(), GroupVerification::id)
                     .satisfies(it -> assertThat(it.verifiedAt()).isNotNull())
                     .returns(VerificationState.ACTIVE, GroupVerification::state)
                     .actual();
@@ -246,7 +246,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
             assertThat(verifications.findChallenges(pendingVerification.id(), owner))
                     .hasSize(1)
                     .first()
-                    .returns(ChallengeState.EXPIRED, VerificationChallenge::state);
+                    .returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
         }
     }
 

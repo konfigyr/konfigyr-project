@@ -375,7 +375,7 @@ class DefaultGroupVerifications implements GroupVerifications {
 		}
 
 		return challenge.toBuilder()
-				.state(ChallengeState.EXPIRED)
+				.state(ChallengeState.UNVERIFIED)
 				.verifiedAt(null)
 				.build();
 	}

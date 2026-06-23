@@ -198,7 +198,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 							.hasSize(1)
 							.extracting(VerificationChallenge::verificationId, VerificationChallenge::method, VerificationChallenge::state)
 							.containsExactlyInAnyOrder(
-									tuple(verification.id(), VerificationMethod.DNS, ChallengeState.EXPIRED)
+									tuple(verification.id(), VerificationMethod.DNS, ChallengeState.UNVERIFIED)
 							));
 		}
 	}
