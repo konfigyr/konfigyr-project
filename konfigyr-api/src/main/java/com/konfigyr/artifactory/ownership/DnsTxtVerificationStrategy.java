@@ -1,21 +1,43 @@
 package com.konfigyr.artifactory.ownership;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.util.Assert;
 
-import javax.naming.CommunicationException;
-import javax.naming.NameNotFoundException;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
+import javax.naming.*;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 import java.util.Hashtable;
 
+/**
+ * {@link VerificationStrategy} that proves ownership of a groupId by resolving a DNS {@code TXT}
+ * record on the domain derived from it.
+ * <p>
+ * The lookup domain is built by reversing the first two components of the groupId, so
+ * {@code com.konfigyr.app} is verified against {@code konfigyr.com}. Ownership is confirmed when one
+ * of the domain's {@code TXT} records exactly matches {@code konfigyr-verification=<challenge token>}.
+ * <p>
+ * Lookup outcomes are mapped to {@link VerificationResult.FailureReason failure reasons} as follows:
+ * <ul>
+ *     <li>{@link VerificationResult.FailureReason#TARGET_NOT_FOUND TARGET_NOT_FOUND} – the domain has
+ *     no {@code TXT} records or does not exist;</li>
+ *     <li>{@link VerificationResult.FailureReason#TOKEN_MISMATCH TOKEN_MISMATCH} – {@code TXT} records
+ *     exist but none carry the expected token;</li>
+ *     <li>{@link VerificationResult.FailureReason#SERVICE_UNAVAILABLE SERVICE_UNAVAILABLE} – the DNS
+ *     lookup could not be completed due to a communication or service failure;</li>
+ *     <li>{@link VerificationResult.FailureReason#INTERNAL_ERROR INTERNAL_ERROR} – any other naming
+ *     failure.</li>
+ * </ul>
+ *
+ * @author Mila Zarkovic
+ * @see VerificationStrategy
+ * @see VerificationMethod#DNS
+ */
 @Slf4j
+@NullMarked
 class DnsTxtVerificationStrategy implements VerificationStrategy {
 	private static final Marker MARKER = MarkerFactory.getMarker("DNS_VERIFIER");
 
@@ -29,7 +51,7 @@ class DnsTxtVerificationStrategy implements VerificationStrategy {
 	}
 
 	@Override
-	public VerificationResult verify(@NonNull GroupVerification verification, @NonNull VerificationChallenge challenge) {
+	public VerificationResult verify(GroupVerification verification, VerificationChallenge challenge) {
 		final String domain = toDomain(verification.groupId());
 
 		try (CloseableDirContext ctx = new CloseableDirContext()) {
@@ -52,8 +74,8 @@ class DnsTxtVerificationStrategy implements VerificationStrategy {
 			return VerificationResult.failure(VerificationResult.FailureReason.TOKEN_MISMATCH);
 		} catch (NameNotFoundException e) {
 			return VerificationResult.failure(VerificationResult.FailureReason.TARGET_NOT_FOUND);
-		} catch (CommunicationException e) {
-			log.error(MARKER, "DNS lookup failed for domain {} due communication failure", domain, e);
+		} catch (CommunicationException | ServiceUnavailableException e) {
+			log.warn(MARKER, "DNS lookup failed for domain {} due communication failure", domain, e);
 			return VerificationResult.failure(VerificationResult.FailureReason.SERVICE_UNAVAILABLE);
 		} catch (NamingException e) {
 			log.error(MARKER, "DNS lookup failed for domain {}", domain, e);

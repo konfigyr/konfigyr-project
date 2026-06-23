@@ -12,7 +12,7 @@ public enum VerificationMethod {
 	DNS,
 
 	/**
-	 * GitHub-based verification using a repository-backed proof.
+	 * Source code host verification using a temporary public repository as proof (etc. GitHub, GitLab...).
 	 */
-	GITHUB;
+	SOURCE_CODE;
 }

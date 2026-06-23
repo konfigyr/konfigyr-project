@@ -10,6 +10,7 @@ import org.mockito.MockedConstruction;
 import javax.naming.CommunicationException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.ServiceUnavailableException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
@@ -105,6 +106,18 @@ class DnsTxtVerificationStrategyTest {
 		final VerificationChallenge challenge = challenge("abc123");
 
 		try (MockedConstruction<InitialDirContext> ignored = mockDnsException(new CommunicationException("DNS timed out"))) {
+			assertThat(strategy.verify(verification, challenge))
+					.isEqualTo(VerificationResult.failure(SERVICE_UNAVAILABLE));
+		}
+	}
+
+	@Test
+	@DisplayName("should return SERVICE_UNAVAILABLE when DNS service is unavailable")
+	void verifyServiceUnavailable() {
+		final GroupVerification verification = verification("com.mycompany");
+		final VerificationChallenge challenge = challenge("abc123");
+
+		try (MockedConstruction<InitialDirContext> ignored = mockDnsException(new ServiceUnavailableException("DNS service unavailable"))) {
 			assertThat(strategy.verify(verification, challenge))
 					.isEqualTo(VerificationResult.failure(SERVICE_UNAVAILABLE));
 		}
