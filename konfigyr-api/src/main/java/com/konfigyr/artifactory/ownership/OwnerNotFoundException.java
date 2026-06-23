@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import java.io.Serial;
 
 /**
- * Exception thrown when a {@link Owner} does not exist.
+ * Exception thrown when a namespace owner cannot be resolved from the supplied slug.
  *
  * @author Vitalii Kushnir
  **/

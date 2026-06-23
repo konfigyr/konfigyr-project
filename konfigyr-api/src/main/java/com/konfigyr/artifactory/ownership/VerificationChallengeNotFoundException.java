@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import java.io.Serial;
 
 /**
- * Exception thrown when a {@link VerificationChallenge} does not exist.
+ * Exception thrown when a verification challenge cannot be found for the requested verification.
  *
  * @author Vitalii Kushnir
  **/
