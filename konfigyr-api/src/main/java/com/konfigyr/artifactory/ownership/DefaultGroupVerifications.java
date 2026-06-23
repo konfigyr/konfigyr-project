@@ -3,6 +3,7 @@ package com.konfigyr.artifactory.ownership;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -21,6 +22,7 @@ import static com.konfigyr.data.tables.GroupVerificationChallenges.GROUP_VERIFIC
 import static com.konfigyr.data.tables.GroupVerifications.GROUP_VERIFICATIONS;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 
+@Slf4j
 @NullMarked
 @RequiredArgsConstructor
 class DefaultGroupVerifications implements GroupVerifications {
@@ -34,6 +36,8 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-active-covering")
     public Optional<GroupVerification> findActiveCovering(String groupId, Owner owner) {
+        log.debug("Looking up active verification covering groupId '{}' for owner {} ({})", groupId, owner.slug(), owner.id());
+
         return context.select(GROUP_VERIFICATIONS.asterisk(), NAMESPACES.SLUG)
                 .from(GROUP_VERIFICATIONS)
                 .join(NAMESPACES)
@@ -47,6 +51,7 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-any-overlapping")
     public Optional<GroupVerification> findAnyOverlapping(String groupId) {
+        log.debug("Checking for any overlapping active verification with groupId '{}'", groupId);
         return context.select(GROUP_VERIFICATIONS.fields())
                 .select(NAMESPACES.SLUG)
                 .from(GROUP_VERIFICATIONS)
@@ -59,6 +64,8 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-by-owner")
     public List<GroupVerification> findByOwner(Owner owner) {
+        log.debug("Listing group verifications for owner {} ({})", owner.slug(), owner.id());
+
         return context.select(GROUP_VERIFICATIONS.fields())
                 .select(NAMESPACES.SLUG)
                 .from(GROUP_VERIFICATIONS)
@@ -70,6 +77,7 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-by-group-id")
     public Optional<GroupVerification> findByGroupId(String groupId, Owner owner) {
+        log.debug("Looking up group verification '{}' for owner {} ({})", groupId, owner.slug(), owner.id());
         return context.select(GROUP_VERIFICATIONS.fields())
                 .select(NAMESPACES.SLUG)
                 .from(GROUP_VERIFICATIONS)
@@ -82,6 +90,7 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-active-challenge")
     public Optional<VerificationChallenge> findActiveChallenge(GroupVerification verification) {
+        log.debug("Looking up active challenge for verification {} with groupId '{}' and state {}", verification.id(), verification.groupId(), verification.state());
         return context.select(GROUP_VERIFICATION_CHALLENGES.fields())
                 .from(GROUP_VERIFICATION_CHALLENGES)
                 .where(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(verification.id().get()))
@@ -92,6 +101,7 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-challenges")
     public List<VerificationChallenge> findChallenges(EntityId verificationId, Owner owner) {
+        log.debug("Listing challenges for verification {} and owner {} ({})", verificationId, owner.slug(), owner.id());
         return context.select(GROUP_VERIFICATION_CHALLENGES.fields())
                 .from(GROUP_VERIFICATION_CHALLENGES)
                 .join(GROUP_VERIFICATIONS).on(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(GROUP_VERIFICATIONS.ID))
@@ -103,6 +113,14 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(label = "group-verifications.save")
     public GroupVerification save(GroupVerification verification) {
+        log.debug(
+                "Saving group verification for owner {} ({}), groupId '{}', state {}",
+                verification.owner().slug(),
+                verification.owner().id(),
+                verification.groupId(),
+                verification.state()
+        );
+
         final Record record = context.insertInto(GROUP_VERIFICATIONS)
                 .set(SettableRecord.of(context, GROUP_VERIFICATIONS)
                         .set(GROUP_VERIFICATIONS.NAMESPACE_ID, verification.owner().id().get())
@@ -122,23 +140,30 @@ class DefaultGroupVerifications implements GroupVerifications {
 
         Assert.state(record != null, "Could not save group verification: " + verification.groupId());
         return toGroupVerification(record, verification.owner());
-
     }
 
     @Override
     @Transactional(label = "group-verifications.claim")
     public GroupVerification claim(Owner owner, String groupId, VerificationMethod method) {
+        log.info(
+                "Claiming group verification for owner {} ({}), groupId '{}', method {}",
+                owner.slug(),
+                owner.id(),
+                groupId,
+                method
+        );
+
         findAnyOverlapping(groupId).ifPresent(ignore -> {
             throw new GroupIdAlreadyClaimedException(groupId);
         });
 
         final GroupVerification verification = save(
-			GroupVerification.builder()
-				.owner(owner)
-				.groupId(groupId)
-				.state(VerificationState.PENDING)
-				.createdAt(OffsetDateTime.now())
-				.build()
+                GroupVerification.builder()
+                        .owner(owner)
+                        .groupId(groupId)
+                        .state(VerificationState.PENDING)
+                        .createdAt(OffsetDateTime.now())
+                        .build()
         );
 
         VerificationChallenge verificationChallenge = createChallenge(verification, method);
@@ -150,6 +175,8 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(label = "group-verifications.verify")
     public GroupVerification verify(Owner owner, String groupId) {
+        log.info("Verifying group verification for owner {} ({}), groupId '{}'", owner.slug(), owner.id(), groupId);
+
         final GroupVerification verification = findByGroupId(groupId, owner)
                 .orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
 
@@ -157,6 +184,7 @@ class DefaultGroupVerifications implements GroupVerifications {
                 .orElseThrow(() -> new VerificationChallengeNotFoundException("No active challenge to verify for groupId " + groupId));
 
         final VerificationStrategy strategy = resolveStrategy(challenge.method());
+        log.debug("Using verification strategy {} for verification {} and challenge {}", strategy.method(), verification.id(), challenge.id());
 
         final VerificationResult result = strategy.verify(verification, challenge);
         final VerificationChallenge verifiedChallenge = applyVerificationResult(challenge, result);
@@ -171,15 +199,39 @@ class DefaultGroupVerifications implements GroupVerifications {
                     .state(VerificationState.ACTIVE)
                     .verifiedAt(OffsetDateTime.now())
                     .build();
+            log.info(
+                    "Activated group verification {} for owner {} ({}), groupId '{}'",
+                    activated.id(),
+                    activated.owner().slug(),
+                    activated.owner().id(),
+                    activated.groupId()
+            );
             return save(activated);
         }
 
+        log.info(
+                "Verification {} for owner {} ({}) and groupId '{}' failed with reason {}",
+                verification.id(),
+                owner.slug(),
+                owner.id(),
+                groupId,
+                result
+        );
         return verification;
     }
 
     @Override
     @Transactional(label = "group-verifications.revoke")
     public GroupVerification revoke(GroupVerification verification) {
+        log.info(
+                "Revoking group verification {} for owner {} ({}), groupId '{}', current state {}",
+                verification.id(),
+                verification.owner().slug(),
+                verification.owner().id(),
+                verification.groupId(),
+                verification.state()
+        );
+
         Assert.state(
                 verification.state() == VerificationState.ACTIVE || verification.state() == VerificationState.PENDING,
                 "Cannot revoke a \"" + verification.state() + "\" verification"
@@ -188,13 +240,29 @@ class DefaultGroupVerifications implements GroupVerifications {
                 .state(VerificationState.REVOKED)
                 .revokedAt(OffsetDateTime.now())
                 .build();
-        return save(revoked);
+        final GroupVerification saved = save(revoked);
+        log.info(
+                "Revoked group verification {} for owner {} ({}), groupId '{}'",
+                saved.id(),
+                saved.owner().slug(),
+                saved.owner().id(),
+                saved.groupId()
+        );
+        return saved;
     }
 
     @Override
     @Transactional(label = "group-verifications.save-challenge")
     public VerificationChallenge saveChallenge(VerificationChallenge challenge) {
         Assert.notNull(challenge.verificationId(), "Verification challenge must be attached to a verification before saving");
+
+        log.debug(
+                "Saving challenge for verificationId {}, method {}, state {}, challengeId {}",
+                challenge.verificationId(),
+                challenge.method(),
+                challenge.state(),
+                challenge.id()
+        );
 
         var insert = context.insertInto(GROUP_VERIFICATION_CHALLENGES);
         if (challenge.id() != null) {
@@ -227,6 +295,7 @@ class DefaultGroupVerifications implements GroupVerifications {
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-owner")
     public Optional<Owner> findOwner(String namespace) {
+        log.debug("Resolving owner for namespace slug '{}'", namespace);
         return context.select(NAMESPACES.ID, NAMESPACES.SLUG)
                 .from(NAMESPACES)
                 .where(NAMESPACES.SLUG.eq(namespace))
@@ -323,5 +392,4 @@ class DefaultGroupVerifications implements GroupVerifications {
                 .verificationId(verification.id())
                 .build();
     }
-
 }
