@@ -11,7 +11,9 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.security.SecureRandom;
 import java.time.OffsetDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +28,8 @@ class DefaultGroupVerifications implements GroupVerifications {
     private final DSLContext context;
 
     private final VerificationStrategy dnsTxtVerificationStrategy;
+
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     @Override
     @Transactional(readOnly = true, label = "group-verifications.find-active-covering")
@@ -121,7 +125,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 
     }
 
-
     @Override
     @Transactional(label = "group-verifications.claim")
     public GroupVerification claim(Owner owner, String groupId, VerificationMethod method) {
@@ -138,10 +141,7 @@ class DefaultGroupVerifications implements GroupVerifications {
 				.build()
         );
 
-        VerificationChallenge verificationChallenge = VerificationChallenge.issue(method)
-                .toBuilder()
-                .verificationId(verification.id())
-                .build();
+        VerificationChallenge verificationChallenge = createChallenge(verification, method);
         saveChallenge(verificationChallenge);
 
         return verification;
@@ -159,7 +159,8 @@ class DefaultGroupVerifications implements GroupVerifications {
         final VerificationStrategy strategy = resolveStrategy(challenge.method());
 
         final VerificationResult result = strategy.verify(verification, challenge);
-        saveChallenge(challenge.applyResult(result));
+        final VerificationChallenge verifiedChallenge = applyVerificationResult(challenge, result);
+        saveChallenge(verifiedChallenge);
 
         if (result instanceof VerificationResult.Success) {
             Assert.state(
@@ -284,6 +285,43 @@ class DefaultGroupVerifications implements GroupVerifications {
             case DNS -> dnsTxtVerificationStrategy;
             case GITHUB -> throw new IllegalArgumentException("Not implemented");
         };
+    }
+
+    private VerificationChallenge applyVerificationResult(VerificationChallenge challenge, VerificationResult result) {
+        Assert.state(
+                challenge.state() == ChallengeState.UNVERIFIED,
+                "Challenge must be " + ChallengeState.UNVERIFIED + " before it can be applied"
+        );
+
+        if (result instanceof VerificationResult.Success success) {
+            Assert.state(
+                    success.method() == challenge.method(),
+                    "Cannot apply a " + success.method() + " result to a " + challenge.method() + " challenge"
+            );
+
+            return challenge.toBuilder()
+                    .state(ChallengeState.VERIFIED)
+                    .verifiedAt(OffsetDateTime.now())
+                    .build();
+        }
+
+        return challenge.toBuilder()
+                .state(ChallengeState.EXPIRED)
+                .verifiedAt(null)
+                .build();
+    }
+
+    private VerificationChallenge createChallenge(GroupVerification verification, VerificationMethod method) {
+        final byte[] seed = new byte[20];
+        RANDOM.nextBytes(seed);
+
+        return VerificationChallenge.builder()
+                .method(method)
+                .token(Base64.getUrlEncoder().withoutPadding().encodeToString(seed))
+                .state(ChallengeState.UNVERIFIED)
+                .createdAt(OffsetDateTime.now())
+                .verificationId(verification.id())
+                .build();
     }
 
 }

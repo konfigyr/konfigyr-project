@@ -9,9 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.naming.CommunicationException;
 import javax.naming.directory.InitialDirContext;
 
+import static com.konfigyr.artifactory.ownership.VerificationResult.FailureReason.SERVICE_UNAVAILABLE;
 import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDns;
+import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDnsException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -222,34 +225,29 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
     @DisplayName("should fail to execute the DNS verification challenge.")
     void shouldFailToVerifyDnsVerificationChallenge() {
         final var owner = Owner.of(EntityId.from(1), "john-doe");
+        final var groupId = "com.my-third-company";
 
-        final var pendingVerification = assertThat(verifications.claim(owner, "com.my-third-company", VerificationMethod.DNS))
+        final var pendingVerification = assertThat(verifications.claim(owner, groupId, VerificationMethod.DNS))
                 .isNotNull()
                 .actual();
 
-        final var unverifiedChallenge = assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+        assertThat(verifications.findChallenges(pendingVerification.id(), owner))
                 .hasSize(1)
                 .first()
-                .satisfies(it -> assertThat(it.id()).isNotNull())
-                .satisfies(it -> assertThat(it.createdAt()).isNotNull())
-                .satisfies(it -> assertThat(it.token()).isNotNull())
-                .returns(pendingVerification.id(), VerificationChallenge::verificationId)
                 .returns(VerificationMethod.DNS, VerificationChallenge::method)
-                .returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
-                .returns(null, VerificationChallenge::verifiedAt)
-                .returns(null, VerificationChallenge::expiresAt)
-                .actual();
+                .returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
 
-        final var failedChallenge = verifications.saveChallenge(
-                unverifiedChallenge.applyResult(VerificationResult.failure("Cannot validate record"))
-        );
+        try (MockedConstruction<InitialDirContext> ignored = mockDnsException(new CommunicationException("DNS timed out"))) {
+            assertThat(verifications.verify(owner, groupId))
+                    .returns(pendingVerification.id(), GroupVerification::id)
+                    .returns(null, GroupVerification::verifiedAt)
+                    .returns(VerificationState.PENDING, GroupVerification::state);
 
-        assertThat(failedChallenge)
-                .returns(unverifiedChallenge.id(), VerificationChallenge::id)
-                .returns(null, VerificationChallenge::verifiedAt)
-                .returns(VerificationMethod.DNS, VerificationChallenge::method)
-                .returns(ChallengeState.EXPIRED, VerificationChallenge::state)
-                .returns(null, VerificationChallenge::expiresAt);
+            assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+                    .hasSize(1)
+                    .first()
+                    .returns(ChallengeState.EXPIRED, VerificationChallenge::state);
+        }
     }
 
     @Test
