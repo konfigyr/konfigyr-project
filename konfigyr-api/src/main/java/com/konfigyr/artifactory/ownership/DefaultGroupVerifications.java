@@ -148,9 +148,12 @@ class DefaultGroupVerifications implements GroupVerifications {
 	@Transactional(label = "group-verifications.verify")
 	public GroupVerification verify(Owner owner, String groupId) {
 		log.info("Verifying group verification for owner {} ({}), groupId '{}'", owner.slug(), owner.id(), groupId);
-
 		final GroupVerification verification = findByGroupId(groupId, owner)
 				.orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
+		Assert.state(
+				verification.state() == VerificationState.PENDING,
+				"Can only activate a pending verification, but was " + verification.state()
+		);
 
 		final VerificationChallenge challenge = findActiveChallenge(verification)
 				.orElseThrow(() -> new VerificationChallengeNotFoundException("No active challenge to verify for groupId " + groupId));
@@ -163,10 +166,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 		save(verifiedChallenge);
 
 		if (result instanceof VerificationResult.Success) {
-			Assert.state(
-					verification.state() == VerificationState.PENDING,
-					"Can only activate a pending verification, but was " + verification.state()
-			);
 			GroupVerification activated = verification.toBuilder()
 					.state(VerificationState.ACTIVE)
 					.verifiedAt(OffsetDateTime.now())
