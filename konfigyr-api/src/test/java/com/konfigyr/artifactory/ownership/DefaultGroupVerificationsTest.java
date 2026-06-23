@@ -191,6 +191,53 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 
 	@Test
 	@Transactional
+	@DisplayName("should revoke claim in pending state")
+	void shouldRevokeClaimInPendingState() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var method = VerificationMethod.DNS;
+		final var groupId = "com.pending-company";
+
+		final var pendingResult = assertThat(verifications.claim(owner, groupId, method))
+				.as("should create correct group verification")
+				.returns(VerificationState.PENDING, GroupVerification::state)
+				.actual();
+
+		final var revokedResult = verifications.revoke(pendingResult);
+		assertThat(revokedResult)
+				.as("should revoke pending claim")
+				.returns(pendingResult.id(), GroupVerification::id)
+				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+				.satisfies(it -> assertThat(it.revokedAt()).isNotNull())
+				.returns(null, GroupVerification::verifiedAt)
+				.returns(owner, GroupVerification::owner)
+				.returns(VerificationState.REVOKED, GroupVerification::state);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to revoke claim in revoked state")
+	void shouldFailToRevokeClaimInPendingState() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var method = VerificationMethod.DNS;
+		final var groupId = "com.revoked-company";
+
+		final var pendingResult = assertThat(verifications.claim(owner, groupId, method))
+				.as("should create correct group verification")
+				.returns(VerificationState.PENDING, GroupVerification::state)
+				.actual();
+
+		final var revokedResult = assertThat(verifications.revoke(pendingResult))
+				.as("should revoke pending claim")
+				.returns(VerificationState.REVOKED, GroupVerification::state)
+				.actual();
+
+		assertThatThrownBy(() -> verifications.revoke(revokedResult))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Cannot revoke a \"REVOKED\" verification");
+	}
+
+	@Test
+	@Transactional
 	@DisplayName("should create a new claim, activate and revoke with SOURCE_CODE activation method")
 	void shouldCreateActivateAndRevokeClaimWithSourceCode() {
 		final var owner = Owner.of(EntityId.from(1), "john-doe");

@@ -35,6 +35,8 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	private static final SecureRandom RANDOM = new SecureRandom();
 
+	private static final List<VerificationState> CLAIM_REVOCABLE_STATES = List.of(VerificationState.ACTIVE, VerificationState.PENDING);
+
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-active-covering")
 	public Optional<GroupVerification> findActiveCovering(String groupId, Owner owner) {
@@ -203,7 +205,7 @@ class DefaultGroupVerifications implements GroupVerifications {
 		);
 
 		Assert.state(
-				verification.state() == VerificationState.ACTIVE || verification.state() == VerificationState.PENDING,
+				CLAIM_REVOCABLE_STATES.contains(verification.state()),
 				"Cannot revoke a \"" + verification.state() + "\" verification"
 		);
 		GroupVerification revoked = verification.toBuilder()
