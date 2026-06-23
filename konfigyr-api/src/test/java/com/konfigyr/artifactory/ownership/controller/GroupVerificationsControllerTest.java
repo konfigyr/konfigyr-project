@@ -32,7 +32,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	@Transactional
 	void shouldFailFindOwner() {
 		mvc.get().uri("/namespaces/{namespace}/group-verifications", "fake-namespace")
-				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -46,7 +46,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	@Transactional
 	void shouldListClaimsForNamespace() {
 		mvc.get().uri("/namespaces/{namespace}/group-verifications", "john-doe")
-				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -86,7 +86,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	@Transactional
 	void shouldFetchClaimByGroupId() {
 		mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}", "john-doe", "org.springframework.ai")
-				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -103,7 +103,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	void shouldRetrieveVerificationChallengeHistory() {
 		final EntityId verificationId = EntityId.from(2);
 		mvc.get().uri("/namespaces/{namespace}/group-verifications/{verificationId}/verification-challenges", "john-doe", verificationId.serialize())
-				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -145,7 +145,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 					.actual();
 
 			mvc.get().uri("/namespaces/{namespace}/group-verifications/{verificationId}/verification-challenges", namespase, verification.id().serialize())
-					.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+					.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 					.exchange()
 					.assertThat()
 					.apply(log())
@@ -187,7 +187,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 					.actual();
 
 			mvc.get().uri("/namespaces/{namespace}/group-verifications/{verificationId}/verification-challenges", namespase, verification.id().serialize())
-					.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+					.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 					.exchange()
 					.assertThat()
 					.apply(log())
