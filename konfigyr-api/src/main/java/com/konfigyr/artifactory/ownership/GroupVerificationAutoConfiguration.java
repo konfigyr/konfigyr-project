@@ -27,7 +27,7 @@ public class GroupVerificationAutoConfiguration {
 	}
 
 	@Bean
-	SourceCodeVerificationStrategy sourceCodeVerificationStrategy() {
-		return new SourceCodeVerificationStrategy(RestClient.builder().build());
+	SourceCodeVerificationStrategy sourceCodeVerificationStrategy(RestClient.Builder builder) {
+		return new SourceCodeVerificationStrategy(builder.build());
 	}
 }
