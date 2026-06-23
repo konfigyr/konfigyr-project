@@ -74,17 +74,6 @@ public interface GroupVerifications {
 	List<VerificationChallenge> findChallenges(EntityId verificationId, Owner owner);
 
 	/**
-	 * Saves a verification claim.
-	 * <p>
-	 * Implementations should persist the claim and return the stored representation, including its
-	 * generated identifier and any timestamps populated by the database.
-	 *
-	 * @param verification the claim to save
-	 * @return the saved claim
-	 */
-	GroupVerification save(GroupVerification verification);
-
-	/**
 	 * Claims a new group verification for the supplied namespace owner.
 	 * <p>
 	 * Implementations are expected to create a pending verification, create an initial challenge for
@@ -119,17 +108,6 @@ public interface GroupVerifications {
 	 * @return the revoked claim
 	 */
 	GroupVerification revoke(GroupVerification verification);
-
-	/**
-	 * Saves a verification challenge.
-	 * <p>
-	 * Implementations should persist the challenge and return the stored representation, including
-	 * any generated identifier and timestamps populated by the database.
-	 *
-	 * @param challenge the challenge to save
-	 * @return the saved challenge
-	 */
-	VerificationChallenge saveChallenge(VerificationChallenge challenge);
 
 	/**
 	 * Resolves the group owner for the given namespace slug.

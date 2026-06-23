@@ -111,38 +111,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 	}
 
 	@Override
-	@Transactional(label = "group-verifications.save")
-	public GroupVerification save(GroupVerification verification) {
-		log.debug(
-				"Saving group verification for owner {} ({}), groupId '{}', state {}",
-				verification.owner().slug(),
-				verification.owner().id(),
-				verification.groupId(),
-				verification.state()
-		);
-
-		final Record record = context.insertInto(GROUP_VERIFICATIONS)
-				.set(SettableRecord.of(context, GROUP_VERIFICATIONS)
-						.set(GROUP_VERIFICATIONS.NAMESPACE_ID, verification.owner().id().get())
-						.set(GROUP_VERIFICATIONS.GROUP_ID, verification.groupId())
-						.set(GROUP_VERIFICATIONS.STATE, verification.state().name())
-						.set(GROUP_VERIFICATIONS.CREATED_AT, verification.createdAt())
-						.set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
-						.set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
-						.get())
-				.onConflict(GROUP_VERIFICATIONS.NAMESPACE_ID, GROUP_VERIFICATIONS.GROUP_ID)
-				.doUpdate()
-				.set(GROUP_VERIFICATIONS.STATE, verification.state().name())
-				.set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
-				.set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
-				.returning(GROUP_VERIFICATIONS.fields())
-				.fetchOne();
-
-		Assert.state(record != null, "Could not save group verification: " + verification.groupId());
-		return toGroupVerification(record, verification.owner());
-	}
-
-	@Override
 	@Transactional(label = "group-verifications.claim")
 	public GroupVerification claim(Owner owner, String groupId, VerificationMethod method) {
 		log.info(
@@ -167,7 +135,7 @@ class DefaultGroupVerifications implements GroupVerifications {
 		);
 
 		VerificationChallenge verificationChallenge = createChallenge(verification, method);
-		saveChallenge(verificationChallenge);
+		save(verificationChallenge);
 
 		return verification;
 	}
@@ -188,7 +156,7 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 		final VerificationResult result = strategy.verify(verification, challenge);
 		final VerificationChallenge verifiedChallenge = applyVerificationResult(challenge, result);
-		saveChallenge(verifiedChallenge);
+		save(verifiedChallenge);
 
 		if (result instanceof VerificationResult.Success) {
 			Assert.state(
@@ -252,8 +220,49 @@ class DefaultGroupVerifications implements GroupVerifications {
 	}
 
 	@Override
-	@Transactional(label = "group-verifications.save-challenge")
-	public VerificationChallenge saveChallenge(VerificationChallenge challenge) {
+	@Transactional(readOnly = true, label = "group-verifications.find-owner")
+	public Optional<Owner> findOwner(String namespace) {
+		log.debug("Resolving owner for namespace slug '{}'", namespace);
+		return context.select(NAMESPACES.ID, NAMESPACES.SLUG)
+				.from(NAMESPACES)
+				.where(NAMESPACES.SLUG.eq(namespace))
+				.fetchOptional(record -> Owner.of(
+						EntityId.from(record.get(NAMESPACES.ID)),
+						record.get(NAMESPACES.SLUG)
+				));
+	}
+
+	private GroupVerification save(GroupVerification verification) {
+		log.debug(
+				"Saving group verification for owner {} ({}), groupId '{}', state {}",
+				verification.owner().slug(),
+				verification.owner().id(),
+				verification.groupId(),
+				verification.state()
+		);
+
+		final Record record = context.insertInto(GROUP_VERIFICATIONS)
+				.set(SettableRecord.of(context, GROUP_VERIFICATIONS)
+						.set(GROUP_VERIFICATIONS.NAMESPACE_ID, verification.owner().id().get())
+						.set(GROUP_VERIFICATIONS.GROUP_ID, verification.groupId())
+						.set(GROUP_VERIFICATIONS.STATE, verification.state().name())
+						.set(GROUP_VERIFICATIONS.CREATED_AT, verification.createdAt())
+						.set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
+						.set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
+						.get())
+				.onConflict(GROUP_VERIFICATIONS.NAMESPACE_ID, GROUP_VERIFICATIONS.GROUP_ID)
+				.doUpdate()
+				.set(GROUP_VERIFICATIONS.STATE, verification.state().name())
+				.set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
+				.set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
+				.returning(GROUP_VERIFICATIONS.fields())
+				.fetchOne();
+
+		Assert.state(record != null, "Could not save group verification: " + verification.groupId());
+		return toGroupVerification(record, verification.owner());
+	}
+
+	private VerificationChallenge save(VerificationChallenge challenge) {
 		Assert.notNull(challenge.verificationId(), "Verification challenge must be attached to a verification before saving");
 
 		log.debug(
@@ -289,20 +298,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 		Assert.state(record != null, "Could not save verification challenge: " + challenge.id());
 		return toVerificationChallenge(record);
-
-	}
-
-	@Override
-	@Transactional(readOnly = true, label = "group-verifications.find-owner")
-	public Optional<Owner> findOwner(String namespace) {
-		log.debug("Resolving owner for namespace slug '{}'", namespace);
-		return context.select(NAMESPACES.ID, NAMESPACES.SLUG)
-				.from(NAMESPACES)
-				.where(NAMESPACES.SLUG.eq(namespace))
-				.fetchOptional(record -> Owner.of(
-						EntityId.from(record.get(NAMESPACES.ID)),
-						record.get(NAMESPACES.SLUG)
-				));
 	}
 
 	private static Condition prefixOf(String groupId) {
