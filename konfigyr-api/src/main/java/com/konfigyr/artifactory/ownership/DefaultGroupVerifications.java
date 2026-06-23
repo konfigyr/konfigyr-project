@@ -31,6 +31,8 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	private final VerificationStrategy dnsTxtVerificationStrategy;
 
+	private final SourceCodeVerificationStrategy sourceCodeVerificationStrategy;
+
 	private static final SecureRandom RANDOM = new SecureRandom();
 
 	@Override
@@ -347,7 +349,7 @@ class DefaultGroupVerifications implements GroupVerifications {
 	private VerificationStrategy resolveStrategy(VerificationMethod model) {
 		return switch (model) {
 			case DNS -> dnsTxtVerificationStrategy;
-			case GITHUB -> throw new IllegalArgumentException("Not implemented");
+			case SOURCE_CODE -> sourceCodeVerificationStrategy;
 		};
 	}
 

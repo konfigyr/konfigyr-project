@@ -89,8 +89,10 @@ public interface GroupVerifications {
 	/**
 	 * Verifies the supplied group verification for the given namespace owner.
 	 * <p>
-	 * Implementations should load the claim, resolve the active challenge, apply the verification
-	 * strategy, and activate the claim when the verification succeeds.
+	 * Implementations should load the claim, resolve the active challenge, and delegate the actual
+	 * proof check to the {@link VerificationStrategy} selected by the challenge method. When the
+	 * strategy returns a successful result, the claim is activated and the verification timestamp is
+	 * recorded. Failed verifications keep the claim in its current state.
 	 *
 	 * @param owner the namespace owner that owns the claim
 	 * @param groupId the group identifier to verify
