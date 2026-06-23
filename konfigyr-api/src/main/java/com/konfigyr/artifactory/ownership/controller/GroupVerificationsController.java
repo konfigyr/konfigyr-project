@@ -44,9 +44,8 @@ public class GroupVerificationsController {
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
 	public CollectionModel<EntityModel<GroupVerification>> getGroupVerifications(@PathVariable String namespace) {
 		final Owner owner = resolveOwner(namespace);
-		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
 		final List<GroupVerification> verifications = groupVerifications.findByOwner(owner);
-		return assembler.groupVerification().assemble(verifications);
+		return assembler(namespace).groupVerification().assemble(verifications);
 	}
 
 	@GetMapping("/{groupId}")
@@ -54,10 +53,9 @@ public class GroupVerificationsController {
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
 	public EntityModel<GroupVerification> getGroupVerification(@PathVariable String namespace, @PathVariable String groupId) {
 		final Owner owner = resolveOwner(namespace);
-		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(groupId, owner)
 				.orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
-		return assembler.groupVerification().assemble(verification);
+		return assembler(namespace).groupVerification().assemble(verification);
 	}
 
 	@PostMapping
@@ -66,15 +64,10 @@ public class GroupVerificationsController {
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
 	public EntityModel<GroupVerification> claim(@PathVariable String namespace, @RequestBody @Validated ClaimRequest request) {
 		final Owner owner = resolveOwner(namespace);
-		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
-
-		groupVerifications.findAnyOverlapping(request.groupId()).ifPresent(ignore -> {
-			throw new GroupIdAlreadyClaimedException(request.groupId());
-		});
 
 		final GroupVerification verification = groupVerifications.claim(owner, request.groupId(), request.verificationMethod());
 
-		return assembler.groupVerification().assemble(verification);
+		return assembler(namespace).groupVerification().assemble(verification);
 	}
 
 	@GetMapping("/{verificationId}/verification-challenges")
@@ -82,9 +75,8 @@ public class GroupVerificationsController {
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
 	public CollectionModel<EntityModel<VerificationChallenge>> getVerificationChallenges(@PathVariable String namespace, @PathVariable  EntityId verificationId) {
 		final Owner owner = resolveOwner(namespace);
-		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
 		final List<VerificationChallenge> verificationChallenges = groupVerifications.findChallenges(verificationId, owner);
-		return assembler.verificationChallenge().assemble(verificationChallenges);
+		return assembler(namespace).verificationChallenge().assemble(verificationChallenges);
 	}
 
 
@@ -96,10 +88,9 @@ public class GroupVerificationsController {
 			@PathVariable String groupId
 	) {
 		final Owner owner = resolveOwner(namespace);
-		final GroupVerificationAssembler assembler = new GroupVerificationAssembler(namespace);
 
 		final GroupVerification updated = groupVerifications.verify(owner, groupId);
-		return assembler.groupVerification().assemble(updated);
+		return assembler(namespace).groupVerification().assemble(updated);
 	}
 
 	@DeleteMapping("/{groupId}")
@@ -110,8 +101,7 @@ public class GroupVerificationsController {
 		final Owner owner = resolveOwner(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(groupId, owner)
 				.orElseThrow(() -> new VerificationChallengeNotFoundException("Could not find a verification for groupId '" + groupId + "' owned by namespace " + owner.slug()));
-
-		groupVerifications.save(verification.revoke());
+		groupVerifications.revoke(verification);
 	}
 
 	private Owner resolveOwner(String slug) {
@@ -119,9 +109,8 @@ public class GroupVerificationsController {
 				.orElseThrow(() -> new OwnerNotFoundException(slug));
 	}
 
-	private GroupVerification lookup(Owner owner, String groupId) {
-		return groupVerifications.findByGroupId(groupId, owner)
-				.orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
+	private GroupVerificationAssembler assembler(String namespace) {
+		return new GroupVerificationAssembler(namespace);
 	}
 
 	public record ClaimRequest(

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -122,8 +121,8 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
     @DisplayName("should reject duplicate active claims for the same groupId")
     void shouldRejectDuplicateActiveClaim() {
         final var owner = Owner.of(EntityId.from(1), "john-doe");
-        final var groupVerification = GroupVerification.claim(owner, "com.konfigyr").activate();
-        assertThatThrownBy(() -> verifications.save(groupVerification)).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> verifications.claim(owner, "com.konfigyr", VerificationMethod.DNS))
+                .isInstanceOf(GroupIdAlreadyClaimedException.class);
     }
 
     @Test
@@ -148,16 +147,16 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
         final var activeVerificationChallenge = verifications.findActiveChallenge(pendingResult);
         final var verificationToken = assertThat(activeVerificationChallenge)
                 .as("should create correct verification challenge with token")
-				.isPresent()
-				.get()
-				.satisfies(it -> assertThat(it.token()).isNotNull())
-				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
-				.returns(method, VerificationChallenge::method)
+                .isPresent()
+                .get()
+                .satisfies(it -> assertThat(it.token()).isNotNull())
+                .satisfies(it -> assertThat(it.createdAt()).isNotNull())
+                .returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
+                .returns(method, VerificationChallenge::method)
                 .actual()
                 .token();
 
-		final String txtRecord = "konfigyr-verification=" + verificationToken;
+        final String txtRecord = "konfigyr-verification=" + verificationToken;
 
         try (MockedConstruction<InitialDirContext> ignored = mockDns(domain, "some-other-record", txtRecord)) {
             final var activeResult = verifications.verify(owner, groupId);
@@ -170,7 +169,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
                     .returns(owner, GroupVerification::owner)
                     .returns(VerificationState.ACTIVE, GroupVerification::state);
 
-            final var revokedResult = verifications.save(activeResult.revoke());
+            final var revokedResult = verifications.revoke(activeResult);
             assertThat(revokedResult)
                     .as("should revoke group verification")
                     .returns(activeResult.id(), GroupVerification::id)
@@ -187,37 +186,35 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
     @DisplayName("should successfully execute the DNS verification challenge")
     void shouldSuccessfullyVerifyDnsVerificationChallenge() {
         final var owner = Owner.of(EntityId.from(1), "john-doe");
-        final var groupVerification = GroupVerification.claim(owner, "com.my-second-company");
+        final var groupId = "com.my-second-company";
+        final var domain = "my-second-company.com";
+        final var pendingVerification = assertThat(verifications.claim(owner, groupId, VerificationMethod.DNS))
+                .isNotNull()
+                .actual();
 
-        final var pendingResult = verifications.save(groupVerification);
-        assertThat(pendingResult).isNotNull();
-
-        final var challenge = VerificationChallenge.issue(VerificationMethod.DNS)
-                .toBuilder()
-                .verificationId(pendingResult.id())
-                .build();
-
-        final var unverifiedChallenge = verifications.saveChallenge(challenge);
-        assertThat(unverifiedChallenge)
-                .satisfies(it -> assertThat(it.id()).isNotNull())
-                .satisfies(it -> assertThat(it.createdAt()).isNotNull())
-                .satisfies(it -> assertThat(it.token()).isNotNull())
-                .returns(pendingResult.id(), VerificationChallenge::verificationId)
+        final var unverifiedChallenge = assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+                .hasSize(1)
+                .first()
                 .returns(VerificationMethod.DNS, VerificationChallenge::method)
                 .returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
-                .returns(null, VerificationChallenge::verifiedAt)
-                .returns(null, VerificationChallenge::expiresAt);
+                .actual();
 
-        final var verifiedChallenge = verifications.saveChallenge(
-                unverifiedChallenge.applyResult(VerificationResult.success(VerificationMethod.DNS))
-        );
+        final String txtRecord = "konfigyr-verification=" + unverifiedChallenge.token();
+        try (MockedConstruction<InitialDirContext> ignored = mockDns(domain, "some-other-record", txtRecord)) {
+            final var activeVerification = assertThat(verifications.verify(owner, groupId))
+                    .returns(unverifiedChallenge.id(), GroupVerification::id)
+                    .satisfies(it -> assertThat(it.verifiedAt()).isNotNull())
+                    .returns(VerificationState.ACTIVE, GroupVerification::state)
+                    .actual();
 
-        assertThat(verifiedChallenge)
-                .returns(unverifiedChallenge.id(), VerificationChallenge::id)
-                .satisfies(it -> assertThat(it.verifiedAt()).isNotNull())
-                .returns(VerificationMethod.DNS, VerificationChallenge::method)
-                .returns(ChallengeState.VERIFIED, VerificationChallenge::state)
-                .returns(null, VerificationChallenge::expiresAt);
+            assertThat(verifications.findChallenges(activeVerification.id(), owner))
+                    .hasSize(1)
+                    .first()
+                    .returns(unverifiedChallenge.id(), VerificationChallenge::id)
+                    .returns(activeVerification.id(), VerificationChallenge::verificationId)
+                    .returns(ChallengeState.VERIFIED, VerificationChallenge::state)
+                    .satisfies(it -> assertThat(it.verifiedAt()).isNotNull());
+        }
     }
 
     @Test
@@ -225,26 +222,23 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
     @DisplayName("should fail to execute the DNS verification challenge.")
     void shouldFailToVerifyDnsVerificationChallenge() {
         final var owner = Owner.of(EntityId.from(1), "john-doe");
-        final var groupVerification = GroupVerification.claim(owner, "com.my-third-company");
 
-        final var pendingResult = verifications.save(groupVerification);
-        assertThat(pendingResult).isNotNull();
+        final var pendingVerification = assertThat(verifications.claim(owner, "com.my-third-company", VerificationMethod.DNS))
+                .isNotNull()
+                .actual();
 
-        final var challenge = VerificationChallenge.issue(VerificationMethod.DNS)
-                .toBuilder()
-                .verificationId(pendingResult.id())
-                .build();
-
-        final var unverifiedChallenge = verifications.saveChallenge(challenge);
-        assertThat(unverifiedChallenge)
+        final var unverifiedChallenge = assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+                .hasSize(1)
+                .first()
                 .satisfies(it -> assertThat(it.id()).isNotNull())
                 .satisfies(it -> assertThat(it.createdAt()).isNotNull())
                 .satisfies(it -> assertThat(it.token()).isNotNull())
-                .returns(pendingResult.id(), VerificationChallenge::verificationId)
+                .returns(pendingVerification.id(), VerificationChallenge::verificationId)
                 .returns(VerificationMethod.DNS, VerificationChallenge::method)
                 .returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
                 .returns(null, VerificationChallenge::verifiedAt)
-                .returns(null, VerificationChallenge::expiresAt);
+                .returns(null, VerificationChallenge::expiresAt)
+                .actual();
 
         final var failedChallenge = verifications.saveChallenge(
                 unverifiedChallenge.applyResult(VerificationResult.failure("Cannot validate record"))
@@ -263,22 +257,9 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
     @DisplayName("should allow only one verification challenge in unverified state")
     void shouldAllowOnlyOneActiveChallenge() {
         final var owner = Owner.of(EntityId.from(1), "john-doe");
-        final var groupVerification = GroupVerification.claim(owner, "com.my-new-company");
-
-        final var pendingResult = verifications.save(groupVerification);
-        assertThat(pendingResult).isNotNull();
-
-        final var challenge = VerificationChallenge.issue(VerificationMethod.DNS)
-                .toBuilder()
-                .verificationId(pendingResult.id())
-                .build();
-
-        final var unverifiedChallenge = verifications.saveChallenge(challenge);
-        assertThat(unverifiedChallenge)
-                .satisfies(it -> assertThat(it.id()).isNotNull())
-                .returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
-
-        assertThatThrownBy(() -> verifications.saveChallenge(challenge))
+        assertThat(verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
+                .isNotNull();
+        assertThatThrownBy(() -> verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
                 .isInstanceOf(DuplicateKeyException.class);
     }
 

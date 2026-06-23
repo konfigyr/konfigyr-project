@@ -1,7 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
 import com.konfigyr.entity.EntityId;
-import org.jmolecules.ddd.annotation.Repository;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
@@ -13,7 +12,6 @@ import java.util.Optional;
  * @author Vitalii Kushnir
  */
 @NullMarked
-@Repository
 public interface GroupVerifications {
 
 	/**
@@ -86,6 +84,8 @@ public interface GroupVerifications {
 	GroupVerification claim(Owner owner, String groupId, VerificationMethod method);
 
 	GroupVerification verify(Owner owner, String groupId);
+
+	GroupVerification revoke(GroupVerification verification);
 
 	/**
 	 * Saves a new verification challenge.
