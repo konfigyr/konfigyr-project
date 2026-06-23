@@ -4,18 +4,29 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.naming.CommunicationException;
+import javax.naming.directory.InitialDirContext;
+
+import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDns;
+import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDnsException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doReturn;
 
 class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 
 	@Autowired
 	GroupVerifications verifications;
+
+	@MockitoSpyBean
+	SourceCodeVerificationStrategy sourceCodeVerificationStrategy;
 
 	@Test
 	@DisplayName("should find active covering by group id and owner")
@@ -118,19 +129,22 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@DisplayName("should reject duplicate active claims for the same groupId")
 	void shouldRejectDuplicateActiveClaim() {
 		final var owner = Owner.of(EntityId.from(1), "john-doe");
-		final var groupVerification = GroupVerification.claim(owner, "com.konfigyr").activate();
-		assertThatThrownBy(() -> verifications.save(groupVerification)).isInstanceOf(DataIntegrityViolationException.class);
+		assertThatThrownBy(() -> verifications.claim(owner, "com.konfigyr", VerificationMethod.DNS))
+				.isInstanceOf(GroupIdAlreadyClaimedException.class);
 	}
 
 	@Test
 	@Transactional
-	@DisplayName("should create a new claim, activate and revoke it")
-	void shouldCreateActivateAndRevokeClaim() {
+	@DisplayName("should create a new claim, activate and revoke with DNA activation method")
+	void shouldCreateActivateAndRevokeClaimWithDns() {
 		final var owner = Owner.of(EntityId.from(1), "john-doe");
-		final var groupVerification = GroupVerification.claim(owner, "com.mycompany");
+		final var method = VerificationMethod.DNS;
+		final var groupId = "com.mycompany";
+		final var domain = "mycompany.com";
 
-		final var pendingResult = verifications.save(groupVerification);
+		final var pendingResult = verifications.claim(owner, groupId, method);
 		assertThat(pendingResult)
+				.as("should create correct group verification")
 				.satisfies(it -> assertThat(it.id()).isNotNull())
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
 				.returns(owner, GroupVerification::owner)
@@ -138,17 +152,135 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.returns(null, GroupVerification::revokedAt)
 				.returns(null, GroupVerification::verifiedAt);
 
-		final var activeResult = verifications.save(pendingResult.activate());
-		assertThat(activeResult)
+		final var activeVerificationChallenge = verifications.findActiveChallenge(pendingResult);
+		final var verificationToken = assertThat(activeVerificationChallenge)
+				.as("should create correct verification challenge with token")
+				.isPresent()
+				.get()
+				.satisfies(it -> assertThat(it.token()).isNotNull())
+				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
+				.returns(method, VerificationChallenge::method)
+				.actual()
+				.token();
+
+		final String txtRecord = "konfigyr-verification=" + verificationToken;
+
+		try (MockedConstruction<InitialDirContext> ignored = mockDns(domain, "some-other-record", txtRecord)) {
+			final var activeResult = verifications.verify(owner, groupId);
+			assertThat(activeResult)
+					.as("should activate group verification")
+					.returns(pendingResult.id(), GroupVerification::id)
+					.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+					.satisfies(it -> assertThat(it.verifiedAt()).isNotNull())
+					.returns(null, GroupVerification::revokedAt)
+					.returns(owner, GroupVerification::owner)
+					.returns(VerificationState.ACTIVE, GroupVerification::state);
+
+			final var revokedResult = verifications.revoke(activeResult);
+			assertThat(revokedResult)
+					.as("should revoke group verification")
+					.returns(activeResult.id(), GroupVerification::id)
+					.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+					.satisfies(it -> assertThat(it.verifiedAt()).isNotNull())
+					.satisfies(it -> assertThat(it.revokedAt()).isNotNull())
+					.returns(owner, GroupVerification::owner)
+					.returns(VerificationState.REVOKED, GroupVerification::state);
+		}
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should revoke claim in pending state")
+	void shouldRevokeClaimInPendingState() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var method = VerificationMethod.DNS;
+		final var groupId = "com.pending-company";
+
+		final var pendingResult = assertThat(verifications.claim(owner, groupId, method))
+				.as("should create correct group verification")
+				.returns(VerificationState.PENDING, GroupVerification::state)
+				.actual();
+
+		final var revokedResult = verifications.revoke(pendingResult);
+		assertThat(revokedResult)
+				.as("should revoke pending claim")
 				.returns(pendingResult.id(), GroupVerification::id)
+				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+				.satisfies(it -> assertThat(it.revokedAt()).isNotNull())
+				.returns(null, GroupVerification::verifiedAt)
+				.returns(owner, GroupVerification::owner)
+				.returns(VerificationState.REVOKED, GroupVerification::state);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to revoke claim in revoked state")
+	void shouldFailToRevokeClaimInPendingState() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var method = VerificationMethod.DNS;
+		final var groupId = "com.revoked-company";
+
+		final var pendingResult = assertThat(verifications.claim(owner, groupId, method))
+				.as("should create correct group verification")
+				.returns(VerificationState.PENDING, GroupVerification::state)
+				.actual();
+
+		final var revokedResult = assertThat(verifications.revoke(pendingResult))
+				.as("should revoke pending claim")
+				.returns(VerificationState.REVOKED, GroupVerification::state)
+				.actual();
+
+		assertThatThrownBy(() -> verifications.revoke(revokedResult))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Cannot revoke a \"REVOKED\" verification");
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should create a new claim, activate and revoke with SOURCE_CODE activation method")
+	void shouldCreateActivateAndRevokeClaimWithSourceCode() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var method = VerificationMethod.SOURCE_CODE;
+		final var groupId = "io.gitlab.john-doe";
+
+		final var pendingVerification = verifications.claim(owner, groupId, method);
+		assertThat(pendingVerification)
+				.as("should create correct group verification")
+				.satisfies(it -> assertThat(it.id()).isNotNull())
+				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+				.returns(owner, GroupVerification::owner)
+				.returns(VerificationState.PENDING, GroupVerification::state)
+				.returns(null, GroupVerification::revokedAt)
+				.returns(null, GroupVerification::verifiedAt);
+
+		final var activeVerificationChallenge = assertThat(verifications.findActiveChallenge(pendingVerification))
+				.as("should create correct verification challenge with token")
+				.isPresent()
+				.get()
+				.satisfies(it -> assertThat(it.token()).isNotNull())
+				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
+				.returns(method, VerificationChallenge::method)
+				.actual();
+
+		doReturn(VerificationResult.success(VerificationMethod.SOURCE_CODE))
+				.when(sourceCodeVerificationStrategy)
+				.verify(pendingVerification, activeVerificationChallenge);
+
+		final var activeResult = verifications.verify(owner, groupId);
+		assertThat(activeResult)
+				.as("should activate group verification")
+				.returns(pendingVerification.id(), GroupVerification::id)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
 				.satisfies(it -> assertThat(it.verifiedAt()).isNotNull())
 				.returns(null, GroupVerification::revokedAt)
 				.returns(owner, GroupVerification::owner)
 				.returns(VerificationState.ACTIVE, GroupVerification::state);
 
-		final var revokedResult = verifications.save(activeResult.revoke());
+		final var revokedResult = verifications.revoke(activeResult);
 		assertThat(revokedResult)
+				.as("should revoke group verification")
 				.returns(activeResult.id(), GroupVerification::id)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
 				.satisfies(it -> assertThat(it.verifiedAt()).isNotNull())
@@ -159,78 +291,65 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should successfully execute the DNS verification challenge")
-	void shouldSuccessfullyVerifyDnsVerificationChallenge() {
+	@DisplayName("should fail to execute the DNS verification challenge")
+	void shouldFailToVerifyDnsVerificationChallenge() {
 		final var owner = Owner.of(EntityId.from(1), "john-doe");
-		final var groupVerification = GroupVerification.claim(owner, "com.my-second-company");
+		final var groupId = "com.my-third-company";
 
-		final var pendingResult = verifications.save(groupVerification);
-		assertThat(pendingResult).isNotNull();
+		final var pendingVerification = assertThat(verifications.claim(owner, groupId, VerificationMethod.DNS))
+				.isNotNull()
+				.actual();
 
-		final var challenge = VerificationChallenge.issue(VerificationMethod.DNS)
-				.toBuilder()
-				.verificationId(pendingResult.id())
-				.build();
-
-		final var unverifiedChallenge = verifications.saveChallenge(challenge);
-		assertThat(unverifiedChallenge)
-				.satisfies(it -> assertThat(it.id()).isNotNull())
-				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.satisfies(it -> assertThat(it.token()).isNotNull())
-				.returns(pendingResult.id(), VerificationChallenge::verificationId)
+		assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+				.hasSize(1)
+				.first()
 				.returns(VerificationMethod.DNS, VerificationChallenge::method)
-				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
-				.returns(null, VerificationChallenge::verifiedAt)
-				.returns(null, VerificationChallenge::expiresAt);
+				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
 
-		final var verifiedChallenge = verifications.saveChallenge(
-				unverifiedChallenge.applyResult(VerificationResult.success(VerificationMethod.DNS))
-		);
+		try (MockedConstruction<InitialDirContext> ignored = mockDnsException(new CommunicationException("DNS timed out"))) {
+			assertThat(verifications.verify(owner, groupId))
+					.returns(pendingVerification.id(), GroupVerification::id)
+					.returns(null, GroupVerification::verifiedAt)
+					.returns(VerificationState.PENDING, GroupVerification::state);
 
-		assertThat(verifiedChallenge)
-				.returns(unverifiedChallenge.id(), VerificationChallenge::id)
-				.satisfies(it -> assertThat(it.verifiedAt()).isNotNull())
-				.returns(VerificationMethod.DNS, VerificationChallenge::method)
-				.returns(ChallengeState.VERIFIED, VerificationChallenge::state)
-				.returns(null, VerificationChallenge::expiresAt);
+			assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+					.hasSize(1)
+					.first()
+					.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
+		}
 	}
 
 	@Test
 	@Transactional
-	@DisplayName("should fail to execute the DNS verification challenge.")
-	void shouldFailToVerifyDnsVerificationChallenge() {
+	@DisplayName("should fail to execute the SOURCE_COSE verification challenge")
+	void shouldFailToVerifySourceCodeVerificationChallenge() {
 		final var owner = Owner.of(EntityId.from(1), "john-doe");
-		final var groupVerification = GroupVerification.claim(owner, "com.my-third-company");
+		final var groupId = "io.gitlab.john-doe";
 
-		final var pendingResult = verifications.save(groupVerification);
-		assertThat(pendingResult).isNotNull();
+		final var pendingVerification = assertThat(verifications.claim(owner, groupId, VerificationMethod.SOURCE_CODE))
+				.isNotNull()
+				.actual();
 
-		final var challenge = VerificationChallenge.issue(VerificationMethod.DNS)
-				.toBuilder()
-				.verificationId(pendingResult.id())
-				.build();
-
-		final var unverifiedChallenge = verifications.saveChallenge(challenge);
-		assertThat(unverifiedChallenge)
-				.satisfies(it -> assertThat(it.id()).isNotNull())
-				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
-				.satisfies(it -> assertThat(it.token()).isNotNull())
-				.returns(pendingResult.id(), VerificationChallenge::verificationId)
-				.returns(VerificationMethod.DNS, VerificationChallenge::method)
+		final var activeVerificationChallenge = assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+				.hasSize(1)
+				.first()
+				.returns(VerificationMethod.SOURCE_CODE, VerificationChallenge::method)
 				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
-				.returns(null, VerificationChallenge::verifiedAt)
-				.returns(null, VerificationChallenge::expiresAt);
+				.actual();
 
-		final var failedChallenge = verifications.saveChallenge(
-				unverifiedChallenge.applyResult(VerificationResult.failure("Cannot validate record"))
-		);
+		doReturn(VerificationResult.failure(VerificationResult.FailureReason.SERVICE_UNAVAILABLE))
+				.when(sourceCodeVerificationStrategy)
+				.verify(pendingVerification, activeVerificationChallenge);
 
-		assertThat(failedChallenge)
-				.returns(unverifiedChallenge.id(), VerificationChallenge::id)
-				.returns(null, VerificationChallenge::verifiedAt)
-				.returns(VerificationMethod.DNS, VerificationChallenge::method)
-				.returns(ChallengeState.EXPIRED, VerificationChallenge::state)
-				.returns(null, VerificationChallenge::expiresAt);
+		assertThat(verifications.verify(owner, groupId))
+				.returns(pendingVerification.id(), GroupVerification::id)
+				.returns(null, GroupVerification::verifiedAt)
+				.returns(VerificationState.PENDING, GroupVerification::state);
+
+		assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+				.hasSize(1)
+				.first()
+				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
 	}
 
 	@Test
@@ -238,22 +357,22 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@DisplayName("should allow only one verification challenge in unverified state")
 	void shouldAllowOnlyOneActiveChallenge() {
 		final var owner = Owner.of(EntityId.from(1), "john-doe");
-		final var groupVerification = GroupVerification.claim(owner, "com.my-new-company");
-
-		final var pendingResult = verifications.save(groupVerification);
-		assertThat(pendingResult).isNotNull();
-
-		final var challenge = VerificationChallenge.issue(VerificationMethod.DNS)
-				.toBuilder()
-				.verificationId(pendingResult.id())
-				.build();
-
-		final var unverifiedChallenge = verifications.saveChallenge(challenge);
-		assertThat(unverifiedChallenge)
-				.satisfies(it -> assertThat(it.id()).isNotNull())
-				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
-
-		assertThatThrownBy(() -> verifications.saveChallenge(challenge))
+		assertThat(verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
+				.isNotNull();
+		assertThatThrownBy(() -> verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
 				.isInstanceOf(DuplicateKeyException.class);
 	}
+
+	@Test
+	@DisplayName("should find group owner for the given namespace slug")
+	void shouldFindGroupOwner() {
+		final var result = verifications.findOwner("konfigyr");
+
+		assertThat(result)
+				.isPresent()
+				.get()
+				.returns(EntityId.from(2L), Owner::id)
+				.returns("konfigyr", Owner::slug);
+	}
+
 }

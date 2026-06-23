@@ -8,21 +8,13 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedConstruction;
 
 import javax.naming.CommunicationException;
-import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.ServiceUnavailableException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 
 import static com.konfigyr.artifactory.ownership.VerificationResult.FailureReason.*;
+import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDnsException;
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
-
 
 class DnsTxtVerificationStrategyTest {
 
@@ -45,7 +37,7 @@ class DnsTxtVerificationStrategyTest {
 		final GroupVerification verification = verification(groupId);
 		final VerificationChallenge challenge = challenge("test-token");
 
-		try (MockedConstruction<InitialDirContext> ignored = mockDns(expectedDomain, "some-other-record", "konfigyr-verification=test-token")) {
+		try (MockedConstruction<InitialDirContext> ignored = VerificationStrategyTestUtils.mockDns(expectedDomain, "some-other-record", "konfigyr-verification=test-token")) {
 			assertThat(strategy.verify(verification, challenge))
 					.isEqualTo(VerificationResult.success(VerificationMethod.DNS));
 		}
@@ -68,7 +60,7 @@ class DnsTxtVerificationStrategyTest {
 		final GroupVerification verification = verification("com.mycompany");
 		final VerificationChallenge challenge = challenge("abc123");
 
-		try (MockedConstruction<InitialDirContext> ignored = mockDnsNoTxt()) {
+		try (MockedConstruction<InitialDirContext> ignored = VerificationStrategyTestUtils.mockDnsNoTxt("mycompany.com")) {
 			assertThat(strategy.verify(verification, challenge))
 					.isEqualTo(VerificationResult.failure(TARGET_NOT_FOUND));
 		}
@@ -159,36 +151,5 @@ class DnsTxtVerificationStrategyTest {
 				.token(token)
 				.state(ChallengeState.UNVERIFIED)
 				.build();
-	}
-
-	private static MockedConstruction<InitialDirContext> mockDns(String domain, String... txtValues) {
-		return mockConstruction(InitialDirContext.class, (mock, _) -> {
-			final NamingEnumeration<?> enumeration = mock(NamingEnumeration.class);
-			final int[] index = {0};
-			when(enumeration.hasMore()).thenAnswer(_ -> index[0] < txtValues.length);
-			when(enumeration.next()).thenAnswer(_ -> txtValues[index[0]++]);
-
-			final Attribute txtAttr = mock(Attribute.class);
-			//noinspection unchecked,rawtypes
-			when(txtAttr.getAll()).thenReturn((NamingEnumeration) enumeration);
-
-			final Attributes attrs = mock(Attributes.class);
-			when(attrs.get("TXT")).thenReturn(txtAttr);
-
-			when(mock.getAttributes(eq("dns:/" + domain), any(String[].class))).thenReturn(attrs);
-		});
-	}
-
-	private static MockedConstruction<InitialDirContext> mockDnsNoTxt() {
-		return mockConstruction(InitialDirContext.class, (mock, _) -> {
-			final Attributes attrs = mock(Attributes.class);
-			when(attrs.get("TXT")).thenReturn(null);
-			when(mock.getAttributes(eq("dns:/" + "mycompany.com"), any(String[].class))).thenReturn(attrs);
-		});
-	}
-
-	private static MockedConstruction<InitialDirContext> mockDnsException(NamingException ex) {
-		return mockConstruction(InitialDirContext.class, (mock, _) ->
-				when(mock.getAttributes(anyString(), any(String[].class))).thenThrow(ex));
 	}
 }

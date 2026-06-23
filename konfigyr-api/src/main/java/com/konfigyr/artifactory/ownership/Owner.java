@@ -9,10 +9,12 @@ import java.io.Serializable;
 
 /**
  * Lightweight reference to a namespace owner in the artifactory bounded context.
+ * <p>
+ * This value object carries the namespace identifier and slug so ownership workflows can reference the
+ * namespace without depending on the full namespace aggregate.
  *
  * @param id   namespace entity identifier
  * @param slug namespace slug used for URL construction
- *
  * @author Vitalii Kushnir
  */
 @ValueObject
