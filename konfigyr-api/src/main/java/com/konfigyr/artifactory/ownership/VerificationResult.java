@@ -6,6 +6,8 @@ import org.jspecify.annotations.NonNull;
  * Represents the outcome of a verification attempt performed by a {@link VerificationStrategy}.
  * <p>
  * A verification result is either a {@link Success} or a {@link Failure}.
+ *
+ * @author Mila Zarkovic
  */
 public sealed interface VerificationResult permits VerificationResult.Success, VerificationResult.Failure {
 
