@@ -7,12 +7,12 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 
-/***
+/**
  * Utility class that contains test {@link Authentication} stubs.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
- **/
+ */
 public interface TestPrincipals {
 
 	/**
