@@ -8,22 +8,13 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedConstruction;
 
 import javax.naming.CommunicationException;
-import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.ServiceUnavailableException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 
 import static com.konfigyr.artifactory.ownership.VerificationResult.FailureReason.*;
 import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDnsException;
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
-
 
 class DnsTxtVerificationStrategyTest {
 
