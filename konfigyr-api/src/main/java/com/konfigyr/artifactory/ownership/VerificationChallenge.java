@@ -24,20 +24,21 @@ import java.time.OffsetDateTime;
  * @param createdAt      timestamp when the challenge was created; may be {@literal null} before persistence
  * @param verifiedAt     timestamp when the challenge was verified; may be {@literal null}
  * @param expiresAt      timestamp when the challenge expires; may be {@literal null}
+ * @author Vitalii Kushnir
  */
 @Builder(toBuilder = true)
 public record VerificationChallenge(
-        @Nullable EntityId id,
-        @Nullable EntityId verificationId,
-        @NonNull VerificationMethod method,
-        @NonNull String token,
-        @NonNull ChallengeState state,
-        @Nullable OffsetDateTime createdAt,
-        @Nullable OffsetDateTime verifiedAt,
-        @Nullable OffsetDateTime expiresAt
+	@Nullable EntityId id,
+	@Nullable EntityId verificationId,
+	@NonNull VerificationMethod method,
+	@NonNull String token,
+	@NonNull ChallengeState state,
+	@Nullable OffsetDateTime createdAt,
+	@Nullable OffsetDateTime verifiedAt,
+	@Nullable OffsetDateTime expiresAt
 ) implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 8383658221756321454L;
+	@Serial
+	private static final long serialVersionUID = 8383658221756321454L;
 
 }

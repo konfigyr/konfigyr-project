@@ -25,18 +25,19 @@ import java.time.OffsetDateTime;
  * @param createdAt  timestamp when the claim was created; may be {@literal null} before persistence
  * @param verifiedAt timestamp when the claim was verified; may be {@literal null}
  * @param revokedAt  timestamp when the claim was revoked; may be {@literal null}
+ * @author Vitalii Kushnir
  */
 @AggregateRoot
 @Builder(toBuilder = true)
 public record GroupVerification(
-        @Nullable @Identity EntityId id,
-        @NonNull Owner owner,
-        @NonNull String groupId,
-        @NonNull VerificationState state,
-        @Nullable OffsetDateTime createdAt,
-        @Nullable OffsetDateTime verifiedAt,
-        @Nullable OffsetDateTime revokedAt
+	@Nullable @Identity EntityId id,
+	@NonNull Owner owner,
+	@NonNull String groupId,
+	@NonNull VerificationState state,
+	@Nullable OffsetDateTime createdAt,
+	@Nullable OffsetDateTime verifiedAt,
+	@Nullable OffsetDateTime revokedAt
 ) implements Serializable {
-    @Serial
-    private static final long serialVersionUID = -8982245386554212335L;
+	@Serial
+	private static final long serialVersionUID = -8982245386554212335L;
 }

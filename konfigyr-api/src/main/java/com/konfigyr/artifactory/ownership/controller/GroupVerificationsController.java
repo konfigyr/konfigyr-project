@@ -1,6 +1,5 @@
 package com.konfigyr.artifactory.ownership.controller;
 
-import com.konfigyr.artifactory.ownership.GroupIdAlreadyClaimedException;
 import com.konfigyr.artifactory.ownership.GroupVerification;
 import com.konfigyr.artifactory.ownership.VerificationChallengeNotFoundException;
 import com.konfigyr.artifactory.ownership.GroupVerifications;

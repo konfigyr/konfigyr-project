@@ -19,11 +19,11 @@ import java.io.Serializable;
  */
 @ValueObject
 public record Owner(
-        @NonNull @Identity EntityId id,
-        @NonNull String slug
+		@NonNull @Identity EntityId id,
+		@NonNull String slug
 ) implements Serializable {
 
-    public static @NonNull Owner of(EntityId id, String slug) {
-        return new Owner(id, slug);
-    }
+	public static @NonNull Owner of(EntityId id, String slug) {
+		return new Owner(id, slug);
+	}
 }
