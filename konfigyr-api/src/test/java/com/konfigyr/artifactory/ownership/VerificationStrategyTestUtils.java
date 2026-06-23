@@ -17,6 +17,9 @@ import static org.mockito.Mockito.when;
 
 public final class VerificationStrategyTestUtils {
 
+	private VerificationStrategyTestUtils() {
+	}
+
 	public static MockedConstruction<InitialDirContext> mockDns(String domain, String... txtValues) {
 		return mockConstruction(InitialDirContext.class, (mock, _) -> {
 			final NamingEnumeration<?> enumeration = mock(NamingEnumeration.class);
