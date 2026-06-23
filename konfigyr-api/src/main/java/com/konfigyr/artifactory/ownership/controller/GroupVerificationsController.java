@@ -1,7 +1,7 @@
 package com.konfigyr.artifactory.ownership.controller;
 
 import com.konfigyr.artifactory.ownership.GroupVerification;
-import com.konfigyr.artifactory.ownership.VerificationChallengeNotFoundException;
+import com.konfigyr.artifactory.ownership.GroupVerificationNotFoundException;
 import com.konfigyr.artifactory.ownership.GroupVerifications;
 import com.konfigyr.artifactory.ownership.Owner;
 import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
@@ -53,7 +53,7 @@ public class GroupVerificationsController {
 	public EntityModel<GroupVerification> getGroupVerification(@PathVariable String namespace, @PathVariable String groupId) {
 		final Owner owner = resolveOwner(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(groupId, owner)
-				.orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
+				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
 		return assembler(namespace).groupVerification().assemble(verification);
 	}
 
@@ -99,7 +99,7 @@ public class GroupVerificationsController {
 	public void revoke(@PathVariable String namespace, @PathVariable String groupId) {
 		final Owner owner = resolveOwner(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(groupId, owner)
-				.orElseThrow(() -> new VerificationChallengeNotFoundException("Could not find a verification for groupId '" + groupId + "' owned by namespace " + owner.slug()));
+				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
 		groupVerifications.revoke(verification);
 	}
 

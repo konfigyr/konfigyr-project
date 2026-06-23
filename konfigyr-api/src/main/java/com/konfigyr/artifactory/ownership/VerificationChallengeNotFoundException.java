@@ -23,8 +23,4 @@ public class VerificationChallengeNotFoundException extends ArtifactoryException
 		super(HttpStatus.NOT_FOUND, message);
 	}
 
-	public VerificationChallengeNotFoundException(HttpStatus status, String message) {
-		super(status, message);
-	}
-
 }
