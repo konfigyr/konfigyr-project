@@ -29,7 +29,6 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 
 	@Test
 	@DisplayName("should fail to list claims for an unknown namespace")
-	@Transactional
 	void shouldFailFindOwner() {
 		mvc.get().uri("/namespaces/{namespace}/group-verifications", "fake-namespace")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
@@ -43,7 +42,6 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 
 	@Test
 	@DisplayName("should list claims for a namespace")
-	@Transactional
 	void shouldListClaimsForNamespace() {
 		mvc.get().uri("/namespaces/{namespace}/group-verifications", "john-doe")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
@@ -83,7 +81,6 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 
 	@Test
 	@DisplayName("should fetch claim by group id")
-	@Transactional
 	void shouldFetchClaimByGroupId() {
 		mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}", "john-doe", "org.springframework.ai")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
@@ -99,7 +96,6 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 
 	@Test
 	@DisplayName("should retrieve verification challenge history for the given claim")
-	@Transactional
 	void shouldRetrieveVerificationChallengeHistory() {
 		final EntityId verificationId = EntityId.from(2);
 		mvc.get().uri("/namespaces/{namespace}/group-verifications/{verificationId}/verification-challenges", "john-doe", verificationId.serialize())
