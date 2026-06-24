@@ -13,7 +13,8 @@ import com.konfigyr.feature.LimitedFeatureValue;
 public interface NamespaceFeatures {
 
 	/**
-	 * Feature definition that is used to define how many {@link Member members} can one {@link Namespace} have.
+	 * Feature definition that is used to define how many {@link com.konfigyr.membership.Member members}
+	 * can one {@link Namespace} have.
 	 */
 	FeatureDefinition<LimitedFeatureValue> MEMBERS_COUNT = FeatureDefinition.of("namespace.members_count", LimitedFeatureValue.class);
 

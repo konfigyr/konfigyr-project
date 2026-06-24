@@ -125,8 +125,10 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     await userEvents.keyboard('[Enter]');
 
-    expect(getByRole('combobox', { name: 'Property name' })).toHaveValue('spring.config.name');
-    expect(getByRole('textbox', { name: 'spring.config.name' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(getByRole('combobox', { name: 'Property name' })).toHaveValue('spring.config.name');
+      expect(getByRole('textbox', { name: 'spring.config.name' })).toBeInTheDocument();
+    });
   });
 
   test('should add selected configuration property with the entered value', async () => {
@@ -147,7 +149,9 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     await userEvents.keyboard('[Enter]');
 
-    expect(getByRole('textbox', { name: 'spring.config.name' })).toHaveValue('application');
+    await waitFor(() => {
+      expect(getByRole('textbox', { name: 'spring.config.name' })).toHaveValue('application');
+    });
 
     await userEvents.clear(
       getByRole('textbox', { name: 'spring.config.name' }),
@@ -280,6 +284,10 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' }),
     );
 
+    await waitFor(() => {
+      expect(getByRole('textbox', { name: 'spring.security.oauth2.client.registration.github.clientSecret' })).toBeInTheDocument();
+    });
+
     await userEvents.type(
       getByRole('textbox', { name: 'spring.security.oauth2.client.registration.github.clientSecret' }),
       'client-secret',
@@ -325,7 +333,10 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     await userEvents.keyboard('[Enter]');
 
-    // start typing to enter the object key...
+    await waitFor(() => {
+      expect(getByRole('textbox', { name: 'konfigyr.test-missing-property' })).toBeInTheDocument();
+    });
+
     await userEvents.type(
       getByRole('textbox', { name: 'konfigyr.test-missing-property' }),
       'Added value',
@@ -389,6 +400,10 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     await userEvents.keyboard('[Enter]');
 
+    await waitFor(() => {
+      expect(getByRole('textbox', { name: 'konfigyr.test.constrained' })).toBeInTheDocument();
+    });
+
     await userEvents.type(
       getByRole('textbox', { name: 'konfigyr.test.constrained' }),
       'ab',
@@ -417,6 +432,10 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
     });
 
     await userEvents.keyboard('[Enter]');
+
+    await waitFor(() => {
+      expect(getByRole('textbox', { name: 'konfigyr.test.constrained' })).toBeInTheDocument();
+    });
 
     await userEvents.type(
       getByRole('textbox', { name: 'konfigyr.test.constrained' }),
@@ -453,6 +472,10 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
     });
 
     await userEvents.keyboard('[Enter]');
+
+    await waitFor(() => {
+      expect(getByRole('textbox', { name: 'konfigyr.test.constrained' })).toBeInTheDocument();
+    });
 
     await userEvents.type(
       getByRole('textbox', { name: 'konfigyr.test.constrained' }),

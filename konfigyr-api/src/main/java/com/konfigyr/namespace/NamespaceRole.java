@@ -1,7 +1,8 @@
 package com.konfigyr.namespace;
 
 /**
- * Defines the role of the {@link Member} within a {@link Namespace} and which actions could be performed.
+ * Defines the role of the {@link com.konfigyr.membership.Member} within a {@link Namespace}
+ * and which actions could be performed.
  *
  * @author Vladimir Spasic
  * @since 1.0.0

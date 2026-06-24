@@ -2,7 +2,8 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
-import { InputField } from '@konfigyr/components/vault/input';
+import { InlineInputField, InputField } from '@konfigyr/components/vault/input';
+import { InlineEdit, InlineEditPlaceholder } from '@konfigyr/components/ui/inline-edit';
 
 import type {
   ConfigurationPropertyValue,
@@ -539,5 +540,97 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(onChange).toBeCalledWith({
       encoded: 'foo,bar,bazz', decoded: ['foo', 'bar', 'bazz'],
     });
+  });
+});
+
+describe('components | vault | properties | <InlineInputField/>', () => {
+  afterEach(() => cleanup());
+
+  test('should mark field invalid on open when the initial value violates the schema', async () => {
+    const property = propertyFor({ type: 'integer', minimum: 10 });
+    const onChange = vi.fn();
+
+    const { getByRole } = renderWithMessageProvider(
+      <InlineEdit value={{ encoded: '5', decoded: 5 }} onChange={onChange}>
+        <InlineEditPlaceholder>5</InlineEditPlaceholder>
+        <InlineInputField property={property} />
+      </InlineEdit>,
+    );
+
+    await userEvent.click(getByRole('button'));
+
+    await waitFor(() => {
+      expect(getByRole('spinbutton', { name: property.name })).toBeInvalid();
+    });
+  });
+
+  test('should block save when the edited value violates the schema', async () => {
+    const property = propertyFor({ type: 'string', minLength: 5 });
+    const onChange = vi.fn();
+
+    const { getByRole } = renderWithMessageProvider(
+      <InlineEdit value={valueFor('valid value')} onChange={onChange}>
+        <InlineEditPlaceholder>valid value</InlineEditPlaceholder>
+        <InlineInputField property={property} />
+      </InlineEdit>,
+    );
+
+    await userEvent.click(getByRole('button'));
+
+    const field = getByRole('textbox', { name: property.name });
+    await userEvent.clear(field);
+    await userEvent.type(field, 'x');
+    await userEvent.keyboard('{Enter}');
+
+    expect(onChange).not.toBeCalled();
+    expect(field).toBeInTheDocument();
+    expect(field).toBeInvalid();
+  });
+
+  test('should save when the edited value satisfies the schema', async () => {
+    const property = propertyFor({ type: 'string', minLength: 3 });
+    const onChange = vi.fn();
+
+    const { getByRole } = renderWithMessageProvider(
+      <InlineEdit value={valueFor('old')} onChange={onChange}>
+        <InlineEditPlaceholder>old</InlineEditPlaceholder>
+        <InlineInputField property={property} />
+      </InlineEdit>,
+    );
+
+    await userEvent.click(getByRole('button'));
+
+    const field = getByRole('textbox', { name: property.name });
+    await userEvent.clear(field);
+    await userEvent.type(field, 'new valid value');
+    await userEvent.keyboard('{Enter}');
+
+    await waitFor(() => {
+      expect(onChange).toBeCalledWith({ encoded: 'new valid value', decoded: 'new valid value' });
+    });
+  });
+
+  test('should clear validation errors and restore original value on cancel', async () => {
+    const property = propertyFor({ type: 'string', minLength: 5 });
+    const onChange = vi.fn();
+
+    const { getByRole, queryByRole } = renderWithMessageProvider(
+      <InlineEdit value={valueFor('valid value')} onChange={onChange}>
+        <InlineEditPlaceholder>valid value</InlineEditPlaceholder>
+        <InlineInputField property={property} />
+      </InlineEdit>,
+    );
+
+    await userEvent.click(getByRole('button'));
+
+    const field = getByRole('textbox', { name: property.name });
+    await userEvent.clear(field);
+    await userEvent.type(field, 'x');
+    await userEvent.keyboard('{Enter}');
+    expect(onChange).not.toBeCalled();
+
+    await userEvent.click(getByRole('button', { name: 'Cancel' }));
+    expect(queryByRole('textbox')).toBeNull();
+    expect(onChange).not.toBeCalled();
   });
 });

@@ -122,7 +122,8 @@ public abstract sealed class NamespaceEvent extends EntityEvent implements Suppl
 	}
 
 	/**
-	 * Abstract event that would be used for all {@link Member} related changes of a {@link Namespace}.
+	 * Abstract event that would be used for all {@link com.konfigyr.membership.Memberships membership}
+	 * related changes of a {@link Namespace}.
 	 */
 	public static abstract sealed class MembershipEvent extends NamespaceEvent
 			permits MemberAdded, MemberUpdated, MemberRemoved {
@@ -153,7 +154,8 @@ public abstract sealed class NamespaceEvent extends EntityEvent implements Suppl
 	}
 
 	/**
-	 * Event that would be published when a new {@link Member} is added to the {@link Namespace}.
+	 * Event that would be published when a new {@link com.konfigyr.membership.Member}
+	 * is added to the {@link Namespace}.
 	 */
 	@DomainEvent(name = "member-added", namespace = "namespaces")
 	public static final class MemberAdded extends MembershipEvent {
@@ -162,7 +164,8 @@ public abstract sealed class NamespaceEvent extends EntityEvent implements Suppl
 
 		/**
 		 * Create a new {@link MemberAdded} event with the {@link Namespace}, {@link com.konfigyr.account.Account}
-		 * that was added as a new {@link Member} and the {@link NamespaceRole} that was assigned to it.
+		 * that was added as a new {@link com.konfigyr.membership.Member} and the {@link NamespaceRole}
+		 * that was assigned to it.
 		 *
 		 * @param namespace the namespace to which this member was added
 		 * @param account entity identifier of the user account that was added as a member
@@ -182,7 +185,8 @@ public abstract sealed class NamespaceEvent extends EntityEvent implements Suppl
 	}
 
 	/**
-	 * Event that would be published when an existing {@link Member} was updated within the {@link Namespace}.
+	 * Event that would be published when an existing {@link com.konfigyr.membership.Member} was
+	 * updated within the {@link Namespace}.
 	 */
 	@DomainEvent(name = "member-updated", namespace = "namespaces")
 	public static final class MemberUpdated extends MembershipEvent {
@@ -211,7 +215,8 @@ public abstract sealed class NamespaceEvent extends EntityEvent implements Suppl
 	}
 
 	/**
-	 * Event that would be published when an existing {@link Member} was removed from the {@link Namespace}.
+	 * Event that would be published when an existing {@link com.konfigyr.membership.Member} was
+	 * removed from the {@link Namespace}.
 	 */
 	@DomainEvent(name = "member-removed", namespace = "namespaces")
 	public static final class MemberRemoved extends MembershipEvent {
