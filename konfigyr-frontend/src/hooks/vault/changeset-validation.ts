@@ -23,7 +23,7 @@ export function useChangesetValidation(properties: Array<ConfigurationProperty<a
         return;
       }
 
-      if (!validatePropertyValue(property.schema, property.value?.encoded)) {
+      if (!validatePropertyValue(property.schema, property.value?.decoded)) {
         invalidPropertyNames.add(property.name);
       }
     });
