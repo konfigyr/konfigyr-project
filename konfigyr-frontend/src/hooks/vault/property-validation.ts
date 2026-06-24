@@ -14,6 +14,8 @@ const ajv = new Ajv({ allErrors: true, coerceTypes: false });
 addFormats(ajv);
 
 const [ DURATION_FORMAT, DATA_SIZE_FORMAT ] = ['duration', 'data-size'];
+const BOOLEAN_ENCODED_PATTERN = /^(true|1|false|0)$/i;
+const BOOLEAN_TRUE_PATTERN = /^(true|1)$/i;
 
 ajv.addFormat(DURATION_FORMAT, DURATION_ENCODED_PATTERN);
 ajv.addFormat(DATA_SIZE_FORMAT, DATA_SIZE_ENCODED_PATTERN);
@@ -178,10 +180,33 @@ function createPropertyValidator (schema: PropertyJsonSchema): ValidateFunction 
   return ajv.compile(schema);
 }
 
+/**
+ * Normalizes an encoded property value before schema validation.
+ *
+ * Currently, this only coerces boolean-like strings into actual booleans so
+ * the validator can accept values such as `"true"` and `"false"`.
+ */
+function normalizePropertyValue(schema: PropertyJsonSchema, value: unknown): unknown {
+  if (value === null || value === undefined || typeof value !== 'string') {
+    return value;
+  }
+
+  if (schema.type === 'boolean') {
+    if (!BOOLEAN_ENCODED_PATTERN.test(value)) {
+      return value;
+    }
+    return BOOLEAN_TRUE_PATTERN.test(value);
+  }
+
+  return value;
+}
+
 function validatePropertyValue(validator: ValidateFunction, schema: PropertyJsonSchema, value: unknown): boolean {
+  const normalizedValue = normalizePropertyValue(schema, value);
+
   return schema.enum?.length
-    ? validator(resolveRelaxedEnumValue(schema.enum, value))
-    : validator(value);
+    ? validator(resolveRelaxedEnumValue(schema.enum, normalizedValue))
+    : validator(normalizedValue);
 }
 
 export function isPropertyValueValid(schema: PropertyJsonSchema, value: unknown): boolean {

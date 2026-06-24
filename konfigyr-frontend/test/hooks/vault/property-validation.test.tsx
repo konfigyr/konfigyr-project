@@ -189,6 +189,7 @@ const VALIDATION_FAIL_CASES: Array<ValidationCase> = [
 ];
 
 const VALIDATION_PASS_CASES: Array<ValidationCase> = [
+  { label: 'boolean', schema: { type: 'boolean' }, value: 'true' },
   { label: 'type', schema: { type: 'string' }, value: 'abs' },
   { label: 'enum', schema: { type: 'string', enum: ['alpha', 'beta'] }, value: 'alpha' },
   { label: 'enum relaxed: uppercase', schema: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] }, value: 'ACTIVE' },
