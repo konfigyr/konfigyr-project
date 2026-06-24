@@ -9,6 +9,7 @@ export * from './vault/change-requests';
 export * from './vault/config-file-parser';
 export * from './vault/changeset';
 export * from './vault/property-validation';
+export * from './vault/changeset-validation';
 export * from './vault/profiles';
 export * from './vault/properties';
 export * from './clipboard';
