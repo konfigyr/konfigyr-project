@@ -1,8 +1,11 @@
 package com.konfigyr.artifactory.controller;
 
 import com.konfigyr.artifactory.*;
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
+import com.konfigyr.security.AuthenticatedPrincipal;
+import com.konfigyr.security.NamespacedPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.http.HttpStatus;
@@ -10,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @NullMarked
 @RestController
@@ -53,6 +58,9 @@ class ArtifactoryController {
 			@RequestBody DefaultArtifactMetadata metadata,
 			BindingResult errors
 	) throws BindException {
+		final EntityId namespaceId = retrieveNamespaceIdentifier()
+				.orElseThrow(() -> new ArtifactoryException(HttpStatus.BAD_REQUEST, "Namespace id is not available for current principal"));
+
 		final ArtifactMetadataValidator validator = new ArtifactMetadataValidator(groupId, artifactId, version);
 		validator.validate(metadata, errors);
 
@@ -69,4 +77,13 @@ class ArtifactoryController {
 		return Assemblers.property(coordinates).assemble(artifactory.properties(coordinates));
 	}
 
+	static Optional<EntityId> retrieveNamespaceIdentifier() {
+		final AuthenticatedPrincipal principal = AuthenticatedPrincipal.resolve();
+
+		if (principal instanceof NamespacedPrincipal namespacedPrincipal) {
+			return namespacedPrincipal.getNamespaceId();
+		}
+
+		return Optional.empty();
+	}
 }
