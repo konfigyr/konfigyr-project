@@ -166,7 +166,7 @@ function StateCountLabel({ type, count }: { type: PropertyTransitionType, count:
   );
 }
 
-function StateInvalidLabel({ count }: { count: number }) {
+function InvalidCountLabel({ count }: { count: number }) {
   return (
     <p
       className={cn(
@@ -320,7 +320,7 @@ function ChangesetStatusBarContents({
             <StateCountLabel type={PropertyTransitionType.REMOVED} count={changeset.deleted} />
           )}
           {invalidCount > 0 && (
-            <StateInvalidLabel count={invalidCount}/>
+            <InvalidCountLabel count={invalidCount}/>
           )}
         </div>
       </div>

@@ -6,16 +6,17 @@ import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { ConfigurationPropertyState, PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { Toaster } from '@konfigyr/components/ui/sonner';
 import { ChangesetStatusBar } from '@konfigyr/components/vault/changeset/status-bar';
-import { useChangesetState } from '@konfigyr/hooks';
+import { useChangesetState, useChangesetValidation } from '@konfigyr/hooks';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
 
 import type { Profile } from '@konfigyr/hooks/types';
 import type { ChangesetStatusBarProps } from '@konfigyr/components/vault/changeset/status-bar';
 
-function TestChangesetStatusBar({ profile, modified = false, ...props }: {
+function TestChangesetStatusBar({ profile, modified = false, invalid = false, ...props }: {
   profile: Profile;
   modified?: boolean;
-} & Omit<ChangesetStatusBarProps, 'changeset'>) {
+  invalid?: boolean;
+} & Omit<ChangesetStatusBarProps, 'changeset' | 'invalidPropertyNames' | 'isChangesetValid'>) {
   const { data } = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profile);
 
   const changeset = useMemo(() => {
@@ -27,17 +28,34 @@ function TestChangesetStatusBar({ profile, modified = false, ...props }: {
         value: { encoded: 'test-app', decoded: 'test-app' },
         state: PropertyTransitionType.ADDED,
       });
+
+      if (invalid) {
+        data.properties.push({
+          name: 'spring.aop.proxy-target-class',
+          typeName: 'java.lang.Boolean',
+          schema: { type: 'boolean' },
+          value: { encoded: 'truee', decoded: 'truee' },
+          state: PropertyTransitionType.ADDED,
+        });
+      }
+
       data.added = data.properties.filter(p => p.state === ConfigurationPropertyState.ADDED).length;
       data.modified = data.properties.filter(p => p.state === ConfigurationPropertyState.UPDATED).length;
       data.deleted = data.properties.filter(p => p.state === ConfigurationPropertyState.REMOVED).length;
     }
     return data;
   }, [data, modified]);
+  const { invalidPropertyNames, isChangesetValid } = useChangesetValidation(changeset?.properties ?? []);
 
   return changeset && (
     <>
       <Toaster />
-      <ChangesetStatusBar changeset={changeset} {...props} />
+      <ChangesetStatusBar
+        changeset={changeset}
+        invalidPropertyNames={invalidPropertyNames}
+        isChangesetValid={isChangesetValid}
+        {...props}
+      />
     </>
   );
 }
@@ -210,5 +228,20 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
     });
 
     expect(onSubmitted).toHaveBeenCalledOnce();
+  });
+
+  test('should disable the submit changeset dialog trigger button when chanset has invalid properies', async () => {
+    const { getByRole, container } = renderWithQueryClient(
+      <TestChangesetStatusBar profile={profiles.development} modified={true} invalid={true} />,
+    );
+
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Apply' })).toBeInTheDocument();
+
+      const alertIcon = container.querySelector('.lucide.lucide-circle-alert');
+      expect(alertIcon?.parentElement).toHaveTextContent('1Invalid');
+    });
+
+    expect(getByRole('button', { name: 'Apply' })).toBeDisabled();
   });
 });
