@@ -31,7 +31,7 @@ function TestChangesetStatusBar({ profile, modified = false, invalid = false, ..
 
       if (invalid) {
         data.properties.push({
-          name: 'spring.aop.proxy-target-class',
+          name: 'spring.aop.auto',
           typeName: 'java.lang.Boolean',
           schema: { type: 'boolean' },
           value: { encoded: 'truee', decoded: 'truee' },
