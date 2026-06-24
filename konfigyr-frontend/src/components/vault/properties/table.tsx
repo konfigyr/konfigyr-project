@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   AlertCircleIcon,
@@ -142,6 +142,13 @@ function ValueCell<T>({ property, readOnly, invalid, onSave }: {
               <span className="opacity-0 group-hover/inline-edit-placeholder:opacity-50 transition-opacity">
                 <PencilIcon className="h-3 w-3" />
               </span>
+            )}
+
+            { !property.value?.encoded && (
+              <FormattedMessage
+                defaultMessage="No value provided"
+                description="Fallback shown when the property has no value"
+              />
             )}
           </div>
         }

@@ -9,7 +9,7 @@ describe('components | vault | properties | <PropertiesTable/>', () => {
     const { container, getByText } = renderWithQueryClient(
       <PropertiesTable
         properties={[buildConfigurationProperty(
-          'spring.aop.proxy-target-class',
+          'spring.aop.auto',
           ConfigurationPropertyState.UPDATED,
           { type: 'boolean' },
           'java.lang.Boolean',
@@ -28,18 +28,35 @@ describe('components | vault | properties | <PropertiesTable/>', () => {
     const { container, getByText } = renderWithQueryClient(
       <PropertiesTable
         properties={[buildConfigurationProperty(
-          'spring.aop.proxy-target-class',
+          'spring.aop.auto',
           ConfigurationPropertyState.UPDATED,
           { type: 'boolean' },
           'java.lang.Boolean',
           'truee',
         )]}
-        invalidPropertyNames={new Set(['spring.aop.proxy-target-class'])}
+        invalidPropertyNames={new Set(['spring.aop.auto'])}
         onUpdate={vi.fn()}
       />,
     );
 
     expect(getByText('true')).toBeInTheDocument();
     expect(container.querySelector('.lucide.lucide-circle-alert')).not.toBeNull();
+  });
+
+  test('should render "No value provided" placeholder when property value is not provided', () => {
+    const { container, getByText } = renderWithQueryClient(
+      <PropertiesTable
+        properties={[buildConfigurationProperty(
+          'spring.aop.proxy-target-class',
+          ConfigurationPropertyState.UPDATED,
+          { type: 'string' },
+          'java.lang.String',
+          undefined,
+        )]}
+        invalidPropertyNames={new Set()}
+        onUpdate={vi.fn()}
+      />,
+    );
+    expect(getByText('No value provided')).toBeInTheDocument();
   });
 });
