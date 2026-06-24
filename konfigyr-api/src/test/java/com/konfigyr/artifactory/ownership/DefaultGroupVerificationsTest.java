@@ -363,16 +363,4 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.isInstanceOf(DuplicateKeyException.class);
 	}
 
-	@Test
-	@DisplayName("should find group owner for the given namespace slug")
-	void shouldFindGroupOwner() {
-		final var result = verifications.findOwner("konfigyr");
-
-		assertThat(result)
-				.isPresent()
-				.get()
-				.returns(EntityId.from(2L), Owner::id)
-				.returns("konfigyr", Owner::slug);
-	}
-
 }

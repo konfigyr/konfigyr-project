@@ -110,15 +110,4 @@ public interface GroupVerifications {
 	 * @return the revoked claim
 	 */
 	GroupVerification revoke(GroupVerification verification);
-
-	/**
-	 * Resolves the group owner for the given namespace slug.
-	 * <p>
-	 * This is a lookup helper used by the controller layer to translate a namespace path segment into
-	 * an {@link Owner} reference for verification operations.
-	 *
-	 * @param namespace the namespace slug to resolve
-	 * @return the matching owner if one exists; otherwise an empty optional
-	 */
-	Optional<Owner> findOwner(String namespace);
 }
