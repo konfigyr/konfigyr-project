@@ -1,5 +1,7 @@
 package com.konfigyr.artifactory;
 
+import com.konfigyr.artifactory.ownership.GroupVerifications;
+import com.konfigyr.artifactory.ownership.OwnerResolver;
 import com.konfigyr.artifactory.store.FileSystemMetadataStore;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.version.Version;
@@ -55,8 +57,10 @@ public class ArtifactoryAutoConfiguration implements WebMvcConfigurer {
 			DSLContext context,
 			MetadataStore store,
 			ArtifactoryConverters converters,
-			ApplicationEventPublisher eventPublisher
+			ApplicationEventPublisher eventPublisher,
+			OwnerResolver ownerResolver,
+			GroupVerifications groupVerifications
 	) {
-		return new DefaultArtifactory(context, store, converters, eventPublisher);
+		return new DefaultArtifactory(context, store, converters, eventPublisher, ownerResolver, groupVerifications);
 	}
 }

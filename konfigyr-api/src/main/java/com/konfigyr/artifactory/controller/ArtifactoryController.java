@@ -64,7 +64,7 @@ class ArtifactoryController {
 		final ArtifactMetadataValidator validator = new ArtifactMetadataValidator(groupId, artifactId, version);
 		validator.validate(metadata, errors);
 
-		return EntityModel.of(artifactory.release(metadata));
+		return EntityModel.of(artifactory.release(namespaceId, metadata));
 	}
 
 	@GetMapping("/{groupId}/{artifactId}/{version}/properties")

@@ -1,11 +1,14 @@
 package com.konfigyr.artifactory.controller;
 
 import com.konfigyr.artifactory.*;
+import com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.security.KonfigyrClaimNames;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
+import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.validation.BindException;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -128,7 +132,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var metadata = TestArtifacts.metadata(artifact);
 
 		mvc.post().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(publishingTo(EntityId.from(2L)))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(TestArtifacts.metadata(artifact)))
 				.exchange()
@@ -190,7 +194,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		));
 
 		mvc.post().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(publishingTo(EntityId.from(2L)))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(metadata.toPrettyString())
 				.exchange()
@@ -212,7 +216,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "3.0.0");
 
 		mvc.post().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(publishingTo(EntityId.from(2L)))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{}")
 				.exchange()
@@ -238,7 +242,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "3.0.0");
 
 		mvc.post().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(publishingTo(EntityId.from(2L)))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"groupId\": \"org.konfigyr\", \"artifactId\": \"konfigyr\", \"version\": \"1.0.0\"}")
 				.exchange()
@@ -256,6 +260,33 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 								.containsExactlyInAnyOrder("properties", "groupId", "artifactId", "version")
 						)
 				));
+	}
+
+	@Test
+	@DisplayName("should fail to upload artifact for an unverified groupId")
+	void uploadArtifactForUnverifiedGroupId() {
+		final var coordinates = ArtifactCoordinates.of("com.unverified", "some-artifact", "1.0.0");
+		final var metadata = TestArtifacts.metadata(coordinates);
+
+		mvc.post().uri(uriForArtifact(coordinates).toUri())
+				.with(publishingTo(EntityId.from(2L)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(GroupIdNotVerifiedException.class, ex -> ex
+						.returns(HttpStatus.BAD_REQUEST, GroupIdNotVerifiedException::getStatusCode)
+						.returns("com.unverified", GroupIdNotVerifiedException::getGroupId)
+						.returns("konfigyr", e -> e.getOwner().slug())
+				))
+				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
+						.hasDetailContaining("GroupId 'com.unverified' is not verified for publishing")
+				));
+
+		assertThat(store.get(coordinates))
+				.as("Should not store property descriptor when the groupId is not verified")
+				.isEmpty();
 	}
 
 	@Test
@@ -325,6 +356,20 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 						.hasDetailContaining("Could not find an artifact with the following coordinates: '%s'", coordinates.format())
 						.hasProperty("coordinates", coordinates.format())
 				));
+	}
+
+	/**
+	 * Creates an authentication post-processor whose access token carries the {@code namespace} claim,
+	 * so the publishing principal resolves to the given namespace owner. Required by the release
+	 * endpoint, which enforces that the namespace holds an active verification claim on the groupId.
+	 *
+	 * @param namespace the namespace identifier to embed as the publishing owner, can't be {@literal null}
+	 * @return the authentication post-processor, never {@literal null}
+	 */
+	static RequestPostProcessor publishingTo(EntityId namespace) {
+		return authentication(claims -> claims
+				.subject(TestAccounts.jane().build().id().serialize())
+				.claim(KonfigyrClaimNames.NAMESPACE, namespace.serialize()));
 	}
 
 	static UriComponents uriForArtifact(ArtifactCoordinates coordinates, String... path) {

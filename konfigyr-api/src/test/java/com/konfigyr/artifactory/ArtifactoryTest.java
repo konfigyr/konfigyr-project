@@ -1,5 +1,7 @@
 package com.konfigyr.artifactory;
 
+import com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException;
+import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
@@ -78,7 +80,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var artifact = TestArtifacts.artifact(builder -> builder.version("3.0.0"));
 		final var metadata = TestArtifacts.metadata(artifact);
 
-		assertThat(artifactory.release(metadata))
+		assertThat(artifactory.release(EntityId.from(2L), metadata))
 				.isNotNull()
 				.returns(artifact.groupId(), VersionedArtifact::groupId)
 				.returns(artifact.artifactId(), VersionedArtifact::artifactId)
@@ -110,7 +112,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var metadata = TestArtifacts.metadata(coordinates);
 
 		assertThatExceptionOfType(ArtifactVersionExistsException.class)
-				.isThrownBy(() -> artifactory.release(metadata))
+				.isThrownBy(() -> artifactory.release(EntityId.from(2L), metadata))
 				.withMessageContaining("Artifact version already exists for following coordinates: %s", coordinates)
 				.returns(coordinates, ArtifactVersionExistsException::getCoordinates)
 				.withNoCause();
@@ -122,6 +124,38 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		assertThat(events.ofType(ArtifactoryEvent.ReleaseCreated.class))
 				.as("Should not publish any release event when artifact release fails")
 				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to release an artifact when the owner has no active claim covering the groupId")
+	void shouldRejectReleaseForUnverifiedGroupId(AssertablePublishedEvents events) {
+		final var coordinates = ArtifactCoordinates.parse("com.unverified:some-artifact:1.0.0");
+		final var metadata = TestArtifacts.metadata(coordinates);
+
+		assertThatExceptionOfType(GroupIdNotVerifiedException.class)
+				.isThrownBy(() -> artifactory.release(EntityId.from(2L), metadata))
+				.returns("com.unverified", GroupIdNotVerifiedException::getGroupId)
+				.returns("konfigyr", ex -> ex.getOwner().slug())
+				.returns(HttpStatus.BAD_REQUEST, GroupIdNotVerifiedException::getStatusCode);
+
+		assertThat(store.get(coordinates))
+				.as("Should not store property descriptor when the groupId is not verified")
+				.isEmpty();
+
+		assertThat(events.ofType(ArtifactoryEvent.ReleaseCreated.class))
+				.as("Should not publish any release event when ownership is not verified")
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to release an artifact when the owner cannot be resolved")
+	void shouldRejectReleaseForUnknownOwner() {
+		final var coordinates = ArtifactCoordinates.parse("com.unverified:some-artifact:1.0.0");
+		final var metadata = TestArtifacts.metadata(coordinates);
+
+		assertThatExceptionOfType(OwnerNotFoundException.class)
+				.isThrownBy(() -> artifactory.release(EntityId.from(9999L), metadata))
+				.returns(HttpStatus.BAD_REQUEST, OwnerNotFoundException::getStatusCode);
 	}
 
 	@Test
