@@ -330,7 +330,7 @@ export function PropertiesImportDialog ({ catalog, profile, onImport }: {
               <Button
                 variant="destructive"
                 disabled={isImporting}
-                onClick={() => handleImport(properties)}
+                onClick={() => handleImport([...categorizedProperties.valid, ...categorizedProperties.invalid])}
               >
                 <ImportIcon/>
                 <FormattedMessage

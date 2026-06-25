@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
+  AlertCircleIcon,
   CurlyBracesIcon,
   HistoryIcon,
   PencilIcon,
@@ -89,9 +90,26 @@ function PropertyNameCell<T>({ property }: { property: ConfigurationProperty<T> 
   );
 }
 
-function ValueCell<T>({ property, readOnly, onSave }: {
+function ValidationErrorTooltip() {
+  return (
+    <span className="shrink-0">
+      <Tooltip>
+        <TooltipTrigger delay={200} render={<AlertCircleIcon className="size-3.5 text-destructive" />} />
+        <TooltipContent side="top" className="font-mono text-xs max-w-full">
+          <FormattedMessage
+            defaultMessage="Invalid property value"
+            description="Label for the warning indicator shown on a configuration property row when its current value does not match the schema"
+          />
+        </TooltipContent>
+      </Tooltip>
+    </span>
+  );
+}
+
+function ValueCell<T>({ property, readOnly, invalid, onSave }: {
   property: ConfigurationProperty<T>,
   readOnly?: boolean,
+  invalid?: boolean,
   onSave: (property: ConfigurationProperty<T>, value: ConfigurationPropertyValue<T>) => void,
 }) {
   const isDeleted = property.state === ConfigurationPropertyState.REMOVED;
@@ -103,9 +121,12 @@ function ValueCell<T>({ property, readOnly, onSave }: {
         className={cn(
           'font-mono text-sm font-medium text-muted-foreground rounded-md px-1.5 py-0.5 -mx-1.5 -my-0.5 transition-colors',
           isDeleted ? 'cursor-default line-through opacity-60' : 'hover:bg-muted/80',
+          invalid && 'text-destructive',
         )}
         render={
-          <div className="flex items-center gap-2">
+          <div className={cn('flex items-center gap-2', invalid && 'text-destructive')}>
+            { invalid && ( <ValidationErrorTooltip/> ) }
+
             {property.value?.encoded && property.value.encoded.length > 40 ? (
               <Tooltip>
                 <TooltipTrigger delay={200} className="truncate max-w-70 block">
@@ -121,6 +142,13 @@ function ValueCell<T>({ property, readOnly, onSave }: {
               <span className="opacity-0 group-hover/inline-edit-placeholder:opacity-50 transition-opacity">
                 <PencilIcon className="h-3 w-3" />
               </span>
+            )}
+
+            { !property.value?.encoded && (
+              <FormattedMessage
+                defaultMessage="No value provided"
+                description="Fallback shown when the property has no value"
+              />
             )}
           </div>
         }
@@ -224,6 +252,7 @@ function ActionsCell<T>({
 export function PropertiesTable({
   properties,
   readOnly,
+  invalidPropertyNames,
   onHistory,
   onDelete,
   onRestore,
@@ -231,6 +260,7 @@ export function PropertiesTable({
 }: {
   properties: Array<ConfigurationProperty<any>>,
   readOnly?: boolean,
+  invalidPropertyNames: Set<string>,
   onUpdate: (property: ConfigurationProperty<any>, value?: ConfigurationPropertyValue<any>) => void | Promise<void>,
 } & PropertyActionProps) {
   return (
@@ -293,6 +323,7 @@ export function PropertiesTable({
                   <ValueCell
                     property={property}
                     readOnly={readOnly}
+                    invalid={invalidPropertyNames.has(property.name)}
                     onSave={onUpdate}
                   />
                 </TableCell>

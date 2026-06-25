@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { CircleXIcon, PencilIcon, SaveIcon } from 'lucide-react';
+import { AlertCircleIcon, CircleXIcon, PencilIcon, SaveIcon } from 'lucide-react';
 import { cva } from 'class-variance-authority';
 import {
   useApplyChangeset,
@@ -55,7 +55,12 @@ export interface ChangesetStatusBarProps {
   onChangeRequestCreated?: (changeRequest: ChangeRequest) => void | Promise<void>,
 }
 
-export function ChangesetStatusBar(props: ChangesetStatusBarProps) {
+export interface ChangesetValidationProps {
+  invalidPropertyNames: Set<string>,
+  isChangesetValid: boolean,
+}
+
+export function ChangesetStatusBar(props: ChangesetStatusBarProps & ChangesetValidationProps) {
   const inlineRef = useRef<HTMLDivElement>(null);
   const [isInlineBarHidden, setIsInlineBarHidden] = useState(false);
 
@@ -80,7 +85,7 @@ export function ChangesetStatusBar(props: ChangesetStatusBarProps) {
   );
 }
 
-export function StickyChangesetStatusBar({ isVisible, ...props }: ChangesetStatusBarProps & { isVisible: boolean }) {
+export function StickyChangesetStatusBar({ isVisible, ...props }: ChangesetStatusBarProps & ChangesetValidationProps & { isVisible: boolean }) {
   return (
     <div
       aria-hidden={!isVisible}
@@ -161,6 +166,27 @@ function StateCountLabel({ type, count }: { type: PropertyTransitionType, count:
   );
 }
 
+function InvalidCountLabel({ count }: { count: number }) {
+  return (
+    <p
+      className={cn(
+        'flex items-center gap-1 text-xs tabular-nums text-destructive',
+      )}
+    >
+      <AlertCircleIcon className="size-3.5"/>
+      {count && (
+        <span className="font-medium">{count}</span>
+      )}
+      <span className="hidden sm:inline">
+        <FormattedMessage
+          defaultMessage="Invalid"
+          description="Label appended to the invalid count badge in the changeset status bar."
+        />
+      </span>
+    </p>
+  );
+}
+
 function DiscardButton({ changeset, onDiscarded, onError }: {
   changeset: ChangesetState;
   onError: (error: unknown) => void;
@@ -204,13 +230,15 @@ function DiscardButton({ changeset, onDiscarded, onError }: {
 
 function ChangesetStatusBarContents({
   changeset,
+  invalidPropertyNames,
+  isChangesetValid,
   variant,
   ref,
   onChangesetApplied,
   onChangesetDiscarded,
   onChangesetRenamed,
   onChangeRequestCreated,
-}: ChangesetStatusBarProps & VariantProps<typeof changesetStatusBarVariants> & { ref?: RefObject<HTMLDivElement | null> }) {
+}: ChangesetStatusBarProps & ChangesetValidationProps & VariantProps<typeof changesetStatusBarVariants> & { ref?: RefObject<HTMLDivElement | null> }) {
   const [opened, setOpened] = useState(false);
   const errorNotification = useErrorNotification();
 
@@ -265,6 +293,7 @@ function ChangesetStatusBarContents({
   }, []);
 
   const totalChanges = changeset.added + changeset.modified + changeset.deleted;
+  const invalidCount = invalidPropertyNames.size;
 
   return (
     <div ref={ref} className={changesetStatusBarVariants({ variant })}>
@@ -290,6 +319,9 @@ function ChangesetStatusBarContents({
           {changeset.deleted > 0 && (
             <StateCountLabel type={PropertyTransitionType.REMOVED} count={changeset.deleted} />
           )}
+          {invalidCount > 0 && (
+            <InvalidCountLabel count={invalidCount}/>
+          )}
         </div>
       </div>
 
@@ -304,7 +336,7 @@ function ChangesetStatusBarContents({
 
         <ChangesetSubmitDialog
           changeset={changeset}
-          disabled={totalChanges === 0}
+          disabled={totalChanges === 0 || !isChangesetValid}
           open={opened}
           onApply={onApply}
           onSubmit={onSubmit}
