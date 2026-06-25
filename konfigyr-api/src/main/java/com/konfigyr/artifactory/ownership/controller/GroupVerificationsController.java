@@ -5,6 +5,7 @@ import com.konfigyr.artifactory.ownership.GroupVerificationNotFoundException;
 import com.konfigyr.artifactory.ownership.GroupVerifications;
 import com.konfigyr.artifactory.ownership.Owner;
 import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
+import com.konfigyr.artifactory.ownership.OwnerResolver;
 import com.konfigyr.artifactory.ownership.VerificationChallenge;
 import com.konfigyr.artifactory.ownership.VerificationMethod;
 import com.konfigyr.entity.EntityId;
@@ -37,6 +38,7 @@ import java.util.List;
 public class GroupVerificationsController {
 
 	private final GroupVerifications groupVerifications;
+	private final OwnerResolver ownerResolver;
 
 	@GetMapping
 	@PreAuthorize("isAdmin(#namespace)")
@@ -104,7 +106,7 @@ public class GroupVerificationsController {
 	}
 
 	private Owner resolveOwner(String slug) {
-		return groupVerifications.findOwner(slug)
+		return ownerResolver.findOwner(slug)
 				.orElseThrow(() -> new OwnerNotFoundException(slug));
 	}
 

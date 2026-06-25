@@ -222,19 +222,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 		return saved;
 	}
 
-	@Override
-	@Transactional(readOnly = true, label = "group-verifications.find-owner")
-	public Optional<Owner> findOwner(String namespace) {
-		log.debug("Resolving owner for namespace slug '{}'", namespace);
-		return context.select(NAMESPACES.ID, NAMESPACES.SLUG)
-				.from(NAMESPACES)
-				.where(NAMESPACES.SLUG.eq(namespace))
-				.fetchOptional(record -> Owner.of(
-						EntityId.from(record.get(NAMESPACES.ID)),
-						record.get(NAMESPACES.SLUG)
-				));
-	}
-
 	private GroupVerification save(GroupVerification verification) {
 		log.debug(
 				"Saving group verification for owner {} ({}), groupId '{}', state {}",

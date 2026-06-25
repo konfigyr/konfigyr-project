@@ -12,7 +12,7 @@ import org.springframework.web.client.RestClient;
 @AutoConfiguration
 @RequiredArgsConstructor
 @AutoConfigureAfter(JooqAutoConfiguration.class)
-public class GroupVerificationAutoConfiguration {
+public class OwnershipAutoConfiguration {
 	private final DSLContext context;
 
 	@Bean
@@ -20,6 +20,11 @@ public class GroupVerificationAutoConfiguration {
 	GroupVerifications defaultGroupVerifications(DnsTxtVerificationStrategy dnsTxtVerificationStrategy,
 			SourceCodeVerificationStrategy sourceCodeVerificationStrategy) {
 		return new DefaultGroupVerifications(context, dnsTxtVerificationStrategy, sourceCodeVerificationStrategy);
+	}
+
+	@Bean
+	OwnerResolver ownerResolver() {
+		return new OwnerResolver(context);
 	}
 
 	@Bean

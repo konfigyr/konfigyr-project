@@ -1,5 +1,10 @@
 package com.konfigyr.artifactory;
 
+import com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException;
+import com.konfigyr.artifactory.ownership.GroupVerifications;
+import com.konfigyr.artifactory.ownership.Owner;
+import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
+import com.konfigyr.artifactory.ownership.OwnerResolver;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.data.Keys;
 import com.konfigyr.data.SettableRecord;
@@ -19,6 +24,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -42,6 +48,8 @@ class DefaultArtifactory implements Artifactory {
 	private final MetadataStore store;
 	private final ArtifactoryConverters converters;
 	private final ApplicationEventPublisher eventPublisher;
+	private final OwnerResolver ownerResolver;
+	private final GroupVerifications groupVerifications;
 
 	@NonNull
 	@Override
@@ -84,6 +92,7 @@ class DefaultArtifactory implements Artifactory {
 	@Observed(name = "konfigyr.artifactory.release")
 	@Transactional(label = "artifactory.release-artifact-component")
 	public VersionedArtifact release(
+			@NonNull EntityId ownerId,
 			@NonNull
 			@ObservationKeyValue(key = "konfigyr.artifactory.artifact", expression = "#this")
 			ArtifactMetadata metadata
@@ -93,6 +102,8 @@ class DefaultArtifactory implements Artifactory {
 		if (exists(coordinates)) {
 			throw new ArtifactVersionExistsException(coordinates);
 		}
+
+		assertCanRelease(ownerId, metadata.groupId());
 
 		final ByteArray checksum;
 		final Resource resource;
@@ -182,6 +193,14 @@ class DefaultArtifactory implements Artifactory {
 				.on(PROPERTY_DEFINITIONS.ID.eq(ARTIFACT_VERSION_PROPERTIES.PROPERTY_DEFINITION_ID))
 				.where(ARTIFACT_VERSION_PROPERTIES.ARTIFACT_VERSION_ID.eq(artifactVersionId))
 				.fetch(record -> toPropertyDefinition(record, converters));
+	}
+
+	private void assertCanRelease(EntityId ownerId, String groupId) {
+		final Owner owner = ownerResolver.findOwner(ownerId)
+				.orElseThrow(() -> new OwnerNotFoundException(HttpStatus.BAD_REQUEST, ownerId));
+
+		groupVerifications.findActiveCovering(groupId, owner)
+				.orElseThrow(() -> new GroupIdNotVerifiedException(groupId, owner));
 	}
 
 	@NonNull
