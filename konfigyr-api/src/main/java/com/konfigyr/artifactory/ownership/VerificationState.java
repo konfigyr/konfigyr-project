@@ -1,5 +1,11 @@
 package com.konfigyr.artifactory.ownership;
 
+import org.jspecify.annotations.NonNull;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import java.util.List;
+
 /**
  * Lifecycle state of a group verification claim.
  *
@@ -25,4 +31,22 @@ public enum VerificationState {
 	 * The claim attempt failed and is no longer valid.
 	 */
 	FAILED;
+
+	private static final MultiValueMap<VerificationState, VerificationState> transitions;
+
+	static {
+		transitions = new LinkedMultiValueMap<>();
+		transitions.addAll(PENDING, List.of(ACTIVE, FAILED, REVOKED));
+		transitions.add(ACTIVE, REVOKED);
+	}
+
+	/**
+	 * Checks if this state can be transitioned into a next one.
+	 *
+	 * @param state verification state to transition to
+	 * @return {@literal true} when transition is supported
+	 */
+	public boolean canTransitionTo(@NonNull VerificationState state) {
+		return transitions.getOrDefault(this, List.of()).contains(state);
+	}
 }

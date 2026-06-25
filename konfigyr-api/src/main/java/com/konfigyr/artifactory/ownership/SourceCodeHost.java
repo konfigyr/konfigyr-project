@@ -9,6 +9,17 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Source code hosts supported by the source-code ownership verification strategy.
+ *
+ * <p>Ownership is proven by creating a public repository named {@code kfgyr-<token>} under the
+ * account derived from the claimed {@code groupId}. The {@code groupId} is expected to follow the
+ * {@code io.<host>.<owner>} convention, where {@code <host>} selects the host (see
+ * {@link #fromGroupId(String)}) and {@code <owner>} is the account that must contain the repository.
+ * {@link #toURI(String, String)} builds the host API URL used to assert that the repository exists.
+ *
+ * @author Mila Zarkovic
+ */
 @NullMarked
 public enum SourceCodeHost {
 
@@ -33,6 +44,14 @@ public enum SourceCodeHost {
 		this.repoUrlTemplate = repoUrlTemplate;
 	}
 
+	/**
+	 * Builds the host API URI that locates the verification repository ({@code kfgyr-<token>})
+	 * for the account derived from the given {@code groupId}.
+	 *
+	 * @param groupId claimed group id in the {@code io.<host>.<owner>} format
+	 * @param token verification token that suffixes the repository name
+	 * @return the host API URI pointing at the expected verification repository
+	 */
 	public URI toURI(String groupId, String token) {
 		final String owner = resolveOwner(groupId);
 
@@ -51,6 +70,15 @@ public enum SourceCodeHost {
 		};
 	}
 
+	/**
+	 * Resolves the source code host from a claimed {@code groupId}.
+	 *
+	 * <p>The {@code groupId} must consist of exactly three non-blank, dot-separated segments
+	 * starting with {@code io} (e.g. {@code io.github.acme}); the middle segment selects the host.
+	 *
+	 * @param groupId claimed group id in the {@code io.<host>.<owner>} format
+	 * @return the matching host, or {@link Optional#empty()} when the id is malformed or unknown
+	 */
 	public static Optional<SourceCodeHost> fromGroupId(String groupId) {
 		final String[] parts = groupId.split("\\.");
 
