@@ -109,20 +109,27 @@ export function Editor({
     }
   }, []);
 
+  const isControlled = value !== undefined;
+  const isEditingControlled = editing !== undefined;
+
   const handleEditingChange = useCallback(
     (nextState: boolean) => {
-      onInternalEditingChange(nextState);
+      if (!isEditingControlled) {
+        onInternalEditingChange(nextState);
+      }
       onEditingChange?.(nextState);
     },
-    [onEditingChange],
+    [isEditingControlled, onEditingChange],
   );
 
   const handleValueChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
-      onInternalValueChange(e.target.value);
+      if (!isControlled) {
+        onInternalValueChange(e.target.value);
+      }
       onValueChange?.(e.target.value);
     },
-    [onValueChange],
+    [isControlled, onValueChange],
   );
 
   return (

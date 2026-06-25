@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
+import { usePropertyValidation } from '@konfigyr/hooks/vault/property-validation';
 import {
   InlineEditContainer,
   useFocusEffect,
@@ -109,6 +110,23 @@ export function InlineInputField<T>({ property }: { property: PropertyDescriptor
   const context = useInlineEdit<ConfigurationPropertyValue<T>>();
   const ref = useFocusEffect<any>(context);
   const onKeyDown = useKeyboardEvents(context);
+  const { validate } = usePropertyValidation(property.schema);
+
+  useEffect(() => {
+    const validator = (value: ConfigurationPropertyValue<T>) => {
+      const result = validate(value.decoded);
+
+      return result.isValid
+        ? undefined
+        : result.errors.map(e => e.message).filter(Boolean);
+    };
+
+    context.setValidate(validator);
+
+    return () => {
+      context.setValidate(undefined);
+    };
+  }, [context.setValidate, validate]);
 
   return (
     <InlineEditContainer>
@@ -119,6 +137,7 @@ export function InlineInputField<T>({ property }: { property: PropertyDescriptor
         onChange={context.setValue}
         onBlur={context.onCancel}
         onKeyDown={onKeyDown}
+        errors={context.errors}
       />
     </InlineEditContainer>
   );
