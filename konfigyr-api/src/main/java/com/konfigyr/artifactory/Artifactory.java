@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory;
 
+import com.konfigyr.entity.EntityId;
 import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.jspecify.annotations.NonNull;
 
@@ -83,12 +84,21 @@ public interface Artifactory {
 	 * <p>
 	 * The {@code artifactory.artifact-version.release} domain event will be emitted after
 	 * a successful release.
+	 * <p>
+	 * Publishing is restricted to owners that hold an active verification claim covering the artifact
+	 * {@code groupId}. The {@code ownerId} identifies the publishing namespace and is resolved to its
+	 * owner before the claim is checked.
 	 *
+	 * @param ownerId the identifier of the namespace publishing the artifact, can't {@literal null}
 	 * @param metadata the metadata describing the artifact version to release, can't {@literal null}
 	 * @return the resulting {@link VersionedArtifact} representing the released artifact
 	 * @throws ArtifactVersionExistsException when an artifact with the same coordinates already exists
+	 * @throws OwnerNotFoundException when the owner cannot be resolved
+	 *         from the supplied {@code ownerId}
+	 * @throws com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException when the owner does not hold
+	 *         an active verification claim covering the artifact {@code groupId}
 	 */
 	@DomainEventPublisher(publishes = "artifactory.artifact-version.release")
-	VersionedArtifact release(@NonNull ArtifactMetadata metadata);
+	VersionedArtifact release(@NonNull EntityId ownerId, @NonNull ArtifactMetadata metadata);
 
 }

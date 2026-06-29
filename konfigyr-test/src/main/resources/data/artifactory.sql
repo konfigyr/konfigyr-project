@@ -68,6 +68,16 @@ INSERT INTO artifact_version_properties(artifact_version_id, property_definition
 (11, 15),
 (11, 16);
 
+INSERT INTO group_verifications(id, namespace_id, group_id, state, created_at, verified_at, revoked_at) VALUES
+(1, 2, 'com.konfigyr', 'ACTIVE', now() - interval '7 days', now() - interval '6 days', NULL),
+(2, 1, 'org.springframework.ai', 'FAILED', now() - interval '2 days', NULL, NULL),
+(3, 1, 'org.springframework.boot', 'PENDING', now() - interval '2 days', NULL, NULL);
+
+INSERT INTO group_verification_challenges(id, group_verification_id, verification_method, challenge_token, state, created_at, verified_at, expires_at) VALUES
+('018f4c2a-1b3d-7e5f-9a6b-7c8d9e0f1a2b', 1, 'GITHUB', 'gh-verified-token-1', 'VERIFIED', now() - interval '7 days', now() - interval '6 days', NULL),
+('018f4c2a-1b3e-7e5f-9a6b-7c8d9e0f1a2c', 2, 'DNS', 'dns-failed-token-1', 'UNVERIFIED', now() - interval '3 days', NULL, null),
+('018f4c2a-1b3f-7e5f-9a6b-7c8d9e0f1a2d', 3, 'DNS', 'dns-pending-token-1', 'UNVERIFIED', now() - interval '2 days', NULL, null);
+
 /** updates the auto-increment sequences to start at 1000 **/
 ALTER SEQUENCE artifacts_id_seq RESTART with 1000;
 ALTER SEQUENCE artifact_versions_id_seq RESTART with 1000;
