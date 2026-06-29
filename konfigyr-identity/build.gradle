@@ -64,7 +64,7 @@ node {
     npmCommand = String.valueOf(getProperty('node.npm'))
 
     /* use the CI NPM command when executing Github actions */
-    npmInstallCommand = System.getenv('CI') ? 'ci' : 'install'
+    npmInstallCommand = ci.map { it ? 'ci' : 'install' }
 }
 
 tasks.register('rollup', NpmTask) {
@@ -75,7 +75,8 @@ tasks.register('rollup', NpmTask) {
     /* define inputs for the task in order to run only when the inputs change */
     inputs.files('package.json', 'package-lock.json', 'rollup.config.js')
     inputs.dir('src/main/resources/assets')
-    inputs.dir(fileTree("node_modules").exclude(".cache"))
+
+    outputs.cacheIf { true }
 
     /* mark the dist as the output directory */
     outputs.dir(project.layout.buildDirectory.dir('resources/main/static'))

@@ -65,12 +65,23 @@ export function AuditRecordFilters({ query, onQueryChange }: {
       onChangeDebounceMs: 200,
       onChange: ({ formApi }) => formApi.handleSubmit(),
     },
-    onSubmit: ({ value }) => onQueryChange({
-      ...query,
-      entityType: value.entityType ? value.entityType : undefined,
-      from: value.range?.from ? value.range.from.toISOString() : undefined,
-      to: value.range?.to ? value.range.to.toISOString() : undefined,
-    }),
+    onSubmit: ({ value }) => {
+      const from = value.range?.from;
+      const to = value.range?.to;
+
+      // react-day-picker sets from === to after the first click in range mode;
+      // this is an intermediate state while the user is selecting the end date.
+      if (from && to && from.getTime() === to.getTime()) {
+        return;
+      }
+
+      onQueryChange({
+        ...query,
+        entityType: value.entityType ? value.entityType : undefined,
+        from: from ? from.toISOString() : undefined,
+        to: to ? to.toISOString() : undefined,
+      });
+    },
   });
 
   const onSubmit = useFormSubmit(form);

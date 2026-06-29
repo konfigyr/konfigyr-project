@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   useAddProperty,
+  useChangesetValidation,
   useImportProperties,
   useModifyProperty,
   useRemoveProperty,
@@ -68,6 +69,7 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
   const { mutateAsync: onDeleteProperty } = useRemoveProperty(changeset);
   const { mutateAsync: onRestoreProperty } = useRestoreProperty(changeset);
   const { mutateAsync: onImportProperties } = useImportProperties(changeset);
+  const { invalidPropertyNames, isChangesetValid } = useChangesetValidation(changeset.properties);
 
   const properties = useFilteredProperties(
     changeset,
@@ -113,7 +115,12 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
 
       {!readOnly && (
         <div className="mb-6">
-          <ChangesetStatusBar changeset={changeset} {...props} />
+          <ChangesetStatusBar
+            changeset={changeset}
+            invalidPropertyNames={invalidPropertyNames}
+            isChangesetValid={isChangesetValid}
+            {...props}
+          />
         </div>
       )}
 
@@ -146,6 +153,7 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
       <PropertiesTable
         properties={properties}
         readOnly={readOnly}
+        invalidPropertyNames={invalidPropertyNames}
         onHistory={onHistory}
         onRestore={onRestore}
         onDelete={onDelete}

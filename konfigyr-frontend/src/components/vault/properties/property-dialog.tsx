@@ -1,4 +1,5 @@
 import {
+  memo,
   startTransition,
   useCallback,
   useEffect,
@@ -97,25 +98,18 @@ const useConditionalFilter = (
   condition: boolean,
   term?: string,
 ) => {
-  const [results, setResults] = useState<Array<PropertyDescriptor>>([]);
   const [debouncedTerm] = useDebounce(term, 200);
+  const cached = useRef<Array<PropertyDescriptor>>([]);
 
   return useMemo(() => {
-    // run the filter only if the condition is true, otherwise return the cached results.
     if (condition) {
-      const filtered = filterPropertyDescriptors(
-        properties,
-        splitSearchTerm(debouncedTerm),
-      );
-
-      setResults(filtered);
-      return filtered;
+      cached.current = filterPropertyDescriptors(properties, splitSearchTerm(debouncedTerm));
     }
-    return results;
+    return cached.current;
   }, [properties, condition, debouncedTerm]);
 };
 
-function PropertyDescriptorItem({ property }: { property: PropertyDescriptor }) {
+const PropertyDescriptorItem = memo(function PropertyDescriptorItemComponent({ property }: { property: PropertyDescriptor }) {
   return (
     <ComboboxItem value={property} className="flex-col items-start gap-1" aria-label={property.name}>
       <div className="flex w-full gap-1 justify-between items-center">
@@ -133,7 +127,7 @@ function PropertyDescriptorItem({ property }: { property: PropertyDescriptor }) 
       <PropertyDefaultValue value={property.defaultValue} variant="labeled" />
     </ComboboxItem>
   );
-}
+});
 
 function PropertyDescriptorInput({ catalog, onChange }: {
   catalog: ServiceCatalog,
@@ -144,6 +138,7 @@ function PropertyDescriptorInput({ catalog, onChange }: {
   const [candidate, onCandidateChange] = useState<PropertyDescriptor | null>(null);
 
   const properties = useConditionalFilter(catalog.properties, !candidate, name);
+  const initialProperties = useMemo(() => properties.slice(0, 20), [properties]);
 
   const items = useMemo(() => {
     let sliced: Array<PropertyDescriptor> = [];
@@ -218,7 +213,7 @@ function PropertyDescriptorInput({ catalog, onChange }: {
         }
       }
     } else {
-      sliced = properties.slice(0, 20);
+      sliced = initialProperties;
     }
 
     // no matching descriptor found, try to add the current property name to the list
@@ -236,7 +231,7 @@ function PropertyDescriptorInput({ catalog, onChange }: {
     }
 
     return sliced;
-  }, [candidate, name, properties]);
+  }, [candidate, name, initialProperties]);
 
   const onSearch = useCallback((query: string, event: ComboboxRoot.ChangeEventDetails) => {
     // ignore none event reasons and when they are carrying the empty query string.
