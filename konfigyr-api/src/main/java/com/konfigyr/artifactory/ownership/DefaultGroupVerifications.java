@@ -29,9 +29,7 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	private final DSLContext context;
 
-	private final VerificationStrategy dnsTxtVerificationStrategy;
-
-	private final SourceCodeVerificationStrategy sourceCodeVerificationStrategy;
+	private final VerificationStrategies strategies;
 
 	private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -156,7 +154,7 @@ class DefaultGroupVerifications implements GroupVerifications {
 		final VerificationChallenge challenge = findActiveChallenge(verification)
 				.orElseThrow(() -> new VerificationChallengeNotFoundException("No active challenge to verify for groupId " + groupId));
 
-		final VerificationStrategy strategy = resolveStrategy(challenge.method());
+		final VerificationStrategy strategy = strategies.get(challenge.method());
 		log.debug("Using verification strategy {} for verification {} and challenge {}", strategy.method(), verification.id(), challenge.id());
 
 		final VerificationResult result = strategy.verify(verification, challenge);
@@ -330,13 +328,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 				.verifiedAt(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT))
 				.expiresAt(record.get(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT))
 				.build();
-	}
-
-	private VerificationStrategy resolveStrategy(VerificationMethod model) {
-		return switch (model) {
-			case DNS -> dnsTxtVerificationStrategy;
-			case SOURCE_CODE -> sourceCodeVerificationStrategy;
-		};
 	}
 
 	private VerificationChallenge applyVerificationResult(VerificationChallenge challenge, VerificationResult result) {
