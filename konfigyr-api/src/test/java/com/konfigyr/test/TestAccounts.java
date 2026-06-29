@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit;
  *
  * @author Vladimir Spasic
  * @since 1.0.0
- **/
+ */
 public interface TestAccounts {
 
 	/**

@@ -19,7 +19,7 @@ public class KeysetNotFoundException extends KeysetManagementException {
 	private static final long serialVersionUID = 918522905298460950L;
 
 	/**
-     * Creates a new {@link KeysetNotFoundException} for the given {@link EntityId entity identifier}.
+	 * Creates a new {@link KeysetNotFoundException} for the given {@link EntityId entity identifier}.
 	 *
 	 * @param id the identifier of the keyset that was not found, cannot be {@literal null}.
 	 */
