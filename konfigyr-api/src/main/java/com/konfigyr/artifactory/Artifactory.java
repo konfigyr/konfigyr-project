@@ -93,7 +93,7 @@ public interface Artifactory {
 	 * @param metadata the metadata describing the artifact version to release, can't {@literal null}
 	 * @return the resulting {@link VersionedArtifact} representing the released artifact
 	 * @throws ArtifactVersionExistsException when an artifact with the same coordinates already exists
-	 * @throws com.konfigyr.artifactory.ownership.OwnerNotFoundException when the owner cannot be resolved
+	 * @throws OwnerNotFoundException when the owner cannot be resolved
 	 *         from the supplied {@code ownerId}
 	 * @throws com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException when the owner does not hold
 	 *         an active verification claim covering the artifact {@code groupId}

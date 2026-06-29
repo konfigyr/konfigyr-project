@@ -1,7 +1,6 @@
 package com.konfigyr.artifactory;
 
 import com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException;
-import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;

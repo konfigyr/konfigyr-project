@@ -23,11 +23,6 @@ public class OwnershipAutoConfiguration {
 	}
 
 	@Bean
-	OwnerResolver ownerResolver() {
-		return new OwnerResolver(context);
-	}
-
-	@Bean
 	DnsTxtVerificationStrategy dnsTxtVerificationStrategy() {
 		return new DnsTxtVerificationStrategy();
 	}

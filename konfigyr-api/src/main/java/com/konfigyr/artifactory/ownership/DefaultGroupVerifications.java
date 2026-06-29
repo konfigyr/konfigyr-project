@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
+import com.konfigyr.artifactory.Owner;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
@@ -299,11 +300,10 @@ class DefaultGroupVerifications implements GroupVerifications {
 	}
 
 	private static GroupVerification toGroupVerification(Record record) {
-		return toGroupVerification(record,
-				Owner.of(
-						EntityId.from(record.get(GROUP_VERIFICATIONS.NAMESPACE_ID)),
-						record.get(NAMESPACES.SLUG)
-				));
+		return toGroupVerification(record, new Owner(
+				record.get(GROUP_VERIFICATIONS.NAMESPACE_ID, EntityId.class),
+				record.get(NAMESPACES.SLUG)
+		));
 	}
 
 	private static GroupVerification toGroupVerification(Record record, Owner owner) {

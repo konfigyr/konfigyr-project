@@ -2,9 +2,6 @@ package com.konfigyr.artifactory;
 
 import com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException;
 import com.konfigyr.artifactory.ownership.GroupVerifications;
-import com.konfigyr.artifactory.ownership.Owner;
-import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
-import com.konfigyr.artifactory.ownership.OwnerResolver;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.data.Keys;
 import com.konfigyr.data.SettableRecord;
@@ -24,7 +21,6 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -196,8 +192,7 @@ class DefaultArtifactory implements Artifactory {
 	}
 
 	private void assertCanRelease(EntityId ownerId, String groupId) {
-		final Owner owner = ownerResolver.findOwner(ownerId)
-				.orElseThrow(() -> new OwnerNotFoundException(HttpStatus.BAD_REQUEST, ownerId));
+		final Owner owner = ownerResolver.resolve(ownerId);
 
 		groupVerifications.findActiveCovering(owner, groupId)
 				.orElseThrow(() -> new GroupIdNotVerifiedException(groupId, owner));

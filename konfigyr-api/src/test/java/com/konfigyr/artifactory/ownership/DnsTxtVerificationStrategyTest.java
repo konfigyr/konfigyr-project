@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
+import com.konfigyr.artifactory.Owner;
 import com.konfigyr.entity.EntityId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -142,7 +143,7 @@ class DnsTxtVerificationStrategyTest {
 	private static GroupVerification verification(String groupId) {
 		return GroupVerification.builder()
 				.id(1L)
-				.owner(Owner.of(EntityId.from(1L), "test-namespace"))
+				.owner(new Owner(EntityId.from(1L), "test-namespace"))
 				.groupId(groupId)
 				.state(VerificationState.PENDING)
 				.build();

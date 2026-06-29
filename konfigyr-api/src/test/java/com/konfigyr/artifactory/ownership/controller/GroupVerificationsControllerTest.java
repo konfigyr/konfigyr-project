@@ -3,7 +3,7 @@ package com.konfigyr.artifactory.ownership.controller;
 import com.konfigyr.artifactory.ownership.ChallengeState;
 import com.konfigyr.artifactory.ownership.GroupIdAlreadyClaimedException;
 import com.konfigyr.artifactory.ownership.GroupVerification;
-import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
+import com.konfigyr.artifactory.OwnerNotFoundException;
 import com.konfigyr.artifactory.ownership.VerificationChallenge;
 import com.konfigyr.artifactory.ownership.VerificationMethod;
 import com.konfigyr.artifactory.ownership.VerificationState;

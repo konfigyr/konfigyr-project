@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
+import com.konfigyr.artifactory.Owner;
 import com.konfigyr.entity.EntityId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -118,7 +119,7 @@ class SourceCodeVerificationStrategyTest {
 	private static GroupVerification verification(String groupId) {
 		return GroupVerification.builder()
 				.id(1L)
-				.owner(Owner.of(EntityId.from(1L), "test-namespace"))
+				.owner(new Owner(EntityId.from(1L), "test-namespace"))
 				.groupId(groupId)
 				.state(VerificationState.PENDING)
 				.build();

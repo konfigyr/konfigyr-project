@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
+import com.konfigyr.artifactory.Owner;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
@@ -35,7 +36,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should find active covering by group id and owner")
 	void shouldFundActiveCoveringByIdAndOwner() {
-		final var owner = Owner.of(EntityId.from(2), "konfigyr");
+		final var owner = new Owner(EntityId.from(2), "konfigyr");
 		final var groupId = "com.konfigyr";
 		final var result = verifications.findActiveCovering(owner, groupId);
 
@@ -53,7 +54,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should return empty result for the unrelated groupId")
 	void shouldReturnEmptyResultForUnrelatedGroupId() {
-		final var owner = Owner.of(EntityId.from(2), "konfigyr");
+		final var owner = new Owner(EntityId.from(2), "konfigyr");
 		final var groupId = "com.config";
 		final var result = verifications.findActiveCovering(owner, groupId);
 
@@ -63,7 +64,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should find covering by owner")
 	void shouldFindCoveringByOwner() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var result = verifications.findByOwner(owner, SearchQuery.of(Pageable.ofSize(10)));
 
 		assertThat(result.stream())
@@ -75,7 +76,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should find claims by owner filtered by state")
 	void shouldFindByOwnerFilteredByState() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 
 		final var pending = verifications.findByOwner(owner, SearchQuery.builder()
 				.pageable(Pageable.ofSize(10))
@@ -101,7 +102,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should find claims by owner filtered by search term")
 	void shouldFindByOwnerFilteredByTerm() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 
 		final var both = verifications.findByOwner(owner, SearchQuery.builder()
 				.pageable(Pageable.ofSize(10))
@@ -127,7 +128,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should return empty page when no claims match state filter")
 	void shouldReturnEmptyPageForUnmatchedStateFilter() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 
 		final var result = verifications.findByOwner(owner, SearchQuery.builder()
 				.pageable(Pageable.ofSize(10))
@@ -140,7 +141,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should find claims by owner filtered by state and search term")
 	void shouldFindByOwnerFilteredByStateAndTerm() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 
 		final var result = verifications.findByOwner(owner, SearchQuery.builder()
 				.pageable(Pageable.ofSize(10))
@@ -157,7 +158,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should find covering by group id")
 	void shouldFindCoveringByGroupId() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var groupId = "org.springframework.boot";
 		final var result = verifications.findByGroupId(owner, groupId);
 
@@ -173,7 +174,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should find active challenge")
 	void shouldFindActiveChallenge() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var groupId = "org.springframework.boot";
 		final var groupVerification = GroupVerification.builder()
 				.id(EntityId.from(3))
@@ -195,7 +196,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should find overlapping active claims for parent group ids")
 	void findAnyOverlapping() {
-		final var owner = Owner.of(EntityId.from(2), "konfigyr");
+		final var owner = new Owner(EntityId.from(2), "konfigyr");
 		final var groupId = "com.konfigyr";
 		final var verification = verifications.findActiveCovering(owner, groupId);
 
@@ -214,7 +215,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should reject duplicate active claims for the same groupId")
 	void shouldRejectDuplicateActiveClaim() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		assertThatThrownBy(() -> verifications.claim(owner, "com.konfigyr", VerificationMethod.DNS))
 				.isInstanceOf(GroupIdAlreadyClaimedException.class);
 	}
@@ -223,7 +224,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should create a new claim, activate and revoke with DNA activation method")
 	void shouldCreateActivateAndRevokeClaimWithDns() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var method = VerificationMethod.DNS;
 		final var groupId = "com.mycompany";
 		final var domain = "mycompany.com";
@@ -279,7 +280,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should revoke claim in pending state")
 	void shouldRevokeClaimInPendingState() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var method = VerificationMethod.DNS;
 		final var groupId = "com.pending-company";
 
@@ -303,7 +304,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should fail to revoke claim in revoked state")
 	void shouldFailToRevokeClaimInPendingState() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var method = VerificationMethod.DNS;
 		final var groupId = "com.revoked-company";
 
@@ -326,7 +327,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should create a new claim, activate and revoke with SOURCE_CODE activation method")
 	void shouldCreateActivateAndRevokeClaimWithSourceCode() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var method = VerificationMethod.SOURCE_CODE;
 		final var groupId = "io.gitlab.john-doe";
 
@@ -379,7 +380,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should fail to execute the DNS verification challenge")
 	void shouldFailToVerifyDnsVerificationChallenge() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var groupId = "com.my-third-company";
 
 		final var pendingVerification = assertThat(verifications.claim(owner, groupId, VerificationMethod.DNS))
@@ -409,7 +410,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should fail to execute the SOURCE_COSE verification challenge")
 	void shouldFailToVerifySourceCodeVerificationChallenge() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var groupId = "io.gitlab.john-doe";
 
 		final var pendingVerification = assertThat(verifications.claim(owner, groupId, VerificationMethod.SOURCE_CODE))
@@ -442,7 +443,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should allow only one verification challenge in unverified state")
 	void shouldAllowOnlyOneActiveChallenge() {
-		final var owner = Owner.of(EntityId.from(1), "john-doe");
+		final var owner = new Owner(EntityId.from(1), "john-doe");
 		assertThat(verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
 				.isNotNull();
 		assertThatThrownBy(() -> verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))

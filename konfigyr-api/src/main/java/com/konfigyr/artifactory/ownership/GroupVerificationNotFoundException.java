@@ -1,6 +1,7 @@
 package com.konfigyr.artifactory.ownership;
 
 import com.konfigyr.artifactory.ArtifactoryException;
+import com.konfigyr.artifactory.Owner;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 
