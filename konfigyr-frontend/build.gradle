@@ -40,7 +40,8 @@ tasks.register('npmBuild', NpmTask) {
     inputs.dir('src')
     inputs.dir('messages')
     inputs.dir('public')
-    inputs.dir(fileTree('node_modules').exclude('.cache'))
+
+    outputs.cacheIf { true }
 
     /* mark the dist as the output directory */
     outputs.dir(project.layout.buildDirectory.dir('.output'))
