@@ -10,6 +10,7 @@ import java.util.List;
  * Lifecycle state of a group verification claim.
  *
  * @author Vitalii Kushnir
+ * @since 1.0.0
  */
 public enum VerificationState {
 	/**

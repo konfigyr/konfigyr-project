@@ -199,7 +199,7 @@ class DefaultArtifactory implements Artifactory {
 		final Owner owner = ownerResolver.findOwner(ownerId)
 				.orElseThrow(() -> new OwnerNotFoundException(HttpStatus.BAD_REQUEST, ownerId));
 
-		groupVerifications.findActiveCovering(groupId, owner)
+		groupVerifications.findActiveCovering(owner, groupId)
 				.orElseThrow(() -> new GroupIdNotVerifiedException(groupId, owner));
 	}
 

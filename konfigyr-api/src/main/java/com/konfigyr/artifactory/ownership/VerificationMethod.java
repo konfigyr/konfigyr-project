@@ -4,6 +4,7 @@ package com.konfigyr.artifactory.ownership;
  * Verification methods supported for proving ownership of a groupId.
  *
  * @author Vitalii Kushnir
+ * @since 1.0.0
  */
 public enum VerificationMethod {
 	/**
@@ -14,5 +15,5 @@ public enum VerificationMethod {
 	/**
 	 * Source code host verification using a temporary public repository as proof (etc. GitHub, GitLab...).
 	 */
-	SOURCE_CODE;
+	SOURCE_CODE
 }

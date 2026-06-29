@@ -9,6 +9,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -85,37 +86,38 @@ class SourceCodeVerificationStrategyTest {
 	@Test
 	@DisplayName("should return SERVICE_UNAVAILABLE on any 5xx error")
 	void verifyInternalErrorOn5xx() {
-		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-500-error-token"))
 				.andRespond(withServerError());
 
-		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
+		assertThat(strategy.verify(verification("io.github.alice"), challenge("500-error-token")))
 				.isEqualTo(VerificationResult.failure(VerificationResult.FailureReason.SERVICE_UNAVAILABLE));
 	}
 
 	@Test
 	@DisplayName("should return INTERNAL_ERROR on unexpected 4xx error")
 	void verifyInternalErrorOn4xx() {
-		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-400-error-token"))
 				.andRespond(withStatus(HttpStatus.FORBIDDEN));
 
-		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
+		assertThat(strategy.verify(verification("io.github.alice"), challenge("400-error-token")))
 				.isEqualTo(VerificationResult.failure(VerificationResult.FailureReason.INTERNAL_ERROR));
 	}
 
 	@Test
 	@DisplayName("should return INTERNAL_ERROR on connection failure")
 	void verifyInternalErrorOnConnectionFailure() {
-		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-test-token"))
+		server.expect(requestTo("https://api.github.com/repos/alice/kfgyr-error-token"))
 				.andRespond(_ -> {
 					throw new IOException("Connection refused");
 				});
 
-		assertThat(strategy.verify(verification("io.github.alice"), challenge("test-token")))
+		assertThat(strategy.verify(verification("io.github.alice"), challenge("error-token")))
 				.isEqualTo(VerificationResult.failure(VerificationResult.FailureReason.INTERNAL_ERROR));
 	}
 
 	private static GroupVerification verification(String groupId) {
 		return GroupVerification.builder()
+				.id(1L)
 				.owner(Owner.of(EntityId.from(1L), "test-namespace"))
 				.groupId(groupId)
 				.state(VerificationState.PENDING)
@@ -124,6 +126,8 @@ class SourceCodeVerificationStrategyTest {
 
 	private static VerificationChallenge challenge(String token) {
 		return VerificationChallenge.builder()
+				.id(UUID.randomUUID())
+				.verificationId(EntityId.from(1L))
 				.method(VerificationMethod.SOURCE_CODE)
 				.token(token)
 				.state(ChallengeState.UNVERIFIED)

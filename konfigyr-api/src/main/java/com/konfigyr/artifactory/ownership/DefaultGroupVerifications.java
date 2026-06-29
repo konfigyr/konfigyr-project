@@ -1,20 +1,26 @@
 package com.konfigyr.artifactory.ownership;
 
+import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.support.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Hex;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.data.domain.Page;
+import org.springframework.security.crypto.keygen.BytesKeyGenerator;
+import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.security.SecureRandom;
 import java.time.OffsetDateTime;
-import java.util.Base64;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,17 +33,20 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 @RequiredArgsConstructor
 class DefaultGroupVerifications implements GroupVerifications {
 
+	private static final PageableExecutor groupVerificationPageableExecutor = PageableExecutor.builder()
+			.defaultSortField(GROUP_VERIFICATIONS.CREATED_AT.desc())
+			.sortField("date", GROUP_VERIFICATIONS.CREATED_AT)
+			.sortField("group", GROUP_VERIFICATIONS.GROUP_ID)
+			.build();
+
+	private final BytesKeyGenerator challengeTokenGenerator = KeyGenerators.secureRandom(6);
+
 	private final DSLContext context;
-
 	private final VerificationStrategies strategies;
-
-	private static final SecureRandom RANDOM = new SecureRandom();
 
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-active-covering")
-	public Optional<GroupVerification> findActiveCovering(String groupId, Owner owner) {
-		log.debug("Looking up active verification covering groupId '{}' for owner {} ({})", groupId, owner.slug(), owner.id());
-
+	public Optional<GroupVerification> findActiveCovering(Owner owner, String groupId) {
 		return context.select(GROUP_VERIFICATIONS.asterisk(), NAMESPACES.SLUG)
 				.from(GROUP_VERIFICATIONS)
 				.join(NAMESPACES)
@@ -51,7 +60,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-any-overlapping")
 	public Optional<GroupVerification> findAnyOverlapping(String groupId) {
-		log.debug("Checking for any overlapping active verification with groupId '{}'", groupId);
 		return context.select(GROUP_VERIFICATIONS.fields())
 				.select(NAMESPACES.SLUG)
 				.from(GROUP_VERIFICATIONS)
@@ -63,21 +71,29 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-by-owner")
-	public List<GroupVerification> findByOwner(Owner owner) {
-		log.debug("Listing group verifications for owner {} ({})", owner.slug(), owner.id());
+	public Page<GroupVerification> findByOwner(Owner owner, SearchQuery query) {
+		final List<Condition> conditions = new ArrayList<>();
+		conditions.add(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get()));
 
-		return context.select(GROUP_VERIFICATIONS.fields())
-				.select(NAMESPACES.SLUG)
-				.from(GROUP_VERIFICATIONS)
-				.join(NAMESPACES).on(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(NAMESPACES.ID))
-				.where(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get()))
-				.fetch(DefaultGroupVerifications::toGroupVerification);
+		query.term().ifPresent(term -> conditions.add(
+				GROUP_VERIFICATIONS.GROUP_ID.containsIgnoreCase(term)
+		));
+
+		query.criteria(GroupVerification.STATE_CRITERIA).ifPresent(state -> conditions.add(
+				GROUP_VERIFICATIONS.STATE.eq(state.name())
+		));
+
+		return groupVerificationPageableExecutor.execute(
+				createGroupVerificationsQuery(DSL.and(conditions)),
+				DefaultGroupVerifications::toGroupVerification,
+				query.pageable(),
+				() -> context.fetchCount(createGroupVerificationsQuery(DSL.and(conditions)))
+		);
 	}
 
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-by-group-id")
-	public Optional<GroupVerification> findByGroupId(String groupId, Owner owner) {
-		log.debug("Looking up group verification '{}' for owner {} ({})", groupId, owner.slug(), owner.id());
+	public Optional<GroupVerification> findByGroupId(Owner owner, String groupId) {
 		return context.select(GROUP_VERIFICATIONS.fields())
 				.select(NAMESPACES.SLUG)
 				.from(GROUP_VERIFICATIONS)
@@ -90,7 +106,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-active-challenge")
 	public Optional<VerificationChallenge> findActiveChallenge(GroupVerification verification) {
-		log.debug("Looking up active challenge for verification {} with groupId '{}' and state {}", verification.id(), verification.groupId(), verification.state());
 		return context.select(GROUP_VERIFICATION_CHALLENGES.fields())
 				.from(GROUP_VERIFICATION_CHALLENGES)
 				.where(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(verification.id().get()))
@@ -100,12 +115,14 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-challenges")
-	public List<VerificationChallenge> findChallenges(EntityId verificationId, Owner owner) {
-		log.debug("Listing challenges for verification {} and owner {} ({})", verificationId, owner.slug(), owner.id());
+	public List<VerificationChallenge> findChallenges(Owner owner, EntityId verificationId) {
 		return context.select(GROUP_VERIFICATION_CHALLENGES.fields())
 				.from(GROUP_VERIFICATION_CHALLENGES)
 				.join(GROUP_VERIFICATIONS).on(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(GROUP_VERIFICATIONS.ID))
-				.where(GROUP_VERIFICATIONS.ID.eq(verificationId.get())).and(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get()))
+				.where(DSL.and(
+						GROUP_VERIFICATIONS.ID.eq(verificationId.get()),
+						GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get())
+				))
 				.orderBy(GROUP_VERIFICATION_CHALLENGES.CREATED_AT.asc())
 				.fetch(DefaultGroupVerifications::toVerificationChallenge);
 	}
@@ -113,29 +130,41 @@ class DefaultGroupVerifications implements GroupVerifications {
 	@Override
 	@Transactional(label = "group-verifications.claim")
 	public GroupVerification claim(Owner owner, String groupId, VerificationMethod method) {
-		log.info(
-				"Claiming group verification for owner {} ({}), groupId '{}', method {}",
-				owner.slug(),
-				owner.id(),
-				groupId,
-				method
-		);
+		log.debug("Attempting to create a group verification and claim challenge for: [owner={}, groupId={}, method={}]",
+				owner, groupId, method);
 
 		findAnyOverlapping(groupId).ifPresent(ignore -> {
 			throw new GroupIdAlreadyClaimedException(groupId);
 		});
 
-		final GroupVerification verification = save(
-				GroupVerification.builder()
-						.owner(owner)
-						.groupId(groupId)
-						.state(VerificationState.PENDING)
-						.createdAt(OffsetDateTime.now())
-						.build()
-		);
+		final GroupVerification verification = context.insertInto(GROUP_VERIFICATIONS)
+				.set(SettableRecord.of(context, GROUP_VERIFICATIONS)
+						.set(GROUP_VERIFICATIONS.ID, EntityId.generate().map(EntityId::get))
+						.set(GROUP_VERIFICATIONS.NAMESPACE_ID, owner.id().get())
+						.set(GROUP_VERIFICATIONS.GROUP_ID, groupId)
+						.set(GROUP_VERIFICATIONS.STATE, VerificationState.PENDING.name())
+						.set(GROUP_VERIFICATIONS.CREATED_AT, OffsetDateTime.now())
+						.get())
+				.returning(GROUP_VERIFICATIONS.fields())
+				.fetchOne(it -> toGroupVerification(it, owner));
 
-		VerificationChallenge verificationChallenge = createChallenge(verification, method);
-		save(verificationChallenge);
+		Assert.state(verification != null, () -> "Could not create verification for: [owner=%s, groupId=%s]"
+				.formatted(owner.slug(),  groupId));
+
+		final VerificationChallenge challenge = context.insertInto(GROUP_VERIFICATION_CHALLENGES)
+				.set(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, verification.id().get())
+				.set(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, method.name())
+				.set(GROUP_VERIFICATION_CHALLENGES.CHALLENGE_TOKEN, generateChallengeToken())
+				.set(GROUP_VERIFICATION_CHALLENGES.STATE, ChallengeState.UNVERIFIED.name())
+				.set(GROUP_VERIFICATION_CHALLENGES.CREATED_AT, verification.createdAt())
+				.returning(GROUP_VERIFICATION_CHALLENGES.fields())
+				.fetchOne(DefaultGroupVerifications::toVerificationChallenge);
+
+		Assert.state(challenge != null, () -> "Could not create challenge for: [verification=%s, groupId=%s, method=%s]"
+				.formatted(verification.id(), verification.groupId(), method.name()));
+
+		log.info("Successfully created group verification claim for owner {} ({}), groupId '{}', method {}",
+				owner.slug(), owner.id(), groupId, method);
 
 		return verification;
 	}
@@ -143,29 +172,51 @@ class DefaultGroupVerifications implements GroupVerifications {
 	@Override
 	@Transactional(label = "group-verifications.verify")
 	public GroupVerification verify(Owner owner, String groupId) {
-		log.info("Verifying group verification for owner {} ({}), groupId '{}'", owner.slug(), owner.id(), groupId);
-		final GroupVerification verification = findByGroupId(groupId, owner)
+		log.debug("Attempting to perform group verification for: [owner={}, groupId={}]", owner, groupId);
+
+		final GroupVerification verification = findByGroupId(owner, groupId)
 				.orElseThrow(() -> new VerificationChallengeNotFoundException(owner, groupId));
+
 		Assert.state(
 				verification.state().canTransitionTo(VerificationState.ACTIVE),
-				"Can only activate a pending verification, but was " + verification.state()
+				() -> "Can only verify a pending groupId verification, but it was in %s state".formatted(verification.state())
 		);
 
 		final VerificationChallenge challenge = findActiveChallenge(verification)
 				.orElseThrow(() -> new VerificationChallengeNotFoundException("No active challenge to verify for groupId " + groupId));
 
+		Assert.state(
+				challenge.state() == ChallengeState.UNVERIFIED,
+				() -> "Verification challenge must be in an '%s' state before it can be applied, but it was in %s state"
+						.formatted(ChallengeState.UNVERIFIED, challenge.state())
+		);
+
 		final VerificationStrategy strategy = strategies.get(challenge.method());
-		log.debug("Using verification strategy {} for verification {} and challenge {}", strategy.method(), verification.id(), challenge.id());
+		log.debug("Using verification strategy {} for verification {} and challenge {}",
+				strategy.method(), verification.id(), challenge.id());
 
 		final VerificationResult result = strategy.verify(verification, challenge);
-		final VerificationChallenge verifiedChallenge = applyVerificationResult(challenge, result);
-		save(verifiedChallenge);
 
-		if (result instanceof VerificationResult.Success) {
-			GroupVerification activated = verification.toBuilder()
+		if (result instanceof VerificationResult.Success(VerificationMethod method)) {
+			Assert.state(method == challenge.method(), "Verification methods do not match");
+
+			final GroupVerification activated = verification.toBuilder()
 					.state(VerificationState.ACTIVE)
 					.verifiedAt(OffsetDateTime.now())
 					.build();
+
+			context.update(GROUP_VERIFICATIONS)
+					.set(GROUP_VERIFICATIONS.STATE, activated.state().name())
+					.set(GROUP_VERIFICATIONS.VERIFIED_AT, activated.verifiedAt())
+					.where(GROUP_VERIFICATIONS.ID.eq(activated.id().get()))
+					.execute();
+
+			context.update(GROUP_VERIFICATION_CHALLENGES)
+					.set(GROUP_VERIFICATION_CHALLENGES.STATE, ChallengeState.VERIFIED.name())
+					.set(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT, activated.verifiedAt())
+					.where(GROUP_VERIFICATION_CHALLENGES.ID.eq(challenge.id()))
+					.execute();
+
 			log.info(
 					"Activated group verification {} for owner {} ({}), groupId '{}'",
 					activated.id(),
@@ -173,7 +224,8 @@ class DefaultGroupVerifications implements GroupVerifications {
 					activated.owner().id(),
 					activated.groupId()
 			);
-			return save(activated);
+
+			return activated;
 		}
 
 		log.info(
@@ -184,106 +236,55 @@ class DefaultGroupVerifications implements GroupVerifications {
 				groupId,
 				result
 		);
+
 		return verification;
 	}
 
 	@Override
 	@Transactional(label = "group-verifications.revoke")
 	public GroupVerification revoke(GroupVerification verification) {
-		log.info(
-				"Revoking group verification {} for owner {} ({}), groupId '{}', current state {}",
-				verification.id(),
-				verification.owner().slug(),
-				verification.owner().id(),
-				verification.groupId(),
-				verification.state()
+		log.debug("Attempting to revoke a group verification for: [owner={}, groupId={}, state={}]",
+				verification.owner(), verification.groupId(), verification.state()
 		);
 
 		Assert.state(
 				verification.state().canTransitionTo(VerificationState.REVOKED),
-				"Cannot revoke a \"" + verification.state() + "\" verification"
+				() -> "Can only revoke an active groupId verification, but it was in a '%s' state".formatted(verification.state())
 		);
-		GroupVerification revoked = verification.toBuilder()
+
+		final GroupVerification revoked = verification.toBuilder()
 				.state(VerificationState.REVOKED)
 				.revokedAt(OffsetDateTime.now())
 				.build();
-		final GroupVerification saved = save(revoked);
+
+		context.update(GROUP_VERIFICATIONS)
+				.set(GROUP_VERIFICATIONS.STATE, revoked.state().name())
+				.set(GROUP_VERIFICATIONS.REVOKED_AT, revoked.revokedAt())
+				.where(GROUP_VERIFICATIONS.ID.eq(revoked.id().get()))
+				.execute();
+
 		log.info(
-				"Revoked group verification {} for owner {} ({}), groupId '{}'",
-				saved.id(),
-				saved.owner().slug(),
-				saved.owner().id(),
-				saved.groupId()
+				"Successfully revoked group verification {} for owner {} ({}), groupId '{}'",
+				revoked.id(),
+				revoked.owner().slug(),
+				revoked.owner().id(),
+				revoked.groupId()
 		);
-		return saved;
+
+		return revoked;
 	}
 
-	private GroupVerification save(GroupVerification verification) {
-		log.debug(
-				"Saving group verification for owner {} ({}), groupId '{}', state {}",
-				verification.owner().slug(),
-				verification.owner().id(),
-				verification.groupId(),
-				verification.state()
-		);
-
-		final Record record = context.insertInto(GROUP_VERIFICATIONS)
-				.set(SettableRecord.of(context, GROUP_VERIFICATIONS)
-						.set(GROUP_VERIFICATIONS.NAMESPACE_ID, verification.owner().id().get())
-						.set(GROUP_VERIFICATIONS.GROUP_ID, verification.groupId())
-						.set(GROUP_VERIFICATIONS.STATE, verification.state().name())
-						.set(GROUP_VERIFICATIONS.CREATED_AT, verification.createdAt())
-						.set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
-						.set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
-						.get())
-				.onConflict(GROUP_VERIFICATIONS.NAMESPACE_ID, GROUP_VERIFICATIONS.GROUP_ID)
-				.doUpdate()
-				.set(GROUP_VERIFICATIONS.STATE, verification.state().name())
-				.set(GROUP_VERIFICATIONS.VERIFIED_AT, verification.verifiedAt())
-				.set(GROUP_VERIFICATIONS.REVOKED_AT, verification.revokedAt())
-				.returning(GROUP_VERIFICATIONS.fields())
-				.fetchOne();
-
-		Assert.state(record != null, "Could not save group verification: " + verification.groupId());
-		return toGroupVerification(record, verification.owner());
+	private String generateChallengeToken() {
+		final byte[] seed = challengeTokenGenerator.generateKey();
+		return Hex.encodeHexString(seed);
 	}
 
-	private VerificationChallenge save(VerificationChallenge challenge) {
-		Assert.notNull(challenge.verificationId(), "Verification challenge must be attached to a verification before saving");
-
-		log.debug(
-				"Saving challenge for verificationId {}, method {}, state {}, challengeId {}",
-				challenge.verificationId(),
-				challenge.method(),
-				challenge.state(),
-				challenge.id()
-		);
-
-		var insert = context.insertInto(GROUP_VERIFICATION_CHALLENGES);
-		if (challenge.id() != null) {
-			insert.set(GROUP_VERIFICATION_CHALLENGES.ID, challenge.id().get());
-		}
-
-		final Record record = insert
-				.set(SettableRecord.of(context, GROUP_VERIFICATION_CHALLENGES)
-						.set(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, challenge.verificationId().get())
-						.set(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, challenge.method().name())
-						.set(GROUP_VERIFICATION_CHALLENGES.CHALLENGE_TOKEN, challenge.token())
-						.set(GROUP_VERIFICATION_CHALLENGES.STATE, challenge.state().name())
-						.set(GROUP_VERIFICATION_CHALLENGES.CREATED_AT, challenge.createdAt())
-						.set(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT, challenge.verifiedAt())
-						.set(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT, challenge.expiresAt())
-						.get())
-				.onConflict(GROUP_VERIFICATION_CHALLENGES.ID)
-				.doUpdate()
-				.set(GROUP_VERIFICATION_CHALLENGES.STATE, challenge.state().name())
-				.set(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT, challenge.verifiedAt())
-				.set(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT, challenge.expiresAt())
-				.returning(GROUP_VERIFICATION_CHALLENGES.fields())
-				.fetchOne();
-
-		Assert.state(record != null, "Could not save verification challenge: " + challenge.id());
-		return toVerificationChallenge(record);
+	private SelectConditionStep<? extends Record> createGroupVerificationsQuery(Condition condition) {
+		return context.select(GROUP_VERIFICATIONS.fields())
+				.select(NAMESPACES.SLUG)
+				.from(GROUP_VERIFICATIONS)
+				.join(NAMESPACES).on(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(NAMESPACES.ID))
+				.where(condition);
 	}
 
 	private static Condition prefixOf(String groupId) {
@@ -307,10 +308,10 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	private static GroupVerification toGroupVerification(Record record, Owner owner) {
 		return GroupVerification.builder()
-				.id(EntityId.from(record.get(GROUP_VERIFICATIONS.ID)))
+				.id(record.get(GROUP_VERIFICATIONS.ID, EntityId.class))
 				.owner(owner)
 				.groupId(record.get(GROUP_VERIFICATIONS.GROUP_ID))
-				.state(VerificationState.valueOf(record.get(GROUP_VERIFICATIONS.STATE)))
+				.state(record.get(GROUP_VERIFICATIONS.STATE, VerificationState.class))
 				.createdAt(record.get(GROUP_VERIFICATIONS.CREATED_AT))
 				.verifiedAt(record.get(GROUP_VERIFICATIONS.VERIFIED_AT))
 				.revokedAt(record.get(GROUP_VERIFICATIONS.REVOKED_AT))
@@ -319,51 +320,15 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	private static VerificationChallenge toVerificationChallenge(Record record) {
 		return VerificationChallenge.builder()
-				.id(EntityId.from(record.get(GROUP_VERIFICATION_CHALLENGES.ID)))
-				.verificationId(EntityId.from(record.get(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID)))
-				.method(VerificationMethod.valueOf(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD)))
+				.id(record.get(GROUP_VERIFICATION_CHALLENGES.ID))
+				.verificationId(record.get(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, EntityId.class))
+				.method(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, VerificationMethod.class))
 				.token(record.get(GROUP_VERIFICATION_CHALLENGES.CHALLENGE_TOKEN))
-				.state(ChallengeState.valueOf(record.get(GROUP_VERIFICATION_CHALLENGES.STATE)))
+				.state(record.get(GROUP_VERIFICATION_CHALLENGES.STATE, ChallengeState.class))
 				.createdAt(record.get(GROUP_VERIFICATION_CHALLENGES.CREATED_AT))
 				.verifiedAt(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT))
 				.expiresAt(record.get(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT))
 				.build();
 	}
 
-	private VerificationChallenge applyVerificationResult(VerificationChallenge challenge, VerificationResult result) {
-		Assert.state(
-				challenge.state() == ChallengeState.UNVERIFIED,
-				"Challenge must be " + ChallengeState.UNVERIFIED + " before it can be applied"
-		);
-
-		if (result instanceof VerificationResult.Success success) {
-			Assert.state(
-					success.method() == challenge.method(),
-					"Cannot apply a " + success.method() + " result to a " + challenge.method() + " challenge"
-			);
-
-			return challenge.toBuilder()
-					.state(ChallengeState.VERIFIED)
-					.verifiedAt(OffsetDateTime.now())
-					.build();
-		}
-
-		return challenge.toBuilder()
-				.state(ChallengeState.UNVERIFIED)
-				.verifiedAt(null)
-				.build();
-	}
-
-	private VerificationChallenge createChallenge(GroupVerification verification, VerificationMethod method) {
-		final byte[] seed = new byte[20];
-		RANDOM.nextBytes(seed);
-
-		return VerificationChallenge.builder()
-				.method(method)
-				.token(Base64.getUrlEncoder().withoutPadding().encodeToString(seed))
-				.state(ChallengeState.UNVERIFIED)
-				.createdAt(OffsetDateTime.now())
-				.verificationId(verification.id())
-				.build();
-	}
 }

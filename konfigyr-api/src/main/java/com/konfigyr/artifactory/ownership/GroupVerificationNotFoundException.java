@@ -10,6 +10,7 @@ import java.io.Serial;
  * Exception thrown when a {@link GroupVerification} cannot be found for the requested namespace and groupId.
  *
  * @author Vitalii Kushnir
+ * @since 1.0.0
  */
 public class GroupVerificationNotFoundException extends ArtifactoryException {
 

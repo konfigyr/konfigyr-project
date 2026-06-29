@@ -16,6 +16,7 @@ import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
  * Resolves a namespace into a lightweight {@link Owner} reference used by ownership workflows.
  *
  * @author Mila Zarkovic
+ * @since 1.0.0
  */
 @Slf4j
 @NullMarked

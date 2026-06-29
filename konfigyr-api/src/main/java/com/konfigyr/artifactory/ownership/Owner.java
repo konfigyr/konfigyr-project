@@ -16,6 +16,7 @@ import java.io.Serializable;
  * @param id   namespace entity identifier
  * @param slug namespace slug used for URL construction
  * @author Vitalii Kushnir
+ * @since 1.0.0
  */
 @ValueObject
 public record Owner(

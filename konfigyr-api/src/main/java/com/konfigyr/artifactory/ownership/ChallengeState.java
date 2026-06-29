@@ -4,6 +4,7 @@ package com.konfigyr.artifactory.ownership;
  * Lifecycle state of a verification challenge attempt.
  *
  * @author Vitalii Kushnir
+ * @since 1.0.0
  */
 public enum ChallengeState {
 	/**
@@ -19,5 +20,5 @@ public enum ChallengeState {
 	/**
 	 * The challenge is no longer valid and can no longer be used.
 	 */
-	EXPIRED;
+	EXPIRED
 }

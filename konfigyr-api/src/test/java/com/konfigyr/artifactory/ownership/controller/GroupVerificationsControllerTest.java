@@ -60,6 +60,100 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should list claims for a namespace filtered by state")
+	void shouldListClaimsFilteredByState() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications?state=PENDING", "john-doe")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(collectionModel(GroupVerification.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(GroupVerification::groupId, GroupVerification::state)
+						.containsExactly(tuple("org.springframework.boot", VerificationState.PENDING)));
+	}
+
+	@Test
+	@DisplayName("should list claims for a namespace filtered by search term")
+	void shouldListClaimsFilteredByTerm() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications?term=ai", "john-doe")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(collectionModel(GroupVerification.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(GroupVerification::groupId, GroupVerification::state)
+						.containsExactly(tuple("org.springframework.ai", VerificationState.FAILED)));
+	}
+
+	@Test
+	@DisplayName("should list claims for a namespace filtered by state and search term")
+	void shouldListClaimsFilteredByStateAndTerm() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications?term=springframework&state=PENDING", "john-doe")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(collectionModel(GroupVerification.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(GroupVerification::groupId, GroupVerification::state)
+						.containsExactly(tuple("org.springframework.boot", VerificationState.PENDING)));
+	}
+
+	@Test
+	@DisplayName("should list claims sorted by groupId ascending")
+	void shouldListClaimsSortedByGroupAscending() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications?sort=group,asc", "john-doe")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(collectionModel(GroupVerification.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(GroupVerification::groupId)
+						.containsExactly("org.springframework.ai", "org.springframework.boot"));
+	}
+
+	@Test
+	@DisplayName("should list claims sorted by groupId descending")
+	void shouldListClaimsSortedByGroupDescending() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications?sort=group,desc", "john-doe")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(collectionModel(GroupVerification.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(GroupVerification::groupId)
+						.containsExactly("org.springframework.boot", "org.springframework.ai"));
+	}
+
+	@Test
+	@DisplayName("should return empty page when no claims match the filter")
+	void shouldReturnEmptyPageForUnmatchedFilter() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications?state=ACTIVE", "john-doe")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(collectionModel(GroupVerification.class))
+				.satisfies(it -> assertThat(it.getContent()).isEmpty());
+	}
+
+	@Test
 	@DisplayName("should submit a new verification claim")
 	@Transactional
 	void shouldSubmitNewVerificationClaim() {

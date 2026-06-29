@@ -11,6 +11,7 @@ import java.io.Serial;
  * Exception thrown when a namespace owner cannot be resolved from the supplied slug or identifier.
  *
  * @author Vitalii Kushnir
+ * @since 1.0.0
  **/
 public class OwnerNotFoundException extends ArtifactoryException {
 

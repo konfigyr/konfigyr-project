@@ -9,6 +9,7 @@ import java.io.Serial;
  * Exception thrown when a group identifier is already claimed by another namespace.
  *
  * @author Vitalii Kushnir
+ * @since 1.0.0
  **/
 public class GroupIdAlreadyClaimedException extends ArtifactoryException {
 

@@ -25,6 +25,7 @@ import java.util.stream.StreamSupport;
  * that class closed to changes when new {@link VerificationMethod} values are added.
  *
  * @author Vladimir Spasic
+ * @since 1.0.0
  * @see VerificationStrategy
  * @see VerificationMethod
  */
