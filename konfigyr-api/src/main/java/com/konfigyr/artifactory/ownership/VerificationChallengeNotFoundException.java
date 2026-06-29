@@ -9,6 +9,7 @@ import java.io.Serial;
  * Exception thrown when a verification challenge cannot be found for the requested verification.
  *
  * @author Vitalii Kushnir
+ * @since 1.0.0
  **/
 public class VerificationChallengeNotFoundException extends ArtifactoryException {
 

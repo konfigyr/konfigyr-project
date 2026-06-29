@@ -33,6 +33,7 @@ import java.util.Hashtable;
  * </ul>
  *
  * @author Mila Zarkovic
+ * @since 1.0.0
  * @see VerificationStrategy
  * @see VerificationMethod#DNS
  */

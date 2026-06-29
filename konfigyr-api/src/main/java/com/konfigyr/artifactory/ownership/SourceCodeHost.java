@@ -19,6 +19,7 @@ import java.util.Optional;
  * {@link #toURI(String, String)} builds the host API URL used to assert that the repository exists.
  *
  * @author Mila Zarkovic
+ * @since 1.0.0
  */
 @NullMarked
 public enum SourceCodeHost {

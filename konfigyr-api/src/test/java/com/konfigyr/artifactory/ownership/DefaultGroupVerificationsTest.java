@@ -1,13 +1,17 @@
 package com.konfigyr.artifactory.ownership;
 
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.UUID;
+
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +37,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	void shouldFundActiveCoveringByIdAndOwner() {
 		final var owner = Owner.of(EntityId.from(2), "konfigyr");
 		final var groupId = "com.konfigyr";
-		final var result = verifications.findActiveCovering(groupId, owner);
+		final var result = verifications.findActiveCovering(owner, groupId);
 
 		assertThat(result)
 				.isPresent()
@@ -51,7 +55,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	void shouldReturnEmptyResultForUnrelatedGroupId() {
 		final var owner = Owner.of(EntityId.from(2), "konfigyr");
 		final var groupId = "com.config";
-		final var result = verifications.findActiveCovering(groupId, owner);
+		final var result = verifications.findActiveCovering(owner, groupId);
 
 		assertThat(result).isEmpty();
 	}
@@ -60,7 +64,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	@DisplayName("should find covering by owner")
 	void shouldFindCoveringByOwner() {
 		final var owner = Owner.of(EntityId.from(1), "john-doe");
-		final var result = verifications.findByOwner(owner);
+		final var result = verifications.findByOwner(owner, SearchQuery.of(Pageable.ofSize(10)));
 
 		assertThat(result.stream())
 				.hasSize(2)
@@ -69,11 +73,93 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should find claims by owner filtered by state")
+	void shouldFindByOwnerFilteredByState() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+
+		final var pending = verifications.findByOwner(owner, SearchQuery.builder()
+				.pageable(Pageable.ofSize(10))
+				.criteria(GroupVerification.STATE_CRITERIA, VerificationState.PENDING)
+				.build());
+
+		assertThat(pending.stream())
+				.hasSize(1)
+				.extracting(GroupVerification::id)
+				.containsExactly(EntityId.from(3));
+
+		final var failed = verifications.findByOwner(owner, SearchQuery.builder()
+				.pageable(Pageable.ofSize(10))
+				.criteria(GroupVerification.STATE_CRITERIA, VerificationState.FAILED)
+				.build());
+
+		assertThat(failed.stream())
+				.hasSize(1)
+				.extracting(GroupVerification::id)
+				.containsExactly(EntityId.from(2));
+	}
+
+	@Test
+	@DisplayName("should find claims by owner filtered by search term")
+	void shouldFindByOwnerFilteredByTerm() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+
+		final var both = verifications.findByOwner(owner, SearchQuery.builder()
+				.pageable(Pageable.ofSize(10))
+				.term("springframework")
+				.build());
+
+		assertThat(both.stream())
+				.hasSize(2)
+				.extracting(GroupVerification::id)
+				.contains(EntityId.from(2), EntityId.from(3));
+
+		final var one = verifications.findByOwner(owner, SearchQuery.builder()
+				.pageable(Pageable.ofSize(10))
+				.term("boot")
+				.build());
+
+		assertThat(one.stream())
+				.hasSize(1)
+				.extracting(GroupVerification::groupId)
+				.containsExactly("org.springframework.boot");
+	}
+
+	@Test
+	@DisplayName("should return empty page when no claims match state filter")
+	void shouldReturnEmptyPageForUnmatchedStateFilter() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+
+		final var result = verifications.findByOwner(owner, SearchQuery.builder()
+				.pageable(Pageable.ofSize(10))
+				.criteria(GroupVerification.STATE_CRITERIA, VerificationState.ACTIVE)
+				.build());
+
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	@DisplayName("should find claims by owner filtered by state and search term")
+	void shouldFindByOwnerFilteredByStateAndTerm() {
+		final var owner = Owner.of(EntityId.from(1), "john-doe");
+
+		final var result = verifications.findByOwner(owner, SearchQuery.builder()
+				.pageable(Pageable.ofSize(10))
+				.term("springframework")
+				.criteria(GroupVerification.STATE_CRITERIA, VerificationState.PENDING)
+				.build());
+
+		assertThat(result.stream())
+				.hasSize(1)
+				.extracting(GroupVerification::groupId)
+				.containsExactly("org.springframework.boot");
+	}
+
+	@Test
 	@DisplayName("should find covering by group id")
 	void shouldFindCoveringByGroupId() {
 		final var owner = Owner.of(EntityId.from(1), "john-doe");
 		final var groupId = "org.springframework.boot";
-		final var result = verifications.findByGroupId(groupId, owner);
+		final var result = verifications.findByGroupId(owner, groupId);
 
 		assertThat(result)
 				.isPresent()
@@ -100,7 +186,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 		assertThat(result)
 				.isPresent()
 				.get()
-				.returns(EntityId.from(3L), VerificationChallenge::id)
+				.returns(UUID.fromString("018f4c2a-1b3f-7e5f-9a6b-7c8d9e0f1a2d"), VerificationChallenge::id)
 				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
 				.returns(VerificationMethod.DNS, VerificationChallenge::method);
 	}
@@ -111,7 +197,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	void findAnyOverlapping() {
 		final var owner = Owner.of(EntityId.from(2), "konfigyr");
 		final var groupId = "com.konfigyr";
-		final var verification = verifications.findActiveCovering(groupId, owner);
+		final var verification = verifications.findActiveCovering(owner, groupId);
 
 		assertThat(verification).isPresent();
 
@@ -233,7 +319,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 
 		assertThatThrownBy(() -> verifications.revoke(revokedResult))
 				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("Cannot revoke a \"REVOKED\" verification");
+				.hasMessage("Can only revoke an active groupId verification, but it was in a '%s' state", VerificationState.REVOKED);
 	}
 
 	@Test
@@ -300,7 +386,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.isNotNull()
 				.actual();
 
-		assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+		assertThat(verifications.findChallenges(owner, pendingVerification.id()))
 				.hasSize(1)
 				.first()
 				.returns(VerificationMethod.DNS, VerificationChallenge::method)
@@ -312,7 +398,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 					.returns(null, GroupVerification::verifiedAt)
 					.returns(VerificationState.PENDING, GroupVerification::state);
 
-			assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+			assertThat(verifications.findChallenges(owner, pendingVerification.id()))
 					.hasSize(1)
 					.first()
 					.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
@@ -330,7 +416,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.isNotNull()
 				.actual();
 
-		final var activeVerificationChallenge = assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+		final var activeVerificationChallenge = assertThat(verifications.findChallenges(owner, pendingVerification.id()))
 				.hasSize(1)
 				.first()
 				.returns(VerificationMethod.SOURCE_CODE, VerificationChallenge::method)
@@ -346,7 +432,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.returns(null, GroupVerification::verifiedAt)
 				.returns(VerificationState.PENDING, GroupVerification::state);
 
-		assertThat(verifications.findChallenges(pendingVerification.id(), owner))
+		assertThat(verifications.findChallenges(owner, pendingVerification.id()))
 				.hasSize(1)
 				.first()
 				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);

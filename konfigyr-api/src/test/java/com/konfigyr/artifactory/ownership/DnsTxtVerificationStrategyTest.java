@@ -12,6 +12,8 @@ import javax.naming.NamingException;
 import javax.naming.ServiceUnavailableException;
 import javax.naming.directory.InitialDirContext;
 
+import java.util.UUID;
+
 import static com.konfigyr.artifactory.ownership.VerificationResult.FailureReason.*;
 import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDnsException;
 import static org.assertj.core.api.Assertions.*;
@@ -139,6 +141,7 @@ class DnsTxtVerificationStrategyTest {
 
 	private static GroupVerification verification(String groupId) {
 		return GroupVerification.builder()
+				.id(1L)
 				.owner(Owner.of(EntityId.from(1L), "test-namespace"))
 				.groupId(groupId)
 				.state(VerificationState.PENDING)
@@ -147,6 +150,8 @@ class DnsTxtVerificationStrategyTest {
 
 	private static VerificationChallenge challenge(String token) {
 		return VerificationChallenge.builder()
+				.id(UUID.randomUUID())
+				.verificationId(EntityId.from(1L))
 				.method(VerificationMethod.DNS)
 				.token(token)
 				.state(ChallengeState.UNVERIFIED)

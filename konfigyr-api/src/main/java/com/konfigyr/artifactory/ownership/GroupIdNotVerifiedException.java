@@ -11,6 +11,7 @@ import java.io.Serial;
  * artifact {@code groupId} and is therefore not allowed to publish artifacts for that group.
  *
  * @author Mila Zarkovic
+ * @since 1.0.0
  */
 public class GroupIdNotVerifiedException extends ArtifactoryException {
 

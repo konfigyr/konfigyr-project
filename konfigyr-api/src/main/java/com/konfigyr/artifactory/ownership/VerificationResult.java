@@ -3,19 +3,42 @@ package com.konfigyr.artifactory.ownership;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Represents the outcome of a verification attempt performed by a {@link VerificationStrategy}.
+ * Outcome of a verification attempt performed by a {@link VerificationStrategy}.
  * <p>
- * A verification result is either a {@link Success} or a {@link Failure}.
+ * A result is either a {@link Success} or a {@link Failure}. {@link VerificationStrategy#verify}
+ * always returns one of these two variants — it never throws. {@link GroupVerifications#verify}
+ * consumes the result to drive two state transitions: the {@link VerificationChallenge} moves to
+ * {@link ChallengeState#VERIFIED} on success or remains {@link ChallengeState#UNVERIFIED} on
+ * failure; the {@link GroupVerification} moves to {@link VerificationState#ACTIVE} on success or
+ * remains {@link VerificationState#PENDING} on failure.
+ * <p>
+ * Callers discriminate between the two variants using pattern matching on the sealed type:
+ * <pre>{@code
+ * VerificationResult result = strategy.verify(verification, challenge);
+ * if (result instanceof VerificationResult.Success success) {
+ *     // activate the claim
+ * } else if (result instanceof VerificationResult.Failure failure) {
+ *     // inspect failure.reason()
+ * }
+ * }</pre>
  *
  * @author Mila Zarkovic
+ * @since 1.0.0
+ * @see VerificationStrategy
+ * @see GroupVerifications
+ * @see VerificationChallenge
  */
 public sealed interface VerificationResult permits VerificationResult.Success, VerificationResult.Failure {
 
 	/**
 	 * Creates a successful verification result.
+	 * <p>
+	 * The {@code method} argument must match the {@link VerificationChallenge#method()} of the
+	 * challenge being verified. {@link GroupVerifications} asserts this at the point of consumption
+	 * to catch strategy implementations that accidentally return a result for the wrong method.
 	 *
-	 * @param method the {@link VerificationMethod} that successfully verified ownership
-	 * @return a successful verification result
+	 * @param method the {@link VerificationMethod} that confirmed ownership
+	 * @return a successful verification result; never {@literal null}
 	 */
 	@NonNull
 	static Success success(@NonNull VerificationMethod method) {
@@ -23,10 +46,14 @@ public sealed interface VerificationResult permits VerificationResult.Success, V
 	}
 
 	/**
-	 * Creates a failed verification result using a predefined {@link FailureReason}.
+	 * Creates a failed verification result from a standardised {@link FailureReason}.
+	 * <p>
+	 * The reason is stored as {@link FailureReason#name()}, so callers can round-trip
+	 * {@link Failure#reason()} back to a {@link FailureReason} via {@link FailureReason#valueOf}.
+	 * Prefer this overload over {@link #failure(String)} whenever a predefined reason applies.
 	 *
-	 * @param reason the failure reason enum value
-	 * @return a failed verification result
+	 * @param reason the standardized failure reason
+	 * @return a failed verification result; never {@literal null}
 	 */
 	@NonNull
 	static Failure failure(@NonNull FailureReason reason) {
@@ -34,13 +61,14 @@ public sealed interface VerificationResult permits VerificationResult.Success, V
 	}
 
 	/**
-	 * Creates a failed verification result using a custom reason string.
+	 * Creates a failed verification result with a custom reason string.
 	 * <p>
-	 * This overload allows strategies to provide additional context beyond the predefined
-	 * {@link FailureReason} values.
+	 * Use this overload only when none of the predefined {@link FailureReason} values accurately
+	 * describes the failure. A free-form reason is opaque to callers that attempt to parse it as a
+	 * {@link FailureReason} — prefer {@link #failure(FailureReason)} whenever possible.
 	 *
-	 * @param reason a failure reason
-	 * @return a failed verification result
+	 * @param reason a free-form, machine-readable description of the failure
+	 * @return a failed verification result; never {@literal null}
 	 */
 	@NonNull
 	static Failure failure(@NonNull String reason) {
@@ -48,39 +76,61 @@ public sealed interface VerificationResult permits VerificationResult.Success, V
 	}
 
 	/**
-	 * Represents a successful verification outcome.
+	 * Successful verification outcome.
+	 * <p>
+	 * Carries the {@link VerificationMethod} that confirmed ownership so that
+	 * {@link GroupVerifications} can assert the strategy's result is consistent with the
+	 * {@link VerificationChallenge} it was asked to verify.
 	 *
-	 * @param method the verification method that succeeded
+	 * @param method the verification method that confirmed ownership; never {@literal null}
 	 */
 	record Success(@NonNull VerificationMethod method) implements VerificationResult {
 	}
 
 	/**
-	 * Represents a failed verification outcome.
+	 * Failed verification outcome.
 	 * <p>
-	 * The failure is represented as a string to allow both structured
-	 * {@link FailureReason} values and custom failure descriptions.
+	 * The reason is a machine-readable string. When constructed via {@link #failure(FailureReason)},
+	 * it equals {@link FailureReason#name()} and can be round-tripped back to the enum via
+	 * {@link FailureReason#valueOf}. When constructed via {@link #failure(String)}, it is an
+	 * arbitrary string and no such guarantee holds.
 	 *
-	 * @param reason machine-readable reason for failure
+	 * @param reason machine-readable description of the failure; never {@literal null}
 	 */
 	record Failure(@NonNull String reason) implements VerificationResult {
 	}
 
 	/**
-	 * Standardized set of failure reasons that can occur during verification.
+	 * Standardised set of failure reasons returned by {@link VerificationStrategy} implementations.
 	 * <p>
-	 * Strategies should map external errors (HTTP, DNS, API responses, etc.)
-	 * into these values whenever possible to ensure consistent behavior across
-	 * verification mechanisms.
+	 * Strategies must prefer these values over free-form strings so that callers can handle failures
+	 * consistently regardless of which verification mechanism produced them. Values serialize to
+	 * their {@link #name()} when stored in a {@link Failure#reason()}.
 	 */
 	enum FailureReason {
-		/** The challenge token was not found in the verification target. */
+		/**
+		 * The verification target was reachable but did not contain the expected challenge token.
+		 * Distinguishable from {@link #TARGET_NOT_FOUND}: the target exists, the token is simply
+		 * absent or wrong.
+		 */
 		TOKEN_MISMATCH,
-		/** The verification target (e.g. DNS record, file) could not be found. */
+
+		/**
+		 * The verification target (e.g. DNS record, repository) could not be found. The namespace
+		 * owner has not yet set up the required proof at the expected location.
+		 */
 		TARGET_NOT_FOUND,
-		/** The verification service is temporarily unavailable. */
+
+		/**
+		 * The external verification service is temporarily unavailable. This is a transient
+		 * condition, retrying after a delay may succeed.
+		 */
 		SERVICE_UNAVAILABLE,
-		/** An unexpected error occurred during verification. */
+
+		/**
+		 * An unexpected error occurred during verification that is not covered by the other reasons.
+		 * Unlike {@link #SERVICE_UNAVAILABLE}, this does not indicate a retryable condition.
+		 */
 		INTERNAL_ERROR,
 	}
 
