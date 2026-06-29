@@ -2,6 +2,7 @@ package com.konfigyr.artifactory.ownership;
 
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -17,9 +18,8 @@ public class OwnershipAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(GroupVerifications.class)
-	GroupVerifications defaultGroupVerifications(DnsTxtVerificationStrategy dnsTxtVerificationStrategy,
-			SourceCodeVerificationStrategy sourceCodeVerificationStrategy) {
-		return new DefaultGroupVerifications(context, dnsTxtVerificationStrategy, sourceCodeVerificationStrategy);
+	GroupVerifications defaultGroupVerifications(VerificationStrategies verificationStrategies) {
+		return new DefaultGroupVerifications(context, verificationStrategies);
 	}
 
 	@Bean
@@ -35,5 +35,10 @@ public class OwnershipAutoConfiguration {
 	@Bean
 	SourceCodeVerificationStrategy sourceCodeVerificationStrategy(RestClient.Builder builder) {
 		return new SourceCodeVerificationStrategy(builder.build());
+	}
+
+	@Bean
+	VerificationStrategies verificationStrategies(ObjectProvider<VerificationStrategy> strategies) {
+		return new VerificationStrategies(strategies);
 	}
 }
