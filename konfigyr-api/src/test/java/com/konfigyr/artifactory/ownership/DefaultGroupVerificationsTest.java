@@ -387,7 +387,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.isNotNull()
 				.actual();
 
-		assertThat(verifications.findChallenges(owner, pendingVerification.id()))
+		assertThat(verifications.findChallenges(pendingVerification))
 				.hasSize(1)
 				.first()
 				.returns(VerificationMethod.DNS, VerificationChallenge::method)
@@ -399,7 +399,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 					.returns(null, GroupVerification::verifiedAt)
 					.returns(VerificationState.PENDING, GroupVerification::state);
 
-			assertThat(verifications.findChallenges(owner, pendingVerification.id()))
+			assertThat(verifications.findChallenges(pendingVerification))
 					.hasSize(1)
 					.first()
 					.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
@@ -417,7 +417,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.isNotNull()
 				.actual();
 
-		final var activeVerificationChallenge = assertThat(verifications.findChallenges(owner, pendingVerification.id()))
+		final var activeVerificationChallenge = assertThat(verifications.findChallenges(pendingVerification))
 				.hasSize(1)
 				.first()
 				.returns(VerificationMethod.SOURCE_CODE, VerificationChallenge::method)
@@ -433,7 +433,7 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.returns(null, GroupVerification::verifiedAt)
 				.returns(VerificationState.PENDING, GroupVerification::state);
 
-		assertThat(verifications.findChallenges(owner, pendingVerification.id()))
+		assertThat(verifications.findChallenges(pendingVerification))
 				.hasSize(1)
 				.first()
 				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);

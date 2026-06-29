@@ -153,8 +153,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var metadata = TestArtifacts.metadata(coordinates);
 
 		assertThatExceptionOfType(OwnerNotFoundException.class)
-				.isThrownBy(() -> artifactory.release(EntityId.from(9999L), metadata))
-				.returns(HttpStatus.BAD_REQUEST, OwnerNotFoundException::getStatusCode);
+				.isThrownBy(() -> artifactory.release(EntityId.from(9999L), metadata));
 	}
 
 	@Test

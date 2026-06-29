@@ -1,4 +1,4 @@
-package com.konfigyr.artifactory.ownership.controller;
+package com.konfigyr.artifactory.controller;
 
 import com.konfigyr.artifactory.ownership.ChallengeState;
 import com.konfigyr.artifactory.ownership.GroupIdAlreadyClaimedException;
@@ -50,7 +50,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(collectionModel(GroupVerification.class))
+				.convertTo(pagedModel(GroupVerification.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.extracting(GroupVerification::groupId, GroupVerification::state)
 						.containsExactlyInAnyOrder(
@@ -69,7 +69,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(collectionModel(GroupVerification.class))
+				.convertTo(pagedModel(GroupVerification.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.extracting(GroupVerification::groupId, GroupVerification::state)
 						.containsExactly(tuple("org.springframework.boot", VerificationState.PENDING)));
@@ -85,7 +85,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(collectionModel(GroupVerification.class))
+				.convertTo(pagedModel(GroupVerification.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.extracting(GroupVerification::groupId, GroupVerification::state)
 						.containsExactly(tuple("org.springframework.ai", VerificationState.FAILED)));
@@ -101,7 +101,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(collectionModel(GroupVerification.class))
+				.convertTo(pagedModel(GroupVerification.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.extracting(GroupVerification::groupId, GroupVerification::state)
 						.containsExactly(tuple("org.springframework.boot", VerificationState.PENDING)));
@@ -117,7 +117,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(collectionModel(GroupVerification.class))
+				.convertTo(pagedModel(GroupVerification.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.extracting(GroupVerification::groupId)
 						.containsExactly("org.springframework.ai", "org.springframework.boot"));
@@ -133,7 +133,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(collectionModel(GroupVerification.class))
+				.convertTo(pagedModel(GroupVerification.class))
 				.satisfies(it -> assertThat(it.getContent())
 						.extracting(GroupVerification::groupId)
 						.containsExactly("org.springframework.boot", "org.springframework.ai"));
@@ -149,7 +149,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(collectionModel(GroupVerification.class))
+				.convertTo(pagedModel(GroupVerification.class))
 				.satisfies(it -> assertThat(it.getContent()).isEmpty());
 	}
 
@@ -191,8 +191,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should retrieve verification challenge history for the given claim")
 	void shouldRetrieveVerificationChallengeHistory() {
-		final EntityId verificationId = EntityId.from(2);
-		mvc.get().uri("/namespaces/{namespace}/group-verifications/{verificationId}/verification-challenges", "john-doe", verificationId.serialize())
+		mvc.get().uri("/namespaces/{namespace}/group-verifications/{verificationId}/challenges", "john-doe", "org.springframework.ai")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -204,7 +203,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 						.hasSize(1)
 						.extracting(VerificationChallenge::verificationId, VerificationChallenge::method, VerificationChallenge::state)
 						.containsExactlyInAnyOrder(
-								tuple(verificationId, VerificationMethod.DNS, ChallengeState.UNVERIFIED)
+								tuple(EntityId.from(2), VerificationMethod.DNS, ChallengeState.UNVERIFIED)
 						));
 	}
 
@@ -212,14 +211,12 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should verify a pending claim with DNS activation method and activate it")
 	@Transactional
 	void shouldVerifyPendingClaim() {
-		final String namespase = "john-doe";
-		final String domain = "springframework.org";
+		final String namespace = "john-doe";
 		final String groupId = "org.springframework.boot";
 		final String txtRecord = "konfigyr-verification=dns-pending-token-1";
 
-		try (MockedConstruction<InitialDirContext> ignored = mockDns(domain, "some-other-record", txtRecord)) {
-
-			final GroupVerification verification =  mvc.post().uri("/namespaces/{namespace}/group-verifications/{groupId}/verify", namespase, groupId)
+		try (MockedConstruction<InitialDirContext> ignored = mockDns("springframework.org", "some-other-record", txtRecord)) {
+			final GroupVerification verification =  mvc.post().uri("/namespaces/{namespace}/group-verifications/{groupId}/verify", namespace, groupId)
 					.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 					.exchange()
 					.assertThat()
@@ -234,7 +231,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 					.returns(null, GroupVerification::revokedAt)
 					.actual();
 
-			mvc.get().uri("/namespaces/{namespace}/group-verifications/{verificationId}/verification-challenges", namespase, verification.id().serialize())
+			mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}/challenges", namespace, groupId)
 					.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 					.exchange()
 					.assertThat()
@@ -255,13 +252,12 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to verify a pending claim with DNS activation method")
 	@Transactional
 	void shouldFailToVerifyPendingClaim() {
-		final String namespase = "konfigyr";
-		final String domain = "company.com";
+		final String namespace = "konfigyr";
 		final String groupId = "com.company.faild";
-		submit(namespase, groupId);
+		submit(namespace, groupId);
 
-		try (MockedConstruction<InitialDirContext> ignored = mockDnsNoTxt(domain)) {
-			final GroupVerification verification =  mvc.post().uri("/namespaces/{namespace}/group-verifications/{groupId}/verify", namespase, groupId)
+		try (MockedConstruction<InitialDirContext> ignored = mockDnsNoTxt("company.com")) {
+			final GroupVerification verification =  mvc.post().uri("/namespaces/{namespace}/group-verifications/{groupId}/verify", namespace, groupId)
 					.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
 					.exchange()
 					.assertThat()
@@ -276,7 +272,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 					.returns(null, GroupVerification::revokedAt)
 					.actual();
 
-			mvc.get().uri("/namespaces/{namespace}/group-verifications/{verificationId}/verification-challenges", namespase, verification.id().serialize())
+			mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}/challenges", namespace, groupId)
 					.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 					.exchange()
 					.assertThat()

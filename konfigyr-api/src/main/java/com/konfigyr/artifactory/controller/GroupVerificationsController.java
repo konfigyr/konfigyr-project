@@ -1,9 +1,8 @@
-package com.konfigyr.artifactory.ownership.controller;
+package com.konfigyr.artifactory.controller;
 
 import com.konfigyr.artifactory.Owner;
 import com.konfigyr.artifactory.OwnerResolver;
 import com.konfigyr.artifactory.ownership.*;
-import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
@@ -21,13 +20,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @NullMarked
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/namespaces/{namespace}/group-verifications")
-public class GroupVerificationsController {
+class GroupVerificationsController {
 
 	private final GroupVerifications groupVerifications;
 	private final OwnerResolver ownerResolver;
@@ -35,7 +32,7 @@ public class GroupVerificationsController {
 	@GetMapping
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
-	public PagedModel<EntityModel<GroupVerification>> getGroupVerifications(
+	PagedModel<EntityModel<GroupVerification>> getGroupVerifications(
 			@PathVariable String namespace,
 			@Nullable @RequestParam(required = false) String term,
 			@Nullable @RequestParam(required = false) VerificationState state,
@@ -49,70 +46,69 @@ public class GroupVerificationsController {
 				.criteria(GroupVerification.STATE_CRITERIA, state)
 				.build();
 
-		return assembler(namespace).groupVerification().assemble(groupVerifications.findByOwner(owner, query));
+		return Assemblers.groupVerification(owner)
+				.assemble(groupVerifications.findByOwner(owner, query));
 	}
 
 	@GetMapping("/{groupId}")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
-	public EntityModel<GroupVerification> getGroupVerification(@PathVariable String namespace, @PathVariable String groupId) {
+	EntityModel<GroupVerification> getGroupVerification(@PathVariable String namespace, @PathVariable String groupId) {
 		final Owner owner = ownerResolver.resolve(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(owner, groupId)
 				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
-		return assembler(namespace).groupVerification().assemble(verification);
+
+		return Assemblers.groupVerification(owner).assemble(verification);
 	}
 
 	@PostMapping
 	@PreAuthorize("isAdmin(#namespace)")
 	@ResponseStatus(HttpStatus.CREATED)
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
-	public EntityModel<GroupVerification> claim(@PathVariable String namespace, @RequestBody @Validated ClaimRequest request) {
+	EntityModel<GroupVerification> claim(@PathVariable String namespace, @RequestBody @Validated ClaimRequest request) {
 		final Owner owner = ownerResolver.resolve(namespace);
-		final GroupVerification verification = groupVerifications.claim(owner, request.groupId(), request.verificationMethod());
 
-		return assembler(namespace).groupVerification().assemble(verification);
+		return Assemblers.groupVerification(owner)
+				.assemble(groupVerifications.claim(owner, request.groupId(), request.verificationMethod()));
 	}
 
-	@GetMapping("/{verificationId}/verification-challenges")
+	@GetMapping("/{groupId}/challenges")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
-	public CollectionModel<EntityModel<VerificationChallenge>> getVerificationChallenges(@PathVariable String namespace, @PathVariable  EntityId verificationId) {
+	CollectionModel<EntityModel<VerificationChallenge>> getVerificationChallenges(@PathVariable String namespace, @PathVariable String groupId) {
 		final Owner owner = ownerResolver.resolve(namespace);
-		final List<VerificationChallenge> verificationChallenges = groupVerifications.findChallenges(owner, verificationId);
-		return assembler(namespace).verificationChallenge().assemble(verificationChallenges);
-	}
+		final GroupVerification verification = groupVerifications.findByGroupId(owner, groupId)
+				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
 
+		return Assemblers.verificationChallenge(owner, verification)
+				.assemble(groupVerifications.findChallenges(verification));
+	}
 
 	@PostMapping("/{groupId}/verify")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
-	public EntityModel<GroupVerification>  verify(
+	EntityModel<GroupVerification> verify(
 			@PathVariable String namespace,
 			@PathVariable String groupId
 	) {
 		final Owner owner = ownerResolver.resolve(namespace);
-		final GroupVerification updated = groupVerifications.verify(owner, groupId);
-		return assembler(namespace).groupVerification().assemble(updated);
+
+		return Assemblers.groupVerification(owner)
+				.assemble(groupVerifications.verify(owner, groupId));
 	}
 
 	@DeleteMapping("/{groupId}")
 	@PreAuthorize("isAdmin(#namespace)")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
-	public void revoke(@PathVariable String namespace, @PathVariable String groupId) {
+	void revoke(@PathVariable String namespace, @PathVariable String groupId) {
 		final Owner owner = ownerResolver.resolve(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(owner, groupId)
 				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
+
 		groupVerifications.revoke(verification);
 	}
 
-	private GroupVerificationAssembler assembler(String namespace) {
-		return new GroupVerificationAssembler(namespace);
-	}
-
-	public record ClaimRequest(
-			@NotBlank String groupId,
-			@NotNull VerificationMethod verificationMethod) {
-	}
+	record ClaimRequest(@NotBlank String groupId, @NotNull VerificationMethod verificationMethod) { /* noop */ }
 
 }

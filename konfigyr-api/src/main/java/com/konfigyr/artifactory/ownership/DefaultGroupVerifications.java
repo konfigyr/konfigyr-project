@@ -116,14 +116,10 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-challenges")
-	public List<VerificationChallenge> findChallenges(Owner owner, EntityId verificationId) {
+	public List<VerificationChallenge> findChallenges(GroupVerification verification) {
 		return context.select(GROUP_VERIFICATION_CHALLENGES.fields())
 				.from(GROUP_VERIFICATION_CHALLENGES)
-				.join(GROUP_VERIFICATIONS).on(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(GROUP_VERIFICATIONS.ID))
-				.where(DSL.and(
-						GROUP_VERIFICATIONS.ID.eq(verificationId.get()),
-						GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get())
-				))
+				.where(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(verification.id().get()))
 				.orderBy(GROUP_VERIFICATION_CHALLENGES.CREATED_AT.asc())
 				.fetch(DefaultGroupVerifications::toVerificationChallenge);
 	}
