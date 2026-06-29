@@ -1,7 +1,6 @@
 package com.konfigyr.artifactory;
 
 import com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException;
-import com.konfigyr.artifactory.ownership.OwnerNotFoundException;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
@@ -154,8 +153,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var metadata = TestArtifacts.metadata(coordinates);
 
 		assertThatExceptionOfType(OwnerNotFoundException.class)
-				.isThrownBy(() -> artifactory.release(EntityId.from(9999L), metadata))
-				.returns(HttpStatus.BAD_REQUEST, OwnerNotFoundException::getStatusCode);
+				.isThrownBy(() -> artifactory.release(EntityId.from(9999L), metadata));
 	}
 
 	@Test

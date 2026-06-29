@@ -1,6 +1,5 @@
-package com.konfigyr.artifactory.ownership;
+package com.konfigyr.artifactory;
 
-import com.konfigyr.artifactory.ArtifactoryException;
 import com.konfigyr.entity.EntityId;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
@@ -8,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import java.io.Serial;
 
 /**
- * Exception thrown when a namespace owner cannot be resolved from the supplied slug or identifier.
+ * Exception thrown when an Artifact {@link Owner} cannot be resolved.
  *
  * @author Vitalii Kushnir
  * @since 1.0.0
@@ -22,8 +21,8 @@ public class OwnerNotFoundException extends ArtifactoryException {
 		super(HttpStatus.NOT_FOUND, "Could not find an owner with the following name: " + slug);
 	}
 
-	public OwnerNotFoundException(@NonNull HttpStatus status, @NonNull EntityId id) {
-		super(status, "Could not find an owner with the following identifier: " + id);
+	public OwnerNotFoundException(@NonNull EntityId id) {
+		super(HttpStatus.NOT_FOUND, "Could not find an owner with the following identifier: " + id);
 	}
 
 }

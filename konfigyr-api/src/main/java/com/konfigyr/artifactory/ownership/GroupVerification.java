@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
+import com.konfigyr.artifactory.Owner;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.SearchQuery;
 import org.jmolecules.ddd.annotation.AggregateRoot;

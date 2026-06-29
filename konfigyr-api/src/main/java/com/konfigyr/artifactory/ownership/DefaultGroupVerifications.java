@@ -1,5 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
+import com.konfigyr.artifactory.Owner;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
@@ -115,14 +116,10 @@ class DefaultGroupVerifications implements GroupVerifications {
 
 	@Override
 	@Transactional(readOnly = true, label = "group-verifications.find-challenges")
-	public List<VerificationChallenge> findChallenges(Owner owner, EntityId verificationId) {
+	public List<VerificationChallenge> findChallenges(GroupVerification verification) {
 		return context.select(GROUP_VERIFICATION_CHALLENGES.fields())
 				.from(GROUP_VERIFICATION_CHALLENGES)
-				.join(GROUP_VERIFICATIONS).on(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(GROUP_VERIFICATIONS.ID))
-				.where(DSL.and(
-						GROUP_VERIFICATIONS.ID.eq(verificationId.get()),
-						GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get())
-				))
+				.where(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(verification.id().get()))
 				.orderBy(GROUP_VERIFICATION_CHALLENGES.CREATED_AT.asc())
 				.fetch(DefaultGroupVerifications::toVerificationChallenge);
 	}
@@ -299,11 +296,10 @@ class DefaultGroupVerifications implements GroupVerifications {
 	}
 
 	private static GroupVerification toGroupVerification(Record record) {
-		return toGroupVerification(record,
-				Owner.of(
-						EntityId.from(record.get(GROUP_VERIFICATIONS.NAMESPACE_ID)),
-						record.get(NAMESPACES.SLUG)
-				));
+		return toGroupVerification(record, new Owner(
+				record.get(GROUP_VERIFICATIONS.NAMESPACE_ID, EntityId.class),
+				record.get(NAMESPACES.SLUG)
+		));
 	}
 
 	private static GroupVerification toGroupVerification(Record record, Owner owner) {

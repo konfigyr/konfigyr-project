@@ -1,6 +1,6 @@
 package com.konfigyr.artifactory.ownership;
 
-import com.konfigyr.entity.EntityId;
+import com.konfigyr.artifactory.Owner;
 import com.konfigyr.support.SearchQuery;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
@@ -123,11 +123,10 @@ public interface GroupVerifications {
 	 * {@link ChallengeState#EXPIRED}) and the current {@link ChallengeState#UNVERIFIED} challenge,
 	 * if any.
 	 *
-	 * @param owner          the namespace owner
-	 * @param verificationId the verification identifier to look up
+	 * @param verification the verification for which verification challenges are retrieved
 	 * @return the challenge history for the claim, in creation order
 	 */
-	List<VerificationChallenge> findChallenges(Owner owner, EntityId verificationId);
+	List<VerificationChallenge> findChallenges(GroupVerification verification);
 
 	/**
 	 * Submits a new ownership claim for the supplied {@code groupId} on behalf of the namespace.

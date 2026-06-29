@@ -1,7 +1,6 @@
 package com.konfigyr.artifactory;
 
 import com.konfigyr.artifactory.ownership.GroupVerifications;
-import com.konfigyr.artifactory.ownership.OwnerResolver;
 import com.konfigyr.artifactory.store.FileSystemMetadataStore;
 import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.version.Version;
