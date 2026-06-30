@@ -44,6 +44,12 @@ interface FormFields {
   range?: DateRange;
 }
 
+interface AuditRecordFiltersProps {
+  query: AuditRecordQuery;
+  onQueryChange: (query: AuditRecordQuery) => void;
+  debounceMs?: number;
+}
+
 function useFormFields(query: AuditRecordQuery): FormFields {
   return useMemo(() => ({
     entityType: query.entityType || '',
@@ -54,15 +60,12 @@ function useFormFields(query: AuditRecordQuery): FormFields {
   }), [query.entityType, query.from, query.to]);
 }
 
-export function AuditRecordFilters({ query, onQueryChange }: {
-  query: AuditRecordQuery;
-  onQueryChange: (query: AuditRecordQuery) => void;
-}) {
+export function AuditRecordFilters({ query, onQueryChange, debounceMs = 200 }: AuditRecordFiltersProps) {
   const intl = useIntl();
   const form = useForm({
     defaultValues: useFormFields(query),
     listeners: {
-      onChangeDebounceMs: 200,
+      onChangeDebounceMs: debounceMs,
       onChange: ({ formApi }) => formApi.handleSubmit(),
     },
     onSubmit: ({ value }) => {
