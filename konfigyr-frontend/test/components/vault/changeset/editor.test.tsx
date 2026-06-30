@@ -64,6 +64,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
@@ -76,6 +77,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
@@ -93,6 +95,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
@@ -118,6 +121,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
@@ -134,6 +138,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
@@ -152,6 +157,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
@@ -191,13 +197,14 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
     });
 
     expect(result.findByText('konfigyr-frontend'));
-  }, 15000);
+  });
 
   test('should update changeset property value', async () => {
     const result = renderWithQueryClient(
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
@@ -225,6 +232,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
