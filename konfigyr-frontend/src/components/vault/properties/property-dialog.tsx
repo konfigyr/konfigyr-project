@@ -97,8 +97,9 @@ const useConditionalFilter = (
   properties: Array<ServiceCatalogProperty>,
   condition: boolean,
   term?: string,
+  debounceMs = 200,
 ) => {
-  const [debouncedTerm] = useDebounce(term, 200);
+  const [debouncedTerm] = useDebounce(term, debounceMs);
   const cached = useRef<Array<PropertyDescriptor>>([]);
 
   return useMemo(() => {
@@ -129,15 +130,16 @@ const PropertyDescriptorItem = memo(function PropertyDescriptorItemComponent({ p
   );
 });
 
-function PropertyDescriptorInput({ catalog, onChange }: {
+function PropertyDescriptorInput({ catalog, onChange, debounceMs }: {
   catalog: ServiceCatalog,
   onChange: (value: PropertyDescriptor | null) => void,
+  debounceMs?: number,
 }) {
   const [name, onNameChange] = useState('');
   const [selection, onSelectionChange] = useState<PropertyDescriptor | null>(null);
   const [candidate, onCandidateChange] = useState<PropertyDescriptor | null>(null);
 
-  const properties = useConditionalFilter(catalog.properties, !candidate, name);
+  const properties = useConditionalFilter(catalog.properties, !candidate, name, debounceMs);
   const initialProperties = useMemo(() => properties.slice(0, 20), [properties]);
 
   const items = useMemo(() => {
@@ -398,10 +400,11 @@ export function PropertyValueInput<T>({ property, value, onChange, onSubmit, onV
   );
 }
 
-export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
+export function PropertyDialog<T>({ changeset, catalog, onAdd, debounceMs = 200 }: {
   changeset: ChangesetState,
   catalog: ServiceCatalog,
   onAdd: (property: ConfigurationProperty<T>) => void | Promise<unknown>,
+  debounceMs?: number,
 }) {
   const [open, onOpenChange] = useState(false);
   const [value, onValueChange] = useState<ConfigurationPropertyValue<any> | null>(null);
@@ -487,6 +490,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd }: {
             <PropertyDescriptorInput
               catalog={catalog}
               onChange={handleDescriptorChange}
+              debounceMs={debounceMs}
             />
             {!canAdd && (
               <FieldError className="text-xs">

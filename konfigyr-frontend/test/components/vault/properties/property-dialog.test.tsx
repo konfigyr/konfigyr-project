@@ -83,7 +83,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should render the property dialog with the closed state', () => {
     const { getByRole, queryByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     expect(getByRole('button', { name: 'Add property' })).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should open the property dialog with the property search combobox in focus', async () => {
     const { getByRole, queryByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -107,7 +107,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should find a configuration property with simple string type', async () => {
     const { getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -133,7 +133,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should add selected configuration property with the entered value', async () => {
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -183,7 +183,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should add a configuration property with object schema type', async () => {
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -231,7 +231,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
         examples: ['debug', 'error', 'fatal', 'info', 'off', 'trace', 'warn'],
       },
       description: 'Log levels severity mapping. For instance, `logging.level.org.springframework=DEBUG`.',
-      score: 101,
+      score: 11,
       state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'DEBUG', decoded: 'DEBUG' },
     });
@@ -243,7 +243,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should add a configuration property with a complex object schema type', async () => {
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -303,7 +303,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       typeName: 'java.util.Map<java.lang.String,org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientProperties$Registration>',
       schema: { type: 'string' },
       description: 'OAuth client registrations.',
-      score: 100,
+      score: 10,
       state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'client-secret', decoded: 'client-secret' },
     });
@@ -311,11 +311,11 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
     await waitFor(() => {
       expect(queryByRole('dialog')).not.toBeInTheDocument();
     });
-  }, 15000);
+  });
 
   test('should add a configuration property that has no matching descriptor', async () => {
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -359,7 +359,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should disable the Add button without showing an error when the initial value violates schema constraints', async () => {
     const { getAllByRole, getByRole, queryByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -384,7 +384,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should show a validation error after typing an invalid value', async () => {
     const { getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -417,7 +417,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should clear the validation error and enable Add button after correcting the value', async () => {
     const { getAllByRole, getByRole, queryByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -457,7 +457,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should not call onAdd when pressing Enter with an invalid value', async () => {
     const { getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
@@ -489,7 +489,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should enable the Add button for a property whose default value satisfies schema constraints', async () => {
     const { getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     await userEvents.click(getByRole('button', { name: 'Add property' }));
