@@ -14,8 +14,8 @@ import org.springframework.security.core.Authentication;
 import java.util.function.Supplier;
 
 /**
- * Konfigyr method security expression root object which contains {@link com.konfigyr.account.Memberships} Spring
- * Security expression checks.
+ * Konfigyr method security expression root object which contains namespace membership
+ * Spring Security expression checks.
  *
  * @author Vladimir Spasic
  * @since 1.0.0

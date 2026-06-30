@@ -2,8 +2,8 @@
   "groups": [
     {
       "name": "konfigyr.invitations",
-      "type": "com.konfigyr.namespace.Invitations",
-      "sourceType": "com.konfigyr.namespace.Invitations"
+      "type": "com.konfigyr.membership.Invitations",
+      "sourceType": "com.konfigyr.membership.Invitations"
     }
   ],
   "properties": [
@@ -12,7 +12,7 @@
       "type": "java.lang.String",
       "defaultValue": "0 0 * * * *",
       "description": "Specifies the interval of the cleanup job that would remove expired namespace membership invitations. Defaults to every hour.",
-      "sourceType": "com.konfigyr.namespace.Invitations"
+      "sourceType": "com.konfigyr.membership.Invitations"
     },
     {
       "name": "konfigyr.scheduler.cron-expression",

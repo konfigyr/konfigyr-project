@@ -112,7 +112,7 @@ class AccountManagerTest extends AbstractIntegrationTest {
 	void shouldFailToUpdateAccount(PublishedEvents events) {
 		final var john = manager.findById(EntityId.from(1)).orElseThrow();
 		final var updates = Account.builder(john)
-				.firstName(RandomStringUtils.randomAlphanumeric(512))
+				.firstName(RandomStringUtils.secure().nextAlphabetic(512))
 				.build();
 
 		assertThatThrownBy(() -> manager.update(updates))

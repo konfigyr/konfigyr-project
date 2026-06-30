@@ -34,7 +34,7 @@ public abstract sealed class AuthorizationEvent implements Serializable permits
 	 * Create a new {@link AuthorizationEvent} with the {@link OAuth2Authorization} that is the
 	 * subject of the event.
 	 *
-	 * @param authorization the authorisation for which the event is associated, never {@literal null}
+	 * @param authorization the authorization for which the event is associated, never {@literal null}
 	 */
 	protected AuthorizationEvent(@NonNull OAuth2Authorization authorization) {
 		this(authorization.getId());
@@ -44,7 +44,7 @@ public abstract sealed class AuthorizationEvent implements Serializable permits
 	 * Create a new {@link AuthorizationEvent} with the identifier of the {@link OAuth2Authorization}
 	 * that is the subject of the event.
 	 *
-	 * @param id the authorisation identifier for which the event is associated, never {@literal null}
+	 * @param id the authorization identifier for which the event is associated, never {@literal null}
 	 */
 	protected AuthorizationEvent(String id) {
 		Assert.hasText(id, "OAuth2 Authorization identifier cannot be empty");
@@ -88,7 +88,7 @@ public abstract sealed class AuthorizationEvent implements Serializable permits
 		 * Create a new {@link AuthorizationEvent.Stored} with the {@link OAuth2Authorization} that was stored
 		 * by the {@link AuthorizationService}.
 		 *
-		 * @param authorization the stored authorisation, never {@literal null}
+		 * @param authorization the stored authorization, never {@literal null}
 		 */
 		public Stored(@NonNull OAuth2Authorization authorization) {
 			super(authorization);
@@ -105,7 +105,7 @@ public abstract sealed class AuthorizationEvent implements Serializable permits
 		 * Create a new {@link AuthorizationEvent.Revoked} with the {@link OAuth2Authorization} that was removed
 		 * or revoked by the {@link AuthorizationService}.
 		 *
-		 * @param authorization the revoked authorisation, never {@literal null}
+		 * @param authorization the revoked authorization, never {@literal null}
 		 */
 		public Revoked(OAuth2Authorization authorization) {
 			super(authorization);
@@ -115,7 +115,7 @@ public abstract sealed class AuthorizationEvent implements Serializable permits
 		 * Create a new {@link AuthorizationEvent.Revoked} with the identifier of the {@link OAuth2Authorization}
 		 * that was removed or revoked by the {@link AuthorizationService}.
 		 *
-		 * @param id identifier of the revoked authorisation, never {@literal null}
+		 * @param id identifier of the revoked authorization, never {@literal null}
 		 */
 		public Revoked(String id) {
 			super(id);

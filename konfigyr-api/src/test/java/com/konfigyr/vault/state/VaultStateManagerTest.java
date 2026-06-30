@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
 
 class VaultStateManagerTest extends AbstractIntegrationTest {
 
-	static byte[] INVALID_STATE = Base64.decode("/8Cw4py/goA=");
+	static final byte[] INVALID_STATE = Base64.decode("/8Cw4py/goA=");
 
 	@Autowired
 	StateRepositoryFactory stateRepositoryFactory;

@@ -14,6 +14,7 @@ import org.jooq.Converter;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
 import org.jooq.Record;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -46,12 +47,12 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 	}
 
 	@Override
-	public void save(RegisteredClient registeredClient) {
+	public void save(@NonNull RegisteredClient registeredClient) {
 		throw new UnsupportedOperationException("Registering OAuth clients is not supported");
 	}
 
 	@Override
-	public RegisteredClient findById(String registrationId) {
+	public RegisteredClient findById(@NonNull String registrationId) {
 		if (StringUtils.isBlank(registrationId)) {
 			return null;
 		}
@@ -68,7 +69,7 @@ public class RegisteredNamespaceClientRepository implements RegisteredClientRepo
 	}
 
 	@Override
-	public RegisteredClient findByClientId(String clientId) {
+	public RegisteredClient findByClientId(@NonNull String clientId) {
 		if (!NamespaceClientId.isPotentialClientId(clientId)) {
 			return null;
 		}

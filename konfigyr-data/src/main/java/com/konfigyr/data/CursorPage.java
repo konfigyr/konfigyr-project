@@ -87,7 +87,7 @@ public interface CursorPage<T> extends Streamable<T> {
 	/**
 	 * Creates a {@link CursorPage} containing a result set with full bidirectional navigation metadata.
 	 * <p>
-	 * This is the primary factory method for creating the full cursor page page, providing the current state
+	 * This is the primary factory method for creating the full cursor page, providing the current state
 	 * of the timeline along with <i>bookmarks</i> to navigate both forward to newer events and backward to
 	 * historical states.
 	 *

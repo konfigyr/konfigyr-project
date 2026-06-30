@@ -318,12 +318,6 @@ class ChangeHistoryServiceTest extends AbstractIntegrationTest {
 				.returns(6, CursorPage::size)
 				.returns(false, CursorPage::hasNext)
 				.returns(false, CursorPage::hasPrevious);
-
-//		assertThat(page)
-//				.hasSize(7)
-//				.extracting(ChangeHistory::id)
-//				.containsExactly("last-revision", "sixth-revision", "fifth-revision",
-//						"fourth-revision", "third-revision", "second-revision", "first-revision");
 	}
 
 	@Test
