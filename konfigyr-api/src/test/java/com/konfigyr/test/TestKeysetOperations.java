@@ -1,7 +1,6 @@
 package com.konfigyr.test;
 
 import com.google.crypto.tink.*;
-import com.google.crypto.tink.ProtoKeySerialization;
 import com.google.crypto.tink.aead.AeadConfig;
 import com.google.crypto.tink.aead.AesGcmKey;
 import com.google.crypto.tink.aead.AesGcmParameters;

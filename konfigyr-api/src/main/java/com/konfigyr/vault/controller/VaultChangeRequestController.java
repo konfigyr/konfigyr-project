@@ -29,8 +29,8 @@ import java.util.List;
 @RequestMapping("/namespaces/{namespace}/services/{service}")
 class VaultChangeRequestController extends AbstractVaultController {
 
-	ChangeRequestManager manager;
-	VaultAccessor accessor;
+	private final ChangeRequestManager manager;
+	private final VaultAccessor accessor;
 
 	VaultChangeRequestController(
 			NamespaceManager namespaces,

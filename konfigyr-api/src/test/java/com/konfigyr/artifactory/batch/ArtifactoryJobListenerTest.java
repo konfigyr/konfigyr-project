@@ -19,8 +19,6 @@ import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.assertArg;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

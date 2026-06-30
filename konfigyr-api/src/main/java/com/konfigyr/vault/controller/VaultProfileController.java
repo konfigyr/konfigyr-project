@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/namespaces/{namespace}/services/{service}")
 class VaultProfileController extends AbstractVaultController {
 
-	VaultAccessor accessor;
+	private final VaultAccessor accessor;
 
 	VaultProfileController(NamespaceManager namespaces, Services services, ProfileManager profiles, VaultAccessor accessor) {
 		super(namespaces, profiles, services);

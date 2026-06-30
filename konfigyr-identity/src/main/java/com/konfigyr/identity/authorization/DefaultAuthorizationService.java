@@ -183,7 +183,7 @@ class DefaultAuthorizationService implements AuthorizationService {
 	@Override
 	@Transactional(readOnly = true, label = "authorization-service.find-authorization-by-id")
 	@Observed(name = "konfigyr.identity.authorization.lookup", lowCardinalityKeyValues = { "lookup.type", "identifier" })
-	public OAuth2Authorization findById(String id) {
+	public OAuth2Authorization findById(@NonNull String id) {
 		Assert.hasText(id, "OAuth2 Authorization identifier cannot be empty");
 
 		log.debug("Looking up OAuth2 Authorization with identifier: {}", id);
@@ -194,7 +194,7 @@ class DefaultAuthorizationService implements AuthorizationService {
 	@Override
 	@Transactional(readOnly = true, label = "authorization-service.find-authorization-by-token")
 	@Observed(name = "konfigyr.identity.authorization.lookup", lowCardinalityKeyValues = { "lookup.type", "token" })
-	public OAuth2Authorization findByToken(String token, @Nullable OAuth2TokenType type) {
+	public OAuth2Authorization findByToken(@NonNull String token, @Nullable OAuth2TokenType type) {
 		Assert.hasText(token, "OAuth2 Authorization token value cannot be empty");
 
 		final Condition condition;
@@ -231,7 +231,7 @@ class DefaultAuthorizationService implements AuthorizationService {
 	@Override
 	@Observed(name = "konfigyr.identity.consent.lookup")
 	@Transactional(readOnly = true, label = "authorization-service.find-consent-by-id")
-	public OAuth2AuthorizationConsent findById(String registeredClientId, String principalName) {
+	public OAuth2AuthorizationConsent findById(@NonNull String registeredClientId, @NonNull String principalName) {
 		Assert.hasText(registeredClientId, "Registered client identifier cannot be empty");
 		Assert.hasText(principalName, "Principal name cannot be empty");
 

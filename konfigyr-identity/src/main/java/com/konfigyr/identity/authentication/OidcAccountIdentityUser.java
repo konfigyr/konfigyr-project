@@ -1,6 +1,7 @@
 package com.konfigyr.identity.authentication;
 
 import lombok.Value;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.FactorGrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -35,6 +36,7 @@ class OidcAccountIdentityUser implements AccountIdentityUser, OidcUser {
 		this.authorities = Collections.unmodifiableCollection(authorities);
 	}
 
+	@NonNull
 	@Override
 	public Map<String, Object> getClaims() {
 		return delegate.getClaims();
@@ -45,11 +47,13 @@ class OidcAccountIdentityUser implements AccountIdentityUser, OidcUser {
 		return delegate.getUserInfo();
 	}
 
+	@NonNull
 	@Override
 	public OidcIdToken getIdToken() {
 		return delegate.getIdToken();
 	}
 
+	@NonNull
 	@Override
 	public Map<String, Object> getAttributes() {
 		return delegate.getAttributes();

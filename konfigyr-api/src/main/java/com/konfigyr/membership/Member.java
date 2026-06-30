@@ -24,7 +24,7 @@ import java.time.ZoneOffset;
  * <p>
  * When the {@link Namespace} is created, the {@link com.konfigyr.account.Account} that creates is
  * automatically added as an {@link NamespaceRole#ADMIN administrator} of the namespace. Additional
- * members can be invited to a {@link Namespace} by the administrators if the selected licence supports it.
+ * members can be invited to a {@link Namespace} by the administrators if the selected license supports it.
  * <p>
  * When managing {@link Member namespace members} it is important to highlight that there must be at least
  * one administrator member in the {@link Namespace}. Leaving a {@link Namespace} without an administrator can

@@ -128,7 +128,7 @@ public record Invitation(
 	 * <p>
 	 * The recipient may or may not have an existing {@link com.konfigyr.account.Account} at the time
 	 * the {@link Invite} is sent. When an account is found for the recipient email, the identifier and
-	 * name are populated. Otherwise only the email address is known.
+	 * name are populated. Otherwise, only the email address is known.
 	 *
 	 * @param id    entity identifier of the recipient account, can be {@literal null} when no account
 	 *              exists for the recipient email

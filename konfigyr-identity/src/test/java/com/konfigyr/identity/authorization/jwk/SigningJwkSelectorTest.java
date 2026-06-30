@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class SigningJwkSelectorTest {
 
-	SigningJwkSelector selector = SigningJwkSelector.getInstance();
+	final SigningJwkSelector selector = SigningJwkSelector.getInstance();
 
 	@Test
 	@DisplayName("should return null when no keys are defined")

@@ -11,7 +11,7 @@ import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
 /**
- * Konfigyr web security expression root object which contains {@link com.konfigyr.account.Memberships} Spring
+ * Konfigyr web security expression root object which contains namespace memberships Spring
  * Security expression checks.
  *
  * @author Vladimir Spasic
