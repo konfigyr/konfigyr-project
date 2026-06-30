@@ -331,7 +331,7 @@ public class ChangeRequestManager {
 			record.set(VAULT_CHANGE_REQUESTS.DESCRIPTION, command.description().value());
 		}
 
-		if (record.changed()) {
+		if (record.touched()) {
 			record.set(VAULT_CHANGE_REQUESTS.UPDATED_AT, OffsetDateTime.now());
 		}
 
