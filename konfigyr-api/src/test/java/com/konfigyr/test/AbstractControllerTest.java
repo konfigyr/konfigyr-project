@@ -74,7 +74,7 @@ public abstract class AbstractControllerTest extends AbstractIntegrationTest {
 	final void registerSigningKeyStub() {
 		final JWK key = KeyGenerator.getInstance().get();
 
-		stubFor(
+		wiremock.stubFor(
 				get(urlPathEqualTo("/oauth/jwks"))
 						.willReturn(jsonResponse(
 								new JWKSet(key).toString(true), 200
