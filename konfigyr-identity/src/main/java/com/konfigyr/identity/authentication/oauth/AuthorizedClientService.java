@@ -86,7 +86,10 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 	@SuppressWarnings("unchecked")
 	@Observed(name = "konfigyr.identity.access-tokens.lookup")
 	@Transactional(readOnly = true, label = "oauth-client-service-load")
-	public <T extends OAuth2AuthorizedClient> T loadAuthorizedClient(String clientRegistrationId, String principalName) {
+	public <T extends OAuth2AuthorizedClient> T loadAuthorizedClient(
+			@NonNull String clientRegistrationId,
+			@NonNull String principalName
+	) {
 		final EntityId account;
 
 		try {
@@ -126,7 +129,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 	@Override
 	@Transactional(label = "oauth-client-service-save")
 	@Observed(name = "konfigyr.identity.access-tokens.store")
-	public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
+	public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, @NonNull Authentication principal) {
 		final EntityId account = lookupUserIdentifierForAuthentication(principal);
 
 		final ClientRegistration registration = authorizedClient.getClientRegistration();
@@ -150,7 +153,7 @@ public class AuthorizedClientService implements OAuth2AuthorizedClientService {
 	@Override
 	@Transactional(label = "oauth-client-service-remove")
 	@Observed(name = "konfigyr.identity.access-tokens.remove")
-	public void removeAuthorizedClient(String clientRegistrationId, String principalName) {
+	public void removeAuthorizedClient(@NonNull String clientRegistrationId, @NonNull String principalName) {
 		final EntityId account = EntityId.from(principalName);
 
 		log.info(MARKER, "Removing OAuth access token for [client={}, account={}]", clientRegistrationId, account);

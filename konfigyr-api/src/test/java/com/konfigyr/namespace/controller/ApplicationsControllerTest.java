@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 public class ApplicationsControllerTest extends AbstractControllerTest {

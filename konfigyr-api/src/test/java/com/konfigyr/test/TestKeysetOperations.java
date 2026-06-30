@@ -5,7 +5,6 @@ import com.google.crypto.tink.aead.AeadConfig;
 import com.google.crypto.tink.aead.AesGcmKey;
 import com.google.crypto.tink.aead.AesGcmParameters;
 import com.google.crypto.tink.internal.MutableSerializationRegistry;
-import com.google.crypto.tink.internal.ProtoKeySerialization;
 import com.google.crypto.tink.proto.KeyData;
 import com.google.crypto.tink.util.SecretBytes;
 import com.konfigyr.crypto.*;
@@ -84,11 +83,11 @@ public final class TestKeysetOperations {
 					.from("test-kek", secret);
 
 			final ProtoKeySerialization serialization = MutableSerializationRegistry.globalInstance()
-					.serializeKey(key, ProtoKeySerialization.class, InsecureSecretKeyAccess.get());
+					.serializeKey(key, InsecureSecretKeyAccess.get());
 
 			final KeyData data = KeyData.newBuilder()
 					.setTypeUrl(serialization.getTypeUrl())
-					.setKeyMaterialType(serialization.getKeyMaterialType())
+					.setKeyMaterialType(KeyData.KeyMaterialType.valueOf(serialization.getKeyMaterialType().toString()))
 					.setValue(serialization.getValue())
 					.build();
 

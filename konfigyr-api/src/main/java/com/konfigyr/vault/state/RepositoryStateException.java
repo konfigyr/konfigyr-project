@@ -83,8 +83,8 @@ public class RepositoryStateException extends RuntimeException {
 		INVALID_STATE,
 
 		/**
-		 * Error code that is used when the configiration state that is stored in the {@link StateRepository}
-		 * can not be encoded or decoded. This could means that the repository is in a corrupted state and
+		 * Error code that is used when the configuration state that is stored in the {@link StateRepository}
+		 * can not be encoded or decoded. This could mean that the repository is in a corrupted state and
 		 * should be repaired.
 		 */
 		CORRUPTED_STATE,

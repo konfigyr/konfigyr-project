@@ -2,6 +2,7 @@ package com.konfigyr.identity.authorization.client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -31,17 +32,17 @@ public final class DelegatingRegisteredClientRepository implements RegisteredCli
 	}
 
 	@Override
-	public void save(RegisteredClient registeredClient) {
+	public void save(@NonNull RegisteredClient registeredClient) {
 		// this is a noop, since we don't support registering OAuth clients
 	}
 
 	@Override
-	public RegisteredClient findById(String id) {
+	public RegisteredClient findById(@NonNull String id) {
 		return lookup(RegisteredClientRepository::findById, id);
 	}
 
 	@Override
-	public RegisteredClient findByClientId(String clientId) {
+	public RegisteredClient findByClientId(@NonNull String clientId) {
 		return lookup(RegisteredClientRepository::findByClientId, clientId);
 	}
 

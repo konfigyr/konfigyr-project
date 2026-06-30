@@ -17,10 +17,10 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class StateRepositoryEventListener {
 
-	static Marker INITIALIZED = MarkerFactory.getMarker("STATE_REPOSITORY_INITIALIZED");
-	static Marker DESTROYED = MarkerFactory.getMarker("STATE_REPOSITORY_DESTROYED");
-	static Marker PROFILE_CREATED = MarkerFactory.getMarker("STATE_REPOSITORY_PROFILE_CREATED");
-	static Marker PROFILE_DELETED = MarkerFactory.getMarker("STATE_REPOSITORY_PROFILE_DELETED");
+	static final Marker INITIALIZED = MarkerFactory.getMarker("STATE_REPOSITORY_INITIALIZED");
+	static final Marker DESTROYED = MarkerFactory.getMarker("STATE_REPOSITORY_DESTROYED");
+	static final Marker PROFILE_CREATED = MarkerFactory.getMarker("STATE_REPOSITORY_PROFILE_CREATED");
+	static final Marker PROFILE_DELETED = MarkerFactory.getMarker("STATE_REPOSITORY_PROFILE_DELETED");
 
 	private final Services services;
 	private final StateRepositoryFactory factory;

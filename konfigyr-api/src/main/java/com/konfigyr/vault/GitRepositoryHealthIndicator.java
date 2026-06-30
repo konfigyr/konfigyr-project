@@ -14,7 +14,7 @@ import java.nio.file.Path;
 @RequiredArgsConstructor
 class GitRepositoryHealthIndicator extends AbstractHealthIndicator {
 
-	static DataUnit[] DATA_UNITS = {
+	static final DataUnit[] DATA_UNITS = {
 			DataUnit.KILOBYTES,
 			DataUnit.MEGABYTES,
 			DataUnit.GIGABYTES,
