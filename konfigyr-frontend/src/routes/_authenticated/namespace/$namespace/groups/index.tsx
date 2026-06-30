@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { useCallback } from 'react';
 import { PlusIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useGetGroupVerifications, useNamespace } from '@konfigyr/hooks';
 import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button, buttonVariants } from '@konfigyr/components/ui/button';
 import { GroupVerificationFilters } from '@konfigyr/components/groups/group-verification-filters';
 import { GroupVerificationTable } from '@konfigyr/components/groups/group-verification-table';
 
@@ -54,13 +54,19 @@ function RouteComponent() {
             onQueryChange={onQueryChange}
           />
 
-          <Button>
-            <PlusIcon data-icon="inline-start" />
-            <FormattedMessage
-              defaultMessage="Claim a groupId"
-              description="Label of the button that starts a new group verification claim."
-            />
-          </Button>
+          <Link
+            to="/namespace/$namespace/groups/create"
+            params={{ namespace: namespace.slug }}
+            className={buttonVariants({ variant: 'ghost' })}
+          >
+            <Button>
+              <PlusIcon data-icon="inline-start" />
+              <FormattedMessage
+                defaultMessage="Claim a groupId"
+                description="Label of the button that starts a new group verification claim."
+              />
+            </Button>
+          </Link>
         </div>
 
         <GroupVerificationTable
