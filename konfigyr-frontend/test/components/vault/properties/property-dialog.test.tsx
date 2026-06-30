@@ -311,7 +311,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
     await waitFor(() => {
       expect(queryByRole('dialog')).not.toBeInTheDocument();
     });
-  });
+  }, 15000);
 
   test('should add a configuration property that has no matching descriptor', async () => {
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((

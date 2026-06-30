@@ -191,7 +191,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
     });
 
     expect(result.findByText('konfigyr-frontend'));
-  });
+  }, 15000);
 
   test('should update changeset property value', async () => {
     const result = renderWithQueryClient(

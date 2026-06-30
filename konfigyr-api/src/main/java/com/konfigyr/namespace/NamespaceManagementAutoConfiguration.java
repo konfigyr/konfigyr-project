@@ -1,5 +1,6 @@
 package com.konfigyr.namespace;
 
+import com.konfigyr.artifactory.OwnerResolver;
 import com.konfigyr.feature.FeatureDefinition;
 import com.konfigyr.feature.FeatureDefinitionConfigurer;
 import com.konfigyr.namespace.catalog.ServiceCatalogSource;
@@ -50,6 +51,11 @@ public class NamespaceManagementAutoConfiguration implements FeatureDefinitionCo
 	@ConditionalOnMissingBean(Services.class)
 	Services defaultNamespaceServices(NamespaceManager namespaces, ServiceCatalogSource catalogSource) {
 		return new DefaultServices(context, namespaces, catalogSource, applicationEventPublisher);
+	}
+
+	@Bean
+	OwnerResolver namespaceOwnerResolver(NamespaceManager namespaces) {
+		return new NamespaceOwnerResolver(namespaces);
 	}
 
 }
