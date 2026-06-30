@@ -1,6 +1,9 @@
 package com.konfigyr.security.oauth;
 
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.security.AuthenticatedPrincipal;
+import com.konfigyr.security.KonfigyrClaimNames;
+import com.konfigyr.security.NamespacedPrincipal;
 import com.konfigyr.security.PrincipalType;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -22,7 +25,7 @@ import java.util.Optional;
 @ToString(of = { "subject", "type" })
 @EqualsAndHashCode(of = { "subject", "type" })
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-final class OAuthAuthenticatedPrincipal implements AuthenticatedPrincipal {
+final class OAuthAuthenticatedPrincipal implements AuthenticatedPrincipal, NamespacedPrincipal {
 
 	@Serial
 	private static final long serialVersionUID = 8120423946731900333L;
@@ -53,6 +56,13 @@ final class OAuthAuthenticatedPrincipal implements AuthenticatedPrincipal {
 	@Override
 	public Optional<String> getDisplayName() {
 		return Optional.ofNullable(jwt.getClaimAsString(StandardClaimNames.NAME));
+	}
+
+	@NonNull
+	@Override
+	public Optional<EntityId> getNamespaceId() {
+		return Optional.ofNullable(jwt.getClaimAsString(KonfigyrClaimNames.NAMESPACE))
+				.map(EntityId::from);
 	}
 
 }

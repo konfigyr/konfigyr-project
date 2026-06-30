@@ -36,6 +36,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: latest
+          cache: npm
+          cache-dependency-path: |
+            konfigyr-frontend/package-lock.json
+            konfigyr-identity/package-lock.json
 
       - name: Build
         env:
@@ -76,6 +80,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: latest
+          cache: npm
+          cache-dependency-path: |
+            konfigyr-frontend/package-lock.json
+            konfigyr-identity/package-lock.json
 
       - name: Publish
         env:

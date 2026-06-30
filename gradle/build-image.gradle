@@ -1,9 +1,7 @@
 apply plugin: 'org.springframework.boot'
 
 tasks.named('bootBuildImage') {
-    imageName = nightly
-            .map { it ? 'latest' : project.version.toString() }
-            .map { "konfigyr/${project.name}:${it}" }
+    imageName = dockerImageTag
 
     docker {
         publishRegistry {

@@ -1,21 +1,32 @@
 plugins {
     id 'io.freefair.lombok' version '9.5.0' apply false
-    id 'org.springframework.boot' version '4.0.6' apply false
+    id 'org.springframework.boot' version '4.1.0' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
 subprojects {
-    /* Resolves to true when running inside GitHub Actions (CI=true is set automatically by the runner).
-     * Used to switch between npm install strategies and test commands appropriate for CI vs local development. */
-    ext.ci = providers.environmentVariable('CI')
-            .map { Boolean.parseBoolean(it) }
-            .orElse(false)
+    ext {
+        def projectName = project.name
+        def projectVersion = String.valueOf(project.version)
 
-    /* Resolves to true when the NIGHTLY environment variable is set, used to determine whether
-     * Docker images should be tagged as 'latest' or with the project version. */
-    ext.nightly = providers.environmentVariable('NIGHTLY')
-            .map { Boolean.parseBoolean(it) }
-            .orElse(false)
+        /* Resolves to true when running inside GitHub Actions (CI=true is set automatically by the runner).
+        * Used to switch between npm install strategies and test commands appropriate for CI vs local development. */
+        ci = providers.environmentVariable('CI')
+                .map { Boolean.parseBoolean(it) }
+                .orElse(false)
+
+        /* Resolves to true when the NIGHTLY environment variable is set, used to determine whether
+         * Docker images should be tagged as 'latest' or with the project version. */
+        nightly = providers.environmentVariable('NIGHTLY')
+                .map { Boolean.parseBoolean(it) }
+                .orElse(false)
+
+        /* Resolves to the full Docker image name including tag. When NIGHTLY=true the image is tagged as
+        * 'latest', otherwise the project version is used (e.g. konfigyr/konfigyr-frontend:1.0.0). */
+        dockerImageTag = nightly
+                .map { it ? 'latest' : projectVersion }
+                .map { "konfigyr/${projectName}:${it}" }
+    }
 
     apply plugin: 'idea'
     apply plugin: 'java'

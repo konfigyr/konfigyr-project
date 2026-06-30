@@ -15,12 +15,6 @@ docker {
     }
 }
 
-/* Resolves to the full Docker image name including tag. When NIGHTLY=true the image is tagged as
- * 'latest', otherwise the project version is used (e.g. konfigyr/konfigyr-frontend:1.0.0). */
-def dockerImageTag = nightly
-        .map { it ? 'latest' : project.version.toString() }
-        .map { "konfigyr/${project.name}:${it}" }
-
 node {
     npmCommand = String.valueOf(getProperty('node.npm'))
 
@@ -40,7 +34,8 @@ tasks.register('npmBuild', NpmTask) {
     inputs.dir('src')
     inputs.dir('messages')
     inputs.dir('public')
-    inputs.dir(fileTree('node_modules').exclude('.cache'))
+
+    outputs.cacheIf { true }
 
     /* mark the dist as the output directory */
     outputs.dir(project.layout.buildDirectory.dir('.output'))
