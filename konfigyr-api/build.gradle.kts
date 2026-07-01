@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.spring.boot)
 }
 
+val extension = the<KonfigyrBuildExtension>()
+
 dependencies {
     implementation(project(":konfigyr-core"))
     implementation(project(":konfigyr-data"))
@@ -55,7 +57,7 @@ springBoot {
 }
 
 tasks.named<BootBuildImage>("bootBuildImage") {
-    imageName.set(the<KonfigyrBuildExtension>().dockerImageTag)
+    imageName.set(extension.dockerImageTag)
 
     docker {
         publishRegistry {

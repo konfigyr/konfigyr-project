@@ -9,7 +9,6 @@ plugins {
     java
     alias(libs.plugins.lombok)      apply false
     alias(libs.plugins.spring.boot) apply false
-    id("io.spring.dependency-management") version "1.1.7" apply false
 }
 
 // Capture the catalog at root level so it is accessible as a closed-over variable
