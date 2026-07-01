@@ -33,7 +33,7 @@ dependencies {
     implementation(libs.commonmark.tasklist)
     implementation(libs.owasp.sanitizer)
 
-    implementation("org.bouncycastle:bcprov-jdk18on")
+    implementation(libs.bouncy.castle.provider)
 
     implementation(libs.jgit)
 
@@ -44,8 +44,8 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     testImplementation(project(":konfigyr-test"))
-    testImplementation("com.icegreen:greenmail")
-    testImplementation("org.wiremock.integrations:wiremock-spring-boot")
+    testImplementation(libs.greenmail)
+    testImplementation(libs.wiremock)
     testImplementation("org.springframework.boot:spring-boot-starter-batch-jdbc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-micrometer-metrics-test")
 }

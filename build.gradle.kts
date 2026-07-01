@@ -18,16 +18,28 @@ subprojects {
     val projectName = project.name
     val projectVersion = project.version.toString()
 
+    /**
+     * Resolves to true when running inside GitHub Actions (CI=true is set automatically by the runner).
+     * Used to switch between npm install strategies and test commands appropriate for CI vs local development.
+     */
     val ci = providers.environmentVariable("CI")
         .map { it.toBoolean() }
         .orElse(false)
     extra["ci"] = ci
 
+    /**
+     * Resolves to true when the NIGHTLY environment variable is set, used to determine whether
+     * Docker images should be tagged as 'latest' or with the project version.
+     */
     val nightly = providers.environmentVariable("NIGHTLY")
         .map { it.toBoolean() }
         .orElse(false)
     extra["nightly"] = nightly
 
+    /**
+     * Resolves to the full Docker image name including tag. When NIGHTLY=true the image is tagged as
+     * 'latest', otherwise the project version is used (e.g. konfigyr/konfigyr-frontend:1.0.0).
+     */
     val dockerImageTag = nightly
         .map { if (it) "latest" else projectVersion }
         .map { "konfigyr/$projectName:$it" }
@@ -67,26 +79,18 @@ subprojects {
         // Apply BOMs to annotation processor classpath so processors can be resolved without versions
         "annotationProcessor"(platform(catalog.spring.boot.bom))
 
+        // Version constraints for libraries that appear only as transitive dependencies and
+        // are never directly referenced in subproject build files. Direct dependencies must
+        // use libs.<alias> instead so their version is visible at the call site.
         constraints {
-            "implementation"(catalog.bouncy.castle.provider)
-            "implementation"(catalog.bouncy.castle.pkix)
-            "implementation"(catalog.jsoup)
-            "implementation"(catalog.greenmail)
-            "implementation"(catalog.wiremock)
+            // Pulled in transitively by testcontainers; pinned to suppress CVE alerts.
             "implementation"(catalog.commons.compress)
+            // Pulled in transitively by the checkstyle tool JVM; pinned to suppress CVE alerts.
             "implementation"(catalog.guava)
-            "implementation"(catalog.commonmark.core)
-            "implementation"(catalog.commonmark.autolink)
-            "implementation"(catalog.commonmark.strikethrough)
-            "implementation"(catalog.commonmark.tasklist)
-            "implementation"(catalog.owasp.sanitizer)
-            "implementation"(catalog.jgit)
         }
 
         "annotationProcessor"("org.springframework.boot:spring-boot-autoconfigure-processor")
         "annotationProcessor"("org.springframework.boot:spring-boot-configuration-processor")
-
-        "implementation"("com.github.spotbugs:spotbugs-annotations:4.10.2")
 
         "testImplementation"("org.springframework.boot:spring-boot-starter-test")
         "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
@@ -100,7 +104,9 @@ subprojects {
         }
     }
 
-    tasks.withType<Test>().configureEach { useJUnitPlatform() }
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+    }
 
     tasks.withType<JavaCompile>().configureEach {
         options.compilerArgs.add("-parameters")

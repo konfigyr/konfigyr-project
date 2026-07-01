@@ -6,7 +6,7 @@ dependencies {
     compileOnly(project(":konfigyr-core"))
 
     compileOnly(libs.konfigyr.mail.api)
-    compileOnly("com.icegreen:greenmail")
+    compileOnly(libs.greenmail)
 
     compileOnly("org.springframework.boot:spring-boot-starter-webmvc-test")
     compileOnly("org.springframework.boot:spring-boot-starter-micrometer-metrics-test")
@@ -28,7 +28,7 @@ dependencies {
     api("org.testcontainers:testcontainers-postgresql")
 
     testImplementation(project(":konfigyr-core"))
-    testImplementation("com.icegreen:greenmail")
+    testImplementation(libs.greenmail)
     testImplementation(libs.konfigyr.mail.api)
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.security:spring-security-oauth2-core")

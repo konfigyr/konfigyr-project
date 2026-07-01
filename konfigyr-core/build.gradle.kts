@@ -33,5 +33,5 @@ dependencies {
     testImplementation("org.liquibase:liquibase-core")
     testImplementation("org.postgresql:postgresql")
 
-    testImplementation("org.bouncycastle:bcpkix-jdk18on")
+    testImplementation(libs.bouncy.castle.pkix)
 }

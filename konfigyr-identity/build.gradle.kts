@@ -37,7 +37,7 @@ dependencies {
 
     implementation("com.konfigyr:konfigyr-crypto-jose")
 
-    implementation("org.bouncycastle:bcprov-jdk18on")
+    implementation(libs.bouncy.castle.provider)
 
     implementation("org.liquibase:liquibase-core")
     implementation("org.postgresql:postgresql")
@@ -47,7 +47,7 @@ dependencies {
 
     testImplementation(project(":konfigyr-test"))
     testImplementation("org.seleniumhq.selenium:htmlunit3-driver")
-    testImplementation("org.wiremock.integrations:wiremock-spring-boot")
+    testImplementation(libs.wiremock)
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 }
 

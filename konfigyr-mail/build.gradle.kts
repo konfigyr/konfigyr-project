@@ -12,6 +12,6 @@ dependencies {
     api("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
 
     testImplementation(project(":konfigyr-test"))
-    testImplementation("com.icegreen:greenmail")
-    testImplementation("org.jsoup:jsoup")
+    testImplementation(libs.greenmail)
+    testImplementation(libs.jsoup)
 }
