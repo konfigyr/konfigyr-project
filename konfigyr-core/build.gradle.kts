@@ -21,10 +21,10 @@ dependencies {
     api("com.google.crypto.tink:tink:1.22.0")
     implementation("com.konfigyr:konfigyr-crypto-jdbc")
 
-    api("com.github.slugify:slugify:4.0.0")
-    implementation("com.ibm.icu:icu4j:78.3")
+    api(libs.slugify)
+    implementation(libs.icu4j)
 
-    api("io.hypersistence:hypersistence-tsid:2.1.4")
+    api(libs.hypersistence.tsid)
 
     api("commons-codec:commons-codec")
 

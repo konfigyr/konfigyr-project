@@ -15,6 +15,9 @@ guava                = "33.6.0-jre"
 commonmark           = "0.29.0"
 owasp-sanitizer      = "20260313.1"
 jgit                 = "7.7.0.202606012155-r"
+slugify              = "4.0.0"
+icu4j                = "78.3"
+hypersistence-tsid   = "2.1.4"
 node-gradle          = "7.1.0"
 bmuschko-docker      = "10.0.0"
 studer-jooq          = "10.2.1"
@@ -39,6 +42,9 @@ commonmark-strikethrough = { group = "org.commonmark",                          
 commonmark-tasklist      = { group = "org.commonmark",                                   name = "commonmark-ext-task-list-items",        version.ref = "commonmark" }
 owasp-sanitizer          = { group = "com.googlecode.owasp-java-html-sanitizer",         name = "owasp-java-html-sanitizer",            version.ref = "owasp-sanitizer" }
 jgit                     = { group = "org.eclipse.jgit",                                 name = "org.eclipse.jgit",                     version.ref = "jgit" }
+slugify                  = { group = "com.github.slugify",                               name = "slugify",                              version.ref = "slugify" }
+icu4j                    = { group = "com.ibm.icu",                                      name = "icu4j",                                version.ref = "icu4j" }
+hypersistence-tsid       = { group = "io.hypersistence",                                 name = "hypersistence-tsid",                   version.ref = "hypersistence-tsid" }
 
 [plugins]
 spring-boot     = { id = "org.springframework.boot",        version.ref = "spring-boot" }
