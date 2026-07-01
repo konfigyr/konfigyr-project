@@ -52,9 +52,17 @@ abstract class NpmExec @Inject constructor(
 
     @TaskAction
     fun run() {
+		val command = listOf<String>(executable.get()) + args.get()
+
+		if (logger.isDebugEnabled) {
+			logger.debug("Running NPM exec task with: [executable={}, args={}, command={}]",
+				executable.get(), args.get(), command)
+		}
+
         execOperations.exec {
-            commandLine(listOf(this@NpmExec.executable.get()) + this@NpmExec.args.get())
+            commandLine(command)
         }
+
         outputFile.orNull?.asFile?.writeText("ok")
     }
 }
