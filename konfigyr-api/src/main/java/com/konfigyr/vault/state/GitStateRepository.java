@@ -38,8 +38,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static com.konfigyr.vault.state.RepositoryStateException.ErrorCode.*;
-import static com.konfigyr.vault.state.RepositoryStateException.ErrorCode.INVALID_STATE;
-import static com.konfigyr.vault.state.RepositoryStateException.ErrorCode.UNAVAILABLE;
 
 /**
  * Implementation of a {@link StateRepository} that uses a high-performance, low-level service for managing

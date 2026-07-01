@@ -21,7 +21,6 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
@@ -40,17 +39,19 @@ final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext>
 		// always use PS256 for signing the JWS
 		context.getJwsHeader().algorithm(SIGNING_ALGORITHM);
 
+		final Authentication authentication = context.getPrincipal();
+
 		if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
 			context.getClaims().audience(audiences);
 
-			Optional.ofNullable(context.getRegisteredClient())
-					.map(RegisteredClient::getClientId)
-					.flatMap(NamespaceClientId::tryParse)
-					.map(NamespaceClientId::namespace)
-					.map(EntityId::serialize)
-					.ifPresent(namespace -> context.getClaims().claim(KonfigyrClaimNames.NAMESPACE, namespace));
+			if (authentication instanceof OAuth2ClientAuthenticationToken client && client.getRegisteredClient() != null) {
+				NamespaceClientId.tryParse(client.getRegisteredClient().getClientId())
+						.map(NamespaceClientId::namespace)
+						.map(EntityId::serialize)
+						.ifPresent(namespace -> context.getClaims().claim(KonfigyrClaimNames.NAMESPACE, namespace));
+			}
 
-			final Authentication authentication = context.getPrincipal();
+
 			final Set<String> authorizedScopes = context.getAuthorizedScopes();
 
 			if (authentication.getPrincipal() instanceof AccountIdentityUser user) {
@@ -67,7 +68,6 @@ final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext>
 		}
 
 		if (ID_TOKEN_TOKEN_TYPE.equals(context.getTokenType())) {
-			final Authentication authentication = context.getPrincipal();
 
 			if (authentication.getPrincipal() instanceof AccountIdentityUser user) {
 				customizeIdToken(user.getAccountIdentity(), context.getClaims());

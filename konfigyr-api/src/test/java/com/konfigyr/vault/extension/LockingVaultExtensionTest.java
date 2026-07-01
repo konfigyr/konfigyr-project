@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 
 class LockingVaultExtensionTest {
 
-	LockingVaultExtension extension = new LockingVaultExtension();
+	final LockingVaultExtension extension = new LockingVaultExtension();
 
 	@Test
 	@DisplayName("should acquire and release lock")

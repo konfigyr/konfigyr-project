@@ -36,7 +36,7 @@ public abstract sealed class AuthorizationConsentEvent implements Serializable p
 	 * Create a new {@link AuthorizationConsentEvent} with the {@link OAuth2AuthorizationConsent} that is the
 	 * subject of the event.
 	 *
-	 * @param consent the authorisation consent for which the event is associated, never {@literal null}
+	 * @param consent the authorization consent for which the event is associated, never {@literal null}
 	 */
 	protected AuthorizationConsentEvent(OAuth2AuthorizationConsent consent) {
 		Assert.notNull(consent, "OAuth2 Authorization consent cannot be null");
@@ -80,7 +80,7 @@ public abstract sealed class AuthorizationConsentEvent implements Serializable p
 		 * Create a new {@link Granted} with the {@link OAuth2AuthorizationConsent} that was granted
 		 * by the {@link AuthorizationService}.
 		 *
-		 * @param consent the stored authorisation consent, never {@literal null}
+		 * @param consent the stored authorization consent, never {@literal null}
 		 */
 		public Granted(@NonNull OAuth2AuthorizationConsent consent) {
 			super(consent);
@@ -97,7 +97,7 @@ public abstract sealed class AuthorizationConsentEvent implements Serializable p
 		 * Create a new {@link Revoked} with the {@link OAuth2AuthorizationConsent} that was removed
 		 * or revoked by the {@link AuthorizationService}.
 		 *
-		 * @param consent the revoked authorisation consent, never {@literal null}
+		 * @param consent the revoked authorization consent, never {@literal null}
 		 */
 		public Revoked(OAuth2AuthorizationConsent consent) {
 			super(consent);
