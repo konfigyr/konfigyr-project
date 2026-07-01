@@ -1,0 +1,60 @@
+[versions]
+spring-boot          = "4.1.0"
+spring-cloud         = "2025.1.1"
+spring-modulith      = "2.0.6"
+jmolecules           = "2025.0.2"
+konfigyr-crypto      = "1.0.0"
+jooq                 = "3.21.5"
+lombok               = "9.5.0"
+bouncy-castle        = "1.84"
+jsoup                = "1.22.2"
+greenmail            = "2.1.9"
+wiremock             = "4.2.1"
+commons-compress     = "1.28.0"
+guava                = "33.6.0-jre"
+commonmark           = "0.29.0"
+owasp-sanitizer      = "20260313.1"
+jgit                 = "7.7.0.202606012155-r"
+slugify              = "4.0.0"
+icu4j                = "78.3"
+hypersistence-tsid   = "2.1.4"
+tink                 = "1.22.0"
+konfigyr-artifactory = "1.0.0-RC4"
+konfigyr-mail        = "1.0.0"
+bmuschko-docker      = "10.0.0"
+studer-jooq          = "10.2.1"
+
+[libraries]
+spring-boot-bom          = { group = "org.springframework.boot",                        name = "spring-boot-dependencies",             version.ref = "spring-boot" }
+spring-cloud-bom         = { group = "org.springframework.cloud",                       name = "spring-cloud-dependencies",            version.ref = "spring-cloud" }
+spring-modulith-bom      = { group = "org.springframework.modulith",                    name = "spring-modulith-bom",                  version.ref = "spring-modulith" }
+jmolecules-bom           = { group = "org.jmolecules",                                  name = "jmolecules-bom",                       version.ref = "jmolecules" }
+konfigyr-crypto-bom      = { group = "com.konfigyr",                                    name = "konfigyr-crypto-dependencies",         version.ref = "konfigyr-crypto" }
+
+bouncy-castle-provider   = { group = "org.bouncycastle",                                name = "bcprov-jdk18on",                       version.ref = "bouncy-castle" }
+bouncy-castle-pkix       = { group = "org.bouncycastle",                                name = "bcpkix-jdk18on",                       version.ref = "bouncy-castle" }
+jsoup                    = { group = "org.jsoup",                                        name = "jsoup",                                version.ref = "jsoup" }
+greenmail                = { group = "com.icegreen",                                     name = "greenmail",                            version.ref = "greenmail" }
+wiremock                 = { group = "org.wiremock.integrations",                        name = "wiremock-spring-boot",                 version.ref = "wiremock" }
+commons-compress         = { group = "org.apache.commons",                               name = "commons-compress",                     version.ref = "commons-compress" }
+guava                    = { group = "com.google.guava",                                 name = "guava",                                version.ref = "guava" }
+commonmark-core          = { group = "org.commonmark",                                   name = "commonmark",                           version.ref = "commonmark" }
+commonmark-autolink      = { group = "org.commonmark",                                   name = "commonmark-ext-autolink",              version.ref = "commonmark" }
+commonmark-strikethrough = { group = "org.commonmark",                                   name = "commonmark-ext-gfm-strikethrough",      version.ref = "commonmark" }
+commonmark-tasklist      = { group = "org.commonmark",                                   name = "commonmark-ext-task-list-items",        version.ref = "commonmark" }
+owasp-sanitizer          = { group = "com.googlecode.owasp-java-html-sanitizer",         name = "owasp-java-html-sanitizer",            version.ref = "owasp-sanitizer" }
+jgit                     = { group = "org.eclipse.jgit",                                 name = "org.eclipse.jgit",                     version.ref = "jgit" }
+slugify                  = { group = "com.github.slugify",                               name = "slugify",                              version.ref = "slugify" }
+icu4j                    = { group = "com.ibm.icu",                                      name = "icu4j",                                version.ref = "icu4j" }
+hypersistence-tsid       = { group = "io.hypersistence",                                 name = "hypersistence-tsid",                   version.ref = "hypersistence-tsid" }
+tink                     = { group = "com.google.crypto.tink",                            name = "tink",                                 version.ref = "tink" }
+konfigyr-artifactory     = { group = "com.konfigyr",                                      name = "konfigyr-artifactory",                 version.ref = "konfigyr-artifactory" }
+konfigyr-mail-api        = { group = "com.konfigyr",                                      name = "konfigyr-mail-api",                    version.ref = "konfigyr-mail" }
+konfigyr-mail-smtp       = { group = "com.konfigyr",                                      name = "konfigyr-mail-smtp",                   version.ref = "konfigyr-mail" }
+konfigyr-mail-thymeleaf  = { group = "com.konfigyr",                                      name = "konfigyr-mail-thymeleaf",              version.ref = "konfigyr-mail" }
+
+[plugins]
+spring-boot     = { id = "org.springframework.boot",        version.ref = "spring-boot" }
+lombok          = { id = "io.freefair.lombok",              version.ref = "lombok" }
+bmuschko-docker = { id = "com.bmuschko.docker-remote-api",  version.ref = "bmuschko-docker" }
+studer-jooq     = { id = "nu.studer.jooq",                  version.ref = "studer-jooq" }
