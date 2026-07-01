@@ -1,10 +1,12 @@
 import io.freefair.gradle.plugins.lombok.LombokExtension
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.plugins.quality.CheckstyleExtension
 import org.gradle.external.javadoc.StandardJavadocDocletOptions
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
+    java
     alias(libs.plugins.lombok)      apply false
     alias(libs.plugins.spring.boot) apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
@@ -13,6 +15,11 @@ plugins {
 // Capture the catalog at root level so it is accessible as a closed-over variable
 // inside subprojects {} without being resolved against each subproject's extensions.
 val catalog = libs
+
+// Disables all the Java jar related tasks for the root project
+tasks.withType<Jar>().configureEach {
+    enabled = false
+}
 
 subprojects {
     val projectName = project.name
@@ -70,30 +77,29 @@ subprojects {
     }
 
     dependencies {
-        "implementation"(platform(catalog.spring.boot.bom))
-        "implementation"(platform(catalog.spring.cloud.bom))
-        "implementation"(platform(catalog.spring.modulith.bom))
-        "implementation"(platform(catalog.jmolecules.bom))
-        "implementation"(platform(catalog.konfigyr.crypto.bom))
+        implementation(platform(catalog.spring.boot.bom))
+        implementation(platform(catalog.spring.cloud.bom))
+        implementation(platform(catalog.spring.modulith.bom))
+        implementation(platform(catalog.jmolecules.bom))
+        implementation(platform(catalog.konfigyr.crypto.bom))
 
         // Apply BOMs to annotation processor classpath so processors can be resolved without versions
-        "annotationProcessor"(platform(catalog.spring.boot.bom))
+        annotationProcessor(platform(catalog.spring.boot.bom))
+        annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor")
+        annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+        testImplementation("org.springframework.boot:spring-boot-starter-test")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
         // Version constraints for libraries that appear only as transitive dependencies and
         // are never directly referenced in subproject build files. Direct dependencies must
         // use libs.<alias> instead so their version is visible at the call site.
         constraints {
             // Pulled in transitively by testcontainers; pinned to suppress CVE alerts.
-            "implementation"(catalog.commons.compress)
+            implementation(catalog.commons.compress)
             // Pulled in transitively by the checkstyle tool JVM; pinned to suppress CVE alerts.
-            "implementation"(catalog.guava)
+            implementation(catalog.guava)
         }
-
-        "annotationProcessor"("org.springframework.boot:spring-boot-autoconfigure-processor")
-        "annotationProcessor"("org.springframework.boot:spring-boot-configuration-processor")
-
-        "testImplementation"("org.springframework.boot:spring-boot-starter-test")
-        "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
     }
 
     configure<JavaPluginExtension> {
