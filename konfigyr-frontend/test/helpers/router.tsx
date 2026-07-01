@@ -17,7 +17,7 @@ export function renderComponentWithRouter(ui: ReactNode) {
     history: createMemoryHistory(),
     defaultErrorComponent: ErrorBoundary,
     defaultNotFoundComponent: () => <NotFound />,
-    defaultPreload: 'intent',
+    defaultPreload: false,
     defaultPendingMinMs: 0,
   });
 
@@ -46,7 +46,7 @@ export function renderWithRouter(path: string) {
     history: createMemoryHistory({ initialEntries: [path] }),
     defaultErrorComponent: ErrorBoundary,
     defaultNotFoundComponent: () => <NotFound />,
-    defaultPreload: 'intent',
+    defaultPreload: false,
     defaultPendingMinMs: 0,
   });
 

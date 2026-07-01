@@ -359,3 +359,5 @@ target/
 vendor/
 coverage/
 tmp/
+
+.githooks/
