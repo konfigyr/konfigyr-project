@@ -55,7 +55,7 @@ springBoot {
 }
 
 tasks.named<BootBuildImage>("bootBuildImage") {
-    imageName.set(project.extra["dockerImageTag"] as Provider<String>)
+    imageName.set(the<KonfigyrBuildExtension>().dockerImageTag)
 
     docker {
         publishRegistry {

@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.node.gradle)
 }
 
-val ci = extra["ci"] as Provider<Boolean>
+val ci = the<KonfigyrBuildExtension>().ci
 
 dependencies {
     implementation(project(":konfigyr-core"))
@@ -85,8 +85,7 @@ tasks.register<NpmTask>("npmTest") {
 tasks.named("processResources") { dependsOn("rollup") }
 
 tasks.named<BootBuildImage>("bootBuildImage") {
-    val dockerImageTag = project.extra["dockerImageTag"] as Provider<String>
-    imageName.set(dockerImageTag)
+    imageName.set(the<KonfigyrBuildExtension>().dockerImageTag)
 
     docker {
         publishRegistry {

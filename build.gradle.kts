@@ -22,35 +22,7 @@ tasks.withType<Jar>().configureEach {
 }
 
 subprojects {
-    val projectName = project.name
-    val projectVersion = project.version.toString()
-
-    /**
-     * Resolves to true when running inside GitHub Actions (CI=true is set automatically by the runner).
-     * Used to switch between npm install strategies and test commands appropriate for CI vs local development.
-     */
-    val ci = providers.environmentVariable("CI")
-        .map { it.toBoolean() }
-        .orElse(false)
-    extra["ci"] = ci
-
-    /**
-     * Resolves to true when the NIGHTLY environment variable is set, used to determine whether
-     * Docker images should be tagged as 'latest' or with the project version.
-     */
-    val nightly = providers.environmentVariable("NIGHTLY")
-        .map { it.toBoolean() }
-        .orElse(false)
-    extra["nightly"] = nightly
-
-    /**
-     * Resolves to the full Docker image name including tag. When NIGHTLY=true the image is tagged as
-     * 'latest', otherwise the project version is used (e.g. konfigyr/konfigyr-frontend:1.0.0).
-     */
-    val dockerImageTag = nightly
-        .map { if (it) "latest" else projectVersion }
-        .map { "konfigyr/$projectName:$it" }
-    extra["dockerImageTag"] = dockerImageTag
+    extensions.create("konfigyr", KonfigyrBuildExtension::class, project.name, project.version.toString())
 
     apply(plugin = "idea")
     apply(plugin = "java")

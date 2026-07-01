@@ -6,9 +6,10 @@ plugins {
     alias(libs.plugins.bmuschko.docker)
 }
 
-val ci = extra["ci"] as Provider<Boolean>
-val nightly = extra["nightly"] as Provider<Boolean>
-val dockerImageTag = extra["dockerImageTag"] as Provider<String>
+val build = the<KonfigyrBuildExtension>()
+val ci = build.ci
+val nightly = build.nightly
+val dockerImageTag = build.dockerImageTag
 
 docker {
     registryCredentials {
@@ -19,6 +20,9 @@ docker {
 }
 
 tasks.register<NpmExec>("npmInstall") {
+    description = "Installs the required NPM dependencies"
+    group = "build"
+
     args.set(ci.map { if (it) listOf("ci") else listOf("install") })
     sources.from("package.json", "package-lock.json")
     outputFile.set(layout.buildDirectory.file("npm-install.stamp"))
@@ -32,6 +36,7 @@ tasks.register<NpmExec>("npmInstall") {
 tasks.register<NpmExec>("npmBuild") {
     dependsOn("npmInstall")
     description = "Builds the frontend application"
+    group = "build"
 
     args.set(listOf("run", "build"))
     sources.from(
@@ -44,6 +49,7 @@ tasks.register<NpmExec>("npmBuild") {
 tasks.register<NpmExec>("npmTest") {
     dependsOn("npmInstall")
     description = "Runs the frontend application tests"
+    group = "verification"
 
     args.set(ci.map { if (it) listOf("run", "test:ci") else listOf("run", "test:coverage") })
     sources.from(
