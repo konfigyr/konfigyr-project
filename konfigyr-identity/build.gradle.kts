@@ -1,13 +1,11 @@
-import com.github.gradle.node.npm.task.NpmTask
 import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
 
 plugins {
     java
     alias(libs.plugins.spring.boot)
-    alias(libs.plugins.node.gradle)
 }
 
-val ci = the<KonfigyrBuildExtension>().ci
+val extension = the<KonfigyrBuildExtension>()
 
 dependencies {
     implementation(project(":konfigyr-core"))
@@ -55,42 +53,42 @@ springBoot {
     buildInfo()
 }
 
-node {
-    npmCommand.set(providers.gradleProperty("node.npm").get())
-    npmInstallCommand.set(ci.map { if (it) "ci" else "install" })
+tasks.register<NpmExec>("npmInstall") {
+    description = "Installs the required NPM dependencies"
+    group = "build"
+
+    args.set(extension.ci.map { if (it) listOf("ci") else listOf("install") })
+    sources.from("package.json", "package-lock.json")
+    outputFile.set(layout.buildDirectory.file("npm-install.stamp"))
+
+    // node_modules is not declared as an output so the stamp alone cannot
+    // serve as a valid cache entry — restoring it without restoring node_modules
+    // would break every downstream task.
+    outputs.cacheIf { false }
 }
 
-tasks.register<NpmTask>("rollup") {
-    dependsOn(tasks.named("npmInstall"))
+tasks.register<NpmExec>("rollup") {
+    dependsOn("npmInstall")
+    description = "Bundles static assets for the identity server UI"
+    group = "build"
 
     args.set(listOf("run", "build"))
-
-    inputs.files("package.json", "package-lock.json", "rollup.config.js")
-    inputs.dir("src/main/resources/assets")
-
-    outputs.cacheIf { true }
-
-    outputs.dir(project.layout.buildDirectory.dir("resources/main/static"))
-}
-
-tasks.register<NpmTask>("npmTest") {
-    dependsOn(tasks.named("npmInstall"))
-
-    args.set(listOf("test"))
-
-    inputs.files("package.json", "package-lock.json", ".eslintrc.json", ".prettierrc.json")
-    inputs.dir("src/main/assets/scripts")
+    sources.from(
+        "package.json", "package-lock.json", "rollup.config.js",
+        fileTree("src/main/resources/assets")
+    )
+    outputDir.set(layout.buildDirectory.dir("resources/main/static"))
 }
 
 tasks.named("processResources") { dependsOn("rollup") }
 
 tasks.named<BootBuildImage>("bootBuildImage") {
-    imageName.set(the<KonfigyrBuildExtension>().dockerImageTag)
+    imageName.set(extension.dockerImageTag)
 
     docker {
         publishRegistry {
             username.set("konfigyr")
-            password.set(providers.environmentVariable("DOCKER_HUB_TOKEN").orElse(""))
+            password.set(providers.environmentVariable("DOCKER_HUB_TOKEN"))
         }
     }
 }
