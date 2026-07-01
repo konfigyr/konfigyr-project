@@ -18,7 +18,7 @@ dependencies {
 
     api("com.konfigyr:konfigyr-crypto-api")
     api("com.konfigyr:konfigyr-crypto-tink")
-    api("com.google.crypto.tink:tink:1.22.0")
+    api(libs.tink)
     implementation("com.konfigyr:konfigyr-crypto-jdbc")
 
     api(libs.slugify)

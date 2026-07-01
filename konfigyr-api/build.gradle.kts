@@ -16,7 +16,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-restclient")
 
-    implementation("com.konfigyr:konfigyr-artifactory:1.0.0-RC4")
+    implementation(libs.konfigyr.artifactory)
 
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("com.github.ben-manes.caffeine:caffeine")
@@ -55,13 +55,12 @@ springBoot {
 }
 
 tasks.named<BootBuildImage>("bootBuildImage") {
-    val dockerImageTag = project.extra["dockerImageTag"] as Provider<String>
-    imageName.set(dockerImageTag)
+    imageName.set(project.extra["dockerImageTag"] as Provider<String>)
 
     docker {
         publishRegistry {
             username.set("konfigyr")
-            password.set(providers.environmentVariable("DOCKER_HUB_TOKEN").orElse(""))
+            password.set(providers.environmentVariable("DOCKER_HUB_TOKEN"))
         }
     }
 }
