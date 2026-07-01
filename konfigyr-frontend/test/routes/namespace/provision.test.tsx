@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
-import { renderWithRouter } from '@konfigyr/test/helpers/router';
+import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
+import { RouteComponent } from '@konfigyr/routes/_authenticated/namespace/provision';
 
 import type { RenderResult } from '@testing-library/react';
 import type { UserEvent } from '@testing-library/user-event';
@@ -12,7 +13,9 @@ describe('routes | namespace | provision', () => {
 
   beforeAll(() => {
     user = userEvents.setup();
-    result = renderWithRouter('/namespace/provision');
+    result = renderComponentWithRouter(
+      <RouteComponent debounceMs={0} />,
+    ) as RenderResult & { router: { state: { location: { pathname: string } } } };
   });
 
   afterAll(() => cleanup());
@@ -95,7 +98,7 @@ describe('routes | namespace | provision', () => {
     );
 
     // wait for the debounce period to be over to avoid race conditions when validating the URL slug
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 25));
 
     await waitFor(() => {
       expect(result.getByRole('textbox', { name: 'URL' })).toBeValid();

@@ -17,7 +17,7 @@ describe('components | namespace | <NamespaceSlugForm/>', () => {
     user = userEvents.setup();
     result = renderWithQueryClient((
       <>
-        <NamespaceSlugForm namespace={namespaces.konfigyr} />
+        <NamespaceSlugForm namespace={namespaces.konfigyr} debounceMs={0} />
         <Toaster />
       </>
     ));
