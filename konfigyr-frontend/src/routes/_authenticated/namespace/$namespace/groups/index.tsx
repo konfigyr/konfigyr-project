@@ -70,6 +70,7 @@ function RouteComponent() {
         </div>
 
         <GroupVerificationTable
+          namespace={namespace.slug}
           data={data}
           isPending={isPending}
           error={error}

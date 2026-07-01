@@ -25,44 +25,45 @@ import {
 } from '@konfigyr/components/ui/table';
 import { Package, ShieldCheckIcon } from 'lucide-react';
 import { GroupVerificationStateBadge } from './group-verification-state';
+import { RevokeGroupVerificationButton } from './revoke-group-verification';
 
 import type { GroupVerification, PageResponse } from '@konfigyr/hooks/types';
 
-function GroupVerificationRowActions({ verification }: { verification: GroupVerification }) {
+function GroupVerificationRowActions({ namespace, verification }: {
+  namespace: string;
+  verification: GroupVerification;
+}) {
   switch (verification.state) {
     case 'ACTIVE':
       return (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost"><ViewLabel /></Button>
           <Button size="sm" variant="ghost">
-            <FormattedMessage
-              defaultMessage="Revoke"
-              description="Label of the button that revokes an active group verification claim."
-            />
+            <ViewLabel />
           </Button>
+          <RevokeGroupVerificationButton namespace={namespace} verification={verification} />
         </div>
       );
     case 'PENDING':
       return (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost">
-            <FormattedMessage
-              defaultMessage="Revoke"
-              description="Label of the button that revokes an active group verification claim."
-            />
-          </Button>
+          <RevokeGroupVerificationButton namespace={namespace} verification={verification} />
         </div>
       );
     default:
       return (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost"><ViewLabel /></Button>
+          <Button size="sm" variant="ghost">
+            <ViewLabel />
+          </Button>
         </div>
       );
   }
 }
 
-function GroupVerificationRow({ verification }: { verification: GroupVerification }) {
+function GroupVerificationRow({ namespace, verification }: {
+  namespace: string;
+  verification: GroupVerification;
+}) {
   return (
     <TableRow>
       <TableCell className="font-mono font-bold">
@@ -89,7 +90,7 @@ function GroupVerificationRow({ verification }: { verification: GroupVerificatio
         )}
       </TableCell>
       <TableCell className="text-right">
-        <GroupVerificationRowActions verification={verification} />
+        <GroupVerificationRowActions namespace={namespace} verification={verification} />
       </TableCell>
     </TableRow>
   );
@@ -153,12 +154,13 @@ function GroupVerificationPagination({ page = 1, size = 20, data }: {
   );
 }
 
-export function GroupVerificationTable({ data, error, isPending, page, size }: {
-  data?: PageResponse<GroupVerification>,
-  error?: Error | null,
-  isPending?: boolean,
-  page?: number,
-  size?: number,
+export function GroupVerificationTable({ namespace, data, error, isPending, page, size }: {
+  namespace: string;
+  data?: PageResponse<GroupVerification>;
+  error?: Error | null;
+  isPending?: boolean;
+  page?: number;
+  size?: number;
 }) {
   return (
     <>
@@ -207,28 +209,30 @@ export function GroupVerificationTable({ data, error, isPending, page, size }: {
                   <TableCell colSpan={5}>
                     <EmptyState
                       icon={<ShieldCheckIcon size="2rem" />}
-                      title={<FormattedMessage
-                        defaultMessage="No group claims found"
-                        description="Empty state title when no group verification claims are found."
-                      />}
-                      description={<FormattedMessage
-                        defaultMessage="This namespace has not claimed any Maven groupId coordinates yet."
-                        description="Empty state description when no group verification claims are found."
-                      />}
+                      title={
+                        <FormattedMessage
+                          defaultMessage="No group claims found"
+                          description="Empty state title when no group verification claims are found."
+                        />
+                      }
+                      description={
+                        <FormattedMessage
+                          defaultMessage="This namespace has not claimed any Maven groupId coordinates yet."
+                          description="Empty state description when no group verification claims are found."
+                        />
+                      }
                     />
                   </TableCell>
                 </TableRow>
               )}
 
               {data?.data.map((verification) => (
-                <GroupVerificationRow key={verification.id} verification={verification} />
+                <GroupVerificationRow key={verification.id} namespace={namespace} verification={verification} />
               ))}
             </TableBody>
           </Table>
 
-          {error && (
-            <ErrorState error={error} />
-          )}
+          {error && <ErrorState error={error} />}
         </CardContent>
       </Card>
 

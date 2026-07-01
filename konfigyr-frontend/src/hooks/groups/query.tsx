@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
 import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
@@ -22,4 +22,19 @@ export const getGroupVerifications = (namespace: string, query: GroupVerificatio
 
 export const useGetGroupVerifications = (namespace: string, query?: GroupVerificationQuery) => {
   return useQuery(getGroupVerifications(namespace, query));
+};
+
+export const useRevokeGroupVerification = (namespace: string) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      await request.delete(`api/namespaces/${namespace}/group-verifications/${groupId}`);
+    },
+    onSuccess: () => {
+      client.invalidateQueries({
+        queryKey: ['namespace', namespace, 'group-verifications'],
+      });
+    },
+  });
 };
