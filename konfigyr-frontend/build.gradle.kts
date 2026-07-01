@@ -6,16 +6,13 @@ plugins {
     alias(libs.plugins.bmuschko.docker)
 }
 
-val build = the<KonfigyrBuildExtension>()
-val ci = build.ci
-val nightly = build.nightly
-val dockerImageTag = build.dockerImageTag
+val extension = the<KonfigyrBuildExtension>()
 
 docker {
     registryCredentials {
         url.set("https://index.docker.io/v1/")
         username.set("konfigyr")
-        password.set(providers.environmentVariable("DOCKER_HUB_TOKEN").orElse(""))
+        password.set(providers.environmentVariable("DOCKER_HUB_TOKEN"))
     }
 }
 
@@ -23,7 +20,7 @@ tasks.register<NpmExec>("npmInstall") {
     description = "Installs the required NPM dependencies"
     group = "build"
 
-    args.set(ci.map { if (it) listOf("ci") else listOf("install") })
+    args.set(extension.ci.map { if (it) listOf("ci") else listOf("install") })
     sources.from("package.json", "package-lock.json")
     outputFile.set(layout.buildDirectory.file("npm-install.stamp"))
 
@@ -43,7 +40,7 @@ tasks.register<NpmExec>("npmBuild") {
         "package.json", "package-lock.json", "vite.config.ts", "tsconfig.json",
         fileTree("src"), fileTree("messages"), fileTree("public")
     )
-    outputDir.set(layout.buildDirectory.dir(".output"))
+    outputDir.set(layout.projectDirectory.dir(".output"))
 }
 
 tasks.register<NpmExec>("npmTest") {
@@ -51,7 +48,7 @@ tasks.register<NpmExec>("npmTest") {
     description = "Runs the frontend application tests"
     group = "verification"
 
-    args.set(ci.map { if (it) listOf("run", "test:ci") else listOf("run", "test:coverage") })
+    args.set(extension.ci.map { if (it) listOf("run", "test:ci") else listOf("run", "test:coverage") })
     sources.from(
         "package.json", "package-lock.json", "eslint.config.mjs", "vitest.config.mts",
         fileTree("src"), fileTree("messages"), fileTree("public"), fileTree("test")
@@ -66,7 +63,7 @@ tasks.register<DockerBuildImage>("dockerBuild") {
     description = "Builds the Docker image with a frontend application"
 
     inputDir.set(project.layout.projectDirectory)
-    images.add(dockerImageTag)
+    images.add(extension.dockerImageTag)
 }
 
 tasks.register<DockerPushImage>("dockerPublish") {
@@ -75,7 +72,7 @@ tasks.register<DockerPushImage>("dockerPublish") {
     group = "docker"
     description = "Builds and publishes the Docker image with a frontend application"
 
-    images.add(dockerImageTag)
+    images.add(extension.dockerImageTag)
 }
 
 tasks.named("bootJar") {
