@@ -1,10 +1,8 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import com.github.gradle.node.npm.task.NpmTask
 
 plugins {
     alias(libs.plugins.spring.boot)
-    alias(libs.plugins.node.gradle)
     alias(libs.plugins.bmuschko.docker)
 }
 
@@ -20,40 +18,39 @@ docker {
     }
 }
 
-node {
-    npmCommand.set(providers.gradleProperty("node.npm").get())
-    npmInstallCommand.set(ci.map { if (it) "ci" else "install" })
+tasks.register<NpmExec>("npmInstall") {
+    args.set(ci.map { if (it) listOf("ci") else listOf("install") })
+    sources.from("package.json", "package-lock.json")
+    outputFile.set(layout.buildDirectory.file("npm-install.stamp"))
+
+    // node_modules is not declared as an output so the stamp alone cannot
+    // serve as a valid cache entry — restoring it without restoring node_modules
+    // would break every downstream task.
+    outputs.cacheIf { false }
 }
 
-tasks.register<NpmTask>("npmBuild") {
-    dependsOn(tasks.named("npmInstall"))
-
+tasks.register<NpmExec>("npmBuild") {
+    dependsOn("npmInstall")
     description = "Builds the frontend application"
 
     args.set(listOf("run", "build"))
-
-    inputs.files("package.json", "package-lock.json", "vite.config.ts", "tsconfig.json")
-    inputs.dir("src")
-    inputs.dir("messages")
-    inputs.dir("public")
-
-    outputs.cacheIf { true }
-
-    outputs.dir(project.layout.buildDirectory.dir(".output"))
+    sources.from(
+        "package.json", "package-lock.json", "vite.config.ts", "tsconfig.json",
+        fileTree("src"), fileTree("messages"), fileTree("public")
+    )
+    outputDir.set(layout.buildDirectory.dir(".output"))
 }
 
-tasks.register<NpmTask>("npmTest") {
-    dependsOn(tasks.named("npmInstall"))
-
+tasks.register<NpmExec>("npmTest") {
+    dependsOn("npmInstall")
     description = "Runs the frontend application tests"
 
     args.set(ci.map { if (it) listOf("run", "test:ci") else listOf("run", "test:coverage") })
-
-    inputs.files("package.json", "package-lock.json", "eslint.config.mjs", "vitest.config.mts")
-    inputs.dir("src")
-    inputs.dir("messages")
-    inputs.dir("public")
-    inputs.dir("test")
+    sources.from(
+        "package.json", "package-lock.json", "eslint.config.mjs", "vitest.config.mts",
+        fileTree("src"), fileTree("messages"), fileTree("public"), fileTree("test")
+    )
+    outputFile.set(layout.buildDirectory.file("npm-test.stamp"))
 }
 
 tasks.register<DockerBuildImage>("dockerBuild") {
