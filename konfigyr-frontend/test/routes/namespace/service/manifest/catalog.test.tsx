@@ -19,10 +19,11 @@ describe('routes | namespace | service | manifest | properties', () => {
   });
 
   test('should search for properties', async () => {
+    const user = userEvent.setup();
     const { getByRole, queryByText } = renderWithRouter('/namespace/konfigyr/services/konfigyr-api/manifest');
 
     await waitFor(async () => {
-      await userEvent.type(
+      await user.type(
         getByRole('searchbox'),
         'spring.aop.auto',
       );
@@ -34,10 +35,11 @@ describe('routes | namespace | service | manifest | properties', () => {
   });
 
   test('should search for properties and not find any match', async () => {
+    const user = userEvent.setup();
     const { getByRole, queryByText } = renderWithRouter('/namespace/konfigyr/services/konfigyr-api/manifest');
 
     await waitFor(async () => {
-      await userEvent.type(
+      await user.type(
         getByRole('searchbox'),
         'missing property',
       );

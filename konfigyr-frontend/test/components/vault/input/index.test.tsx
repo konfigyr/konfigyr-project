@@ -28,6 +28,7 @@ describe('components | vault | properties | <InputField/>', () => {
   test('should render input field for a simple string JSON schema property type', async () => {
     const property = propertyFor({ type: 'string' });
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InputField property={property} value={valueFor('existing value')} onChange={onChange} />,
@@ -39,7 +40,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(field).toHaveAccessibleDescription(property.description);
     expect(field).not.toHaveAttribute('list');
 
-    await userEvent.type(field, 's');
+    await user.type(field, 's');
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith({
         encoded: 'existing values', decoded: 'existing values',
@@ -221,6 +222,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const property = propertyFor({ type: 'boolean' });
     const value = { encoded: 'true', decoded: true };
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InputField property={property} value={value} onChange={onChange} />,
@@ -231,7 +233,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(field).toBeChecked();
     expect(field).toHaveAccessibleDescription(property.description);
 
-    await userEvent.click(field);
+    await user.click(field);
 
     await waitFor(() => expect(onChange).toBeCalledWith({ encoded: 'false', decoded: false }));
   });
@@ -240,6 +242,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const property = propertyFor({ type: 'integer' });
     const value = { encoded: '148', decoded: 148 };
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InputField property={property} value={value} onChange={onChange} />,
@@ -250,7 +253,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(field).toHaveValue(148);
     expect(field).toHaveAccessibleDescription(property.description);
 
-    await userEvent.type(field, '7');
+    await user.type(field, '7');
 
     await waitFor(() => expect(onChange).toBeCalledWith({ encoded: '1487', decoded: 1487 }));
   });
@@ -259,6 +262,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const property = propertyFor({ type: 'number' });
     const value = { encoded: '10.25', decoded: 10.25 };
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InputField property={property} value={value} onChange={onChange} />,
@@ -270,7 +274,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(field).toHaveAccessibleDescription(property.description);
     expect(field).toBeValid();
 
-    await userEvent.type(field, '2');
+    await user.type(field, '2');
 
     await waitFor(() => expect(onChange).toBeCalledWith({ encoded: '10.252', decoded: 10.252 }));
   });
@@ -311,6 +315,7 @@ describe('components | vault | properties | <InputField/>', () => {
   test('should render field for a JSON schema property type with enumeration', async () => {
     const property = propertyFor({ type: 'string', enum: ['ON', 'OFF', 'MAYBE'] });
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole, getAllByRole } = renderWithMessageProvider(
       <InputField property={property} value={valueFor('OFF')} onChange={onChange} />,
@@ -319,7 +324,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const field = getByRole('combobox', { name: property.name });
     expect(field).toBeInTheDocument();
 
-    await userEvent.click(field);
+    await user.click(field);
 
     await waitFor(() => {
       expect(getAllByRole('option')).toHaveLength(3);
@@ -329,7 +334,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(getByRole('option', { name: 'OFF' })).toBeInTheDocument();
     expect(getByRole('option', { name: 'MAYBE' })).toBeInTheDocument();
 
-    await userEvent.click(getByRole('option', { name: 'ON' }));
+    await user.click(getByRole('option', { name: 'ON' }));
 
     await waitFor(() => {
       expect(onChange).toBeCalledWith({ encoded: 'ON', decoded: 'ON' });
@@ -340,6 +345,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const property = propertyFor({ type: 'string', format: 'duration' });
     const value = { encoded: '21s', decoded: { value: 21, unit: 's' } };
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InputField property={property} value={value} onChange={onChange} />,
@@ -349,7 +355,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(field).toBeInTheDocument();
     expect(field).toHaveValue(21);
 
-    await userEvent.type(field, '0');
+    await user.type(field, '0');
     await waitFor(() => expect(onChange).toBeCalledWith({
       encoded: '210s', decoded: { value: 210, unit: 's' },
     }));
@@ -357,7 +363,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const trigger = getByRole('button', { name: 's' });
     expect(trigger).toBeInTheDocument();
 
-    await userEvent.click(trigger);
+    await user.click(trigger);
     await waitFor(() => {
       expect(getByRole('menuitemradio', { name: 'Milliseconds' } )).toBeInTheDocument();
       expect(getByRole('menuitemradio', { name: 'Seconds' } )).toBeInTheDocument();
@@ -366,7 +372,7 @@ describe('components | vault | properties | <InputField/>', () => {
       expect(getByRole('menuitemradio', { name: 'Days' } )).toBeInTheDocument();
     });
 
-    await userEvent.click(getByRole('menuitemradio', { name: 'Days' } ));
+    await user.click(getByRole('menuitemradio', { name: 'Days' } ));
     await waitFor(() => expect(onChange).toBeCalledWith({
       encoded: '21d', decoded: { value: 21, unit: 'd' },
     }));
@@ -376,6 +382,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const property = propertyFor({ type: 'string', format: 'data-size' });
     const value = { encoded: '128MB', decoded: { value: 128, unit: 'MB' } };
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InputField property={property} value={value} onChange={onChange} />,
@@ -385,7 +392,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(field).toBeInTheDocument();
     expect(field).toHaveValue(128);
 
-    await userEvent.type(field, '0');
+    await user.type(field, '0');
 
     expect(onChange).toBeCalledWith({
       encoded: '1280MB', decoded: { value: 1280, unit: 'MB' },
@@ -394,7 +401,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const trigger = getByRole('button', { name: 'MB' });
     expect(trigger).toBeInTheDocument();
 
-    await userEvent.click(trigger);
+    await user.click(trigger);
     await waitFor(() => {
       expect(getByRole('menuitemradio', { name: 'Bytes' } )).toBeInTheDocument();
       expect(getByRole('menuitemradio', { name: 'Kilobytes' } )).toBeInTheDocument();
@@ -403,7 +410,7 @@ describe('components | vault | properties | <InputField/>', () => {
       expect(getByRole('menuitemradio', { name: 'Terabytes' } )).toBeInTheDocument();
     });
 
-    await userEvent.click(getByRole('menuitemradio', { name: 'Bytes' } ));
+    await user.click(getByRole('menuitemradio', { name: 'Bytes' } ));
     expect(onChange).toBeCalledWith({
       encoded: '128B', decoded: { value: 128, unit: 'B' },
     });
@@ -413,6 +420,7 @@ describe('components | vault | properties | <InputField/>', () => {
     const property = propertyFor({ type: 'array', items: { type: 'string' } });
     const value = { encoded: 'foo, bar, baz', decoded: ['foo', 'bar', 'baz'] };
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InputField property={property} value={value} onChange={onChange} />,
@@ -428,7 +436,7 @@ describe('components | vault | properties | <InputField/>', () => {
 
     expect(chips).toStrictEqual(['foo', 'bar', 'baz']);
 
-    await userEvent.type(
+    await user.type(
       getByRole('combobox'), 'new option',
     );
 
@@ -436,7 +444,7 @@ describe('components | vault | properties | <InputField/>', () => {
       expect(getByRole('option', { name: 'new option' })).toBeInTheDocument();
     });
 
-    await userEvent.click(getByRole('option', { name: 'new option' }));
+    await user.click(getByRole('option', { name: 'new option' }));
 
     expect(onChange).toBeCalledWith({
       encoded: 'foo,bar,baz,new option', decoded: ['foo', 'bar', 'baz', 'new option'],
@@ -449,6 +457,7 @@ describe('components | vault | properties | <InputField/>', () => {
     });
     const value = { encoded: 'foo, bar', decoded: ['foo', 'bar'] };
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole, getByText } = renderWithMessageProvider(
       <InputField property={property} value={value} onChange={onChange} />,
@@ -464,7 +473,7 @@ describe('components | vault | properties | <InputField/>', () => {
 
     expect(chips).toStrictEqual(['foo', 'bar']);
 
-    await userEvent.type(
+    await user.type(
       getByRole('combobox'), 'ba',
     );
 
@@ -477,7 +486,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(getByRole('option', { name: 'baz' })).toBeInTheDocument();
     expect(getByRole('option', { name: 'baz' })).toHaveAttribute('aria-selected', 'false');
 
-    await userEvent.type(
+    await user.type(
       getByRole('combobox'), 'missing',
     );
 
@@ -485,8 +494,8 @@ describe('components | vault | properties | <InputField/>', () => {
       expect(getByText('No matching items found')).toBeInTheDocument();
     });
 
-    await userEvent.clear(getByRole('combobox'));
-    await userEvent.click(getByRole('option', { name: 'bar' }));
+    await user.clear(getByRole('combobox'));
+    await user.click(getByRole('option', { name: 'bar' }));
 
     expect(onChange).toBeCalledWith({
       encoded: 'foo', decoded: ['foo'],
@@ -499,6 +508,7 @@ describe('components | vault | properties | <InputField/>', () => {
     });
     const value = { encoded: 'foo, bar', decoded: ['foo', 'bar'] };
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InputField property={property} value={value} onChange={onChange} />,
@@ -514,7 +524,7 @@ describe('components | vault | properties | <InputField/>', () => {
 
     expect(chips).toStrictEqual(['foo', 'bar']);
 
-    await userEvent.type(
+    await user.type(
       getByRole('combobox'), 'ba',
     );
 
@@ -527,7 +537,7 @@ describe('components | vault | properties | <InputField/>', () => {
     expect(getByRole('option', { name: 'baz' })).toBeInTheDocument();
     expect(getByRole('option', { name: 'baz' })).toHaveAttribute('aria-selected', 'false');
 
-    await userEvent.type(
+    await user.type(
       getByRole('combobox'), 'zz',
     );
 
@@ -535,7 +545,7 @@ describe('components | vault | properties | <InputField/>', () => {
       expect(getByRole('option', { name: 'bazz' })).toBeInTheDocument();
     });
 
-    await userEvent.click(getByRole('option', { name: 'bazz' }));
+    await user.click(getByRole('option', { name: 'bazz' }));
 
     expect(onChange).toBeCalledWith({
       encoded: 'foo,bar,bazz', decoded: ['foo', 'bar', 'bazz'],
@@ -549,6 +559,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
   test('should mark field invalid on open when the initial value violates the schema', async () => {
     const property = propertyFor({ type: 'integer', minimum: 10 });
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InlineEdit value={{ encoded: '5', decoded: 5 }} onChange={onChange}>
@@ -557,7 +568,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
       </InlineEdit>,
     );
 
-    await userEvent.click(getByRole('button'));
+    await user.click(getByRole('button'));
 
     await waitFor(() => {
       expect(getByRole('spinbutton', { name: property.name })).toBeInvalid();
@@ -567,6 +578,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
   test('should block save when the edited value violates the schema', async () => {
     const property = propertyFor({ type: 'string', minLength: 5 });
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InlineEdit value={valueFor('valid value')} onChange={onChange}>
@@ -575,12 +587,12 @@ describe('components | vault | properties | <InlineInputField/>', () => {
       </InlineEdit>,
     );
 
-    await userEvent.click(getByRole('button'));
+    await user.click(getByRole('button'));
 
     const field = getByRole('textbox', { name: property.name });
-    await userEvent.clear(field);
-    await userEvent.type(field, 'x');
-    await userEvent.keyboard('{Enter}');
+    await user.clear(field);
+    await user.type(field, 'x');
+    await user.keyboard('{Enter}');
 
     expect(onChange).not.toBeCalled();
     expect(field).toBeInTheDocument();
@@ -590,6 +602,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
   test('should save when the edited value satisfies the schema', async () => {
     const property = propertyFor({ type: 'string', minLength: 3 });
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithMessageProvider(
       <InlineEdit value={valueFor('old')} onChange={onChange}>
@@ -598,12 +611,12 @@ describe('components | vault | properties | <InlineInputField/>', () => {
       </InlineEdit>,
     );
 
-    await userEvent.click(getByRole('button'));
+    await user.click(getByRole('button'));
 
     const field = getByRole('textbox', { name: property.name });
-    await userEvent.clear(field);
-    await userEvent.type(field, 'new valid value');
-    await userEvent.keyboard('{Enter}');
+    await user.clear(field);
+    await user.type(field, 'new valid value');
+    await user.keyboard('{Enter}');
 
     await waitFor(() => {
       expect(onChange).toBeCalledWith({ encoded: 'new valid value', decoded: 'new valid value' });
@@ -613,6 +626,7 @@ describe('components | vault | properties | <InlineInputField/>', () => {
   test('should clear validation errors and restore original value on cancel', async () => {
     const property = propertyFor({ type: 'string', minLength: 5 });
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole, queryByRole } = renderWithMessageProvider(
       <InlineEdit value={valueFor('valid value')} onChange={onChange}>
@@ -621,15 +635,15 @@ describe('components | vault | properties | <InlineInputField/>', () => {
       </InlineEdit>,
     );
 
-    await userEvent.click(getByRole('button'));
+    await user.click(getByRole('button'));
 
     const field = getByRole('textbox', { name: property.name });
-    await userEvent.clear(field);
-    await userEvent.type(field, 'x');
-    await userEvent.keyboard('{Enter}');
+    await user.clear(field);
+    await user.type(field, 'x');
+    await user.keyboard('{Enter}');
     expect(onChange).not.toBeCalled();
 
-    await userEvent.click(getByRole('button', { name: 'Cancel' }));
+    await user.click(getByRole('button', { name: 'Cancel' }));
     expect(queryByRole('textbox')).toBeNull();
     expect(onChange).not.toBeCalled();
   });
