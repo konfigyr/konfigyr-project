@@ -5,7 +5,6 @@ plugins {
 dependencies {
     compileOnly(project(":konfigyr-core"))
 
-    compileOnly(libs.konfigyr.mail.api)
     compileOnly(libs.greenmail)
 
     compileOnly("org.springframework.boot:spring-boot-starter-webmvc-test")
@@ -29,7 +28,6 @@ dependencies {
 
     testImplementation(project(":konfigyr-core"))
     testImplementation(libs.greenmail)
-    testImplementation(libs.konfigyr.mail.api)
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.security:spring-security-oauth2-core")
     testImplementation("org.springframework.boot:spring-boot-starter-micrometer-metrics-test")

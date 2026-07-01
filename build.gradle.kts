@@ -53,6 +53,7 @@ subprojects {
         implementation(platform(catalog.spring.modulith.bom))
         implementation(platform(catalog.jmolecules.bom))
         implementation(platform(catalog.konfigyr.crypto.bom))
+        implementation(platform(catalog.konfigyr.mail.bom))
 
         // Apply BOMs to annotation processor classpath so processors can be resolved without versions
         annotationProcessor(platform(catalog.spring.boot.bom))
