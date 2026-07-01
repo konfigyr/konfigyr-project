@@ -23,7 +23,7 @@ class SettableRecordTest {
 
 	@BeforeEach
 	void setup() {
-		MockConnection connection = new MockConnection(ctx -> null);
+		MockConnection connection = new MockConnection(ignore -> null);
 		context = DSL.using(connection, SQLDialect.POSTGRES);
 	}
 
@@ -36,7 +36,7 @@ class SettableRecordTest {
 				.set(TESTING_TABLE.TIMESTAMP, OffsetDateTime.MIN);
 
 		assertThat(record.get())
-				.returns(true, Record::changed)
+				.returns(true, Record::touched)
 				.returns(1L, it -> it.get(TESTING_TABLE.ID))
 				.returns("ACTIVE", it -> it.get(TESTING_TABLE.STATUS))
 				.returns(OffsetDateTime.MIN, it -> it.get(TESTING_TABLE.TIMESTAMP));
@@ -51,10 +51,10 @@ class SettableRecordTest {
 				.set(TESTING_TABLE.TIMESTAMP, Optional.empty());
 
 		assertThat(record.get())
-				.returns(true, Record::changed)
+				.returns(true, Record::touched)
 				.returns(1L, it -> it.get(TESTING_TABLE.ID))
-				.returns(true, it -> it.changed(TESTING_TABLE.STATUS))
-				.returns(false, it -> it.changed(TESTING_TABLE.TIMESTAMP));
+				.returns(true, it -> it.touched(TESTING_TABLE.STATUS))
+				.returns(false, it -> it.touched(TESTING_TABLE.TIMESTAMP));
 	}
 
 	@Test
@@ -73,9 +73,9 @@ class SettableRecordTest {
 				.set(TESTING_TABLE.TIMESTAMP, timestamp, converter);
 
 		assertThat(record.get())
-				.returns(true, Record::changed)
-				.returns(false, it -> it.changed(TESTING_TABLE.ID))
-				.returns(false, it -> it.changed(TESTING_TABLE.STATUS))
+				.returns(true, Record::touched)
+				.returns(false, it -> it.touched(TESTING_TABLE.ID))
+				.returns(false, it -> it.touched(TESTING_TABLE.STATUS))
 				.returns(converter.to(timestamp), it -> it.get(TESTING_TABLE.TIMESTAMP));
 	}
 
@@ -88,9 +88,9 @@ class SettableRecordTest {
 				.set(TESTING_TABLE.TIMESTAMP, timestamp, it -> it.atOffset(ZoneOffset.UTC));
 
 		assertThat(record.get())
-				.returns(true, Record::changed)
-				.returns(false, it -> it.changed(TESTING_TABLE.ID))
-				.returns(false, it -> it.changed(TESTING_TABLE.STATUS))
+				.returns(true, Record::touched)
+				.returns(false, it -> it.touched(TESTING_TABLE.ID))
+				.returns(false, it -> it.touched(TESTING_TABLE.STATUS))
 				.returns(timestamp.atOffset(ZoneOffset.UTC), it -> it.get(TESTING_TABLE.TIMESTAMP));
 	}
 
@@ -104,9 +104,9 @@ class SettableRecordTest {
 		});
 
 		assertThat(record.get())
-				.returns(true, Record::changed)
-				.returns(true, it -> it.changed(TESTING_TABLE.ID))
-				.returns(true, it -> it.changed(TESTING_TABLE.STATUS))
+				.returns(true, Record::touched)
+				.returns(true, it -> it.touched(TESTING_TABLE.ID))
+				.returns(true, it -> it.touched(TESTING_TABLE.STATUS))
 				.returns(23L, it -> it.get(TESTING_TABLE.ID))
 				.returns("UPDATED", it -> it.get(TESTING_TABLE.STATUS));
 	}
