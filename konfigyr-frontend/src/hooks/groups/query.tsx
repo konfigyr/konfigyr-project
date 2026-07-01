@@ -2,7 +2,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import request from '@konfigyr/lib/http';
 
 import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
-import type { GroupVerification, GroupVerificationQuery } from './types';
+import type { GroupVerification, GroupVerificationQuery, VerificationMethod } from './types';
 
 export const groupVerificationKeys = {
   getGroupVerifications: (namespace: string, query: GroupVerificationQuery) => ['namespace', namespace, 'group-verifications', query],
@@ -22,6 +22,23 @@ export const getGroupVerifications = (namespace: string, query: GroupVerificatio
 
 export const useGetGroupVerifications = (namespace: string, query?: GroupVerificationQuery) => {
   return useQuery(getGroupVerifications(namespace, query));
+};
+
+export const useClaimGroupVerification = (namespace: string) => {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { groupId: string; verificationMethod: VerificationMethod }): Promise<GroupVerification> => {
+      return request.post(`api/namespaces/${namespace}/group-verifications`, {
+        json: payload,
+      }).json<GroupVerification>();
+    },
+    onSuccess: () => {
+      client.invalidateQueries({
+        queryKey: ['namespace', namespace, 'group-verifications'],
+      });
+    },
+  });
 };
 
 export const useRevokeGroupVerification = (namespace: string) => {
