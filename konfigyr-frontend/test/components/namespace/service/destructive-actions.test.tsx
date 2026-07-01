@@ -3,15 +3,18 @@ import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { namespaces, services } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import { ServiceDestructiveActions } from '@konfigyr/components/namespace/service/settings/destructive-actions';
-import userEvents from '@testing-library/user-event/dist/cjs/index.js';
+import userEvents from '@testing-library/user-event';
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('components | namespace | service | <ServiceDestructiveActions/>', () => {
+  let user: UserEvent;
   let result: RenderResult;
 
   const onDelete = vi.fn();
 
   beforeEach(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <ServiceDestructiveActions namespace={namespaces.konfigyr} service={services.konfigyrId} onDelete={onDelete}/>
     ));
@@ -33,7 +36,7 @@ describe('components | namespace | service | <ServiceDestructiveActions/>', () =
   test('should open the delete confirmation modal', async () => {
     expect(result.getByText('Delete service')).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Delete service' }),
     );
 
@@ -50,11 +53,11 @@ describe('components | namespace | service | <ServiceDestructiveActions/>', () =
   test('should open the delete confirmation modal and enable the confirmation button', async () => {
     expect(result.getByText('Delete service')).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Delete service' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByPlaceholderText('Input service name'),
       services.konfigyrId.name,
     );
@@ -65,16 +68,16 @@ describe('components | namespace | service | <ServiceDestructiveActions/>', () =
   test('should confirm delete service action', async () => {
     expect(result.getByText('Delete service')).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Delete service' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByPlaceholderText('Input service name'),
       services.konfigyrId.name,
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Yes, I am sure' }),
     );
 

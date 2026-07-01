@@ -6,13 +6,16 @@ import { accounts } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
+import type { UserEvent } from '@testing-library/user-event';
 import type { RenderResult } from '@testing-library/react';
 
 describe('components | account | <AccountDeleteConfirmationDialog/>', () => {
   const onDelete = vi.fn();
   let result: RenderResult;
+  let user: UserEvent;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <AccountDeleteConfirmationDialog account={accounts.johnDoe} onDelete={onDelete} />
@@ -34,7 +37,7 @@ describe('components | account | <AccountDeleteConfirmationDialog/>', () => {
   });
 
   test('should open account delete confirmation dialog', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -48,7 +51,7 @@ describe('components | account | <AccountDeleteConfirmationDialog/>', () => {
   });
 
   test('should close account delete confirmation dialog', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Nope, I have changed my mind' }),
     );
 
@@ -62,7 +65,7 @@ describe('components | account | <AccountDeleteConfirmationDialog/>', () => {
       return Promise.reject(new Error('Fail to delete account'));
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -70,7 +73,7 @@ describe('components | account | <AccountDeleteConfirmationDialog/>', () => {
       expect(result.getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Yes, I am sure' }),
     );
 
@@ -84,7 +87,7 @@ describe('components | account | <AccountDeleteConfirmationDialog/>', () => {
       expect(result.getByRole('alertdialog')).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Yes, I am sure' }),
     );
   });

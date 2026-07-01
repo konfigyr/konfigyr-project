@@ -5,6 +5,8 @@ import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { SearchToggle } from '@konfigyr/components/layout/search-toggle';
 
 describe('components | layout | <SearchToggle/>', () => {
+  const user = userEvents.setup();
+
   const result = renderWithMessageProvider(
     <SearchToggle />,
   );
@@ -14,7 +16,7 @@ describe('components | layout | <SearchToggle/>', () => {
   test('should render search toggle button that would open the search dialog', async () => {
     expect(result.getByRole('button', { name: 'Search...' })).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -32,7 +34,7 @@ describe('components | layout | <SearchToggle/>', () => {
   });
 
   test('should close the dialog by pressing ESC key', async () => {
-    await userEvents.keyboard('{Escape}');
+    await user.keyboard('{Escape}');
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).not.toBeInTheDocument();
@@ -40,13 +42,13 @@ describe('components | layout | <SearchToggle/>', () => {
   });
 
   test('should open and close dialog by pressing shortcut', async () => {
-    await userEvents.keyboard('{meta>}k{/meta}');
+    await user.keyboard('{meta>}k{/meta}');
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).toBeInTheDocument();
     });
 
-    await userEvents.keyboard('{meta>}k{/meta}');
+    await user.keyboard('{meta>}k{/meta}');
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).not.toBeInTheDocument();

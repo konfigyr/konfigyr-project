@@ -7,6 +7,7 @@ describe('components | UI | <Switch/>', () => {
   afterEach(() => cleanup());
 
   test('should render controlled switch component', async () => {
+    const user = userEvents.setup();
     const { getByRole } = render(
       <Switch data-testid="inputs" checked={true} />,
     );
@@ -16,7 +17,7 @@ describe('components | UI | <Switch/>', () => {
     expect(input).toBeChecked();
     expect(input).toHaveAttribute('aria-checked', 'true');
 
-    await userEvents.click(input);
+    await user.click(input);
 
     // this is a controlled component, should not change its state
     expect(input).toBeChecked();
@@ -25,6 +26,7 @@ describe('components | UI | <Switch/>', () => {
 
   test('should render uncontrolled switch component', async () => {
     const onCheckedChange = vi.fn();
+    const user = userEvents.setup();
 
     const { getByRole } = render(
       <Switch data-testid="inputs" onCheckedChange={onCheckedChange} />,
@@ -35,7 +37,7 @@ describe('components | UI | <Switch/>', () => {
     expect(input).not.toBeChecked();
     expect(input).toHaveAttribute('aria-checked', 'false');
 
-    await userEvents.click(input);
+    await user.click(input);
 
     expect(onCheckedChange).toHaveBeenCalled();
 

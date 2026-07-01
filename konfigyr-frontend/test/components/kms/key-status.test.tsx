@@ -80,11 +80,12 @@ describe('components | kms | <KeyStatusBadge/>', () => {
   afterEach(() => cleanup());
 
   test('should show a tooltip when hovering over key status badge', async () => {
+    const user = userEvents.setup();
     const { getByRole, getByText } = renderWithMessageProvider(
       <KeyStatusBadge status='ENABLED' delay={50} />,
     );
 
-    await userEvents.hover(getByRole('button'));
+    await user.hover(getByRole('button'));
 
     await waitFor(() => {
       expect(getByText('This key is active and being used for all new cryptographic operations.'))

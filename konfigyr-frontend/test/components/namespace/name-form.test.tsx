@@ -7,11 +7,14 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('components | namespace | <NamespaceNameForm/>', () => {
   let result: RenderResult;
+  let user: UserEvent;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <NamespaceNameForm namespace={namespaces.konfigyr} />
@@ -37,11 +40,11 @@ describe('components | namespace | <NamespaceNameForm/>', () => {
   });
 
   test('should fail to submit invalid form', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -50,7 +53,7 @@ describe('components | namespace | <NamespaceNameForm/>', () => {
   });
 
   test('should enter invalid namespace name', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'Namespace name that is too long and should trigger validation error',
     );
@@ -60,16 +63,16 @@ describe('components | namespace | <NamespaceNameForm/>', () => {
   });
 
   test('should submit form with invalid display name', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'Invalid name',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -82,16 +85,16 @@ describe('components | namespace | <NamespaceNameForm/>', () => {
   });
 
   test('should submit form with valid display name', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       namespaces.konfigyr.name,
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

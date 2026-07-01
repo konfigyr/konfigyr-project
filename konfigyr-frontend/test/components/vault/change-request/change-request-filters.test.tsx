@@ -33,6 +33,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
 
   test('should search by search term', async () => {
     const onQueryChange = vi.fn();
+    const user = userEvents.setup();
     const { getByRole } = renderWithQueryClient(
       <ChangeRequestFilters
         namespace={namespaces.konfigyr}
@@ -42,7 +43,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
       />,
     );
 
-    await userEvents.type(
+    await user.type(
       getByRole('searchbox'),
       'search term',
     );
@@ -59,6 +60,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
 
   test('should sort by last modified', async () => {
     const onQueryChange = vi.fn();
+    const user = userEvents.setup();
     const { getByRole } = renderWithQueryClient(
       <ChangeRequestFilters
         namespace={namespaces.konfigyr}
@@ -68,7 +70,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
       />,
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('combobox', { name: 'Sort by' }),
     );
 
@@ -76,7 +78,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
       expect(getByRole('option', { name: 'Least recently updated' })).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('option', { name: 'Least recently updated' }),
     );
 
@@ -92,6 +94,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
 
   test('should filter by state', async () => {
     const onQueryChange = vi.fn();
+    const user = userEvents.setup();
     const { getByRole } = renderWithQueryClient(
       <ChangeRequestFilters
         namespace={namespaces.konfigyr}
@@ -101,7 +104,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
       />,
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('combobox', { name: 'Filter by state' }),
     );
 
@@ -109,7 +112,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
       expect(getByRole('option', { name: 'Merged' })).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('option', { name: 'Merged' }),
     );
 
@@ -125,6 +128,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
 
   test('should filter by specific profile', async () => {
     const onQueryChange = vi.fn();
+    const user = userEvents.setup();
     const { getByRole } = renderWithQueryClient(
       <ChangeRequestFilters
         namespace={namespaces.konfigyr}
@@ -134,7 +138,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
       />,
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('combobox', { name: 'Filter by profile' }),
     );
 
@@ -142,7 +146,7 @@ describe('components | vault | change-request | <ChangeRequestFilters/>', () => 
       expect(getByRole('option', { name: 'Staging' })).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('option', { name: 'Staging' }),
     );
 

@@ -43,6 +43,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
   });
 
   test('should render <ServiceConfigurationProfiles> component and delete Development profile', async () => {
+    const user = userEvents.setup();
     const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.konfigyr}
@@ -55,7 +56,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
       expect(result.getByText('Staging')).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Delete Development profile' }),
     );
 
@@ -66,7 +67,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
         'permanently remove the associated configuration states.If you want to keep the profile but prevent ' +
         'further changes, use the read-only profile policy instead.');
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Yes, I am sure' }),
     );
 
@@ -75,6 +76,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
   });
 
   test('should render <ServiceConfigurationProfiles> component and update policy to Read-only for the Development profile', async () => {
+    const user = userEvents.setup();
     const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
         namespace={namespaces.konfigyr}
@@ -93,7 +95,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
     expect(result.getByRole('button', { name: 'Update policy for Staging profile' })).toBeInTheDocument();
     expect(result.getByRole('button', { name: 'Update policy for Staging profile' })).toHaveTextContent('Protected profile');
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Update policy for Development profile' }),
     );
 
@@ -101,7 +103,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
     expect(result.getByRole('menuitemradio', { name: 'Unprotected' }));
     expect(result.getByRole('menuitemradio', { name: 'Read-only' }));
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('menuitemradio', { name: 'Read-only' }),
     );
 
@@ -113,6 +115,7 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
 
   test('should render <ServiceConfigurationProfiles> component and update Development profile name', async () => {
     const NEW_PROFILE_NAME = 'Development Profile';
+    const user = userEvents.setup();
 
     const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
@@ -127,19 +130,20 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
 
     expect(result.queryByText(NEW_PROFILE_NAME)).not.toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Development' }),
     );
 
-    await userEvents.clear(result.getByRole('textbox'));
-    await userEvents.type(result.getByRole('textbox'), NEW_PROFILE_NAME);
-    await userEvents.keyboard('{Enter}');
+    await user.clear(result.getByRole('textbox'));
+    await user.type(result.getByRole('textbox'), NEW_PROFILE_NAME);
+    await user.keyboard('{Enter}');
 
     expect(result.getByRole('button', { name: NEW_PROFILE_NAME })).toBeInTheDocument();
   });
 
   test('should render <ServiceConfigurationProfiles> component and update Development profile description', async () => {
     const NEW_PROFILE_DESCRIPTION = 'Development profile description';
+    const user = userEvents.setup();
 
     const result = renderComponentWithRouter((
       <ServiceConfigurationProfiles
@@ -154,13 +158,13 @@ describe('components | namespace | service | profiles | <ServiceConfigurationPro
 
     expect(result.queryByText(NEW_PROFILE_DESCRIPTION)).not.toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       result.getAllByRole('button', { name: 'No description provided' })[0],
     );
 
-    await userEvents.clear(result.getByRole('textbox'));
-    await userEvents.type(result.getByRole('textbox'), NEW_PROFILE_DESCRIPTION);
-    await userEvents.keyboard('{Enter}');
+    await user.clear(result.getByRole('textbox'));
+    await user.type(result.getByRole('textbox'), NEW_PROFILE_DESCRIPTION);
+    await user.keyboard('{Enter}');
 
     expect(result.getByRole('button', { name: NEW_PROFILE_DESCRIPTION })).toBeInTheDocument();
   });

@@ -4,11 +4,14 @@ import userEvents from '@testing-library/user-event';
 import { renderWithRouter } from '@konfigyr/test/helpers/router';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('routes | namespace | provision', () => {
   let result: RenderResult & { router: { state: { location: { pathname: string } } } };
+  let user: UserEvent;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithRouter('/namespace/provision');
   });
 
@@ -31,7 +34,7 @@ describe('routes | namespace | provision', () => {
   });
 
   test('should validate initial form data', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -46,7 +49,7 @@ describe('routes | namespace | provision', () => {
   });
 
   test('should connect name with URL slug input field', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Name' }),
       'some Namespace name',
     );
@@ -55,20 +58,20 @@ describe('routes | namespace | provision', () => {
   });
 
   test('should disconnect name when URL slug input field is made dirty and invalid', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'URL' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'URL' }),
       'updated-namespace-slug',
     );
 
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Name' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Name' }),
       'Namespace name',
     );
@@ -82,11 +85,11 @@ describe('routes | namespace | provision', () => {
   });
 
   test('should validate URL slug availability', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'URL' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'URL' }),
       'available-namespace',
     );
@@ -105,7 +108,7 @@ describe('routes | namespace | provision', () => {
   test('should create namespace and redirect to namespace overview page', async () => {
     expect(result.getByRole('button')).not.toBeDisabled();
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

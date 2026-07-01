@@ -89,6 +89,7 @@ describe('components | UI | <InlineEdit/>', () => {
   });
 
   test('should open editing state when placeholder is clicked', async () => {
+    const user = userEvents.setup();
     const result = renderWithMessageProvider(
       <InlineEdit value="my value" onChange={onChange}>
         <InlineEditPlaceholder />
@@ -98,7 +99,7 @@ describe('components | UI | <InlineEdit/>', () => {
 
     expect(result.queryByRole('textbox')).toBeNull();
 
-    await userEvents.click(result.getByRole('button'));
+    await user.click(result.getByRole('button'));
 
     const input = result.getByRole('textbox');
     expect(input).toBeInTheDocument();
@@ -111,6 +112,7 @@ describe('components | UI | <InlineEdit/>', () => {
   });
 
   test('should open editing state when placeholder is focused and Enter key is pressed', async () => {
+    const user = userEvents.setup();
     const result = renderWithMessageProvider(
       <InlineEdit value="my value" onChange={onChange}>
         <InlineEditPlaceholder />
@@ -120,10 +122,10 @@ describe('components | UI | <InlineEdit/>', () => {
 
     expect(result.queryByRole('textbox')).toBeNull();
 
-    await userEvents.tab();
+    await user.tab();
     expect(result.getByRole('button')).toHaveFocus();
 
-    await userEvents.keyboard('{Enter}');
+    await user.keyboard('{Enter}');
 
     const input = result.getByRole('textbox');
     expect(input).toBeInTheDocument();
@@ -136,6 +138,7 @@ describe('components | UI | <InlineEdit/>', () => {
   });
 
   test('should exit editing state when cancel action button is clicked', async () => {
+    const user = userEvents.setup();
     const result = renderWithMessageProvider(
       <InlineEdit value="my value" onChange={onChange}>
         <InlineEditPlaceholder />
@@ -143,16 +146,17 @@ describe('components | UI | <InlineEdit/>', () => {
       </InlineEdit>,
     );
 
-    await userEvents.click(result.getByRole('button'));
+    await user.click(result.getByRole('button'));
     expect(result.queryByRole('textbox')).toBeInTheDocument();
 
-    await userEvents.click(result.getByRole('button', { name: 'Cancel' }));
+    await user.click(result.getByRole('button', { name: 'Cancel' }));
     expect(result.queryByRole('textbox')).toBeNull();
 
     expect(onChange).not.toBeCalled();
   });
 
   test('should exit editing state when escape key is pressed', async () => {
+    const user = userEvents.setup();
     const result = renderWithMessageProvider(
       <InlineEdit value="my value" onChange={onChange}>
         <InlineEditPlaceholder />
@@ -160,16 +164,17 @@ describe('components | UI | <InlineEdit/>', () => {
       </InlineEdit>,
     );
 
-    await userEvents.click(result.getByRole('button'));
+    await user.click(result.getByRole('button'));
     expect(result.queryByRole('textbox')).toBeInTheDocument();
 
-    await userEvents.keyboard('{Escape}');
+    await user.keyboard('{Escape}');
     expect(result.queryByRole('textbox')).toBeNull();
 
     expect(onChange).not.toBeCalled();
   });
 
   test('should render inline edit with input field', async () => {
+    const user = userEvents.setup();
     const result = renderWithMessageProvider(
       <InlineEdit value="my value" onChange={onChange}>
         <InlineEditPlaceholder />
@@ -177,13 +182,13 @@ describe('components | UI | <InlineEdit/>', () => {
       </InlineEdit>,
     );
 
-    await userEvents.click(result.getByRole('button'));
+    await user.click(result.getByRole('button'));
     expect(result.queryByRole('textbox')).toBeInTheDocument();
 
-    await userEvents.clear(result.getByRole('textbox'));
-    await userEvents.type(result.getByRole('textbox'), 'new value');
+    await user.clear(result.getByRole('textbox'));
+    await user.type(result.getByRole('textbox'), 'new value');
 
-    await userEvents.keyboard('{Enter}');
+    await user.keyboard('{Enter}');
 
     await waitFor(() => {
       expect(onChange).toBeCalledWith('new value');
@@ -191,6 +196,7 @@ describe('components | UI | <InlineEdit/>', () => {
   });
 
   test('should render inline edit with textarea field', async () => {
+    const user = userEvents.setup();
     const result = renderWithMessageProvider(
       <InlineEdit value="text area value" onChange={onChange}>
         <InlineEditPlaceholder />
@@ -198,17 +204,18 @@ describe('components | UI | <InlineEdit/>', () => {
       </InlineEdit>,
     );
 
-    await userEvents.click(result.getByRole('button'));
+    await user.click(result.getByRole('button'));
     expect(result.queryByRole('textbox')).toBeInTheDocument();
 
-    await userEvents.type(result.getByRole('textbox'), ', appended text');
-    await userEvents.click(result.getByRole('button', { name: 'Save' }));
+    await user.type(result.getByRole('textbox'), ', appended text');
+    await user.click(result.getByRole('button', { name: 'Save' }));
 
     expect(onChange).toBeCalledWith('text area value, appended text');
   });
 
   test('should block save when validation fails', async () => {
     const validate = (value: string) => value.length < 3 ? ['Value must be at least 3 characters'] : undefined;
+    const user = userEvents.setup();
 
     const result = renderWithMessageProvider(
       <InlineEdit value="valid" onChange={onChange}>
@@ -217,10 +224,10 @@ describe('components | UI | <InlineEdit/>', () => {
       </InlineEdit>,
     );
 
-    await userEvents.click(result.getByRole('button'));
-    await userEvents.clear(result.getByRole('textbox'));
-    await userEvents.type(result.getByRole('textbox'), 'x');
-    await userEvents.keyboard('{Enter}');
+    await user.click(result.getByRole('button'));
+    await user.clear(result.getByRole('textbox'));
+    await user.type(result.getByRole('textbox'), 'x');
+    await user.keyboard('{Enter}');
 
     expect(onChange).not.toBeCalled();
     expect(result.getByRole('textbox')).toBeInTheDocument();
@@ -229,6 +236,7 @@ describe('components | UI | <InlineEdit/>', () => {
 
   test('should save when validation passes', async () => {
     const validate = (value: string) => value.length < 3 ? ['Value must be at least 3 characters'] : undefined;
+    const user = userEvents.setup();
 
     const result = renderWithMessageProvider(
       <InlineEdit value="old" onChange={onChange}>
@@ -237,13 +245,13 @@ describe('components | UI | <InlineEdit/>', () => {
       </InlineEdit>,
     );
 
-    await userEvents.click(result.getByRole('button'));
-    await userEvents.clear(result.getByRole('textbox'));
-    await userEvents.type(result.getByRole('textbox'), 'new valid value');
+    await user.click(result.getByRole('button'));
+    await user.clear(result.getByRole('textbox'));
+    await user.type(result.getByRole('textbox'), 'new valid value');
 
     expect(result.getByRole('textbox')).toBeValid();
 
-    await userEvents.keyboard('{Enter}');
+    await user.keyboard('{Enter}');
 
     await waitFor(() => {
       expect(onChange).toBeCalledWith('new valid value');
@@ -252,6 +260,7 @@ describe('components | UI | <InlineEdit/>', () => {
 
   test('should clear validation errors on cancel', async () => {
     const validate = (value: string) => value.length < 3 ? ['Value must be at least 3 characters'] : undefined;
+    const user = userEvents.setup();
 
     const result = renderWithMessageProvider(
       <InlineEdit value="valid" onChange={onChange}>
@@ -260,23 +269,24 @@ describe('components | UI | <InlineEdit/>', () => {
       </InlineEdit>,
     );
 
-    await userEvents.click(result.getByRole('button'));
-    await userEvents.clear(result.getByRole('textbox'));
-    await userEvents.type(result.getByRole('textbox'), 'x');
-    await userEvents.keyboard('{Enter}');
+    await user.click(result.getByRole('button'));
+    await user.clear(result.getByRole('textbox'));
+    await user.type(result.getByRole('textbox'), 'x');
+    await user.keyboard('{Enter}');
     expect(onChange).not.toBeCalled();
     expect(result.getByRole('textbox')).toBeInvalid();
 
-    await userEvents.click(result.getByRole('button', { name: 'Cancel' }));
+    await user.click(result.getByRole('button', { name: 'Cancel' }));
     expect(result.queryByRole('textbox')).toBeNull();
 
-    await userEvents.click(result.getByRole('button'));
+    await user.click(result.getByRole('button'));
     expect(result.getByRole('textbox')).toBeInTheDocument();
     expect(result.getByRole('textbox')).toHaveValue('valid');
     expect(result.getByRole('textbox')).toBeValid();
   });
 
   test('should render inline edit with switch field', async () => {
+    const user = userEvents.setup();
     const result = renderWithMessageProvider(
       <InlineEdit value={true} onChange={onChange}>
         <InlineEditPlaceholder />
@@ -284,14 +294,14 @@ describe('components | UI | <InlineEdit/>', () => {
       </InlineEdit>,
     );
 
-    await userEvents.click(result.getByRole('button'));
+    await user.click(result.getByRole('button'));
     expect(result.queryByRole('switch')).toBeInTheDocument();
     expect(result.queryByRole('switch')).toBeChecked();
 
-    await userEvents.click(result.getByRole('switch'));
+    await user.click(result.getByRole('switch'));
     expect(result.queryByRole('switch')).not.toBeChecked();
 
-    await userEvents.click(result.getByRole('button', { name: 'Save' }));
+    await user.click(result.getByRole('button', { name: 'Save' }));
 
     expect(onChange).toBeCalledWith(false);
   });

@@ -87,13 +87,14 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
   });
 
   test('should click on the Delete application button', async () => {
+    const user = userEvents.setup();
     const { getByRole, getByText } = renderComponentWithRouter(
       <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr}/>,
     );
 
     expect(getByRole('button', { name: 'Delete application' })).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Delete application' }),
     );
 
@@ -105,19 +106,20 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
       expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Yes, I am sure' }),
     );
   });
 
   test('should click on the Reset application button', async () => {
+    const user = userEvents.setup();
     const { getByRole, getByText } = renderComponentWithRouter(
       <ApplicationDetails namespace={namespaces.konfigyr} application={applications.konfigyr}/>,
     );
 
     expect(getByRole('button', { name: 'Reset application' })).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Reset application' }),
     );
 
@@ -129,7 +131,7 @@ describe('components | namespace | applications | <ApplicationDetails/>', () => 
       expect(getByRole('button', { name: 'Yes, I am sure' })).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Yes, I am sure' }),
     );
   });

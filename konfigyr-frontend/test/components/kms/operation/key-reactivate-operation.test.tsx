@@ -8,6 +8,7 @@ import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | operation | <KeyReactivateOperation/>', () => {
   const onCancel = vi.fn();
+  const user = userEvents.setup();
 
   const result = renderWithQueryClient((
     <>
@@ -36,7 +37,7 @@ describe('components | kms | operation | <KeyReactivateOperation/>', () => {
   });
 
   test('should successfully reactivate key', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Reactivate' }),
     );
 
