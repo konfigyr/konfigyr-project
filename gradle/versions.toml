@@ -20,38 +20,37 @@ icu4j                = "78.3"
 hypersistence-tsid   = "2.1.4"
 tink                 = "1.22.0"
 konfigyr-artifactory = "1.0.0-RC4"
-konfigyr-mail        = "1.0.0"
+konfigyr-mail        = "1.1.0"
 bmuschko-docker      = "10.0.0"
 studer-jooq          = "10.2.1"
 
 [libraries]
-spring-boot-bom          = { group = "org.springframework.boot",                        name = "spring-boot-dependencies",             version.ref = "spring-boot" }
-spring-cloud-bom         = { group = "org.springframework.cloud",                       name = "spring-cloud-dependencies",            version.ref = "spring-cloud" }
-spring-modulith-bom      = { group = "org.springframework.modulith",                    name = "spring-modulith-bom",                  version.ref = "spring-modulith" }
-jmolecules-bom           = { group = "org.jmolecules",                                  name = "jmolecules-bom",                       version.ref = "jmolecules" }
-konfigyr-crypto-bom      = { group = "com.konfigyr",                                    name = "konfigyr-crypto-dependencies",         version.ref = "konfigyr-crypto" }
+spring-boot-bom          = { group = "org.springframework.boot",                        name = "spring-boot-dependencies",           version.ref = "spring-boot" }
+spring-cloud-bom         = { group = "org.springframework.cloud",                       name = "spring-cloud-dependencies",          version.ref = "spring-cloud" }
+spring-modulith-bom      = { group = "org.springframework.modulith",                    name = "spring-modulith-bom",                version.ref = "spring-modulith" }
+jmolecules-bom           = { group = "org.jmolecules",                                  name = "jmolecules-bom",                     version.ref = "jmolecules" }
+konfigyr-crypto-bom      = { group = "com.konfigyr",                                    name = "konfigyr-crypto-dependencies",       version.ref = "konfigyr-crypto" }
+konfigyr-mail-bom        = { group = "com.konfigyr",                                    name = "konfigyr-mail-dependencies",         version.ref = "konfigyr-mail" }
 
-bouncy-castle-provider   = { group = "org.bouncycastle",                                name = "bcprov-jdk18on",                       version.ref = "bouncy-castle" }
-bouncy-castle-pkix       = { group = "org.bouncycastle",                                name = "bcpkix-jdk18on",                       version.ref = "bouncy-castle" }
-jsoup                    = { group = "org.jsoup",                                        name = "jsoup",                                version.ref = "jsoup" }
-greenmail                = { group = "com.icegreen",                                     name = "greenmail",                            version.ref = "greenmail" }
-wiremock                 = { group = "org.wiremock.integrations",                        name = "wiremock-spring-boot",                 version.ref = "wiremock" }
-commons-compress         = { group = "org.apache.commons",                               name = "commons-compress",                     version.ref = "commons-compress" }
-guava                    = { group = "com.google.guava",                                 name = "guava",                                version.ref = "guava" }
-commonmark-core          = { group = "org.commonmark",                                   name = "commonmark",                           version.ref = "commonmark" }
-commonmark-autolink      = { group = "org.commonmark",                                   name = "commonmark-ext-autolink",              version.ref = "commonmark" }
-commonmark-strikethrough = { group = "org.commonmark",                                   name = "commonmark-ext-gfm-strikethrough",      version.ref = "commonmark" }
-commonmark-tasklist      = { group = "org.commonmark",                                   name = "commonmark-ext-task-list-items",        version.ref = "commonmark" }
-owasp-sanitizer          = { group = "com.googlecode.owasp-java-html-sanitizer",         name = "owasp-java-html-sanitizer",            version.ref = "owasp-sanitizer" }
-jgit                     = { group = "org.eclipse.jgit",                                 name = "org.eclipse.jgit",                     version.ref = "jgit" }
-slugify                  = { group = "com.github.slugify",                               name = "slugify",                              version.ref = "slugify" }
-icu4j                    = { group = "com.ibm.icu",                                      name = "icu4j",                                version.ref = "icu4j" }
-hypersistence-tsid       = { group = "io.hypersistence",                                 name = "hypersistence-tsid",                   version.ref = "hypersistence-tsid" }
-tink                     = { group = "com.google.crypto.tink",                            name = "tink",                                 version.ref = "tink" }
-konfigyr-artifactory     = { group = "com.konfigyr",                                      name = "konfigyr-artifactory",                 version.ref = "konfigyr-artifactory" }
-konfigyr-mail-api        = { group = "com.konfigyr",                                      name = "konfigyr-mail-api",                    version.ref = "konfigyr-mail" }
-konfigyr-mail-smtp       = { group = "com.konfigyr",                                      name = "konfigyr-mail-smtp",                   version.ref = "konfigyr-mail" }
-konfigyr-mail-thymeleaf  = { group = "com.konfigyr",                                      name = "konfigyr-mail-thymeleaf",              version.ref = "konfigyr-mail" }
+bouncy-castle-provider   = { group = "org.bouncycastle",                                name = "bcprov-jdk18on",                     version.ref = "bouncy-castle" }
+bouncy-castle-pkix       = { group = "org.bouncycastle",                                name = "bcpkix-jdk18on",                     version.ref = "bouncy-castle" }
+jsoup                    = { group = "org.jsoup",                                       name = "jsoup",                              version.ref = "jsoup" }
+greenmail                = { group = "com.icegreen",                                    name = "greenmail",                          version.ref = "greenmail" }
+wiremock                 = { group = "org.wiremock.integrations",                       name = "wiremock-spring-boot",               version.ref = "wiremock" }
+commons-compress         = { group = "org.apache.commons",                              name = "commons-compress",                   version.ref = "commons-compress" }
+guava                    = { group = "com.google.guava",                                name = "guava",                              version.ref = "guava" }
+commonmark-core          = { group = "org.commonmark",                                  name = "commonmark",                         version.ref = "commonmark" }
+commonmark-autolink      = { group = "org.commonmark",                                  name = "commonmark-ext-autolink",            version.ref = "commonmark" }
+commonmark-strikethrough = { group = "org.commonmark",                                  name = "commonmark-ext-gfm-strikethrough",   version.ref = "commonmark" }
+commonmark-tasklist      = { group = "org.commonmark",                                  name = "commonmark-ext-task-list-items",     version.ref = "commonmark" }
+owasp-sanitizer          = { group = "com.googlecode.owasp-java-html-sanitizer",        name = "owasp-java-html-sanitizer",          version.ref = "owasp-sanitizer" }
+jgit                     = { group = "org.eclipse.jgit",                                name = "org.eclipse.jgit",                   version.ref = "jgit" }
+slugify                  = { group = "com.github.slugify",                              name = "slugify",                            version.ref = "slugify" }
+icu4j                    = { group = "com.ibm.icu",                                     name = "icu4j",                              version.ref = "icu4j" }
+hypersistence-tsid       = { group = "io.hypersistence",                                name = "hypersistence-tsid",                 version.ref = "hypersistence-tsid" }
+tink                     = { group = "com.google.crypto.tink",                          name = "tink",                               version.ref = "tink" }
+konfigyr-artifactory     = { group = "com.konfigyr",                                    name = "konfigyr-artifactory",               version.ref = "konfigyr-artifactory" }
+konfigyr-mail-test       = { group = "com.konfigyr",                                    name = "konfigyr-mail-test",                 version.ref = "konfigyr-mail" }
 
 [plugins]
 spring-boot     = { id = "org.springframework.boot",        version.ref = "spring-boot" }

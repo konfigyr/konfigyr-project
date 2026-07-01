@@ -5,8 +5,8 @@ plugins {
 dependencies {
     api("org.springframework.boot:spring-boot-starter-mail")
 
-    api(libs.konfigyr.mail.smtp)
-    api(libs.konfigyr.mail.thymeleaf)
+    api("com.konfigyr:konfigyr-mail-smtp")
+    api("com.konfigyr:konfigyr-mail-thymeleaf")
 
     api("org.springframework.boot:spring-boot-starter-thymeleaf")
     api("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")

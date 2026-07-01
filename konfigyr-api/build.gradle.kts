@@ -48,6 +48,7 @@ dependencies {
     testImplementation(project(":konfigyr-test"))
     testImplementation(libs.greenmail)
     testImplementation(libs.wiremock)
+    testImplementation(libs.konfigyr.mail.test)
     testImplementation("org.springframework.boot:spring-boot-starter-batch-jdbc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-micrometer-metrics-test")
 }
