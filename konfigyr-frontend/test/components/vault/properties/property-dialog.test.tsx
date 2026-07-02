@@ -83,7 +83,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
   test('should render the property dialog with the closed state', () => {
     const { getByRole, queryByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
     expect(getByRole('button', { name: 'Add property' })).toBeInTheDocument();
@@ -91,11 +91,12 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should open the property dialog with the property search combobox in focus', async () => {
+    const user = userEvents.setup();
     const { getByRole, queryByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
     expect(getByRole('dialog')).toBeInTheDocument();
 
@@ -106,13 +107,14 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should find a configuration property with simple string type', async () => {
+    const user = userEvents.setup();
     const { getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'spring.config.name',
     );
@@ -123,7 +125,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     expect(getByRole('option', { name: 'spring.config.name' })).toBeInTheDocument();
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('combobox', { name: 'Property name' })).toHaveValue('spring.config.name');
@@ -132,13 +134,14 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should add selected configuration property with the entered value', async () => {
+    const user = userEvents.setup();
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'spring.config.name',
     );
@@ -147,22 +150,22 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('textbox', { name: 'spring.config.name' })).toHaveValue('application');
     });
 
-    await userEvents.clear(
+    await user.clear(
       getByRole('textbox', { name: 'spring.config.name' }),
     );
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'spring.config.name' }),
       'Test configuration property',
     );
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     expect(onAdd).toHaveBeenCalledExactlyOnceWith({
       artifact: 'org.springframework.boot:spring-boot:4.0.3',
@@ -182,13 +185,14 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should add a configuration property with object schema type', async () => {
+    const user = userEvents.setup();
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'logging.level',
     );
@@ -199,7 +203,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     expect(getByRole('option', { name: 'logging.level' })).toBeInTheDocument();
 
-    await userEvents.keyboard('[Tab]');
+    await user.keyboard('[Tab]');
 
     await waitFor(() => {
       expect(getAllByRole('option')).toHaveLength(3);
@@ -209,16 +213,16 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
     expect(getByRole('option', { name: 'logging.level.sql' })).toBeInTheDocument();
     expect(getByRole('option', { name: 'logging.level.web' })).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       getByRole('option', { name: 'logging.level.web' }),
     );
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'logging.level.web' }),
       'DEBUG',
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Add property' }),
     );
 
@@ -231,7 +235,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
         examples: ['debug', 'error', 'fatal', 'info', 'off', 'trace', 'warn'],
       },
       description: 'Log levels severity mapping. For instance, `logging.level.org.springframework=DEBUG`.',
-      score: 101,
+      score: 11,
       state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'DEBUG', decoded: 'DEBUG' },
     });
@@ -242,13 +246,14 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should add a configuration property with a complex object schema type', async () => {
+    const user = userEvents.setup();
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'spring.security.oauth2.client.registration',
     );
@@ -259,10 +264,10 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     expect(getByRole('option', { name: 'spring.security.oauth2.client.registration' })).toBeInTheDocument();
 
-    await userEvents.keyboard('[Tab]');
+    await user.keyboard('[Tab]');
 
     // start typing to enter the object key...
-    await userEvents.type(
+    await user.type(
       getByRole('combobox'),
       '.github',
     );
@@ -280,7 +285,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
     expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' })).toBeInTheDocument();
     expect(getByRole('option', { name: 'spring.security.oauth2.client.registration.github.scope' })).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       getByRole('option', { name: 'spring.security.oauth2.client.registration.github.clientSecret' }),
     );
 
@@ -288,12 +293,12 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       expect(getByRole('textbox', { name: 'spring.security.oauth2.client.registration.github.clientSecret' })).toBeInTheDocument();
     });
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'spring.security.oauth2.client.registration.github.clientSecret' }),
       'client-secret',
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Add property' }),
     );
 
@@ -303,7 +308,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       typeName: 'java.util.Map<java.lang.String,org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientProperties$Registration>',
       schema: { type: 'string' },
       description: 'OAuth client registrations.',
-      score: 100,
+      score: 10,
       state: ConfigurationPropertyState.ADDED,
       value: { encoded: 'client-secret', decoded: 'client-secret' },
     });
@@ -311,16 +316,17 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
     await waitFor(() => {
       expect(queryByRole('dialog')).not.toBeInTheDocument();
     });
-  }, 15000);
+  });
 
   test('should add a configuration property that has no matching descriptor', async () => {
+    const user = userEvents.setup();
     const { queryByRole, getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'konfigyr.test-missing-property',
     );
@@ -331,18 +337,18 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
 
     expect(getByRole('option', { name: 'konfigyr.test-missing-property' })).toBeInTheDocument();
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('textbox', { name: 'konfigyr.test-missing-property' })).toBeInTheDocument();
     });
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'konfigyr.test-missing-property' }),
       'Added value',
     );
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     expect(onAdd).toHaveBeenCalledExactlyOnceWith({
       name: 'konfigyr.test-missing-property',
@@ -358,13 +364,14 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should disable the Add button without showing an error when the initial value violates schema constraints', async () => {
+    const user = userEvents.setup();
     const { getAllByRole, getByRole, queryByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'konfigyr.test.constrained',
     );
@@ -373,7 +380,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('button', { name: 'Add property' })).toBeDisabled();
@@ -383,13 +390,14 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should show a validation error after typing an invalid value', async () => {
+    const user = userEvents.setup();
     const { getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'konfigyr.test.constrained',
     );
@@ -398,13 +406,13 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('textbox', { name: 'konfigyr.test.constrained' })).toBeInTheDocument();
     });
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'konfigyr.test.constrained' }),
       'ab',
     );
@@ -416,13 +424,14 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should clear the validation error and enable Add button after correcting the value', async () => {
+    const user = userEvents.setup();
     const { getAllByRole, getByRole, queryByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'konfigyr.test.constrained',
     );
@@ -431,21 +440,21 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('textbox', { name: 'konfigyr.test.constrained' })).toBeInTheDocument();
     });
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'konfigyr.test.constrained' }),
       'ab',
     );
 
     expect(getByRole('alert')).toBeInTheDocument();
 
-    await userEvents.clear(getByRole('textbox', { name: 'konfigyr.test.constrained' }));
-    await userEvents.type(
+    await user.clear(getByRole('textbox', { name: 'konfigyr.test.constrained' }));
+    await user.type(
       getByRole('textbox', { name: 'konfigyr.test.constrained' }),
       'valid-value',
     );
@@ -456,13 +465,14 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
   });
 
   test('should not call onAdd when pressing Enter with an invalid value', async () => {
+    const user = userEvents.setup();
     const { getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'konfigyr.test.constrained',
     );
@@ -471,30 +481,31 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('textbox', { name: 'konfigyr.test.constrained' })).toBeInTheDocument();
     });
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'konfigyr.test.constrained' }),
       'ab',
     );
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     expect(onAdd).not.toHaveBeenCalled();
   });
 
   test('should enable the Add button for a property whose default value satisfies schema constraints', async () => {
+    const user = userEvents.setup();
     const { getAllByRole, getByRole } = renderWithQueryClient((
-      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} />
+      <PropertyDialog changeset={changeset} catalog={catalog} onAdd={onAdd} debounceMs={0} />
     ));
 
-    await userEvents.click(getByRole('button', { name: 'Add property' }));
+    await user.click(getByRole('button', { name: 'Add property' }));
 
-    await userEvents.type(
+    await user.type(
       getByRole('combobox', { name: 'Property name' }),
       'konfigyr.test.valid-default',
     );
@@ -503,7 +514,7 @@ describe('components | vault | properties | <PropertyDialog/>', () => {
       expect(getAllByRole('option')).toHaveLength(1);
     });
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('button', { name: 'Add property' })).not.toBeDisabled();

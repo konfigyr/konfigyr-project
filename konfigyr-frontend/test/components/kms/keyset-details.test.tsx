@@ -6,6 +6,8 @@ import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | <KeysetDetails/>', () => {
+  const user = userEvents.setup();
+
   const result = renderWithQueryClient(
     <KeysetDetails
       namespace={namespaces.konfigyr}
@@ -40,7 +42,7 @@ describe('components | kms | <KeysetDetails/>', () => {
   });
 
   test('should open the dropdown menu for a key', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: `Open actions menu for key ${kms.destroyedKeyset.keys[0].id}` }),
     );
 
@@ -56,7 +58,7 @@ describe('components | kms | <KeysetDetails/>', () => {
   });
 
   test('should restore the key that is scheduled for destruction', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('menuitem', { name: 'Restore key' }),
     );
 
@@ -64,11 +66,11 @@ describe('components | kms | <KeysetDetails/>', () => {
       result.getByRole('dialog', { name: 'Restore key?' });
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Yes, I am sure' }),
     );
 
-    await userEvents.keyboard('{Escape}');
+    await user.keyboard('{Escape}');
 
     await waitFor(() => {
       expect(result.queryByRole('menu')).not.toBeInTheDocument();

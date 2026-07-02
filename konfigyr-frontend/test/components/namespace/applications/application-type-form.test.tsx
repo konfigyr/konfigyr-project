@@ -29,11 +29,12 @@ describe('components | namespace | applications | <ApplicationTypeForm/>', () =>
 
   test('should call onSubmit with SERVICE_ACCOUNT when submitting without changing selection', async () => {
     const onSubmit = vi.fn();
+    const user = userEvents.setup();
     const { getByRole } = renderComponentWithRouter(
       <ApplicationTypeForm onSubmit={onSubmit} />,
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /continue to application configuration/i }),
     );
 
@@ -44,12 +45,13 @@ describe('components | namespace | applications | <ApplicationTypeForm/>', () =>
 
   test('should call onSubmit with AGENT when AGENT is selected', async () => {
     const onSubmit = vi.fn();
+    const user = userEvents.setup();
     const { getByRole } = renderComponentWithRouter(
       <ApplicationTypeForm onSubmit={onSubmit} />,
     );
 
-    await userEvents.click(getByRole('radio', { name: /ai agent/i }));
-    await userEvents.click(
+    await user.click(getByRole('radio', { name: /ai agent/i }));
+    await user.click(
       getByRole('button', { name: /continue to application configuration/i }),
     );
 
@@ -60,12 +62,13 @@ describe('components | namespace | applications | <ApplicationTypeForm/>', () =>
 
   test('should call onSubmit with WORKLOAD when WORKLOAD is selected', async () => {
     const onSubmit = vi.fn();
+    const user = userEvents.setup();
     const { getByRole } = renderComponentWithRouter(
       <ApplicationTypeForm onSubmit={onSubmit} />,
     );
 
-    await userEvents.click(getByRole('radio', { name: /workload identity/i }));
-    await userEvents.click(
+    await user.click(getByRole('radio', { name: /workload identity/i }));
+    await user.click(
       getByRole('button', { name: /continue to application configuration/i }),
     );
 

@@ -8,6 +8,7 @@ import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | operation | <KeyRestoreOperation/>', () => {
   const onCancel = vi.fn();
+  const user = userEvents.setup();
 
   const result = renderWithQueryClient((
     <>
@@ -36,7 +37,7 @@ describe('components | kms | operation | <KeyRestoreOperation/>', () => {
   });
 
   test('should successfully restore key from scheduled for destruction', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Yes, I am sure' }),
     );
 

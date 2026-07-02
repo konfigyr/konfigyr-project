@@ -65,16 +65,17 @@ describe('routes | namespace | application details', () => {
   });
 
   test('should show success toast after updating an application', async () => {
+    const user = userEvents.setup();
     const { getByLabelText, getByText } = renderWithRouter('/namespace/konfigyr/applications/existing-application-id');
 
     await waitFor(() => {
       expect(getByLabelText('Application name')).toHaveValue('konfigyr test');
     });
 
-    await userEvents.clear(getByLabelText('Application name'));
-    await userEvents.type(getByLabelText('Application name'), 'updated name');
+    await user.clear(getByLabelText('Application name'));
+    await user.type(getByLabelText('Application name'), 'updated name');
 
-    await userEvents.click(
+    await user.click(
       getByText(/update application/i),
     );
 

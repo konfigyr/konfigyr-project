@@ -7,6 +7,7 @@ describe('routes | join namespace', () => {
   afterEach(() => cleanup());
 
   test('should render the join namespace page and accept invitation', async () => {
+    const user = userEvent.setup();
     const { router, getByRole, getByText } = renderWithRouter('/join/0b9f514567f6cd9bb393a06388fc3dd7');
 
     await waitFor(() => {
@@ -16,7 +17,7 @@ describe('routes | join namespace', () => {
     expect(getByText('John Doe has a seat waiting for you.')).toBeInTheDocument();
     expect(getByRole('button', { name: 'Join Konfigyr' })).toBeInTheDocument();
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Join Konfigyr' }),
     );
 

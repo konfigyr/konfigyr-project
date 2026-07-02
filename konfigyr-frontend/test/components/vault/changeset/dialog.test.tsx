@@ -134,6 +134,7 @@ describe('components | vault | changeset | <ChangesetSubmitDialog/>', () => {
 
   test('should close the changeset submit dialog when clicking on cancel button', async () => {
     const onClose = vi.fn();
+    const user = userEvent.setup();
     const { getByRole, queryByRole } = renderWithQueryClient(
       <ChangesetSubmitDialog
         open={true}
@@ -148,7 +149,7 @@ describe('components | vault | changeset | <ChangesetSubmitDialog/>', () => {
     expect(queryByRole('dialog')).toBeInTheDocument();
     expect(queryByRole('button', { name: 'Close' })).toBeInTheDocument();
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Close' }),
     );
 
@@ -158,6 +159,7 @@ describe('components | vault | changeset | <ChangesetSubmitDialog/>', () => {
   test('should submit changes without adding a description', async () => {
     const onApply = vi.fn();
     const onSubmit = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithQueryClient(
       <ChangesetSubmitDialog
@@ -169,20 +171,20 @@ describe('components | vault | changeset | <ChangesetSubmitDialog/>', () => {
       />,
     );
 
-    await userEvent.clear(
+    await user.clear(
       getByRole('textbox', { name: 'Change subject' }),
     );
 
-    await userEvent.type(
+    await user.type(
       getByRole('textbox', { name: 'Change subject' }),
       'New changeset name',
     );
 
-    await userEvent.click(
+    await user.click(
       getByRole('radio', { name: 'Submit for review' }),
     );
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Propose changes' }),
     );
 
@@ -195,7 +197,7 @@ describe('components | vault | changeset | <ChangesetSubmitDialog/>', () => {
   test('should apply changes with description', async () => {
     const onApply = vi.fn();
     const onSubmit = vi.fn();
-
+    const user = userEvent.setup();
     const { getByRole } = renderWithQueryClient(
       <ChangesetSubmitDialog
         open={true}
@@ -206,21 +208,21 @@ describe('components | vault | changeset | <ChangesetSubmitDialog/>', () => {
       />,
     );
 
-    await userEvent.clear(
+    await user.clear(
       getByRole('textbox', { name: 'Change subject' }),
     );
 
-    await userEvent.type(
+    await user.type(
       getByRole('textbox', { name: 'Change subject' }),
       'New changeset name',
     );
 
-    await userEvent.type(
+    await user.type(
       getByRole('textbox', { name: 'Description' }),
       'Description of the changeset',
     );
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Propose changes' }),
     );
 
@@ -235,6 +237,7 @@ describe('components | vault | changeset | <ChangesetSubmitDialog/>', () => {
   test('should submit changes to unprotected profile', async () => {
     const onApply = vi.fn();
     const onSubmit = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole } = renderWithQueryClient(
       <ChangesetSubmitDialog
@@ -246,11 +249,11 @@ describe('components | vault | changeset | <ChangesetSubmitDialog/>', () => {
       />,
     );
 
-    await userEvent.click(
+    await user.click(
       getByRole('radio', { name: 'Submit for review' }),
     );
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Propose changes' }),
     );
 

@@ -8,6 +8,7 @@ import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | operation | <KeysetDecryptOperation/>', () => {
   const onCancel = vi.fn();
+  const user = userEvents.setup();
 
   const result = renderWithQueryClient((
     <>
@@ -38,7 +39,7 @@ describe('components | kms | operation | <KeysetDecryptOperation/>', () => {
   });
 
   test('should validate form', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Decrypt ciphertext' }),
     );
 
@@ -49,12 +50,12 @@ describe('components | kms | operation | <KeysetDecryptOperation/>', () => {
   });
 
   test('should fail to decrypt cipher text', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Text to decrypt' }),
       'invalid-cipher',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Decrypt ciphertext' }),
     );
 
@@ -64,21 +65,21 @@ describe('components | kms | operation | <KeysetDecryptOperation/>', () => {
   });
 
   test('should successfully decrypt cipher text', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Text to decrypt' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Text to decrypt' }),
       'AVr7U4_7PUEu2qf7SYLUW4H2PZvJIcRQvLlCVYpWmKxzHD8rnUx2sgxQ',
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Additional authenticated data' }),
       'authenticated-data',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Decrypt ciphertext' }),
     );
 
@@ -94,7 +95,7 @@ describe('components | kms | operation | <KeysetDecryptOperation/>', () => {
     const closeButtons = result.getAllByRole('button', { name: 'Close' });
     expect(closeButtons).toHaveLength(2);
 
-    await userEvents.click(closeButtons[1]);
+    await user.click(closeButtons[1]);
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).not.toBeInTheDocument();

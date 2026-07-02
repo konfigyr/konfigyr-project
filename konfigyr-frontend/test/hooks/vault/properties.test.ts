@@ -76,7 +76,7 @@ describe('hooks | vault | properties', () => {
 
   test('should debounce property descriptor search term', async () => {
     const { result: search, rerender } = renderHook(
-      (props: { term: string }) => usePropertyDescriptorSearch(descriptors, props.term, 400),
+      (props: { term: string }) => usePropertyDescriptorSearch(descriptors, props.term, 25),
       { initialProps: { term: '' } },
     );
 

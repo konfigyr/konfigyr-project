@@ -7,11 +7,14 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('components | account | <AccountNameForm/>', () => {
   let result: RenderResult;
+  let user: UserEvent;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <AccountNameForm account={accounts.johnDoe} />
@@ -34,11 +37,11 @@ describe('components | account | <AccountNameForm/>', () => {
   });
 
   test('should fail to submit invalid form', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -47,7 +50,7 @@ describe('components | account | <AccountNameForm/>', () => {
   });
 
   test('should enter new account name', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'Invalid display name',
     );
@@ -57,7 +60,7 @@ describe('components | account | <AccountNameForm/>', () => {
   });
 
   test('should submit form with invalid display name', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -70,16 +73,16 @@ describe('components | account | <AccountNameForm/>', () => {
   });
 
   test('should submit form with valid display name', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'John Doe',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

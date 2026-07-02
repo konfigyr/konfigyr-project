@@ -7,11 +7,14 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('components | namespace | members | <InviteForm/>', () => {
+  let user: UserEvent;
   let result: RenderResult;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <InviteForm namespace={namespaces.konfigyr} />
@@ -32,12 +35,12 @@ describe('components | namespace | members | <InviteForm/>', () => {
   });
 
   test('should render an error notification when invitation can not be sent', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'invalid email address',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -50,20 +53,20 @@ describe('components | namespace | members | <InviteForm/>', () => {
   });
 
   test('should render success notification when invitation is sent', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'invitee@konfigyr.com',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('switch'),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

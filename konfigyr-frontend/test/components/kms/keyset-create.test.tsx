@@ -8,6 +8,7 @@ import { namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | <CreateKeysetForm/>', () => {
   const onCreate = vi.fn();
+  const user = userEvents.setup();
 
   const result = renderWithQueryClient((
     <>
@@ -27,12 +28,12 @@ describe('components | kms | <CreateKeysetForm/>', () => {
   });
 
   test('should validate form', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Keyset name' }),
       'Keyset name that is too long and should trigger validation error',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Create keyset' }),
     );
 
@@ -43,16 +44,16 @@ describe('components | kms | <CreateKeysetForm/>', () => {
   });
 
   test('should attempt to create a keyset that already exists', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Keyset name' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Keyset name' }),
       'existing-keyset',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('combobox', { name: 'Keyset algorithm' }),
     );
 
@@ -60,11 +61,11 @@ describe('components | kms | <CreateKeysetForm/>', () => {
       expect(result.getAllByRole('option')).toHaveLength(5);
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('option', { name: /AES128-GCM/ }),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Create keyset' }),
     );
 
@@ -74,16 +75,16 @@ describe('components | kms | <CreateKeysetForm/>', () => {
   });
 
   test('should create a new keyset for namespace', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Keyset name' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Keyset name' }),
       'new-keyset',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('combobox', { name: 'Keyset algorithm' }),
     );
 
@@ -91,11 +92,11 @@ describe('components | kms | <CreateKeysetForm/>', () => {
       expect(result.getAllByRole('option')).toHaveLength(5);
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('option', { name: /AES256-GCM/ }),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Create keyset' }),
     );
 

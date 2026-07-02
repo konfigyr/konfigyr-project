@@ -7,11 +7,14 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('components | namespace | <NamespaceDescriptionForm/>', () => {
   let result: RenderResult;
+  let user: UserEvent;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <NamespaceDescriptionForm namespace={namespaces.konfigyr} />
@@ -47,7 +50,7 @@ describe('components | namespace | <NamespaceDescriptionForm/>', () => {
       description += String.fromCharCode(array[i]);
     }
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       window.btoa(description),
     );
@@ -57,16 +60,16 @@ describe('components | namespace | <NamespaceDescriptionForm/>', () => {
   });
 
   test('should submit form with invalid description', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'Invalid description',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -79,16 +82,16 @@ describe('components | namespace | <NamespaceDescriptionForm/>', () => {
   });
 
   test('should submit form with valid description', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       namespaces.konfigyr.name,
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

@@ -56,7 +56,7 @@ const useFilteredProperties = (
   }, [properties, termFilter]);
 };
 
-export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: ServiceCatalog } & ChangesetStatusBarProps) {
+export function ChangesetEditor({ catalog, changeset, debounceMs = 200, ...props }: { catalog: ServiceCatalog; debounceMs?: number } & ChangesetStatusBarProps) {
   const readOnly = changeset.profile.policy === 'IMMUTABLE';
   const [propertyStatusFilter, onPropertyStatusFilterChanged] = useState<StatusFilter>(StatusFilter.ALL);
   const [propertyTermFilter, onPropertyTermFilterChanged] = useState<string>('');
@@ -130,12 +130,14 @@ export function ChangesetEditor({ catalog, changeset, ...props }: { catalog: Ser
             className="max-w-sm"
             value={propertyTermFilter}
             onChange={onPropertyTermFilterChanged}
+            debounce={debounceMs}
           />
 
           <PropertyDialog
             catalog={catalog}
             changeset={changeset}
             onAdd={onAdd}
+            debounceMs={debounceMs}
           />
 
           <PropertiesImportDialog catalog={catalog} onImport={onImport} profile={changeset.profile} />

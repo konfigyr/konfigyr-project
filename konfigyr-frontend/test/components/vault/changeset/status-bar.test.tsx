@@ -102,6 +102,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
 
   test('should update changeset name', async () => {
     const onRenamed = vi.fn();
+    const user = userEvent.setup();
     const { getByRole } = renderWithQueryClient(
       <TestChangesetStatusBar profile={profiles.development} onChangesetRenamed={onRenamed}/>,
     );
@@ -110,20 +111,20 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
       expect(getByRole('button', { name: 'Changeset draft' })).toBeInTheDocument();
     });
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Changeset draft' }),
     );
 
-    await userEvent.clear(
+    await user.clear(
       getByRole('textbox'),
     );
 
-    await userEvent.type(
+    await user.type(
       getByRole('textbox'),
       'Updated changeset name',
     );
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Save' }),
     );
 
@@ -136,6 +137,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
 
   test('should discard changeset', async () => {
     const onDiscarded = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole, getByText } = renderWithQueryClient(
       <TestChangesetStatusBar profile={profiles.development} onChangesetDiscarded={onDiscarded} />,
@@ -145,7 +147,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
       expect(getByRole('button', { name: 'Discard' })).toBeInTheDocument();
     });
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Discard' }),
     );
 
@@ -170,6 +172,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
 
   test('should open the submit changeset dialog and apply the changes to an unprotected profile', async () => {
     const onApplied = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole, getByText } = renderWithQueryClient(
       <TestChangesetStatusBar profile={profiles.development} modified={true} onChangesetApplied={onApplied} />,
@@ -180,7 +183,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
       expect(getByRole('button', { name: 'Apply' })).not.toBeDisabled();
     });
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Apply' }),
     );
 
@@ -188,7 +191,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
       expect(getByRole('dialog')).toBeInTheDocument();
     });
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Propose changes' }),
     );
 
@@ -201,6 +204,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
 
   test('should open the submit changeset dialog and submit the changes to a protected profile', async () => {
     const onSubmitted = vi.fn();
+    const user = userEvent.setup();
 
     const { getByRole, getByText } = renderWithQueryClient(
       <TestChangesetStatusBar profile={profiles.staging} modified={true} onChangeRequestCreated={onSubmitted}/>,
@@ -210,7 +214,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
       expect(getByRole('button', { name: 'Submit' })).toBeInTheDocument();
     });
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Submit' }),
     );
 
@@ -218,7 +222,7 @@ describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
       expect(getByRole('dialog')).toBeInTheDocument();
     });
 
-    await userEvent.click(
+    await user.click(
       getByRole('button', { name: 'Propose changes' }),
     );
 

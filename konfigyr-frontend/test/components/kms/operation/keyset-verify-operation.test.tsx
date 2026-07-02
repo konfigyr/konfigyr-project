@@ -8,6 +8,7 @@ import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | operation | <KeysetVerifySignatureOperation/>', () => {
   const onCancel = vi.fn();
+  const user = userEvents.setup();
 
   const result = renderWithQueryClient((
     <>
@@ -38,7 +39,7 @@ describe('components | kms | operation | <KeysetVerifySignatureOperation/>', () 
   });
 
   test('should validate form', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Verify signature' }),
     );
 
@@ -49,17 +50,17 @@ describe('components | kms | operation | <KeysetVerifySignatureOperation/>', () 
   });
 
   test('should fail to validate signature due to server error', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Signature to verify' }),
       'some-signature',
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Text to verify' }),
       'invalid-plaintext',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Verify signature' }),
     );
 
@@ -69,16 +70,16 @@ describe('components | kms | operation | <KeysetVerifySignatureOperation/>', () 
   });
 
   test('should fail to validate signature', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Text to verify' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Text to verify' }),
       'Plaintext to verify',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Verify signature' }),
     );
 
@@ -89,16 +90,16 @@ describe('components | kms | operation | <KeysetVerifySignatureOperation/>', () 
   });
 
   test('should successfully validate signature', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Signature to verify' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Signature to verify' }),
       'valid-signature',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Verify signature' }),
     );
 
@@ -109,7 +110,7 @@ describe('components | kms | operation | <KeysetVerifySignatureOperation/>', () 
   });
 
   test('should close the keyset operation dialog', async () => {
-    await userEvents.click(result.getByRole('button', { name: 'Cancel' }));
+    await user.click(result.getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).not.toBeInTheDocument();

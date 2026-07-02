@@ -64,7 +64,7 @@ const namespaceSlugSchema = z.object({
     .max(30, { message: 'URL slug must be at most 30 characters.' }),
 });
 
-export function NamespaceSlugForm({ namespace }: { namespace: Namespace }) {
+export function NamespaceSlugForm({ namespace, debounceMs = 300 }: { namespace: Namespace, debounceMs?: number }) {
   const id = useId();
   const queryClient = useQueryClient();
   const { mutateAsync: updateNamespace } = useUpdateNamespace(namespace);
@@ -119,7 +119,7 @@ export function NamespaceSlugForm({ namespace }: { namespace: Namespace }) {
             <form.AppField
               name="slug"
               validators={{
-                onChangeAsyncDebounceMs: 300,
+                onChangeAsyncDebounceMs: debounceMs,
                 onChangeAsync: validateSlug,
               }}
               children={(field) => (

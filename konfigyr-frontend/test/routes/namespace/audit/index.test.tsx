@@ -7,6 +7,7 @@ describe('routes | namespace | audit', () => {
   afterEach(() => cleanup());
 
   test('should render Namespace audit record list page', async () => {
+    const user = userEvents.setup();
     const { getByRole, getByText, router } = renderWithRouter('/namespace/konfigyr/audit');
 
     await waitFor(() => {
@@ -24,7 +25,7 @@ describe('routes | namespace | audit', () => {
 
     expect(getByRole('button', { name: 'Go to next page' })).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Go to next page' }),
     );
 
