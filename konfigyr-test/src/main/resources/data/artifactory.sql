@@ -11,17 +11,17 @@ INSERT INTO artifacts(id, group_id, artifact_id, name, description, website, rep
 (10, 'org.springframework.modulith', 'spring-modulith-moments', 'Spring Modulith Moments', 'Modular monoliths with Spring Boot', 'https://spring.io/projects/spring-modulith/spring-modulith-moments', 'https://github.com/spring-projects-experimental/spring-modulith', now() - interval '10 days', now() - interval '9 days');
 
 INSERT INTO artifact_versions(id, artifact_id, version, state, checksum, released_at) VALUES
-(1, 1, '1.0.0', 'RELEASED', decode('lmUgkxFN4ru/3vuoTkcrYdf2Z5IfcSnmmtfnZJh+Lwo=', 'base64'), now() - interval '1 days'),
-(2, 2, '1.0.0', 'RELEASED', decode('/dDqvCohLTXiFVbzK9EPgoFqx7LMj/PHtd/5ycpeV8s=', 'base64'), now() - interval '7 days'),
-(3, 2, '1.0.1', 'RELEASED', decode('tBFMF6xGmSUIYo1skF45tzoCCN9WN026PdxUUBb4P7c=', 'base64'), now() - interval '3 days'),
-(4, 2, '1.0.2', 'RELEASED', decode('Z4ZfvHMxf2DwgPPzOpWR/F19myuTCvYVVN7WSf3vxTs=', 'base64'), now() - interval '1 days'),
-(5, 3, '1.0.0', 'RELEASED', decode('xWl6bKMwnQ1ZVs/CVKuoFufZACtb7oh5uebZr0T6txA=', 'base64'), now() - interval '2 days'),
-(6, 5, '1.0.0', 'RELEASED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '1 hours'),
-(7, 6, '4.0.4', 'RELEASED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '6 hours'),
-(8, 7, '4.0.4', 'RELEASED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '3 days'),
-(9, 8, '4.0.4', 'RELEASED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '2 days'),
-(10, 9, '2.0.4', 'RELEASED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days'),
-(11, 10, '2.0.4', 'RELEASED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days');
+(1, 1, '1.0.0', 'PUBLISHED', decode('lmUgkxFN4ru/3vuoTkcrYdf2Z5IfcSnmmtfnZJh+Lwo=', 'base64'), now() - interval '1 days'),
+(2, 2, '1.0.0', 'PUBLISHED', decode('/dDqvCohLTXiFVbzK9EPgoFqx7LMj/PHtd/5ycpeV8s=', 'base64'), now() - interval '7 days'),
+(3, 2, '1.0.1', 'PUBLISHED', decode('tBFMF6xGmSUIYo1skF45tzoCCN9WN026PdxUUBb4P7c=', 'base64'), now() - interval '3 days'),
+(4, 2, '1.0.2', 'PUBLISHED', decode('Z4ZfvHMxf2DwgPPzOpWR/F19myuTCvYVVN7WSf3vxTs=', 'base64'), now() - interval '1 days'),
+(5, 3, '1.0.0', 'PUBLISHED', decode('xWl6bKMwnQ1ZVs/CVKuoFufZACtb7oh5uebZr0T6txA=', 'base64'), now() - interval '2 days'),
+(6, 5, '1.0.0', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '1 hours'),
+(7, 6, '4.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '6 hours'),
+(8, 7, '4.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '3 days'),
+(9, 8, '4.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '2 days'),
+(10, 9, '2.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days'),
+(11, 10, '2.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days');
 
 INSERT INTO property_definitions(id, artifact_id, checksum, name, type_name, schema, default_value, description, deprecation, occurrences, first_seen, last_seen) VALUES
 (1, 2, decode('cRJ8jlPpTPmTJEoZEZNDSjvdqafG05QkzNJplXyu9J0=', 'base64'), 'spring.application.name', 'java.lang.String', convert_to('{"type":"string"}', 'UTF-8'), NULL, 'Application name. Typically used with logging to help identify the application.', NULL, 1, '1.0.1', '1.0.1'),

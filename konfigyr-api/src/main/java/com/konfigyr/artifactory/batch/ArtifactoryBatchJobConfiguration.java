@@ -30,7 +30,7 @@ class ArtifactoryBatchJobConfiguration {
 			JobExecutionListener artifactoryJobExecutionListener
 	) {
 		return new JobBuilder(ArtifactoryJobNames.PUBLISH_JOB, repository)
-				.validator(createReleaseParametersValidator())
+				.validator(createPublicationParametersValidator())
 				.start(provenance)
 				.listener(artifactoryJobExecutionListener)
 				.build();
@@ -50,7 +50,7 @@ class ArtifactoryBatchJobConfiguration {
 		return new ArtifactoryJobListener(registry, operator);
 	}
 
-	static JobParametersValidator createReleaseParametersValidator() {
+	static JobParametersValidator createPublicationParametersValidator() {
 		return new DefaultJobParametersValidator(new String[] { "artifact" }, new String[0]);
 	}
 

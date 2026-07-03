@@ -198,7 +198,7 @@ and third-party integrations alike.
 | `ArtifactVersion` | Immutable snapshot of a specific release. Owns `PropertyOccurrence` links. |
 | `PropertyDescriptor` | Configuration property metadata: name, type, description, default, JSON Schema. |
 | `ArtifactMetadata` | Upload envelope — aggregates all `PropertyDescriptor`s for one artifact version. Uploaded by build plugins via REST. |
-| `Release` | Version change event with lifecycle: `PENDING → RELEASED → FAILED`. |
+| `Publication` | Version change event with lifecycle: `PENDING → PUBLISHED → FAILED`. |
 | `Manifest` | A Konfigyr service's current metadata state — used to detect property differences across environments. |
 | `ServiceManifest` | Relational link between a namespace-owned service and one or more artifact versions. Enables metadata reuse (shared library configs) across services. |
 
@@ -216,7 +216,7 @@ Artifactory module
   5. Compute Occurrence Checksum (schema + description + deprecation)
   6. Deduplicate: reuse existing PropertyOccurrence if checksum matches
   7. Create Version-to-Property links
-  8. Update Release status: PENDING → RELEASED
+  8. Update Publication status: PENDING → PUBLISHED
 ```
 
 ## API Contracts
