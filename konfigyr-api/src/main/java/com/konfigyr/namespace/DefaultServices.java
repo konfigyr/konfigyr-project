@@ -271,7 +271,7 @@ class DefaultServices implements Services {
 		log.info(PUBLISHED, "Successfully published manifest for service {} in namespace {}: {}",
 				service.id(), service.namespace(), manifest);
 
-		publisher.publishEvent(new ServiceEvent.Published(service, manifest));
+		publisher.publishEvent(new ServiceEvent.Released(service, manifest));
 
 		return manifest;
 	}
