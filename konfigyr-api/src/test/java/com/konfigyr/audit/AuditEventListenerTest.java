@@ -516,8 +516,8 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should persist audit record for service published event with empty artifact coordinates")
-	void shouldAuditEmptyServicePublishedManifest() {
+	@DisplayName("should persist audit record for service released event with empty artifact coordinates")
+	void shouldAuditEmptyServiceReleasedManifest() {
 		setSecurityContext(TestPrincipals.john());
 
 		final Service service = Service.builder()
@@ -530,20 +530,20 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		final var manifest = mock(Manifest.class);
 		doReturn(Collections.emptyList()).when(manifest).artifacts();
 
-		listener.on(new ServiceEvent.Published(service, manifest));
+		listener.on(new ServiceEvent.Released(service, manifest));
 
 		assertAuditRecord("service", EntityId.from(902))
 				.returns(EntityId.from(10), AuditRecord::namespaceId)
-				.satisfies(assertAuditRecordMessage("Service artifacts were published"))
-				.returns("service.published", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Service was released"))
+				.returns("service.released", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("artifacts", List.of())
 				);
 	}
 
 	@Test
-	@DisplayName("should persist audit record for service published event with artifact coordinates")
-	void shouldAuditServicePublishedManifest() {
+	@DisplayName("should persist audit record for service released event with artifact coordinates")
+	void shouldAuditServiceReleasedManifest() {
 		setSecurityContext(TestPrincipals.john());
 
 		final Service service = Service.builder()
@@ -559,12 +559,12 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 				Artifact.of("com.konfigyr", "konfigyr-identity", "1.0.0")
 		)).when(manifest).artifacts();
 
-		listener.on(new ServiceEvent.Published(service, manifest));
+		listener.on(new ServiceEvent.Released(service, manifest));
 
 		assertAuditRecord("service", EntityId.from(902))
 				.returns(EntityId.from(10), AuditRecord::namespaceId)
-				.returns("service.published", AuditRecord::eventType)
-				.satisfies(assertAuditRecordMessage("Service artifacts were published"))
+				.returns("service.released", AuditRecord::eventType)
+				.satisfies(assertAuditRecordMessage("Service was released"))
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("artifacts", List.of(
 								"com.konfigyr:konfigyr-api:1.0.0",

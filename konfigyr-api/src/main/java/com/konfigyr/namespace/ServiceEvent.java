@@ -16,7 +16,7 @@ import java.util.function.Supplier;
  * @since 1.0.0
  **/
 public sealed abstract class ServiceEvent extends EntityEvent implements Supplier<Service>
-		permits ServiceEvent.Created, ServiceEvent.Renamed, ServiceEvent.Published, ServiceEvent.Deleted {
+		permits ServiceEvent.Created, ServiceEvent.Renamed, ServiceEvent.Released, ServiceEvent.Deleted {
 
 	protected final Service service;
 
@@ -98,29 +98,29 @@ public sealed abstract class ServiceEvent extends EntityEvent implements Supplie
 	}
 
 	/**
-	 * Event that would be published when a new {@link Manifest} for the {@link Service} is published.
+	 * Event that would be published when a new {@link Manifest} for the {@link Service} is released.
 	 */
-	@DomainEvent(name = "service-published", namespace = "namespaces")
-	public static final class Published extends ServiceEvent {
+	@DomainEvent(name = "service-released", namespace = "namespaces")
+	public static final class Released extends ServiceEvent {
 
 		private final Manifest manifest;
 
 		/**
-		 * Create a new {@link Published} event with the {@link EntityId entity identifier} of the
-		 * {@link Service} that was just published by the {@link Services service manager}.
+		 * Create a new {@link Released} event with the {@link EntityId entity identifier} of the
+		 * {@link Service} that was just released by the {@link Services service manager}.
 		 *
-		 * @param service the published service.
-		 * @param manifest the published manifest.
+		 * @param service the released service.
+		 * @param manifest the released manifest.
 		 */
-		public Published(Service service, Manifest manifest) {
+		public Released(Service service, Manifest manifest) {
 			super(service);
 			this.manifest = manifest;
 		}
 
 		/**
-		 * Returns the {@link Manifest} that was published for the {@link Service}.
+		 * Returns the {@link Manifest} that was released for the {@link Service}.
 		 *
-		 * @return the published manifest, never {@literal null}.
+		 * @return the released manifest, never {@literal null}.
 		 */
 		@NonNull
 		public Manifest manifest() {

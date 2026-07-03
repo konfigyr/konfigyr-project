@@ -305,8 +305,8 @@ class AuditEventListener {
 		);
 	}
 
-	@TransactionalEventListener(id = "audit.service-published", classes = ServiceEvent.Published.class)
-	void on(ServiceEvent.Published event) {
+	@TransactionalEventListener(id = "audit.service-released", classes = ServiceEvent.Released.class)
+	void on(ServiceEvent.Released event) {
 		insert(event, builder -> {
 			final List<String> artifacts = new ArrayList<>();
 
@@ -316,7 +316,7 @@ class AuditEventListener {
 
 			builder.entityType("service")
 					.entityId(event.id())
-					.eventType("service.published")
+					.eventType("service.released")
 					.details("artifacts", Collections.unmodifiableList(artifacts));
 		});
 	}
