@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Value object representing a specific version of an {@link ArtifactDefinition}.
  * <p>
- * Each {@code VersionedArtifact} represents a single release or build of an {@link ArtifactDefinition},
+ * Each {@code VersionedArtifact} represents a single publication or build of an {@link ArtifactDefinition},
  * identified by its semantic version (e.g., {@code 1.0.0}) and a content checksum.
  * <p>
  * In DDD terms, it belongs to the {@link ArtifactDefinition} aggregate and does not exist
@@ -31,11 +31,11 @@ import java.util.List;
  * @param coordinates Maven coordinates of the artifact, can't be {@literal null}.
  * @param name human-readable name of the artifact, may be {@literal null}.
  * @param description textual description of the artifact, may be {@literal null}.
- * @param state current release state of the artifact version, can't be {@literal null}.
- * @param checksum checksum that uniquely identifying the contents of this release, may be {@literal null}.
+ * @param state current publication state of the artifact version, can't be {@literal null}.
+ * @param checksum checksum that uniquely identifying the contents of this publication, may be {@literal null}.
  * @param website external URL for documentation or homepage, may be {@literal null}.
  * @param repository source control repository reference (SCM URL), may be {@literal null}.
- * @param publishedAt timestamp when was this artifact version released, can be {@literal null}
+ * @param publishedAt timestamp when was this artifact version published, can be {@literal null}
  * @author Vladimir Spasic
  * @since 1.0.0
  */
@@ -206,14 +206,14 @@ public record VersionedArtifact(
 		}
 
 		/**
-		 * Specify when this {@link VersionedArtifact} was released.
+		 * Specify when this {@link VersionedArtifact} was published.
 		 *
-		 * @param releasedAt release date
+		 * @param publishedAt publish date
 		 * @return versioned artifact builder
 		 */
 		@NonNull
-		public Builder publishedAt(OffsetDateTime releasedAt) {
-			return this.publishedAt(releasedAt == null ? null : releasedAt.toInstant());
+		public Builder publishedAt(OffsetDateTime publishedAt) {
+			return this.publishedAt(publishedAt == null ? null : publishedAt.toInstant());
 		}
 
 		/**

@@ -92,7 +92,7 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent permits Artifa
 
 		/**
 		 * Create a new {@link PublicationCompleted} event with the {@link EntityId entity identifier} of the
-		 * {@link VersionedArtifact} that was successfully released by the {@link Artifactory}.
+		 * {@link VersionedArtifact} that was successfully published by the {@link Artifactory}.
 		 *
 		 * @param id entity identifier of the artifact version
 		 * @param coordinates the artifact coordinates of the artifact version
@@ -119,7 +119,7 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent permits Artifa
 
 		/**
 		 * Create a new {@link PublicationFailed} event with the {@link EntityId entity identifier} of the
-		 * {@link VersionedArtifact} that was could not be released by the {@link Artifactory}.
+		 * {@link VersionedArtifact} that was could not be published by the {@link Artifactory}.
 		 *
 		 * @param id entity identifier of the artifact version
 		 * @param coordinates the artifact coordinates of the artifact version
