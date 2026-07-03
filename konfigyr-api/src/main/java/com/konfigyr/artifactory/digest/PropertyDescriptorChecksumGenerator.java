@@ -166,9 +166,9 @@ public final class PropertyDescriptorChecksumGenerator {
 	}
 
 	private byte[] digest(@NonNull MessageDigest digest, JsonSchema schema) {
-		final JsonSchemaDigestVisitor visitor = new JsonSchemaDigestVisitor(digest);
+		final JsonSchemaDigestVisitor visitor = JsonSchemaDigestVisitor.of(digest);
 		visitor.visit(schema);
-		return visitor.get();
+		return visitor.digest();
 	}
 
 	private byte[] digest(@NonNull MessageDigest digest, byte[] data) {

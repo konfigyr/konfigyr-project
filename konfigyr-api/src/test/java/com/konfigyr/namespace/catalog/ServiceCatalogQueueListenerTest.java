@@ -216,8 +216,8 @@ class ServiceCatalogQueueListenerTest extends AbstractIntegrationTest {
 		);
 	}
 
-	static ArtifactoryEvent.ReleaseCompleted createReleaseCompletedEvent(long id) {
-		return new ArtifactoryEvent.ReleaseCompleted(EntityId.from(id), mock(ArtifactCoordinates.class));
+	static ArtifactoryEvent.PublicationCompleted createReleaseCompletedEvent(long id) {
+		return new ArtifactoryEvent.PublicationCompleted(EntityId.from(id), mock(ArtifactCoordinates.class));
 	}
 
 	static ServiceEvent.Published createManifestPublishedEvent(long id) {

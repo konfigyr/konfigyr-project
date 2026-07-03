@@ -504,7 +504,7 @@ class ServiceControllerTest extends AbstractControllerTest {
 				.satisfies(it -> assertThat(it.artifacts())
 						.hasSize(7)
 						.containsExactly(
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("org.springframework.boot")
 										.artifactId("spring-boot")
 										.version("4.0.4")
@@ -513,7 +513,7 @@ class ServiceControllerTest extends AbstractControllerTest {
 										.website("https://spring.io/projects/spring-boot")
 										.repository("https://github.com/spring-projects/spring-boot")
 										.build(),
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("org.springframework.boot")
 										.artifactId("spring-boot-actuator")
 										.version("4.0.4")
@@ -522,7 +522,7 @@ class ServiceControllerTest extends AbstractControllerTest {
 										.website("https://spring.io/projects/spring-boot")
 										.repository("https://github.com/spring-projects/spring-boot")
 										.build(),
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("org.springframework.boot")
 										.artifactId("spring-boot-autoconfigure")
 										.version("4.0.4")
@@ -531,17 +531,17 @@ class ServiceControllerTest extends AbstractControllerTest {
 										.website("https://spring.io/projects/spring-boot")
 										.repository("https://github.com/spring-projects/spring-boot")
 										.build(),
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("org.springframework.boot")
 										.artifactId("spring-boot-jooq")
 										.version("4.0.4")
 										.build(),
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("org.springframework.boot")
 										.artifactId("spring-boot-liquibase")
 										.version("4.0.4")
 										.build(),
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("org.springframework.modulith")
 										.artifactId("spring-modulith-core")
 										.version("2.0.3")
@@ -550,7 +550,7 @@ class ServiceControllerTest extends AbstractControllerTest {
 										.website("https://spring.io/projects/spring-modulith/spring-modulith-core")
 										.repository("https://github.com/spring-projects-experimental/spring-modulith")
 										.build(),
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("org.springframework.modulith")
 										.artifactId("spring-modulith-moments")
 										.version("2.0.3")
@@ -648,7 +648,7 @@ class ServiceControllerTest extends AbstractControllerTest {
 				.satisfies(it -> assertThat(it.artifacts())
 						.hasSize(2)
 						.containsExactly(
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("com.konfigyr")
 										.artifactId("konfigyr-crypto-api")
 										.version("1.0.2")
@@ -656,7 +656,7 @@ class ServiceControllerTest extends AbstractControllerTest {
 										.description("Spring Boot Crypto API library")
 										.repository("https://github.com/konfigyr/konfigyr-crypto")
 										.build(),
-								Artifact.builder()
+								ManifestEntry.builder()
 										.groupId("com.konfigyr")
 										.artifactId("konfigyr-crypto-tink")
 										.version("1.0.0")

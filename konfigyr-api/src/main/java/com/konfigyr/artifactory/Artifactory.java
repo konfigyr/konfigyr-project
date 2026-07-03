@@ -12,10 +12,10 @@ import java.util.Optional;
  * <p>
  * The {@code Artifactory} service provides operations for resolving, inspecting, and publishing
  * versioned artifacts managed by the platform. Artifacts represent reusable configuration libraries
- * whose metadata and property definitions are versioned and released through this service.
+ * whose metadata and property definitions are versioned and published through this service.
  * <p>
  * Implementations are responsible for enforcing domain invariants such as coordinate uniqueness,
- * release immutability, and metadata validation. Released artifacts are expected to be immutable
+ * release immutability, and metadata validation. Published artifacts are expected to be immutable
  * representations of a configuration schema at a specific point in time.
  * <p>
  * The {@code Artifactory} interface represents the main boundary between the application layer and
@@ -79,26 +79,26 @@ public interface Artifactory {
 	 *   <li>Emitting a domain event indicating that a new artifact version has been released</li>
 	 * </ul>
 	 * <p>
-	 * Implementations should treat released artifact versions as immutable. Once a version has been
+	 * Implementations should treat published artifact versions as immutable. Once a version has been
 	 * successfully published, its metadata and property definitions must not be modified.
 	 * <p>
-	 * The {@code artifactory.artifact-version.release} domain event will be emitted after
-	 * a successful release.
+	 * The {@code artifactory.artifact-version.publication-created} domain event will be emitted after
+	 * a successful publication.
 	 * <p>
 	 * Publishing is restricted to owners that hold an active verification claim covering the artifact
 	 * {@code groupId}. The {@code ownerId} identifies the publishing namespace and is resolved to its
 	 * owner before the claim is checked.
 	 *
 	 * @param ownerId the identifier of the namespace publishing the artifact, can't {@literal null}
-	 * @param metadata the metadata describing the artifact version to release, can't {@literal null}
-	 * @return the resulting {@link VersionedArtifact} representing the released artifact
+	 * @param metadata the metadata describing the artifact version to publish, can't {@literal null}
+	 * @return the resulting {@link VersionedArtifact} representing the published artifact
 	 * @throws ArtifactVersionExistsException when an artifact with the same coordinates already exists
 	 * @throws OwnerNotFoundException when the owner cannot be resolved
 	 *         from the supplied {@code ownerId}
 	 * @throws com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException when the owner does not hold
 	 *         an active verification claim covering the artifact {@code groupId}
 	 */
-	@DomainEventPublisher(publishes = "artifactory.artifact-version.release")
-	VersionedArtifact release(@NonNull EntityId ownerId, @NonNull ArtifactMetadata metadata);
+	@DomainEventPublisher(publishes = "artifactory.artifact-version.publication-created")
+	VersionedArtifact publish(@NonNull EntityId ownerId, @NonNull ArtifactMetadata metadata);
 
 }

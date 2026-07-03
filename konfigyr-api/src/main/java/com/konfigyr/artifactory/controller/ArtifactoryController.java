@@ -51,7 +51,7 @@ class ArtifactoryController {
 	}
 
 	@PostMapping("/{groupId}/{artifactId}/{version}")
-	EntityModel<Release> release(
+	EntityModel<Publication> publish(
 			@PathVariable String groupId,
 			@PathVariable String artifactId,
 			@PathVariable String version,
@@ -64,7 +64,7 @@ class ArtifactoryController {
 		final ArtifactMetadataValidator validator = new ArtifactMetadataValidator(groupId, artifactId, version);
 		validator.validate(metadata, errors);
 
-		return EntityModel.of(artifactory.release(namespaceId, metadata));
+		return EntityModel.of(artifactory.publish(namespaceId, metadata));
 	}
 
 	@GetMapping("/{groupId}/{artifactId}/{version}/properties")

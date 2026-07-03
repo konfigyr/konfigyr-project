@@ -53,16 +53,16 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.convertTo(VersionedArtifact.class)
 				.returns(EntityId.from(6), VersionedArtifact::id)
 				.returns(EntityId.from(5), VersionedArtifact::artifact)
-				.returns(coordinates.groupId(), Release::groupId)
-				.returns(coordinates.artifactId(), Release::artifactId)
-				.returns(coordinates.version().get(), Release::version)
-				.returns("Konfigyr API", Release::name)
-				.returns("Private REST API", Release::description)
-				.returns(URI.create("konfigyr.api"), Release::website)
-				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), Release::repository)
-				.returns(List.of(), Release::errors)
-				.returns("ec54eb43a2f17d3fecf5062c987c794ea025da258de0b6ea6483542ef79e3f8a", Release::checksum)
-				.satisfies(it -> assertThat(it.releasedAt())
+				.returns(coordinates.groupId(), Publication::groupId)
+				.returns(coordinates.artifactId(), Publication::artifactId)
+				.returns(coordinates.version().get(), Publication::version)
+				.returns("Konfigyr API", Publication::name)
+				.returns("Private REST API", Publication::description)
+				.returns(URI.create("konfigyr.api"), Publication::website)
+				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), Publication::repository)
+				.returns(List.of(), Publication::errors)
+				.returns("ec54eb43a2f17d3fecf5062c987c794ea025da258de0b6ea6483542ef79e3f8a", Publication::checksum)
+				.satisfies(it -> assertThat(it.publishedAt())
 						.isCloseTo(Instant.now().minus(1, ChronoUnit.HOURS), within(15, ChronoUnit.MINUTES))
 				);
 	}
@@ -120,7 +120,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should upload new artifact and create a release")
+	@DisplayName("should upload new artifact and create a publication")
 	void shouldUploadNewArtifact() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "3.0.0");
 		final var artifact = TestArtifacts.artifact(coordinates, builder -> builder
@@ -140,18 +140,18 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(DefaultRelease.class)
-				.returns(coordinates.groupId(), Release::groupId)
-				.returns(coordinates.artifactId(), Release::artifactId)
-				.returns(coordinates.version().get(), Release::version)
-				.returns(artifact.name(), Release::name)
-				.returns(artifact.description(), Release::description)
-				.returns(artifact.website(), Release::website)
-				.returns(artifact.repository(), Release::repository)
-				.returns(ReleaseState.PENDING, Release::state)
-				.returns(List.of(), Release::errors)
-				.returns("8d9d53cfd5d27febf82baf0f8d801545358c1cf21e3d54cf9c2e5c5ba1754b98", Release::checksum)
-				.satisfies(it -> assertThat(it.releasedAt())
+				.convertTo(DefaultPublication.class)
+				.returns(coordinates.groupId(), Publication::groupId)
+				.returns(coordinates.artifactId(), Publication::artifactId)
+				.returns(coordinates.version().get(), Publication::version)
+				.returns(artifact.name(), Publication::name)
+				.returns(artifact.description(), Publication::description)
+				.returns(artifact.website(), Publication::website)
+				.returns(artifact.repository(), Publication::repository)
+				.returns(PublicationState.PENDING, Publication::state)
+				.returns(List.of(), Publication::errors)
+				.returns("8d9d53cfd5d27febf82baf0f8d801545358c1cf21e3d54cf9c2e5c5ba1754b98", Publication::checksum)
+				.satisfies(it -> assertThat(it.publishedAt())
 						.isCloseTo(Instant.now(), within(10, ChronoUnit.SECONDS))
 				);
 

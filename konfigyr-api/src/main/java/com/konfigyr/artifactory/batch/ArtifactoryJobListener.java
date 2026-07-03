@@ -31,9 +31,9 @@ class ArtifactoryJobListener {
 	private final JobOperator operator;
 
 	@Async
-	@TransactionalEventListener(id = "artifactory.release-job-launcher", classes = ArtifactoryEvent.ReleaseCreated.class)
-	void released(ArtifactoryEvent.ReleaseCreated event) throws Exception {
-		launch(ArtifactoryJobNames.RELEASE_JOB, builder -> builder
+	@TransactionalEventListener(id = "artifactory.publication-job-launcher", classes = ArtifactoryEvent.PublicationCreated.class)
+	void published(ArtifactoryEvent.PublicationCreated event) throws Exception {
+		launch(ArtifactoryJobNames.PUBLISH_JOB, builder -> builder
 				.addString("artifact", event.coordinates().format(), true)
 		);
 	}

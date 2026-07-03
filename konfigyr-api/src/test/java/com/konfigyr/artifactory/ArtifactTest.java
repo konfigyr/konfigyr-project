@@ -110,7 +110,7 @@ class ArtifactTest {
 				.artifact("000005KK96ZZP")
 				.version("1.0.0")
 				.checksum("checksum")
-				.releasedAt(Instant.now())
+				.publishedAt(Instant.now())
 				.build();
 
 		assertThat(version)
@@ -124,7 +124,7 @@ class ArtifactTest {
 				.returns(artifact.repository(), VersionedArtifact::repository)
 				.returns("checksum", VersionedArtifact::checksum);
 
-		assertThat(version.releasedAt())
+		assertThat(version.publishedAt())
 				.isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
 	}
 }

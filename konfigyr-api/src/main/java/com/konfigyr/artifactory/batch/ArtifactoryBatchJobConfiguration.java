@@ -24,12 +24,12 @@ class ArtifactoryBatchJobConfiguration {
 
 	private final JobRepository repository;
 
-	@Bean(name = ArtifactoryJobNames.RELEASE_JOB)
-	Job releaseJob(
+	@Bean(name = ArtifactoryJobNames.PUBLISH_JOB)
+	Job publicationJob(
 			@Qualifier(ProvenanceConfiguration.PROVENANCE_STEP) Step provenance,
 			JobExecutionListener artifactoryJobExecutionListener
 	) {
-		return new JobBuilder(ArtifactoryJobNames.RELEASE_JOB, repository)
+		return new JobBuilder(ArtifactoryJobNames.PUBLISH_JOB, repository)
 				.validator(createReleaseParametersValidator())
 				.start(provenance)
 				.listener(artifactoryJobExecutionListener)

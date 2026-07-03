@@ -86,7 +86,7 @@ class ServiceCatalogQueueListener {
 			label = "service-catalog-queue.scheduler-for-artifact"
 	)
 	@TransactionalEventListener(id = "namespace.catalog.build.artifact-released")
-	void enqueue(ArtifactoryEvent.ReleaseCompleted event) {
+	void enqueue(ArtifactoryEvent.PublicationCompleted event) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to schedule service catalog builds for released artifact: [id={}, coordinates={}]",
 					event.id(), event.coordinates());

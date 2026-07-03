@@ -456,32 +456,32 @@ class AuditEventListener {
 
 	// ── Artifactory events ──────────────────────────────────────────────────
 
-	@TransactionalEventListener(id = "audit.release-created", classes = ArtifactoryEvent.ReleaseCreated.class)
-	void on(ArtifactoryEvent.ReleaseCreated event) {
+	@TransactionalEventListener(id = "audit.publication-created", classes = ArtifactoryEvent.PublicationCreated.class)
+	void on(ArtifactoryEvent.PublicationCreated event) {
 		insert(event, builder -> builder
 				.entityType("artifact-version")
 				.entityId(event.id())
-				.eventType("artifact-version.release-created")
+				.eventType("artifact-version.publication-created")
 				.details("coordinates", event.coordinates().format())
 		);
 	}
 
-	@TransactionalEventListener(id = "audit.release-completed", classes = ArtifactoryEvent.ReleaseCompleted.class)
-	void on(ArtifactoryEvent.ReleaseCompleted event) {
+	@TransactionalEventListener(id = "audit.publication-completed", classes = ArtifactoryEvent.PublicationCompleted.class)
+	void on(ArtifactoryEvent.PublicationCompleted event) {
 		insert(event, builder -> builder
 				.entityType("artifact-version")
 				.entityId(event.id())
-				.eventType("artifact-version.release-completed")
+				.eventType("artifact-version.publication-completed")
 				.details("coordinates", event.coordinates().format())
 		);
 	}
 
-	@TransactionalEventListener(id = "audit.release-failed", classes = ArtifactoryEvent.ReleaseFailed.class)
-	void on(ArtifactoryEvent.ReleaseFailed event) {
+	@TransactionalEventListener(id = "audit.publication-failed", classes = ArtifactoryEvent.PublicationFailed.class)
+	void on(ArtifactoryEvent.PublicationFailed event) {
 		insert(event, builder -> builder
 				.entityType("artifact-version")
 				.entityId(event.id())
-				.eventType("artifact-version.release-failed")
+				.eventType("artifact-version.publication-failed")
 				.details("coordinates", event.coordinates().format())
 		);
 	}

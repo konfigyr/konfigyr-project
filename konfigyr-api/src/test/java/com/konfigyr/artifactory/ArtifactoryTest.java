@@ -46,7 +46,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.returns("fdd0eabc2a212d35e21556f32bd10f82816ac7b2cc8ff3c7b5dff9c9ca5e57cb", VersionedArtifact::checksum)
 				.returns(null, VersionedArtifact::website)
 				.returns(URI.create("https://github.com/konfigyr/konfigyr-crypto"), VersionedArtifact::repository)
-				.satisfies(it -> assertThat(it.releasedAt())
+				.satisfies(it -> assertThat(it.publishedAt())
 						.isCloseTo(
 								OffsetDateTime.now().minusDays(7).toInstant(),
 								within(1, ChronoUnit.HOURS)
@@ -75,11 +75,11 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 	@Test
 	@Transactional
 	@DisplayName("should create a new artifact release")
-	void shouldReleaseArtifact(AssertablePublishedEvents events) {
+	void shouldPublishArtifact(AssertablePublishedEvents events) {
 		final var artifact = TestArtifacts.artifact(builder -> builder.version("3.0.0"));
 		final var metadata = TestArtifacts.metadata(artifact);
 
-		assertThat(artifactory.release(EntityId.from(2L), metadata))
+		assertThat(artifactory.publish(EntityId.from(2L), metadata))
 				.isNotNull()
 				.returns(artifact.groupId(), VersionedArtifact::groupId)
 				.returns(artifact.artifactId(), VersionedArtifact::artifactId)
@@ -88,9 +88,9 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.returns(artifact.description(), VersionedArtifact::description)
 				.returns(artifact.website(), VersionedArtifact::website)
 				.returns(artifact.repository(), VersionedArtifact::repository)
-				.returns(ReleaseState.PENDING, VersionedArtifact::state)
+				.returns(PublicationState.PENDING, VersionedArtifact::state)
 				.returns("8d9d53cfd5d27febf82baf0f8d801545358c1cf21e3d54cf9c2e5c5ba1754b98", VersionedArtifact::checksum)
-				.satisfies(it -> assertThat(it.releasedAt())
+				.satisfies(it -> assertThat(it.publishedAt())
 						.isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS))
 				);
 
@@ -100,18 +100,18 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 
 		events.assertThat()
 				.as("Should publish an event for the new artifact release")
-				.contains(ArtifactoryEvent.ReleaseCreated.class)
-				.matching(ArtifactoryEvent.ReleaseCreated::coordinates, ArtifactCoordinates.of(artifact));
+				.contains(ArtifactoryEvent.PublicationCreated.class)
+				.matching(ArtifactoryEvent.PublicationCreated::coordinates, ArtifactCoordinates.of(artifact));
 	}
 
 	@Test
 	@DisplayName("should fail to create a new artifact release when version already exists")
-	void shouldReleaseExistingArtifact(AssertablePublishedEvents events) {
+	void shouldPublishExistingArtifact(AssertablePublishedEvents events) {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-api:1.0.0");
 		final var metadata = TestArtifacts.metadata(coordinates);
 
 		assertThatExceptionOfType(ArtifactVersionExistsException.class)
-				.isThrownBy(() -> artifactory.release(EntityId.from(2L), metadata))
+				.isThrownBy(() -> artifactory.publish(EntityId.from(2L), metadata))
 				.withMessageContaining("Artifact version already exists for following coordinates: %s", coordinates)
 				.returns(coordinates, ArtifactVersionExistsException::getCoordinates)
 				.withNoCause();
@@ -120,19 +120,19 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.as("Should not store property descriptor in the metadata store")
 				.isEmpty();
 
-		assertThat(events.ofType(ArtifactoryEvent.ReleaseCreated.class))
+		assertThat(events.ofType(ArtifactoryEvent.PublicationCreated.class))
 				.as("Should not publish any release event when artifact release fails")
 				.isEmpty();
 	}
 
 	@Test
 	@DisplayName("should fail to release an artifact when the owner has no active claim covering the groupId")
-	void shouldRejectReleaseForUnverifiedGroupId(AssertablePublishedEvents events) {
+	void shouldRejectPublishForUnverifiedGroupId(AssertablePublishedEvents events) {
 		final var coordinates = ArtifactCoordinates.parse("com.unverified:some-artifact:1.0.0");
 		final var metadata = TestArtifacts.metadata(coordinates);
 
 		assertThatExceptionOfType(GroupIdNotVerifiedException.class)
-				.isThrownBy(() -> artifactory.release(EntityId.from(2L), metadata))
+				.isThrownBy(() -> artifactory.publish(EntityId.from(2L), metadata))
 				.returns("com.unverified", GroupIdNotVerifiedException::getGroupId)
 				.returns("konfigyr", ex -> ex.getOwner().slug())
 				.returns(HttpStatus.BAD_REQUEST, GroupIdNotVerifiedException::getStatusCode);
@@ -141,19 +141,19 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.as("Should not store property descriptor when the groupId is not verified")
 				.isEmpty();
 
-		assertThat(events.ofType(ArtifactoryEvent.ReleaseCreated.class))
+		assertThat(events.ofType(ArtifactoryEvent.PublicationCreated.class))
 				.as("Should not publish any release event when ownership is not verified")
 				.isEmpty();
 	}
 
 	@Test
 	@DisplayName("should fail to release an artifact when the owner cannot be resolved")
-	void shouldRejectReleaseForUnknownOwner() {
+	void shouldRejectPublishForUnknownOwner() {
 		final var coordinates = ArtifactCoordinates.parse("com.unverified:some-artifact:1.0.0");
 		final var metadata = TestArtifacts.metadata(coordinates);
 
 		assertThatExceptionOfType(OwnerNotFoundException.class)
-				.isThrownBy(() -> artifactory.release(EntityId.from(9999L), metadata));
+				.isThrownBy(() -> artifactory.publish(EntityId.from(9999L), metadata));
 	}
 
 	@Test

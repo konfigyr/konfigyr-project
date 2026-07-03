@@ -35,7 +35,7 @@ import java.util.List;
  * @param checksum checksum that uniquely identifying the contents of this release, may be {@literal null}.
  * @param website external URL for documentation or homepage, may be {@literal null}.
  * @param repository source control repository reference (SCM URL), may be {@literal null}.
- * @param releasedAt timestamp when was this artifact version released, can be {@literal null}
+ * @param publishedAt timestamp when was this artifact version released, can be {@literal null}
  * @author Vladimir Spasic
  * @since 1.0.0
  */
@@ -44,14 +44,14 @@ public record VersionedArtifact(
 		@NonNull @Identity EntityId id,
 		@NonNull @Association(aggregateType = ArtifactDefinition.class) EntityId artifact,
 		@NonNull ArtifactCoordinates coordinates,
-		@NonNull ReleaseState state,
+		@NonNull PublicationState state,
 		@Nullable String checksum,
 		@Nullable String name,
 		@Nullable String description,
 		@Nullable URI website,
 		@Nullable URI repository,
-		@NonNull Instant releasedAt
-) implements ArtifactDescriptor, Release {
+		@NonNull Instant publishedAt
+) implements ArtifactDescriptor, Publication {
 
 	@Serial
 	private static final long serialVersionUID = 2501993329087351789L;
@@ -127,7 +127,7 @@ public record VersionedArtifact(
 	 * The builder enforces explicit intent when creating new domain aggregates. Typically, only the {@code id},
 	 * {@code groupId}, {@code artifactId} and {@code version} are mandatory, with other fields being optional.
 	 */
-	public static final class Builder extends ReleaseBuilder<VersionedArtifact, Builder> {
+	public static final class Builder extends PublicationBuilder<VersionedArtifact, Builder> {
 		private EntityId id;
 		private EntityId artifact;
 
@@ -212,8 +212,8 @@ public record VersionedArtifact(
 		 * @return versioned artifact builder
 		 */
 		@NonNull
-		public Builder releasedAt(OffsetDateTime releasedAt) {
-			return releasedAt(releasedAt == null ? null : releasedAt.toInstant());
+		public Builder publishedAt(OffsetDateTime releasedAt) {
+			return this.publishedAt(releasedAt == null ? null : releasedAt.toInstant());
 		}
 
 		/**
@@ -224,17 +224,17 @@ public record VersionedArtifact(
 		 */
 		@NonNull
 		@Override
-		public VersionedArtifact build() {
+		public VersionedArtifact instantiate() {
 			Assert.notNull(id, "Versioned artifact entity identifier can not be null");
 			Assert.notNull(artifact, "Artifact entity identifier can not be null");
 			Assert.hasText(groupId, "Artifact groupId can not be null");
 			Assert.hasText(artifactId, "Artifact artifactId can not be null");
 			Assert.notNull(version, "Artifact version can not be null");
-			Assert.notNull(releasedAt, "Created date can not be null");
+			Assert.notNull(publishedAt, "Created date can not be null");
 
 			return new VersionedArtifact(id, artifact, ArtifactCoordinates.of(groupId, artifactId, version),
-					state == null ? ReleaseState.PENDING : state, checksum, name, description, website,
-					repository, releasedAt);
+					state == null ? PublicationState.PENDING : state, checksum, name, description, website,
+					repository, publishedAt);
 		}
 	}
 

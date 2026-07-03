@@ -3,6 +3,7 @@ package com.konfigyr.namespace.controller;
 import com.konfigyr.artifactory.ArtifactCoordinates;
 import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.artifactory.PropertyDescriptor;
+import com.konfigyr.artifactory.ServiceReleaseCandidate;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.*;
@@ -156,6 +157,27 @@ class ServicesController {
 		);
 
 		return Assemblers.manifest(ns, service).assemble(services.publish(service, request.coordinates()));
+	}
+
+	@PostMapping("{slug}/releases")
+	@PreAuthorize("isMember(#namespace)")
+	@ResponseStatus(HttpStatus.CREATED)
+	@RequiresScope(OAuthScope.PUBLISH_MANIFESTS)
+	EntityModel<Manifest> release(
+			@PathVariable @NonNull String namespace,
+			@PathVariable @NonNull String slug,
+			@RequestBody @Validated @NotEmpty List<ServiceReleaseCandidate> candidates
+	) {
+		final Namespace ns = lookupNamespace(namespace);
+		final Service service = services.get(ns, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace, slug)
+		);
+
+		final var coordinates = candidates.stream()
+				.map(ArtifactCoordinates::of)
+				.toList();
+
+		return Assemblers.manifest(ns, service).assemble(services.publish(service, coordinates));
 	}
 
 	@NonNull

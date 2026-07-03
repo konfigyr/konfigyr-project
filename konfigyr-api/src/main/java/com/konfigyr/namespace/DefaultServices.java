@@ -336,7 +336,8 @@ class DefaultServices implements Services {
 						ARTIFACTS.NAME,
 						ARTIFACTS.DESCRIPTION,
 						ARTIFACTS.WEBSITE,
-						ARTIFACTS.REPOSITORY
+						ARTIFACTS.REPOSITORY,
+						ARTIFACTS.CREATED_AT
 				)
 				.from(SERVICE_ARTIFACTS)
 				.leftJoin(ARTIFACTS)
@@ -345,7 +346,7 @@ class DefaultServices implements Services {
 						ARTIFACTS.ARTIFACT_ID.eq(SERVICE_ARTIFACTS.ARTIFACT_ID)
 				))
 				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(SERVICE_RELEASES.ID))
-		).as(SERVICE_ARTIFACTS_ALIAS).convertFrom(results -> results.map(DefaultServices::toArtifact));
+		).as(SERVICE_ARTIFACTS_ALIAS).convertFrom(results -> results.map(DefaultServices::toManifestEntry));
 	}
 
 	@NonNull
@@ -367,14 +368,14 @@ class DefaultServices implements Services {
 		return Manifest.builder()
 				.id(record.get(SERVICE_RELEASES.ID, EntityId.class).serialize())
 				.name(record.get(SERVICES.NAME))
-				.artifacts((Iterable<? extends Artifact>) record.get(SERVICE_ARTIFACTS_ALIAS))
+				.artifacts((Iterable<? extends ManifestEntry>) record.get(SERVICE_ARTIFACTS_ALIAS))
 				.createdAt(record.get(SERVICE_RELEASES.CREATED_AT, Instant.class))
 				.build();
 	}
 
 	@NonNull
-	private static Artifact toArtifact(@NonNull Record record) {
-		return Artifact.builder()
+	private static ManifestEntry toManifestEntry(@NonNull Record record) {
+		return ManifestEntry.builder()
 				.groupId(record.get(SERVICE_ARTIFACTS.GROUP_ID))
 				.artifactId(record.get(SERVICE_ARTIFACTS.ARTIFACT_ID))
 				.version(record.get(SERVICE_ARTIFACTS.VERSION))
@@ -382,6 +383,9 @@ class DefaultServices implements Services {
 				.description(record.get(ARTIFACTS.DESCRIPTION))
 				.website(record.get(ARTIFACTS.WEBSITE))
 				.repository(record.get(ARTIFACTS.REPOSITORY))
+				.checksum(record.get(SERVICE_ARTIFACTS.VERSION))
+				.resolvedAt(record.get(ARTIFACTS.CREATED_AT, Instant.class))
+				.source(ArtifactSource.ARTIFACTORY)
 				.build();
 	}
 

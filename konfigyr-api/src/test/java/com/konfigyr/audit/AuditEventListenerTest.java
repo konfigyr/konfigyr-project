@@ -861,18 +861,18 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should persist audit record for artifact release created event")
-	void shouldAuditReleaseCreated() {
+	@DisplayName("should persist audit record for artifact publication created event")
+	void shouldAuditPublicationCreated() {
 		setSecurityContext(TestPrincipals.application("test-oauth-application"));
 
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-core", "2.0.0");
 
-		listener.on(new ArtifactoryEvent.ReleaseCreated(EntityId.from(1200), coordinates));
+		listener.on(new ArtifactoryEvent.PublicationCreated(EntityId.from(1200), coordinates));
 
 		assertAuditRecord("artifact-version", EntityId.from(1200))
 				.returns(null, AuditRecord::namespaceId)
 				.returns("artifact-version", AuditRecord::entityType)
-				.returns("artifact-version.release-created", AuditRecord::eventType)
+				.returns("artifact-version.publication-created", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
 						.containsEntry("coordinates", coordinates.format())
 				)
@@ -881,33 +881,33 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 						.returns(PrincipalType.OAUTH_CLIENT.name(), Actor::type)
 						.returns("Test application: test-oauth-application", Actor::name)
 				)
-				.satisfies(assertAuditRecordMessage("Artifact release started for %s", coordinates.format()));
+				.satisfies(assertAuditRecordMessage("Artifact publication started for %s", coordinates.format()));
 	}
 
 	@Test
-	@DisplayName("should persist audit record for artifact release completed event")
-	void shouldAuditReleaseCompleted() {
+	@DisplayName("should persist audit record for artifact publication completed event")
+	void shouldAuditPublicationCompleted() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-core", "2.0.0");
 
-		listener.on(new ArtifactoryEvent.ReleaseCompleted(EntityId.from(1201), coordinates));
+		listener.on(new ArtifactoryEvent.PublicationCompleted(EntityId.from(1201), coordinates));
 
 		assertAuditRecord("artifact-version", EntityId.from(1201))
-				.returns("artifact-version.release-completed", AuditRecord::eventType)
+				.returns("artifact-version.publication-completed", AuditRecord::eventType)
 				.returns(AuditEventListener.SYSTEM_ACTOR, AuditRecord::actor)
-				.satisfies(assertAuditRecordMessage("Artifact release completed for %s", coordinates.format()));
+				.satisfies(assertAuditRecordMessage("Artifact %s has been successfully published", coordinates.format()));
 	}
 
 	@Test
-	@DisplayName("should persist audit record for artifact release failed event")
-	void shouldAuditReleaseFailed() {
+	@DisplayName("should persist audit record for artifact publication failed event")
+	void shouldAuditPublicationFailed() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-core", "2.0.0");
 
-		listener.on(new ArtifactoryEvent.ReleaseFailed(EntityId.from(1202), coordinates));
+		listener.on(new ArtifactoryEvent.PublicationFailed(EntityId.from(1202), coordinates));
 
 		assertAuditRecord("artifact-version", EntityId.from(1202))
-				.returns("artifact-version.release-failed", AuditRecord::eventType)
+				.returns("artifact-version.publication-failed", AuditRecord::eventType)
 				.returns(AuditEventListener.SYSTEM_ACTOR, AuditRecord::actor)
-				.satisfies(assertAuditRecordMessage("Artifact release failed for %s", coordinates.format()));
+				.satisfies(assertAuditRecordMessage("Failed to publish %s Artifact", coordinates.format()));
 	}
 
 	@Test

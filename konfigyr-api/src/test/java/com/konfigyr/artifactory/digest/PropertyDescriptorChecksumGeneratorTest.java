@@ -41,7 +41,7 @@ class PropertyDescriptorChecksumGeneratorTest {
 	void generate() {
 		assertThat(generator.generate(charset()))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
+				.isEqualTo("IC4XNSmUErqHEMLvL5F_LN9EOUaOsOLUBCuZ0wUkwdM=");
 	}
 
 	@Test
@@ -53,19 +53,19 @@ class PropertyDescriptorChecksumGeneratorTest {
 
 		assertThat(generator.generate(metadata))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
+				.isEqualTo("IC4XNSmUErqHEMLvL5F_LN9EOUaOsOLUBCuZ0wUkwdM=");
 
 		doReturn("").when(metadata).defaultValue();
 
 		assertThat(generator.generate(metadata))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
+				.isEqualTo("IC4XNSmUErqHEMLvL5F_LN9EOUaOsOLUBCuZ0wUkwdM=");
 
 		doReturn("  ").when(metadata).defaultValue();
 
 		assertThat(generator.generate(metadata))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
+				.isEqualTo("IC4XNSmUErqHEMLvL5F_LN9EOUaOsOLUBCuZ0wUkwdM=");
 	}
 
 	@Test
@@ -77,7 +77,7 @@ class PropertyDescriptorChecksumGeneratorTest {
 
 		assertThat(generator.generate(metadata))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("WPBXs76PtXbiRomHqPNDLnrmNGdK9D_KtmU0HzsMu3Y=");
+				.isEqualTo("byzB0PVMcR2z9GW4jzJlVRiudwPj7gaS-E5SlKxAN1I=");
 	}
 
 	@Test
@@ -89,19 +89,19 @@ class PropertyDescriptorChecksumGeneratorTest {
 
 		assertThat(generator.generate(metadata))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("j6s_LeZ1xec9fMrK6-du04pJzEeossisWzNVYl6cKBY=");
+				.isEqualTo("IC4XNSmUErqHEMLvL5F_LN9EOUaOsOLUBCuZ0wUkwdM=");
 
 		doReturn(new Deprecation("Some reason", null)).when(metadata).deprecation();
 
 		assertThat(generator.generate(metadata))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("CXAKZEwTR_JKuaJjhikfm__D7P_MRYkEg2v0Y_Cff5o=");
+				.isEqualTo("13pldiY3R2clnRTUGyYyP7Hn6BPpPjOV5tamhvwLyWM=");
 
 		doReturn(new Deprecation("Some reason", "No replacement")).when(metadata).deprecation();
 
 		assertThat(generator.generate(metadata))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("aY7by7kFORCCs8GPCLmqN43Hjat40-3nwlsNwg19yLA=");
+				.isEqualTo("PpGuvtgsDuftqvBlK7yzsLKqHwOqk51V9TtQTXSBvYk=");
 	}
 
 	@Test
@@ -113,7 +113,7 @@ class PropertyDescriptorChecksumGeneratorTest {
 
 		assertThat(generator.generate(metadata))
 				.extracting(ByteArray::encodeBase64Url)
-				.isEqualTo("SHljs6oOzyDuThdXWHsCRWEFhpe551WOtVnNcUj08D8=");
+				.isEqualTo("hqfPc-kKqUGD6uqxs6bwiHWVeNGYP-A6-AbORvO-j9o=");
 	}
 
 	static PropertyDescriptor charset() {

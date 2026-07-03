@@ -87,7 +87,7 @@ class DefaultArtifactory implements Artifactory {
 	@Override
 	@Observed(name = "konfigyr.artifactory.release")
 	@Transactional(label = "artifactory.release-artifact-component")
-	public VersionedArtifact release(
+	public VersionedArtifact publish(
 			@NonNull EntityId ownerId,
 			@NonNull
 			@ObservationKeyValue(key = "konfigyr.artifactory.artifact", expression = "#this")
@@ -160,14 +160,14 @@ class DefaultArtifactory implements Artifactory {
 			throw new ArtifactoryException("Unexpected error occurred while storing metadata for artifact: " + coordinates.format(), ex);
 		}
 
-		eventPublisher.publishEvent(new ArtifactoryEvent.ReleaseCreated(EntityId.from(artifactVersionId), coordinates));
+		eventPublisher.publishEvent(new ArtifactoryEvent.PublicationCreated(EntityId.from(artifactVersionId), coordinates));
 
 		return VersionedArtifact.from(metadata)
 				.id(artifactVersionId)
 				.artifact(artifactId)
-				.state(ReleaseState.PENDING)
+				.state(PublicationState.PENDING)
 				.checksum(checksum.encodeHex())
-				.releasedAt(Instant.now())
+				.publishedAt(Instant.now())
 				.build();
 	}
 
@@ -214,13 +214,13 @@ class DefaultArtifactory implements Artifactory {
 				.groupId(record.get(ARTIFACTS.GROUP_ID))
 				.artifactId(record.get(ARTIFACTS.ARTIFACT_ID))
 				.version(record.get(ARTIFACT_VERSIONS.VERSION))
-				.state(record.get(ARTIFACT_VERSIONS.STATE, ReleaseState.class))
+				.state(record.get(ARTIFACT_VERSIONS.STATE, PublicationState.class))
 				.checksum(record.get(ARTIFACT_VERSIONS.CHECKSUM, Converter.from(ByteArray.class, String.class, ByteArray::encodeHex)))
 				.name(record.get(ARTIFACTS.NAME))
 				.description(record.get(ARTIFACTS.DESCRIPTION))
 				.website(record.get(ARTIFACTS.WEBSITE))
 				.repository(record.get(ARTIFACTS.REPOSITORY))
-				.releasedAt(record.get(ARTIFACT_VERSIONS.RELEASED_AT))
+				.publishedAt(record.get(ARTIFACT_VERSIONS.RELEASED_AT))
 				.build();
 	}
 
