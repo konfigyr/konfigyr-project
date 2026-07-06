@@ -210,6 +210,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var unknownArtifact = ArtifactCoordinates.parse("com.konfigyr:konfigyr-unknown:1.0.0");
 
 		assertThat(artifactory.existing(List.of(existing, alsoExisting, unknownVersion, unknownArtifact)))
+				.extracting(ArtifactCoordinates::of)
 				.containsExactlyInAnyOrder(existing, alsoExisting);
 	}
 

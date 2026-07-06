@@ -6,90 +6,144 @@ import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
-import org.jooq.Record;
 import org.jooq.impl.DSL;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
 import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 
+/**
+ * Default {@link ServiceManifests} implementation.
+ * <p>
+ * A build plugin uses three calls, in order, to publish a service's Spring Boot configuration
+ * metadata:
+ * <ol>
+ *     <li>{@link #open}: tell the server which Maven coordinates this build depends on, and get
+ *     back which of them the plugin still needs to upload metadata for.</li>
+ *     <li>{@link #upload}: for each coordinate the server asked for, upload the parsed
+ *     {@code spring-configuration-metadata.json} contents.</li>
+ *     <li>{@link #complete}: tell the server the build is done, so it can check every required
+ *     upload happened and make the resulting property catalog available.</li>
+ * </ol>
+ * All three calls read and write the same two database tables: {@code service_releases} (one row
+ * per service, tracking the state of its current build) and {@code service_artifacts} (one row per
+ * declared coordinate within that build).
+ * <p>
+ * Each {@code service_artifacts} row has a {@code source} and a {@code checksum} column, and the
+ * two are linked by a rule that the rest of this class depends on:
+ * <ul>
+ *     <li>{@code source = LOCAL} means the coordinate is the build's own artifact, or one of its
+ *     dependencies, whose metadata this service itself uploads via {@link #upload}. Until that
+ *     upload happens, {@code checksum} is {@literal null}. That is precisely how the code tells
+ *     "declared but not yet uploaded" apart from "already uploaded". Once uploaded, {@code checksum}
+ *     holds the SHA-256 of the uploaded bytes, so a later {@link #open} call can tell whether the
+ *     plugin's local copy still matches what was last uploaded.</li>
+ *     <li>{@code source = ARTIFACTORY} means the coordinate is a third-party dependency whose
+ *     metadata already exists in the shared Artifactory registry (see {@link Artifactory}), so this
+ *     service never uploads anything for it. Its {@code checksum} column is therefore always
+ *     {@literal null}: that column only ever records what <em>this service</em> uploaded, and for an
+ *     {@code ARTIFACTORY} row that never happens. The Artifactory does have its own checksum for
+ *     the coordinate (see {@link Publication#checksum()}), but that value is only ever held in memory,
+ *     inside {@link ExistingArtifact}, for the duration of a single {@link #open} call, it is never
+ *     written to {@code service_artifacts.checksum}. See {@link CandidateArtifact#resolveChecksum}
+ *     for where this is enforced.</li>
+ * </ul>
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ */
+@Slf4j
+@NullMarked
 @RequiredArgsConstructor
 class DefaultServiceManifests implements ServiceManifests {
 
 	private static final String VERSION = "latest";
 
+	private final Marker RELEASE_OPENED = MarkerFactory.getMarker("SERVICE_RELEASE_OPENED");
+
 	private final DSLContext context;
 	private final Artifactory artifactory;
 
-	@NonNull
 	@Override
 	@Transactional(label = "service-manifest.open")
-	public ServiceRelease open(@NonNull Service service, @NonNull Collection<ServiceReleaseCandidate> artifacts) {
+	public ServiceRelease open(Service service, Collection<ServiceReleaseCandidate> artifacts) {
+		log.debug("Attempting to open a service manifest for {} with: {}", service, artifacts);
+
 		final Long releaseId = upsertRelease(service);
-		final Map<ArtifactCoordinates, ExistingArtifact> existing = loadExistingArtifacts(releaseId);
 
-		final Set<ArtifactCoordinates> coordinates = new LinkedHashSet<>();
-		for (ServiceReleaseCandidate candidate : artifacts) {
-			coordinates.add(ArtifactCoordinates.of(candidate));
-		}
+		// Convert the incoming candidates to their ArtifactCoordinates pairs...
+		final List<CandidateArtifact> candidates = artifacts.stream().map(CandidateArtifact::new).toList();
 
-		final Set<ArtifactCoordinates> indexed = artifactory.existing(coordinates);
+		// Merge in whatever the Artifactory already has indexed for these coordinates, without
+		// overriding a real, previously uploaded checksum already recorded for this release: a
+		// LOCAL row with a non-null checksum is settled and must win over merely being indexed.
+		final Map<ArtifactCoordinates, ExistingArtifact> existing = new LinkedHashMap<>();
+		existing.putAll(loadExistingPublications(artifacts));
+		existing.putAll(loadExistingServiceArtifacts(releaseId));
+
 		final List<ServiceReleaseEntry> entries = new ArrayList<>(artifacts.size());
 
-		var insert = context.insertInto(SERVICE_ARTIFACTS,
-				SERVICE_ARTIFACTS.RELEASE_ID, SERVICE_ARTIFACTS.GROUP_ID, SERVICE_ARTIFACTS.ARTIFACT_ID,
-				SERVICE_ARTIFACTS.VERSION, SERVICE_ARTIFACTS.SOURCE, SERVICE_ARTIFACTS.CHECKSUM);
+		// prepare the bulk insert query for the release///
+		var insert = context.insertInto(SERVICE_ARTIFACTS).columns(
+				SERVICE_ARTIFACTS.RELEASE_ID,
+				SERVICE_ARTIFACTS.GROUP_ID,
+				SERVICE_ARTIFACTS.ARTIFACT_ID,
+				SERVICE_ARTIFACTS.VERSION,
+				SERVICE_ARTIFACTS.SOURCE,
+				SERVICE_ARTIFACTS.CHECKSUM
+		);
 
-		for (ServiceReleaseCandidate candidate : artifacts) {
-			final ArtifactCoordinates coordinate = ArtifactCoordinates.of(candidate);
-			final ExistingArtifact current = existing.get(coordinate);
+		for (CandidateArtifact candidate : candidates) {
+			final ExistingArtifact current = existing.get(candidate.coordinates());
 
 			final ArtifactUploadStatus status;
 			final ArtifactSource source;
 			final String checksum;
 
-			if (current != null && current.checksum() != null && current.checksum().equals(candidate.checksum())) {
-				status = ArtifactUploadStatus.SKIP;
+			if (current != null) {
+				status = candidate.resolveStatus(current);
 				source = current.source();
-				checksum = current.checksum();
-			} else if (current != null && current.checksum() != null) {
-				status = ArtifactUploadStatus.UPLOAD_REQUIRED;
-				source = ArtifactSource.LOCAL;
-				checksum = null;
-			} else if (indexed.contains(coordinate)) {
-				status = ArtifactUploadStatus.SKIP;
-				source = ArtifactSource.ARTIFACTORY;
-				checksum = null;
+				checksum = candidate.resolveChecksum(status, current);
 			} else {
 				status = ArtifactUploadStatus.UPLOAD_REQUIRED;
 				source = ArtifactSource.LOCAL;
 				checksum = null;
 			}
 
-			entries.add(ServiceReleaseEntry.of(coordinate.groupId(), coordinate.artifactId(), coordinate.version().get(), status));
-			insert = insert.values(releaseId, coordinate.groupId(), coordinate.artifactId(), coordinate.version().get(), source.name(), checksum);
+			entries.add(ServiceReleaseEntry.of(candidate.artifact(), status));
+
+			// append the insert row statement for the artifact...
+			insert = insert.values(
+					releaseId,
+					candidate.coordinates().groupId(),
+					candidate.coordinates().artifactId(),
+					candidate.coordinates().version().get(),
+					source.name(),
+					checksum
+			);
 		}
 
-		if (!coordinates.isEmpty()) {
-			insert.onConflict(SERVICE_ARTIFACTS.RELEASE_ID, SERVICE_ARTIFACTS.GROUP_ID, SERVICE_ARTIFACTS.ARTIFACT_ID, SERVICE_ARTIFACTS.VERSION)
+		if (!candidates.isEmpty()) {
+			insert.onConflictOnConstraint(Keys.UNIQUE_SERVICE_ARTIFACT)
 					.doUpdate()
 					.set(SERVICE_ARTIFACTS.SOURCE, DSL.excluded(SERVICE_ARTIFACTS.SOURCE))
 					.set(SERVICE_ARTIFACTS.CHECKSUM, DSL.excluded(SERVICE_ARTIFACTS.CHECKSUM))
 					.execute();
 		}
 
-		pruneStaleArtifacts(releaseId, coordinates);
+		pruneStaleArtifacts(releaseId, candidates);
+
+		log.info(RELEASE_OPENED, "Successfully opened release {} for service {}: {} artifact(s) declared",
+				releaseId, service.id(), entries.size());
 
 		return ServiceRelease.builder()
 				.id(EntityId.from(releaseId).serialize())
@@ -98,8 +152,23 @@ class DefaultServiceManifests implements ServiceManifests {
 				.build();
 	}
 
-	@NonNull
-	private Long upsertRelease(@NonNull Service service) {
+	/**
+	 * Upserts the single {@code service_releases} row for this service to
+	 * {@link ReleaseState#PENDING}, taking over an in-progress or previously completed build rather
+	 * than rejecting it, since there is only ever one release row per service.
+	 * <p>
+	 * The upsert is keyed on the {@code unique_namespace_service_version} constraint with a fixed
+	 * {@link #VERSION}. Every build for a service therefore lands on the same row.
+	 * <p>
+	 * If proper version tracking (multiple retained releases, history, diffs) lands in a future,
+	 * this fixed-version upsert is what needs to change first, into an actual insert of a new row per
+	 * build. The release id returned from here is already addressable in every URL specifically so
+	 * that change doesn't have to touch the request/response protocol.
+	 *
+	 * @param service the service opening or taking over a build, can't be {@literal null}.
+	 * @return the entity identifier of the upserted release row, never {@literal null}.
+	 */
+	private Long upsertRelease(Service service) {
 		final Long releaseId = context.insertInto(SERVICE_RELEASES)
 				.set(
 						SettableRecord.of(context, SERVICE_RELEASES)
@@ -122,32 +191,97 @@ class DefaultServiceManifests implements ServiceManifests {
 		return releaseId;
 	}
 
-	@NonNull
-	private Map<ArtifactCoordinates, ExistingArtifact> loadExistingArtifacts(@NonNull Long releaseId) {
-		return context.select(SERVICE_ARTIFACTS.GROUP_ID, SERVICE_ARTIFACTS.ARTIFACT_ID, SERVICE_ARTIFACTS.VERSION,
-						SERVICE_ARTIFACTS.SOURCE, SERVICE_ARTIFACTS.CHECKSUM)
+	/**
+	 * Loads the {@code service_artifacts} rows already recorded for this release, keyed by their
+	 * {@link ArtifactCoordinates}.
+	 * <p>
+	 * This is the release's current state of record, checked against each incoming artifact in
+	 * {@link #open(Service, Collection)} to resolve its {@link ArtifactUploadStatus}: a matching
+	 * checksum means the metadata behind this coordinate was already uploaded and can be skipped; a
+	 * non-null but different checksum means it was uploaded before but is now stale; a coordinate
+	 * missing here entirely has never been seen in this release.
+	 *
+	 * @param releaseId the release to load existing artifacts for, can't be {@literal null}.
+	 * @return existing artifacts for the release keyed by their coordinates, never {@literal null}.
+	 */
+	private Map<ArtifactCoordinates, ExistingArtifact> loadExistingServiceArtifacts(Long releaseId) {
+		return context.select(
+						SERVICE_ARTIFACTS.GROUP_ID,
+						SERVICE_ARTIFACTS.ARTIFACT_ID,
+						SERVICE_ARTIFACTS.VERSION,
+						SERVICE_ARTIFACTS.SOURCE,
+						SERVICE_ARTIFACTS.CHECKSUM
+				)
 				.from(SERVICE_ARTIFACTS)
 				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(releaseId))
 				.fetchMap(
 						record -> ArtifactCoordinates.of(
-								record.get(SERVICE_ARTIFACTS.GROUP_ID), record.get(SERVICE_ARTIFACTS.ARTIFACT_ID), record.get(SERVICE_ARTIFACTS.VERSION)),
+								record.get(SERVICE_ARTIFACTS.GROUP_ID),
+								record.get(SERVICE_ARTIFACTS.ARTIFACT_ID),
+								record.get(SERVICE_ARTIFACTS.VERSION)
+						),
 						record -> new ExistingArtifact(
 								record.get(SERVICE_ARTIFACTS.CHECKSUM),
-								ArtifactSource.valueOf(record.get(SERVICE_ARTIFACTS.SOURCE)))
+								record.get(SERVICE_ARTIFACTS.SOURCE)
+						)
 				);
 	}
 
-	private void pruneStaleArtifacts(@NonNull Long releaseId, @NonNull Collection<ArtifactCoordinates> coordinates) {
-		if (coordinates.isEmpty()) {
+	/**
+	 * Resolves the {@link Publication} already indexed by the {@link Artifactory} for each of the
+	 * given candidates, keyed by {@link ArtifactCoordinates}.
+	 * <p>
+	 * Every match is reported as an {@link ArtifactSource#ARTIFACTORY} entry carrying the
+	 * {@link Publication}'s own checksum: since {@code service_artifacts.checksum} is always
+	 * {@literal null} for {@code ARTIFACTORY} rows, this is the only place that checksum is actually
+	 * available. Candidates with no matching {@link Publication} are simply absent from the result,
+	 * since they haven't been indexed yet.
+	 *
+	 * @param candidates the release candidates to resolve against the Artifactory, can't be {@literal null}.
+	 * @return existing publications keyed by their coordinates, never {@literal null}.
+	 */
+	private Map<ArtifactCoordinates, ExistingArtifact> loadExistingPublications(Collection<ServiceReleaseCandidate> candidates) {
+		final Map<ArtifactCoordinates, ExistingArtifact> existing = new LinkedHashMap<>();
+
+		if (candidates.isEmpty()) {
+			return existing;
+		}
+
+		final Set<ArtifactCoordinates> coordinates = new LinkedHashSet<>(candidates.size());
+		for (ServiceReleaseCandidate candidate : candidates) {
+			coordinates.add(ArtifactCoordinates.of(candidate));
+		}
+
+		for (Publication publication : artifactory.existing(coordinates)) {
+			existing.put(ArtifactCoordinates.of(publication), new ExistingArtifact(publication));
+		}
+
+		return existing;
+	}
+
+	/**
+	 * Deletes every {@code service_artifacts} row for this release whose coordinates are not part of
+	 * the given candidates.
+	 * <p>
+	 * This is how a declared artifact drops out of a release: a build that stops depending on a
+	 * coordinate it previously declared is expected to have that coordinate's row removed the next
+	 * time it resolves a release, rather than leaving it behind indefinitely.
+	 *
+	 * @param releaseId the release to prune, can't be {@literal null}.
+	 * @param candidates the complete, current set of declared candidates, can't be {@literal null}; an
+	 *                    empty collection removes every row for this release.
+	 */
+	private void pruneStaleArtifacts(Long releaseId, Collection<CandidateArtifact> candidates) {
+		if (candidates.isEmpty()) {
 			context.deleteFrom(SERVICE_ARTIFACTS)
 					.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(releaseId))
 					.execute();
 			return;
 		}
 
-		final String[] groupIds = coordinates.stream().map(ArtifactCoordinates::groupId).toArray(String[]::new);
-		final String[] artifactIds = coordinates.stream().map(ArtifactCoordinates::artifactId).toArray(String[]::new);
-		final String[] versions = coordinates.stream().map(coordinate -> coordinate.version().get()).toArray(String[]::new);
+		final String[] groupIds = candidates.stream().map(CandidateArtifact::artifact).map(Artifact::groupId).toArray(String[]::new);
+		final String[] artifactIds = candidates.stream().map(CandidateArtifact::artifact).map(Artifact::artifactId).toArray(String[]::new);
+		final String[] versions = candidates.stream().map(CandidateArtifact::artifact).map(Artifact::version).toArray(String[]::new);
 
 		context.deleteFrom(SERVICE_ARTIFACTS)
 				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(releaseId))
@@ -157,18 +291,132 @@ class DefaultServiceManifests implements ServiceManifests {
 				.execute();
 	}
 
+	/**
+	 * Not yet implemented. Notes for whoever picks this up:
+	 * <ul>
+	 *     <li>Reject the call if there is no {@code LOCAL} {@code service_artifacts} row for this
+	 *     release matching the given {@code metadata}'s coordinates — an upload for a coordinate that
+	 *     was never declared via {@link #open} should not be accepted.</li>
+	 *     <li>Reject the call if the release is not currently {@link ReleaseState#PENDING} — once a
+	 *     release is {@code RELEASED}, the plugin must call {@link #open} again to start a new build
+	 *     before uploading anything.</li>
+	 *     <li>Explode {@code metadata.properties()} into {@code service_configuration_catalog} rows
+	 *     for this coordinate, replacing whatever rows already exist there for it (a re-upload of the
+	 *     same coordinate should overwrite, not duplicate).</li>
+	 *     <li>Update the matching {@code service_artifacts} row's {@code checksum} to
+	 *     {@code metadata.checksum()} — this is what turns it from "declared" into "uploaded", see
+	 *     this class's own Javadoc for why that column doubles as that signal.</li>
+	 *     <li>Log the outcome, matching the {@code log.info(...)} call at the top of {@link #open}.</li>
+	 * </ul>
+	 *
+	 * @param service the service the release belongs to, can't be {@literal null}.
+	 * @param releaseId the entity identifier of the release the upload belongs to, can't be {@literal null}.
+	 * @param metadata the uploaded artifact metadata, can't be {@literal null}.
+	 */
 	@Override
-	public void upload(@NonNull Service service, @NonNull EntityId releaseId, @NonNull ArtifactMetadata metadata) {
+	public void upload(Service service, EntityId releaseId, ArtifactMetadata metadata) {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
-	@NonNull
+	/**
+	 * Not yet implemented. Notes for whoever picks this up:
+	 * <ul>
+	 *     <li>First check whether any {@code service_artifacts} row for this release still has
+	 *     {@code source = LOCAL AND checksum IS NULL} — meaning something declared via {@link #open}
+	 *     was never actually uploaded via {@link #upload}. If so, this release cannot complete: set
+	 *     {@code service_releases.state} to {@link ReleaseState#FAILED} and return a
+	 *     {@link ServiceRelease} whose {@link ServiceRelease#errors()} lists those coordinates.</li>
+	 *     <li>Otherwise, build the property catalog for this release in
+	 *     {@code service_configuration_catalog}. The {@code LOCAL} coordinates were already exploded
+	 *     into the catalog by {@link #upload}; what is still missing here is the {@code ARTIFACTORY}
+	 *     coordinates, whose property descriptors live in the Artifactory's own tables instead of
+	 *     having been uploaded directly. {@code ServiceCatalogWorker} (in the sibling
+	 *     {@code com.konfigyr.namespace.catalog} package) already contains the exact join needed —
+	 *     from {@code service_artifacts} through {@code artifacts}, {@code artifact_versions},
+	 *     {@code artifact_version_properties}, to {@code property_definitions} — but it is
+	 *     package-private today, so either expose it for reuse here or re-create the same join.</li>
+	 *     <li>Set {@code service_releases.state} to {@link ReleaseState#RELEASED} and
+	 *     {@code published_at} to the current time.</li>
+	 *     <li>Publish a {@code ServiceEvent.Released} event so that
+	 *     {@code ServiceCatalogQueueListener} picks up this release for indexing. Building that event
+	 *     needs the {@link Service} (already a parameter here) and a {@code Manifest}
+	 *     ({@code Services.manifest(Service)}), which means this class needs a new dependency on
+	 *     {@code Services} that it does not have today.</li>
+	 *     <li>Log the outcome, matching the {@code log.info(...)} call at the top of {@link #open}.</li>
+	 * </ul>
+	 *
+	 * @param service the service the release belongs to, can't be {@literal null}.
+	 * @param releaseId the entity identifier of the release to complete, can't be {@literal null}.
+	 * @return the completed service release, never {@literal null}.
+	 */
 	@Override
-	public ServiceRelease complete(@NonNull Service service, @NonNull EntityId releaseId) {
+	public ServiceRelease complete(Service service, EntityId releaseId) {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
+	private record CandidateArtifact(ArtifactCoordinates coordinates, ServiceReleaseCandidate artifact) {
+
+		private CandidateArtifact(ServiceReleaseCandidate candidate) {
+			this(ArtifactCoordinates.of(candidate),  candidate);
+		}
+
+		/**
+		 * Resolves the {@link ArtifactUploadStatus} of this candidate against what is already known
+		 * about its coordinates, either a previously recorded {@code service_artifacts} row or a
+		 * {@link Publication} indexed by the {@link Artifactory}.
+		 * <p>
+		 * An {@link ArtifactSource#ARTIFACTORY} match is always {@link ArtifactUploadStatus#SKIP},
+		 * regardless of checksum: the plugin never uploads a dependency it doesn't own, so there is
+		 * nothing to compare against. Otherwise, the outcome depends on whether this candidate's own
+		 * checksum matches what was already recorded.
+		 *
+		 * @param existing what is already known about this candidate's coordinates, can't be {@literal null}.
+		 * @return the resolved upload status, never {@literal null}.
+		 */
+		private ArtifactUploadStatus resolveStatus(ExistingArtifact existing) {
+			if (existing.source() == ArtifactSource.ARTIFACTORY) {
+				return ArtifactUploadStatus.SKIP;
+			}
+			return Objects.equals(artifact().checksum(), existing.checksum()) ?
+					ArtifactUploadStatus.SKIP : ArtifactUploadStatus.UPLOAD_REQUIRED;
+		}
+
+		/**
+		 * Resolves the checksum that should be persisted to {@code service_artifacts.checksum} for
+		 * this candidate, given its resolved {@code status}.
+		 * <p>
+		 * {@literal null} is the "not yet uploaded" signal for a {@link ArtifactSource#LOCAL} row, so
+		 * it must only be replaced with a real value once a matching, already-uploaded checksum is
+		 * confirmed, i.e. {@code status} is {@link ArtifactUploadStatus#SKIP} and {@code existing} is
+		 * {@link ArtifactSource#LOCAL}. Every other outcome persists {@literal null}: an
+		 * {@link ArtifactSource#ARTIFACTORY} row has no local upload to checksum in the first place,
+		 * and anything that isn't {@code SKIP} still needs to be uploaded, so carrying over its old or
+		 * unrelated checksum would wrongly read back as already settled.
+		 *
+		 * @param status the resolved upload status for this candidate, can't be {@literal null}.
+		 * @param existing what is already known about this candidate's coordinates, can't be {@literal null}.
+		 * @return the checksum to persist, or {@literal null} when nothing settled should be recorded.
+		 */
+		private String resolveChecksum(ArtifactUploadStatus status, ExistingArtifact existing) {
+			return status == ArtifactUploadStatus.SKIP && existing.source() == ArtifactSource.LOCAL
+					? existing.checksum()
+					: null;
+		}
+	}
+
+	/**
+	 * A previously recorded {@code service_artifacts} row for a single coordinate within a release.
+	 */
 	private record ExistingArtifact(String checksum, ArtifactSource source) {
+
+		private ExistingArtifact(Publication publication) {
+			this(publication.checksum(), ArtifactSource.ARTIFACTORY);
+		}
+
+		private ExistingArtifact(String checksum, String source) {
+			this(checksum, ArtifactSource.valueOf(source));
+		}
+
 	}
 
 }

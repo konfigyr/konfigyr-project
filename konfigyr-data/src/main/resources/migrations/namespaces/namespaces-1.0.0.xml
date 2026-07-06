@@ -366,6 +366,12 @@
 				referencedColumnNames="id"
 				onDelete="CASCADE"
 		/>
+
+		<addUniqueConstraint
+				tableName="service_artifacts"
+				columnNames="release_id, group_id, artifact_id, version"
+				constraintName="unique_service_artifact"
+		/>
 	</changeSet>
 
 	<changeSet author="vspasic" id="1.0.0-create-service-configuration-catalog-table" context="api">

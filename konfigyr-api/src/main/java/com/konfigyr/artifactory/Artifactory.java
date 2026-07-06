@@ -71,11 +71,13 @@ public interface Artifactory {
 	boolean exists(@NonNull ArtifactCoordinates coordinates);
 
 	/**
-	 * Returns the subset of the given {@link ArtifactCoordinates} that are already indexed by this
-	 * {@code Artifactory}.
+	 * Returns the {@link Publication} for each of the given {@link ArtifactCoordinates} that is already
+	 * indexed by this {@code Artifactory}.
 	 * <p>
 	 * This is a batch counterpart to {@link #exists(ArtifactCoordinates)}, intended for callers that
 	 * need to resolve the existence of many coordinates at once without issuing one query per coordinate.
+	 * Returning the {@link Publication} rather than just the matched coordinate lets callers read its
+	 * {@link Publication#checksum()} directly, without a further lookup.
 	 * <p>
 	 * Coordinates from the input that have no matching artifact version indexed by this {@code Artifactory}
 	 * are simply omitted from the returned set — they are not reported back as missing or invalid, since
@@ -83,10 +85,10 @@ public interface Artifactory {
 	 * need to know which of their coordinates are absent should compute the difference against the input.
 	 *
 	 * @param coordinates coordinates to check, can be empty
-	 * @return the subset of the given coordinates that exist, never {@literal null}, empty if the input is empty
+	 * @return the publications matching the given coordinates that exist, never {@literal null}, empty if the input is empty
 	 */
 	@NonNull
-	Set<ArtifactCoordinates> existing(@NonNull Collection<ArtifactCoordinates> coordinates);
+	Set<Publication> existing(@NonNull Collection<ArtifactCoordinates> coordinates);
 
 	/**
 	 * Publishes a new artifact version based on the provided metadata.
