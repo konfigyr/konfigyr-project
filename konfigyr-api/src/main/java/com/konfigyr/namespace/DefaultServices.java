@@ -1,7 +1,6 @@
 package com.konfigyr.namespace;
 
 import com.konfigyr.artifactory.*;
-import com.konfigyr.data.Keys;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
@@ -9,7 +8,6 @@ import com.konfigyr.io.ByteArray;
 import com.konfigyr.namespace.catalog.ServiceCatalogSource;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
-import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.*;
@@ -27,7 +25,6 @@ import org.springframework.util.Assert;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +41,6 @@ class DefaultServices implements Services {
 	private static final Name SERVICE_ARTIFACTS_ALIAS = DSL.name("artifacts");
 
 	private final Marker CREATED = MarkerFactory.getMarker("SERVICE_CREATED");
-	private final Marker PUBLISHED = MarkerFactory.getMarker("MANIFEST_PUBLISHED");
 
 	static final PageableExecutor servicesExecutor = PageableExecutor.builder()
 			.defaultSortField(SERVICES.NAME.desc())
@@ -224,58 +220,6 @@ class DefaultServices implements Services {
 	@Override
 	public Page<PropertyDescriptor> search(@NonNull Service service, @NonNull SearchQuery query) {
 		return catalogSource.query(service, query);
-	}
-
-	@NonNull
-	@Override
-	@Transactional(label = "service-release")
-	@Observed(name = "konfigyr.namespace.service.publish")
-	public Manifest publish(@NonNull Service service, @NonNull Collection<? extends ArtifactCoordinates> artifacts) {
-		final Long releaseId = context.insertInto(SERVICE_RELEASES)
-				.set(
-						SettableRecord.of(context, SERVICE_RELEASES)
-								.set(SERVICE_RELEASES.ID, EntityId.generate().map(EntityId::get))
-								.set(SERVICE_RELEASES.SERVICE_ID, service.id().get())
-								.set(SERVICE_RELEASES.VERSION, "latest")
-								.set(SERVICE_RELEASES.STATE, "PENDING")
-								.set(SERVICE_RELEASES.CREATED_AT, OffsetDateTime.now())
-								.get()
-				)
-				.onConflictOnConstraint(Keys.UNIQUE_NAMESPACE_SERVICE_VERSION)
-				.doUpdate()
-				.set(SERVICE_RELEASES.STATE, "PENDING")
-				.set(SERVICE_RELEASES.CREATED_AT, OffsetDateTime.now())
-				.returning(SERVICE_RELEASES.ID)
-				.fetchOne(SERVICE_RELEASES.ID);
-
-		Assert.state(releaseId != null, "Failed to resolve the release identifier for: " + service);
-
-		// clear the previous artifact manifest state...
-		context.deleteFrom(SERVICE_ARTIFACTS)
-				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(releaseId))
-				.execute();
-
-		// insert the defined artifact coordinates now that we have a clear state...
-		final long count = context.insertInto(SERVICE_ARTIFACTS)
-				.set(artifacts.stream().map(coordinate -> SettableRecord.of(context, SERVICE_ARTIFACTS)
-						.set(SERVICE_ARTIFACTS.RELEASE_ID, releaseId)
-						.set(SERVICE_ARTIFACTS.GROUP_ID, coordinate.groupId())
-						.set(SERVICE_ARTIFACTS.ARTIFACT_ID, coordinate.artifactId())
-						.set(SERVICE_ARTIFACTS.VERSION, coordinate.version().get())
-						.get()
-				).toList())
-				.execute();
-
-		Assert.state(count == artifacts.size(), "Failed to insert all artifacts for: " + service);
-
-		final Manifest manifest = manifest(service);
-
-		log.info(PUBLISHED, "Successfully published manifest for service {} in namespace {}: {}",
-				service.id(), service.namespace(), manifest);
-
-		publisher.publishEvent(new ServiceEvent.Released(service, manifest));
-
-		return manifest;
 	}
 
 	@Override

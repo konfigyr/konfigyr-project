@@ -12,11 +12,8 @@ import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.version.Version;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
@@ -658,130 +655,6 @@ class ServiceControllerTest extends AbstractControllerTest {
 	void retrieveManifestWithoutMembership() {
 		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
 				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden());
-	}
-
-	@Test
-	@Disabled("""
-			Legacy Services.publish() write path never populates service_artifacts.checksum, which \
-			ManifestEntry now requires to be non-blank. Re-enable once the legacy manifest write path \
-			is retired in favor of the resolve/upload/publish release flow.""")
-	@DisplayName("should publish the namespace service manifest")
-	void publishServiceManifest() {
-		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-api/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.2\", \"com.konfigyr:konfigyr-crypto-tink:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatus(HttpStatus.CREATED)
-				.bodyJson()
-				.convertTo(Manifest.class)
-				.returns(EntityId.from(2).serialize(), Manifest::id)
-				.returns("Konfigyr API", Manifest::name)
-				.satisfies(it -> assertThat(it.artifacts())
-						.hasSize(2)
-						.containsExactly(
-								ManifestEntry.builder()
-										.groupId("com.konfigyr")
-										.artifactId("konfigyr-crypto-api")
-										.version("1.0.2")
-										.name("Konfigyr Crypto API")
-										.description("Spring Boot Crypto API library")
-										.repository("https://github.com/konfigyr/konfigyr-crypto")
-										.build(),
-								ManifestEntry.builder()
-										.groupId("com.konfigyr")
-										.artifactId("konfigyr-crypto-tink")
-										.version("1.0.0")
-										.name("Konfigyr Crypto Tink")
-										.description("Tink support Konfigyr Crypto API library")
-										.repository("https://github.com/konfigyr/konfigyr-crypto")
-										.build()
-						)
-				)
-				.satisfies(it -> assertThat(it.createdAt())
-						.isCloseTo(Instant.now(), within(5, ChronoUnit.MINUTES))
-				);
-	}
-
-	@ValueSource(strings = {
-			"{}",
-			"{\"artifacts\": null}",
-			"{\"artifacts\": []}",
-			"{\"artifacts\": [null]}",
-			"{\"artifacts\": [\"\", \"  \"]}",
-			"{\"artifacts\": [\"invalid-coordinates\"]}",
-			"{\"artifacts\": [\"invalid:coordinates\", \"com.konfigyr:konfigyr-api:1.0.0\"]}"
-	})
-	@ParameterizedTest(name = "with payload: {0}")
-	@DisplayName("should fail to publish manifest with invalid payload")
-	void publishManifestWithInvalidArtifacts(String payload) {
-		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-api/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(payload)
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitleContaining("Invalid")
-						.hasDetailContaining("invalid request data")
-						.containsProperty("errors")
-				));
-	}
-
-	@Test
-	@DisplayName("should fail to publish manifest for unknown service")
-	void publishManifestForUnknownService() {
-		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(serviceNotFound("unknown-service"));
-	}
-
-	@Test
-	@DisplayName("should not publish a service manifest for an unknown namespace")
-	void publishManifestForUnknownNamespace() {
-		mvc.post().uri("/namespaces/unknown-namespace/services/unknown-service/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatus(HttpStatus.NOT_FOUND)
-				.satisfies(namespaceNotFound("unknown-namespace"));
-	}
-
-	@Test
-	@DisplayName("should not publish service manifest when namespaces:read scope is not present")
-	void publishManifestWithoutScope() {
-		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-id/manifest")
-				.with(authentication(TestPrincipals.jane()))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden(OAuthScope.PUBLISH_MANIFESTS));
-	}
-
-	@Test
-	@DisplayName("should not publish service manifest when user is not a member of a namespace")
-	void publishManifestWithoutMembership() {
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
-				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
 				.exchange()
 				.assertThat()
 				.apply(log())

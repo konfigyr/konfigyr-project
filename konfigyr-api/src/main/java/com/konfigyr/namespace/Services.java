@@ -10,7 +10,6 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -157,28 +156,6 @@ public interface Services {
 	 * @see ServiceCatalog
 	 */
 	Page<PropertyDescriptor> search(Service service, SearchQuery query);
-
-	/**
-	 * Updates the manifest of a service with a new set of artifact dependencies.
-	 * <p>
-	 * The provided collection represents the complete set of artifacts that should be associated with the
-	 * service after the update. Each artifact is identified using its Maven coordinates ({@code groupId},
-	 * {@code artifactId}, {@code version}).
-	 * <p>
-	 * During this process the system performs several operations:
-	 * <ul>
-	 *     <li>Validates that each referenced artifact exists in the Artifactory</li>
-	 *     <li>Resolves configuration metadata contributed by the artifacts</li>
-	 *     <li>Computes the effective property definitions used by the service</li>
-	 *     <li>Updates the service manifest to reflect the new dependency set</li>
-	 * </ul>
-	 *
-	 * @param service service for which release should be created, can't be {@literal null}
-	 * @param artifacts the complete collection of artifacts that should compose the
-	 *                  service manifest, never {@literal null} but may be empty
-	 * @return the updated {@link Manifest} reflecting the resolved dependency set
-	 */
-	Manifest publish(Service service, Collection<? extends ArtifactCoordinates> artifacts);
 
 	/**
 	 * Deletes a single {@link Service} by its entity identifier.
