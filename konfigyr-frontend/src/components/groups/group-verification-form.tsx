@@ -51,7 +51,7 @@ export function GroupVerificationForm ({
   });
 
   const handleSubmit = useFormSubmit(form);
-  const isGroupIdEditable = !!defaultValues.groupId;
+  const isReadOnly = !!defaultValues.groupId;
 
   return (
     <Card className="border">
@@ -89,11 +89,11 @@ export function GroupVerificationForm ({
                 render={
                   <Input
                     placeholder="com.mycompany"
-                    autoFocus={isGroupIdEditable}
+                    autoFocus={isReadOnly}
                     autoComplete="off"
                     className="font-mono"
-                    readOnly={isGroupIdEditable}
-                    disabled={isGroupIdEditable}
+                    readOnly={isReadOnly}
+                    disabled={isReadOnly}
                     value={field.state.value}
                     onChange={e => field.handleChange(e.target.value)}
                     onBlur={() => field.handleBlur()}
@@ -113,6 +113,7 @@ export function GroupVerificationForm ({
                 <GroupVerificationMethodSelector
                   value={field.state.value}
                   onChange={field.handleChange}
+                  readOnly={isReadOnly}
                 />
               </Field>
             )}/>

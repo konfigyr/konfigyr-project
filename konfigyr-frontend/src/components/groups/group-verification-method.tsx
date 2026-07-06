@@ -46,12 +46,13 @@ export function VerificationMethodName({ method }: { method?: string | Verificat
   }
 }
 
-export function GroupVerificationMethodSelector({ value, onChange }: {
+export function GroupVerificationMethodSelector({ value, onChange, readOnly }: {
   value?: VerificationMethod;
   onChange: (method: VerificationMethod) => void;
+  readOnly?: boolean
 }) {
   return (
-    <RadioGroup value={value ?? ''} onValueChange={(v) => onChange(v as VerificationMethod)}>
+    <RadioGroup readOnly={readOnly} disabled={readOnly} value={value ?? ''} onValueChange={(v) => onChange(v as VerificationMethod)}>
       {VERIFICATION_METHODS.map((method) => {
         const selected = value === method;
         const Icon = VERIFICATION_METHOD_ICON[method];

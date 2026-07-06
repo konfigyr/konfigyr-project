@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@konfigyr/components/ui/table';
 import { Package, ShieldCheckIcon } from 'lucide-react';
+import { GroupIdLabel, StateLabel, VerifiedAtLabel } from '@konfigyr/components/groups/messages';
 import { GroupVerificationStateBadge } from './group-verification-state';
 import { RevokeGroupVerificationButton } from './revoke-group-verification';
 
@@ -33,11 +34,18 @@ function GroupVerificationRowActions({ namespace, verification }: {
   namespace: string;
   verification: GroupVerification;
 }) {
+  const detailsLink = (
+    <Link
+      to="/namespace/$namespace/groups/$groupId"
+      params={{ namespace, groupId: verification.groupId }}
+    />
+  );
+
   switch (verification.state) {
     case 'ACTIVE':
       return (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost">
+          <Button size="sm" variant="ghost" render={detailsLink}>
             <ViewLabel />
           </Button>
           <RevokeGroupVerificationButton namespace={namespace} verification={verification} />
@@ -46,13 +54,16 @@ function GroupVerificationRowActions({ namespace, verification }: {
     case 'PENDING':
       return (
         <div className="flex justify-end gap-2">
+          <Button size="sm" variant="ghost" render={detailsLink}>
+            <ViewLabel />
+          </Button>
           <RevokeGroupVerificationButton namespace={namespace} verification={verification} />
         </div>
       );
     default:
       return (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost">
+          <Button size="sm" variant="ghost" render={detailsLink}>
             <ViewLabel />
           </Button>
         </div>
@@ -170,25 +181,16 @@ export function GroupVerificationTable({ namespace, data, error, isPending, page
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-64">
-                  <FormattedMessage
-                    defaultMessage="groupId"
-                    description="Column header for the Maven groupId of a group verification claim."
-                  />
+                  <GroupIdLabel />
                 </TableHead>
                 <TableHead className="w-32">
-                  <FormattedMessage
-                    defaultMessage="State"
-                    description="Column header for the state of a group verification claim."
-                  />
+                  <StateLabel />
                 </TableHead>
                 <TableHead className="w-32">
                   <CreatedAtLabel />
                 </TableHead>
                 <TableHead className="w-32">
-                  <FormattedMessage
-                    defaultMessage="Verified"
-                    description="Column header for the date a group verification claim was verified."
-                  />
+                  <VerifiedAtLabel />
                 </TableHead>
                 <TableHead className="w-48 text-right">
                   <ActionsLabel />
