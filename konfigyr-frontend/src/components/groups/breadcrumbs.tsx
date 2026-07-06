@@ -1,14 +1,13 @@
 import { Link } from '@tanstack/react-router';
-import { FormattedMessage } from 'react-intl';
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@konfigyr/components/ui/breadcrumb';
 
+import { GroupClaimsLabel } from '@konfigyr/components/groups/messages';
 import type { ReactNode } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
@@ -23,18 +22,13 @@ export function GroupsBreadcrumbs({ namespace, children }: { namespace: Namespac
                 to="/namespace/$namespace/groups"
                 params={{ namespace: namespace.slug }}
               >
-                <FormattedMessage
-                  defaultMessage="Group claims"
-                  description="Breadcrumb label for the group verification claims list page."
-                />
+                <GroupClaimsLabel />
               </Link>
             }
           />
         </BreadcrumbItem>
         <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>{children}</BreadcrumbPage>
-        </BreadcrumbItem>
+        {children}
       </BreadcrumbList>
     </Breadcrumb>
   );

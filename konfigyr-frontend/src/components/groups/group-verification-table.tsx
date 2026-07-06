@@ -29,28 +29,29 @@ import { GroupVerificationStateBadge } from './group-verification-state';
 import { RevokeGroupVerificationButton } from './revoke-group-verification';
 
 import type { GroupVerification, PageResponse } from '@konfigyr/hooks/types';
+import type { ReactNode } from 'react';
+
+export function GroupVerificationDetailsLink( { namespace, groupId, children }: { namespace: string, groupId: string, children?: ReactNode } ) {
+  return (
+    <Link
+      to="/namespace/$namespace/groups/$groupId"
+      params={{ namespace, groupId }}
+    >
+      { children ? children : groupId }
+    </Link>
+  );
+}
 
 function GroupVerificationRowActions({ namespace, verification }: {
   namespace: string;
   verification: GroupVerification;
 }) {
   const detailsLink = (
-    <Link
-      to="/namespace/$namespace/groups/$groupId"
-      params={{ namespace, groupId: verification.groupId }}
-    />
+    <GroupVerificationDetailsLink namespace={namespace} groupId={verification.groupId} />
   );
 
   switch (verification.state) {
     case 'ACTIVE':
-      return (
-        <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost" render={detailsLink}>
-            <ViewLabel />
-          </Button>
-          <RevokeGroupVerificationButton namespace={namespace} verification={verification} />
-        </div>
-      );
     case 'PENDING':
       return (
         <div className="flex justify-end gap-2">

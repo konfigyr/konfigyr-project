@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 import { toast } from 'sonner';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
   useClaimAgainGroupVerification, useGetActiveVerificationChallenge,
   useGetGroupVerification,
@@ -10,7 +10,9 @@ import { useErrorNotification } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
 import { GroupVerificationForm } from '@konfigyr/components/groups/group-verification-form';
 import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
-import { EditClaimLabel } from '@konfigyr/components/groups/messages';
+import { ClaimAgainLabel, EditClaimLabel } from '@konfigyr/components/groups/messages';
+import { BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@konfigyr/components/ui/breadcrumb';
+import { GroupVerificationDetailsLink } from '@konfigyr/components/groups/group-verification-table';
 import type { GroupVerificationFormValues } from '@konfigyr/components/groups/group-verification-form';
 
 export const Route = createFileRoute(
@@ -61,21 +63,26 @@ function RouteComponent () {
   };
 
   return (
-    <LayoutContent>
-      <LayoutNavbar title={( <EditClaimLabel /> )} />
-      <div className="mx-4 space-y-6">
-        <GroupsBreadcrumbs namespace={namespace}>
-          <EditClaimLabel />
-        </GroupsBreadcrumbs>
-
-        <div className="lg:w-2/3 xl:w-3/5 px-4 mx-auto">
-          <GroupVerificationForm
-            defaultValues={defaultValues}
-            onSubmit={onSubmit}
-            onCancel={() => navigate({ to: '/namespace/$namespace/groups/$groupId', params: { namespace: namespace.slug, groupId } })}
+    <>
+      <GroupsBreadcrumbs namespace={namespace}>
+        <BreadcrumbItem>
+          <BreadcrumbLink
+            render={
+              <GroupVerificationDetailsLink namespace={namespace.slug} groupId={groupId} />
+            }
           />
-        </div>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <ClaimAgainLabel />
+      </GroupsBreadcrumbs>
+
+      <div className="lg:w-2/3 xl:w-3/5 px-4 mx-auto">
+        <GroupVerificationForm
+          defaultValues={defaultValues}
+          onSubmit={onSubmit}
+          onCancel={() => navigate({ to: '/namespace/$namespace/groups/$groupId', params: { namespace: namespace.slug, groupId } })}
+        />
       </div>
-    </LayoutContent>
+    </>
   );
 }

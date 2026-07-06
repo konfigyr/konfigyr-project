@@ -6,6 +6,7 @@ import { useErrorNotification } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
 import { GroupVerificationForm } from '@konfigyr/components/groups/group-verification-form';
 import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { GroupClaimsLabel } from '@konfigyr/components/groups/messages';
 import type { GroupVerificationFormValues } from '@konfigyr/components/groups/group-verification-form';
 
 export const Route = createFileRoute(
@@ -45,11 +46,11 @@ function RouteComponent() {
 
   return (
     <LayoutContent>
-      <LayoutNavbar title="Claim a groupId" />
+      <LayoutNavbar title={( <GroupClaimsLabel /> )} />
       <div className="mx-4 space-y-6">
         <GroupsBreadcrumbs namespace={namespace}>
           <FormattedMessage
-            defaultMessage="Claim a groupId"
+            defaultMessage="Claim a group id"
             description="Breadcrumb label for the group verification claim creation page."
           />
         </GroupsBreadcrumbs>

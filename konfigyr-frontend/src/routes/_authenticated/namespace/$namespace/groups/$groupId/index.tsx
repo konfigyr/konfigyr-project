@@ -93,85 +93,82 @@ function RouteComponent () {
     : null;
 
   return (
-    <LayoutContent>
-      <LayoutNavbar title={groupId}/>
-      <div className="mx-4 space-y-6">
-        <GroupsBreadcrumbs namespace={namespace}>
-          {groupId}
-        </GroupsBreadcrumbs>
+    <>
+      <GroupsBreadcrumbs namespace={namespace}>
+        {groupId}
+      </GroupsBreadcrumbs>
 
-        <div className="mx-auto w-full space-y-6 lg:w-2/3 xl:w-3/5">
-          {loading && (
-            <EmptyState
-              icon={<ShieldCheckIcon/>}
-              title={(
-                <FormattedMessage
-                  defaultMessage="Loading group claim"
-                  description="Loading state title for a group claim detail page."
-                />
-              )}
-              description={(
-                <FormattedMessage
-                  defaultMessage="Fetching the current claim and verification challenge."
-                  description="Loading state description for a group claim detail page."
-                />
-              )}
-            />
-          )}
+      <div className="mx-auto w-full space-y-6 lg:w-2/3 xl:w-3/5">
+        {loading && (
+          <EmptyState
+            icon={<ShieldCheckIcon/>}
+            title={(
+              <FormattedMessage
+                defaultMessage="Loading group claim"
+                description="Loading state title for a group claim detail page."
+              />
+            )}
+            description={(
+              <FormattedMessage
+                defaultMessage="Fetching the current claim and verification challenge."
+                description="Loading state description for a group claim detail page."
+              />
+            )}
+          />
+        )}
 
-          {isError && (
-            <ErrorState error={error!} className="border-none"/>
-          )}
+        {isError && (
+          <ErrorState error={error!} className="border-none"/>
+        )}
 
-          {verification && (
-            <>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-card">
-                    <PackageIcon className="size-5 text-muted-foreground" aria-hidden="true"/>
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="truncate font-mono text-2xl font-medium leading-tight">
-                      {verification.groupId}
-                    </h1>
-                  </div>
+        {verification && (
+          <>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-card">
+                  <PackageIcon className="size-5 text-muted-foreground" aria-hidden="true"/>
+                </div>
+                <div className="min-w-0">
+                  <h1 className="truncate font-mono text-2xl font-medium leading-tight">
+                    {verification.groupId}
+                  </h1>
                 </div>
               </div>
+            </div>
 
-              {banner}
+            {banner}
 
-              <GroupVerification verification={verification} challenge={challenge}/>
+            <GroupVerification verification={verification} challenge={challenge}/>
 
-              <div className="flex flex-wrap gap-3">
-                {verification.state === 'ACTIVE' && (
-                  <Button variant="destructive" loading={isRevoking} onClick={onRevoke} >
-                    <Trash2Icon/>
-                    <RevokeClaimLabel />
-                  </Button>
-                )}
+            <div className="flex flex-wrap gap-3">
+              {verification.state === 'ACTIVE' && (
+                <Button variant="destructive" loading={isRevoking} onClick={onRevoke}>
+                  <Trash2Icon/>
+                  <RevokeClaimLabel/>
+                </Button>
+              )}
 
-                { (verification.state === 'PENDING' || verification.state === 'FAILED') && (
-                  <Button loading={isVerifying} onClick={onVerify} >
-                    <RotateCcwIcon/>
-                    <VerifyClaimLabel />
-                  </Button>
-                )}
+              {(verification.state === 'PENDING' || verification.state === 'FAILED') && (
+                <Button loading={isVerifying} onClick={onVerify}>
+                  <RotateCcwIcon/>
+                  <VerifyClaimLabel/>
+                </Button>
+              )}
 
-                {verification.state === 'REVOKED' && (
-                  <Link
-                    to="/namespace/$namespace/groups/$groupId/edit"
-                    params={{ namespace: namespace.slug, groupId }}
-                    className={buttonVariants({ variant: 'default' })}
-                  >
-                    <RotateCcwIcon/>
-                    <ClaimAgainLabel />
-                  </Link>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+              {verification.state === 'REVOKED' && (
+                <Link
+                  to="/namespace/$namespace/groups/$groupId/edit"
+                  params={{ namespace: namespace.slug, groupId }}
+                  className={buttonVariants({ variant: 'default' })}
+                >
+                  <RotateCcwIcon/>
+                  <ClaimAgainLabel/>
+                </Link>
+              )}
+            </div>
+          </>
+        )}
       </div>
-    </LayoutContent>
+    </>
   );
 }

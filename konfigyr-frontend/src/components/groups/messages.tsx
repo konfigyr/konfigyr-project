@@ -76,3 +76,10 @@ export const VerifyClaimLabel = () => (
     description="Button label that verifies a group claim."
   />
 );
+
+export const GroupClaimsLabel = () => (
+  <FormattedMessage
+    defaultMessage="Group claims"
+    description="Breadcrumb label for the group verification claims list page."
+  />
+);
