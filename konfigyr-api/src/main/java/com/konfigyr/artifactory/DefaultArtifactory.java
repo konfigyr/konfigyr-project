@@ -16,6 +16,7 @@ import org.jooq.Condition;
 import org.jooq.Converter;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.SelectJoinStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
@@ -53,23 +54,7 @@ class DefaultArtifactory implements Artifactory {
 	@Override
 	@Transactional(readOnly = true, label = "artifactory.get-versioned-artifact")
 	public Optional<VersionedArtifact> get(@NonNull ArtifactCoordinates coordinates) {
-		return context.select(
-						ARTIFACT_VERSIONS.ID,
-						ARTIFACT_VERSIONS.STATE,
-						ARTIFACT_VERSIONS.CHECKSUM,
-						ARTIFACTS.ID,
-						ARTIFACTS.GROUP_ID,
-						ARTIFACTS.ARTIFACT_ID,
-						ARTIFACT_VERSIONS.VERSION,
-						ARTIFACTS.NAME,
-						ARTIFACTS.DESCRIPTION,
-						ARTIFACTS.WEBSITE,
-						ARTIFACTS.REPOSITORY,
-						ARTIFACT_VERSIONS.RELEASED_AT
-				)
-				.from(ARTIFACT_VERSIONS)
-				.innerJoin(ARTIFACTS)
-				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
+		return createVersionedArtifactQuery()
 				.where(toCondition(coordinates))
 				.fetchOptional(DefaultArtifactory::toVersionedArtifact);
 	}
@@ -89,7 +74,7 @@ class DefaultArtifactory implements Artifactory {
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "artifactory.existing-coordinates")
-	public Set<ArtifactCoordinates> existing(@NonNull Collection<ArtifactCoordinates> coordinates) {
+	public Set<Publication> existing(@NonNull Collection<ArtifactCoordinates> coordinates) {
 		if (coordinates.isEmpty()) {
 			return Set.of();
 		}
@@ -98,16 +83,12 @@ class DefaultArtifactory implements Artifactory {
 		final String[] artifactIds = coordinates.stream().map(ArtifactCoordinates::artifactId).toArray(String[]::new);
 		final String[] versions = coordinates.stream().map(coordinate -> coordinate.version().get()).toArray(String[]::new);
 
-		return context.select(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, ARTIFACT_VERSIONS.VERSION)
-				.from(ARTIFACT_VERSIONS)
-				.innerJoin(ARTIFACTS)
-				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
+		return createVersionedArtifactQuery()
 				.where(DSL.row(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, ARTIFACT_VERSIONS.VERSION)
 						.in(DSL.select(DSL.field("g", String.class), DSL.field("a", String.class), DSL.field("v", String.class))
 								.from("unnest({0}::text[], {1}::text[], {2}::text[]) AS t(g, a, v)",
 										groupIds, artifactIds, versions)))
-				.fetchSet(record -> ArtifactCoordinates.of(
-						record.get(ARTIFACTS.GROUP_ID), record.get(ARTIFACTS.ARTIFACT_ID), record.get(ARTIFACT_VERSIONS.VERSION)));
+				.fetchSet(DefaultArtifactory::toVersionedArtifact);
 	}
 
 	@Override
@@ -215,6 +196,27 @@ class DefaultArtifactory implements Artifactory {
 				.on(PROPERTY_DEFINITIONS.ID.eq(ARTIFACT_VERSION_PROPERTIES.PROPERTY_DEFINITION_ID))
 				.where(ARTIFACT_VERSION_PROPERTIES.ARTIFACT_VERSION_ID.eq(artifactVersionId))
 				.fetch(record -> toPropertyDefinition(record, converters));
+	}
+
+	@NonNull
+	private SelectJoinStep<? extends Record> createVersionedArtifactQuery() {
+		return context.select(
+						ARTIFACT_VERSIONS.ID,
+						ARTIFACT_VERSIONS.STATE,
+						ARTIFACT_VERSIONS.CHECKSUM,
+						ARTIFACTS.ID,
+						ARTIFACTS.GROUP_ID,
+						ARTIFACTS.ARTIFACT_ID,
+						ARTIFACT_VERSIONS.VERSION,
+						ARTIFACTS.NAME,
+						ARTIFACTS.DESCRIPTION,
+						ARTIFACTS.WEBSITE,
+						ARTIFACTS.REPOSITORY,
+						ARTIFACT_VERSIONS.RELEASED_AT
+				)
+				.from(ARTIFACT_VERSIONS)
+				.innerJoin(ARTIFACTS)
+				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID));
 	}
 
 	private void assertCanRelease(EntityId ownerId, String groupId) {
