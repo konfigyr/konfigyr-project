@@ -5,6 +5,7 @@ import com.konfigyr.data.Keys;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.io.ByteArray;
 import com.konfigyr.namespace.catalog.ServiceCatalogSource;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
@@ -30,6 +31,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
 import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
 import static com.konfigyr.data.tables.Services.SERVICES;
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
@@ -333,17 +335,25 @@ class DefaultServices implements Services {
 						SERVICE_ARTIFACTS.GROUP_ID,
 						SERVICE_ARTIFACTS.ARTIFACT_ID,
 						SERVICE_ARTIFACTS.VERSION,
+						SERVICE_ARTIFACTS.SOURCE,
+						SERVICE_ARTIFACTS.CHECKSUM,
 						ARTIFACTS.NAME,
 						ARTIFACTS.DESCRIPTION,
 						ARTIFACTS.WEBSITE,
 						ARTIFACTS.REPOSITORY,
-						ARTIFACTS.CREATED_AT
+						ARTIFACTS.CREATED_AT,
+						ARTIFACT_VERSIONS.CHECKSUM
 				)
 				.from(SERVICE_ARTIFACTS)
 				.leftJoin(ARTIFACTS)
 				.on(DSL.and(
 						ARTIFACTS.GROUP_ID.eq(SERVICE_ARTIFACTS.GROUP_ID),
 						ARTIFACTS.ARTIFACT_ID.eq(SERVICE_ARTIFACTS.ARTIFACT_ID)
+				))
+				.leftJoin(ARTIFACT_VERSIONS)
+				.on(DSL.and(
+						ARTIFACT_VERSIONS.ARTIFACT_ID.eq(ARTIFACTS.ID),
+						ARTIFACT_VERSIONS.VERSION.eq(SERVICE_ARTIFACTS.VERSION)
 				))
 				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(SERVICE_RELEASES.ID))
 		).as(SERVICE_ARTIFACTS_ALIAS).convertFrom(results -> results.map(DefaultServices::toManifestEntry));
@@ -375,6 +385,14 @@ class DefaultServices implements Services {
 
 	@NonNull
 	private static ManifestEntry toManifestEntry(@NonNull Record record) {
+		final ArtifactSource source = record.get(SERVICE_ARTIFACTS.SOURCE, ArtifactSource.class);
+
+		// LOCAL artifacts carry their own uploaded metadata checksum; ARTIFACTORY artifacts reuse the
+		// checksum of the indexed artifact version, since service_artifacts.checksum is always null for them
+		final String checksum = source == ArtifactSource.LOCAL
+				? record.get(SERVICE_ARTIFACTS.CHECKSUM)
+				: record.get(ARTIFACT_VERSIONS.CHECKSUM, Converter.from(ByteArray.class, String.class, ByteArray::encodeHex));
+
 		return ManifestEntry.builder()
 				.groupId(record.get(SERVICE_ARTIFACTS.GROUP_ID))
 				.artifactId(record.get(SERVICE_ARTIFACTS.ARTIFACT_ID))
@@ -383,9 +401,9 @@ class DefaultServices implements Services {
 				.description(record.get(ARTIFACTS.DESCRIPTION))
 				.website(record.get(ARTIFACTS.WEBSITE))
 				.repository(record.get(ARTIFACTS.REPOSITORY))
-				.checksum(record.get(SERVICE_ARTIFACTS.VERSION))
+				.checksum(checksum)
 				.resolvedAt(record.get(ARTIFACTS.CREATED_AT, Instant.class))
-				.source(ArtifactSource.ARTIFACTORY)
+				.source(source)
 				.build();
 	}
 

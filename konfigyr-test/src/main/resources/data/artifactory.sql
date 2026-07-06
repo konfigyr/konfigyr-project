@@ -8,7 +8,9 @@ INSERT INTO artifacts(id, group_id, artifact_id, name, description, website, rep
 (7, 'org.springframework.boot', 'spring-boot-autoconfigure', 'Spring Boot AutoConfigure', 'Spring Boot auto-configuration attempts to automatically configure your Spring applications', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
 (8, 'org.springframework.boot', 'spring-boot-actuator', 'Spring Boot Actuator', 'Spring Boot Actuator', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
 (9, 'org.springframework.modulith', 'spring-modulith-core', 'Spring Modulith Core', 'Modular monoliths with Spring Boot', 'https://spring.io/projects/spring-modulith/spring-modulith-core', 'https://github.com/spring-projects-experimental/spring-modulith', now() - interval '10 days', now() - interval '9 days'),
-(10, 'org.springframework.modulith', 'spring-modulith-moments', 'Spring Modulith Moments', 'Modular monoliths with Spring Boot', 'https://spring.io/projects/spring-modulith/spring-modulith-moments', 'https://github.com/spring-projects-experimental/spring-modulith', now() - interval '10 days', now() - interval '9 days');
+(10, 'org.springframework.modulith', 'spring-modulith-moments', 'Spring Modulith Moments', 'Modular monoliths with Spring Boot', 'https://spring.io/projects/spring-modulith/spring-modulith-moments', 'https://github.com/spring-projects-experimental/spring-modulith', now() - interval '10 days', now() - interval '9 days'),
+(11, 'org.springframework.boot', 'spring-boot-jooq', 'Spring Boot jOOQ', 'Spring Boot jOOQ support', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
+(12, 'org.springframework.boot', 'spring-boot-liquibase', 'Spring Boot Liquibase', 'Spring Boot Liquibase support', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours');
 
 INSERT INTO artifact_versions(id, artifact_id, version, state, checksum, released_at) VALUES
 (1, 1, '1.0.0', 'PUBLISHED', decode('lmUgkxFN4ru/3vuoTkcrYdf2Z5IfcSnmmtfnZJh+Lwo=', 'base64'), now() - interval '1 days'),
@@ -21,7 +23,12 @@ INSERT INTO artifact_versions(id, artifact_id, version, state, checksum, release
 (8, 7, '4.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '3 days'),
 (9, 8, '4.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '2 days'),
 (10, 9, '2.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days'),
-(11, 10, '2.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days');
+(11, 10, '2.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days'),
+(12, 11, '4.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '6 hours'),
+(13, 12, '4.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '6 hours'),
+/* no artifact_version_properties attached: exercises the "declared version has no indexed property descriptors yet" catalog scenario */
+(14, 9, '2.0.3', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days'),
+(15, 10, '2.0.3', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days');
 
 INSERT INTO property_definitions(id, artifact_id, checksum, name, type_name, schema, default_value, description, deprecation, occurrences, first_seen, last_seen) VALUES
 (1, 2, decode('cRJ8jlPpTPmTJEoZEZNDSjvdqafG05QkzNJplXyu9J0=', 'base64'), 'spring.application.name', 'java.lang.String', convert_to('{"type":"string"}', 'UTF-8'), NULL, 'Application name. Typically used with logging to help identify the application.', NULL, 1, '1.0.1', '1.0.1'),
