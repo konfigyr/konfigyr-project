@@ -35,7 +35,7 @@ public interface TestArtifacts {
 	 * @return the test artifact, never {@literal null}
 	 * @see DefaultArtifact
 	 */
-	static Artifact artifact(Consumer<DefaultArtifact.Builder> consumer) {
+	static Artifact artifact(Consumer<ArtifactBuilder<?, ?>> consumer) {
 		return artifact(ArtifactCoordinates.of("com.konfigyr", "konfigyr-id", "1.0.0"), consumer);
 	}
 
@@ -62,7 +62,7 @@ public interface TestArtifacts {
 	 * @return the test artifact, never {@literal null}
 	 * @see DefaultArtifact
 	 */
-	static Artifact artifact(ArtifactCoordinates coordinates, Consumer<DefaultArtifact.Builder> consumer) {
+	static Artifact artifact(ArtifactCoordinates coordinates, Consumer<ArtifactBuilder<?, ?>> consumer) {
 		final var builder = Artifact.builder()
 				.groupId(coordinates.groupId())
 				.artifactId(coordinates.artifactId())
