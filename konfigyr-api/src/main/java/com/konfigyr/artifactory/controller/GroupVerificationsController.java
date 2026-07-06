@@ -20,6 +20,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @NullMarked
 @RestController
 @RequiredArgsConstructor
@@ -72,6 +74,17 @@ class GroupVerificationsController {
 				.assemble(groupVerifications.claim(owner, request.groupId(), request.verificationMethod()));
 	}
 
+	@PutMapping
+	@PreAuthorize("isAdmin(#namespace)")
+	@ResponseStatus(HttpStatus.OK)
+	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
+	EntityModel<GroupVerification> claimAgain(@PathVariable String namespace, @RequestBody @Validated ClaimRequest request) {
+		final Owner owner = ownerResolver.resolve(namespace);
+
+		return Assemblers.groupVerification(owner)
+				.assemble(groupVerifications.claimAgain(owner, request.groupId(), request.verificationMethod()));
+	}
+
 	@GetMapping("/{groupId}/challenges")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
@@ -82,6 +95,18 @@ class GroupVerificationsController {
 
 		return Assemblers.verificationChallenge(owner, verification)
 				.assemble(groupVerifications.findChallenges(verification));
+	}
+
+	@GetMapping("/{groupId}/active-challenge")
+	@PreAuthorize("isAdmin(#namespace)")
+	@RequiresScope(OAuthScope.READ_NAMESPACES)
+	Optional<EntityModel<VerificationChallenge>> getActiveChallenge(@PathVariable String namespace, @PathVariable String groupId) {
+		final Owner owner = ownerResolver.resolve(namespace);
+		final GroupVerification verification = groupVerifications.findByGroupId(owner, groupId)
+				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
+
+		final Optional<VerificationChallenge> verificationChallenge = groupVerifications.findActiveChallenge(verification);
+		return verificationChallenge.map(it -> Assemblers.verificationChallenge(owner, verification).assemble(it));
 	}
 
 	@PostMapping("/{groupId}/verify")

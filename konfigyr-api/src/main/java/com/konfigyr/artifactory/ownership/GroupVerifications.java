@@ -150,6 +150,24 @@ public interface GroupVerifications {
 	GroupVerification claim(Owner owner, String groupId, VerificationMethod method);
 
 	/**
+	 * Reclaims an existing ownership claim for the supplied {@code groupId} using the given method.
+	 * <p>
+	 * The existing verification is loaded for the namespace, its active challenge is reset or
+	 * recreated for the new {@link VerificationMethod}, and the claim is moved back to
+	 * {@link VerificationState#PENDING}. Implementations only allow reclaiming claims that are in a
+	 * reclaimable terminal state, such as {@link VerificationState#FAILED} or
+	 * {@link VerificationState#REVOKED}.
+	 *
+	 * @param owner   the namespace owner that holds the claim
+	 * @param groupId the group identifier to reclaim
+	 * @param method  the verification method to use for the reclaimed claim
+	 * @return the updated {@link VerificationState#PENDING} verification claim
+	 * @throws GroupVerificationNotFoundException when no claim exists for the owner and groupId
+	 * @throws IllegalStateException              when the claim is not in a reclaimable state
+	 */
+	GroupVerification claimAgain(Owner owner, String groupId, VerificationMethod method);
+
+	/**
 	 * Attempts to verify the ownership claim for the given {@code groupId} on behalf of the namespace.
 	 * <p>
 	 * Loads the claim and its active {@link ChallengeState#UNVERIFIED} challenge, then delegates to

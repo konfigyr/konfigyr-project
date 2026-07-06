@@ -6,10 +6,14 @@ import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedConstruction;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
@@ -278,6 +282,49 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 
 	@Test
 	@Transactional
+	@DisplayName("should reclaim an existing failed claim and reuse its challenge")
+	void shouldReclaimPendingClaim() {
+		final var owner = new Owner(EntityId.from(1), "john-doe");
+		final var groupId = "org.springframework.ai";
+		final var method = VerificationMethod.DNS;
+
+		final var reclaimed = verifications.claimAgain(owner, groupId, method);
+
+		assertThat(reclaimed)
+				.returns(EntityId.from(2), GroupVerification::id)
+				.returns(owner, GroupVerification::owner)
+				.returns(groupId, GroupVerification::groupId)
+				.returns(VerificationState.PENDING, GroupVerification::state)
+				.returns(null, GroupVerification::verifiedAt)
+				.returns(null, GroupVerification::revokedAt);
+
+		assertThat(verifications.findChallenges(reclaimed))
+				.as("should create the second verification challenge")
+				.hasSize(2);
+
+		assertThat(verifications.findActiveChallenge(reclaimed))
+				.as("should create a new correct verification challenge with token")
+				.isPresent()
+				.get()
+				.satisfies(it -> assertThat(it.token()).isNotNull())
+				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
+				.returns(method, VerificationChallenge::method);
+	}
+
+	@Transactional
+	@MethodSource("reclaimRejectedScenarios")
+	@DisplayName("should fail to reclaim")
+	@ParameterizedTest(name = "should fail to reclaim {1} verification with state {2}")
+	void shouldFailToReclaimActiveClaim(String groupId, VerificationState state, EntityId namespaceId, String namespace) {
+		final var owner = new Owner(namespaceId, namespace);
+
+		assertThatThrownBy(() -> verifications.claimAgain(owner, groupId, VerificationMethod.DNS))
+				.isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	@Transactional
 	@DisplayName("should revoke claim in pending state")
 	void shouldRevokeClaimInPendingState() {
 		final var owner = new Owner(EntityId.from(1), "john-doe");
@@ -450,4 +497,10 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.isInstanceOf(DuplicateKeyException.class);
 	}
 
+	static Stream<Arguments> reclaimRejectedScenarios() {
+		return Stream.of(
+				Arguments.of("com.konfigyr", VerificationState.ACTIVE, EntityId.from(2), "konfigyr"),
+				Arguments.of("org.springframework.boot", VerificationState.PENDING, EntityId.from(1), "john-doe")
+		);
+	}
 }
