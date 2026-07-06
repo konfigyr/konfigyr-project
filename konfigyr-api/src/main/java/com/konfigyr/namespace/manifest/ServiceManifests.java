@@ -19,8 +19,8 @@ import java.util.Collection;
  * declared artifact remains unresolved.
  *
  * @author Vladimir Spasic
- * @see ServiceRelease
  * @since 1.0.0
+ * @see ServiceRelease
  **/
 public interface ServiceManifests {
 
