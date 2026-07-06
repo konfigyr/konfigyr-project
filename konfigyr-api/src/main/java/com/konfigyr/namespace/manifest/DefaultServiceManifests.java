@@ -19,6 +19,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
+import static com.konfigyr.data.tables.ServiceConfigurationCatalog.SERVICE_CONFIGURATION_CATALOG;
 import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 
 /**
@@ -69,9 +70,11 @@ class DefaultServiceManifests implements ServiceManifests {
 	private static final String VERSION = "latest";
 
 	private final Marker RELEASE_OPENED = MarkerFactory.getMarker("SERVICE_RELEASE_OPENED");
+	private final Marker ARTIFACT_UPLOADED = MarkerFactory.getMarker("SERVICE_ARTIFACT_UPLOADED");
 
 	private final DSLContext context;
 	private final Artifactory artifactory;
+	private final ArtifactoryConverters converters;
 
 	@Override
 	@Transactional(label = "service-manifest.open")
@@ -292,30 +295,105 @@ class DefaultServiceManifests implements ServiceManifests {
 	}
 
 	/**
-	 * Not yet implemented. Notes for whoever picks this up:
-	 * <ul>
-	 *     <li>Reject the call if there is no {@code LOCAL} {@code service_artifacts} row for this
-	 *     release matching the given {@code metadata}'s coordinates — an upload for a coordinate that
-	 *     was never declared via {@link #open} should not be accepted.</li>
-	 *     <li>Reject the call if the release is not currently {@link ReleaseState#PENDING} — once a
-	 *     release is {@code RELEASED}, the plugin must call {@link #open} again to start a new build
-	 *     before uploading anything.</li>
-	 *     <li>Explode {@code metadata.properties()} into {@code service_configuration_catalog} rows
-	 *     for this coordinate, replacing whatever rows already exist there for it (a re-upload of the
-	 *     same coordinate should overwrite, not duplicate).</li>
-	 *     <li>Update the matching {@code service_artifacts} row's {@code checksum} to
-	 *     {@code metadata.checksum()} — this is what turns it from "declared" into "uploaded", see
-	 *     this class's own Javadoc for why that column doubles as that signal.</li>
-	 *     <li>Log the outcome, matching the {@code log.info(...)} call at the top of {@link #open}.</li>
-	 * </ul>
+	 * Uploads the configuration property metadata for a single artifact that was previously declared
+	 * for this release via {@link #open}.
+	 * <p>
+	 * The given {@code metadata}'s coordinates must match a {@code LOCAL} {@code service_artifacts} row
+	 * already recorded for this release; anything else — a coordinate never declared, or one declared
+	 * as {@code ARTIFACTORY} rather than {@code LOCAL} — is rejected with an
+	 * {@link UndeclaredArtifactException}. The release must also still be {@link ReleaseState#PENDING},
+	 * otherwise a {@link ReleaseNotPendingException} is thrown: once a release is {@code RELEASED}, the
+	 * plugin must call {@link #open} again to start a new build before uploading anything.
+	 * <p>
+	 * {@code metadata.properties()} is exploded into {@code service_configuration_catalog} rows for
+	 * this coordinate, replacing whatever rows already exist there for it, so a re-upload of the same
+	 * coordinate overwrites rather than duplicates. The matching {@code service_artifacts} row's
+	 * {@code checksum} is then updated to {@code metadata.checksum()} — this is what turns it from
+	 * "declared" into "uploaded", see this class's own Javadoc for why that column doubles as that
+	 * signal.
 	 *
 	 * @param service the service the release belongs to, can't be {@literal null}.
 	 * @param releaseId the entity identifier of the release the upload belongs to, can't be {@literal null}.
 	 * @param metadata the uploaded artifact metadata, can't be {@literal null}.
+	 * @throws UndeclaredArtifactException if the metadata's coordinates were not declared for this
+	 *         release as a {@code LOCAL} artifact.
+	 * @throws ReleaseNotPendingException if the release is not currently {@link ReleaseState#PENDING}.
 	 */
 	@Override
+	@Transactional(label = "service-manifest.upload")
 	public void upload(Service service, EntityId releaseId, ArtifactMetadata metadata) {
-		throw new UnsupportedOperationException("Not yet implemented");
+		final ArtifactCoordinates coordinates = ArtifactCoordinates.of(metadata);
+
+		log.debug("Attempting to upload artifact metadata for {} to release {} for service {}",
+				coordinates, releaseId, service);
+
+		final ReleaseState state = context.select(SERVICE_RELEASES.STATE)
+				.from(SERVICE_ARTIFACTS)
+				.join(SERVICE_RELEASES).on(SERVICE_RELEASES.ID.eq(SERVICE_ARTIFACTS.RELEASE_ID))
+				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(releaseId.get()))
+				.and(SERVICE_RELEASES.SERVICE_ID.eq(service.id().get()))
+				.and(SERVICE_ARTIFACTS.GROUP_ID.eq(coordinates.groupId()))
+				.and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq(coordinates.artifactId()))
+				.and(SERVICE_ARTIFACTS.VERSION.eq(coordinates.version().get()))
+				.and(SERVICE_ARTIFACTS.SOURCE.eq(ArtifactSource.LOCAL.name()))
+				.fetchOptional(SERVICE_RELEASES.STATE)
+				.map(ReleaseState::valueOf)
+				.orElseThrow(() -> new UndeclaredArtifactException(coordinates));
+
+		if (state != ReleaseState.PENDING) {
+			throw new ReleaseNotPendingException(releaseId, state);
+		}
+
+		context.deleteFrom(SERVICE_CONFIGURATION_CATALOG)
+				.where(SERVICE_CONFIGURATION_CATALOG.RELEASE_ID.eq(releaseId.get()))
+				.and(SERVICE_CONFIGURATION_CATALOG.GROUP_ID.eq(coordinates.groupId()))
+				.and(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID.eq(coordinates.artifactId()))
+				.and(SERVICE_CONFIGURATION_CATALOG.VERSION.eq(coordinates.version().get()))
+				.execute();
+
+		var insert = context.insertInto(SERVICE_CONFIGURATION_CATALOG).columns(
+				SERVICE_CONFIGURATION_CATALOG.SERVICE_ID,
+				SERVICE_CONFIGURATION_CATALOG.RELEASE_ID,
+				SERVICE_CONFIGURATION_CATALOG.GROUP_ID,
+				SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID,
+				SERVICE_CONFIGURATION_CATALOG.VERSION,
+				SERVICE_CONFIGURATION_CATALOG.NAME,
+				SERVICE_CONFIGURATION_CATALOG.TYPE_NAME,
+				SERVICE_CONFIGURATION_CATALOG.SCHEMA,
+				SERVICE_CONFIGURATION_CATALOG.DEFAULT_VALUE,
+				SERVICE_CONFIGURATION_CATALOG.DESCRIPTION,
+				SERVICE_CONFIGURATION_CATALOG.DEPRECATION
+		);
+
+		for (PropertyDescriptor property : metadata.properties()) {
+			insert = insert.values(
+					service.id().get(),
+					releaseId.get(),
+					coordinates.groupId(),
+					coordinates.artifactId(),
+					coordinates.version().get(),
+					property.name(),
+					property.typeName(),
+					converters.schema().to(property.schema()),
+					property.defaultValue(),
+					property.description(),
+					converters.deprecation().to(property.deprecation())
+			);
+		}
+
+		if (!metadata.properties().isEmpty()) {
+			insert.execute();
+		}
+
+		context.update(SERVICE_ARTIFACTS)
+				.set(SERVICE_ARTIFACTS.CHECKSUM, metadata.checksum())
+				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(releaseId.get()))
+				.and(SERVICE_ARTIFACTS.GROUP_ID.eq(coordinates.groupId()))
+				.and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq(coordinates.artifactId()))
+				.and(SERVICE_ARTIFACTS.VERSION.eq(coordinates.version().get()))
+				.execute();
+
+		log.info(ARTIFACT_UPLOADED, "Successfully uploaded artifact metadata for {} to release {}", coordinates, releaseId);
 	}
 
 	/**

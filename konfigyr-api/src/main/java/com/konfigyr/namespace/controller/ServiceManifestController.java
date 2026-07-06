@@ -1,7 +1,9 @@
 package com.konfigyr.namespace.controller;
 
+import com.konfigyr.artifactory.ArtifactMetadata;
 import com.konfigyr.artifactory.ServiceRelease;
 import com.konfigyr.artifactory.ServiceReleaseCandidate;
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.namespace.NamespaceNotFoundException;
@@ -47,6 +49,22 @@ class ServiceManifestController {
 		);
 
 		return manifests.open(service, request.artifacts());
+	}
+
+	@PostMapping("/{id}/artifacts")
+	@PreAuthorize("isMember(#namespace)")
+	void upload(
+			@PathVariable String namespace,
+			@PathVariable String slug,
+			@PathVariable String id,
+			@RequestBody ArtifactMetadata metadata
+	) {
+		final Namespace ns = lookupNamespace(namespace);
+		final Service service = services.get(ns, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace, slug)
+		);
+
+		manifests.upload(service, EntityId.from(id), metadata);
 	}
 
 	@NonNull
