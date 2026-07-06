@@ -2,10 +2,10 @@ import {
   ActivityIcon,
   MonitorCloudIcon,
   MonitorIcon,
+  Package,
   SendIcon,
   Settings2Icon,
   UsersIcon,
-  Package,
 } from 'lucide-react';
 import {
   SidebarGroup,
