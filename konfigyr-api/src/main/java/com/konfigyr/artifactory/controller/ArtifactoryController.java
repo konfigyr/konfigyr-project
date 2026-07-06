@@ -6,14 +6,26 @@ import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.NamespacedPrincipal;
+import com.konfigyr.version.Version;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @NullMarked
@@ -55,16 +67,16 @@ class ArtifactoryController {
 			@PathVariable String groupId,
 			@PathVariable String artifactId,
 			@PathVariable String version,
-			@RequestBody DefaultArtifactMetadata metadata,
+			@RequestBody @Validated ArtifactPublication publication,
 			BindingResult errors
 	) throws BindException {
 		final EntityId namespaceId = retrieveNamespaceIdentifier()
 				.orElseThrow(() -> new ArtifactoryException(HttpStatus.BAD_REQUEST, "Namespace id is not available for current principal"));
 
-		final ArtifactMetadataValidator validator = new ArtifactMetadataValidator(groupId, artifactId, version);
-		validator.validate(metadata, errors);
+		final ArtifactCoordinates coordinates = ArtifactCoordinates.of(groupId, artifactId, version);
+		publication.validate(coordinates, errors);
 
-		return EntityModel.of(artifactory.publish(namespaceId, metadata));
+		return EntityModel.of(artifactory.publish(namespaceId, publication.toArtifactMetadata()));
 	}
 
 	@GetMapping("/{groupId}/{artifactId}/{version}/properties")
@@ -85,5 +97,83 @@ class ArtifactoryController {
 		}
 
 		return Optional.empty();
+	}
+
+	@NullUnmarked
+	record ArtifactPublication(
+			@NotBlank String groupId,
+			@NotBlank String artifactId,
+			@NotNull Version version,
+			String name,
+			String description,
+			URI website,
+			URI repository,
+			@NotBlank String checksum,
+			@Valid @NotEmpty List<@NotNull ArtifactPublicationProperty> properties
+	) {
+
+		void validate(ArtifactCoordinates coordinates, BindingResult errors) throws BindException {
+			if (StringUtils.hasText(groupId()) && !Objects.equals(coordinates.groupId(), groupId)) {
+				reject(errors, "groupId", coordinates.groupId(), groupId());
+			}
+			if (StringUtils.hasText(artifactId()) && !Objects.equals(coordinates.artifactId(), artifactId)) {
+				reject(errors, "artifactId", coordinates.artifactId(), artifactId());
+			}
+			if (version() != null && !Objects.equals(coordinates.version(), version())) {
+				reject(errors, "version", coordinates.version().get(), version().get());
+			}
+			if (errors.hasErrors()) {
+				throw new BindException(errors);
+			}
+		}
+
+		ArtifactMetadata toArtifactMetadata() {
+			final var builder = ArtifactMetadata.builder()
+					.groupId(groupId)
+					.artifactId(artifactId)
+					.version(version.get())
+					.name(name)
+					.description(description)
+					.website(website)
+					.repository(repository)
+					.checksum(checksum);
+
+			for (final ArtifactPublicationProperty property : properties) {
+				builder.property(property.toPropertyDescriptor());
+			}
+
+			return builder.build();
+		}
+
+		private void reject(Errors errors, String field, String expected, String actual) {
+			final String defaultMessage = "The field '%s' of artifact metadata must match '%s' but was: '%s'"
+					.formatted(field, expected, actual);
+
+			errors.rejectValue(field, "artifactory.validation.metadata." + field + ".mismatch", defaultMessage);
+		}
+
+	}
+
+	@NullUnmarked
+	record ArtifactPublicationProperty(
+			@NotBlank String name,
+			@NotNull JsonSchema schema,
+			@NotBlank String typeName,
+			String description,
+			String defaultValue,
+			Deprecation deprecation
+	) {
+
+		PropertyDescriptor toPropertyDescriptor() {
+			return PropertyDescriptor.builder()
+					.name(name)
+					.schema(schema)
+					.typeName(typeName)
+					.description(description)
+					.defaultValue(defaultValue)
+					.deprecation(deprecation)
+					.build();
+		}
+
 	}
 }

@@ -21,7 +21,6 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.validation.BindException;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import tools.jackson.databind.node.ObjectNode;
 
 import java.net.URI;
 import java.time.Instant;
@@ -176,27 +175,21 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to upload existing artifact")
 	void uploadExistingArtifact() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "1.0.0");
-		final var metadata = jsonMapper.<ObjectNode>valueToTree(Artifact.builder()
+		final var metadata = ArtifactMetadata.builder()
 				.artifactId(coordinates.artifactId())
 				.groupId(coordinates.groupId())
 				.version(coordinates.version().get())
-				.build()
-		);
-
-		// register an empty object in the properties array to verify that validation is skipped
-		// for property descriptors within the payload. The validation of property descriptors
-		// should be performed by the artifact metadata release batch job
-		metadata.set("properties", jsonMapper.createArrayNode().add(
-				jsonMapper.createArrayNode().objectNode()
-		).add(
-				jsonMapper.createArrayNode().objectNode()
-						.put("name", "property.name")
-		));
+				.property(PropertyDescriptor.builder()
+						.name("konfigyr.name")
+						.typeName("java.lang.String")
+						.schema(StringSchema.instance())
+						.build()
+				).build();
 
 		mvc.post().uri(uriForArtifact(coordinates).toUri())
 				.with(publishingTo(EntityId.from(2L)))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(metadata.toPrettyString())
+				.content(jsonMapper.writeValueAsBytes(metadata))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -231,7 +224,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 								.isInstanceOf(Collection.class)
 								.asInstanceOf(InstanceOfAssertFactories.collection(Map.class))
 								.extracting("pointer")
-								.containsExactlyInAnyOrder("properties", "groupId", "artifactId", "version")
+								.containsExactlyInAnyOrder("properties", "groupId", "artifactId", "version", "checksum")
 						)
 				));
 	}
@@ -244,7 +237,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		mvc.post().uri(uriForArtifact(coordinates).toUri())
 				.with(publishingTo(EntityId.from(2L)))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"groupId\": \"org.konfigyr\", \"artifactId\": \"konfigyr\", \"version\": \"1.0.0\"}")
+				.content("{\"groupId\": \"org.konfigyr\", \"artifactId\": \"konfigyr\", \"version\": \"1.0.0\",\"checksum\":\"VoKbC7AVS7doAsC6OUpxX15VPn/7yWm9Lg9w7c79JXI=\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())

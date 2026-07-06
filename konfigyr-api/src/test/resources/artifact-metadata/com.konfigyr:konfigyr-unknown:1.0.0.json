@@ -2,6 +2,9 @@
   {
     "name": "spring.application.name",
     "typeName": "java.lang.String",
+    "schema": {
+      "type": "string"
+    },
     "description": "Application name. Typically used with logging to help identify the application."
   }
 ]
