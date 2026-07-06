@@ -309,7 +309,10 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		uploadArtifact(id, TestArtifacts.metadata(coordinates))
 				.assertThat()
 				.apply(log())
-				.hasStatus(HttpStatus.CONFLICT);
+				.satisfies(problemDetailFor(HttpStatus.CONFLICT, problem -> problem
+						.hasTitle("Release is not pending")
+						.hasDetailContaining("Release is no longer pending")
+				));
 	}
 
 	@Test
@@ -321,7 +324,10 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		uploadArtifact(id, TestArtifacts.metadata(ArtifactCoordinates.of("com.acme", "other-service", "1.0.0")))
 				.assertThat()
 				.apply(log())
-				.hasStatus(HttpStatus.NOT_FOUND);
+				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+						.hasTitle("Artifact not declared for this release")
+						.hasDetailContaining("com.acme:other-service:1.0.0")
+				));
 	}
 
 	@Test
