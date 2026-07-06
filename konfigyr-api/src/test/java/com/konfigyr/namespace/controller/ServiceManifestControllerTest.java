@@ -41,8 +41,8 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@DisplayName("should open a new release when the service has none")
 	void shouldOpenNewRelease() {
 		final var request = new ServiceManifestController.ResolveReleaseRequest(List.of(
-				ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1"),
-				ServiceReleaseCandidate.of("com.acme", "other-service", "2.0.0", "checksum-2")
+				ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-artifactory", "1.2.0", "checksum-1"),
+				ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-crypto", "2.0.0", "checksum-2")
 		));
 
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
@@ -103,7 +103,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@DisplayName("should take over an existing release and skip artifacts with a matching checksum")
 	void shouldTakeOverExistingRelease() {
 		final var request = new ServiceManifestController.ResolveReleaseRequest(List.of(
-				ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1")
+				ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-artifactory", "1.2.0", "checksum-1")
 		));
 
 		final ServiceRelease first = mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
@@ -118,7 +118,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.actual();
 
 		// simulate T8's upload() having already recorded this checksum for the artifact
-		markUploaded("com.acme", "my-service", "1.2.0", "checksum-1");
+		markUploaded("com.konfigyr", "konfigyr-artifactory", "1.2.0", "checksum-1");
 
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
@@ -146,20 +146,20 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of(
-						ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1")
+						ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-artifactory", "1.2.0", "checksum-1")
 				))))
 				.exchange()
 				.assertThat()
 				.hasStatusOk();
 
 		// simulate T8's upload() having already recorded the old checksum for the artifact
-		markUploaded("com.acme", "my-service", "1.2.0", "checksum-1");
+		markUploaded("com.konfigyr", "konfigyr-artifactory", "1.2.0", "checksum-1");
 
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of(
-						ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-2")
+						ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-artifactory", "1.2.0", "checksum-2")
 				))))
 				.exchange()
 				.assertThat()
@@ -193,8 +193,8 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of(
-						ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1"),
-						ServiceReleaseCandidate.of("com.acme", "other-service", "2.0.0", "checksum-2")
+						ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-artifactory", "1.2.0", "checksum-1"),
+						ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-crypto", "2.0.0", "checksum-2")
 				))))
 				.exchange()
 				.assertThat()
@@ -204,7 +204,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of(
-						ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1")
+						ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-artifactory", "1.2.0", "checksum-1")
 				))))
 				.exchange()
 				.assertThat()
@@ -215,7 +215,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.satisfies(release -> assertThat(release.artifacts()).hasSize(1));
 
 		assertThat(context.fetchExists(SERVICE_ARTIFACTS,
-				SERVICE_ARTIFACTS.GROUP_ID.eq("com.acme").and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq("other-service"))
+				SERVICE_ARTIFACTS.GROUP_ID.eq("com.konfigyr").and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq("konfigyr-crypto"))
 		)).isFalse();
 	}
 
@@ -223,7 +223,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should upload artifact metadata for a declared coordinate")
 	void shouldUploadArtifactMetadata() {
-		final var coordinates = ArtifactCoordinates.of("com.acme", "my-service", "1.2.0");
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-artifactory", "1.2.0");
 		final String id = openRelease(coordinates);
 		final ArtifactMetadata metadata = TestArtifacts.metadata(coordinates);
 
@@ -259,13 +259,13 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should replace catalog rows and update the checksum when the same coordinate is uploaded again")
 	void shouldReplaceCatalogRowsOnReupload() {
-		final var coordinates = ArtifactCoordinates.of("com.acme", "my-service", "1.2.0");
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-artifactory", "1.2.0");
 		final String id = openRelease(coordinates);
 
 		uploadArtifact(id, TestArtifacts.metadata(coordinates)).assertThat().hasStatusOk();
 
 		final ArtifactMetadata metadata = TestArtifacts.metadata(coordinates, PropertyDescriptor.builder()
-				.name("com.acme.my-service.enabled")
+				.name("com.konfigyr.konfigyr-artifactory.enabled")
 				.typeName("java.lang.Boolean")
 				.schema(StringSchema.instance())
 				.build());
@@ -281,7 +281,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.and(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID.eq(coordinates.artifactId()))
 				.and(SERVICE_CONFIGURATION_CATALOG.VERSION.eq(coordinates.version().get()))
 				.fetch(SERVICE_CONFIGURATION_CATALOG.NAME))
-				.containsExactly("com.acme.my-service.enabled");
+				.containsExactly("com.konfigyr.konfigyr-artifactory.enabled");
 
 		assertThat(context.select(SERVICE_ARTIFACTS.CHECKSUM)
 				.from(SERVICE_ARTIFACTS)
@@ -296,7 +296,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should reject an artifact upload when the release is not pending")
 	void shouldRejectUploadForNotPendingRelease() {
-		final var coordinates = ArtifactCoordinates.of("com.acme", "my-service", "1.2.0");
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-artifactory", "1.2.0");
 		final String id = openRelease(coordinates);
 
 		final int updated = context.update(SERVICE_RELEASES)
@@ -319,14 +319,14 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should reject an artifact upload for a coordinate that was not declared for the release")
 	void shouldRejectUploadForUndeclaredCoordinate() {
-		final String id = openRelease(ArtifactCoordinates.of("com.acme", "my-service", "1.2.0"));
+		final String id = openRelease(ArtifactCoordinates.of("com.konfigyr", "konfigyr-artifactory", "1.2.0"));
 
-		uploadArtifact(id, TestArtifacts.metadata(ArtifactCoordinates.of("com.acme", "other-service", "1.0.0")))
+		uploadArtifact(id, TestArtifacts.metadata(ArtifactCoordinates.of("com.konfigyr", "konfigyr-crypto", "1.0.0")))
 				.assertThat()
 				.apply(log())
 				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
 						.hasTitle("Artifact not declared for this release")
-						.hasDetailContaining("com.acme:other-service:1.0.0")
+						.hasDetailContaining("com.konfigyr:konfigyr-crypto:1.0.0")
 				));
 	}
 
@@ -334,7 +334,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should reject a malformed artifact metadata payload")
 	void shouldRejectMalformedUploadPayload() {
-		final String id = openRelease(ArtifactCoordinates.of("com.acme", "my-service", "1.2.0"));
+		final String id = openRelease(ArtifactCoordinates.of("com.konfigyr", "konfigyr-artifactory", "1.2.0"));
 
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/artifacts", id)
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
