@@ -28,8 +28,10 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.konfigyr.data.tables.ArtifactVersionProperties.ARTIFACT_VERSION_PROPERTIES;
 import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
@@ -82,6 +84,30 @@ class DefaultArtifactory implements Artifactory {
 						.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
 						.where(toCondition(coordinates))
 		);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "artifactory.existing-coordinates")
+	public Set<ArtifactCoordinates> existing(@NonNull Collection<ArtifactCoordinates> coordinates) {
+		if (coordinates.isEmpty()) {
+			return Set.of();
+		}
+
+		final String[] groupIds = coordinates.stream().map(ArtifactCoordinates::groupId).toArray(String[]::new);
+		final String[] artifactIds = coordinates.stream().map(ArtifactCoordinates::artifactId).toArray(String[]::new);
+		final String[] versions = coordinates.stream().map(coordinate -> coordinate.version().get()).toArray(String[]::new);
+
+		return context.select(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, ARTIFACT_VERSIONS.VERSION)
+				.from(ARTIFACT_VERSIONS)
+				.innerJoin(ARTIFACTS)
+				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
+				.where(DSL.row(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, ARTIFACT_VERSIONS.VERSION)
+						.in(DSL.select(DSL.field("g", String.class), DSL.field("a", String.class), DSL.field("v", String.class))
+								.from("unnest({0}::text[], {1}::text[], {2}::text[]) AS t(g, a, v)",
+										groupIds, artifactIds, versions)))
+				.fetchSet(record -> ArtifactCoordinates.of(
+						record.get(ARTIFACTS.GROUP_ID), record.get(ARTIFACTS.ARTIFACT_ID), record.get(ARTIFACT_VERSIONS.VERSION)));
 	}
 
 	@Override

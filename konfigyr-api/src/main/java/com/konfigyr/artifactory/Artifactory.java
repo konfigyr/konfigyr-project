@@ -4,8 +4,10 @@ import com.konfigyr.entity.EntityId;
 import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.jspecify.annotations.NonNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Interface that represents the primary entry point to the {@code Artifactory} domain.
@@ -67,6 +69,24 @@ public interface Artifactory {
 	 * @return {@code true} if an artifact version exists, otherwise {@code false}
 	 */
 	boolean exists(@NonNull ArtifactCoordinates coordinates);
+
+	/**
+	 * Returns the subset of the given {@link ArtifactCoordinates} that are already indexed by this
+	 * {@code Artifactory}.
+	 * <p>
+	 * This is a batch counterpart to {@link #exists(ArtifactCoordinates)}, intended for callers that
+	 * need to resolve the existence of many coordinates at once without issuing one query per coordinate.
+	 * <p>
+	 * Coordinates from the input that have no matching artifact version indexed by this {@code Artifactory}
+	 * are simply omitted from the returned set — they are not reported back as missing or invalid, since
+	 * "not yet indexed" is an expected, non-exceptional outcome for a batch existence check. Callers that
+	 * need to know which of their coordinates are absent should compute the difference against the input.
+	 *
+	 * @param coordinates coordinates to check, can be empty
+	 * @return the subset of the given coordinates that exist, never {@literal null}, empty if the input is empty
+	 */
+	@NonNull
+	Set<ArtifactCoordinates> existing(@NonNull Collection<ArtifactCoordinates> coordinates);
 
 	/**
 	 * Publishes a new artifact version based on the provided metadata.

@@ -17,6 +17,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -198,6 +199,34 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.returns(coordinates, ArtifactVersionNotFoundException::getCoordinates)
 				.returns(HttpStatus.NOT_FOUND, ArtifactVersionNotFoundException::getStatusCode)
 				.withNoCause();
+	}
+
+	@Test
+	@DisplayName("should resolve the subset of coordinates that already exist in the Artifactory")
+	void shouldResolveExistingCoordinates() {
+		final var existing = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:1.0.0");
+		final var alsoExisting = ArtifactCoordinates.parse("com.konfigyr:konfigyr-api:1.0.0");
+		final var unknownVersion = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:9.0.0");
+		final var unknownArtifact = ArtifactCoordinates.parse("com.konfigyr:konfigyr-unknown:1.0.0");
+
+		assertThat(artifactory.existing(List.of(existing, alsoExisting, unknownVersion, unknownArtifact)))
+				.containsExactlyInAnyOrder(existing, alsoExisting);
+	}
+
+	@Test
+	@DisplayName("should resolve an empty set of existing coordinates when none of them exist")
+	void shouldResolveNoExistingCoordinates() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-unknown:1.0.0");
+
+		assertThat(artifactory.existing(List.of(coordinates)))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should resolve an empty set of existing coordinates without querying when given an empty collection")
+	void shouldResolveExistingCoordinatesForEmptyCollection() {
+		assertThat(artifactory.existing(List.of()))
+				.isEmpty();
 	}
 
 }

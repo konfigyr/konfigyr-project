@@ -298,6 +298,10 @@
 				<constraints nullable="false" />
 			</column>
 
+			<column name="published_at" type="timestamptz" remarks="Timestamp when this release last transitioned to RELEASED.">
+				<constraints nullable="true" />
+			</column>
+
 			<column name="created_at" type="timestamptz" defaultValue="NOW()">
 				<constraints nullable="false" />
 			</column>
@@ -343,6 +347,14 @@
 
 			<column name="version" type="text" remarks="The Maven coordinate `version` field.">
 				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="source" type="varchar(16)" defaultValue="LOCAL" remarks="Distinguishes artifacts uploaded by the plugin (LOCAL) from those resolved through the Artifactory index (ARTIFACTORY).">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="checksum" type="text" remarks="SHA-256 hex digest of the uploaded Spring Boot configuration metadata; null while the artifact still needs to be uploaded.">
+				<constraints nullable="true" />
 			</column>
 		</createTable>
 
