@@ -13,11 +13,9 @@ import com.konfigyr.namespace.Services;
 import com.konfigyr.namespace.manifest.ServiceManifests;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,14 +39,14 @@ class ServiceManifestController {
 	ServiceRelease resolve(
 			@PathVariable String namespace,
 			@PathVariable String slug,
-			@RequestBody @Validated ResolveReleaseRequest request
+			@RequestBody List<ServiceReleaseCandidate> candidates
 	) {
 		final Namespace ns = lookupNamespace(namespace);
 		final Service service = services.get(ns, slug).orElseThrow(
 				() -> new ServiceNotFoundException(namespace, slug)
 		);
 
-		return manifests.open(service, request.artifacts());
+		return manifests.open(service, candidates);
 	}
 
 	@PostMapping("/{id}/artifacts")
@@ -70,10 +68,6 @@ class ServiceManifestController {
 	@NonNull
 	Namespace lookupNamespace(@NonNull String slug) {
 		return namespaces.findBySlug(slug).orElseThrow(() -> new NamespaceNotFoundException(slug));
-	}
-
-	record ResolveReleaseRequest(@NotNull List<@NotNull ServiceReleaseCandidate> artifacts) {
-
 	}
 
 }
