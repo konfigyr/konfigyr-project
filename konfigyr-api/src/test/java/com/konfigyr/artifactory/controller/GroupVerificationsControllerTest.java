@@ -203,7 +203,7 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 						.hasSize(1)
 						.extracting(VerificationChallenge::verificationId, VerificationChallenge::method, VerificationChallenge::state)
 						.containsExactlyInAnyOrder(
-								tuple(EntityId.from(2), VerificationMethod.DNS, ChallengeState.UNVERIFIED)
+								tuple(EntityId.from(2), VerificationMethod.DNS, ChallengeState.EXPIRED)
 						));
 	}
 
