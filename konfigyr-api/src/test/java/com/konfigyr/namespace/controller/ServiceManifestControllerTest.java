@@ -1,26 +1,41 @@
 package com.konfigyr.namespace.controller;
 
-import com.konfigyr.artifactory.ArtifactSource;
-import com.konfigyr.artifactory.ArtifactUploadStatus;
-import com.konfigyr.artifactory.ServiceRelease;
-import com.konfigyr.artifactory.ServiceReleaseCandidate;
+import com.konfigyr.artifactory.*;
+import com.konfigyr.entity.EntityId;
+import com.konfigyr.io.ByteArray;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.api.ObjectAssert;
 import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.impl.DSL;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
+import static com.konfigyr.data.tables.ServiceConfigurationCatalog.SERVICE_CONFIGURATION_CATALOG;
+import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 class ServiceManifestControllerTest extends AbstractControllerTest {
+
+	static Artifact konfigyrArtifactoryArtifact = Artifact.of("com.konfigyr", "konfigyr-artifactory", "1.2.0");
+	static Artifact konfigyrCryptoApiArtifact = Artifact.of("com.konfigyr", "konfigyr-crypto-api", "1.1.0");
 
 	@Autowired
 	DSLContext context;
@@ -29,25 +44,27 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should open a new release when the service has none")
 	void shouldOpenNewRelease() {
-		final var request = new ServiceManifestController.ResolveReleaseRequest(List.of(
-				ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1"),
-				ServiceReleaseCandidate.of("com.acme", "other-service", "2.0.0", "checksum-2")
-		));
+		final var candidates = List.of(
+				ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum-1"),
+				ServiceReleaseCandidate.of(konfigyrCryptoApiArtifact, "checksum-2")
+		);
 
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(request))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(ServiceRelease.class)
+		assertThatRelease(candidates)
 				.returns(com.konfigyr.artifactory.ReleaseState.PENDING, ServiceRelease::state)
 				.satisfies(release -> assertThat(release.artifacts())
 						.hasSize(2)
-						.allSatisfy(entry -> assertThat(entry.status()).isEqualTo(ArtifactUploadStatus.UPLOAD_REQUIRED))
+						.satisfiesExactlyInAnyOrder(
+								entry -> assertThat(entry)
+										.returns(konfigyrArtifactoryArtifact.groupId(), Artifact::groupId)
+										.returns(konfigyrArtifactoryArtifact.artifactId(), Artifact::artifactId)
+										.returns(konfigyrArtifactoryArtifact.version(), Artifact::version)
+										.returns(ArtifactUploadStatus.UPLOAD_REQUIRED, ServiceReleaseEntry::status),
+								entry -> assertThat(entry)
+										.returns(konfigyrCryptoApiArtifact.groupId(), Artifact::groupId)
+										.returns(konfigyrCryptoApiArtifact.artifactId(), Artifact::artifactId)
+										.returns(konfigyrCryptoApiArtifact.version(), Artifact::version)
+										.returns(ArtifactUploadStatus.UPLOAD_REQUIRED, ServiceReleaseEntry::status)
+						)
 				);
 	}
 
@@ -55,157 +72,290 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should skip an artifact that is already indexed in the Artifactory")
 	void shouldSkipIndexedArtifact() {
-		final var request = new ServiceManifestController.ResolveReleaseRequest(List.of(
-				ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-crypto-api", "1.0.0", "irrelevant-checksum")
-		));
-
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(request))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(ServiceRelease.class)
+		assertThatRelease(ServiceReleaseCandidate.of("com.konfigyr", "konfigyr-crypto-api", "1.0.0", "checksum"))
 				.satisfies(release -> assertThat(release.artifacts())
 						.hasSize(1)
 						.first()
-						.returns(ArtifactUploadStatus.SKIP, entry -> entry.status())
+						.returns("com.konfigyr", Artifact::groupId)
+						.returns("konfigyr-crypto-api", Artifact::artifactId)
+						.returns("1.0.0", Artifact::version)
+						.returns(ArtifactUploadStatus.SKIP, ServiceReleaseEntry::status)
 				);
 
-		assertThat(context.select(SERVICE_ARTIFACTS.SOURCE, SERVICE_ARTIFACTS.CHECKSUM)
+		// assert that artifact is added to the release artifacts with the matching source
+		final var record = context.select(SERVICE_ARTIFACTS.SOURCE, SERVICE_ARTIFACTS.CHECKSUM)
 				.from(SERVICE_ARTIFACTS)
 				.where(SERVICE_ARTIFACTS.GROUP_ID.eq("com.konfigyr"))
 				.and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq("konfigyr-crypto-api"))
 				.and(SERVICE_ARTIFACTS.VERSION.eq("1.0.0"))
-				.fetchOne())
-				.satisfies(record -> {
-					assertThat(record.get(SERVICE_ARTIFACTS.SOURCE)).isEqualTo(ArtifactSource.ARTIFACTORY.name());
-					assertThat(record.get(SERVICE_ARTIFACTS.CHECKSUM)).isNull();
-				});
+				.fetchOneMap();
+
+		assertThat(record)
+				.containsEntry(SERVICE_ARTIFACTS.SOURCE.getName(), ArtifactSource.ARTIFACTORY.name())
+				.containsEntry(SERVICE_ARTIFACTS.CHECKSUM.getName(), null);
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should take over an existing release and skip artifacts with a matching checksum")
 	void shouldTakeOverExistingRelease() {
-		final var request = new ServiceManifestController.ResolveReleaseRequest(List.of(
-				ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1")
-		));
+		final var metadata = metadata(konfigyrArtifactoryArtifact, "checksum-1");
 
-		final ServiceRelease first = mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(request))
-				.exchange()
-				.assertThat()
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(ServiceRelease.class)
+		final ServiceRelease first = assertThatRelease(ServiceReleaseCandidate.of(metadata))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
 				.actual();
 
-		// simulate T8's upload() having already recorded this checksum for the artifact
-		markUploaded("com.acme", "my-service", "1.2.0", "checksum-1");
+		// checksum-1 is what the plugin already declared for this coordinate above, so uploading
+		// metadata carrying that same checksum is what settles it as "already uploaded"
+		assertThatUpload(first.id(), metadata)
+				.hasStatus(HttpStatus.NO_CONTENT);
 
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(request))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(ServiceRelease.class)
+		assertThatRelease(ServiceReleaseCandidate.of(metadata))
 				.returns(first.id(), ServiceRelease::id)
-				.satisfies(release -> assertThat(release.artifacts())
-						.hasSize(1)
-						.first()
-						.returns(ArtifactUploadStatus.SKIP, entry -> entry.status())
-				);
+				.extracting(ServiceRelease::artifacts, InstanceOfAssertFactories.iterable(ServiceReleaseEntry.class))
+				.hasSize(1)
+				.first()
+				.returns(ArtifactUploadStatus.SKIP, ServiceReleaseEntry::status);
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should mark an artifact upload required when its checksum changed")
 	void shouldRequireUploadWhenChecksumChanged() {
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of(
-						ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1")
-				))))
-				.exchange()
-				.assertThat()
-				.hasStatusOk();
+		final var metadata = metadata(konfigyrArtifactoryArtifact, "initial-checksum");
 
-		// simulate T8's upload() having already recorded the old checksum for the artifact
-		markUploaded("com.acme", "my-service", "1.2.0", "checksum-1");
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
 
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of(
-						ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-2")
-				))))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(ServiceRelease.class)
-				.satisfies(release -> assertThat(release.artifacts())
-						.hasSize(1)
-						.first()
-						.returns(ArtifactUploadStatus.UPLOAD_REQUIRED, entry -> entry.status())
-				);
-	}
+		// `initial-checksum` is what the plugin already declared for this coordinate above, so uploading
+		// metadata carrying that same checksum is what settles it as "already uploaded"
+		assertThatUpload(release.id(), metadata)
+				.hasStatus(HttpStatus.NO_CONTENT);
 
-	private void markUploaded(String groupId, String artifactId, String version, String checksum) {
-		final int updated = context.update(SERVICE_ARTIFACTS)
-				.set(SERVICE_ARTIFACTS.CHECKSUM, checksum)
-				.where(SERVICE_ARTIFACTS.GROUP_ID.eq(groupId))
-				.and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq(artifactId))
-				.and(SERVICE_ARTIFACTS.VERSION.eq(version))
-				.execute();
-
-		assertThat(updated).as("Expected an existing service_artifacts row to update").isOne();
+		assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "different-checksum"))
+				.returns(release.id(), ServiceRelease::id)
+				.extracting(ServiceRelease::artifacts, InstanceOfAssertFactories.iterable(ServiceReleaseEntry.class))
+				.hasSize(1)
+				.first()
+				.returns(ArtifactUploadStatus.UPLOAD_REQUIRED, ServiceReleaseEntry::status);
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should prune artifacts that are no longer declared")
 	void shouldPruneStaleArtifacts() {
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of(
-						ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1"),
-						ServiceReleaseCandidate.of("com.acme", "other-service", "2.0.0", "checksum-2")
-				))))
-				.exchange()
-				.assertThat()
-				.hasStatusOk();
+		assertThatRelease(List.of(
+				ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum-1"),
+				ServiceReleaseCandidate.of(konfigyrCryptoApiArtifact, "checksum-2")
+		)).satisfies(release -> assertThat(release.artifacts()).hasSize(2));
 
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
+		assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum-1"))
+				.satisfies(release -> assertThat(release.artifacts()).hasSize(1));
+
+		assertThat(context.fetchExists(SERVICE_ARTIFACTS, DSL.and(
+				SERVICE_ARTIFACTS.GROUP_ID.eq(konfigyrCryptoApiArtifact.groupId()),
+				SERVICE_ARTIFACTS.ARTIFACT_ID.eq(konfigyrCryptoApiArtifact.artifactId()),
+				SERVICE_ARTIFACTS.VERSION.eq(konfigyrCryptoApiArtifact.version())
+		))).isFalse();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should upload artifact metadata for a declared coordinate")
+	void shouldUploadArtifactMetadata() {
+		final var metadata = konfigyrArtifactoryArtifact.toMetadata(List.of(
+				PropertyDescriptor.builder()
+						.name("com.konfigyr.konfigyr-artifactory.enabled")
+						.typeName("java.lang.Boolean")
+						.schema(BooleanSchema.instance())
+						.description("Enables the artifact metadata upload")
+						.defaultValue("true")
+						.build()
+		));
+
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		assertThatUpload(release.id(), metadata)
+				.hasStatus(HttpStatus.NO_CONTENT);
+
+		final var record = context.select(SERVICE_ARTIFACTS.SOURCE, SERVICE_ARTIFACTS.CHECKSUM)
+				.from(SERVICE_ARTIFACTS)
+				.where(SERVICE_ARTIFACTS.GROUP_ID.eq(konfigyrArtifactoryArtifact.groupId()))
+				.and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq(konfigyrArtifactoryArtifact.artifactId()))
+				.and(SERVICE_ARTIFACTS.VERSION.eq(konfigyrArtifactoryArtifact.version()))
+				.fetchOneMap();
+
+		assertThat(record)
+				.containsEntry(SERVICE_ARTIFACTS.SOURCE.getName(), ArtifactSource.LOCAL.name())
+				.containsEntry(SERVICE_ARTIFACTS.CHECKSUM.getName(), metadata.checksum());
+
+		final var properties = context.select(SERVICE_CONFIGURATION_CATALOG.fields())
+				.from(SERVICE_CONFIGURATION_CATALOG)
+				.where(SERVICE_CONFIGURATION_CATALOG.GROUP_ID.eq(metadata.groupId()))
+				.and(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID.eq(metadata.artifactId()))
+				.and(SERVICE_CONFIGURATION_CATALOG.VERSION.eq(metadata.version()))
+				.fetch(Record::intoMap);
+
+		assertThat(properties)
+				.hasSize(1)
+				.first(InstanceOfAssertFactories.map(String.class, Object.class))
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.NAME.getName(), "com.konfigyr.konfigyr-artifactory.enabled")
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.TYPE_NAME.getName(), "java.lang.Boolean")
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.DEFAULT_VALUE.getName(), "true")
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.DESCRIPTION.getName(), "Enables the artifact metadata upload")
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.DEPRECATION.getName(), null)
+				.hasEntrySatisfying(SERVICE_CONFIGURATION_CATALOG.SCHEMA.getName(), it -> assertThat(it)
+						.isNotNull()
+						.isInstanceOf(ByteArray.class)
+						.asInstanceOf(InstanceOfAssertFactories.type(ByteArray.class))
+						.returns("{\"type\":\"boolean\"}", bytes -> bytes.toString(StandardCharsets.UTF_8))
+				)
+				.hasEntrySatisfying(SERVICE_CONFIGURATION_CATALOG.SEARCH_VECTOR.getName(), it -> assertThat(it)
+						.isNotNull()
+				);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should upload artifact metadata containing a large number of properties")
+	void shouldUploadLargeArtifactMetadata() throws IOException {
+		final ArtifactMetadata metadata = jsonMapper.readValue(
+				new ClassPathResource("fixtures/org.springframework.boot-spring-boot-autoconfigure-3.5.7.json").getInputStream(),
+				ArtifactMetadata.class
+		);
+
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		final Instant start = Instant.now();
+
+		assertThatUpload(release.id(), metadata)
+				.hasStatus(HttpStatus.NO_CONTENT);
+
+		// loose sanity bound, not a precise perf assertion: catches a genuine regression
+		// (e.g. row-by-row inserts instead of a bulk insert) without flaking on CI noise
+		assertThat(Duration.between(start, Instant.now()))
+				.as("Uploading a large artifact metadata payload should complete quickly")
+				.isLessThan(Duration.ofSeconds(5));
+
+		assertThat(context.fetchCount(SERVICE_CONFIGURATION_CATALOG,
+				SERVICE_CONFIGURATION_CATALOG.GROUP_ID.eq(metadata.groupId())
+						.and(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID.eq(metadata.artifactId()))
+						.and(SERVICE_CONFIGURATION_CATALOG.VERSION.eq(metadata.version()))
+		)).isEqualTo(metadata.properties().size());
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should replace catalog rows and update the checksum when the same coordinate is uploaded again")
+	void shouldReplaceCatalogRowsOnReupload() {
+		final var metadata = konfigyrArtifactoryArtifact.toMetadata(List.of(
+				PropertyDescriptor.builder()
+						.name("com.konfigyr.konfigyr-artifactory.enabled")
+						.typeName("java.lang.Boolean")
+						.schema(StringSchema.instance())
+						.build()
+		));
+
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		assertThatUpload(release.id(), metadata)
+				.hasStatus(HttpStatus.NO_CONTENT);
+
+		assertThat(context.select(SERVICE_CONFIGURATION_CATALOG.NAME)
+				.from(SERVICE_CONFIGURATION_CATALOG)
+				.where(SERVICE_CONFIGURATION_CATALOG.GROUP_ID.eq(metadata.groupId()))
+				.and(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID.eq(metadata.artifactId()))
+				.and(SERVICE_CONFIGURATION_CATALOG.VERSION.eq(metadata.version()))
+				.fetch(SERVICE_CONFIGURATION_CATALOG.NAME))
+				.containsExactly("com.konfigyr.konfigyr-artifactory.enabled");
+
+		assertThat(context.select(SERVICE_ARTIFACTS.CHECKSUM)
+				.from(SERVICE_ARTIFACTS)
+				.where(SERVICE_ARTIFACTS.GROUP_ID.eq(metadata.groupId()))
+				.and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq(metadata.artifactId()))
+				.and(SERVICE_ARTIFACTS.VERSION.eq(metadata.version()))
+				.fetchOne(SERVICE_ARTIFACTS.CHECKSUM))
+				.isEqualTo(metadata.checksum());
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should reject an artifact upload when the release is not pending")
+	void shouldRejectUploadForNotPendingRelease() {
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum"))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		final int updated = context.update(SERVICE_RELEASES)
+				.set(SERVICE_RELEASES.STATE, ReleaseState.RELEASED.name())
+				.where(SERVICE_RELEASES.ID.eq(EntityId.from(release.id()).get()))
+				.execute();
+
+		assertThat(updated)
+				.as("Expected an existing service_releases row to update")
+				.isOne();
+
+		assertThatUpload(release.id(), metadata(konfigyrArtifactoryArtifact, "checksum"))
+				.satisfies(problemDetailFor(HttpStatus.CONFLICT, problem -> problem
+						.hasTitle("Release is not pending")
+						.hasDetailContaining("Release is no longer pending")
+				));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should reject an artifact upload for a coordinate that was not declared for the release")
+	void shouldRejectUploadForUndeclaredCoordinate() {
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum"))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		assertThatUpload(release.id(), metadata(konfigyrCryptoApiArtifact, "crypto-checksum"))
+				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+						.hasTitle("Artifact not declared for this release")
+						.hasDetailContaining("The artifact with coordinates '%s' was not declared for this release",
+								ArtifactCoordinates.of(konfigyrCryptoApiArtifact).format())
+				));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should reject a malformed artifact metadata payload")
+	void shouldRejectMalformedUploadPayload() {
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum"))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/artifacts", release.id())
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of(
-						ServiceReleaseCandidate.of("com.acme", "my-service", "1.2.0", "checksum-1")
-				))))
+				.content("{not-valid-json")
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(ServiceRelease.class)
-				.satisfies(release -> assertThat(release.artifacts()).hasSize(1));
+				.hasStatus(HttpStatus.BAD_REQUEST);
+	}
 
-		assertThat(context.fetchExists(SERVICE_ARTIFACTS,
-				SERVICE_ARTIFACTS.GROUP_ID.eq("com.acme").and(SERVICE_ARTIFACTS.ARTIFACT_ID.eq("other-service"))
-		)).isFalse();
+	@Test
+	@DisplayName("should fail to upload an artifact for an unknown service")
+	void shouldRejectUnknownServiceForArtifactUpload() {
+		final var metadata = metadata(konfigyrCryptoApiArtifact, "crypto-checksum");
+
+		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}/artifacts", EntityId.from(999).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound("unknown-service"));
 	}
 
 	@Test
@@ -214,7 +364,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
 				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of())))
+				.content("[]")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -227,7 +377,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-id/releases")
 				.with(authentication(TestPrincipals.john()))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of())))
+				.content("[]")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -240,7 +390,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases")
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of())))
+				.content("[]")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -253,11 +403,53 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		mvc.post().uri("/namespaces/unknown-namespace/services/unknown-service/releases")
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsBytes(new ServiceManifestController.ResolveReleaseRequest(List.of())))
+				.content("[]")
 				.exchange()
 				.assertThat()
 				.apply(log())
 				.satisfies(namespaceNotFound("unknown-namespace"));
+	}
+
+	private ObjectAssert<ServiceRelease> assertThatRelease(ServiceReleaseCandidate... candidates) {
+		return assertThatRelease(List.of(candidates));
+	}
+
+	private ObjectAssert<ServiceRelease> assertThatRelease(List<ServiceReleaseCandidate> candidates) {
+		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(candidates))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ServiceRelease.class)
+				.asInstanceOf(InstanceOfAssertFactories.type(ServiceRelease.class));
+	}
+
+	private MvcTestResultAssert assertThatUpload(String id, ArtifactMetadata metadata) {
+		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/artifacts", id)
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log());
+	}
+
+	private static ArtifactMetadata metadata(Artifact artifact, String checksum) {
+		return ArtifactMetadata.builder()
+				.groupId(artifact.groupId())
+				.artifactId(artifact.artifactId())
+				.version(artifact.version())
+				.checksum(checksum)
+				.property(PropertyDescriptor.builder()
+						.name("some.property")
+						.typeName("java.lang.String")
+						.schema(StringSchema.instance())
+						.build())
+				.build();
 	}
 
 }
