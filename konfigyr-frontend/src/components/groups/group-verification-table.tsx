@@ -15,16 +15,15 @@ import {
   PaginationRange,
 } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@konfigyr/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@konfigyr/components/ui/table';
 import { Package, ShieldCheckIcon } from 'lucide-react';
-import { GroupIdLabel, StateLabel, VerifiedAtLabel } from '@konfigyr/components/groups/messages';
+import {
+  CancelClaimLabel,
+  GroupIdLabel,
+  RevokeClaimLabel,
+  StateLabel,
+  VerifiedAtLabel,
+} from '@konfigyr/components/groups/messages';
 import { GroupVerificationStateBadge } from './group-verification-state';
 import { RevokeGroupVerificationButton } from './revoke-group-verification';
 
@@ -46,30 +45,49 @@ function GroupVerificationRowActions({ namespace, verification }: {
   namespace: string;
   verification: GroupVerification;
 }) {
-  const detailsLink = (
-    <GroupVerificationDetailsLink namespace={namespace} groupId={verification.groupId} />
-  );
 
   switch (verification.state) {
     case 'ACTIVE':
+      return (
+        <div className="flex justify-end gap-2">
+          <ViewButton namespace={namespace} groupId={verification.groupId} />
+          <RevokeGroupVerificationButton namespace={namespace} verification={verification} action={'REVOKE'} >
+            <Button size="sm" variant="destructive">
+              <RevokeClaimLabel />
+            </Button>
+          </RevokeGroupVerificationButton>
+        </div>
+      );
     case 'PENDING':
       return (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost" render={detailsLink}>
-            <ViewLabel />
-          </Button>
-          <RevokeGroupVerificationButton namespace={namespace} verification={verification} />
+          <ViewButton namespace={namespace} groupId={verification.groupId} />
+          <RevokeGroupVerificationButton namespace={namespace} verification={verification} action={'CANCEL'} >
+            <Button size="sm" variant="destructive">
+              <CancelClaimLabel />
+            </Button>
+          </RevokeGroupVerificationButton>
         </div>
       );
     default:
       return (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost" render={detailsLink}>
-            <ViewLabel />
-          </Button>
+          <ViewButton namespace={namespace} groupId={verification.groupId} />
         </div>
       );
   }
+}
+
+function ViewButton({ namespace, groupId }: { namespace: string, groupId: string }) {
+  return (
+    <div className="flex justify-end gap-2">
+      <Button size="sm" variant="ghost" render={(
+        <GroupVerificationDetailsLink namespace={namespace} groupId={groupId} />
+      )}>
+        <ViewLabel />
+      </Button>
+    </div>
+  );
 }
 
 function GroupVerificationRow({ namespace, verification }: {

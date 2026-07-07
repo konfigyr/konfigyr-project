@@ -63,6 +63,65 @@ export const RevokeClaimLabel = () => (
   />
 );
 
+export const CancelClaimLabel = () => (
+  <FormattedMessage
+    defaultMessage="Cancel claim"
+    description="Button label that cancels an pending group claim."
+  />
+);
+
+export const RevokeVerificationClaimTitle = () => (
+  <FormattedMessage
+    defaultMessage="Revoke group verification claim"
+    description="Title of the confirmation dialog for revoking a group verification claim"
+  />
+);
+
+export const CancelVerificationClaimTitle = () => (
+  <FormattedMessage
+    defaultMessage="Cancel group verification claim"
+    description="Title of the confirmation dialog for canceling a group verification claim"
+  />
+);
+
+export const RevokeVerificationClaimDescription = ({ groupId }: { groupId: string } ) => (
+  <FormattedMessage
+    defaultMessage="Are you sure you want to revoke the group verification claim for <b>{groupId}</b>?"
+    values={{
+      groupId,
+      b: (chunks) => <strong>{chunks}</strong>,
+    }}
+    description="Confirmation text in the dialog for revoking a group verification claim"
+  />
+);
+
+export const CancelVerificationClaimDescription = ({ groupId }: { groupId: string } ) => (
+  <FormattedMessage
+    defaultMessage="Are you sure you want to cancel the group verification claim for <b>{groupId}</b>?"
+    values={{
+      groupId,
+      b: (chunks) => <strong>{chunks}</strong>,
+    }}
+    description="Confirmation text in the dialog for canceling a group verification claim"
+  />
+);
+
+export const ClaimRevokedSuccessMessage = ({ groupId }: { groupId: string }) => (
+  <FormattedMessage
+    defaultMessage="Successfully revoked {groupId}"
+    values={{ groupId }}
+    description="Success message when a group verification claim is revoked"
+  />
+);
+
+export const ClaimCanceledSuccessMessage = ({ groupId }: { groupId: string }) => (
+  <FormattedMessage
+    defaultMessage="Successfully canceled {groupId}"
+    values={{ groupId }}
+    description="Success message when a group verification claim is revoked"
+  />
+);
+
 export const ClaimAgainLabel = () => (
   <FormattedMessage
     defaultMessage="Claim again"
@@ -83,3 +142,6 @@ export const GroupClaimsLabel = () => (
     description="Breadcrumb label for the group verification claims list page."
   />
 );
+
+
+

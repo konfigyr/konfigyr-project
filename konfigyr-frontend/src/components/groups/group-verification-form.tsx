@@ -113,7 +113,6 @@ export function GroupVerificationForm ({
                 <GroupVerificationMethodSelector
                   value={field.state.value}
                   onChange={field.handleChange}
-                  readOnly={isReadOnly}
                 />
               </Field>
             )}/>

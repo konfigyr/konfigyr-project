@@ -1,23 +1,29 @@
 import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { PackageIcon, RotateCcwIcon, ShieldCheckIcon, Trash2Icon } from 'lucide-react';
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { PackageIcon, RotateCcwIcon, ShieldBanIcon, ShieldCheckIcon, XIcon } from 'lucide-react';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import {
   useGetActiveVerificationChallenge,
   useGetGroupVerification,
   useGetVerificationChallenges,
   useNamespace,
-  useRevokeGroupVerification,
   useVerifyGroupVerification,
 } from '@konfigyr/hooks';
 import { ErrorState, useErrorNotification } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
 import { GroupVerificationStateAlert } from '@konfigyr/components/groups/group-verification-state';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
 import { Button, buttonVariants } from '@konfigyr/components/ui/button';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { GroupVerification } from '@konfigyr/components/groups/group-verification-challenge';
-import { ClaimAgainLabel, RevokeClaimLabel, VerifyClaimLabel } from '@konfigyr/components/groups/messages';
+import {
+  CancelClaimLabel,
+  ClaimAgainLabel,
+  RevokeClaimLabel,
+  VerifyClaimLabel,
+} from '@konfigyr/components/groups/messages';
+import {
+  RevokeGroupVerificationButton,
+} from '@konfigyr/components/groups/revoke-group-verification';
 
 export const Route = createFileRoute(
   '/_authenticated/namespace/$namespace/groups/$groupId/',
@@ -52,7 +58,6 @@ function RouteComponent () {
   } = useGetVerificationChallenges(namespace.slug, groupId);
 
   const { mutateAsync: verifyGroupVerification, isPending: isVerifying } = useVerifyGroupVerification(namespace.slug);
-  const { mutateAsync: revokeGroupVerification, isPending: isRevoking } = useRevokeGroupVerification(namespace.slug);
 
   const loading = isVerificationPending || isActiveChallengePending || isChallengesPending;
   const error = verificationError || activeChallengesError || challengesError;
@@ -71,18 +76,6 @@ function RouteComponent () {
     }
     try {
       await verifyGroupVerification(verification.groupId);
-    } catch (e) {
-      errorNotification(e);
-    }
-  };
-
-  const onRevoke = async () => {
-    if (!verification) {
-      return;
-    }
-
-    try {
-      await revokeGroupVerification(verification.groupId);
     } catch (e) {
       errorNotification(e);
     }
@@ -142,10 +135,21 @@ function RouteComponent () {
 
             <div className="flex flex-wrap gap-3">
               {verification.state === 'ACTIVE' && (
-                <Button variant="destructive" loading={isRevoking} onClick={onRevoke}>
-                  <Trash2Icon/>
-                  <RevokeClaimLabel/>
-                </Button>
+                <RevokeGroupVerificationButton namespace={namespace.slug} verification={verification} action={'REVOKE'}>
+                  <Button variant="destructive">
+                    <ShieldBanIcon />
+                    <RevokeClaimLabel/>
+                  </Button>
+                </RevokeGroupVerificationButton>
+              )}
+
+              {verification.state === 'PENDING' && (
+                <RevokeGroupVerificationButton namespace={namespace.slug} verification={verification} action={'CANCEL'}>
+                  <Button variant="destructive">
+                    <XIcon/>
+                    <CancelClaimLabel />
+                  </Button>
+                </RevokeGroupVerificationButton>
               )}
 
               {(verification.state === 'PENDING' || verification.state === 'FAILED') && (

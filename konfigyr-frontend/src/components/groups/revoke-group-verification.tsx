@@ -2,7 +2,6 @@
 
 import { toast } from 'sonner';
 import { useCallback } from 'react';
-import { FormattedMessage } from 'react-intl';
 import { useRevokeGroupVerification } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
 import {
@@ -16,20 +15,44 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@konfigyr/components/ui/alert-dialog';
-import { Button } from '@konfigyr/components/ui/button';
 import { CancelLabel } from '@konfigyr/components/messages';
 import { TriangleAlert } from 'lucide-react';
+import {
+  CancelClaimLabel, CancelVerificationClaimDescription,
+  CancelVerificationClaimTitle, ClaimCanceledSuccessMessage, ClaimRevokedSuccessMessage,
+  RevokeClaimLabel, RevokeVerificationClaimDescription,
+  RevokeVerificationClaimTitle,
+} from '@konfigyr/components/groups/messages';
+import type { ReactElement , ReactNode } from 'react';
 import type { GroupVerification } from '@konfigyr/hooks/types';
+
+export type RevokeGroupVerificationButtonProps = {
+  namespace: string;
+  verification: GroupVerification;
+  action: 'CANCEL' | 'REVOKE'
+  children: ReactElement
+};
 
 export function RevokeGroupVerificationButton({
   namespace,
   verification,
-}: {
-  namespace: string;
-  verification: GroupVerification;
-}) {
+  action,
+  children,
+}: RevokeGroupVerificationButtonProps) {
   const errorNotification = useErrorNotification();
   const { isPending, mutateAsync: revokeGroupVerification } = useRevokeGroupVerification(namespace);
+
+  const submitLabel: ReactNode = action === 'CANCEL' ? <CancelClaimLabel /> : <RevokeClaimLabel />;
+
+  const title: ReactNode = action === 'CANCEL' ? <CancelVerificationClaimTitle /> : <RevokeVerificationClaimTitle /> ;
+
+  const description: ReactNode = action === 'CANCEL' ?
+    <CancelVerificationClaimDescription groupId={verification.groupId} /> :
+    <RevokeVerificationClaimDescription groupId={verification.groupId} /> ;
+
+  const successMessage: ReactNode = action === 'CANCEL' ?
+    <ClaimCanceledSuccessMessage groupId={verification.groupId} /> :
+    <ClaimRevokedSuccessMessage groupId={verification.groupId} /> ;
 
   const onRevoke = useCallback(async () => {
     try {
@@ -38,45 +61,20 @@ export function RevokeGroupVerificationButton({
       return errorNotification(error);
     }
 
-    toast.success(
-      <FormattedMessage
-        defaultMessage="Successfully revoked {groupId}"
-        values={{ groupId: verification.groupId }}
-        description="Success message when a group verification claim is revoked"
-      />,
-    );
+    toast.success(successMessage);
   }, [verification, errorNotification, revokeGroupVerification]);
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger
-        render={
-          <Button size="sm" variant="destructive">
-            <FormattedMessage
-              defaultMessage="Revoke"
-              description="Label of the button that revokes a group verification claim."
-            />
-          </Button>
-        }
-      />
+      <AlertDialogTrigger render={( children )} />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <TriangleAlert className="h-5 w-5 text-destructive shrink-0" />
-            <FormattedMessage
-              defaultMessage="Revoke group verification claim"
-              description="Title of the confirmation dialog for revoking a group verification claim"
-            />
+            {( title )}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            <FormattedMessage
-              defaultMessage="Are you sure you want to revoke the group verification claim for <b>{groupId}</b>?"
-              values={{
-                groupId: verification.groupId,
-                b: (chunks) => <strong>{chunks}</strong>,
-              }}
-              description="Confirmation text in the dialog for revoking a group verification claim"
-            />
+            {( description )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -84,10 +82,7 @@ export function RevokeGroupVerificationButton({
             <CancelLabel />
           </AlertDialogCancel>
           <AlertDialogAction variant="destructive" disabled={isPending} loading={isPending} onClick={onRevoke}>
-            <FormattedMessage
-              defaultMessage="Revoke claim"
-              description="Label for the confirm button in the dialog for revoking a group verification claim"
-            />
+            {( submitLabel )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
