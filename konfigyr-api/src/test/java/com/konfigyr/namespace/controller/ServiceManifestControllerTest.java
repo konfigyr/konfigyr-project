@@ -14,12 +14,16 @@ import org.jooq.impl.DSL;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
@@ -104,7 +108,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		// checksum-1 is what the plugin already declared for this coordinate above, so uploading
 		// metadata carrying that same checksum is what settles it as "already uploaded"
 		assertThatUpload(first.id(), metadata)
-				.hasStatusOk();
+				.hasStatus(HttpStatus.NO_CONTENT);
 
 		assertThatRelease(ServiceReleaseCandidate.of(metadata))
 				.returns(first.id(), ServiceRelease::id)
@@ -127,7 +131,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		// `initial-checksum` is what the plugin already declared for this coordinate above, so uploading
 		// metadata carrying that same checksum is what settles it as "already uploaded"
 		assertThatUpload(release.id(), metadata)
-				.hasStatusOk();
+				.hasStatus(HttpStatus.NO_CONTENT);
 
 		assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "different-checksum"))
 				.returns(release.id(), ServiceRelease::id)
@@ -175,7 +179,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.actual();
 
 		assertThatUpload(release.id(), metadata)
-				.hasStatusOk();
+				.hasStatus(HttpStatus.NO_CONTENT);
 
 		final var record = context.select(SERVICE_ARTIFACTS.SOURCE, SERVICE_ARTIFACTS.CHECKSUM)
 				.from(SERVICE_ARTIFACTS)
@@ -216,6 +220,37 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 
 	@Test
 	@Transactional
+	@DisplayName("should upload artifact metadata containing a large number of properties")
+	void shouldUploadLargeArtifactMetadata() throws IOException {
+		final ArtifactMetadata metadata = jsonMapper.readValue(
+				new ClassPathResource("fixtures/org.springframework.boot-spring-boot-autoconfigure-3.5.7.json").getInputStream(),
+				ArtifactMetadata.class
+		);
+
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		final Instant start = Instant.now();
+
+		assertThatUpload(release.id(), metadata)
+				.hasStatus(HttpStatus.NO_CONTENT);
+
+		// loose sanity bound, not a precise perf assertion: catches a genuine regression
+		// (e.g. row-by-row inserts instead of a bulk insert) without flaking on CI noise
+		assertThat(Duration.between(start, Instant.now()))
+				.as("Uploading a large artifact metadata payload should complete quickly")
+				.isLessThan(Duration.ofSeconds(5));
+
+		assertThat(context.fetchCount(SERVICE_CONFIGURATION_CATALOG,
+				SERVICE_CONFIGURATION_CATALOG.GROUP_ID.eq(metadata.groupId())
+						.and(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID.eq(metadata.artifactId()))
+						.and(SERVICE_CONFIGURATION_CATALOG.VERSION.eq(metadata.version()))
+		)).isEqualTo(metadata.properties().size());
+	}
+
+	@Test
+	@Transactional
 	@DisplayName("should replace catalog rows and update the checksum when the same coordinate is uploaded again")
 	void shouldReplaceCatalogRowsOnReupload() {
 		final var metadata = konfigyrArtifactoryArtifact.toMetadata(List.of(
@@ -231,7 +266,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.actual();
 
 		assertThatUpload(release.id(), metadata)
-				.hasStatusOk();
+				.hasStatus(HttpStatus.NO_CONTENT);
 
 		assertThat(context.select(SERVICE_CONFIGURATION_CATALOG.NAME)
 				.from(SERVICE_CONFIGURATION_CATALOG)
@@ -306,6 +341,21 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	@DisplayName("should fail to upload an artifact for an unknown service")
+	void shouldRejectUnknownServiceForArtifactUpload() {
+		final var metadata = metadata(konfigyrCryptoApiArtifact, "crypto-checksum");
+
+		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/release/artifacts")
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound("unknown-service"));
 	}
 
 	@Test
