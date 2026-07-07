@@ -348,7 +348,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	void shouldRejectUnknownServiceForArtifactUpload() {
 		final var metadata = metadata(konfigyrCryptoApiArtifact, "crypto-checksum");
 
-		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/release/artifacts")
+		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}/artifacts", EntityId.from(999).serialize())
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(metadata))
