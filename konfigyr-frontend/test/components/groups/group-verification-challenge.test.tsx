@@ -43,7 +43,7 @@ describe('components | groups | <GroupVerification/>', () => {
     expect(getByText('Verification state')).toBeInTheDocument();
     expect(getByText('Pending')).toBeInTheDocument();
 
-    expect(getByText('Method')).toBeInTheDocument();
+    expect(getByText('Verification method')).toBeInTheDocument();
     expect(getByText('DNS')).toBeInTheDocument();
 
     expect(getByText('Challenge state')).toBeInTheDocument();
