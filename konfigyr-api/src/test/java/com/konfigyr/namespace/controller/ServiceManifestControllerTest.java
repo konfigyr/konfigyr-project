@@ -2,12 +2,14 @@ package com.konfigyr.namespace.controller;
 
 import com.konfigyr.artifactory.*;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.io.ByteArray;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.ObjectAssert;
 import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
@@ -161,7 +164,9 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				PropertyDescriptor.builder()
 						.name("com.konfigyr.konfigyr-artifactory.enabled")
 						.typeName("java.lang.Boolean")
-						.schema(StringSchema.instance())
+						.schema(BooleanSchema.instance())
+						.description("Enables the artifact metadata upload")
+						.defaultValue("true")
 						.build()
 		));
 
@@ -183,16 +188,30 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.containsEntry(SERVICE_ARTIFACTS.SOURCE.getName(), ArtifactSource.LOCAL.name())
 				.containsEntry(SERVICE_ARTIFACTS.CHECKSUM.getName(), metadata.checksum());
 
-		assertThat(context.select(SERVICE_CONFIGURATION_CATALOG.NAME, SERVICE_CONFIGURATION_CATALOG.SEARCH_VECTOR)
+		final var properties = context.select(SERVICE_CONFIGURATION_CATALOG.fields())
 				.from(SERVICE_CONFIGURATION_CATALOG)
 				.where(SERVICE_CONFIGURATION_CATALOG.GROUP_ID.eq(metadata.groupId()))
 				.and(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID.eq(metadata.artifactId()))
 				.and(SERVICE_CONFIGURATION_CATALOG.VERSION.eq(metadata.version()))
-				.fetch())
-				.hasSize(metadata.properties().size())
-				.allSatisfy(it -> assertThat(it.get(SERVICE_CONFIGURATION_CATALOG.SEARCH_VECTOR)).isNotNull())
-				.extracting(it -> it.get(SERVICE_CONFIGURATION_CATALOG.NAME))
-				.containsExactlyInAnyOrderElementsOf(metadata.properties().stream().map(PropertyDescriptor::name).toList());
+				.fetch(Record::intoMap);
+
+		assertThat(properties)
+				.hasSize(1)
+				.first(InstanceOfAssertFactories.map(String.class, Object.class))
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.NAME.getName(), "com.konfigyr.konfigyr-artifactory.enabled")
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.TYPE_NAME.getName(), "java.lang.Boolean")
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.DEFAULT_VALUE.getName(), "true")
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.DESCRIPTION.getName(), "Enables the artifact metadata upload")
+				.containsEntry(SERVICE_CONFIGURATION_CATALOG.DEPRECATION.getName(), null)
+				.hasEntrySatisfying(SERVICE_CONFIGURATION_CATALOG.SCHEMA.getName(), it -> assertThat(it)
+						.isNotNull()
+						.isInstanceOf(ByteArray.class)
+						.asInstanceOf(InstanceOfAssertFactories.type(ByteArray.class))
+						.returns("{\"type\":\"boolean\"}", bytes -> bytes.toString(StandardCharsets.UTF_8))
+				)
+				.hasEntrySatisfying(SERVICE_CONFIGURATION_CATALOG.SEARCH_VECTOR.getName(), it -> assertThat(it)
+						.isNotNull()
+				);
 	}
 
 	@Test
