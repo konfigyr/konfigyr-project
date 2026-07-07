@@ -25,7 +25,7 @@ import {
   VerifiedAtLabel,
 } from '@konfigyr/components/groups/messages';
 import { GroupVerificationStateBadge } from './group-verification-state';
-import { RevokeGroupVerificationButton } from './revoke-group-verification';
+import { CancelGroupVerificationButton, RevokeGroupVerificationButton } from './revoke-group-verification';
 
 import type { GroupVerification, PageResponse } from '@konfigyr/hooks/types';
 import type { ReactNode } from 'react';
@@ -51,7 +51,7 @@ function GroupVerificationRowActions({ namespace, verification }: {
       return (
         <div className="flex justify-end gap-2">
           <ViewButton namespace={namespace} groupId={verification.groupId} />
-          <RevokeGroupVerificationButton namespace={namespace} verification={verification} action={'REVOKE'} >
+          <RevokeGroupVerificationButton namespace={namespace} verification={verification}>
             <Button size="sm" variant="destructive">
               <RevokeClaimLabel />
             </Button>
@@ -62,11 +62,11 @@ function GroupVerificationRowActions({ namespace, verification }: {
       return (
         <div className="flex justify-end gap-2">
           <ViewButton namespace={namespace} groupId={verification.groupId} />
-          <RevokeGroupVerificationButton namespace={namespace} verification={verification} action={'CANCEL'} >
+          <CancelGroupVerificationButton namespace={namespace} verification={verification} >
             <Button size="sm" variant="destructive">
               <CancelClaimLabel />
             </Button>
-          </RevokeGroupVerificationButton>
+          </CancelGroupVerificationButton>
         </div>
       );
     default:

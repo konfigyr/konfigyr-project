@@ -23,17 +23,33 @@ import {
   RevokeClaimLabel, RevokeVerificationClaimDescription,
   RevokeVerificationClaimTitle,
 } from '@konfigyr/components/groups/messages';
-import type { ReactElement , ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import type { GroupVerification } from '@konfigyr/hooks/types';
 
-export type RevokeGroupVerificationButtonProps = {
+type RevokeGroupVerificationButtonProps = {
   namespace: string;
   verification: GroupVerification;
   action: 'CANCEL' | 'REVOKE'
   children: ReactElement
 };
 
-export function RevokeGroupVerificationButton({
+export function RevokeGroupVerificationButton ({ namespace, verification, children }: { namespace: string, verification: GroupVerification, children: ReactElement }) {
+  return (
+    <RevokeButton namespace={namespace} verification={verification} action={'REVOKE'}>
+      {(children)}
+    </RevokeButton>
+  );
+}
+
+export function CancelGroupVerificationButton ({ namespace, verification, children }: { namespace: string, verification: GroupVerification, children: ReactElement }) {
+  return (
+    <RevokeButton namespace={namespace} verification={verification} action={'CANCEL'}>
+      {(children)}
+    </RevokeButton>
+  );
+}
+
+function RevokeButton ({
   namespace,
   verification,
   action,
@@ -42,17 +58,17 @@ export function RevokeGroupVerificationButton({
   const errorNotification = useErrorNotification();
   const { isPending, mutateAsync: revokeGroupVerification } = useRevokeGroupVerification(namespace);
 
-  const submitLabel: ReactNode = action === 'CANCEL' ? <CancelClaimLabel /> : <RevokeClaimLabel />;
+  const submitLabel: ReactNode = action === 'CANCEL' ? <CancelClaimLabel/> : <RevokeClaimLabel/>;
 
-  const title: ReactNode = action === 'CANCEL' ? <CancelVerificationClaimTitle /> : <RevokeVerificationClaimTitle /> ;
+  const title: ReactNode = action === 'CANCEL' ? <CancelVerificationClaimTitle/> : <RevokeVerificationClaimTitle/>;
 
   const description: ReactNode = action === 'CANCEL' ?
-    <CancelVerificationClaimDescription groupId={verification.groupId} /> :
-    <RevokeVerificationClaimDescription groupId={verification.groupId} /> ;
+    <CancelVerificationClaimDescription groupId={verification.groupId}/> :
+    <RevokeVerificationClaimDescription groupId={verification.groupId}/>;
 
   const successMessage: ReactNode = action === 'CANCEL' ?
-    <ClaimCanceledSuccessMessage groupId={verification.groupId} /> :
-    <ClaimRevokedSuccessMessage groupId={verification.groupId} /> ;
+    <ClaimCanceledSuccessMessage groupId={verification.groupId}/> :
+    <ClaimRevokedSuccessMessage groupId={verification.groupId}/>;
 
   const onRevoke = useCallback(async () => {
     try {
@@ -66,23 +82,23 @@ export function RevokeGroupVerificationButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={( children )} />
+      <AlertDialogTrigger render={(children)}/>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <TriangleAlert className="h-5 w-5 text-destructive shrink-0" />
-            {( title )}
+            <TriangleAlert className="h-5 w-5 text-destructive shrink-0"/>
+            {(title)}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {( description )}
+            {(description)}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>
-            <CancelLabel />
+            <CancelLabel/>
           </AlertDialogCancel>
           <AlertDialogAction variant="destructive" disabled={isPending} loading={isPending} onClick={onRevoke}>
-            {( submitLabel )}
+            {(submitLabel)}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

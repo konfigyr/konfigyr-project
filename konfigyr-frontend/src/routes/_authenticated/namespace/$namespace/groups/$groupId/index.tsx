@@ -21,6 +21,7 @@ import {
   VerifyClaimLabel,
 } from '@konfigyr/components/groups/messages';
 import {
+  CancelGroupVerificationButton,
   RevokeGroupVerificationButton,
 } from '@konfigyr/components/groups/revoke-group-verification';
 
@@ -126,7 +127,7 @@ function RouteComponent () {
 
             <div className="flex flex-wrap gap-3">
               {verification.state === 'ACTIVE' && (
-                <RevokeGroupVerificationButton namespace={namespace.slug} verification={verification} action={'REVOKE'}>
+                <RevokeGroupVerificationButton namespace={namespace.slug} verification={verification} >
                   <Button variant="destructive">
                     <ShieldBanIcon />
                     <RevokeClaimLabel/>
@@ -135,12 +136,12 @@ function RouteComponent () {
               )}
 
               {verification.state === 'PENDING' && (
-                <RevokeGroupVerificationButton namespace={namespace.slug} verification={verification} action={'CANCEL'}>
+                <CancelGroupVerificationButton namespace={namespace.slug} verification={verification} >
                   <Button variant="destructive">
                     <XIcon/>
                     <CancelClaimLabel />
                   </Button>
-                </RevokeGroupVerificationButton>
+                </CancelGroupVerificationButton>
               )}
 
               {(verification.state === 'PENDING' || verification.state === 'FAILED') && (
