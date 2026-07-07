@@ -12,7 +12,6 @@ import type {
 export const groupVerificationKeys = {
   getGroupVerification: (namespace: string, groupId: string) => ['namespace', namespace, 'group-verifications', groupId],
   getVerificationChallenges: (namespace: string, groupId: string) => ['namespace', namespace, 'group-verifications', groupId, 'challenges'],
-  getActiveChallenge: (namespace: string, groupId: string) => ['namespace', namespace, 'group-verifications', groupId, 'active-challenge'],
   getGroupVerifications: (namespace: string, query: GroupVerificationQuery) => ['namespace', namespace, 'group-verifications', query],
 };
 
@@ -50,17 +49,6 @@ export const getVerificationChallenges = (namespace: string, groupId: string) =>
   });
 };
 
-export const getActiveVerificationChallenge = (namespace: string, groupId: string) => {
-  return queryOptions({
-    queryKey: groupVerificationKeys.getActiveChallenge(namespace, groupId),
-    queryFn: async ({ signal }): Promise<VerificationChallenge> => {
-      return await request
-        .get(`api/namespaces/${namespace}/group-verifications/${groupId}/active-challenge`, { signal })
-        .json();
-    },
-  });
-};
-
 export const useGetGroupVerifications = (namespace: string, query?: GroupVerificationQuery) => {
   return useQuery(getGroupVerifications(namespace, query));
 };
@@ -71,10 +59,6 @@ export const useGetGroupVerification = (namespace: string, groupId: string) => {
 
 export const useGetVerificationChallenges = (namespace: string, groupId: string) => {
   return useQuery(getVerificationChallenges(namespace, groupId));
-};
-
-export const useGetActiveVerificationChallenge = (namespace: string, groupId: string) => {
-  return useQuery(getActiveVerificationChallenge(namespace, groupId));
 };
 
 export const useClaimGroupVerification = (namespace: string) => {
@@ -104,9 +88,6 @@ export const useClaimAgainGroupVerification = (namespace: string) => {
     onSuccess: async (verification) => {
       client.setQueryData(groupVerificationKeys.getGroupVerification(namespace, verification.groupId), verification);
       await client.invalidateQueries({
-        queryKey: groupVerificationKeys.getActiveChallenge(namespace, verification.groupId),
-      });
-      await client.invalidateQueries({
         queryKey: groupVerificationKeys.getVerificationChallenges(namespace, verification.groupId),
       });
     },
@@ -122,9 +103,6 @@ export const useVerifyGroupVerification = (namespace: string) => {
     },
     onSuccess: async (verification) => {
       client.setQueryData(groupVerificationKeys.getGroupVerification(namespace, verification.groupId), verification);
-      await client.invalidateQueries({
-        queryKey: groupVerificationKeys.getActiveChallenge(namespace, verification.groupId),
-      });
       await client.invalidateQueries({
         queryKey: groupVerificationKeys.getVerificationChallenges(namespace, verification.groupId),
       });

@@ -3,7 +3,6 @@ import { FormattedMessage } from 'react-intl';
 import { PackageIcon, RotateCcwIcon, ShieldBanIcon, ShieldCheckIcon, XIcon } from 'lucide-react';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import {
-  useGetActiveVerificationChallenge,
   useGetGroupVerification,
   useGetVerificationChallenges,
   useNamespace,
@@ -44,13 +43,6 @@ function RouteComponent () {
   } = useGetGroupVerification(namespace.slug, groupId);
 
   const {
-    data: activeChallenge,
-    error: activeChallengesError,
-    isError: isActiveChallengeError,
-    isPending: isActiveChallengePending,
-  } = useGetActiveVerificationChallenge(namespace.slug, groupId);
-
-  const {
     data: challenges,
     error: challengesError,
     isError: isChallengesError,
@@ -59,16 +51,15 @@ function RouteComponent () {
 
   const { mutateAsync: verifyGroupVerification, isPending: isVerifying } = useVerifyGroupVerification(namespace.slug);
 
-  const loading = isVerificationPending || isActiveChallengePending || isChallengesPending;
-  const error = verificationError || activeChallengesError || challengesError;
-  const isError = isVerificationError || isActiveChallengeError || isChallengesError;
+  const loading = isVerificationPending || isChallengesPending;
+  const error = verificationError || challengesError;
+  const isError = isVerificationError || isChallengesError;
 
   const challenge = useMemo(() => {
-    if (activeChallenge) {
-      return activeChallenge;
-    }
-    return challenges ? challenges.data[challenges.data.length - 1] : undefined;
-  }, [activeChallenge, challenges]);
+    const items = challenges?.data ?? [];
+    // items already ordered on the backend by createdAt.asc(),
+    return items.at(-1);
+  }, [challenges]);
 
   const onVerify = async () => {
     if (!verification) {

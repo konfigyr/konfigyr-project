@@ -1,18 +1,18 @@
 import { FormattedMessage } from 'react-intl';
 import { toast } from 'sonner';
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
-  useClaimAgainGroupVerification, useGetActiveVerificationChallenge,
-  useGetGroupVerification,
+  useClaimAgainGroupVerification,
+  useGetGroupVerification, useGetVerificationChallenges,
   useNamespace,
 } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
 import { GroupVerificationForm } from '@konfigyr/components/groups/group-verification-form';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
 import { ClaimAgainLabel, EditClaimLabel } from '@konfigyr/components/groups/messages';
 import { BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@konfigyr/components/ui/breadcrumb';
 import { GroupVerificationDetailsLink } from '@konfigyr/components/groups/group-verification-table';
+import { useMemo } from 'react';
 import type { GroupVerificationFormValues } from '@konfigyr/components/groups/group-verification-form';
 
 export const Route = createFileRoute(
@@ -33,8 +33,14 @@ function RouteComponent () {
   } = useGetGroupVerification(namespace.slug, groupId);
 
   const {
-    data: challenge,
-  } = useGetActiveVerificationChallenge(namespace.slug, groupId);
+    data: challenges,
+  } = useGetVerificationChallenges(namespace.slug, groupId);
+
+  const challenge = useMemo(() => {
+    const items = challenges?.data ?? [];
+    // items already ordered on the backend by createdAt.asc(),
+    return items.at(-1);
+  }, [challenges]);
 
   const defaultValues: GroupVerificationFormValues = {
     groupId: verification?.groupId ?? '',
