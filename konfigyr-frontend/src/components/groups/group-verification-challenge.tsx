@@ -18,12 +18,18 @@ import {
 import type { ChallengeState, GroupVerification, VerificationChallenge } from '@konfigyr/hooks/types';
 import type { ReactNode } from 'react';
 
-const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
+export const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   year: 'numeric',
   month: 'short',
   day: 'numeric',
 };
 
+/**
+ * Renders the verification details card and, for pending claims, the matching activation instructions.
+ *
+ * @param verification the group verification record to display
+ * @param challenge the optional verification challenge used to render the method, challenge state, and activation instructions
+ */
 export function GroupVerification ({ verification, challenge }: {
   verification: GroupVerification;
   challenge?: VerificationChallenge | undefined;
@@ -49,7 +55,7 @@ export function GroupVerification ({ verification, challenge }: {
   );
 }
 
-export function GroupVerificationChallengeState ({ state }: { state?: string | ChallengeState }) {
+function GroupVerificationChallengeState ({ state }: { state?: string | ChallengeState }) {
   switch (state) {
     case 'UNVERIFIED':
       return <FormattedMessage
@@ -71,7 +77,7 @@ export function GroupVerificationChallengeState ({ state }: { state?: string | C
   }
 }
 
-export function GroupVerificationDetails ({ verification, challenge }: { verification: GroupVerification, challenge?: VerificationChallenge | null }) {
+function GroupVerificationDetails ({ verification, challenge }: { verification: GroupVerification, challenge?: VerificationChallenge | null }) {
   const intl = useIntl();
   const createdAt = verification.createdAt ? intl.formatDate(verification.createdAt, DATE_FORMAT_OPTIONS) : null;
   const verifiedAt = verification.verifiedAt ? intl.formatDate(verification.verifiedAt, DATE_FORMAT_OPTIONS) : null;
