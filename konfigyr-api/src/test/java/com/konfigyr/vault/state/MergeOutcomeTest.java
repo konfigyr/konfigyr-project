@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.*;
 
 class MergeOutcomeTest {
 
-	static String NAME = "ref/profiles/test-profile";
-	static String AUTHOR = "John Doe <john.doe@konfigyr.com>";
+	final static String NAME = "ref/profiles/test-profile";
+	final static String AUTHOR = "John Doe <john.doe@konfigyr.com>";
 
 	@Test
 	@DisplayName("should create unknown merge outcomes")

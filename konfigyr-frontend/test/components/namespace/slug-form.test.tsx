@@ -7,14 +7,17 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('components | namespace | <NamespaceSlugForm/>', () => {
+  let user: UserEvent;
   let result: RenderResult;
 
   beforeEach(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
-        <NamespaceSlugForm namespace={namespaces.konfigyr} />
+        <NamespaceSlugForm namespace={namespaces.konfigyr} debounceMs={0} />
         <Toaster />
       </>
     ));
@@ -32,11 +35,11 @@ describe('components | namespace | <NamespaceSlugForm/>', () => {
   });
 
   test('should fail to submit invalid form', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -45,7 +48,7 @@ describe('components | namespace | <NamespaceSlugForm/>', () => {
   });
 
   test('should enter invalid namespace slug', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'Namespace slug that is too long and should trigger validation error',
     );
@@ -55,11 +58,11 @@ describe('components | namespace | <NamespaceSlugForm/>', () => {
   });
 
   test('should enter namespace slug that is already taken', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'taken-slug',
     );
@@ -76,7 +79,7 @@ describe('components | namespace | <NamespaceSlugForm/>', () => {
       expect(result.getByRole('button')).not.toBeDisabled();
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

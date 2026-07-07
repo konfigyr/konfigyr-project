@@ -5,14 +5,17 @@ import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { namespaces } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
+import type { UserEvent } from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
 
 describe('components | namespace | <NamespaceDeleteForm/>', () => {
+  let user: UserEvent;
   let result: RenderResult;
   const onDelete = vi.fn();
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <NamespaceDeleteForm namespace={namespaces.konfigyr} onDelete={onDelete} />
@@ -35,7 +38,7 @@ describe('components | namespace | <NamespaceDeleteForm/>', () => {
   });
 
   test('should open namespace delete confirmation dialog', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -49,7 +52,7 @@ describe('components | namespace | <NamespaceDeleteForm/>', () => {
   });
 
   test('should close namespace delete confirmation dialog', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Cancel' }),
     );
 
@@ -63,7 +66,7 @@ describe('components | namespace | <NamespaceDeleteForm/>', () => {
       return Promise.reject(new Error('Fail to delete account'));
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -71,7 +74,7 @@ describe('components | namespace | <NamespaceDeleteForm/>', () => {
       expect(result.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Delete' }),
     );
 
@@ -83,7 +86,7 @@ describe('components | namespace | <NamespaceDeleteForm/>', () => {
   test('should successfully delete namespace', async () => {
     expect(result.getByRole('alertdialog')).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Delete' }),
     );
 

@@ -64,6 +64,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
@@ -72,16 +73,18 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   });
 
   test('should filter changeset properties by term', async () => {
+    const user = userEvent.setup();
     const result = renderWithQueryClient(
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
     expect(result.getByRole('searchbox')).toBeInTheDocument();
 
-    await userEvent.type(result.getByRole('searchbox'), 'name');
+    await user.type(result.getByRole('searchbox'), 'name');
 
     await waitFor(() => {
       expect(result.getAllByRole('row')).length(2);
@@ -89,21 +92,23 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   });
 
   test('should filter changeset properties by state', async () => {
+    const user = userEvent.setup();
     const result = renderWithQueryClient(
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
-    await userEvent.click(result.getByRole('radio', { name: 'Modified' }));
+    await user.click(result.getByRole('radio', { name: 'Modified' }));
 
     await waitFor(() => {
       expect(result.getByText('application.name')).toBeInTheDocument();
       expect(result.getAllByRole('row')).length(2);
     });
 
-    await userEvent.click(result.getByRole('radio', { name: 'Deleted' }));
+    await user.click(result.getByRole('radio', { name: 'Deleted' }));
 
     await waitFor(() => {
       expect(result.queryByText('application.name')).toBeNull();
@@ -114,14 +119,16 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   });
 
   test('should display an empty state when no filter matches the property', async () => {
+    const user = userEvent.setup();
     const result = renderWithQueryClient(
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
-    await userEvent.click(result.getByRole('radio', { name: 'Deleted' }));
+    await user.click(result.getByRole('radio', { name: 'Deleted' }));
 
     await waitFor(() => {
       expect(result.getAllByRole('row')).length(2);
@@ -130,17 +137,19 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   });
 
   test('should open changeset property history', async () => {
+    const user = userEvent.setup();
     const result = renderWithQueryClient(
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
     const buttons = result.getAllByRole('button', { name: 'History' });
     expect(buttons).length(2);
 
-    await userEvent.click(buttons[0]);
+    await user.click(buttons[0]);
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).toBeInTheDocument();
@@ -148,17 +157,19 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   });
 
   test('should add changeset property value', async () => {
+    const user = userEvent.setup();
     const result = renderWithQueryClient(
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
     const button = result.getByRole('button', { name: 'Add property' });
     expect(button).toBeInTheDocument();
 
-    await userEvent.click(button);
+    await user.click(button);
 
     await waitFor(() => {
       expect(result.getByRole('dialog', { name: 'Add configuration property' })).toBeInTheDocument();
@@ -166,7 +177,7 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
 
     expect(result.getByRole('combobox', { name: 'Property name' })).toBeInTheDocument();
 
-    await userEvent.type(
+    await user.type(
       result.getByRole('combobox', { name: 'Property name' }),
       'application.index',
     );
@@ -175,45 +186,47 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
       expect(result.getByRole('option', { name: 'application.index' })).toBeInTheDocument();
     });
 
-    await userEvent.click(
+    await user.click(
       result.getByRole('option', { name: 'application.index' }),
     );
 
-    await userEvent.type(
+    await user.type(
       result.getByRole('textbox', { name: 'application.index' }),
       'konfigyr-frontend',
     );
 
-    await userEvent.click(result.getByRole('button', { name: 'Add property' }));
+    await user.click(result.getByRole('button', { name: 'Add property' }));
 
     await waitFor(() => {
       expect(result.queryByRole('dialog', { name: 'Add configuration property' })).toBeNull();
     });
 
     expect(result.findByText('konfigyr-frontend'));
-  }, 15000);
+  });
 
   test('should update changeset property value', async () => {
+    const user = userEvent.setup();
     const result = renderWithQueryClient(
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
     const button = result.getByRole('button', { name: 'konfigyr-frontend' });
     expect(button).toBeInTheDocument();
 
-    await userEvent.click(button);
+    await user.click(button);
 
     await waitFor(() => {
       expect(result.getByRole('textbox', { name: 'application.name' })).toBeInTheDocument();
     });
 
     const input = result.getByRole('textbox', { name: 'application.name' });
-    await userEvent.clear(input);
-    await userEvent.type(input, 'konfigyr-backend');
-    await userEvent.keyboard('[Enter]');
+    await user.clear(input);
+    await user.type(input, 'konfigyr-backend');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(result.queryAllByText('Modified')).toHaveLength(4);
@@ -221,17 +234,19 @@ describe('components | vault | changeset | <ChangesetEditor/>', () => {
   });
 
   test('should delete changeset property', async () => {
+    const user = userEvent.setup();
     const result = renderWithQueryClient(
       <ChangesetEditor
         catalog={catalog}
         changeset={changeset}
+        debounceMs={0}
       />,
     );
 
     const buttons = result.getAllByRole('button', { name: 'Delete' });
     expect(buttons).length(2);
 
-    await userEvent.click(buttons[0]);
+    await user.click(buttons[0]);
 
     await waitFor(() => {
       expect(result.queryByText('Deleted')).toBeInTheDocument();

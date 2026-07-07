@@ -7,12 +7,15 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('components | namespace | service | <CreateServiceForm/>', () => {
   const onCreate = vi.fn();
+  let user: UserEvent;
   let result: RenderResult;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <CreateServiceForm namespace={namespaces.konfigyr} onCreate={onCreate}/>
@@ -37,7 +40,7 @@ describe('components | namespace | service | <CreateServiceForm/>', () => {
   });
 
   test('should validate namespace service form', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Create service' }),
     );
 
@@ -48,17 +51,17 @@ describe('components | namespace | service | <CreateServiceForm/>', () => {
   });
 
   test('should show error notification when service can not be created', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Identifier' }),
       'invalid-service-identifier',
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Display name' }),
       'Service name',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -68,16 +71,16 @@ describe('components | namespace | service | <CreateServiceForm/>', () => {
   });
 
   test('should create namespace service and invoke the onCreate action', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Identifier' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Identifier' }),
       'service-identifier',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

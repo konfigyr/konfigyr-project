@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  *         more information.
  *     </li>
  *     <li>
- *         Second part of the random {@link TSID} component, apart from the above mentioned node part,
+ *         Second part of the random {@link TSID} component, apart from the above-mentioned node part,
  *         is the counter. This implementation uses the {@link SecureRandom} to reset the counter when
  *         the millisecond changes.
  *     </li>

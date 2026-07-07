@@ -4,14 +4,16 @@ import { Toaster } from '@konfigyr/components/ui/sonner';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { accounts } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';
-import userEvents from '@testing-library/user-event';
-
+import userEvent from '@testing-library/user-event';
+import type { UserEvent } from '@testing-library/user-event';
 import type { RenderResult } from '@testing-library/react';
 
 describe('components | account | <AccountEmailForm/>', () => {
   let result: RenderResult;
+  let user: UserEvent;
 
   beforeAll(() => {
+    user = userEvent.setup();
     result = renderWithQueryClient((
       <>
         <AccountEmailForm account={accounts.johnDoe} />
@@ -37,11 +39,11 @@ describe('components | account | <AccountEmailForm/>', () => {
   });
 
   test('should fail to submit invalid form', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -50,7 +52,7 @@ describe('components | account | <AccountEmailForm/>', () => {
   });
 
   test('should enter new account email', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'unavilable-email@konfigyr.com',
     );
@@ -60,7 +62,7 @@ describe('components | account | <AccountEmailForm/>', () => {
   });
 
   test('should submit form with invalid email address', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -73,16 +75,16 @@ describe('components | account | <AccountEmailForm/>', () => {
   });
 
   test('should submit form with valid email address', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox'),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox'),
       'valid-address@konfigyr.com',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -97,12 +99,12 @@ describe('components | account | <AccountEmailForm/>', () => {
   });
 
   test('should submit form with invalid verification code', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Enter confirmation code' }),
       'invalid-code',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -112,16 +114,16 @@ describe('components | account | <AccountEmailForm/>', () => {
   });
 
   test('should submit form with valid verification code', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Enter confirmation code' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Enter confirmation code' }),
       'valid-code',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

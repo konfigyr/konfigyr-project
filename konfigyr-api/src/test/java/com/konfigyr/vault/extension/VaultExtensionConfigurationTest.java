@@ -15,10 +15,10 @@ import static org.assertj.core.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class VaultExtensionConfigurationTest {
 
+	final ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
+
 	@Mock
 	ApplicationEventPublisher applicationEventPublisher;
-
-	ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
 
 	@Test
 	@DisplayName("should declare vault extension beans in correct order")

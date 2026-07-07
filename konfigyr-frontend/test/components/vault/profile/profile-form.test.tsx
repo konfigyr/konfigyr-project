@@ -7,12 +7,15 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event/dist/cjs/index.js';
 
 describe('components | vault | profile | <CreateProfileForm/>', () => {
   const onCreate = vi.fn();
+  let user: UserEvent;
   let result: RenderResult;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <CreateProfileForm
@@ -45,7 +48,7 @@ describe('components | vault | profile | <CreateProfileForm/>', () => {
   });
 
   test('should validate profile form', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Create profile' }),
     );
 
@@ -57,16 +60,16 @@ describe('components | vault | profile | <CreateProfileForm/>', () => {
   });
 
   test('should show error notification when service can not be created', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Profile identifier' }),
       'invalid-profile-identifier',
     );
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Profile name' }),
       'Profile name',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -76,16 +79,16 @@ describe('components | vault | profile | <CreateProfileForm/>', () => {
   });
 
   test('should create profile and invoke the onCreate action', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Profile identifier' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Profile identifier' }),
       'profile-identifier',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

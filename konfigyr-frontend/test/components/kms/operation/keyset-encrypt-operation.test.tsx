@@ -8,6 +8,7 @@ import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | operation | <KeysetEncryptOperation/>', () => {
   const onCancel = vi.fn();
+  const user = userEvents.setup();
 
   const result = renderWithQueryClient((
     <>
@@ -38,7 +39,7 @@ describe('components | kms | operation | <KeysetEncryptOperation/>', () => {
   });
 
   test('should validate form', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Encrypt data' }),
     );
 
@@ -49,12 +50,12 @@ describe('components | kms | operation | <KeysetEncryptOperation/>', () => {
   });
 
   test('should fail to encrypt plain text', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Text to encrypt' }),
       'invalid-plaintext',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Encrypt data' }),
     );
 
@@ -64,21 +65,21 @@ describe('components | kms | operation | <KeysetEncryptOperation/>', () => {
   });
 
   test('should successfully encrypt plain text', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Text to encrypt' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Text to encrypt' }),
       'text to encrypt',
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Additional authenticated data' }),
       'authenticated-data',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Encrypt data' }),
     );
 
@@ -93,7 +94,7 @@ describe('components | kms | operation | <KeysetEncryptOperation/>', () => {
     const closeButtons = result.getAllByRole('button', { name: 'Close' });
     expect(closeButtons).toHaveLength(2);
 
-    await userEvents.click(closeButtons[1]);
+    await user.click(closeButtons[1]);
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).not.toBeInTheDocument();

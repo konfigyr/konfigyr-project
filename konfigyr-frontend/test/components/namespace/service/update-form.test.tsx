@@ -7,11 +7,14 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('components | namespace | service | <ServiceUpdateForm/>', () => {
+  let user: UserEvent;
   let result: RenderResult;
 
   beforeAll(() => {
+    user = userEvents.setup();
     result = renderWithQueryClient((
       <>
         <ServiceUpdateForm namespace={namespaces.konfigyr} service={services.konfigyrId} />
@@ -31,11 +34,11 @@ describe('components | namespace | service | <ServiceUpdateForm/>', () => {
   });
 
   test('should validate namespace service form', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Display name' }),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Update service' }),
     );
 
@@ -45,16 +48,16 @@ describe('components | namespace | service | <ServiceUpdateForm/>', () => {
   });
 
   test('should show error notification when service can not be created', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Display name' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Display name' }),
       'invalid service name',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Update service' }),
     );
 
@@ -64,16 +67,16 @@ describe('components | namespace | service | <ServiceUpdateForm/>', () => {
   });
 
   test('should update namespace service and show notification', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Display name' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Display name' }),
       'Service name',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Update service' }),
     );
 

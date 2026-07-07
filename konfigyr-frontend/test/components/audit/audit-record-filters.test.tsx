@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { cleanup, waitFor } from '@testing-library/react';
-import userEvents from '@testing-library/user-event';
+import { cleanup, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { startOfDay, subDays } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
@@ -24,7 +24,7 @@ describe('components | audit | <AuditRecordFilters/>', () => {
 
   test('should render <AuditRecordFilters/> component with empty filter values', () => {
     const { getByRole } = renderWithMessageProvider(
-      <AuditRecordFilters query={{}} onQueryChange={vi.fn()} />,
+      <AuditRecordFilters debounceMs={0} query={{}} onQueryChange={vi.fn()} />,
     );
 
     expect(getByRole('combobox', { name: 'Filter by entity type' })).toBeInTheDocument();
@@ -35,7 +35,7 @@ describe('components | audit | <AuditRecordFilters/>', () => {
 
   test('should render <AuditRecordFilters/> component with a selected entity type', () => {
     const { getByRole } = renderWithMessageProvider(
-      <AuditRecordFilters query={{ entityType: 'namespace' }} onQueryChange={vi.fn()} />,
+      <AuditRecordFilters debounceMs={0} query={{ entityType: 'namespace' }} onQueryChange={vi.fn()} />,
     );
 
     expect(getByRole('combobox', { name: 'Filter by entity type' })).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('components | audit | <AuditRecordFilters/>', () => {
 
   test('should render <AuditRecordFilters/> component with only from date range selected', () => {
     const { getByRole } = renderWithMessageProvider(
-      <AuditRecordFilters query={{ from: '2026-04-29' }} onQueryChange={vi.fn()} />,
+      <AuditRecordFilters debounceMs={0} query={{ from: '2026-04-29' }} onQueryChange={vi.fn()} />,
     );
 
     expect(getByRole('button', { name: 'Apr 29, 2026' })).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe('components | audit | <AuditRecordFilters/>', () => {
 
   test('should render <AuditRecordFilters/> component with a date range selected', () => {
     const { getByRole } = renderWithMessageProvider(
-      <AuditRecordFilters query={{ from: '2026-04-27', to: '2026-04-29' }} onQueryChange={vi.fn()} />,
+      <AuditRecordFilters debounceMs={0} query={{ from: '2026-04-27', to: '2026-04-29' }} onQueryChange={vi.fn()} />,
     );
 
     expect(getByRole('button', { name: 'Apr 27, 2026 - Apr 29, 2026' })).toBeInTheDocument();
@@ -60,67 +60,56 @@ describe('components | audit | <AuditRecordFilters/>', () => {
 
   test('should select entity type from the combobox', async () => {
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
-    const { getAllByRole, getByRole } = renderWithMessageProvider(
-      <AuditRecordFilters query={{ entityType: 'namespace', size: 20 }} onQueryChange={onChange} />,
+    const { getAllByRole, getByRole, findByRole } = renderWithMessageProvider(
+      <AuditRecordFilters debounceMs={0} query={{ entityType: 'namespace', size: 20 }} onQueryChange={onChange} />,
     );
 
-    await userEvents.click(
-      getByRole('combobox', { name: 'Filter by entity type' }),
-    );
+    await user.click(getByRole('combobox', { name: 'Filter by entity type' }));
 
-    await waitFor(() => {
-      expect(getByRole('listbox')).toBeInTheDocument();
-    });
+    const listbox = await findByRole('listbox');
+    const options = within(listbox).getAllByRole('option');
 
-    expect(getAllByRole('option')).toHaveLength(5);
-    expect(getByRole('option', { name: 'Namespace' })).toBeInTheDocument();
-    expect(getByRole('option', { name: 'Application' })).toBeInTheDocument();
-    expect(getByRole('option', { name: 'KMS Keyset' })).toBeInTheDocument();
-    expect(getByRole('option', { name: 'Service' })).toBeInTheDocument();
-    expect(getByRole('option', { name: 'Service profile' })).toBeInTheDocument();
+    expect(options).toHaveLength(5);
+    expect(within(listbox).getByRole('option', { name: 'Namespace' })).toBeInTheDocument();
+    expect(within(listbox).getByRole('option', { name: 'Application' })).toBeInTheDocument();
+    expect(within(listbox).getByRole('option', { name: 'KMS Keyset' })).toBeInTheDocument();
+    expect(within(listbox).getByRole('option', { name: 'Service' })).toBeInTheDocument();
+    expect(within(listbox).getByRole('option', { name: 'Service profile' })).toBeInTheDocument();
 
-    await userEvents.click(
-      getByRole('option', { name: 'Service profile' }),
-    );
+    await user.click(within(listbox).getByRole('option', { name: 'Service profile' }));
 
-    await waitFor(() => {
-      expect(onChange).toHaveBeenCalledExactlyOnceWith({ entityType: 'profile', size: 20 });
-    });
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({ entityType: 'profile', size: 20 });
   });
 
   test('should select date range from the calendar filter', async () => {
     const onChange = vi.fn();
+    const user = userEvent.setup();
 
     const { baseElement, getByRole } = renderWithMessageProvider(
-      <AuditRecordFilters query={{ size: 20 }} onQueryChange={onChange} />,
+      <AuditRecordFilters debounceMs={0} query={{ size: 20 }} onQueryChange={onChange} />,
     );
 
-    await userEvents.click(
-      getByRole('button', { name: 'Select date range' }),
-    );
+    await user.click(getByRole('button', { name: 'Select date range' }));
 
-    await waitFor(() => {
-      expect(getByRole('dialog')).toBeInTheDocument();
-    });
+    expect(getByRole('dialog')).toBeInTheDocument();
 
     const fromDate = createCalendarDate(5);
     const toDate = createCalendarDate(2);
 
     const fromButton = baseElement.querySelector(formatCalendarDateSelector(fromDate));
     expect(fromButton).toBeInTheDocument();
-    await userEvents.click(fromButton!);
+    await user.click(fromButton!);
 
     const toButton = baseElement.querySelector(formatCalendarDateSelector(toDate));
     expect(toButton).toBeInTheDocument();
-    await userEvents.click(toButton!);
+    await user.click(toButton!);
 
-    await waitFor(() => {
-      expect(onChange).toHaveBeenCalledExactlyOnceWith({
-        size: 20,
-        from: fromDate.toISOString(),
-        to: toDate.toISOString(),
-      });
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({
+      size: 20,
+      from: fromDate.toISOString(),
+      to: toDate.toISOString(),
     });
   });
 });

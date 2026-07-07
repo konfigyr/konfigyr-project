@@ -2,6 +2,7 @@ package com.konfigyr.identity.authorization.client;
 
 import com.konfigyr.identity.authorization.AuthorizationProperties;
 import com.konfigyr.identity.authorization.AuthorizationServerScopes;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -52,17 +53,17 @@ public final class KonfigyrRegisteredClientRepository implements RegisteredClien
 	}
 
 	@Override
-	public void save(RegisteredClient registeredClient) {
+	public void save(@NonNull RegisteredClient registeredClient) {
 		throw new UnsupportedOperationException("Registering OAuth clients is not supported");
 	}
 
 	@Override
-	public RegisteredClient findById(String id) {
+	public RegisteredClient findById(@NonNull String id) {
 		return find(RegisteredClient::getId, id);
 	}
 
 	@Override
-	public RegisteredClient findByClientId(String clientId) {
+	public RegisteredClient findByClientId(@NonNull String clientId) {
 		return find(RegisteredClient::getClientId, clientId);
 	}
 

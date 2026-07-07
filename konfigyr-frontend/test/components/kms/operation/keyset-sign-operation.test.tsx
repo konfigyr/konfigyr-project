@@ -8,6 +8,7 @@ import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
 
 describe('components | kms | operation | <KeysetSigningOperation/>', () => {
   const onCancel = vi.fn();
+  const user = userEvents.setup();
 
   const result = renderWithQueryClient((
     <>
@@ -37,7 +38,7 @@ describe('components | kms | operation | <KeysetSigningOperation/>', () => {
   });
 
   test('should validate form', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Create signature' }),
     );
 
@@ -47,12 +48,12 @@ describe('components | kms | operation | <KeysetSigningOperation/>', () => {
   });
 
   test('should fail to sign plain text', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Text to sign' }),
       'invalid-plaintext',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Create signature' }),
     );
 
@@ -62,16 +63,16 @@ describe('components | kms | operation | <KeysetSigningOperation/>', () => {
   });
 
   test('should successfully sign plain text', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Text to sign' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Text to sign' }),
       'Text to sign',
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Create signature' }),
     );
 
@@ -86,7 +87,7 @@ describe('components | kms | operation | <KeysetSigningOperation/>', () => {
     const closeButtons = result.getAllByRole('button', { name: 'Close' });
     expect(closeButtons).toHaveLength(2);
 
-    await userEvents.click(closeButtons[1]);
+    await user.click(closeButtons[1]);
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).not.toBeInTheDocument();

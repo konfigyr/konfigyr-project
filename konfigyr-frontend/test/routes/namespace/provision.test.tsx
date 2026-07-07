@@ -1,15 +1,21 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
-import { renderWithRouter } from '@konfigyr/test/helpers/router';
+import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
+import { RouteComponent } from '@konfigyr/routes/_authenticated/namespace/provision';
 
 import type { RenderResult } from '@testing-library/react';
+import type { UserEvent } from '@testing-library/user-event';
 
 describe('routes | namespace | provision', () => {
   let result: RenderResult & { router: { state: { location: { pathname: string } } } };
+  let user: UserEvent;
 
   beforeAll(() => {
-    result = renderWithRouter('/namespace/provision');
+    user = userEvents.setup();
+    result = renderComponentWithRouter(
+      <RouteComponent debounceMs={0} />,
+    ) as RenderResult & { router: { state: { location: { pathname: string } } } };
   });
 
   afterAll(() => cleanup());
@@ -31,7 +37,7 @@ describe('routes | namespace | provision', () => {
   });
 
   test('should validate initial form data', async () => {
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 
@@ -46,7 +52,7 @@ describe('routes | namespace | provision', () => {
   });
 
   test('should connect name with URL slug input field', async () => {
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Name' }),
       'some Namespace name',
     );
@@ -55,20 +61,20 @@ describe('routes | namespace | provision', () => {
   });
 
   test('should disconnect name when URL slug input field is made dirty and invalid', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'URL' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'URL' }),
       'updated-namespace-slug',
     );
 
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'Name' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'Name' }),
       'Namespace name',
     );
@@ -82,17 +88,17 @@ describe('routes | namespace | provision', () => {
   });
 
   test('should validate URL slug availability', async () => {
-    await userEvents.clear(
+    await user.clear(
       result.getByRole('textbox', { name: 'URL' }),
     );
 
-    await userEvents.type(
+    await user.type(
       result.getByRole('textbox', { name: 'URL' }),
       'available-namespace',
     );
 
     // wait for the debounce period to be over to avoid race conditions when validating the URL slug
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 25));
 
     await waitFor(() => {
       expect(result.getByRole('textbox', { name: 'URL' })).toBeValid();
@@ -105,7 +111,7 @@ describe('routes | namespace | provision', () => {
   test('should create namespace and redirect to namespace overview page', async () => {
     expect(result.getByRole('button')).not.toBeDisabled();
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button'),
     );
 

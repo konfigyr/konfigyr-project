@@ -7,6 +7,7 @@ describe('routes | namespace | service | profile | history', () => {
   afterEach(() => cleanup());
 
   test('should render profile history page and navigate to next page', async () => {
+    const user = userEvents.setup();
     const { getByRole, getByText, router } = renderWithRouter('/namespace/konfigyr/services/konfigyr-api/profiles/development/history');
 
     await waitFor(() => {
@@ -15,7 +16,7 @@ describe('routes | namespace | service | profile | history', () => {
     });
 
     expect(getByRole('navigation', { name: 'pagination' })).toBeInTheDocument();
-    await userEvents.click(getByRole('button', { name: 'Go to next page' }));
+    await user.click(getByRole('button', { name: 'Go to next page' }));
 
     await waitFor(() => {
       expect(router.state.location.search.token).toStrictEqual('next-token');

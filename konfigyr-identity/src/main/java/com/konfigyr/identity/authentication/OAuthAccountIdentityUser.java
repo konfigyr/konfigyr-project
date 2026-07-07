@@ -2,6 +2,7 @@ package com.konfigyr.identity.authentication;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
@@ -16,6 +17,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Value
+@NullMarked
 @RequiredArgsConstructor
 public class OAuthAccountIdentityUser implements AccountIdentityUser, OAuth2User  {
 

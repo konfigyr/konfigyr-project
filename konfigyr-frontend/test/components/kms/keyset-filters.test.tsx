@@ -25,6 +25,7 @@ describe('components | kms | <KeysetFilters/>', () => {
   test('should render keyset filters with custom search term', async () => {
     const query = { ...DEFAULT_QUERY, term: 'search term' };
     const onQueryChange = vi.fn();
+    const user = userEvents.setup();
 
     const result = renderWithMessageProvider((
       <KeysetFilters query={query} onQueryChange={onQueryChange} />
@@ -35,8 +36,8 @@ describe('components | kms | <KeysetFilters/>', () => {
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue('search term');
 
-    await userEvents.clear(input);
-    await userEvents.type(input, 'new search term');
+    await user.clear(input);
+    await user.type(input, 'new search term');
 
     await waitFor(() => {
       expect(onQueryChange).toHaveBeenCalledExactlyOnceWith({

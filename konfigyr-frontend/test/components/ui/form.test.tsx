@@ -87,29 +87,30 @@ describe('components | UI | <Input/>', () => {
 
   test('should render form', async () => {
     const onSubmit = vi.fn();
+    const user = userEvents.setup();
 
     const { getByRole } = render(<ExampleForm onSubmit={onSubmit}/>);
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'Your name' }),
       'John Doe',
     );
 
-    await userEvents.type(
+    await user.type(
       getByRole('spinbutton', { name: 'Your age' }),
       '22',
     );
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'Tell us more about yourself' }),
       'Test enthusiast.',
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('switch', { name: 'Do you wanna receive newsletters?' }),
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Submit' }),
     );
 
@@ -123,10 +124,11 @@ describe('components | UI | <Input/>', () => {
 
   test('should render form validation errors', async () => {
     const onSubmit = vi.fn();
+    const user = userEvents.setup();
 
     const { getByRole } = render(<ExampleForm onSubmit={onSubmit}/>);
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Submit' }),
     );
 

@@ -46,6 +46,7 @@ describe('components | namespace | navigation | <NamespaceServicesNavigationMenu
   });
 
   test('should open the create service dialog', async () => {
+    const user = userEvents.setup();
     const result = renderComponentWithRouter(
       <Layout>
         <NamespaceServicesNavigationMenu namespace={namespaces.johnDoe} />
@@ -57,7 +58,7 @@ describe('components | namespace | navigation | <NamespaceServicesNavigationMenu
     const trigger = result.getByRole('button', { name: 'Create new service' });
     expect(trigger).toBeInTheDocument();
 
-    await userEvents.click(trigger);
+    await user.click(trigger);
 
     await waitFor(() => {
       expect(result.getByRole('dialog')).toBeInTheDocument();

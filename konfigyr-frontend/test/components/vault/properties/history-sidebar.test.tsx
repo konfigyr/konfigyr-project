@@ -61,6 +61,7 @@ describe('components | vault | properties | <HistorySidebar/>', () => {
   });
 
   test('should display opened sidebar and close it', async () => {
+    const user = userEvents.setup();
     const result = renderWithQueryClient(
       <TestHistorySidebar opened={true} property={applicationNameProperty} />,
     );
@@ -73,7 +74,7 @@ describe('components | vault | properties | <HistorySidebar/>', () => {
     expect(result.getByText(applicationNameProperty.value!.encoded)).toBeInTheDocument();
     expect(result.getByText(applicationNameProperty.typeName)).toBeInTheDocument();
 
-    await userEvents.click(result.getByRole('button', { name: 'Close' }));
+    await user.click(result.getByRole('button', { name: 'Close' }));
 
     await waitFor(() => {
       expect(result.queryByRole('dialog')).toBeNull();

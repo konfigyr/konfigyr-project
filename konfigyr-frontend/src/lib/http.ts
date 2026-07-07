@@ -62,6 +62,7 @@ export function resolvePrefixUrl(): string {
  */
 export default ky.extend({
   prefix: resolvePrefixUrl(),
+  ...(import.meta.env.MODE === 'test' ? { retry: 0 } : {}),
   hooks: {
     beforeError: [
       adapt,

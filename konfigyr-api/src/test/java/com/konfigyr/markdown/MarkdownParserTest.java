@@ -217,7 +217,7 @@ class MarkdownParserTest {
 	}
 
 	@Test
-	@DisplayName("should perserve `class` attributes from code")
+	@DisplayName("should preserve `class` attributes from code")
 	void preservesLanguageClassOnCodeBlock() {
 		final var contents = MarkdownContents.of("```java\nSystem.out.println();\n```");
 		assertThat(parser.toSafeHtml(contents))

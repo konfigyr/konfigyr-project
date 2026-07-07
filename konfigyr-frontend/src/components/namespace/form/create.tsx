@@ -31,7 +31,7 @@ const namespaceFormSchema = z.object({
 
 type FormSchema = z.infer<typeof namespaceFormSchema>;
 
-export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namespace) => void | Promise<void> }) {
+export function CreateNamespaceForm({ onCreate, debounceMs = 300 }: { onCreate: (namespace: Namespace) => void | Promise<void>, debounceMs?: number }) {
   const queryClient = useQueryClient();
   const { mutateAsync: createNamespace } = useCreateNamespace();
   const errorNotification = useErrorNotification();
@@ -90,7 +90,7 @@ export function CreateNamespaceForm({ onCreate }: { onCreate: (namespace: Namesp
         <form.AppField
           name="slug"
           validators={{
-            onChangeAsyncDebounceMs: 300,
+            onChangeAsyncDebounceMs: debounceMs,
             onChangeAsync: validateSlug,
           }}
           children={(field) => (

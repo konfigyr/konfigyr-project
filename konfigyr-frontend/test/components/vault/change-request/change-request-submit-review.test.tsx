@@ -53,6 +53,7 @@ describe('components | vault | change-request | <ChangeRequestSubmitReview/>', (
 
   test('should submit change request review without comment', async () => {
     const onReview = vi.fn();
+    const user = userEvents.setup();
     const { getByRole, getByText } = renderWithMessageProvider(
       <>
         <Toaster />
@@ -60,8 +61,8 @@ describe('components | vault | change-request | <ChangeRequestSubmitReview/>', (
       </>,
     );
 
-    await userEvents.click(getByRole('radio', { name: 'Approve changes' }));
-    await userEvents.click(getByRole('button', { name: 'Submit review' }));
+    await user.click(getByRole('radio', { name: 'Approve changes' }));
+    await user.click(getByRole('button', { name: 'Submit review' }));
 
     expect(onReview).toHaveBeenCalledExactlyOnceWith({
       comment: '',
@@ -75,6 +76,7 @@ describe('components | vault | change-request | <ChangeRequestSubmitReview/>', (
 
   test('should submit change request review with comment', async () => {
     const onReview = vi.fn();
+    const user = userEvents.setup();
     const { getByRole, getByText } = renderWithMessageProvider(
       <>
         <Toaster />
@@ -82,13 +84,13 @@ describe('components | vault | change-request | <ChangeRequestSubmitReview/>', (
       </>,
     );
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox'),
       'This is a test comment',
     );
 
-    await userEvents.click(getByRole('radio', { name: 'Comment' }));
-    await userEvents.click(getByRole('button', { name: 'Submit review' }));
+    await user.click(getByRole('radio', { name: 'Comment' }));
+    await user.click(getByRole('button', { name: 'Submit review' }));
 
     expect(onReview).toHaveBeenCalledExactlyOnceWith({
       comment: 'This is a test comment',
@@ -102,6 +104,7 @@ describe('components | vault | change-request | <ChangeRequestSubmitReview/>', (
 
   test('should fail to submit change request review', async () => {
     const onReview = vi.fn();
+    const user = userEvents.setup();
     const { getByRole, getByText } = renderWithMessageProvider(
       <>
         <Toaster />
@@ -111,8 +114,8 @@ describe('components | vault | change-request | <ChangeRequestSubmitReview/>', (
 
     onReview.mockThrowOnce(new Error('Test error'));
 
-    await userEvents.click(getByRole('radio', { name: 'Request changes' }));
-    await userEvents.click(getByRole('button', { name: 'Submit review' }));
+    await user.click(getByRole('radio', { name: 'Request changes' }));
+    await user.click(getByRole('button', { name: 'Submit review' }));
 
     expect(onReview).toHaveBeenCalledExactlyOnceWith({
       comment: '',

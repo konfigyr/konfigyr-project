@@ -12,6 +12,7 @@ describe('components | namespace | applications | confirm application actions', 
   afterEach(() => cleanup());
 
   test('should render <ConfirmNamespaceApplicationDeleteAction /> component', async () => {
+    const user = userEvents.setup();
     const { getByText, getByRole } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationDeleteAction
         namespace={namespaces.konfigyr}
@@ -24,7 +25,7 @@ describe('components | namespace | applications | confirm application actions', 
       expect(getByText('Delete application'), 'render delete button').toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /delete application/i }),
     );
 
@@ -46,6 +47,7 @@ describe('components | namespace | applications | confirm application actions', 
 
   test('should render <ConfirmNamespaceApplicationDeleteAction /> component and confirm delete action', async () => {
     const onConfirm = vi.fn();
+    const user = userEvents.setup();
 
     const { getByRole, getByText } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationDeleteAction
@@ -59,11 +61,11 @@ describe('components | namespace | applications | confirm application actions', 
       expect(getByText('Delete application'), 'render delete button').toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /delete application/i }),
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Yes, I am sure' }),
     );
 
@@ -72,6 +74,7 @@ describe('components | namespace | applications | confirm application actions', 
 
   test('should render <ConfirmNamespaceApplicationDeleteAction /> component and cancel delete action', async () => {
     const onConfirm = vi.fn();
+    const user = userEvents.setup();
 
     const { getByRole, getByText } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationDeleteAction
@@ -85,11 +88,11 @@ describe('components | namespace | applications | confirm application actions', 
       expect(getByText('Delete application'), 'render delete button').toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /delete application/i }),
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /cancel/i }),
     );
 
@@ -97,6 +100,7 @@ describe('components | namespace | applications | confirm application actions', 
   });
 
   test('should render <ConfirmNamespaceApplicationResetAction /> component', async () => {
+    const user = userEvents.setup();
     const { getByText, getByRole } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationResetAction
         namespace={namespaces.konfigyr}
@@ -109,7 +113,7 @@ describe('components | namespace | applications | confirm application actions', 
       expect(getByText('Reset application'), 'render reset button').toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /reset application/i }),
     );
 
@@ -131,6 +135,7 @@ describe('components | namespace | applications | confirm application actions', 
 
   test('should render <ConfirmNamespaceApplicationResetAction /> component and confirm reset action', async () => {
     const onConfirm = vi.fn();
+    const user = userEvents.setup();
 
     const { getByRole, getByText } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationResetAction
@@ -144,11 +149,11 @@ describe('components | namespace | applications | confirm application actions', 
       expect(getByText('Reset application'), 'render reset button').toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /reset application/i }),
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Yes, I am sure' }),
     );
 
@@ -157,6 +162,7 @@ describe('components | namespace | applications | confirm application actions', 
 
   test('should render <ConfirmNamespaceApplicationResetAction /> component and cancel reset action', async () => {
     const onConfirm = vi.fn();
+    const user = userEvents.setup();
 
     const { getByRole, getByText } = renderComponentWithRouter(
       <ConfirmNamespaceApplicationResetAction
@@ -170,11 +176,11 @@ describe('components | namespace | applications | confirm application actions', 
       expect(getByText('Reset application'), 'render reset button').toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /reset application/i }),
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: /cancel/i }),
     );
 

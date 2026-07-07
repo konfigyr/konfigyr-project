@@ -8,6 +8,7 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 
 import type { Member } from '@konfigyr/hooks/memberships/types';
+import type { UserEvent } from '@testing-library/user-event';
 
 const render = (member: Member | null, onClose: () => void) => renderWithQueryClient((
   <>
@@ -25,9 +26,11 @@ describe('components | namespace | members | <UpdateMemberForm/>', () => {
   };
 
   let onClose: () => void;
+  let user: UserEvent;
 
   beforeEach(() => {
     onClose = vi.fn();
+    user = userEvents.setup();
   });
 
   afterEach(() => cleanup());
@@ -59,7 +62,7 @@ describe('components | namespace | members | <UpdateMemberForm/>', () => {
   test('should invoke on close action when cancel button is clicked', async () => {
     const result = render(member, onClose);
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Close' }),
     );
 
@@ -69,11 +72,11 @@ describe('components | namespace | members | <UpdateMemberForm/>', () => {
   test('should fail to update namespace member', async () => {
     const result = render(member, onClose);
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('radio', { checked: false }),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Update role' }),
     );
 
@@ -90,11 +93,11 @@ describe('components | namespace | members | <UpdateMemberForm/>', () => {
       id: 'update-member',
     }, onClose);
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('radio', { checked: false }),
     );
 
-    await userEvents.click(
+    await user.click(
       result.getByRole('button', { name: 'Update role' }),
     );
 

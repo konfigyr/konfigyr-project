@@ -34,7 +34,7 @@ public record AccessGrant(@NonNull SecurityIdentity identity, @NonNull Serializa
 	}
 
 	/**
-	 * Creates an {@link AccessGrant} for a {@link com.konfigyr.namespace.Member} that would use
+	 * Creates an {@link AccessGrant} for a {@link com.konfigyr.membership.Member} that would use
 	 * {@link SecurityIdentity} that is based on the entity identifier of the {@link com.konfigyr.account.Account}
 	 * associated with the membership with the given {@link NamespaceRole role}.
 	 *

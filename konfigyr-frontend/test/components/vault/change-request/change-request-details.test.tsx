@@ -21,6 +21,7 @@ describe('components | vault | change-request | <ChangeRequestDetails/>', () => 
   });
 
   test('should update change request name using the inline edit', async () => {
+    const user = userEvents.setup();
     const { getByRole } = renderWithQueryClient(
       <ChangeRequestDetails
         namespace={namespaces.konfigyr}
@@ -33,18 +34,18 @@ describe('components | vault | change-request | <ChangeRequestDetails/>', () => 
       expect(getByRole('button', { name: 'Update application name' })).toBeInTheDocument();
     });
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Update application name' }),
     );
 
     expect(getByRole('textbox', { name: 'Edit change request subject' })).toBeInTheDocument();
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'Edit change request subject' }),
       ' - Updated',
     );
 
-    await userEvents.keyboard('[Enter]');
+    await user.keyboard('[Enter]');
 
     await waitFor(() => {
       expect(getByRole('button', { name: 'Update application name - Updated' })).toBeInTheDocument();
@@ -52,6 +53,7 @@ describe('components | vault | change-request | <ChangeRequestDetails/>', () => 
   });
 
   test('should update change request description', async () => {
+    const user = userEvents.setup();
     const { getByRole, getByText } = renderWithQueryClient(
       <ChangeRequestDetails
         namespace={namespaces.konfigyr}
@@ -66,18 +68,18 @@ describe('components | vault | change-request | <ChangeRequestDetails/>', () => 
 
     expect(getByText('Align the application name with the new naming convention')).toBeInTheDocument();
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Edit' }),
     );
 
     expect(getByRole('textbox', { name: 'Update change request description' })).toBeInTheDocument();
 
-    await userEvents.type(
+    await user.type(
       getByRole('textbox', { name: 'Update change request description' }),
       ' - Updated description',
     );
 
-    await userEvents.click(
+    await user.click(
       getByRole('button', { name: 'Update description' }),
     );
 

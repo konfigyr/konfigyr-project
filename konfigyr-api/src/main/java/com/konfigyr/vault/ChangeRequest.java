@@ -49,7 +49,7 @@ import java.time.OffsetDateTime;
  *     </li>
  * </ul>
  *
- * @param id the unique entity identifer of the change request, can't be {@literal null}
+ * @param id the unique entity identifier of the change request, can't be {@literal null}
  * @param service the service that is the owner of the change request, can't be {@literal null}
  * @param profile the target profile where the changes would be merged, can't be {@literal null}
  * @param number the change request number sequence that unique per service, can't be {@literal null}
