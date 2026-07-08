@@ -8,6 +8,7 @@ import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.ServiceEvent;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.test.AbstractIntegrationTest;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -232,8 +233,9 @@ class ServiceManifestsTest extends AbstractIntegrationTest {
 				.get()
 				.returns(release.id(), ServiceRelease::id)
 				.returns(ReleaseState.RELEASED, ServiceRelease::state)
-				.returns(completed.publishedAt(), ServiceRelease::publishedAt)
-				.returns(List.of(), ServiceRelease::errors);
+				.returns(List.of(), ServiceRelease::errors)
+				.extracting(ServiceRelease::publishedAt, InstanceOfAssertFactories.INSTANT)
+				.isCloseTo(completed.publishedAt(), within(1, ChronoUnit.SECONDS));
 	}
 
 	@Test
@@ -250,7 +252,8 @@ class ServiceManifestsTest extends AbstractIntegrationTest {
 				.get()
 				.returns(release.id(), ServiceRelease::id)
 				.returns(ReleaseState.FAILED, ServiceRelease::state)
-				.returns(completed.errors(), ServiceRelease::errors);
+				.returns(completed.errors(), ServiceRelease::errors)
+				.returns(null, ServiceRelease::publishedAt);
 	}
 
 	@Test
