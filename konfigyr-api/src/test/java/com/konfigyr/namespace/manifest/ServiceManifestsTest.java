@@ -8,6 +8,7 @@ import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.ServiceEvent;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.test.AbstractIntegrationTest;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -180,6 +181,98 @@ class ServiceManifestsTest extends AbstractIntegrationTest {
 		assertThatExceptionOfType(ReleaseNotPendingException.class)
 				.isThrownBy(() -> manifests.complete(service, EntityId.from(release.id())))
 				.returns(ReleaseState.RELEASED, ReleaseNotPendingException::getState);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should retrieve a pending release with per-artifact upload status")
+	void shouldRetrievePendingRelease() {
+		final var uploaded = metadata(konfigyrArtifactoryArtifact);
+		final var pending = metadata(Artifact.of("com.konfigyr", "konfigyr-crypto-api", "1.1.0"));
+
+		final var release = manifests.open(service, List.of(
+				ServiceReleaseCandidate.of(uploaded),
+				ServiceReleaseCandidate.of(pending)
+		));
+
+		manifests.upload(service, EntityId.from(release.id()), uploaded);
+
+		assertThat(manifests.get(service, EntityId.from(release.id())))
+				.isPresent()
+				.get()
+				.returns(release.id(), ServiceRelease::id)
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.returns(null, ServiceRelease::publishedAt)
+				.returns(List.of(), ServiceRelease::errors)
+				.extracting(ServiceRelease::artifacts)
+				.satisfies(entries -> assertThat(entries)
+						.hasSize(2)
+						.satisfiesExactlyInAnyOrder(
+								entry -> assertThat(entry)
+										.returns(ArtifactCoordinates.of(uploaded), ArtifactCoordinates::of)
+										.returns(ArtifactUploadStatus.SKIP, ServiceReleaseEntry::status),
+								entry -> assertThat(entry)
+										.returns(ArtifactCoordinates.of(pending), ArtifactCoordinates::of)
+										.returns(ArtifactUploadStatus.UPLOAD_REQUIRED, ServiceReleaseEntry::status)
+						)
+				);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should retrieve a released release")
+	void shouldRetrieveReleasedRelease() {
+		final var metadata = metadata(konfigyrArtifactoryArtifact);
+		final var release = manifests.open(service, List.of(ServiceReleaseCandidate.of(metadata)));
+
+		manifests.upload(service, EntityId.from(release.id()), metadata);
+		final var completed = manifests.complete(service, EntityId.from(release.id()));
+
+		assertThat(manifests.get(service, EntityId.from(release.id())))
+				.isPresent()
+				.get()
+				.returns(release.id(), ServiceRelease::id)
+				.returns(ReleaseState.RELEASED, ServiceRelease::state)
+				.returns(List.of(), ServiceRelease::errors)
+				.extracting(ServiceRelease::publishedAt, InstanceOfAssertFactories.INSTANT)
+				.isCloseTo(completed.publishedAt(), within(1, ChronoUnit.SECONDS));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should retrieve a failed release with the same errors reported by complete")
+	void shouldRetrieveFailedRelease() {
+		final var metadata = metadata(konfigyrArtifactoryArtifact);
+		final var release = manifests.open(service, List.of(ServiceReleaseCandidate.of(metadata)));
+
+		final var completed = manifests.complete(service, EntityId.from(release.id()));
+
+		assertThat(manifests.get(service, EntityId.from(release.id())))
+				.isPresent()
+				.get()
+				.returns(release.id(), ServiceRelease::id)
+				.returns(ReleaseState.FAILED, ServiceRelease::state)
+				.returns(completed.errors(), ServiceRelease::errors)
+				.returns(null, ServiceRelease::publishedAt);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve a release that does not exist")
+	void shouldNotRetrieveUnknownRelease() {
+		assertThat(manifests.get(service, EntityId.from(95673678))).isEmpty();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to retrieve a release belonging to a different service")
+	void shouldNotRetrieveReleaseForDifferentService() {
+		final var metadata = metadata(konfigyrArtifactoryArtifact);
+		final var release = manifests.open(service, List.of(ServiceReleaseCandidate.of(metadata)));
+
+		final Namespace namespace = namespaces.findBySlug("konfigyr").orElseThrow();
+		final Service otherService = services.get(namespace, "konfigyr-api").orElseThrow();
+
+		assertThat(manifests.get(otherService, EntityId.from(release.id()))).isEmpty();
 	}
 
 	private static ArtifactMetadata metadata(Artifact artifact) {

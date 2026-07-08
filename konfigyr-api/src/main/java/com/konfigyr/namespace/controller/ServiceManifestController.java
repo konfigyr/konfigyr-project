@@ -9,6 +9,7 @@ import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.ServiceNotFoundException;
 import com.konfigyr.namespace.Services;
+import com.konfigyr.namespace.manifest.ReleaseNotFoundException;
 import com.konfigyr.namespace.manifest.ServiceManifests;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
@@ -56,6 +57,26 @@ class ServiceManifestController {
 		);
 
 		return Assemblers.release(ns, service).assemble(manifests.open(service, candidates));
+	}
+
+	@GetMapping("/releases/{id}")
+	@PreAuthorize("isMember(#namespace)")
+	@RequiresScope(OAuthScope.PUBLISH_MANIFESTS)
+	EntityModel<ServiceRelease> release(
+			@PathVariable String namespace,
+			@PathVariable String slug,
+			@PathVariable EntityId id
+	) {
+		final Namespace ns = lookupNamespace(namespace);
+		final Service service = services.get(ns, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace, slug)
+		);
+
+		final ServiceRelease release = manifests.get(service, id).orElseThrow(
+				() -> new ReleaseNotFoundException(id)
+		);
+
+		return Assemblers.release(ns, service).assemble(release);
 	}
 
 	@PostMapping("/releases/{id}/artifacts")
