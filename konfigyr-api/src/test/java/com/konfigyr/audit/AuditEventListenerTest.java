@@ -2,10 +2,7 @@ package com.konfigyr.audit;
 
 import com.konfigyr.account.Account;
 import com.konfigyr.account.AccountEvent;
-import com.konfigyr.artifactory.Artifact;
-import com.konfigyr.artifactory.ArtifactCoordinates;
-import com.konfigyr.artifactory.ArtifactoryEvent;
-import com.konfigyr.artifactory.Manifest;
+import com.konfigyr.artifactory.*;
 import com.konfigyr.data.CursorPage;
 import com.konfigyr.data.CursorPageable;
 import com.konfigyr.entity.EntityId;
@@ -31,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -555,8 +553,18 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		final var manifest = mock(Manifest.class);
 		doReturn(Arrays.asList(
-				Artifact.of("com.konfigyr", "konfigyr-api", "1.0.0"),
-				Artifact.of("com.konfigyr", "konfigyr-identity", "1.0.0")
+				ManifestEntry.builder()
+						.artifact(Artifact.of("com.konfigyr", "konfigyr-api", "1.0.0"))
+						.checksum("konfigyr-api-checksum")
+						.source(ArtifactSource.ARTIFACTORY)
+						.resolvedAt(Instant.EPOCH)
+						.build(),
+				ManifestEntry.builder()
+						.artifact(Artifact.of("com.konfigyr", "konfigyr-identity", "1.0.0"))
+						.checksum("konfigyr-identity-checksum")
+						.source(ArtifactSource.ARTIFACTORY)
+						.resolvedAt(Instant.EPOCH)
+						.build()
 		)).when(manifest).artifacts();
 
 		listener.on(new ServiceEvent.Released(service, manifest));
@@ -570,6 +578,29 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 								"com.konfigyr:konfigyr-api:1.0.0",
 								"com.konfigyr:konfigyr-identity:1.0.0"
 						))
+				);
+	}
+
+	@Test
+	@DisplayName("should persist audit record for service release failed event with errors")
+	void shouldAuditReleaseFailed() {
+		setSecurityContext(TestPrincipals.john());
+
+		final Service service = Service.builder()
+				.id(903L)
+				.namespace(18L)
+				.slug("api-service")
+				.name("API Service")
+				.build();
+
+		listener.on(new ServiceEvent.ReleaseFailed(service, List.of("Release error")));
+
+		assertAuditRecord("service", EntityId.from(903))
+				.returns(EntityId.from(18), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("Service release failed"))
+				.returns("service.release-failed", AuditRecord::eventType)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("errors", List.of("Release error"))
 				);
 	}
 
