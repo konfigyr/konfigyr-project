@@ -343,10 +343,7 @@ class DefaultServiceManifests implements ServiceManifests {
 		final List<ArtifactCoordinates> missing = findMissingArtifactCoordinates(releaseId);
 
 		if (!missing.isEmpty()) {
-			final List<String> errors = missing.stream()
-					.map(ArtifactCoordinates::format)
-					.map("Artifact with coordinates '%s' was not uploaded"::formatted)
-					.toList();
+			final List<String> errors = toMissingArtifactErrors(missing);
 
 			context.update(SERVICE_RELEASES)
 					.set(SERVICE_RELEASES.STATE, ReleaseState.FAILED.name())
@@ -382,6 +379,69 @@ class DefaultServiceManifests implements ServiceManifests {
 				.state(ReleaseState.RELEASED)
 				.publishedAt(publishedAt.toInstant())
 				.build();
+	}
+
+	/**
+	 * Retrieves a previously opened or completed release by its identifier, rebuilding the same
+	 * {@link ServiceRelease} shape {@link #open} and {@link #complete} already return from what is
+	 * currently persisted in {@code service_releases} and {@code service_artifacts}.
+	 * <p>
+	 * Each declared coordinate's {@link ArtifactUploadStatus} is re-derived from its current
+	 * {@code service_artifacts} row: a {@code LOCAL} row with a {@literal null} checksum is still
+	 * {@link ArtifactUploadStatus#UPLOAD_REQUIRED}; anything else — an uploaded {@code LOCAL} row or an
+	 * {@code ARTIFACTORY} row — is {@link ArtifactUploadStatus#SKIP}. For a {@link ReleaseState#FAILED}
+	 * release, {@code service_artifacts} still holds the coordinates that were never uploaded, since
+	 * {@link #complete} does not prune them on failure, so {@link ServiceRelease#errors()} can be
+	 * recomputed the same way {@link #complete} reported them.
+	 *
+	 * @param service the service the release belongs to, can't be {@literal null}.
+	 * @param releaseId the entity identifier of the release to retrieve, can't be {@literal null}.
+	 * @return the matching service release, or {@literal empty} if no release with this identifier
+	 *         exists for this service.
+	 */
+	@Override
+	@Transactional(readOnly = true, label = "service-manifest.get-release")
+	public Optional<ServiceRelease> get(Service service, EntityId releaseId) {
+		final Record record = context.select(SERVICE_RELEASES.STATE, SERVICE_RELEASES.PUBLISHED_AT)
+				.from(SERVICE_RELEASES)
+				.where(DSL.and(
+						SERVICE_RELEASES.ID.eq(releaseId.get()),
+						SERVICE_RELEASES.SERVICE_ID.eq(service.id().get())
+				))
+				.fetchOne();
+
+		if (record == null) {
+			return Optional.empty();
+		}
+
+		final ReleaseState state = ReleaseState.valueOf(record.get(SERVICE_RELEASES.STATE));
+		final OffsetDateTime publishedAt = record.get(SERVICE_RELEASES.PUBLISHED_AT);
+
+		final List<ServiceReleaseEntry> entries = context.select(
+						SERVICE_ARTIFACTS.GROUP_ID,
+						SERVICE_ARTIFACTS.ARTIFACT_ID,
+						SERVICE_ARTIFACTS.VERSION,
+						SERVICE_ARTIFACTS.SOURCE,
+						SERVICE_ARTIFACTS.CHECKSUM
+				)
+				.from(SERVICE_ARTIFACTS)
+				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(releaseId.get()))
+				.fetch(DefaultServiceManifests::toServiceReleaseEntry);
+
+		final var builder = ServiceRelease.builder()
+				.id(releaseId.serialize())
+				.state(state)
+				.artifacts(entries);
+
+		if (publishedAt != null) {
+			builder.publishedAt(publishedAt.toInstant());
+		}
+
+		if (state == ReleaseState.FAILED) {
+			builder.errors(toMissingArtifactErrors(findMissingArtifactCoordinates(releaseId)));
+		}
+
+		return Optional.of(builder.build());
 	}
 
 	/**
@@ -548,6 +608,48 @@ class DefaultServiceManifests implements ServiceManifests {
 				.fetch(record -> ArtifactCoordinates.parse(
 						record.get(SERVICE_ARTIFACTS.COORDINATES)
 				));
+	}
+
+	/**
+	 * Formats each of the given missing coordinates into the error message reported on
+	 * {@link ServiceRelease#errors()}, shared by {@link #complete} and {@link #get(Service, EntityId)}
+	 * so a {@link ReleaseState#FAILED} release reports the exact same wording however it is reached.
+	 *
+	 * @param missing the coordinates that were never uploaded, can't be {@literal null}.
+	 * @return one formatted error message per missing coordinate, never {@literal null}.
+	 */
+	private static List<String> toMissingArtifactErrors(List<ArtifactCoordinates> missing) {
+		return missing.stream()
+				.map(ArtifactCoordinates::format)
+				.map("Artifact with coordinates '%s' was not uploaded"::formatted)
+				.toList();
+	}
+
+	/**
+	 * Converts a single {@code service_artifacts} row into a {@link ServiceReleaseEntry}, re-deriving
+	 * its {@link ArtifactUploadStatus} the same way {@link #open} does: an {@code ARTIFACTORY} row, or
+	 * a {@code LOCAL} row with a non-null checksum, is {@link ArtifactUploadStatus#SKIP}; a
+	 * {@code LOCAL} row with a {@literal null} checksum is still {@link ArtifactUploadStatus#UPLOAD_REQUIRED}.
+	 *
+	 * @param record the {@code service_artifacts} row to convert, can't be {@literal null}.
+	 * @return the resolved service release entry, never {@literal null}.
+	 */
+	private static ServiceReleaseEntry toServiceReleaseEntry(Record record) {
+		final ArtifactSource source = record.get(SERVICE_ARTIFACTS.SOURCE, ArtifactSource.class);
+		final String checksum = record.get(SERVICE_ARTIFACTS.CHECKSUM);
+
+		final ArtifactUploadStatus status = source == ArtifactSource.ARTIFACTORY || checksum != null
+				? ArtifactUploadStatus.SKIP
+				: ArtifactUploadStatus.UPLOAD_REQUIRED;
+
+		return ServiceReleaseEntry.of(
+				Artifact.of(
+						record.get(SERVICE_ARTIFACTS.GROUP_ID),
+						record.get(SERVICE_ARTIFACTS.ARTIFACT_ID),
+						record.get(SERVICE_ARTIFACTS.VERSION)
+				),
+				status
+		);
 	}
 
 	private Field<List<Artifact>> createServiceArtifactMultiselectField() {

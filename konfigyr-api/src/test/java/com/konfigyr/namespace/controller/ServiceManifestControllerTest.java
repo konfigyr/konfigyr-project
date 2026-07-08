@@ -643,6 +643,121 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@Transactional
+	@DisplayName("should retrieve a pending release with per-artifact upload status")
+	void shouldRetrievePendingRelease() {
+		final var uploaded = metadata(konfigyrArtifactoryArtifact, "checksum");
+		final var release = assertThatRelease(List.of(
+				ServiceReleaseCandidate.of(uploaded),
+				ServiceReleaseCandidate.of(konfigyrCryptoApiArtifact, "checksum")
+		)).actual();
+
+		assertThatUpload(release.id(), uploaded).hasStatus(HttpStatus.NO_CONTENT);
+
+		assertThatRelease(release.id())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ServiceRelease.class)
+				.returns(release.id(), ServiceRelease::id)
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.returns(List.of(), ServiceRelease::errors)
+				.satisfies(retrieved -> assertThat(retrieved.artifacts())
+						.hasSize(2)
+						.satisfiesExactlyInAnyOrder(
+								entry -> assertThat(entry)
+										.returns(ArtifactCoordinates.of(konfigyrArtifactoryArtifact), ArtifactCoordinates::of)
+										.returns(ArtifactUploadStatus.SKIP, ServiceReleaseEntry::status),
+								entry -> assertThat(entry)
+										.returns(ArtifactCoordinates.of(konfigyrCryptoApiArtifact), ArtifactCoordinates::of)
+										.returns(ArtifactUploadStatus.UPLOAD_REQUIRED, ServiceReleaseEntry::status)
+						)
+				);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should retrieve a released release")
+	void shouldRetrieveReleasedRelease() {
+		final var metadata = metadata(konfigyrArtifactoryArtifact, "checksum");
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata)).actual();
+
+		assertThatUpload(release.id(), metadata).hasStatus(HttpStatus.NO_CONTENT);
+		assertThatComplete(release.id()).hasStatusOk();
+
+		assertThatRelease(release.id())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ServiceRelease.class)
+				.returns(release.id(), ServiceRelease::id)
+				.returns(ReleaseState.RELEASED, ServiceRelease::state)
+				.returns(List.of(), ServiceRelease::errors)
+				.satisfies(retrieved -> assertThat(retrieved.publishedAt()).isNotNull());
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should retrieve a failed release with the same errors reported by complete")
+	void shouldRetrieveFailedRelease() {
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum")).actual();
+
+		assertThatComplete(release.id()).hasStatus(HttpStatus.CONFLICT);
+
+		assertThatRelease(release.id())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ServiceRelease.class)
+				.returns(release.id(), ServiceRelease::id)
+				.returns(ReleaseState.FAILED, ServiceRelease::state)
+				.satisfies(retrieved -> assertThat(retrieved.errors())
+						.containsExactly("Artifact with coordinates '%s' was not uploaded"
+								.formatted(ArtifactCoordinates.of(konfigyrArtifactoryArtifact).format()))
+				);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve a release that does not exist")
+	void shouldRejectRetrieveForUnknownRelease() {
+		assertThatRelease(EntityId.from(999).serialize())
+				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+						.hasTitle("Release not found")
+						.hasDetailContaining("Could not find a release with the following identifier")
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve a release for an unknown service")
+	void shouldRejectRetrieveForUnknownService() {
+		mvc.get().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}", EntityId.from(999).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound("unknown-service"));
+	}
+
+	@Test
+	@DisplayName("should not retrieve a release when user is not a member of the namespace")
+	void shouldRejectRetrieveWhenNotAMember() {
+		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}", EntityId.from(999).serialize())
+				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_MANIFESTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should not retrieve a release when the publish-manifests scope is not present")
+	void shouldRejectRetrieveWithoutScope() {
+		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/releases/{id}", EntityId.from(999).serialize())
+				.with(authentication(TestPrincipals.john()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.PUBLISH_MANIFESTS));
+	}
+
+	@Test
 	@DisplayName("should not resolve a release when user is not a member of the namespace")
 	void shouldRejectWhenNotAMember() {
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
@@ -710,6 +825,14 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.bodyJson()
 				.convertTo(ServiceRelease.class)
 				.asInstanceOf(InstanceOfAssertFactories.type(ServiceRelease.class));
+	}
+
+	private MvcTestResultAssert assertThatRelease(String id) {
+		return mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}", id)
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.exchange()
+				.assertThat()
+				.apply(log());
 	}
 
 	private MvcTestResultAssert assertThatUpload(String id, ArtifactMetadata metadata) {

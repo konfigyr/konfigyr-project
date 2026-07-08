@@ -9,6 +9,7 @@ import com.konfigyr.namespace.Service;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Interface that defines a contract for building a service's Service Configuration Manifest through
@@ -59,6 +60,23 @@ public interface ServiceManifests {
 	 */
 	@NonNull
 	ServiceRelease open(@NonNull Service service, @NonNull Collection<ServiceReleaseCandidate> artifacts);
+
+	/**
+	 * Retrieves a previously opened or completed {@link ServiceRelease} by its identifier.
+	 * <p>
+	 * Returns the same shape {@link #open} and {@link #complete} already return: current
+	 * {@link com.konfigyr.artifactory.ReleaseState}, one {@link com.konfigyr.artifactory.ServiceReleaseEntry}
+	 * per declared artifact with its current {@link com.konfigyr.artifactory.ArtifactUploadStatus}, and,
+	 * for a {@link com.konfigyr.artifactory.ReleaseState#FAILED} release, the coordinates that were never
+	 * uploaded.
+	 *
+	 * @param service the service the release belongs to, can't be {@literal null}.
+	 * @param releaseId the entity identifier of the release to retrieve, can't be {@literal null}.
+	 * @return the matching service release, or {@literal empty} if no release with this identifier
+	 *         exists for this service.
+	 */
+	@NonNull
+	Optional<ServiceRelease> get(@NonNull Service service, @NonNull EntityId releaseId);
 
 	/**
 	 * Records the Spring Boot configuration metadata uploaded by the build plugin for a single artifact
