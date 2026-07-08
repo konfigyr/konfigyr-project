@@ -1,6 +1,5 @@
 package com.konfigyr.namespace;
 
-import com.konfigyr.artifactory.ArtifactCoordinates;
 import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.artifactory.PropertyDescriptor;
 import com.konfigyr.entity.EntityId;
@@ -86,23 +85,6 @@ public interface Services {
 	 */
 	@DomainEventPublisher(publishes = "namespaces.service-renamed")
 	Service update(EntityId id, ServiceDefinition definition);
-
-	/**
-	 * Returns the current manifest associated with the given service.
-	 * <p>
-	 * A manifest represents the set of {@link ArtifactCoordinates artifacts} that are currently
-	 * used by a specific service within a {@link Namespace}. Each artifact referenced by the
-	 * manifest contributes configuration metadata resolved through the {@code Artifactory} domain.
-	 * <p>
-	 * The manifest acts as the bridge between a service and the configuration metadata
-	 * provided by its dependencies. When a manifest is resolved, the Artifactory aggregates
-	 * the configuration property definitions contributed by all referenced artifacts and
-	 * produces the effective configuration metadata used by the service.
-	 *
-	 * @param service service for which manifest should be retrieved, can't be {@literal null}
-	 * @return the current {@link Manifest} for the service, never {@literal null}
-	 */
-	Manifest manifest(Service service);
 
 	/**
 	 * Returns the complete configuration catalog of the specified {@link Service}

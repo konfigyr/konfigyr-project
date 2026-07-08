@@ -7,6 +7,7 @@ import com.konfigyr.support.Slug;
 import org.jmolecules.event.annotation.DomainEvent;
 import org.jspecify.annotations.NonNull;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -16,7 +17,8 @@ import java.util.function.Supplier;
  * @since 1.0.0
  **/
 public sealed abstract class ServiceEvent extends EntityEvent implements Supplier<Service>
-		permits ServiceEvent.Created, ServiceEvent.Renamed, ServiceEvent.Released, ServiceEvent.Deleted {
+		permits ServiceEvent.Created, ServiceEvent.Renamed, ServiceEvent.Released, ServiceEvent.ReleaseFailed,
+		ServiceEvent.Deleted {
 
 	protected final Service service;
 
@@ -125,6 +127,38 @@ public sealed abstract class ServiceEvent extends EntityEvent implements Supplie
 		@NonNull
 		public Manifest manifest() {
 			return manifest;
+		}
+	}
+
+	/**
+	 * Event that would be published when a release attempt for a {@link Service} fails, so that
+	 * anything left behind by the attempt can be cleaned up.
+	 */
+	@DomainEvent(name = "service-release-failed", namespace = "namespaces")
+	public static final class ReleaseFailed extends ServiceEvent {
+
+		private final List<String> errors;
+
+		/**
+		 * Create a new {@link ReleaseFailed} event with the {@link EntityId entity identifier} of the
+		 * {@link Service} whose release attempt failed, and the reasons it failed.
+		 *
+		 * @param service the service whose release attempt failed.
+		 * @param errors the errors that caused the release attempt to fail.
+		 */
+		public ReleaseFailed(Service service, List<String> errors) {
+			super(service);
+			this.errors = List.copyOf(errors);
+		}
+
+		/**
+		 * Returns the errors that caused the release attempt to fail.
+		 *
+		 * @return release errors, never {@literal null}.
+		 */
+		@NonNull
+		public List<String> errors() {
+			return errors;
 		}
 	}
 

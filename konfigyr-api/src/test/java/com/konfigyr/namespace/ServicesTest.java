@@ -295,9 +295,14 @@ class ServicesTest extends AbstractIntegrationTest {
 		final var catalog = services.catalog(EntityId.from(2));
 
 		assertThat(catalog)
-				.hasSize(3)
+				.hasSize(4)
 				.extracting(ServiceCatalog.Property::name)
-				.containsExactly("spring.application.deprecated", "spring.application.index", "spring.application.name");
+				.containsExactly(
+						"com.acme.service.property",
+						"spring.application.deprecated",
+						"spring.application.index",
+						"spring.application.name"
+				);
 
 		assertThatObject(catalog)
 				.returns(EntityId.from(2), ServiceCatalog::id)

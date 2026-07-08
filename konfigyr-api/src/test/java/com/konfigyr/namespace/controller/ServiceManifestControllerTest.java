@@ -24,21 +24,210 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
 import static com.konfigyr.data.tables.ServiceConfigurationCatalog.SERVICE_CONFIGURATION_CATALOG;
 import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 class ServiceManifestControllerTest extends AbstractControllerTest {
+
+	// matches the checksum seeded for artifact_versions rows referenced by konfigyr-id's manifest, see artifactory.sql
+	private static final String EXISTING_ARTIFACT_VERSION_CHECKSUM = "ec54eb43a2f17d3fecf5062c987c794ea025da258de0b6ea6483542ef79e3f8a";
 
 	static Artifact konfigyrArtifactoryArtifact = Artifact.of("com.konfigyr", "konfigyr-artifactory", "1.2.0");
 	static Artifact konfigyrCryptoApiArtifact = Artifact.of("com.konfigyr", "konfigyr-crypto-api", "1.1.0");
 
 	@Autowired
 	DSLContext context;
+
+	@Test
+	@DisplayName("should retrieve the latest namespace service manifest")
+	void retrieveServiceManifest() {
+		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/manifest")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(Manifest.class)
+				.returns(EntityId.from(1).serialize(), Manifest::id)
+				.returns("Konfigyr ID", Manifest::name)
+				.satisfies(it -> assertThat(it.artifacts())
+						.hasSize(8)
+						.usingRecursiveFieldByFieldElementComparatorIgnoringFields("resolvedAt")
+						.containsExactly(
+								ManifestEntry.builder()
+										.groupId("com.acme")
+										.artifactId("spring-boot-service")
+										.version("1.0.0")
+										.name("Acme Spring Boot service")
+										.description("Spring Boot service")
+										.website("https://acme.com/service")
+										.repository("https://github.com/acme/service")
+										.checksum("6QRgbo04ZnpKhc3o5yZckptP+61bzEBhwNibipufooU=")
+										.source(ArtifactSource.LOCAL)
+										.resolvedAt(Instant.EPOCH)
+										.build(),
+								ManifestEntry.builder()
+										.groupId("org.springframework.boot")
+										.artifactId("spring-boot")
+										.version("4.0.4")
+										.name("Spring Boot")
+										.description("Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications")
+										.website("https://spring.io/projects/spring-boot")
+										.repository("https://github.com/spring-projects/spring-boot")
+										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
+										.source(ArtifactSource.ARTIFACTORY)
+										.resolvedAt(Instant.EPOCH)
+										.build(),
+								ManifestEntry.builder()
+										.groupId("org.springframework.boot")
+										.artifactId("spring-boot-actuator")
+										.version("4.0.4")
+										.name("Spring Boot Actuator")
+										.description("Spring Boot Actuator")
+										.website("https://spring.io/projects/spring-boot")
+										.repository("https://github.com/spring-projects/spring-boot")
+										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
+										.source(ArtifactSource.ARTIFACTORY)
+										.resolvedAt(Instant.EPOCH)
+										.build(),
+								ManifestEntry.builder()
+										.groupId("org.springframework.boot")
+										.artifactId("spring-boot-autoconfigure")
+										.version("4.0.4")
+										.name("Spring Boot AutoConfigure")
+										.description("Spring Boot auto-configuration attempts to automatically configure your Spring applications")
+										.website("https://spring.io/projects/spring-boot")
+										.repository("https://github.com/spring-projects/spring-boot")
+										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
+										.source(ArtifactSource.ARTIFACTORY)
+										.resolvedAt(Instant.EPOCH)
+										.build(),
+								ManifestEntry.builder()
+										.groupId("org.springframework.boot")
+										.artifactId("spring-boot-jooq")
+										.version("4.0.4")
+										.name("Spring Boot jOOQ")
+										.description("Spring Boot jOOQ support")
+										.website("https://spring.io/projects/spring-boot")
+										.repository("https://github.com/spring-projects/spring-boot")
+										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
+										.source(ArtifactSource.ARTIFACTORY)
+										.resolvedAt(Instant.EPOCH)
+										.build(),
+								ManifestEntry.builder()
+										.groupId("org.springframework.boot")
+										.artifactId("spring-boot-liquibase")
+										.version("4.0.4")
+										.name("Spring Boot Liquibase")
+										.description("Spring Boot Liquibase support")
+										.website("https://spring.io/projects/spring-boot")
+										.repository("https://github.com/spring-projects/spring-boot")
+										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
+										.source(ArtifactSource.ARTIFACTORY)
+										.resolvedAt(Instant.EPOCH)
+										.build(),
+								ManifestEntry.builder()
+										.groupId("org.springframework.modulith")
+										.artifactId("spring-modulith-core")
+										.version("2.0.3")
+										.name("Spring Modulith Core")
+										.description("Modular monoliths with Spring Boot")
+										.website("https://spring.io/projects/spring-modulith/spring-modulith-core")
+										.repository("https://github.com/spring-projects-experimental/spring-modulith")
+										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
+										.source(ArtifactSource.ARTIFACTORY)
+										.resolvedAt(Instant.EPOCH)
+										.build(),
+								ManifestEntry.builder()
+										.groupId("org.springframework.modulith")
+										.artifactId("spring-modulith-moments")
+										.version("2.0.3")
+										.name("Spring Modulith Moments")
+										.description("Modular monoliths with Spring Boot")
+										.website("https://spring.io/projects/spring-modulith/spring-modulith-moments")
+										.repository("https://github.com/spring-projects-experimental/spring-modulith")
+										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
+										.source(ArtifactSource.ARTIFACTORY)
+										.resolvedAt(Instant.EPOCH)
+										.build()
+						)
+				)
+				.satisfies(it -> assertThat(it.createdAt())
+						.isCloseTo(Instant.now().minus(3, ChronoUnit.DAYS), within(1, ChronoUnit.HOURS))
+				);
+	}
+
+	@Test
+	@DisplayName("should retrieve an empty manifest for service that was not yet released")
+	void retrieveManifestForUnreleasedService() {
+		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(Manifest.class)
+				.returns(EntityId.from(1).serialize(), Manifest::id)
+				.returns("John Doe Blog", Manifest::name)
+				.returns(List.of(), Manifest::artifacts)
+				.satisfies(it -> assertThat(it.createdAt())
+						.isCloseTo(Instant.now(), within(5, ChronoUnit.MINUTES))
+				);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve manifest for unknown service")
+	void retrieveManifestForUnknownService() {
+		mvc.get().uri("/namespaces/konfigyr/services/unknown-service/manifest")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound("unknown-service"));
+	}
+
+	@Test
+	@DisplayName("should not retrieve a service manifest for an unknown namespace")
+	void retrieveManifestForUnknownNamespace() {
+		mvc.get().uri("/namespaces/unknown-namespace/services/unknown-service/manifest")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND)
+				.satisfies(namespaceNotFound("unknown-namespace"));
+	}
+
+	@Test
+	@DisplayName("should not retrieve service manifest when namespaces:read scope is not present")
+	void retrieveManifestWithoutScope() {
+		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/manifest")
+				.with(authentication(TestPrincipals.jane()))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.READ_NAMESPACES));
+	}
+
+	@Test
+	@DisplayName("should not retrieve service manifest when user is not a member of a namespace")
+	void retrieveManifestWithoutMembership() {
+		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
+				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+	}
 
 	@Test
 	@Transactional
@@ -359,6 +548,101 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@Transactional
+	@DisplayName("should complete a release once every declared artifact has been uploaded")
+	void shouldCompleteRelease() {
+		final var metadata = metadata(konfigyrArtifactoryArtifact, "checksum");
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		assertThatUpload(release.id(), metadata)
+				.hasStatus(HttpStatus.NO_CONTENT);
+
+		assertThatComplete(release.id())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ServiceRelease.class)
+				.returns(release.id(), ServiceRelease::id)
+				.returns(ReleaseState.RELEASED, ServiceRelease::state)
+				.returns(List.of(), ServiceRelease::errors)
+				.satisfies(completed -> assertThat(completed.publishedAt()).isNotNull());
+
+		assertThat(context.select(SERVICE_RELEASES.STATE, SERVICE_RELEASES.PUBLISHED_AT)
+				.from(SERVICE_RELEASES)
+				.where(SERVICE_RELEASES.ID.eq(EntityId.from(release.id()).get()))
+				.fetchOneMap())
+				.containsEntry(SERVICE_RELEASES.STATE.getName(), ReleaseState.RELEASED.name())
+				.hasEntrySatisfying(SERVICE_RELEASES.PUBLISHED_AT.getName(), it -> assertThat(it).isNotNull());
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to complete a release when a declared artifact was never uploaded")
+	void shouldFailToCompleteReleaseWithMissingUpload() {
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum"))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		assertThatComplete(release.id())
+				.hasStatus(HttpStatus.CONFLICT)
+				.bodyJson()
+				.convertTo(ServiceRelease.class)
+				.returns(release.id(), ServiceRelease::id)
+				.returns(ReleaseState.FAILED, ServiceRelease::state)
+				.satisfies(completed -> assertThat(completed.errors())
+						.containsExactly("Artifact with coordinates '%s' was not uploaded"
+								.formatted(ArtifactCoordinates.of(konfigyrArtifactoryArtifact).format()))
+				);
+
+		assertThat(context.select(SERVICE_RELEASES.STATE)
+				.from(SERVICE_RELEASES)
+				.where(SERVICE_RELEASES.ID.eq(EntityId.from(release.id()).get()))
+				.fetchOne(SERVICE_RELEASES.STATE))
+				.isEqualTo(ReleaseState.FAILED.name());
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to complete a release that is not pending")
+	void shouldRejectCompleteForNotPendingRelease() {
+		final var metadata = metadata(konfigyrArtifactoryArtifact, "checksum");
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata))
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.actual();
+
+		assertThatUpload(release.id(), metadata).hasStatus(HttpStatus.NO_CONTENT);
+		assertThatComplete(release.id()).hasStatusOk();
+
+		assertThatComplete(release.id())
+				.satisfies(problemDetailFor(HttpStatus.CONFLICT, problem -> problem
+						.hasTitle("Release is not pending")
+						.hasDetailContaining("Release is no longer pending")
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to complete an unknown release")
+	void shouldRejectCompleteForUnknownRelease() {
+		assertThatComplete(EntityId.from(999).serialize())
+				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+						.hasTitle("Release not found")
+						.hasDetailContaining("Could not find a release with the following identifier")
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to complete a release for an unknown service")
+	void shouldRejectCompleteForUnknownService() {
+		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}/complete", EntityId.from(999).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound("unknown-service"));
+	}
+
+	@Test
 	@DisplayName("should not resolve a release when user is not a member of the namespace")
 	void shouldRejectWhenNotAMember() {
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
@@ -433,6 +717,14 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log());
+	}
+
+	private MvcTestResultAssert assertThatComplete(String id) {
+		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/complete", id)
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
 				.exchange()
 				.assertThat()
 				.apply(log());

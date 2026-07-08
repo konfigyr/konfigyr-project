@@ -1,6 +1,5 @@
 package com.konfigyr.namespace.controller;
 
-import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.artifactory.PropertyDescriptor;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
@@ -123,17 +122,6 @@ class ServicesController {
 		}
 
 		return Assemblers.property(ns, service).assemble(services.search(service, builder.build()));
-	}
-
-	@GetMapping("{slug}/manifest")
-	@PreAuthorize("isMember(#namespace)")
-	EntityModel<Manifest> manifest(@PathVariable @NonNull String namespace, @PathVariable @NonNull String slug) {
-		final Namespace ns = lookupNamespace(namespace);
-		final Service service = services.get(ns, slug).orElseThrow(
-				() -> new ServiceNotFoundException(namespace, slug)
-		);
-
-		return Assemblers.manifest(ns, service).assemble(services.manifest(service));
 	}
 
 	@NonNull

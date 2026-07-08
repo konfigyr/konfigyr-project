@@ -1,7 +1,6 @@
 package com.konfigyr.audit;
 
 import com.konfigyr.account.AccountEvent;
-import com.konfigyr.artifactory.Artifact;
 import com.konfigyr.artifactory.ArtifactCoordinates;
 import com.konfigyr.artifactory.ArtifactoryEvent;
 import com.konfigyr.entity.EntityEvent;
@@ -23,11 +22,14 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.konfigyr.data.tables.Services.SERVICES;
 
@@ -308,17 +310,24 @@ class AuditEventListener {
 	@TransactionalEventListener(id = "audit.service-released", classes = ServiceEvent.Released.class)
 	void on(ServiceEvent.Released event) {
 		insert(event, builder -> {
-			final List<String> artifacts = new ArrayList<>();
-
-			for (Artifact artifact : event.manifest().artifacts()) {
-				artifacts.add(ArtifactCoordinates.of(artifact).format());
-			}
+			final List<String> artifacts = toSecureList(event.manifest().artifacts(),
+					artifact -> ArtifactCoordinates.of(artifact).format());
 
 			builder.entityType("service")
 					.entityId(event.id())
 					.eventType("service.released")
-					.details("artifacts", Collections.unmodifiableList(artifacts));
+					.details("artifacts", artifacts);
 		});
+	}
+
+	@TransactionalEventListener(id = "audit.service-release-failed", classes = ServiceEvent.ReleaseFailed.class)
+	void on(ServiceEvent.ReleaseFailed event) {
+		insert(event, builder -> builder
+				.entityType("service")
+				.entityId(event.id())
+				.eventType("service.release-failed")
+				.details("errors", toSecureList(event.errors()))
+		);
 	}
 
 	@TransactionalEventListener(id = "audit.service-deleted", classes = ServiceEvent.Deleted.class)
@@ -504,6 +513,54 @@ class AuditEventListener {
 				log.error("Failed to persist audit event: {}", event, ex);
 			}
 		});
+	}
+
+	/**
+	 * Copies the given {@code collection} into a plain {@link ArrayList} before it is stored as an
+	 * {@link AuditEvent} detail.
+	 * <p>
+	 * Audit event details are serialized using a Jackson mapper hardened with Spring Security's
+	 * {@code SecurityJacksonModules}, which installs a {@code PolymorphicTypeValidator} that only
+	 * allows a curated subset of types to be (de)serialized polymorphically. Collections such as the
+	 * ones returned by {@link List#of} or {@link java.util.stream.Stream#toList()} are backed by
+	 * JDK-internal {@code ImmutableCollections} types that are not part of that allow-list, so passing
+	 * them straight through would fail serialization. Re-collecting into a plain {@link ArrayList}
+	 * guarantees the stored value is always a type the validator recognizes.
+	 *
+	 * @param collection the collection to convert, can be {@literal null} or empty
+	 * @param <T> the type of elements in the collection
+	 * @return an unmodifiable {@link ArrayList} copy of the given collection, never {@literal null}
+	 */
+	private static <T> List<T> toSecureList(@Nullable Collection<T> collection) {
+		return toSecureList(collection, Function.identity());
+	}
+
+	/**
+	 * Maps each element of the given {@code collection} with the supplied {@code mapper} and copies the
+	 * result into a plain {@link ArrayList} before it is stored as an {@link AuditEvent} detail.
+	 * <p>
+	 * See {@link #toSecureList(Collection)} for why this copy is necessary: the mapped result must land
+	 * in a type accepted by the {@code PolymorphicTypeValidator} that guards the audit Jackson mapper,
+	 * rather than whatever collection type {@code mapper} or the caller happened to produce.
+	 *
+	 * @param collection the collection to convert, can be {@literal null} or empty
+	 * @param mapper the function applied to each element, can't be {@literal null}
+	 * @param <T> the type of elements in the source collection
+	 * @param <R> the type of elements in the secured collection
+	 * @return an unmodifiable {@link ArrayList} of the mapped elements, never {@literal null}
+	 */
+	private static <T, R> List<R> toSecureList(@Nullable Collection<T> collection, Function<T, R> mapper) {
+		if (CollectionUtils.isEmpty(collection)) {
+			return Collections.emptyList();
+		}
+
+		final List<R> list = new ArrayList<>(collection.size());
+
+		for (T entry : collection) {
+			list.add(mapper.apply(entry));
+		}
+
+		return Collections.unmodifiableList(list);
 	}
 
 	/**
