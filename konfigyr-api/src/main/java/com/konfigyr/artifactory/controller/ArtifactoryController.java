@@ -6,6 +6,8 @@ import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.NamespacedPrincipal;
+import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.version.Version;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -32,6 +34,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/artifacts")
 @RequiredArgsConstructor
+@RequiresScope(OAuthScope.READ_ARTIFACTS)
 class ArtifactoryController {
 
 	private final Artifactory artifactory;
@@ -63,6 +66,7 @@ class ArtifactoryController {
 	}
 
 	@PostMapping("/{groupId}/{artifactId}/{version}")
+	@RequiresScope(OAuthScope.PUBLISH_ARTIFACTS)
 	EntityModel<Publication> publish(
 			@PathVariable String groupId,
 			@PathVariable String artifactId,

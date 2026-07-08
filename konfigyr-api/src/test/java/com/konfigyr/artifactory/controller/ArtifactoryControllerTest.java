@@ -7,6 +7,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
 import com.konfigyr.security.KonfigyrClaimNames;
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestPrincipals;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.validation.BindException;
@@ -43,7 +45,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "1.0.0");
 
 		mvc.get().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -72,7 +74,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "unknown", "1.0.0");
 
 		mvc.get().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -93,7 +95,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "1.0.0");
 
 		mvc.head().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -108,7 +110,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "unknown", "1.0.0");
 
 		mvc.head().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -283,12 +285,34 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to publish an artifact when the artifactory:publish scope is not present")
+	void uploadArtifactWithoutScope() {
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "3.0.0");
+		final var metadata = TestArtifacts.metadata(coordinates);
+
+		mvc.post().uri(uriForArtifact(coordinates).toUri())
+				.with(authentication(claims -> claims
+						.subject(TestAccounts.jane().build().id().serialize())
+						.claim(KonfigyrClaimNames.NAMESPACE, EntityId.from(2L).serialize())))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.PUBLISH_ARTIFACTS));
+
+		assertThat(store.get(coordinates))
+				.as("Should not store property descriptor when the scope is missing")
+				.isEmpty();
+	}
+
+	@Test
 	@DisplayName("should retrieve property descriptors for a specific artifact version")
 	void retrieveArtifactProperties() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-crypto-api", "1.0.1");
 
 		mvc.get().uri(uriForArtifact(coordinates, "properties").toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -319,7 +343,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-crypto-api", "1.0.0");
 
 		mvc.get().uri(uriForArtifact(coordinates, "properties").toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -336,7 +360,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "unknown", "1.0.0");
 
 		mvc.get().uri(uriForArtifact(coordinates, "properties").toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -353,8 +377,9 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 
 	/**
 	 * Creates an authentication post-processor whose access token carries the {@code namespace} claim,
-	 * so the publishing principal resolves to the given namespace owner. Required by the release
-	 * endpoint, which enforces that the namespace holds an active verification claim on the groupId.
+	 * so the publishing principal resolves to the given namespace owner, and the {@code artifactory:publish}
+	 * scope required by the endpoint. Required by the release endpoint, which enforces that the namespace
+	 * holds an active verification claim on the groupId.
 	 *
 	 * @param namespace the namespace identifier to embed as the publishing owner, can't be {@literal null}
 	 * @return the authentication post-processor, never {@literal null}
@@ -362,7 +387,8 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	static RequestPostProcessor publishingTo(EntityId namespace) {
 		return authentication(claims -> claims
 				.subject(TestAccounts.jane().build().id().serialize())
-				.claim(KonfigyrClaimNames.NAMESPACE, namespace.serialize()));
+				.claim(KonfigyrClaimNames.NAMESPACE, namespace.serialize())
+				.claim(OAuth2ParameterNames.SCOPE, OAuthScopes.of(OAuthScope.PUBLISH_ARTIFACTS).toString()));
 	}
 
 	static UriComponents uriForArtifact(ArtifactCoordinates coordinates, String... path) {

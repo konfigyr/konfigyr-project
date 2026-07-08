@@ -53,14 +53,24 @@ public enum OAuthScope implements GrantedAuthority {
 	INVITE_MEMBERS("namespaces:invite", READ_NAMESPACES),
 
 	/**
-	 * Grants permissions to create service releases by publishing manifests.
+	 * Grants permissions to resolve, upload to, and complete service releases.
 	 */
-	PUBLISH_MANIFESTS("namespaces:publish-manifests", READ_NAMESPACES),
+	PUBLISH_RELEASES("namespaces:publish-releases", READ_NAMESPACES),
 
 	/**
 	 * Grants full access to namespace operations like read, write, delete, and invite.
 	 */
-	NAMESPACES("namespaces", READ_NAMESPACES, WRITE_NAMESPACES, DELETE_NAMESPACES, INVITE_MEMBERS, PUBLISH_MANIFESTS),
+	NAMESPACES("namespaces", READ_NAMESPACES, WRITE_NAMESPACES, DELETE_NAMESPACES, INVITE_MEMBERS, PUBLISH_RELEASES),
+
+	/**
+	 * Grants read-only access to Artifactory artifacts and their property definitions.
+	 */
+	READ_ARTIFACTS("artifactory:read"),
+
+	/**
+	 * Grants permission to publish new artifact versions to the Artifactory.
+	 */
+	PUBLISH_ARTIFACTS("artifactory:publish", READ_ARTIFACTS),
 
 	/**
 	 * Grants read-only access to service profiles.

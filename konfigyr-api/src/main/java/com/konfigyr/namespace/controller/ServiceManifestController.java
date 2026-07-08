@@ -45,7 +45,7 @@ class ServiceManifestController {
 
 	@PostMapping("releases")
 	@PreAuthorize("isMember(#namespace)")
-	@RequiresScope(OAuthScope.PUBLISH_MANIFESTS)
+	@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 	EntityModel<ServiceRelease> resolve(
 			@PathVariable String namespace,
 			@PathVariable String slug,
@@ -61,7 +61,7 @@ class ServiceManifestController {
 
 	@GetMapping("/releases/{id}")
 	@PreAuthorize("isMember(#namespace)")
-	@RequiresScope(OAuthScope.PUBLISH_MANIFESTS)
+	@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 	EntityModel<ServiceRelease> release(
 			@PathVariable String namespace,
 			@PathVariable String slug,
@@ -82,7 +82,7 @@ class ServiceManifestController {
 	@PostMapping("/releases/{id}/artifacts")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@PreAuthorize("isMember(#namespace)")
-	@RequiresScope(OAuthScope.PUBLISH_MANIFESTS)
+	@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 	void upload(
 			@PathVariable String namespace,
 			@PathVariable String slug,
@@ -99,7 +99,7 @@ class ServiceManifestController {
 
 	@PostMapping("/releases/{id}/complete")
 	@PreAuthorize("isMember(#namespace)")
-	@RequiresScope(OAuthScope.PUBLISH_MANIFESTS)
+	@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 	ResponseEntity<EntityModel<ServiceRelease>> complete(
 			@PathVariable String namespace,
 			@PathVariable String slug,
