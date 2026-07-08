@@ -321,6 +321,16 @@ class AuditEventListener {
 		});
 	}
 
+	@TransactionalEventListener(id = "audit.service-release-failed", classes = ServiceEvent.ReleaseFailed.class)
+	void on(ServiceEvent.ReleaseFailed event) {
+		insert(event, builder -> builder
+				.entityType("service")
+				.entityId(event.id())
+				.eventType("service.release-failed")
+				.details("errors", event.errors())
+		);
+	}
+
 	@TransactionalEventListener(id = "audit.service-deleted", classes = ServiceEvent.Deleted.class)
 	void on(ServiceEvent.Deleted event) {
 		insert(event, builder -> builder

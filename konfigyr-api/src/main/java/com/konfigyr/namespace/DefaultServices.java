@@ -4,7 +4,6 @@ import com.konfigyr.artifactory.*;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.data.SettableRecord;
 import com.konfigyr.entity.EntityId;
-import com.konfigyr.io.ByteArray;
 import com.konfigyr.namespace.catalog.ServiceCatalogSource;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.support.Slug;
@@ -22,23 +21,16 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
-import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
 import static com.konfigyr.data.tables.Services.SERVICES;
-import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
-import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 
 @Slf4j
 @RequiredArgsConstructor
 class DefaultServices implements Services {
-
-	private static final Name SERVICE_ARTIFACTS_ALIAS = DSL.name("artifacts");
 
 	private final Marker CREATED = MarkerFactory.getMarker("SERVICE_CREATED");
 
@@ -187,19 +179,6 @@ class DefaultServices implements Services {
 
 	@NonNull
 	@Override
-	@Transactional(readOnly = true, label = "retrieve-service-manifest")
-	public Manifest manifest(@NonNull Service service) {
-		return createManifestQuery(SERVICE_RELEASES.SERVICE_ID.eq(service.id().get()))
-			.fetchOptional(DefaultServices::toManifest)
-			.orElseGet(() -> Manifest.builder()
-					.id(service.id().serialize())
-					.name(service.name())
-					.build()
-			);
-	}
-
-	@NonNull
-	@Override
 	@Transactional(readOnly = true, label = "retrieve-service-catalog")
 	public ServiceCatalog catalog(@NonNull EntityId id) {
 		final Service service = get(id).orElseThrow(() -> new ServiceNotFoundException(id));
@@ -260,47 +239,8 @@ class DefaultServices implements Services {
 	}
 
 	@NonNull
-	private SelectConditionStep<? extends Record> createManifestQuery(@NonNull Condition condition) {
-		return context.select(SERVICE_RELEASES.ID, SERVICES.NAME, SERVICE_RELEASES.CREATED_AT, createServiceArtifactMultiselectField())
-				.from(SERVICE_RELEASES)
-				.innerJoin(SERVICES)
-				.on(SERVICES.ID.eq(SERVICE_RELEASES.SERVICE_ID))
-				.where(condition);
-	}
-
-	@NonNull
 	private Optional<Service> fetch(@NonNull Condition condition) {
 		return createServicesQuery(condition).fetchOptional(DefaultServices::toService);
-	}
-
-	private Field<List<Artifact>> createServiceArtifactMultiselectField() {
-		return DSL.multiset(
-				DSL.select(
-						SERVICE_ARTIFACTS.GROUP_ID,
-						SERVICE_ARTIFACTS.ARTIFACT_ID,
-						SERVICE_ARTIFACTS.VERSION,
-						SERVICE_ARTIFACTS.SOURCE,
-						SERVICE_ARTIFACTS.CHECKSUM,
-						ARTIFACTS.NAME,
-						ARTIFACTS.DESCRIPTION,
-						ARTIFACTS.WEBSITE,
-						ARTIFACTS.REPOSITORY,
-						ARTIFACTS.CREATED_AT,
-						ARTIFACT_VERSIONS.CHECKSUM
-				)
-				.from(SERVICE_ARTIFACTS)
-				.leftJoin(ARTIFACTS)
-				.on(DSL.and(
-						ARTIFACTS.GROUP_ID.eq(SERVICE_ARTIFACTS.GROUP_ID),
-						ARTIFACTS.ARTIFACT_ID.eq(SERVICE_ARTIFACTS.ARTIFACT_ID)
-				))
-				.leftJoin(ARTIFACT_VERSIONS)
-				.on(DSL.and(
-						ARTIFACT_VERSIONS.ARTIFACT_ID.eq(ARTIFACTS.ID),
-						ARTIFACT_VERSIONS.VERSION.eq(SERVICE_ARTIFACTS.VERSION)
-				))
-				.where(SERVICE_ARTIFACTS.RELEASE_ID.eq(SERVICE_RELEASES.ID))
-		).as(SERVICE_ARTIFACTS_ALIAS).convertFrom(results -> results.map(DefaultServices::toManifestEntry));
 	}
 
 	@NonNull
@@ -313,41 +253,6 @@ class DefaultServices implements Services {
 				.description(record.get(SERVICES.DESCRIPTION))
 				.createdAt(record.get(SERVICES.CREATED_AT))
 				.updatedAt(record.get(SERVICES.UPDATED_AT))
-				.build();
-	}
-
-	@NonNull
-	@SuppressWarnings("unchecked")
-	private static Manifest toManifest(@NonNull Record record) {
-		return Manifest.builder()
-				.id(record.get(SERVICE_RELEASES.ID, EntityId.class).serialize())
-				.name(record.get(SERVICES.NAME))
-				.artifacts((Iterable<? extends ManifestEntry>) record.get(SERVICE_ARTIFACTS_ALIAS))
-				.createdAt(record.get(SERVICE_RELEASES.CREATED_AT, Instant.class))
-				.build();
-	}
-
-	@NonNull
-	private static ManifestEntry toManifestEntry(@NonNull Record record) {
-		final ArtifactSource source = record.get(SERVICE_ARTIFACTS.SOURCE, ArtifactSource.class);
-
-		// LOCAL artifacts carry their own uploaded metadata checksum; ARTIFACTORY artifacts reuse the
-		// checksum of the indexed artifact version, since service_artifacts.checksum is always null for them
-		final String checksum = source == ArtifactSource.LOCAL
-				? record.get(SERVICE_ARTIFACTS.CHECKSUM)
-				: record.get(ARTIFACT_VERSIONS.CHECKSUM, Converter.from(ByteArray.class, String.class, ByteArray::encodeHex));
-
-		return ManifestEntry.builder()
-				.groupId(record.get(SERVICE_ARTIFACTS.GROUP_ID))
-				.artifactId(record.get(SERVICE_ARTIFACTS.ARTIFACT_ID))
-				.version(record.get(SERVICE_ARTIFACTS.VERSION))
-				.name(record.get(ARTIFACTS.NAME))
-				.description(record.get(ARTIFACTS.DESCRIPTION))
-				.website(record.get(ARTIFACTS.WEBSITE))
-				.repository(record.get(ARTIFACTS.REPOSITORY))
-				.checksum(checksum)
-				.resolvedAt(record.get(ARTIFACTS.CREATED_AT, Instant.class))
-				.source(source)
 				.build();
 	}
 

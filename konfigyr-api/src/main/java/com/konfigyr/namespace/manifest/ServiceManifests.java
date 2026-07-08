@@ -1,6 +1,7 @@
 package com.konfigyr.namespace.manifest;
 
 import com.konfigyr.artifactory.ArtifactMetadata;
+import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.artifactory.ServiceRelease;
 import com.konfigyr.artifactory.ServiceReleaseCandidate;
 import com.konfigyr.entity.EntityId;
@@ -23,6 +24,25 @@ import java.util.Collection;
  * @see ServiceRelease
  **/
 public interface ServiceManifests {
+
+	/**
+	 * Returns the current {@link Manifest} associated with the given service.
+	 * <p>
+	 * A manifest represents the set of {@link com.konfigyr.artifactory.ArtifactCoordinates artifacts}
+	 * that are currently used by a specific service within a {@link com.konfigyr.namespace.Namespace}.
+	 * Each artifact referenced by the manifest contributes configuration metadata resolved through the
+	 * {@code Artifactory} domain.
+	 * <p>
+	 * The manifest acts as the bridge between a service and the configuration metadata provided by its
+	 * dependencies. When a manifest is resolved, the Artifactory aggregates the configuration property
+	 * definitions contributed by all referenced artifacts and produces the effective configuration
+	 * metadata used by the service.
+	 *
+	 * @param service service for which the manifest should be retrieved, can't be {@literal null}.
+	 * @return the current {@link Manifest} for the service, never {@literal null}.
+	 */
+	@NonNull
+	Manifest get(@NonNull Service service);
 
 	/**
 	 * Opens a new build for the given service, or takes over its current {@link ServiceRelease} if one

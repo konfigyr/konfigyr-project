@@ -1,0 +1,32 @@
+{
+  "groupId": "com.acme",
+  "artifactId": "spring-boot-library",
+  "version": "1.1.4",
+  "name": "Acme Spring Boot Library",
+  "description": "Official Acme Spring Boot library",
+  "website": "https://acme.com/library",
+  "repository": "https://github.com/acme/library",
+  "checksum": "Boi1WBsisqtXQOa39tX3LKFZ5XHXxAmUMpyVp+lCft0=",
+  "properties": [
+    {
+      "name": "com.acme.library.imported",
+      "schema": {
+        "type": "string"
+      },
+      "typeName": "java.lang.String",
+      "description": "Imported library property from Artifactory.",
+      "defaultValue": null,
+      "deprecation": null
+    },
+    {
+      "name": "com.acme.library.property",
+      "schema": {
+        "type": "boolean"
+      },
+      "typeName": "java.lang.Boolean",
+      "description": "Local library property.",
+      "defaultValue": "false",
+      "deprecation": null
+    }
+  ]
+}

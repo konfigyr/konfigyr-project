@@ -2,6 +2,7 @@ package com.konfigyr.namespace.controller;
 
 import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.artifactory.PropertyDescriptor;
+import com.konfigyr.artifactory.ServiceRelease;
 import com.konfigyr.hateoas.*;
 import com.konfigyr.namespace.*;
 import org.springframework.http.HttpMethod;
@@ -39,6 +40,12 @@ interface Assemblers {
 	static RepresentationModelAssembler<Manifest, EntityModel<Manifest>> manifest(Namespace namespace, Service service) {
 		return manifest -> EntityModel.of(manifest, linkBuilder(namespace, service).path("manifest").selfRel())
 				.add(linkBuilder(namespace, service).path("manifest").method(HttpMethod.POST).rel("release"));
+	}
+
+	static RepresentationModelAssembler<ServiceRelease, EntityModel<ServiceRelease>> release(Namespace namespace, Service service) {
+		return release -> EntityModel.of(release, linkBuilder(namespace, service, release).selfRel())
+				.add(linkBuilder(namespace, service, release).path("artifacts").method(HttpMethod.POST).rel("upload artifact metadata"))
+				.add(linkBuilder(namespace, service, release).path("complete").method(HttpMethod.POST).rel("complete service release"));
 	}
 
 	static RepresentationModelAssembler<ServiceCatalog, EntityModel<ServiceCatalog>> catalog(Namespace namespace) {
@@ -85,5 +92,11 @@ interface Assemblers {
 		return linkBuilder(namespace, service)
 				.path("catalog")
 				.path(descriptor.name());
+	}
+
+	static LinkBuilder linkBuilder(Namespace namespace, Service service, ServiceRelease release) {
+		return linkBuilder(namespace, service)
+				.path("releases")
+				.path(release.id());
 	}
 }

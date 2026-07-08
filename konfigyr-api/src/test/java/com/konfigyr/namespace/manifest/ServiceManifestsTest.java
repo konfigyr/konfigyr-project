@@ -5,6 +5,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.namespace.Service;
+import com.konfigyr.namespace.ServiceEvent;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.jooq.DSLContext;
@@ -12,15 +13,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
 import static com.konfigyr.data.tables.ServiceConfigurationCatalog.SERVICE_CONFIGURATION_CATALOG;
 import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
 
 class ServiceManifestsTest extends AbstractIntegrationTest {
 
@@ -48,13 +51,15 @@ class ServiceManifestsTest extends AbstractIntegrationTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should open a release and upload artifact metadata for a declared coordinate")
-	void shouldOpenAndUploadArtifactMetadata() {
+	@DisplayName("should open a release and upload artifact metadata for a declared coordinate and complete")
+	void shouldProcessRelease(AssertablePublishedEvents events) {
 		final var metadata = metadata(konfigyrArtifactoryArtifact);
 		final var release = manifests.open(service, List.of(ServiceReleaseCandidate.of(metadata)));
 
-		assertThat(release.state())
-				.isEqualTo(ReleaseState.PENDING);
+		assertThat(release)
+				.returns(ReleaseState.PENDING, ServiceRelease::state)
+				.returns(List.of(), ServiceRelease::errors)
+				.returns(null, ServiceRelease::publishedAt);
 
 		assertThat(release.artifacts())
 				.hasSize(1)
@@ -77,6 +82,25 @@ class ServiceManifestsTest extends AbstractIntegrationTest {
 						.and(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID.eq(metadata.artifactId()))
 						.and(SERVICE_CONFIGURATION_CATALOG.VERSION.eq(metadata.version()))
 		)).isEqualTo(metadata.properties().size());
+
+		final var completed = manifests.complete(service, EntityId.from(release.id()));
+
+		assertThat(completed)
+				.returns(ReleaseState.RELEASED, ServiceRelease::state)
+				.returns(List.of(), ServiceRelease::errors);
+
+		assertThat(completed.publishedAt())
+				.isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
+
+		assertThat(context.select(SERVICE_RELEASES.STATE)
+				.from(SERVICE_RELEASES)
+				.where(SERVICE_RELEASES.ID.eq(EntityId.from(release.id()).get()))
+				.fetchOne(SERVICE_RELEASES.STATE))
+				.isEqualTo(ReleaseState.RELEASED.name());
+
+		events.assertThat()
+				.contains(ServiceEvent.Released.class)
+				.matching(ServiceEvent.Released::get, service);
 	}
 
 	@Test
@@ -109,6 +133,53 @@ class ServiceManifestsTest extends AbstractIntegrationTest {
 				.isThrownBy(() -> manifests.upload(service, EntityId.from(release.id()), metadata))
 				.returns(ReleaseState.RELEASED, ReleaseNotPendingException::getState)
 				.returns(EntityId.from(release.id()), ReleaseNotPendingException::getReleaseId);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to complete a release when a declared artifact was never uploaded")
+	void shouldFailToCompleteReleaseWithMissingUpload(AssertablePublishedEvents events) {
+		final var metadata = metadata(konfigyrArtifactoryArtifact);
+		final var release = manifests.open(service, List.of(ServiceReleaseCandidate.of(metadata)));
+
+		final var completed = manifests.complete(service, EntityId.from(release.id()));
+
+		assertThat(completed.state()).isEqualTo(ReleaseState.FAILED);
+		assertThat(completed.errors()).containsExactly(
+				"Artifact with coordinates '%s' was not uploaded".formatted(ArtifactCoordinates.of(metadata).format())
+		);
+
+		assertThat(context.select(SERVICE_RELEASES.STATE)
+				.from(SERVICE_RELEASES)
+				.where(SERVICE_RELEASES.ID.eq(EntityId.from(release.id()).get()))
+				.fetchOne(SERVICE_RELEASES.STATE))
+				.isEqualTo(ReleaseState.FAILED.name());
+
+		events.assertThat()
+				.contains(ServiceEvent.ReleaseFailed.class)
+				.matching(ServiceEvent.ReleaseFailed::errors, completed.errors());
+	}
+
+	@Test
+	@DisplayName("should fail to complete a release that does not exist")
+	void shouldRejectCompleteForUnknownRelease() {
+		assertThatExceptionOfType(ReleaseNotFoundException.class)
+				.isThrownBy(() -> manifests.complete(service, EntityId.from(95673678)))
+				.returns(EntityId.from(95673678), ReleaseNotFoundException::getReleaseId);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to complete a release that is not pending")
+	void shouldRejectCompleteForNotPendingRelease() {
+		final var metadata = metadata(konfigyrArtifactoryArtifact);
+		final var release = manifests.open(service, List.of(ServiceReleaseCandidate.of(metadata)));
+		manifests.upload(service, EntityId.from(release.id()), metadata);
+		manifests.complete(service, EntityId.from(release.id()));
+
+		assertThatExceptionOfType(ReleaseNotPendingException.class)
+				.isThrownBy(() -> manifests.complete(service, EntityId.from(release.id())))
+				.returns(ReleaseState.RELEASED, ReleaseNotPendingException::getState);
 	}
 
 	private static ArtifactMetadata metadata(Artifact artifact) {
