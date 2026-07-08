@@ -16,6 +16,7 @@ import org.jooq.Condition;
 import org.jooq.Converter;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.SelectJoinStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,8 +29,10 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.konfigyr.data.tables.ArtifactVersionProperties.ARTIFACT_VERSION_PROPERTIES;
 import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
@@ -51,23 +54,7 @@ class DefaultArtifactory implements Artifactory {
 	@Override
 	@Transactional(readOnly = true, label = "artifactory.get-versioned-artifact")
 	public Optional<VersionedArtifact> get(@NonNull ArtifactCoordinates coordinates) {
-		return context.select(
-						ARTIFACT_VERSIONS.ID,
-						ARTIFACT_VERSIONS.STATE,
-						ARTIFACT_VERSIONS.CHECKSUM,
-						ARTIFACTS.ID,
-						ARTIFACTS.GROUP_ID,
-						ARTIFACTS.ARTIFACT_ID,
-						ARTIFACT_VERSIONS.VERSION,
-						ARTIFACTS.NAME,
-						ARTIFACTS.DESCRIPTION,
-						ARTIFACTS.WEBSITE,
-						ARTIFACTS.REPOSITORY,
-						ARTIFACT_VERSIONS.RELEASED_AT
-				)
-				.from(ARTIFACT_VERSIONS)
-				.innerJoin(ARTIFACTS)
-				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
+		return createVersionedArtifactQuery()
 				.where(toCondition(coordinates))
 				.fetchOptional(DefaultArtifactory::toVersionedArtifact);
 	}
@@ -84,10 +71,30 @@ class DefaultArtifactory implements Artifactory {
 		);
 	}
 
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "artifactory.existing-coordinates")
+	public Set<Publication> existing(@NonNull Collection<ArtifactCoordinates> coordinates) {
+		if (coordinates.isEmpty()) {
+			return Set.of();
+		}
+
+		final String[] groupIds = coordinates.stream().map(ArtifactCoordinates::groupId).toArray(String[]::new);
+		final String[] artifactIds = coordinates.stream().map(ArtifactCoordinates::artifactId).toArray(String[]::new);
+		final String[] versions = coordinates.stream().map(coordinate -> coordinate.version().get()).toArray(String[]::new);
+
+		return createVersionedArtifactQuery()
+				.where(DSL.row(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, ARTIFACT_VERSIONS.VERSION)
+						.in(DSL.select(DSL.field("g", String.class), DSL.field("a", String.class), DSL.field("v", String.class))
+								.from("unnest({0}::text[], {1}::text[], {2}::text[]) AS t(g, a, v)",
+										groupIds, artifactIds, versions)))
+				.fetchSet(DefaultArtifactory::toVersionedArtifact);
+	}
+
 	@Override
 	@Observed(name = "konfigyr.artifactory.release")
 	@Transactional(label = "artifactory.release-artifact-component")
-	public VersionedArtifact release(
+	public VersionedArtifact publish(
 			@NonNull EntityId ownerId,
 			@NonNull
 			@ObservationKeyValue(key = "konfigyr.artifactory.artifact", expression = "#this")
@@ -160,14 +167,14 @@ class DefaultArtifactory implements Artifactory {
 			throw new ArtifactoryException("Unexpected error occurred while storing metadata for artifact: " + coordinates.format(), ex);
 		}
 
-		eventPublisher.publishEvent(new ArtifactoryEvent.ReleaseCreated(EntityId.from(artifactVersionId), coordinates));
+		eventPublisher.publishEvent(new ArtifactoryEvent.PublicationCreated(EntityId.from(artifactVersionId), coordinates));
 
 		return VersionedArtifact.from(metadata)
 				.id(artifactVersionId)
 				.artifact(artifactId)
-				.state(ReleaseState.PENDING)
+				.state(PublicationState.PENDING)
 				.checksum(checksum.encodeHex())
-				.releasedAt(Instant.now())
+				.publishedAt(Instant.now())
 				.build();
 	}
 
@@ -189,6 +196,27 @@ class DefaultArtifactory implements Artifactory {
 				.on(PROPERTY_DEFINITIONS.ID.eq(ARTIFACT_VERSION_PROPERTIES.PROPERTY_DEFINITION_ID))
 				.where(ARTIFACT_VERSION_PROPERTIES.ARTIFACT_VERSION_ID.eq(artifactVersionId))
 				.fetch(record -> toPropertyDefinition(record, converters));
+	}
+
+	@NonNull
+	private SelectJoinStep<? extends Record> createVersionedArtifactQuery() {
+		return context.select(
+						ARTIFACT_VERSIONS.ID,
+						ARTIFACT_VERSIONS.STATE,
+						ARTIFACT_VERSIONS.CHECKSUM,
+						ARTIFACTS.ID,
+						ARTIFACTS.GROUP_ID,
+						ARTIFACTS.ARTIFACT_ID,
+						ARTIFACT_VERSIONS.VERSION,
+						ARTIFACTS.NAME,
+						ARTIFACTS.DESCRIPTION,
+						ARTIFACTS.WEBSITE,
+						ARTIFACTS.REPOSITORY,
+						ARTIFACT_VERSIONS.RELEASED_AT
+				)
+				.from(ARTIFACT_VERSIONS)
+				.innerJoin(ARTIFACTS)
+				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID));
 	}
 
 	private void assertCanRelease(EntityId ownerId, String groupId) {
@@ -214,13 +242,13 @@ class DefaultArtifactory implements Artifactory {
 				.groupId(record.get(ARTIFACTS.GROUP_ID))
 				.artifactId(record.get(ARTIFACTS.ARTIFACT_ID))
 				.version(record.get(ARTIFACT_VERSIONS.VERSION))
-				.state(record.get(ARTIFACT_VERSIONS.STATE, ReleaseState.class))
+				.state(record.get(ARTIFACT_VERSIONS.STATE, PublicationState.class))
 				.checksum(record.get(ARTIFACT_VERSIONS.CHECKSUM, Converter.from(ByteArray.class, String.class, ByteArray::encodeHex)))
 				.name(record.get(ARTIFACTS.NAME))
 				.description(record.get(ARTIFACTS.DESCRIPTION))
 				.website(record.get(ARTIFACTS.WEBSITE))
 				.repository(record.get(ARTIFACTS.REPOSITORY))
-				.releasedAt(record.get(ARTIFACT_VERSIONS.RELEASED_AT))
+				.publishedAt(record.get(ARTIFACT_VERSIONS.RELEASED_AT))
 				.build();
 	}
 

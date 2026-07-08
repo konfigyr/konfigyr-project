@@ -80,9 +80,9 @@ class ServiceCatalogQueueListenerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@DisplayName("should schedule service catalog build task when service manifest was published")
-	void scheduleForPublishedManifest() {
-		final var event = createManifestPublishedEvent(2);
+	@DisplayName("should schedule service catalog build task when service manifest was released")
+	void scheduleForReleasedManifest() {
+		final var event = createManifestReleasedEvent(2);
 
 		assertThatNoException().isThrownBy(() -> queue.enqueue(event));
 
@@ -102,7 +102,7 @@ class ServiceCatalogQueueListenerTest extends AbstractIntegrationTest {
 	void enqueueBuildForSameRelease() throws InterruptedException {
 		final var timeout = Duration.ofSeconds(2);
 
-		assertThatNoException().isThrownBy(() -> queue.enqueue(createManifestPublishedEvent(2)));
+		assertThatNoException().isThrownBy(() -> queue.enqueue(createManifestReleasedEvent(2)));
 		await().atMost(timeout).untilAsserted(() -> assertQueue()
 				.hasSize(1)
 				.first()
@@ -139,7 +139,7 @@ class ServiceCatalogQueueListenerTest extends AbstractIntegrationTest {
 
 		Thread.sleep(timeout.plus(timeout));
 
-		assertThatNoException().isThrownBy(() -> queue.enqueue(createManifestPublishedEvent(2)));
+		assertThatNoException().isThrownBy(() -> queue.enqueue(createManifestReleasedEvent(2)));
 		await().atMost(timeout).untilAsserted(() -> assertQueue()
 				.hasSize(2)
 				.satisfiesExactlyInAnyOrder(
@@ -173,7 +173,7 @@ class ServiceCatalogQueueListenerTest extends AbstractIntegrationTest {
 				.returning(WORKER_QUEUE.ID)
 				.fetchOne(WORKER_QUEUE.ID);
 
-		assertThatNoException().isThrownBy(() -> queue.enqueue(createManifestPublishedEvent(2)));
+		assertThatNoException().isThrownBy(() -> queue.enqueue(createManifestReleasedEvent(2)));
 
 		await().untilAsserted(() -> assertQueue(WORKER_QUEUE.ID.eq(id))
 				.first()
@@ -188,7 +188,7 @@ class ServiceCatalogQueueListenerTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should fail to schedule service catalog build task for unknown service release identifier")
 	void scheduleForUnknownManifest() {
-		final var event = createManifestPublishedEvent(9999);
+		final var event = createManifestReleasedEvent(9999);
 
 		assertThatNoException().isThrownBy(() -> queue.enqueue(event));
 		await().untilAsserted(() -> assertQueue().isEmpty());
@@ -216,18 +216,18 @@ class ServiceCatalogQueueListenerTest extends AbstractIntegrationTest {
 		);
 	}
 
-	static ArtifactoryEvent.ReleaseCompleted createReleaseCompletedEvent(long id) {
-		return new ArtifactoryEvent.ReleaseCompleted(EntityId.from(id), mock(ArtifactCoordinates.class));
+	static ArtifactoryEvent.PublicationCompleted createReleaseCompletedEvent(long id) {
+		return new ArtifactoryEvent.PublicationCompleted(EntityId.from(id), mock(ArtifactCoordinates.class));
 	}
 
-	static ServiceEvent.Published createManifestPublishedEvent(long id) {
+	static ServiceEvent.Released createManifestReleasedEvent(long id) {
 		final var service = mock(Service.class);
 		doReturn(EntityId.from(id)).when(service).id();
 
 		final var manifest = mock(Manifest.class);
 		doReturn(EntityId.from(id).serialize()).when(manifest).id();
 
-		return new ServiceEvent.Published(service, manifest);
+		return new ServiceEvent.Released(service, manifest);
 	}
 
 }

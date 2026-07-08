@@ -7,6 +7,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
 import com.konfigyr.security.KonfigyrClaimNames;
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestAccounts;
 import com.konfigyr.test.TestPrincipals;
@@ -16,12 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.validation.BindException;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import tools.jackson.databind.node.ObjectNode;
 
 import java.net.URI;
 import java.time.Instant;
@@ -44,7 +45,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "1.0.0");
 
 		mvc.get().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -53,16 +54,16 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.convertTo(VersionedArtifact.class)
 				.returns(EntityId.from(6), VersionedArtifact::id)
 				.returns(EntityId.from(5), VersionedArtifact::artifact)
-				.returns(coordinates.groupId(), Release::groupId)
-				.returns(coordinates.artifactId(), Release::artifactId)
-				.returns(coordinates.version().get(), Release::version)
-				.returns("Konfigyr API", Release::name)
-				.returns("Private REST API", Release::description)
-				.returns(URI.create("konfigyr.api"), Release::website)
-				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), Release::repository)
-				.returns(List.of(), Release::errors)
-				.returns("ec54eb43a2f17d3fecf5062c987c794ea025da258de0b6ea6483542ef79e3f8a", Release::checksum)
-				.satisfies(it -> assertThat(it.releasedAt())
+				.returns(coordinates.groupId(), Publication::groupId)
+				.returns(coordinates.artifactId(), Publication::artifactId)
+				.returns(coordinates.version().get(), Publication::version)
+				.returns("Konfigyr API", Publication::name)
+				.returns("Private REST API", Publication::description)
+				.returns(URI.create("konfigyr.api"), Publication::website)
+				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), Publication::repository)
+				.returns(List.of(), Publication::errors)
+				.returns("ec54eb43a2f17d3fecf5062c987c794ea025da258de0b6ea6483542ef79e3f8a", Publication::checksum)
+				.satisfies(it -> assertThat(it.publishedAt())
 						.isCloseTo(Instant.now().minus(1, ChronoUnit.HOURS), within(15, ChronoUnit.MINUTES))
 				);
 	}
@@ -73,7 +74,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "unknown", "1.0.0");
 
 		mvc.get().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -94,7 +95,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "1.0.0");
 
 		mvc.head().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -109,7 +110,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "unknown", "1.0.0");
 
 		mvc.head().uri(uriForArtifact(coordinates).toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -120,7 +121,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should upload new artifact and create a release")
+	@DisplayName("should upload new artifact and create a publication")
 	void shouldUploadNewArtifact() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "3.0.0");
 		final var artifact = TestArtifacts.artifact(coordinates, builder -> builder
@@ -140,18 +141,18 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(DefaultRelease.class)
-				.returns(coordinates.groupId(), Release::groupId)
-				.returns(coordinates.artifactId(), Release::artifactId)
-				.returns(coordinates.version().get(), Release::version)
-				.returns(artifact.name(), Release::name)
-				.returns(artifact.description(), Release::description)
-				.returns(artifact.website(), Release::website)
-				.returns(artifact.repository(), Release::repository)
-				.returns(ReleaseState.PENDING, Release::state)
-				.returns(List.of(), Release::errors)
-				.returns("8d9d53cfd5d27febf82baf0f8d801545358c1cf21e3d54cf9c2e5c5ba1754b98", Release::checksum)
-				.satisfies(it -> assertThat(it.releasedAt())
+				.convertTo(DefaultPublication.class)
+				.returns(coordinates.groupId(), Publication::groupId)
+				.returns(coordinates.artifactId(), Publication::artifactId)
+				.returns(coordinates.version().get(), Publication::version)
+				.returns(artifact.name(), Publication::name)
+				.returns(artifact.description(), Publication::description)
+				.returns(artifact.website(), Publication::website)
+				.returns(artifact.repository(), Publication::repository)
+				.returns(PublicationState.PENDING, Publication::state)
+				.returns(List.of(), Publication::errors)
+				.returns("8d9d53cfd5d27febf82baf0f8d801545358c1cf21e3d54cf9c2e5c5ba1754b98", Publication::checksum)
+				.satisfies(it -> assertThat(it.publishedAt())
 						.isCloseTo(Instant.now(), within(10, ChronoUnit.SECONDS))
 				);
 
@@ -176,27 +177,21 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to upload existing artifact")
 	void uploadExistingArtifact() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "1.0.0");
-		final var metadata = jsonMapper.<ObjectNode>valueToTree(Artifact.builder()
+		final var metadata = ArtifactMetadata.builder()
 				.artifactId(coordinates.artifactId())
 				.groupId(coordinates.groupId())
 				.version(coordinates.version().get())
-				.build()
-		);
-
-		// register an empty object in the properties array to verify that validation is skipped
-		// for property descriptors within the payload. The validation of property descriptors
-		// should be performed by the artifact metadata release batch job
-		metadata.set("properties", jsonMapper.createArrayNode().add(
-				jsonMapper.createArrayNode().objectNode()
-		).add(
-				jsonMapper.createArrayNode().objectNode()
-						.put("name", "property.name")
-		));
+				.property(PropertyDescriptor.builder()
+						.name("konfigyr.name")
+						.typeName("java.lang.String")
+						.schema(StringSchema.instance())
+						.build()
+				).build();
 
 		mvc.post().uri(uriForArtifact(coordinates).toUri())
 				.with(publishingTo(EntityId.from(2L)))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(metadata.toPrettyString())
+				.content(jsonMapper.writeValueAsBytes(metadata))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -231,7 +226,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 								.isInstanceOf(Collection.class)
 								.asInstanceOf(InstanceOfAssertFactories.collection(Map.class))
 								.extracting("pointer")
-								.containsExactlyInAnyOrder("properties", "groupId", "artifactId", "version")
+								.containsExactlyInAnyOrder("properties", "groupId", "artifactId", "version", "checksum")
 						)
 				));
 	}
@@ -244,7 +239,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		mvc.post().uri(uriForArtifact(coordinates).toUri())
 				.with(publishingTo(EntityId.from(2L)))
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"groupId\": \"org.konfigyr\", \"artifactId\": \"konfigyr\", \"version\": \"1.0.0\"}")
+				.content("{\"groupId\": \"org.konfigyr\", \"artifactId\": \"konfigyr\", \"version\": \"1.0.0\",\"checksum\":\"VoKbC7AVS7doAsC6OUpxX15VPn/7yWm9Lg9w7c79JXI=\"}")
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -290,12 +285,34 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to publish an artifact when the artifactory:publish scope is not present")
+	void uploadArtifactWithoutScope() {
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "3.0.0");
+		final var metadata = TestArtifacts.metadata(coordinates);
+
+		mvc.post().uri(uriForArtifact(coordinates).toUri())
+				.with(authentication(claims -> claims
+						.subject(TestAccounts.jane().build().id().serialize())
+						.claim(KonfigyrClaimNames.NAMESPACE, EntityId.from(2L).serialize())))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.PUBLISH_ARTIFACTS));
+
+		assertThat(store.get(coordinates))
+				.as("Should not store property descriptor when the scope is missing")
+				.isEmpty();
+	}
+
+	@Test
 	@DisplayName("should retrieve property descriptors for a specific artifact version")
 	void retrieveArtifactProperties() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-crypto-api", "1.0.1");
 
 		mvc.get().uri(uriForArtifact(coordinates, "properties").toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -326,7 +343,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-crypto-api", "1.0.0");
 
 		mvc.get().uri(uriForArtifact(coordinates, "properties").toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -343,7 +360,7 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "unknown", "1.0.0");
 
 		mvc.get().uri(uriForArtifact(coordinates, "properties").toUri())
-				.with(authentication(TestPrincipals.john()))
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -360,8 +377,9 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 
 	/**
 	 * Creates an authentication post-processor whose access token carries the {@code namespace} claim,
-	 * so the publishing principal resolves to the given namespace owner. Required by the release
-	 * endpoint, which enforces that the namespace holds an active verification claim on the groupId.
+	 * so the publishing principal resolves to the given namespace owner, and the {@code artifactory:publish}
+	 * scope required by the endpoint. Required by the release endpoint, which enforces that the namespace
+	 * holds an active verification claim on the groupId.
 	 *
 	 * @param namespace the namespace identifier to embed as the publishing owner, can't be {@literal null}
 	 * @return the authentication post-processor, never {@literal null}
@@ -369,7 +387,8 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	static RequestPostProcessor publishingTo(EntityId namespace) {
 		return authentication(claims -> claims
 				.subject(TestAccounts.jane().build().id().serialize())
-				.claim(KonfigyrClaimNames.NAMESPACE, namespace.serialize()));
+				.claim(KonfigyrClaimNames.NAMESPACE, namespace.serialize())
+				.claim(OAuth2ParameterNames.SCOPE, OAuthScopes.of(OAuthScope.PUBLISH_ARTIFACTS).toString()));
 	}
 
 	static UriComponents uriForArtifact(ArtifactCoordinates coordinates, String... path) {

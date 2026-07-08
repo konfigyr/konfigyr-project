@@ -8,7 +8,6 @@ import org.jmolecules.ddd.annotation.Identity;
 import org.jmolecules.ddd.annotation.ValueObject;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.springframework.util.Assert;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -161,10 +160,7 @@ public record ServiceCatalog(
 		}
 
 		@Override
-		public Property build() {
-			Assert.hasText(name, "Service catalog property must have a name");
-			Assert.hasText(typeName, "Service catalog property must have a type name");
-
+		protected Property instantiate() {
 			return new Property(ArtifactCoordinates.of(groupId, artifactId, version), name, schema, typeName,
 					description, defaultValue, deprecation);
 		}

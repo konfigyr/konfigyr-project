@@ -7,6 +7,7 @@ import com.konfigyr.support.Slug;
 import org.jmolecules.event.annotation.DomainEvent;
 import org.jspecify.annotations.NonNull;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -16,7 +17,8 @@ import java.util.function.Supplier;
  * @since 1.0.0
  **/
 public sealed abstract class ServiceEvent extends EntityEvent implements Supplier<Service>
-		permits ServiceEvent.Created, ServiceEvent.Renamed, ServiceEvent.Published, ServiceEvent.Deleted {
+		permits ServiceEvent.Created, ServiceEvent.Renamed, ServiceEvent.Released, ServiceEvent.ReleaseFailed,
+		ServiceEvent.Deleted {
 
 	protected final Service service;
 
@@ -98,33 +100,65 @@ public sealed abstract class ServiceEvent extends EntityEvent implements Supplie
 	}
 
 	/**
-	 * Event that would be published when a new {@link Manifest} for the {@link Service} is published.
+	 * Event that would be published when a new {@link Manifest} for the {@link Service} is released.
 	 */
-	@DomainEvent(name = "service-published", namespace = "namespaces")
-	public static final class Published extends ServiceEvent {
+	@DomainEvent(name = "service-released", namespace = "namespaces")
+	public static final class Released extends ServiceEvent {
 
 		private final Manifest manifest;
 
 		/**
-		 * Create a new {@link Published} event with the {@link EntityId entity identifier} of the
-		 * {@link Service} that was just published by the {@link Services service manager}.
+		 * Create a new {@link Released} event with the {@link EntityId entity identifier} of the
+		 * {@link Service} that was just released by the {@link Services service manager}.
 		 *
-		 * @param service the published service.
-		 * @param manifest the published manifest.
+		 * @param service the released service.
+		 * @param manifest the released manifest.
 		 */
-		public Published(Service service, Manifest manifest) {
+		public Released(Service service, Manifest manifest) {
 			super(service);
 			this.manifest = manifest;
 		}
 
 		/**
-		 * Returns the {@link Manifest} that was published for the {@link Service}.
+		 * Returns the {@link Manifest} that was released for the {@link Service}.
 		 *
-		 * @return the published manifest, never {@literal null}.
+		 * @return the released manifest, never {@literal null}.
 		 */
 		@NonNull
 		public Manifest manifest() {
 			return manifest;
+		}
+	}
+
+	/**
+	 * Event that would be published when a release attempt for a {@link Service} fails, so that
+	 * anything left behind by the attempt can be cleaned up.
+	 */
+	@DomainEvent(name = "service-release-failed", namespace = "namespaces")
+	public static final class ReleaseFailed extends ServiceEvent {
+
+		private final List<String> errors;
+
+		/**
+		 * Create a new {@link ReleaseFailed} event with the {@link EntityId entity identifier} of the
+		 * {@link Service} whose release attempt failed, and the reasons it failed.
+		 *
+		 * @param service the service whose release attempt failed.
+		 * @param errors the errors that caused the release attempt to fail.
+		 */
+		public ReleaseFailed(Service service, List<String> errors) {
+			super(service);
+			this.errors = List.copyOf(errors);
+		}
+
+		/**
+		 * Returns the errors that caused the release attempt to fail.
+		 *
+		 * @return release errors, never {@literal null}.
+		 */
+		@NonNull
+		public List<String> errors() {
+			return errors;
 		}
 	}
 

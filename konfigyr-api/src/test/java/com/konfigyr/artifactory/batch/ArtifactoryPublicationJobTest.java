@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
+class ArtifactoryPublicationJobTest extends AbstractIntegrationTest {
 
 	@Autowired
 	Artifactory artifactory;
@@ -41,7 +41,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 	JobOperator operator;
 
 	@Autowired
-	@Qualifier(ArtifactoryJobNames.RELEASE_JOB)
+	@Qualifier(ArtifactoryJobNames.PUBLISH_JOB)
 	Job job;
 
 	@AfterAll
@@ -103,16 +103,16 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		assertThat(artifactory.get(coordinates))
 				.isPresent()
 				.get()
-				.returns(ReleaseState.FAILED, VersionedArtifact::state);
+				.returns(PublicationState.FAILED, VersionedArtifact::state);
 
 		events.assertThat()
-				.contains(ArtifactoryEvent.ReleaseFailed.class)
-				.matching(ArtifactoryEvent.ReleaseFailed::coordinates, coordinates);
+				.contains(ArtifactoryEvent.PublicationFailed.class)
+				.matching(ArtifactoryEvent.PublicationFailed::coordinates, coordinates);
 	}
 
 	@Test
 	@Order(3)
-	@DisplayName("should process the release job for 'com.konfigyr:konfigyr-licences:1.0.0'")
+	@DisplayName("should process the publication job for 'com.konfigyr:konfigyr-licences:1.0.0'")
 	void first(AssertablePublishedEvents events) throws Exception {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.0");
 
@@ -130,7 +130,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		assertThat(artifactory.get(coordinates))
 				.isPresent()
 				.get()
-				.returns(ReleaseState.RELEASED, VersionedArtifact::state);
+				.returns(PublicationState.PUBLISHED, VersionedArtifact::state);
 
 		assertThatProperties(coordinates)
 				.hasSize(5)
@@ -143,13 +143,13 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 				));
 
 		events.assertThat()
-				.contains(ArtifactoryEvent.ReleaseCompleted.class)
-				.matching(ArtifactoryEvent.ReleaseCompleted::coordinates, coordinates);
+				.contains(ArtifactoryEvent.PublicationCompleted.class)
+				.matching(ArtifactoryEvent.PublicationCompleted::coordinates, coordinates);
 	}
 
 	@Test
 	@Order(4)
-	@DisplayName("should process the release job for 'com.konfigyr:konfigyr-licences:1.0.1'")
+	@DisplayName("should process the publication job for 'com.konfigyr:konfigyr-licences:1.0.1'")
 	void second(AssertablePublishedEvents events) throws Exception {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.1");
 
@@ -167,7 +167,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		assertThat(artifactory.get(coordinates))
 				.isPresent()
 				.get()
-				.returns(ReleaseState.RELEASED, VersionedArtifact::state);
+				.returns(PublicationState.PUBLISHED, VersionedArtifact::state);
 
 		assertThatProperties(coordinates)
 				.hasSize(5)
@@ -180,13 +180,13 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 				));
 
 		events.assertThat()
-				.contains(ArtifactoryEvent.ReleaseCompleted.class)
-				.matching(ArtifactoryEvent.ReleaseCompleted::coordinates, coordinates);
+				.contains(ArtifactoryEvent.PublicationCompleted.class)
+				.matching(ArtifactoryEvent.PublicationCompleted::coordinates, coordinates);
 	}
 
 	@Test
 	@Order(4)
-	@DisplayName("should process the release job for 'com.konfigyr:konfigyr-licences:1.0.2'")
+	@DisplayName("should process the publication job for 'com.konfigyr:konfigyr-licences:1.0.2'")
 	void third(AssertablePublishedEvents events) throws Exception {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.2");
 
@@ -204,7 +204,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		assertThat(artifactory.get(coordinates))
 				.isPresent()
 				.get()
-				.returns(ReleaseState.RELEASED, VersionedArtifact::state);
+				.returns(PublicationState.PUBLISHED, VersionedArtifact::state);
 
 		assertThatProperties(coordinates)
 				.hasSize(5)
@@ -217,8 +217,8 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 				));
 
 		events.assertThat()
-				.contains(ArtifactoryEvent.ReleaseCompleted.class)
-				.matching(ArtifactoryEvent.ReleaseCompleted::coordinates, coordinates);
+				.contains(ArtifactoryEvent.PublicationCompleted.class)
+				.matching(ArtifactoryEvent.PublicationCompleted::coordinates, coordinates);
 	}
 
 	ListAssert<PropertyDefinition> assertThatProperties(ArtifactCoordinates coordinates) {
@@ -245,7 +245,7 @@ class ArtifactoryReleaseJobTest extends AbstractIntegrationTest {
 		context.insertInto(ARTIFACT_VERSIONS)
 				.set(ARTIFACT_VERSIONS.ARTIFACT_ID, 4L)
 				.set(ARTIFACT_VERSIONS.VERSION, version)
-				.set(ARTIFACT_VERSIONS.STATE, ReleaseState.PENDING.name())
+				.set(ARTIFACT_VERSIONS.STATE, PublicationState.PENDING.name())
 				.set(ARTIFACT_VERSIONS.CHECKSUM, ByteArray.fromString(version))
 				.execute();
 	}

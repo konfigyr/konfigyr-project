@@ -21,7 +21,7 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent permits Artifa
 	 * Abstract event type used for events related to a {@link VersionedArtifact}.
 	 */
 	public static sealed abstract class ArtifactEvent extends ArtifactoryEvent
-			permits ReleaseCreated, ReleaseCompleted, ReleaseFailed {
+			permits PublicationCreated, PublicationCompleted, PublicationFailed {
 
 		private final ArtifactCoordinates coordinates;
 
@@ -60,71 +60,71 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent permits Artifa
 	/**
 	 * Event that would be published when a new {@link VersionedArtifact} is created.
 	 */
-	@DomainEvent(name = "artifact-version.release-created", namespace = "artifactory")
-	public static final class ReleaseCreated extends ArtifactEvent {
+	@DomainEvent(name = "artifact-version.publication-created", namespace = "artifactory")
+	public static final class PublicationCreated extends ArtifactEvent {
 
 		/**
-		 * Create a new {@link ReleaseCreated} event with the {@link EntityId entity identifier} of the
+		 * Create a new {@link PublicationCreated} event with the {@link EntityId entity identifier} of the
 		 * {@link VersionedArtifact} that was just created by the {@link Artifactory}.
 		 *
 		 * @param id entity identifier of the created artifact version
 		 * @param coordinates the artifact coordinates of the created artifact version
 		 */
-		public ReleaseCreated(EntityId id, ArtifactCoordinates coordinates) {
+		public PublicationCreated(EntityId id, ArtifactCoordinates coordinates) {
 			super(id, coordinates);
 		}
 	}
 
 	/**
-	 * Event that would be published when a new {@link VersionedArtifact} is successfully released.
+	 * Event that would be published when a new {@link VersionedArtifact} is successfully published.
 	 */
-	@DomainEvent(name = "artifact-version.release-completed", namespace = "artifactory")
-	public static final class ReleaseCompleted extends ArtifactEvent {
+	@DomainEvent(name = "artifact-version.publication-completed", namespace = "artifactory")
+	public static final class PublicationCompleted extends ArtifactEvent {
 
 		/**
-		 * Create a new {@link ReleaseCompleted} event for the {@link VersionedArtifact}.
+		 * Create a new {@link PublicationCompleted} event for the {@link VersionedArtifact}.
 		 *
 		 * @param artifact affected artifact version, can't be {@literal null}.
 		 */
-		public ReleaseCompleted(VersionedArtifact artifact) {
+		public PublicationCompleted(VersionedArtifact artifact) {
 			this(artifact.id(), artifact.coordinates());
 		}
 
 		/**
-		 * Create a new {@link ReleaseCompleted} event with the {@link EntityId entity identifier} of the
-		 * {@link VersionedArtifact} that was successfully released by the {@link Artifactory}.
+		 * Create a new {@link PublicationCompleted} event with the {@link EntityId entity identifier} of the
+		 * {@link VersionedArtifact} that was successfully published by the {@link Artifactory}.
 		 *
 		 * @param id entity identifier of the artifact version
 		 * @param coordinates the artifact coordinates of the artifact version
 		 */
-		public ReleaseCompleted(EntityId id, ArtifactCoordinates coordinates) {
+		public PublicationCompleted(EntityId id, ArtifactCoordinates coordinates) {
 			super(id, coordinates);
 		}
 	}
 
 	/**
-	 * Event that would be published when a release for {@link VersionedArtifact} failed.
+	 * Event that would be published when a publication for {@link VersionedArtifact} failed.
 	 */
-	@DomainEvent(name = "artifact-version.release-failed", namespace = "artifactory")
-	public static final class ReleaseFailed extends ArtifactEvent {
+	@DomainEvent(name = "artifact-version.publication-failed", namespace = "artifactory")
+	public static final class PublicationFailed extends ArtifactEvent {
 
 		/**
-		 * Create a new {@link ReleaseFailed} event for the {@link VersionedArtifact}.
+		 * Create a new {@link PublicationFailed} event for the {@link VersionedArtifact}.
 		 *
 		 * @param artifact affected artifact version, can't be {@literal null}.
 		 */
-		public ReleaseFailed(VersionedArtifact artifact) {
+		public PublicationFailed(VersionedArtifact artifact) {
 			this(artifact.id(), artifact.coordinates());
 		}
 
 		/**
-		 * Create a new {@link ReleaseFailed} event with the {@link EntityId entity identifier} of the
-		 * {@link VersionedArtifact} that was could not be released by the {@link Artifactory}.
+		 * Create a new {@link PublicationFailed} event with the {@link EntityId entity identifier} of the
+		 * {@link VersionedArtifact} that was could not be published by the {@link Artifactory}.
 		 *
 		 * @param id entity identifier of the artifact version
 		 * @param coordinates the artifact coordinates of the artifact version
 		 */
-		public ReleaseFailed(EntityId id, ArtifactCoordinates coordinates) {
+		public PublicationFailed(EntityId id, ArtifactCoordinates coordinates) {
 			super(id, coordinates);
 		}
 	}

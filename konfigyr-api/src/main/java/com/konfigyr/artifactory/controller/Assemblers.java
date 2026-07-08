@@ -16,7 +16,7 @@ interface Assemblers {
 
 	static RepresentationModelAssembler<VersionedArtifact, EntityModel<VersionedArtifact>> artifact(ArtifactCoordinates coordinates) {
 		return artifact -> EntityModel.of(artifact, linkBuilder(coordinates).selfRel())
-				.add(linkBuilder(coordinates).method(HttpMethod.POST).rel("release"))
+				.add(linkBuilder(coordinates).method(HttpMethod.POST).rel("publish"))
 				.add(linkBuilder(coordinates).method(HttpMethod.GET).rel("properties"));
 	}
 

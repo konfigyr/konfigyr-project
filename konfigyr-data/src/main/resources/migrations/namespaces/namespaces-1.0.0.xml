@@ -298,6 +298,10 @@
 				<constraints nullable="false" />
 			</column>
 
+			<column name="published_at" type="timestamptz" remarks="Timestamp when this release last transitioned to RELEASED.">
+				<constraints nullable="true" />
+			</column>
+
 			<column name="created_at" type="timestamptz" defaultValue="NOW()">
 				<constraints nullable="false" />
 			</column>
@@ -344,7 +348,40 @@
 			<column name="version" type="text" remarks="The Maven coordinate `version` field.">
 				<constraints primaryKey="true" nullable="false" />
 			</column>
+
+			<column name="source" type="varchar(16)" defaultValue="LOCAL" remarks="Distinguishes artifacts uploaded by the plugin (LOCAL) from those resolved through the Artifactory index (ARTIFACTORY).">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="checksum" type="text" remarks="SHA-256 hex digest of the uploaded Spring Boot configuration metadata; null while the artifact still needs to be uploaded.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="name" type="text" remarks="Human-readable name of the artifact; only ever set for LOCAL coordinates, from the uploaded ArtifactMetadata.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="description" type="text" remarks="Textual description of the artifact; only ever set for LOCAL coordinates, from the uploaded ArtifactMetadata.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="website" type="text" remarks="Documentation or project website URL of the artifact; only ever set for LOCAL coordinates, from the uploaded ArtifactMetadata.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="repository" type="text" remarks="Source control repository URL of the artifact; only ever set for LOCAL coordinates, from the uploaded ArtifactMetadata.">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()" remarks="When this coordinate was first declared for this service; stable across take-overs of the same release.">
+				<constraints nullable="false" />
+			</column>
 		</createTable>
+
+		<sql>
+			ALTER TABLE service_artifacts
+				ADD COLUMN coordinates text GENERATED ALWAYS AS (group_id || ':' || artifact_id || ':' || version) STORED;
+		</sql>
 
 		<addForeignKeyConstraint
 				baseTableName="service_artifacts"
@@ -353,6 +390,12 @@
 				referencedTableName="service_releases"
 				referencedColumnNames="id"
 				onDelete="CASCADE"
+		/>
+
+		<addUniqueConstraint
+				tableName="service_artifacts"
+				columnNames="release_id, group_id, artifact_id, version"
+				constraintName="unique_service_artifact"
 		/>
 	</changeSet>
 
@@ -432,6 +475,11 @@
 			`service_configuration_catalog_default` that would be used as a fallback in case the service specific
 			partition can't be created.
 		</comment>
+
+		<sql>
+			ALTER TABLE service_configuration_catalog
+				ADD COLUMN coordinates text GENERATED ALWAYS AS (group_id || ':' || artifact_id || ':' || version) STORED;
+		</sql>
 
 		<addForeignKeyConstraint
 				baseTableName="service_configuration_catalog"

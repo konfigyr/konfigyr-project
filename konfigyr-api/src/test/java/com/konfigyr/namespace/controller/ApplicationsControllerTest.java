@@ -75,7 +75,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 										.returns("Konfigyr workload app", NamespaceApplication::name)
 										.returns("kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", NamespaceApplication::clientId)
 										.returns(null, NamespaceApplication::clientSecret)
-										.returns(OAuthScopes.of(OAuthScope.PUBLISH_MANIFESTS), NamespaceApplication::scopes)
+										.returns(OAuthScopes.of(OAuthScope.PUBLISH_RELEASES), NamespaceApplication::scopes)
 						)
 				)
 				.satisfies(it -> assertThat(it.getMetadata())
@@ -157,7 +157,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 										.returns("Konfigyr workload app", NamespaceApplication::name)
 										.returns("kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", NamespaceApplication::clientId)
 										.returns(null, NamespaceApplication::clientSecret)
-										.returns(OAuthScopes.of(OAuthScope.PUBLISH_MANIFESTS), NamespaceApplication::scopes)
+										.returns(OAuthScopes.of(OAuthScope.PUBLISH_RELEASES), NamespaceApplication::scopes)
 						)
 				)
 				.satisfies(it -> assertThat(it.getMetadata())
@@ -198,7 +198,7 @@ public class ApplicationsControllerTest extends AbstractControllerTest {
 										.returns("Konfigyr workload app", NamespaceApplication::name)
 										.returns("kfg-AQMAAAAAAAAAAgAAAABqJToWpdAzsv7lni7oCvpjfb0", NamespaceApplication::clientId)
 										.returns(null, NamespaceApplication::clientSecret)
-										.returns(OAuthScopes.of(OAuthScope.PUBLISH_MANIFESTS), NamespaceApplication::scopes),
+										.returns(OAuthScopes.of(OAuthScope.PUBLISH_RELEASES), NamespaceApplication::scopes),
 								app -> assertThat(app)
 										.returns(EntityId.from(2L), NamespaceApplication::id)
 										.returns(EntityId.from(2L), NamespaceApplication::namespace)

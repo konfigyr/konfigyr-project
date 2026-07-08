@@ -48,7 +48,7 @@ public record PropertyDefinition(
 		@NonNull JsonSchema schema,
 		@Nullable String defaultValue,
 		@Nullable String description,
-		@NonNull Deprecation deprecation,
+		@Nullable Deprecation deprecation,
 		int occurrences,
 		@NonNull Version firstSeen,
 		@NonNull Version lastSeen
@@ -231,7 +231,7 @@ public record PropertyDefinition(
 		 * @throws IllegalStateException if any required (non-null) field is missing.
 		 */
 		@NonNull
-		public PropertyDefinition build() {
+		protected PropertyDefinition instantiate() {
 			Assert.notNull(id, "Property definition entity identifier must not be null");
 			Assert.notNull(artifact, "Artifact entity identifier must not be null");
 			Assert.notNull(checksum, "Property checksum must not be null");

@@ -2,6 +2,7 @@ package com.konfigyr.namespace.controller;
 
 import com.konfigyr.artifactory.*;
 import com.konfigyr.entity.EntityId;
+import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkRelation;
 import com.konfigyr.hateoas.PagedModel;
@@ -10,21 +11,16 @@ import com.konfigyr.namespace.ServiceCatalog;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
-import com.konfigyr.version.Version;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -489,268 +485,6 @@ class ServiceControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should retrieve the latest namespace service manifest")
-	void retrieveServiceManifest() {
-		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(Manifest.class)
-				.returns(EntityId.from(1).serialize(), Manifest::id)
-				.returns("Konfigyr ID", Manifest::name)
-				.satisfies(it -> assertThat(it.artifacts())
-						.hasSize(7)
-						.containsExactly(
-								Artifact.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot")
-										.version("4.0.4")
-										.name("Spring Boot")
-										.description("Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications")
-										.website("https://spring.io/projects/spring-boot")
-										.repository("https://github.com/spring-projects/spring-boot")
-										.build(),
-								Artifact.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot-actuator")
-										.version("4.0.4")
-										.name("Spring Boot Actuator")
-										.description("Spring Boot Actuator")
-										.website("https://spring.io/projects/spring-boot")
-										.repository("https://github.com/spring-projects/spring-boot")
-										.build(),
-								Artifact.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot-autoconfigure")
-										.version("4.0.4")
-										.name("Spring Boot AutoConfigure")
-										.description("Spring Boot auto-configuration attempts to automatically configure your Spring applications")
-										.website("https://spring.io/projects/spring-boot")
-										.repository("https://github.com/spring-projects/spring-boot")
-										.build(),
-								Artifact.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot-jooq")
-										.version("4.0.4")
-										.build(),
-								Artifact.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot-liquibase")
-										.version("4.0.4")
-										.build(),
-								Artifact.builder()
-										.groupId("org.springframework.modulith")
-										.artifactId("spring-modulith-core")
-										.version("2.0.3")
-										.name("Spring Modulith Core")
-										.description("Modular monoliths with Spring Boot")
-										.website("https://spring.io/projects/spring-modulith/spring-modulith-core")
-										.repository("https://github.com/spring-projects-experimental/spring-modulith")
-										.build(),
-								Artifact.builder()
-										.groupId("org.springframework.modulith")
-										.artifactId("spring-modulith-moments")
-										.version("2.0.3")
-										.name("Spring Modulith Moments")
-										.description("Modular monoliths with Spring Boot")
-										.website("https://spring.io/projects/spring-modulith/spring-modulith-moments")
-										.repository("https://github.com/spring-projects-experimental/spring-modulith")
-										.build()
-						)
-				)
-				.satisfies(it -> assertThat(it.createdAt())
-						.isCloseTo(Instant.now().minus(3, ChronoUnit.DAYS), within(1, ChronoUnit.HOURS))
-				);
-	}
-
-	@Test
-	@DisplayName("should retrieve an empty manifest for service that was not yet released")
-	void retrieveManifestForUnreleasedService() {
-		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(Manifest.class)
-				.returns(EntityId.from(1).serialize(), Manifest::id)
-				.returns("John Doe Blog", Manifest::name)
-				.returns(List.of(), Manifest::artifacts)
-				.satisfies(it -> assertThat(it.createdAt())
-						.isCloseTo(Instant.now(), within(5, ChronoUnit.MINUTES))
-				);
-	}
-
-	@Test
-	@DisplayName("should fail to retrieve manifest for unknown service")
-	void retrieveManifestForUnknownService() {
-		mvc.get().uri("/namespaces/konfigyr/services/unknown-service/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(serviceNotFound("unknown-service"));
-	}
-
-	@Test
-	@DisplayName("should not retrieve a service manifest for an unknown namespace")
-	void retrieveManifestForUnknownNamespace() {
-		mvc.get().uri("/namespaces/unknown-namespace/services/unknown-service/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatus(HttpStatus.NOT_FOUND)
-				.satisfies(namespaceNotFound("unknown-namespace"));
-	}
-
-	@Test
-	@DisplayName("should not retrieve service manifest when namespaces:read scope is not present")
-	void retrieveManifestWithoutScope() {
-		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/manifest")
-				.with(authentication(TestPrincipals.jane()))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden(OAuthScope.READ_NAMESPACES));
-	}
-
-	@Test
-	@DisplayName("should not retrieve service manifest when user is not a member of a namespace")
-	void retrieveManifestWithoutMembership() {
-		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
-				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden());
-	}
-
-	@Test
-	@DisplayName("should publish the namespace service manifest")
-	void publishServiceManifest() {
-		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-api/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.2\", \"com.konfigyr:konfigyr-crypto-tink:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatus(HttpStatus.CREATED)
-				.bodyJson()
-				.convertTo(Manifest.class)
-				.returns(EntityId.from(2).serialize(), Manifest::id)
-				.returns("Konfigyr API", Manifest::name)
-				.satisfies(it -> assertThat(it.artifacts())
-						.hasSize(2)
-						.containsExactly(
-								Artifact.builder()
-										.groupId("com.konfigyr")
-										.artifactId("konfigyr-crypto-api")
-										.version("1.0.2")
-										.name("Konfigyr Crypto API")
-										.description("Spring Boot Crypto API library")
-										.repository("https://github.com/konfigyr/konfigyr-crypto")
-										.build(),
-								Artifact.builder()
-										.groupId("com.konfigyr")
-										.artifactId("konfigyr-crypto-tink")
-										.version("1.0.0")
-										.name("Konfigyr Crypto Tink")
-										.description("Tink support Konfigyr Crypto API library")
-										.repository("https://github.com/konfigyr/konfigyr-crypto")
-										.build()
-						)
-				)
-				.satisfies(it -> assertThat(it.createdAt())
-						.isCloseTo(Instant.now(), within(5, ChronoUnit.MINUTES))
-				);
-	}
-
-	@ValueSource(strings = {
-			"{}",
-			"{\"artifacts\": null}",
-			"{\"artifacts\": []}",
-			"{\"artifacts\": [null]}",
-			"{\"artifacts\": [\"\", \"  \"]}",
-			"{\"artifacts\": [\"invalid-coordinates\"]}",
-			"{\"artifacts\": [\"invalid:coordinates\", \"com.konfigyr:konfigyr-api:1.0.0\"]}"
-	})
-	@ParameterizedTest(name = "with payload: {0}")
-	@DisplayName("should fail to publish manifest with invalid payload")
-	void publishManifestWithInvalidArtifacts(String payload) {
-		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-api/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(payload)
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitleContaining("Invalid")
-						.hasDetailContaining("invalid request data")
-						.containsProperty("errors")
-				));
-	}
-
-	@Test
-	@DisplayName("should fail to publish manifest for unknown service")
-	void publishManifestForUnknownService() {
-		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(serviceNotFound("unknown-service"));
-	}
-
-	@Test
-	@DisplayName("should not publish a service manifest for an unknown namespace")
-	void publishManifestForUnknownNamespace() {
-		mvc.post().uri("/namespaces/unknown-namespace/services/unknown-service/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatus(HttpStatus.NOT_FOUND)
-				.satisfies(namespaceNotFound("unknown-namespace"));
-	}
-
-	@Test
-	@DisplayName("should not publish service manifest when namespaces:read scope is not present")
-	void publishManifestWithoutScope() {
-		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-id/manifest")
-				.with(authentication(TestPrincipals.jane()))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden(OAuthScope.PUBLISH_MANIFESTS));
-	}
-
-	@Test
-	@DisplayName("should not publish service manifest when user is not a member of a namespace")
-	void publishManifestWithoutMembership() {
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
-				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_MANIFESTS))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"artifacts\": [\"com.konfigyr:konfigyr-crypto-api:1.0.0\"]}")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden());
-	}
-
-	@Test
 	@DisplayName("should retrieve the latest namespace service catalog")
 	void retrieveServiceCatalog() {
 		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/catalog")
@@ -766,14 +500,10 @@ class ServiceControllerTest extends AbstractControllerTest {
 						.returns("konfigyr-id", Service::slug)
 				)
 				.satisfies(it -> assertThat(it.properties())
-						.hasSize(3)
-						.allSatisfy(property -> assertThat(property.artifact())
-								.returns("org.springframework.boot", ArtifactCoordinates::groupId)
-								.returns("spring-boot", ArtifactCoordinates::artifactId)
-								.returns(Version.of("4.0.3"), ArtifactCoordinates::version)
-						)
+						.hasSize(4)
 						.satisfiesExactlyInAnyOrder(
 								property -> assertThat(property)
+										.returns(ArtifactCoordinates.parse("org.springframework.boot:spring-boot:4.0.3"), ServiceCatalog.Property::artifact)
 										.returns("spring.application.name", ServiceCatalog.Property::name)
 										.returns("java.lang.String", ServiceCatalog.Property::typeName)
 										.returns(StringSchema.instance(), ServiceCatalog.Property::schema)
@@ -781,6 +511,7 @@ class ServiceControllerTest extends AbstractControllerTest {
 										.returns(null, ServiceCatalog.Property::defaultValue)
 										.returns(null, ServiceCatalog.Property::deprecation),
 								property -> assertThat(property)
+										.returns(ArtifactCoordinates.parse("org.springframework.boot:spring-boot:4.0.3"), ServiceCatalog.Property::artifact)
 										.returns("spring.application.index", ServiceCatalog.Property::name)
 										.returns("java.lang.Integer", ServiceCatalog.Property::typeName)
 										.returns(IntegerSchema.builder().format("int32").build(), ServiceCatalog.Property::schema)
@@ -788,12 +519,21 @@ class ServiceControllerTest extends AbstractControllerTest {
 										.returns(null, ServiceCatalog.Property::defaultValue)
 										.returns(null, ServiceCatalog.Property::deprecation),
 								property -> assertThat(property)
+										.returns(ArtifactCoordinates.parse("org.springframework.boot:spring-boot:4.0.3"), ServiceCatalog.Property::artifact)
 										.returns("spring.application.deprecated", ServiceCatalog.Property::name)
 										.returns("java.lang.Boolean", ServiceCatalog.Property::typeName)
 										.returns(BooleanSchema.instance(), ServiceCatalog.Property::schema)
 										.returns("Deprecated property that is no longer needed.", ServiceCatalog.Property::description)
 										.returns("true", ServiceCatalog.Property::defaultValue)
-										.returns(new Deprecation("No longer needed", null), ServiceCatalog.Property::deprecation)
+										.returns(new Deprecation("No longer needed", null), ServiceCatalog.Property::deprecation),
+								property -> assertThat(property)
+										.returns(ArtifactCoordinates.parse("com.acme:spring-boot-service:1.0.0"), ServiceCatalog.Property::artifact)
+										.returns("com.acme.service.property", ServiceCatalog.Property::name)
+										.returns("java.lang.String", ServiceCatalog.Property::typeName)
+										.returns(StringSchema.instance(), ServiceCatalog.Property::schema)
+										.returns("Local service property.", ServiceCatalog.Property::description)
+										.returns(null, ServiceCatalog.Property::defaultValue)
+										.returns(null, ServiceCatalog.Property::deprecation)
 						)
 				);
 	}
@@ -874,36 +614,41 @@ class ServiceControllerTest extends AbstractControllerTest {
 				.hasStatusOk()
 				.bodyJson()
 				.convertTo(pagedModel(ServiceCatalog.Property.class))
-				.satisfies(it -> assertThat(it.getContent())
-						.hasSize(3)
-						.allSatisfy(property -> assertThat(property.artifact())
-								.returns("org.springframework.boot", ArtifactCoordinates::groupId)
-								.returns("spring-boot", ArtifactCoordinates::artifactId)
-								.returns(Version.of("4.0.3"), ArtifactCoordinates::version)
-						)
-						.satisfiesExactlyInAnyOrder(
-								property -> assertThat(property)
-										.returns("spring.application.name", ServiceCatalog.Property::name)
-										.returns("java.lang.String", ServiceCatalog.Property::typeName)
-										.returns(StringSchema.instance(), ServiceCatalog.Property::schema)
-										.returns("Application name. Typically used with logging to help identify the application.", ServiceCatalog.Property::description)
-										.returns(null, ServiceCatalog.Property::defaultValue)
-										.returns(null, ServiceCatalog.Property::deprecation),
-								property -> assertThat(property)
-										.returns("spring.application.index", ServiceCatalog.Property::name)
-										.returns("java.lang.Integer", ServiceCatalog.Property::typeName)
-										.returns(IntegerSchema.builder().format("int32").build(), ServiceCatalog.Property::schema)
-										.returns("Application index.", ServiceCatalog.Property::description)
-										.returns(null, ServiceCatalog.Property::defaultValue)
-										.returns(null, ServiceCatalog.Property::deprecation),
-								property -> assertThat(property)
-										.returns("spring.application.deprecated", ServiceCatalog.Property::name)
-										.returns("java.lang.Boolean", ServiceCatalog.Property::typeName)
-										.returns(BooleanSchema.instance(), ServiceCatalog.Property::schema)
-										.returns("Deprecated property that is no longer needed.", ServiceCatalog.Property::description)
-										.returns("true", ServiceCatalog.Property::defaultValue)
-										.returns(new Deprecation("No longer needed", null), ServiceCatalog.Property::deprecation)
-						)
+				.extracting(CollectionModel::getContent, InstanceOfAssertFactories.iterable(ServiceCatalog.Property.class))
+				.hasSize(4)
+				.satisfiesExactlyInAnyOrder(
+						property -> assertThat(property)
+								.returns(ArtifactCoordinates.parse("org.springframework.boot:spring-boot:4.0.3"), ServiceCatalog.Property::artifact)
+								.returns("spring.application.name", ServiceCatalog.Property::name)
+								.returns("java.lang.String", ServiceCatalog.Property::typeName)
+								.returns(StringSchema.instance(), ServiceCatalog.Property::schema)
+								.returns("Application name. Typically used with logging to help identify the application.", ServiceCatalog.Property::description)
+								.returns(null, ServiceCatalog.Property::defaultValue)
+								.returns(null, ServiceCatalog.Property::deprecation),
+						property -> assertThat(property)
+								.returns(ArtifactCoordinates.parse("org.springframework.boot:spring-boot:4.0.3"), ServiceCatalog.Property::artifact)
+								.returns("spring.application.index", ServiceCatalog.Property::name)
+								.returns("java.lang.Integer", ServiceCatalog.Property::typeName)
+								.returns(IntegerSchema.builder().format("int32").build(), ServiceCatalog.Property::schema)
+								.returns("Application index.", ServiceCatalog.Property::description)
+								.returns(null, ServiceCatalog.Property::defaultValue)
+								.returns(null, ServiceCatalog.Property::deprecation),
+						property -> assertThat(property)
+								.returns(ArtifactCoordinates.parse("org.springframework.boot:spring-boot:4.0.3"), ServiceCatalog.Property::artifact)
+								.returns("spring.application.deprecated", ServiceCatalog.Property::name)
+								.returns("java.lang.Boolean", ServiceCatalog.Property::typeName)
+								.returns(BooleanSchema.instance(), ServiceCatalog.Property::schema)
+								.returns("Deprecated property that is no longer needed.", ServiceCatalog.Property::description)
+								.returns("true", ServiceCatalog.Property::defaultValue)
+								.returns(new Deprecation("No longer needed", null), ServiceCatalog.Property::deprecation),
+						property -> assertThat(property)
+								.returns(ArtifactCoordinates.parse("com.acme:spring-boot-service:1.0.0"), ServiceCatalog.Property::artifact)
+								.returns("com.acme.service.property", ServiceCatalog.Property::name)
+								.returns("java.lang.String", ServiceCatalog.Property::typeName)
+								.returns(StringSchema.instance(), ServiceCatalog.Property::schema)
+								.returns("Local service property.", ServiceCatalog.Property::description)
+								.returns(null, ServiceCatalog.Property::defaultValue)
+								.returns(null, ServiceCatalog.Property::deprecation)
 				);
 	}
 

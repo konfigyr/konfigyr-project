@@ -19,7 +19,7 @@ import org.jspecify.annotations.NonNull;
 public interface ProvenanceEvaluator {
 
 	/**
-	 * Evaluates the {@link Provenance} for the {@link PropertyDescriptor} that was released under the
+	 * Evaluates the {@link Provenance} for the {@link PropertyDescriptor} that was published under the
 	 * given {@link VersionedArtifact artifact version}.
 	 *
 	 * @param version the artifact version that declared the property metadata, can't be {@literal null}.

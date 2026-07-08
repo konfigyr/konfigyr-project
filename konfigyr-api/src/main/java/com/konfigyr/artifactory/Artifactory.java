@@ -4,18 +4,20 @@ import com.konfigyr.entity.EntityId;
 import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.jspecify.annotations.NonNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Interface that represents the primary entry point to the {@code Artifactory} domain.
  * <p>
  * The {@code Artifactory} service provides operations for resolving, inspecting, and publishing
  * versioned artifacts managed by the platform. Artifacts represent reusable configuration libraries
- * whose metadata and property definitions are versioned and released through this service.
+ * whose metadata and property definitions are versioned and published through this service.
  * <p>
  * Implementations are responsible for enforcing domain invariants such as coordinate uniqueness,
- * release immutability, and metadata validation. Released artifacts are expected to be immutable
+ * release immutability, and metadata validation. Published artifacts are expected to be immutable
  * representations of a configuration schema at a specific point in time.
  * <p>
  * The {@code Artifactory} interface represents the main boundary between the application layer and
@@ -69,6 +71,26 @@ public interface Artifactory {
 	boolean exists(@NonNull ArtifactCoordinates coordinates);
 
 	/**
+	 * Returns the {@link Publication} for each of the given {@link ArtifactCoordinates} that is already
+	 * indexed by this {@code Artifactory}.
+	 * <p>
+	 * This is a batch counterpart to {@link #exists(ArtifactCoordinates)}, intended for callers that
+	 * need to resolve the existence of many coordinates at once without issuing one query per coordinate.
+	 * Returning the {@link Publication} rather than just the matched coordinate lets callers read its
+	 * {@link Publication#checksum()} directly, without a further lookup.
+	 * <p>
+	 * Coordinates from the input that have no matching artifact version indexed by this {@code Artifactory}
+	 * are simply omitted from the returned set — they are not reported back as missing or invalid, since
+	 * "not yet indexed" is an expected, non-exceptional outcome for a batch existence check. Callers that
+	 * need to know which of their coordinates are absent should compute the difference against the input.
+	 *
+	 * @param coordinates coordinates to check, can be empty
+	 * @return the publications matching the given coordinates that exist, never {@literal null}, empty if the input is empty
+	 */
+	@NonNull
+	Set<Publication> existing(@NonNull Collection<ArtifactCoordinates> coordinates);
+
+	/**
 	 * Publishes a new artifact version based on the provided metadata.
 	 * <p>
 	 * This operation performs the release process for an artifact, which includes:
@@ -79,26 +101,26 @@ public interface Artifactory {
 	 *   <li>Emitting a domain event indicating that a new artifact version has been released</li>
 	 * </ul>
 	 * <p>
-	 * Implementations should treat released artifact versions as immutable. Once a version has been
+	 * Implementations should treat published artifact versions as immutable. Once a version has been
 	 * successfully published, its metadata and property definitions must not be modified.
 	 * <p>
-	 * The {@code artifactory.artifact-version.release} domain event will be emitted after
-	 * a successful release.
+	 * The {@code artifactory.artifact-version.publication-created} domain event will be emitted after
+	 * a successful publication.
 	 * <p>
 	 * Publishing is restricted to owners that hold an active verification claim covering the artifact
 	 * {@code groupId}. The {@code ownerId} identifies the publishing namespace and is resolved to its
 	 * owner before the claim is checked.
 	 *
 	 * @param ownerId the identifier of the namespace publishing the artifact, can't {@literal null}
-	 * @param metadata the metadata describing the artifact version to release, can't {@literal null}
-	 * @return the resulting {@link VersionedArtifact} representing the released artifact
+	 * @param metadata the metadata describing the artifact version to publish, can't {@literal null}
+	 * @return the resulting {@link VersionedArtifact} representing the published artifact
 	 * @throws ArtifactVersionExistsException when an artifact with the same coordinates already exists
 	 * @throws OwnerNotFoundException when the owner cannot be resolved
 	 *         from the supplied {@code ownerId}
 	 * @throws com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException when the owner does not hold
 	 *         an active verification claim covering the artifact {@code groupId}
 	 */
-	@DomainEventPublisher(publishes = "artifactory.artifact-version.release")
-	VersionedArtifact release(@NonNull EntityId ownerId, @NonNull ArtifactMetadata metadata);
+	@DomainEventPublisher(publishes = "artifactory.artifact-version.publication-created")
+	VersionedArtifact publish(@NonNull EntityId ownerId, @NonNull ArtifactMetadata metadata);
 
 }

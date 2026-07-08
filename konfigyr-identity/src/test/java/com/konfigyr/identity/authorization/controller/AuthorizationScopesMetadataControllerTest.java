@@ -46,8 +46,8 @@ class AuthorizationScopesMetadataControllerTest extends AbstractControllerIntegr
 								"Grants full access to namespace management that includes read, write and delete access to namespaces and managing invitations and collaborators."
 						),
 						new ScopeMetadata(
-								OAuthScope.PUBLISH_MANIFESTS.getAuthority(),
-								"Grants access to publish service manifests. This scope is usually granted to OAuth clients used by the Konfigyr build plugins."
+								OAuthScope.PUBLISH_RELEASES.getAuthority(),
+								"Grants access to resolve, upload to, and complete service releases. This scope is usually granted to OAuth clients used by the Konfigyr build plugins."
 						),
 						new ScopeMetadata(
 								OAuthScope.INVITE_MEMBERS.getAuthority(),
@@ -56,6 +56,14 @@ class AuthorizationScopesMetadataControllerTest extends AbstractControllerIntegr
 						new ScopeMetadata(OAuthScope.READ_NAMESPACES.getAuthority(), "Grants read-only access to namespaces."),
 						new ScopeMetadata(OAuthScope.WRITE_NAMESPACES.getAuthority(), "Grants read and write access to namespaces."),
 						new ScopeMetadata(OAuthScope.DELETE_NAMESPACES.getAuthority(), "Grants read, write and delete access to namespaces."),
+						new ScopeMetadata(
+								OAuthScope.READ_ARTIFACTS.getAuthority(),
+								"Grants read-only access to Artifactory artifacts and their property definitions."
+						),
+						new ScopeMetadata(
+								OAuthScope.PUBLISH_ARTIFACTS.getAuthority(),
+								"Grants access to publish new artifact versions to the Artifactory. This scope is usually granted to OAuth clients used by the Konfigyr build plugins."
+						),
 						new ScopeMetadata(
 								OAuthScope.PROFILES.getAuthority(),
 								"Grants full access to service profile configuration management that includes read,write and delete access to profiles."

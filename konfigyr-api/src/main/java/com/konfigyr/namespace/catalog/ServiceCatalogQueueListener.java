@@ -86,7 +86,7 @@ class ServiceCatalogQueueListener {
 			label = "service-catalog-queue.scheduler-for-artifact"
 	)
 	@TransactionalEventListener(id = "namespace.catalog.build.artifact-released")
-	void enqueue(ArtifactoryEvent.ReleaseCompleted event) {
+	void enqueue(ArtifactoryEvent.PublicationCompleted event) {
 		if (log.isDebugEnabled()) {
 			log.debug("Attempting to schedule service catalog builds for released artifact: [id={}, coordinates={}]",
 					event.id(), event.coordinates());
@@ -147,7 +147,7 @@ class ServiceCatalogQueueListener {
 	 * This guarantees that the catalog remains a deterministic projection of the latest manifest
 	 * without producing intermediate or inconsistent states.
 	 *
-	 * @param event the manifest publication event containing the release identifier
+	 * @param event the manifest release event containing the release identifier
 	 */
 	@Async
 	@Transactional(
@@ -155,12 +155,12 @@ class ServiceCatalogQueueListener {
 			isolation = Isolation.SERIALIZABLE,
 			label = "service-catalog-queue.scheduler-for-manifest"
 	)
-	@TransactionalEventListener(id = "namespace.catalog.build.manifest-published")
-	void enqueue(ServiceEvent.Published event) {
+	@TransactionalEventListener(id = "namespace.catalog.build.manifest-released")
+	void enqueue(ServiceEvent.Released event) {
 		final Manifest manifest = event.manifest();
 
 		if (log.isDebugEnabled()) {
-			log.debug("Attempting to schedule service catalog builds for published manifest: [id={}, service={}]",
+			log.debug("Attempting to schedule service catalog builds for released manifest: [id={}, service={}]",
 					manifest.id(), event.id());
 		}
 
@@ -186,7 +186,7 @@ class ServiceCatalogQueueListener {
 				.set(WORKER_QUEUE.NEEDS_RESCHEDULE, true)
 				.execute();
 
-		log.info("Scheduled {} service catalog build(s) for published manifest: [id={}, service={}]",
+		log.info("Scheduled {} service catalog build(s) for released manifest: [id={}, service={}]",
 				rows, manifest.id(), event.id());
 	}
 
