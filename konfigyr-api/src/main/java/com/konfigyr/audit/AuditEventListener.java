@@ -528,6 +528,7 @@ class AuditEventListener {
 	 * guarantees the stored value is always a type the validator recognizes.
 	 *
 	 * @param collection the collection to convert, can be {@literal null} or empty
+	 * @param <T> the type of elements in the collection
 	 * @return an unmodifiable {@link ArrayList} copy of the given collection, never {@literal null}
 	 */
 	private static <T> List<T> toSecureList(@Nullable Collection<T> collection) {
@@ -544,6 +545,8 @@ class AuditEventListener {
 	 *
 	 * @param collection the collection to convert, can be {@literal null} or empty
 	 * @param mapper the function applied to each element, can't be {@literal null}
+	 * @param <T> the type of elements in the source collection
+	 * @param <R> the type of elements in the secured collection
 	 * @return an unmodifiable {@link ArrayList} of the mapped elements, never {@literal null}
 	 */
 	private static <T, R> List<R> toSecureList(@Nullable Collection<T> collection, Function<T, R> mapper) {
