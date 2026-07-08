@@ -523,7 +523,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.actual();
 
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/artifacts", release.id())
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{not-valid-json")
 				.exchange()
@@ -538,7 +538,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 		final var metadata = metadata(konfigyrCryptoApiArtifact, "crypto-checksum");
 
 		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}/artifacts", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(metadata))
 				.exchange()
@@ -635,7 +635,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to complete a release for an unknown service")
 	void shouldRejectCompleteForUnknownService() {
 		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}/complete", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -728,7 +728,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to retrieve a release for an unknown service")
 	void shouldRejectRetrieveForUnknownService() {
 		mvc.get().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -739,7 +739,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@DisplayName("should not retrieve a release when user is not a member of the namespace")
 	void shouldRejectRetrieveWhenNotAMember() {
 		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -747,21 +747,21 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should not retrieve a release when the publish-manifests scope is not present")
+	@DisplayName("should not retrieve a release when the publish-releases scope is not present")
 	void shouldRejectRetrieveWithoutScope() {
 		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/releases/{id}", EntityId.from(999).serialize())
 				.with(authentication(TestPrincipals.john()))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(forbidden(OAuthScope.PUBLISH_MANIFESTS));
+				.satisfies(forbidden(OAuthScope.PUBLISH_RELEASES));
 	}
 
 	@Test
 	@DisplayName("should not resolve a release when user is not a member of the namespace")
 	void shouldRejectWhenNotAMember() {
 		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("[]")
 				.exchange()
@@ -771,7 +771,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should not resolve a release when the publish-manifests scope is not present")
+	@DisplayName("should not resolve a release when the publish-releases scope is not present")
 	void shouldRejectWithoutScope() {
 		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-id/releases")
 				.with(authentication(TestPrincipals.john()))
@@ -780,14 +780,14 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(forbidden(OAuthScope.PUBLISH_MANIFESTS));
+				.satisfies(forbidden(OAuthScope.PUBLISH_RELEASES));
 	}
 
 	@Test
 	@DisplayName("should fail to resolve a release for an unknown service")
 	void shouldRejectUnknownService() {
 		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("[]")
 				.exchange()
@@ -800,7 +800,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@DisplayName("should fail to resolve a release for an unknown namespace")
 	void shouldRejectUnknownNamespace() {
 		mvc.post().uri("/namespaces/unknown-namespace/services/unknown-service/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("[]")
 				.exchange()
@@ -815,7 +815,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 
 	private ObjectAssert<ServiceRelease> assertThatRelease(List<ServiceReleaseCandidate> candidates) {
 		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(candidates))
 				.exchange()
@@ -829,7 +829,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 
 	private MvcTestResultAssert assertThatRelease(String id) {
 		return mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}", id)
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log());
@@ -837,7 +837,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 
 	private MvcTestResultAssert assertThatUpload(String id, ArtifactMetadata metadata) {
 		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/artifacts", id)
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(metadata))
 				.exchange()
@@ -847,7 +847,7 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 
 	private MvcTestResultAssert assertThatComplete(String id) {
 		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/complete", id)
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_MANIFESTS))
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log());

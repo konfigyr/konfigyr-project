@@ -93,7 +93,7 @@ class OAuthScopeTest {
 				Arguments.of(OAuthScope.INVITE_MEMBERS, "namespaces:invite", Set.of(
 						OAuthScope.READ_NAMESPACES
 				)),
-				Arguments.of(OAuthScope.PUBLISH_MANIFESTS, "namespaces:publish-manifests", Set.of(
+				Arguments.of(OAuthScope.PUBLISH_RELEASES, "namespaces:publish-releases", Set.of(
 						OAuthScope.READ_NAMESPACES
 				)),
 				Arguments.of(OAuthScope.NAMESPACES, "namespaces", Set.of(
@@ -101,7 +101,13 @@ class OAuthScopeTest {
 						OAuthScope.WRITE_NAMESPACES,
 						OAuthScope.DELETE_NAMESPACES,
 						OAuthScope.INVITE_MEMBERS,
-						OAuthScope.PUBLISH_MANIFESTS
+						OAuthScope.PUBLISH_RELEASES
+				)),
+
+				/* Artifactory scope group */
+				Arguments.of(OAuthScope.READ_ARTIFACTS, "artifactory:read", Set.of()),
+				Arguments.of(OAuthScope.PUBLISH_ARTIFACTS, "artifactory:publish", Set.of(
+						OAuthScope.READ_ARTIFACTS
 				)),
 
 				/* Profile scope group */

@@ -75,7 +75,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractIntegrationTest im
 				.satisfies(assertScopes(
 						"namespaces:read",
 						"namespaces:delete",
-						"namespaces:publish-manifests",
+						"namespaces:publish-releases",
 						"namespaces:write",
 						"namespaces:invite",
 						"namespaces"
@@ -106,7 +106,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractIntegrationTest im
 				.satisfies(assertScopes(
 						"namespaces:read",
 						"namespaces:delete",
-						"namespaces:publish-manifests",
+						"namespaces:publish-releases",
 						"namespaces:write",
 						"namespaces:invite",
 						"namespaces"
@@ -136,7 +136,7 @@ class RegisteredNamespaceClientRepositoryTest extends AbstractIntegrationTest im
 				.satisfies(assertNoClientSecret())
 				.satisfies(assertScopes(
 						"namespaces:read",
-						"namespaces:publish-manifests"
+						"namespaces:publish-releases"
 				))
 				.satisfies(assertAuthorizationGrantTypes(AuthorizationGrantType.TOKEN_EXCHANGE))
 				.satisfies(assertClientAuthenticationMethods(ClientAuthenticationMethod.NONE))
