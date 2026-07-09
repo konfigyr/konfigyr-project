@@ -10,28 +10,41 @@ import { z } from 'zod';
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
 import { GroupIdLabel } from '@konfigyr/components/groups/messages';
 
-export const claimSchema = z
+function isValidGroupId (groupId: string) {
+  const segments = groupId.split('.');
+
+  if (segments.length < 2) {
+    return false;
+  }
+
+  return segments.every((segment) => /^[a-z][a-z0-9_-]*$/.test(segment));
+}
+
+function isSupportedSourceCodeGroupId (groupId: string) {
+  const segments = groupId.split('.');
+  const [ domain, host, owner ] = segments;
+
+  return segments.length === 3 &&
+    domain === 'io' &&
+    ['github', 'gitlab', 'bitbucket'].includes(host) &&
+    /^[a-z][a-z0-9_-]*$/.test(owner);
+}
+
+export const GROUP_VERIFICATION_CLAIM_SCHEMA = z
   .object({
-    groupId: z
-      .string()
+    groupId: z.string()
       .min(1, { message: 'Group ID is required' })
-      .regex(/^[a-z][a-z0-9_\-.]*(\.[a-z][a-z0-9_\-.]*)+$/, {
+      .refine(isValidGroupId, {
         message: 'Must be lowercase, dot-separated, with at least two segments — e.g. com.mycompany',
       }),
     verificationMethod: z.enum(['DNS', 'SOURCE_CODE']),
   })
-  .refine(
-    ({
-      groupId,
-      verificationMethod,
-    }) => verificationMethod !== 'SOURCE_CODE' || /^io\.(github|gitlab|bitbucket)\.[a-z][a-z0-9_-]*$/.test(groupId),
-    {
-      message: 'Source code verification only supports io.github.*, io.gitlab.*, or io.bitbucket.* groupIds',
-      path: ['groupId'],
-    },
-  );
+  .refine(({ groupId, verificationMethod }) => verificationMethod !== 'SOURCE_CODE' || isSupportedSourceCodeGroupId(groupId), {
+    message: 'Source code verification only supports io.github.*, io.gitlab.*, or io.bitbucket.* groupIds',
+    path: ['groupId'],
+  });
 
-export type GroupVerificationFormValues = z.infer<typeof claimSchema>;
+export type GroupVerificationFormValues = z.infer<typeof GROUP_VERIFICATION_CLAIM_SCHEMA>;
 
 export type GroupVerificationFormProps = {
   defaultValues: GroupVerificationFormValues;
@@ -46,7 +59,7 @@ export function GroupVerificationForm ({
 }: GroupVerificationFormProps) {
   const form = useForm({
     defaultValues,
-    validators: { onSubmit: claimSchema },
+    validators: { onSubmit: GROUP_VERIFICATION_CLAIM_SCHEMA },
     onSubmit,
   });
 
