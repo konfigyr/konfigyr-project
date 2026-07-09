@@ -1,4 +1,4 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { CodeIcon, GlobeIcon } from 'lucide-react';
 import { Label } from '@konfigyr/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@konfigyr/components/ui/radio-group';
@@ -6,6 +6,11 @@ import { cn } from '@konfigyr/components/utils';
 
 import type { ReactNode } from 'react';
 import type { VerificationMethod } from '@konfigyr/hooks/types';
+
+export type SourceHostInformation = {
+  label: string;
+  account: string;
+};
 
 const VERIFICATION_METHODS: Array<VerificationMethod> = ['DNS', 'SOURCE_CODE'];
 
@@ -29,7 +34,7 @@ const VERIFICATION_METHOD_DESCRIPTION: Record<VerificationMethod, ReactNode> = {
   ),
 };
 
-export function VerificationMethodName({ method }: { method?: string | VerificationMethod }) {
+export function VerificationMethodName ({ method }: { method?: string | VerificationMethod }) {
   switch (method) {
     case 'DNS':
       return <FormattedMessage
@@ -46,13 +51,14 @@ export function VerificationMethodName({ method }: { method?: string | Verificat
   }
 }
 
-export function GroupVerificationMethodSelector({ value, onChange, readOnly }: {
+export function GroupVerificationMethodSelector ({ value, onChange, readOnly }: {
   value?: VerificationMethod;
   onChange: (method: VerificationMethod) => void;
   readOnly?: boolean
 }) {
   return (
-    <RadioGroup readOnly={readOnly} disabled={readOnly} value={value ?? ''} onValueChange={(v) => onChange(v as VerificationMethod)}>
+    <RadioGroup readOnly={readOnly} disabled={readOnly} value={value ?? ''}
+      onValueChange={(v) => onChange(v as VerificationMethod)}>
       {VERIFICATION_METHODS.map((method) => {
         const selected = value === method;
         const Icon = VERIFICATION_METHOD_ICON[method];
@@ -64,12 +70,12 @@ export function GroupVerificationMethodSelector({ value, onChange, readOnly }: {
               selected ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-transparent hover:bg-muted/50',
             )}
           >
-            <RadioGroupItem value={method} />
+            <RadioGroupItem value={method}/>
             <div className="flex items-start gap-3">
-              <Icon className="size-5 mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <Icon className="size-5 mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true"/>
               <div className="grid gap-1">
                 <span className="font-medium leading-none">
-                  <VerificationMethodName method={method} />
+                  <VerificationMethodName method={method}/>
                 </span>
                 <p className="text-sm text-muted-foreground font-normal">{VERIFICATION_METHOD_DESCRIPTION[method]}</p>
               </div>
@@ -79,4 +85,25 @@ export function GroupVerificationMethodSelector({ value, onChange, readOnly }: {
       })}
     </RadioGroup>
   );
+}
+
+export function sourceCodeHostLabel (groupId: string): SourceHostInformation {
+  const intl = useIntl();
+  const [domain, host, account] = groupId.split('.');
+  switch (host) {
+    case 'github':
+      return { label: 'GitHub', account };
+    case 'gitlab':
+      return { label: 'GitLub', account };
+    case 'bitbucket':
+      return { label: 'Bitbucket', account };
+    default:
+      return {
+        label: intl.formatMessage({
+          defaultMessage: 'your ${host}.${domain} source control server',
+          description: 'Label for a user-managed source control server',
+        }, { host, domain }),
+        account,
+      };
+  }
 }

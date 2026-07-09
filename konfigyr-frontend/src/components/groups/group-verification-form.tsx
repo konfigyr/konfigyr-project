@@ -22,12 +22,12 @@ function isValidGroupId (groupId: string) {
 
 function isSupportedSourceCodeGroupId (groupId: string) {
   const segments = groupId.split('.');
-  const [ domain, host, owner ] = segments;
+  const [ domain, host, account ] = segments;
 
   return segments.length === 3 &&
     domain === 'io' &&
     ['github', 'gitlab', 'bitbucket'].includes(host) &&
-    /^[a-z][a-z0-9_-]*$/.test(owner);
+    /^[a-z][a-z0-9_-]*$/.test(account);
 }
 
 export const GROUP_VERIFICATION_CLAIM_SCHEMA = z

@@ -3,6 +3,7 @@ import { Badge } from '@konfigyr/components/ui/badge';
 
 import { SimpleAlert } from '@konfigyr/components/ui/alert';
 import { AlertCircleIcon, CheckCircle2Icon, CircleAlertIcon, Trash2Icon } from 'lucide-react';
+import { sourceCodeHostLabel } from '@konfigyr/components/groups/group-verification-method';
 import type { ComponentProps } from 'react';
 import type { VerificationMethod, VerificationState } from '@konfigyr/hooks/types';
 
@@ -10,11 +11,6 @@ export type GroupVerificationStateAlertProps = {
   groupId: string;
   verificationChallenge?: { method: VerificationMethod; token: string } | undefined;
   verificationState: string;
-};
-
-export type SourceHostInformation = {
-  label: string;
-  account: string;
 };
 
 export function GroupVerificationState ({ state }: { state?: string | VerificationState }) {
@@ -210,19 +206,4 @@ function RevokedAlertAlert ({ groupId }: { groupId: string }) {
       variant="default"
     />
   );
-}
-
-export function sourceCodeHostLabel (groupId: string): SourceHostInformation {
-  const intl = useIntl();
-  const [domain, host, account] = groupId.split('.');
-  switch (host) {
-    case 'github':
-      return { label: 'GitHub', account };
-    case 'gitlab':
-      return { label: 'GitLub', account };
-    case 'bitbucket':
-      return { label: 'Bitbucket', account };
-    default:
-      return { label: `your ${host}.${domain} server`, account };
-  }
 }
