@@ -28,6 +28,8 @@ dependencies {
 
     implementation("org.springframework.retry:spring-retry")
 
+    implementation("org.apache.httpcomponents.client5:httpclient5")
+
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
     implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")

@@ -11,6 +11,11 @@ spring:
     change-log: classpath:migrations/changelog.xml
     contexts: identity
 
+  http:
+    clients:
+      connect-timeout: 5s
+      read-timeout: 2s
+
   messages:
     basename: messages/messages, messages/mail
 
