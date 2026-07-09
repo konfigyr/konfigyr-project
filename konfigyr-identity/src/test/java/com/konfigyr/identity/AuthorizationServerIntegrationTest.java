@@ -767,7 +767,9 @@ class AuthorizationServerIntegrationTest extends AbstractControllerIntegrationTe
 				.hasPathSatisfying("$.token_type", it -> it.assertThat()
 						.isEqualTo(OAuth2AccessToken.TokenType.BEARER.getValue()))
 				.hasPathSatisfying("$.scope", it -> it.assertThat()
-						.isEqualTo("namespaces:read namespaces:publish-manifests"))
+						.asInstanceOf(InstanceOfAssertFactories.STRING)
+						.satisfies(scope -> assertThat(scope.split(" "))
+								.containsExactlyInAnyOrder("namespaces:read", "namespaces:publish-releases")))
 				.hasPathSatisfying("$.access_token", it -> it.assertThat().isNotNull())
 				.doesNotHavePath("$.refresh_token")
 				.doesNotHavePath("$.id_token");

@@ -56,9 +56,9 @@ class AuditMessageResolverTest {
 	@Test
 	@DisplayName("should resolve message for artifact release event")
 	void shouldResolveArtifactMessage() {
-		assertThat(resolver.resolve("artifact-version.release-completed",
+		assertThat(resolver.resolve("artifact-version.publication-completed",
 				Map.of("coordinates", "com.konfigyr:api:1.0.0")))
-				.isEqualTo("Artifact release completed for com.konfigyr:api:1.0.0");
+				.isEqualTo("Artifact com.konfigyr:api:1.0.0 has been successfully published");
 	}
 
 	@Test

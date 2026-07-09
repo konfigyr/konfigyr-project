@@ -55,12 +55,19 @@ class ConfigurationCatalogServiceTest extends AbstractIntegrationTest {
 				.returns(0, Page::getNumber)
 				.returns(2, Page::getSize)
 				.returns(2, Page::getNumberOfElements)
-				.returns(3L, Page::getTotalElements)
+				.returns(4L, Page::getTotalElements)
 				.returns(2, Page::getTotalPages);
 
 		assertThat(properties.getContent())
 				.hasSize(2)
 				.containsExactly(
+						ServiceCatalog.Property.builder()
+								.coordinates(ArtifactCoordinates.of("com.acme", "spring-boot-service", "1.0.0"))
+								.name("com.acme.service.property")
+								.typeName("java.lang.String")
+								.schema(StringSchema.instance())
+								.description("Local service property.")
+								.build(),
 						ServiceCatalog.Property.builder()
 								.coordinates(ArtifactCoordinates.of("org.springframework.boot", "spring-boot", "4.0.3"))
 								.name("spring.application.deprecated")
@@ -69,13 +76,6 @@ class ConfigurationCatalogServiceTest extends AbstractIntegrationTest {
 								.description("Deprecated property that is no longer needed.")
 								.defaultValue("true")
 								.deprecation("No longer needed", null)
-								.build(),
-						ServiceCatalog.Property.builder()
-								.coordinates(ArtifactCoordinates.of("org.springframework.boot", "spring-boot", "4.0.3"))
-								.name("spring.application.index")
-								.typeName("java.lang.Integer")
-								.schema(IntegerSchema.builder().format("int32").build())
-								.description("Application index.")
 								.build()
 				);
 	}

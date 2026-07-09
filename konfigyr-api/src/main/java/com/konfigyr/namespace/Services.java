@@ -1,6 +1,5 @@
 package com.konfigyr.namespace;
 
-import com.konfigyr.artifactory.ArtifactCoordinates;
 import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.artifactory.PropertyDescriptor;
 import com.konfigyr.entity.EntityId;
@@ -10,7 +9,6 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -89,23 +87,6 @@ public interface Services {
 	Service update(EntityId id, ServiceDefinition definition);
 
 	/**
-	 * Returns the current manifest associated with the given service.
-	 * <p>
-	 * A manifest represents the set of {@link ArtifactCoordinates artifacts} that are currently
-	 * used by a specific service within a {@link Namespace}. Each artifact referenced by the
-	 * manifest contributes configuration metadata resolved through the {@code Artifactory} domain.
-	 * <p>
-	 * The manifest acts as the bridge between a service and the configuration metadata
-	 * provided by its dependencies. When a manifest is resolved, the Artifactory aggregates
-	 * the configuration property definitions contributed by all referenced artifacts and
-	 * produces the effective configuration metadata used by the service.
-	 *
-	 * @param service service for which manifest should be retrieved, can't be {@literal null}
-	 * @return the current {@link Manifest} for the service, never {@literal null}
-	 */
-	Manifest manifest(Service service);
-
-	/**
 	 * Returns the complete configuration catalog of the specified {@link Service}
 	 * with the given entity identifier.
 	 * <p>
@@ -157,28 +138,6 @@ public interface Services {
 	 * @see ServiceCatalog
 	 */
 	Page<PropertyDescriptor> search(Service service, SearchQuery query);
-
-	/**
-	 * Updates the manifest of a service with a new set of artifact dependencies.
-	 * <p>
-	 * The provided collection represents the complete set of artifacts that should be associated with the
-	 * service after the update. Each artifact is identified using its Maven coordinates ({@code groupId},
-	 * {@code artifactId}, {@code version}).
-	 * <p>
-	 * During this process the system performs several operations:
-	 * <ul>
-	 *     <li>Validates that each referenced artifact exists in the Artifactory</li>
-	 *     <li>Resolves configuration metadata contributed by the artifacts</li>
-	 *     <li>Computes the effective property definitions used by the service</li>
-	 *     <li>Updates the service manifest to reflect the new dependency set</li>
-	 * </ul>
-	 *
-	 * @param service service for which release should be created, can't be {@literal null}
-	 * @param artifacts the complete collection of artifacts that should compose the
-	 *                  service manifest, never {@literal null} but may be empty
-	 * @return the updated {@link Manifest} reflecting the resolved dependency set
-	 */
-	Manifest publish(Service service, Collection<? extends ArtifactCoordinates> artifacts);
 
 	/**
 	 * Deletes a single {@link Service} by its entity identifier.

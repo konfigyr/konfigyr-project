@@ -11,6 +11,7 @@ public final class AuthorizationServerScopes {
 	private static final OAuthScopes scopes = OAuthScopes.of(
 			OAuthScope.OPENID,
 			OAuthScope.NAMESPACES,
+			OAuthScope.PUBLISH_ARTIFACTS,
 			OAuthScope.PROFILES
 	);
 

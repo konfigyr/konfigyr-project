@@ -26,7 +26,7 @@ class ArtifactoryJobExecutionListener implements JobExecutionListener {
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.SERIALIZABLE)
 	public void afterJob(JobExecution jobExecution) {
-		final ReleaseState state;
+		final PublicationState state;
 
 		final ArtifactCoordinates coordinates = ArtifactCoordinates.parse(
 				jobExecution.getJobParameters().getString("artifact")
@@ -36,9 +36,9 @@ class ArtifactoryJobExecutionListener implements JobExecutionListener {
 				coordinates.format(), jobExecution.getStatus(), jobExecution.getExitStatus());
 
 		if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-			state = ReleaseState.RELEASED;
+			state = PublicationState.PUBLISHED;
 		} else {
-			state = ReleaseState.FAILED;
+			state = PublicationState.FAILED;
 		}
 
 		final VersionedArtifact artifact = artifactory.get(coordinates).orElseThrow(() -> new IllegalStateException(
@@ -50,12 +50,12 @@ class ArtifactoryJobExecutionListener implements JobExecutionListener {
 				.where(ArtifactVersions.ARTIFACT_VERSIONS.ID.eq(artifact.id().get()))
 				.execute();
 
-		if (state == ReleaseState.RELEASED) {
-			eventPublisher.publishEvent(new ArtifactoryEvent.ReleaseCompleted(artifact));
+		if (state == PublicationState.PUBLISHED) {
+			eventPublisher.publishEvent(new ArtifactoryEvent.PublicationCompleted(artifact));
 		}
 
-		if (state == ReleaseState.FAILED) {
-			eventPublisher.publishEvent(new ArtifactoryEvent.ReleaseFailed(artifact));
+		if (state == PublicationState.FAILED) {
+			eventPublisher.publishEvent(new ArtifactoryEvent.PublicationFailed(artifact));
 		}
 	}
 }
