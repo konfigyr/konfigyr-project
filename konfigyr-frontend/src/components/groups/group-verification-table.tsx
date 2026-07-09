@@ -16,7 +16,7 @@ import {
 } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@konfigyr/components/ui/table';
-import { Package, ShieldCheckIcon } from 'lucide-react';
+import { EllipsisVerticalIcon, Package, ShieldCheckIcon } from 'lucide-react';
 import {
   CancelClaimLabel,
   GroupIdLabel,
@@ -24,73 +24,85 @@ import {
   StateLabel,
   VerifiedAtLabel,
 } from '@konfigyr/components/groups/messages';
+import { useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@konfigyr/components/ui/dropdown-menu';
 import { GroupVerificationStateBadge } from './group-verification-state';
 import { CancelGroupVerificationButton, RevokeGroupVerificationButton } from './revoke-group-verification';
-
-import type { GroupVerification, PageResponse } from '@konfigyr/hooks/types';
 import type { ReactNode } from 'react';
 
-export function GroupVerificationDetailsLink( { namespace, groupId, children }: { namespace: string, groupId: string, children?: ReactNode } ) {
+import type { GroupVerification, PageResponse } from '@konfigyr/hooks/types';
+
+export function GroupVerificationDetailsLink ({ namespace, groupId, children }: {
+  namespace: string,
+  groupId: string,
+  children?: ReactNode
+}) {
   return (
     <Link
       to="/namespace/$namespace/groups/$groupId"
       params={{ namespace, groupId }}
     >
-      { children ? children : groupId }
+      {children ? children : groupId}
     </Link>
   );
 }
 
-function GroupVerificationRowActions({ namespace, verification }: {
+function GroupVerificationRowActions ({ namespace, verification }: {
   namespace: string;
   verification: GroupVerification;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setMenuOpen(false);
+    }
+  };
 
-  switch (verification.state) {
-    case 'ACTIVE':
-      return (
-        <div className="flex justify-end gap-2">
-          <ViewButton namespace={namespace} groupId={verification.groupId} />
-          <RevokeGroupVerificationButton namespace={namespace} verification={verification}>
-            <Button size="sm" variant="destructive">
-              <RevokeClaimLabel />
-            </Button>
-          </RevokeGroupVerificationButton>
-        </div>
-      );
-    case 'PENDING':
-      return (
-        <div className="flex justify-end gap-2">
-          <ViewButton namespace={namespace} groupId={verification.groupId} />
-          <CancelGroupVerificationButton namespace={namespace} verification={verification} >
-            <Button size="sm" variant="destructive">
-              <CancelClaimLabel />
-            </Button>
-          </CancelGroupVerificationButton>
-        </div>
-      );
-    default:
-      return (
-        <div className="flex justify-end gap-2">
-          <ViewButton namespace={namespace} groupId={verification.groupId} />
-        </div>
-      );
-  }
-}
-
-function ViewButton({ namespace, groupId }: { namespace: string, groupId: string }) {
   return (
-    <div className="flex justify-end gap-2">
-      <Button size="sm" variant="ghost" render={(
-        <GroupVerificationDetailsLink namespace={namespace} groupId={groupId} />
-      )}>
-        <ViewLabel />
-      </Button>
-    </div>
+    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost">
+            <EllipsisVerticalIcon/>
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end">
+        <GroupVerificationDetailsLink namespace={namespace} groupId={verification.groupId}>
+          <DropdownMenuItem>
+            <ViewLabel/>
+          </DropdownMenuItem>
+        </GroupVerificationDetailsLink>
+
+        {verification.state === 'ACTIVE' && (
+          <RevokeGroupVerificationButton namespace={namespace}
+            verification={verification}
+            onOpenChange={handleDialogOpenChange}>
+            <DropdownMenuItem variant="destructive" closeOnClick={false}>
+              <RevokeClaimLabel/>
+            </DropdownMenuItem>
+          </RevokeGroupVerificationButton>
+        )}
+
+        {verification.state === 'PENDING' && (
+          <CancelGroupVerificationButton namespace={namespace} verification={verification}
+            onOpenChange={handleDialogOpenChange}>
+            <DropdownMenuItem closeOnClick={false}>
+              <CancelClaimLabel/>
+            </DropdownMenuItem>
+          </CancelGroupVerificationButton>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-function GroupVerificationRow({ namespace, verification }: {
+function GroupVerificationRow ({ namespace, verification }: {
   namespace: string;
   verification: GroupVerification;
 }) {
@@ -98,47 +110,47 @@ function GroupVerificationRow({ namespace, verification }: {
     <TableRow>
       <TableCell className="font-mono font-bold">
         <div className="flex items-center gap-2">
-          <Package className="size-4 text-muted-foreground" aria-hidden="true" />
+          <Package className="size-4 text-muted-foreground" aria-hidden="true"/>
           {verification.groupId}
         </div>
       </TableCell>
       <TableCell>
-        <GroupVerificationStateBadge state={verification.state} />
+        <GroupVerificationStateBadge state={verification.state}/>
       </TableCell>
       <TableCell>
         <time dateTime={verification.createdAt}>
-          <FormattedDate value={verification.createdAt} day="2-digit" month="short" year="numeric" />
+          <FormattedDate value={verification.createdAt} day="2-digit" month="short" year="numeric"/>
         </time>
       </TableCell>
       <TableCell>
         {verification.verifiedAt ? (
           <time dateTime={verification.verifiedAt}>
-            <FormattedDate value={verification.verifiedAt} day="2-digit" month="short" year="numeric" />
+            <FormattedDate value={verification.verifiedAt} day="2-digit" month="short" year="numeric"/>
           </time>
         ) : (
           <span className="text-muted-foreground">&mdash;</span>
         )}
       </TableCell>
       <TableCell className="text-right">
-        <GroupVerificationRowActions namespace={namespace} verification={verification} />
+        <GroupVerificationRowActions namespace={namespace} verification={verification}/>
       </TableCell>
     </TableRow>
   );
 }
 
-function GroupVerificationSkeleton() {
+function GroupVerificationSkeleton () {
   return (
     <TableRow data-slot="group-verification-skeleton">
-      <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-      <TableCell><Skeleton className="h-5 w-20 rounded-xl" /></TableCell>
-      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-      <TableCell><Skeleton className="h-5 w-24 ml-auto" /></TableCell>
+      <TableCell><Skeleton className="h-5 w-48"/></TableCell>
+      <TableCell><Skeleton className="h-5 w-20 rounded-xl"/></TableCell>
+      <TableCell><Skeleton className="h-5 w-24"/></TableCell>
+      <TableCell><Skeleton className="h-5 w-24"/></TableCell>
+      <TableCell><Skeleton className="h-5 w-24 ml-auto"/></TableCell>
     </TableRow>
   );
 }
 
-function GroupVerificationPagination({ page = 1, size = 20, data }: {
+function GroupVerificationPagination ({ page = 1, size = 20, data }: {
   page?: number;
   size?: number;
   data?: PageResponse<GroupVerification>;
@@ -156,7 +168,7 @@ function GroupVerificationPagination({ page = 1, size = 20, data }: {
         <PaginationItem>
           <PaginationPrevious
             render={(
-              <Link to="." search={search => ({ ...search, page: page - 1 })} />
+              <Link to="." search={search => ({ ...search, page: page - 1 })}/>
             )}
           />
         </PaginationItem>
@@ -175,7 +187,7 @@ function GroupVerificationPagination({ page = 1, size = 20, data }: {
         <PaginationItem>
           <PaginationNext
             render={(
-              <Link to="." search={search => ({ ...search, page: page + 1 })} />
+              <Link to="." search={search => ({ ...search, page: page + 1 })}/>
             )}
           />
         </PaginationItem>
@@ -184,7 +196,7 @@ function GroupVerificationPagination({ page = 1, size = 20, data }: {
   );
 }
 
-export function GroupVerificationTable({ namespace, data, error, isPending, page, size }: {
+export function GroupVerificationTable ({ namespace, data, error, isPending, page, size }: {
   namespace: string;
   data?: PageResponse<GroupVerification>;
   error?: Error | null;
@@ -200,28 +212,28 @@ export function GroupVerificationTable({ namespace, data, error, isPending, page
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-64">
-                  <GroupIdLabel />
+                  <GroupIdLabel/>
                 </TableHead>
                 <TableHead className="w-32">
-                  <StateLabel />
+                  <StateLabel/>
                 </TableHead>
                 <TableHead className="w-32">
-                  <CreatedAtLabel />
+                  <CreatedAtLabel/>
                 </TableHead>
                 <TableHead className="w-32">
-                  <VerifiedAtLabel />
+                  <VerifiedAtLabel/>
                 </TableHead>
                 <TableHead className="w-48 text-right">
-                  <ActionsLabel />
+                  <ActionsLabel/>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isPending && (
                 <>
-                  <GroupVerificationSkeleton />
-                  <GroupVerificationSkeleton />
-                  <GroupVerificationSkeleton />
+                  <GroupVerificationSkeleton/>
+                  <GroupVerificationSkeleton/>
+                  <GroupVerificationSkeleton/>
                 </>
               )}
 
@@ -229,7 +241,7 @@ export function GroupVerificationTable({ namespace, data, error, isPending, page
                 <TableRow>
                   <TableCell colSpan={5}>
                     <EmptyState
-                      icon={<ShieldCheckIcon size="2rem" />}
+                      icon={<ShieldCheckIcon size="2rem"/>}
                       title={
                         <FormattedMessage
                           defaultMessage="No group claims found"
@@ -248,16 +260,16 @@ export function GroupVerificationTable({ namespace, data, error, isPending, page
               )}
 
               {data?.data.map((verification) => (
-                <GroupVerificationRow key={verification.id} namespace={namespace} verification={verification} />
+                <GroupVerificationRow key={verification.id} namespace={namespace} verification={verification}/>
               ))}
             </TableBody>
           </Table>
 
-          {error && <ErrorState error={error} />}
+          {error && <ErrorState error={error}/>}
         </CardContent>
       </Card>
 
-      <GroupVerificationPagination page={page} size={size} data={data} />
+      <GroupVerificationPagination page={page} size={size} data={data}/>
     </>
   );
 }

@@ -31,19 +31,20 @@ type RevokeGroupVerificationButtonProps = {
   verification: GroupVerification;
   action: 'CANCEL' | 'REVOKE'
   children: ReactElement
+  onOpenChange?: (open: boolean) => void
 };
 
-export function RevokeGroupVerificationButton ({ namespace, verification, children }: { namespace: string, verification: GroupVerification, children: ReactElement }) {
+export function RevokeGroupVerificationButton ({ namespace, verification, children, onOpenChange }: { namespace: string, verification: GroupVerification, children: ReactElement, onOpenChange?: (open: boolean) => void }) {
   return (
-    <RevokeButton namespace={namespace} verification={verification} action={'REVOKE'}>
+    <RevokeButton namespace={namespace} verification={verification} action={'REVOKE'} onOpenChange={onOpenChange}>
       {(children)}
     </RevokeButton>
   );
 }
 
-export function CancelGroupVerificationButton ({ namespace, verification, children }: { namespace: string, verification: GroupVerification, children: ReactElement }) {
+export function CancelGroupVerificationButton ({ namespace, verification, children, onOpenChange }: { namespace: string, verification: GroupVerification, children: ReactElement, onOpenChange?: (open: boolean) => void }) {
   return (
-    <RevokeButton namespace={namespace} verification={verification} action={'CANCEL'}>
+    <RevokeButton namespace={namespace} verification={verification} action={'CANCEL'} onOpenChange={onOpenChange}>
       {(children)}
     </RevokeButton>
   );
@@ -54,6 +55,7 @@ function RevokeButton ({
   verification,
   action,
   children,
+  onOpenChange,
 }: RevokeGroupVerificationButtonProps) {
   const errorNotification = useErrorNotification();
   const { isPending, mutateAsync: revokeGroupVerification } = useRevokeGroupVerification(namespace);
@@ -81,7 +83,7 @@ function RevokeButton ({
   }, [verification, errorNotification, revokeGroupVerification]);
 
   return (
-    <AlertDialog>
+    <AlertDialog onOpenChange={onOpenChange}>
       <AlertDialogTrigger render={(children)}/>
       <AlertDialogContent>
         <AlertDialogHeader>
