@@ -13,7 +13,7 @@ function RouteComponent () {
     <LayoutContent>
       <LayoutNavbar title={( <GroupClaimsLabel /> )} />
       <div className="mx-4 space-y-6">
-        <Outlet />;
+        <Outlet />
       </div>
     </LayoutContent>
   );
