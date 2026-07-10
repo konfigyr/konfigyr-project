@@ -51,13 +51,27 @@ export interface AuthenticationSession {
 }
 
 const useAuthenticationSession = () => {
-  const password = process.env.KONFIGYR_SESSION_KEY;
+  const sessionKey = process.env.KONFIGYR_SESSION_KEY;
 
-  if (typeof password !== 'string') {
+  if (typeof sessionKey !== 'string') {
     throw new Error('KONFIGYR_SESSION_KEY environment variable is not set');
   }
 
-  return useSession<SessionData>({ name: 'konfigyr.sid', password }) as Promise<AuthenticationSession>;
+  let secureCookie: boolean = process.env.NODE_ENV === 'production';
+
+  if (process.env.KONFIGYR_SESSION_SECURE) {
+    secureCookie = /^(true|t|1)$/i.test(process.env.KONFIGYR_SESSION_SECURE);
+  }
+
+  return useSession<SessionData>({
+    name: 'konfigyr.sid',
+    password: sessionKey,
+    cookie: {
+      secure: secureCookie,
+      sameSite: 'lax',
+      httpOnly: true,
+    },
+  }) as Promise<AuthenticationSession>;
 };
 
 const discover = () => {

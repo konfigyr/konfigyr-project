@@ -20,18 +20,25 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.util.Lazy;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.endpoint.*;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.jwt.JwtDecoderFactory;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestOperations;
 
 import java.util.concurrent.TimeUnit;
@@ -102,6 +109,11 @@ public class AuthenticationConfiguration {
 	}
 
 	@Bean
+	JwtDecoderFactory<ClientRegistration> oidcTokenDecoderFactory(RestTemplateBuilder builder) {
+		return new OidcTokenDecoderFactory(builder.build(), properties.getOidc().getJwtClockSkew());
+	}
+
+	@Bean
 	AccountIdentityListener accountIdentityListener(Mailer mailer) {
 		return new AccountIdentityListener(mailer);
 	}
@@ -114,6 +126,54 @@ public class AuthenticationConfiguration {
 		service.setRestOperations(operations);
 
 		return service;
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class AccessTokenResponseClientConfiguration {
+
+		private final RestClient restClient;
+
+		AccessTokenResponseClientConfiguration(ClientHttpRequestFactory clientHttpRequestFactory) {
+			this.restClient = RestClient.builder()
+					.requestFactory(clientHttpRequestFactory)
+					.defaultStatusHandler(new OAuth2ErrorResponseErrorHandler())
+					.configureMessageConverters((messageConverters) -> {
+						messageConverters.addCustomConverter(new FormHttpMessageConverter());
+						messageConverters.addCustomConverter(new OAuth2AccessTokenResponseHttpMessageConverter());
+					}).build();
+		}
+
+		@Bean
+		OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> authorizationCodeTokenResponseClient() {
+			return customize(new RestClientAuthorizationCodeTokenResponseClient());
+		}
+
+		@Bean
+		OAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> clientCredentialsTokenResponseClient() {
+			return customize(new RestClientClientCredentialsTokenResponseClient());
+		}
+
+		@Bean
+		OAuth2AccessTokenResponseClient<OAuth2RefreshTokenGrantRequest> refreshTokenTokenResponseClient() {
+			return customize(new RestClientRefreshTokenTokenResponseClient());
+		}
+
+		@Bean
+		OAuth2AccessTokenResponseClient<TokenExchangeGrantRequest> tokenExchangeTokenResponseClient() {
+			return customize(new RestClientTokenExchangeTokenResponseClient());
+		}
+
+		@Bean
+		OAuth2AccessTokenResponseClient<JwtBearerGrantRequest> jwtBearerTokenResponseClient() {
+			return customize(new RestClientJwtBearerTokenResponseClient());
+		}
+
+		<T extends AbstractOAuth2AuthorizationGrantRequest> OAuth2AccessTokenResponseClient<T> customize(
+				AbstractRestClientOAuth2AccessTokenResponseClient<T> client
+		) {
+			client.setRestClient(restClient);
+			return client;
+		}
 	}
 
 }
