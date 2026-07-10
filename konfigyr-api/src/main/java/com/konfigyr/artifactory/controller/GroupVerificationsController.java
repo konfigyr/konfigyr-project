@@ -74,17 +74,6 @@ class GroupVerificationsController {
 				.assemble(groupVerifications.claim(owner, request.groupId(), request.verificationMethod()));
 	}
 
-	@PutMapping
-	@PreAuthorize("isAdmin(#namespace)")
-	@ResponseStatus(HttpStatus.OK)
-	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
-	EntityModel<GroupVerification> claimAgain(@PathVariable String namespace, @RequestBody @Validated ClaimRequest request) {
-		final Owner owner = ownerResolver.resolve(namespace);
-
-		return Assemblers.groupVerification(owner)
-				.assemble(groupVerifications.claimAgain(owner, request.groupId(), request.verificationMethod()));
-	}
-
 	@GetMapping("/{groupId}/challenges")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)

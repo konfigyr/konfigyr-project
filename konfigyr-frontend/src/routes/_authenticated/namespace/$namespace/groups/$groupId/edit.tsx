@@ -2,8 +2,9 @@ import { FormattedMessage } from 'react-intl';
 import { toast } from 'sonner';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
-  useClaimAgainGroupVerification,
-  useGetGroupVerification, useGetVerificationChallenges,
+  useClaimGroupVerification,
+  useGetGroupVerification,
+  useGetVerificationChallenges,
   useNamespace,
 } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -26,7 +27,7 @@ function RouteComponent () {
   const { groupId } = Route.useParams();
   const navigate = useNavigate({ from: Route.fullPath });
   const errorNotification = useErrorNotification();
-  const { mutateAsync: claimAgainGroupVerification } = useClaimAgainGroupVerification(namespace.slug);
+  const { mutateAsync: claimGroupVerification } = useClaimGroupVerification(namespace.slug);
 
   const {
     data: verification,
@@ -49,7 +50,7 @@ function RouteComponent () {
 
   const onSubmit = async ({ value }: { value: typeof defaultValues }) => {
     try {
-      const updated = await claimAgainGroupVerification(value);
+      const updated = await claimGroupVerification(value);
 
       toast.success((
         <FormattedMessage

@@ -129,13 +129,19 @@ public interface GroupVerifications {
 	List<VerificationChallenge> findChallenges(GroupVerification verification);
 
 	/**
-	 * Submits a new ownership claim for the supplied {@code groupId} on behalf of the namespace.
+	 * Submits or refreshes an ownership claim for the supplied {@code groupId} on behalf of the
+	 * namespace.
 	 * <p>
-	 * Creates a {@link VerificationState#PENDING} {@link GroupVerification} and an initial
-	 * {@link ChallengeState#UNVERIFIED} {@link VerificationChallenge} for the chosen method, persists
-	 * both records, and returns the {@link GroupVerification}. The challenge token, which the
-	 * namespace must publish to the verification target, is not included in the returned record; use
-	 * {@link #findActiveChallenge(GroupVerification)} to retrieve it.
+	 * If the namespace does not yet have a claim for the group, this creates a
+	 * {@link VerificationState#PENDING} {@link GroupVerification} and an initial
+	 * {@link ChallengeState#UNVERIFIED} {@link VerificationChallenge} for the chosen method. If a
+	 * claim already exists for the namespace and group, the current unverified challenge is expired
+	 * and a fresh one is issued for the requested method. In both cases, the updated
+	 * {@link GroupVerification} is returned.
+	 * <p>
+	 * The challenge token, which the namespace must publish to the verification target, is not
+	 * included in the returned record; use {@link #findActiveChallenge(GroupVerification)} to retrieve
+	 * it.
 	 * <p>
 	 * {@link #findAnyOverlapping(String)} must be checked before calling this method. If an
 	 * overlapping active claim exists, implementations must throw
@@ -144,28 +150,10 @@ public interface GroupVerifications {
 	 * @param owner   the namespace owner that is claiming the group
 	 * @param groupId the Maven group identifier to claim
 	 * @param method  the verification method used to prove ownership
-	 * @return the created {@link VerificationState#PENDING} verification claim
+	 * @return the created or refreshed {@link GroupVerification} claim
 	 * @throws GroupIdAlreadyClaimedException when an active claim already covers the groupId
 	 */
 	GroupVerification claim(Owner owner, String groupId, VerificationMethod method);
-
-	/**
-	 * Reclaims an existing ownership claim for the supplied {@code groupId} using the given method.
-	 * <p>
-	 * The existing verification is loaded for the namespace, its active challenge is reset or
-	 * recreated for the new {@link VerificationMethod}, and the claim is moved back to
-	 * {@link VerificationState#PENDING}. Implementations only allow reclaiming claims that are in a
-	 * reclaimable terminal state, such as {@link VerificationState#FAILED} or
-	 * {@link VerificationState#REVOKED}.
-	 *
-	 * @param owner   the namespace owner that holds the claim
-	 * @param groupId the group identifier to reclaim
-	 * @param method  the verification method to use for the reclaimed claim
-	 * @return the updated {@link VerificationState#PENDING} verification claim
-	 * @throws GroupVerificationNotFoundException when no claim exists for the owner and groupId
-	 * @throws IllegalStateException              when the claim is not in a reclaimable state
-	 */
-	GroupVerification claimAgain(Owner owner, String groupId, VerificationMethod method);
 
 	/**
 	 * Attempts to verify the ownership claim for the given {@code groupId} on behalf of the namespace.

@@ -70,21 +70,6 @@ export const useClaimGroupVerification = (namespace: string) => {
         json: payload,
       }).json<GroupVerification>();
     },
-    onSuccess: (verification) => {
-      client.setQueryData(groupVerificationKeys.getGroupVerification(namespace, verification.groupId), verification);
-    },
-  });
-};
-
-export const useClaimAgainGroupVerification = (namespace: string) => {
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: { groupId: string; verificationMethod: VerificationMethod }): Promise<GroupVerification> => {
-      return request.put(`api/namespaces/${namespace}/group-verifications`, {
-        json: payload,
-      }).json<GroupVerification>();
-    },
     onSuccess: async (verification) => {
       client.setQueryData(groupVerificationKeys.getGroupVerification(namespace, verification.groupId), verification);
       await client.invalidateQueries({

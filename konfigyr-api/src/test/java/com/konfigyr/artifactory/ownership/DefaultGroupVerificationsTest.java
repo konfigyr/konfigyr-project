@@ -6,22 +6,15 @@ import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedConstruction;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.CommunicationException;
 import javax.naming.directory.InitialDirContext;
+import java.util.UUID;
 
 import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDns;
 import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDnsException;
@@ -282,13 +275,13 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should reclaim an existing failed claim and reuse its challenge")
-	void shouldReclaimPendingClaim() {
+	@DisplayName("should claim a new verification challenge for an existing failed claim")
+	void shouldReclaimExistingClaim() {
 		final var owner = new Owner(EntityId.from(1), "john-doe");
 		final var groupId = "org.springframework.ai";
 		final var method = VerificationMethod.DNS;
 
-		final var reclaimed = verifications.claimAgain(owner, groupId, method);
+		final var reclaimed = verifications.claim(owner, groupId, method);
 
 		assertThat(reclaimed)
 				.returns(EntityId.from(2), GroupVerification::id)
@@ -310,17 +303,6 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
 				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
 				.returns(method, VerificationChallenge::method);
-	}
-
-	@Transactional
-	@MethodSource("reclaimRejectedScenarios")
-	@DisplayName("should fail to reclaim")
-	@ParameterizedTest(name = "should fail to reclaim {1} verification with state {2}")
-	void shouldFailToReclaimActiveClaim(String groupId, VerificationState state, EntityId namespaceId, String namespace) {
-		final var owner = new Owner(namespaceId, namespace);
-
-		assertThatThrownBy(() -> verifications.claimAgain(owner, groupId, VerificationMethod.DNS))
-				.isInstanceOf(IllegalStateException.class);
 	}
 
 	@Test
@@ -484,23 +466,5 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.hasSize(1)
 				.first()
 				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
-	}
-
-	@Test
-	@Transactional
-	@DisplayName("should allow only one verification challenge in unverified state")
-	void shouldAllowOnlyOneActiveChallenge() {
-		final var owner = new Owner(EntityId.from(1), "john-doe");
-		assertThat(verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
-				.isNotNull();
-		assertThatThrownBy(() -> verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
-				.isInstanceOf(DuplicateKeyException.class);
-	}
-
-	static Stream<Arguments> reclaimRejectedScenarios() {
-		return Stream.of(
-				Arguments.of("com.konfigyr", VerificationState.ACTIVE, EntityId.from(2), "konfigyr"),
-				Arguments.of("org.springframework.boot", VerificationState.PENDING, EntityId.from(1), "john-doe")
-		);
 	}
 }

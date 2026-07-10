@@ -40,8 +40,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 			.sortField("group", GROUP_VERIFICATIONS.GROUP_ID)
 			.build();
 
-	private static final List<VerificationState> RECLAIMABLE_STATES = List.of(VerificationState.FAILED, VerificationState.REVOKED);
-
 	private final BytesKeyGenerator challengeTokenGenerator = KeyGenerators.secureRandom(6);
 
 	private final DSLContext context;
@@ -131,52 +129,13 @@ class DefaultGroupVerifications implements GroupVerifications {
 	public GroupVerification claim(Owner owner, String groupId, VerificationMethod method) {
 		log.debug("Attempting to create a group verification and claim challenge for: [owner={}, groupId={}, method={}]",
 				owner, groupId, method);
-
 		findAnyOverlapping(groupId).ifPresent(ignore -> {
 			throw new GroupIdAlreadyClaimedException(groupId);
 		});
 
-		final GroupVerification verification = context.insertInto(GROUP_VERIFICATIONS)
-				.set(SettableRecord.of(context, GROUP_VERIFICATIONS)
-						.set(GROUP_VERIFICATIONS.ID, EntityId.generate().map(EntityId::get))
-						.set(GROUP_VERIFICATIONS.NAMESPACE_ID, owner.id().get())
-						.set(GROUP_VERIFICATIONS.GROUP_ID, groupId)
-						.set(GROUP_VERIFICATIONS.STATE, VerificationState.PENDING.name())
-						.set(GROUP_VERIFICATIONS.CREATED_AT, OffsetDateTime.now())
-						.get())
-				.returning(GROUP_VERIFICATIONS.fields())
-				.fetchOne(it -> toGroupVerification(it, owner));
-
-		Assert.state(verification != null, () -> "Could not create verification for: [owner=%s, groupId=%s]"
-				.formatted(owner.slug(), groupId));
-
-		createVerificationChallenge(verification, method);
-
-		log.info("Successfully created group verification claim for owner {} ({}), groupId '{}', method {}",
-				owner.slug(), owner.id(), groupId, method);
-
-		return verification;
-	}
-
-	@Override
-	@Transactional(label = "group-verifications.claim-again")
-	public GroupVerification claimAgain(Owner owner, String groupId, VerificationMethod method) {
-		GroupVerification verification = findByGroupId(owner, groupId)
-				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
-
-		Assert.state(
-				RECLAIMABLE_STATES.contains(verification.state()),
-				() -> "Verification claim cannot be reclaimed: [state=%s, owner=%s, groupId=%s]"
-						.formatted(verification.state(), owner.slug(), verification.groupId())
-		);
-
-		reclaimVerificationChallenge(verification, method);
-		GroupVerification updated = reclaimGroupVerification(owner, verification);
-
-		log.info("Successfully updated group verification claim for owner {} ({}), groupId '{}', method {}",
-				owner.slug(), owner.id(), groupId, method);
-
-		return updated;
+		return findByGroupId(owner, groupId)
+				.map(groupVerification -> requestNewChallenge(groupVerification, method))
+				.orElseGet(() -> createClaim(owner, groupId, method));
 	}
 
 	@Override
@@ -340,19 +299,17 @@ class DefaultGroupVerifications implements GroupVerifications {
 				.build();
 	}
 
-	private GroupVerification reclaimGroupVerification(Owner owner, GroupVerification verification) {
-		GroupVerification updated = context.update(GROUP_VERIFICATIONS)
-				.set(GROUP_VERIFICATIONS.STATE, VerificationState.PENDING.name())
-				.setNull(GROUP_VERIFICATIONS.VERIFIED_AT)
-				.setNull(GROUP_VERIFICATIONS.REVOKED_AT)
-				.where(GROUP_VERIFICATIONS.ID.eq(verification.id().get()))
-				.returning(GROUP_VERIFICATIONS.fields())
-				.fetchOne(it -> toGroupVerification(it, owner));
+	private void expireActiveChallenges(GroupVerification verification) {
+		final int expired = context.update(GROUP_VERIFICATION_CHALLENGES)
+				.set(GROUP_VERIFICATION_CHALLENGES.STATE, ChallengeState.EXPIRED.name())
+				.set(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT, OffsetDateTime.now())
+				.where(
+						GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(verification.id().get())
+								.and(GROUP_VERIFICATION_CHALLENGES.STATE.eq(ChallengeState.UNVERIFIED.name())))
+				.execute();
 
-		Assert.state(updated != null, () -> "Could not update verification for: [owner=%s, groupId=%s]"
-				.formatted(owner.slug(), verification.groupId()));
-
-		return updated;
+		log.debug("Expired {} active verification challenge(s) for group verification {} ({})",
+				expired, verification.id(), verification.groupId());
 	}
 
 	private VerificationChallenge reclaimVerificationChallenge(GroupVerification verification, VerificationMethod method) {
@@ -389,6 +346,50 @@ class DefaultGroupVerifications implements GroupVerifications {
 				.formatted(verification.id(), verification.groupId(), method.name()));
 
 		return challenge;
+	}
+
+	private GroupVerification createClaim(Owner owner, String groupId, VerificationMethod method) {
+		final GroupVerification verification = context.insertInto(GROUP_VERIFICATIONS)
+				.set(SettableRecord.of(context, GROUP_VERIFICATIONS)
+						.set(GROUP_VERIFICATIONS.ID, EntityId.generate().map(EntityId::get))
+						.set(GROUP_VERIFICATIONS.NAMESPACE_ID, owner.id().get())
+						.set(GROUP_VERIFICATIONS.GROUP_ID, groupId)
+						.set(GROUP_VERIFICATIONS.STATE, VerificationState.PENDING.name())
+						.set(GROUP_VERIFICATIONS.CREATED_AT, OffsetDateTime.now())
+						.get())
+				.returning(GROUP_VERIFICATIONS.fields())
+				.fetchOne(it -> toGroupVerification(it, owner));
+
+		Assert.state(verification != null, () -> "Could not create verification for: [owner=%s, groupId=%s]"
+				.formatted(owner.slug(), groupId));
+
+		createVerificationChallenge(verification, method);
+
+		log.info("Successfully created group verification claim for owner {} ({}), groupId '{}', method {}",
+				owner.slug(), owner.id(), groupId, method);
+
+		return verification;
+	}
+
+	private GroupVerification requestNewChallenge(GroupVerification verification, VerificationMethod method) {
+		GroupVerification updated = context.update(GROUP_VERIFICATIONS)
+				.set(GROUP_VERIFICATIONS.STATE, VerificationState.PENDING.name())
+				.setNull(GROUP_VERIFICATIONS.VERIFIED_AT)
+				.setNull(GROUP_VERIFICATIONS.REVOKED_AT)
+				.where(GROUP_VERIFICATIONS.ID.eq(verification.id().get()))
+				.returning(GROUP_VERIFICATIONS.fields())
+				.fetchOne(it -> toGroupVerification(it, verification.owner()));
+
+		Assert.state(updated != null, () -> "Could not update verification for: [owner=%s, groupId=%s]"
+				.formatted(verification.owner().slug(), verification.groupId()));
+
+		expireActiveChallenges(verification);
+		createVerificationChallenge(verification, method);
+
+		log.info("Successfully requested a new verification challenge for owner {} ({}), groupId '{}', method {}",
+				updated.owner().slug(), updated.owner().id(), updated.groupId(), method);
+
+		return updated;
 	}
 
 }
