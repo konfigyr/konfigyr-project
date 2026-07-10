@@ -136,12 +136,23 @@ export const VerifyClaimLabel = () => (
   />
 );
 
+export const ClaimVerifiedSuccessMessage = () => (
+  <FormattedMessage
+    defaultMessage="Claim verified successfully."
+    description="Success message when a group verification claim is verified."
+  />
+);
+
+export const ClaimVerifiedWarningMessage = () => (
+  <FormattedMessage
+    defaultMessage="Cannot verify claim. Please check configuration and try again."
+    description="Warning message when a group verification claim does not end up active after verification."
+  />
+);
+
 export const GroupClaimsLabel = () => (
   <FormattedMessage
     defaultMessage="Group claims"
     description="Breadcrumb label for the group verification claims list page."
   />
 );
-
-
-

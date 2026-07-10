@@ -6,9 +6,8 @@ import {
   useGetGroupVerification,
   useGetVerificationChallenges,
   useNamespace,
-  useVerifyGroupVerification,
 } from '@konfigyr/hooks';
-import { ErrorState, useErrorNotification } from '@konfigyr/components/error';
+import { ErrorState } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
 import { GroupVerificationStateAlert } from '@konfigyr/components/groups/group-verification-state';
 import { Button, buttonVariants } from '@konfigyr/components/ui/button';
@@ -24,6 +23,7 @@ import {
   CancelGroupVerificationButton,
   RevokeGroupVerificationButton,
 } from '@konfigyr/components/groups/revoke-group-verification';
+import { VerifyGroupVerificationButton } from '@konfigyr/components/groups/verify-group-verification';
 
 export const Route = createFileRoute(
   '/_authenticated/namespace/$namespace/groups/$groupId/',
@@ -34,7 +34,6 @@ export const Route = createFileRoute(
 function RouteComponent () {
   const namespace = useNamespace();
   const { groupId } = Route.useParams();
-  const errorNotification = useErrorNotification();
 
   const {
     data: verification,
@@ -50,8 +49,6 @@ function RouteComponent () {
     isPending: isChallengesPending,
   } = useGetVerificationChallenges(namespace.slug, groupId);
 
-  const { mutateAsync: verifyGroupVerification, isPending: isVerifying } = useVerifyGroupVerification(namespace.slug);
-
   const loading = isVerificationPending || isChallengesPending;
   const error = verificationError || challengesError;
   const isError = isVerificationError || isChallengesError;
@@ -61,17 +58,6 @@ function RouteComponent () {
     // items already ordered on the backend by createdAt.asc(),
     return items.at(-1);
   }, [challenges]);
-
-  const onVerify = async () => {
-    if (!verification) {
-      return;
-    }
-    try {
-      await verifyGroupVerification(verification.groupId);
-    } catch (e) {
-      errorNotification(e);
-    }
-  };
 
   const banner = verification
     ? <GroupVerificationStateAlert groupId={verification.groupId} verificationChallenge={challenge} verificationState={verification.state}/>
@@ -145,10 +131,12 @@ function RouteComponent () {
               )}
 
               {(verification.state === 'PENDING' || verification.state === 'FAILED') && (
-                <Button loading={isVerifying} onClick={onVerify}>
-                  <RotateCcwIcon/>
-                  <VerifyClaimLabel/>
-                </Button>
+                <VerifyGroupVerificationButton namespace={namespace.slug} verification={verification}>
+                  <Button>
+                    <RotateCcwIcon/>
+                    <VerifyClaimLabel/>
+                  </Button>
+                </VerifyGroupVerificationButton>
               )}
 
               {verification.state === 'REVOKED' && (
