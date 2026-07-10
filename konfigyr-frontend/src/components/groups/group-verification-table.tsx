@@ -83,7 +83,7 @@ function GroupVerificationRowActions ({ namespace, verification }: {
           <RevokeGroupVerificationButton namespace={namespace}
             verification={verification}
             onOpenChange={handleDialogOpenChange}>
-            <DropdownMenuItem variant="destructive" closeOnClick={false}>
+            <DropdownMenuItem closeOnClick={false}>
               <RevokeClaimLabel/>
             </DropdownMenuItem>
           </RevokeGroupVerificationButton>
