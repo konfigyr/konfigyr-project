@@ -8,16 +8,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.UUID;
-
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.CommunicationException;
 import javax.naming.directory.InitialDirContext;
+import java.util.UUID;
 
 import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDns;
 import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.mockDnsException;
@@ -278,6 +275,38 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 
 	@Test
 	@Transactional
+	@DisplayName("should claim a new verification challenge for an existing failed claim")
+	void shouldReclaimExistingClaim() {
+		final var owner = new Owner(EntityId.from(1), "john-doe");
+		final var groupId = "org.springframework.ai";
+		final var method = VerificationMethod.DNS;
+
+		final var reclaimed = verifications.claim(owner, groupId, method);
+
+		assertThat(reclaimed)
+				.returns(EntityId.from(2), GroupVerification::id)
+				.returns(owner, GroupVerification::owner)
+				.returns(groupId, GroupVerification::groupId)
+				.returns(VerificationState.PENDING, GroupVerification::state)
+				.returns(null, GroupVerification::verifiedAt)
+				.returns(null, GroupVerification::revokedAt);
+
+		assertThat(verifications.findChallenges(reclaimed))
+				.as("should create the second verification challenge")
+				.hasSize(2);
+
+		assertThat(verifications.findActiveChallenge(reclaimed))
+				.as("should create a new correct verification challenge with token")
+				.isPresent()
+				.get()
+				.satisfies(it -> assertThat(it.token()).isNotNull())
+				.satisfies(it -> assertThat(it.createdAt()).isNotNull())
+				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state)
+				.returns(method, VerificationChallenge::method);
+	}
+
+	@Test
+	@Transactional
 	@DisplayName("should revoke claim in pending state")
 	void shouldRevokeClaimInPendingState() {
 		final var owner = new Owner(EntityId.from(1), "john-doe");
@@ -438,16 +467,4 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 				.first()
 				.returns(ChallengeState.UNVERIFIED, VerificationChallenge::state);
 	}
-
-	@Test
-	@Transactional
-	@DisplayName("should allow only one verification challenge in unverified state")
-	void shouldAllowOnlyOneActiveChallenge() {
-		final var owner = new Owner(EntityId.from(1), "john-doe");
-		assertThat(verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
-				.isNotNull();
-		assertThatThrownBy(() -> verifications.claim(owner, "com.my-new-company", VerificationMethod.DNS))
-				.isInstanceOf(DuplicateKeyException.class);
-	}
-
 }

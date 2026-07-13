@@ -5,6 +5,7 @@ import kms from './server/kms';
 import memberships from './server/memberships';
 import namespaces from './server/namespaces';
 import applications from './server/namespace/applications';
+import groups from './server/namespace/groups';
 import invitations from './server/namespace/invitations';
 import audit from './server/audit';
 import oidc from './server/oidc';
@@ -19,6 +20,7 @@ export const handlers = [
   ...memberships,
   ...namespaces,
   ...applications,
+  ...groups,
   ...invitations,
   ...audit,
   ...oidc,

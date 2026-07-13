@@ -129,13 +129,19 @@ public interface GroupVerifications {
 	List<VerificationChallenge> findChallenges(GroupVerification verification);
 
 	/**
-	 * Submits a new ownership claim for the supplied {@code groupId} on behalf of the namespace.
+	 * Submits or refreshes an ownership claim for the supplied {@code groupId} on behalf of the
+	 * namespace.
 	 * <p>
-	 * Creates a {@link VerificationState#PENDING} {@link GroupVerification} and an initial
-	 * {@link ChallengeState#UNVERIFIED} {@link VerificationChallenge} for the chosen method, persists
-	 * both records, and returns the {@link GroupVerification}. The challenge token, which the
-	 * namespace must publish to the verification target, is not included in the returned record; use
-	 * {@link #findActiveChallenge(GroupVerification)} to retrieve it.
+	 * If the namespace does not yet have a claim for the group, this creates a
+	 * {@link VerificationState#PENDING} {@link GroupVerification} and an initial
+	 * {@link ChallengeState#UNVERIFIED} {@link VerificationChallenge} for the chosen method. If a
+	 * claim already exists for the namespace and group, the current unverified challenge is expired
+	 * and a fresh one is issued for the requested method. In both cases, the updated
+	 * {@link GroupVerification} is returned.
+	 * <p>
+	 * The challenge token, which the namespace must publish to the verification target, is not
+	 * included in the returned record; use {@link #findActiveChallenge(GroupVerification)} to retrieve
+	 * it.
 	 * <p>
 	 * {@link #findAnyOverlapping(String)} must be checked before calling this method. If an
 	 * overlapping active claim exists, implementations must throw
@@ -144,7 +150,7 @@ public interface GroupVerifications {
 	 * @param owner   the namespace owner that is claiming the group
 	 * @param groupId the Maven group identifier to claim
 	 * @param method  the verification method used to prove ownership
-	 * @return the created {@link VerificationState#PENDING} verification claim
+	 * @return the created or refreshed {@link GroupVerification} claim
 	 * @throws GroupIdAlreadyClaimedException when an active claim already covers the groupId
 	 */
 	GroupVerification claim(Owner owner, String groupId, VerificationMethod method);

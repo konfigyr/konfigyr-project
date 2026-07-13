@@ -53,6 +53,7 @@ if (typeof window !== 'undefined') {
     writable: true,
   });
 
+  window.scrollTo = vi.fn();
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
   window.HTMLElement.prototype.releasePointerCapture = vi.fn();
   window.HTMLElement.prototype.hasPointerCapture = vi.fn();
