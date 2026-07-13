@@ -312,26 +312,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 				expired, verification.id(), verification.groupId());
 	}
 
-	private VerificationChallenge reclaimVerificationChallenge(GroupVerification verification, VerificationMethod method) {
-		final VerificationChallenge updated = context.update(GROUP_VERIFICATION_CHALLENGES)
-				.set(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, method.name())
-				.set(GROUP_VERIFICATION_CHALLENGES.STATE, ChallengeState.UNVERIFIED.name())
-				.setNull(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT)
-				.setNull(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT)
-				.where(
-						GROUP_VERIFICATION_CHALLENGES.STATE.eq(ChallengeState.UNVERIFIED.name())
-								.and(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID.eq(verification.id().get()))
-				)
-				.returning(GROUP_VERIFICATION_CHALLENGES.fields())
-				.fetchOne(DefaultGroupVerifications::toVerificationChallenge);
-
-		if (updated != null) {
-			return updated;
-		}
-
-		return createVerificationChallenge(verification, method);
-	}
-
 	private VerificationChallenge createVerificationChallenge(GroupVerification verification, VerificationMethod method) {
 		final VerificationChallenge challenge = context.insertInto(GROUP_VERIFICATION_CHALLENGES)
 				.set(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, verification.id().get())
@@ -384,10 +364,10 @@ class DefaultGroupVerifications implements GroupVerifications {
 				.formatted(verification.owner().slug(), verification.groupId()));
 
 		expireActiveChallenges(verification);
-		createVerificationChallenge(verification, method);
+		VerificationChallenge challenge  = createVerificationChallenge(verification, method);
 
-		log.info("Successfully requested a new verification challenge for owner {} ({}), groupId '{}', method {}",
-				updated.owner().slug(), updated.owner().id(), updated.groupId(), method);
+		log.info("Successfully requested a new verification challenge for owner {} ({}), groupId '{}', method {}, state {}",
+				updated.owner().slug(), updated.owner().id(), updated.groupId(), challenge.method(), challenge.state());
 
 		return updated;
 	}
