@@ -1,5 +1,6 @@
 package com.konfigyr.membership;
 
+import com.konfigyr.Hostnames;
 import com.konfigyr.mail.Mailer;
 import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.feature.Features;
@@ -40,8 +41,8 @@ public class MembershipAutoConfiguration {
 
 	@Bean
 	@ConditionalOnBean(Mailer.class)
-	InvitationSender invitationSender(Mailer mailer) {
-		return new InvitationSender(mailer, context);
+	InvitationSender invitationSender(Hostnames hostnames, Mailer mailer) {
+		return new InvitationSender(mailer, context, hostnames);
 	}
 
 }

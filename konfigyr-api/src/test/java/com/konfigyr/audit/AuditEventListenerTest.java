@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -233,10 +232,7 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 		final var namespace = mock(Namespace.class);
 		doReturn(EntityId.from(800)).when(namespace).id();
 
-		listener.on(new InvitationEvent.Created(
-				namespace, "inv-key-123",
-				UriComponentsBuilder.fromUriString("https://konfigyr.com").build()
-		));
+		listener.on(new InvitationEvent.Created(namespace, "inv-key-123"));
 
 		assertAuditRecord("invitation", EntityId.from(800))
 				.returns(EntityId.from(800), AuditRecord::namespaceId)

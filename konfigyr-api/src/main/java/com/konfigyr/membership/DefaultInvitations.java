@@ -28,8 +28,6 @@ import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponents;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -166,8 +164,7 @@ class DefaultInvitations implements Invitations {
 		log.info("Invitation has been created for namespace '{}' with: [key={}, role={}, sender={}]",
 				context.name(), key, invite.role(), invite.sender());
 
-		final UriComponents host = ServletUriComponentsBuilder.fromCurrentServletMapping().build();
-		publisher.publishEvent(new InvitationEvent.Created(namespace, invitation.key(), host));
+		publisher.publishEvent(new InvitationEvent.Created(namespace, invitation.key()));
 
 		return invitation;
 	}

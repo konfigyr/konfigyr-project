@@ -3,6 +3,8 @@ spring:
     type: SIMPLE
 
 konfigyr:
+  hostnames:
+    api: https://api.konfigyr.com
   crypto:
     master-key:
       value: meITChyITJK/Z46MKXNN2LeSYJQdb1aGaLAWoy9+g3Y=

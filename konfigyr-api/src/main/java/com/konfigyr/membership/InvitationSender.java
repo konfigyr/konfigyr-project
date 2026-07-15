@@ -1,5 +1,6 @@
 package com.konfigyr.membership;
 
+import com.konfigyr.Hostnames;
 import com.konfigyr.mail.Mail;
 import com.konfigyr.mail.Mailer;
 import com.konfigyr.support.FullName;
@@ -14,7 +15,6 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
@@ -40,6 +40,7 @@ class InvitationSender {
 
 	private final Mailer mailer;
 	private final DSLContext context;
+	private final Hostnames hostnames;
 
 	@Async
 	@Retryable(noRetryFor = MembershipException.class)
@@ -50,8 +51,8 @@ class InvitationSender {
 		final Record invitation = lookupInvitation(event);
 		final String namespace = invitation.get(NAMESPACES.SLUG);
 
-		final String invitationLink = createUriComponentsBuilder(event.host())
-				.pathSegment("namespace", namespace, "members", "invitation", event.key())
+		final String invitationLink = UriComponentsBuilder.fromUri(hostnames.web())
+				.pathSegment("join", event.key())
 				.toUriString();
 
 		final Mail mail = Mail.builder()
@@ -99,14 +100,6 @@ class InvitationSender {
 						InvitationException.ErrorCode.INVITATION_NOT_FOUND,
 						"Could not find invitation for key '" + event.key() + "' in namespace: " + event.namespace()
 				));
-	}
-
-	@NonNull
-	static UriComponentsBuilder createUriComponentsBuilder(@NonNull UriComponents root) {
-		return UriComponentsBuilder.newInstance()
-				.scheme(root.getScheme())
-				.host(root.getHost())
-				.port(root.getPort());
 	}
 
 }
