@@ -1,5 +1,6 @@
 package com.konfigyr.membership;
 
+import com.konfigyr.Hostnames;
 import com.konfigyr.mail.Mail;
 import com.konfigyr.mail.Recipient;
 import com.konfigyr.mail.test.MailAssert;
@@ -19,8 +20,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSendException;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.OffsetDateTime;
 
@@ -31,13 +30,14 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class InvitationSenderTest extends AbstractIntegrationTest {
 
-	static final UriComponents host = UriComponentsBuilder.fromUriString("https://konfigyr.com:8443/namespaces?foo=bar#segment").build();
-
 	@Autowired
 	NamespaceManager namespaces;
 
 	@Autowired
 	DSLContext context;
+
+	@Autowired
+	Hostnames hostnames;
 
 	@Captor
 	ArgumentCaptor<Mail> captor;
@@ -46,14 +46,14 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 
 	@BeforeEach
 	void setup() {
-		sender = new InvitationSender(mailer, context);
+		sender = new InvitationSender(mailer, context, hostnames);
 	}
 
 	@Test
 	@DisplayName("should send invitation email when created event is published")
 	void shouldSendInvitation() {
 		final var namespace = namespaces.findBySlug("konfigyr").orElseThrow();
-		final var event = new InvitationEvent.Created(namespace, "09320d7f8e21143b2957f1caded74cbc", host);
+		final var event = new InvitationEvent.Created(namespace, "09320d7f8e21143b2957f1caded74cbc");
 
 		assertThatNoException().isThrownBy(() -> sender.send(event));
 
@@ -66,7 +66,7 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 				.hasRecipients(Recipient.to("invitee@konfigyr.com"))
 				.hasAttribute("sender", FullName.of("John", "Doe"))
 				.hasAttribute("namespace", "Konfigyr")
-				.hasAttribute("link", "https://konfigyr.com:8443/namespace/konfigyr/members/invitation/09320d7f8e21143b2957f1caded74cbc")
+				.hasAttribute("link", "https://konfigyr.com/join/09320d7f8e21143b2957f1caded74cbc")
 				.hasAttributeSatisfying("expiration", date -> Assertions.assertThat(date)
 						.isInstanceOf(OffsetDateTime.class)
 						.asInstanceOf(InstanceOfAssertFactories.OFFSET_DATE_TIME)
@@ -78,7 +78,7 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 	@DisplayName("should fail to send email when invitation is not found")
 	void shouldFailToSendUnknownInvitation() {
 		final var namespace = namespaces.findBySlug("konfigyr").orElseThrow();
-		final var event = new InvitationEvent.Created(namespace, "unknown", host);
+		final var event = new InvitationEvent.Created(namespace, "unknown");
 
 		assertThatThrownBy(() -> sender.send(event))
 				.isInstanceOf(InvitationException.class)
@@ -92,7 +92,7 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 	@DisplayName("should fail to send invitation email due to mailer exception")
 	void shouldNotCatchMailerExceptions() {
 		final var namespace = namespaces.findBySlug("konfigyr").orElseThrow();
-		final var event = new InvitationEvent.Created(namespace, "09320d7f8e21143b2957f1caded74cbc", host);
+		final var event = new InvitationEvent.Created(namespace, "09320d7f8e21143b2957f1caded74cbc");
 
 		doThrow(MailSendException.class).when(mailer).send(any());
 

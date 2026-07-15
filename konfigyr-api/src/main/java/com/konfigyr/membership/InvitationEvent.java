@@ -7,7 +7,6 @@ import com.konfigyr.namespace.Namespace;
 import org.jmolecules.event.annotation.DomainEvent;
 import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
-import org.springframework.web.util.UriComponents;
 
 import java.util.function.Supplier;
 
@@ -71,28 +70,14 @@ public abstract sealed class InvitationEvent extends EntityEvent implements Supp
 	@DomainEvent(name = "invitation-created", namespace = "namespace")
 	public static final class Created extends InvitationEvent {
 
-		private final UriComponents host;
-
 		/**
 		 * Create a new {@link Created} event for the given {@link Namespace} and invitation key.
 		 *
 		 * @param namespace the namespace for which the invitation was created
 		 * @param key       invitation key
-		 * @param host      the URI components of the current request host, used to construct email links
 		 */
-		public Created(Namespace namespace, String key, UriComponents host) {
+		public Created(Namespace namespace, String key) {
 			super(namespace, key);
-			this.host = host;
-		}
-
-		/**
-		 * Returns the {@link UriComponents} host used to construct invitation links in emails.
-		 *
-		 * @return the host, never {@literal null}
-		 */
-		@NonNull
-		public UriComponents host() {
-			return host;
 		}
 	}
 
