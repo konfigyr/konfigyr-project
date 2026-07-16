@@ -19,6 +19,7 @@ import org.jooq.Record;
 import org.jooq.SelectJoinStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -37,6 +38,7 @@ import java.util.Set;
 import static com.konfigyr.data.tables.ArtifactVersionProperties.ARTIFACT_VERSION_PROPERTIES;
 import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
 import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
+import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 import static com.konfigyr.data.tables.PropertyDefinitions.PROPERTY_DEFINITIONS;
 
 @Slf4j
@@ -47,7 +49,6 @@ class DefaultArtifactory implements Artifactory {
 	private final MetadataStore store;
 	private final ArtifactoryConverters converters;
 	private final ApplicationEventPublisher eventPublisher;
-	private final OwnerResolver ownerResolver;
 	private final GroupVerifications groupVerifications;
 
 	@NonNull
@@ -56,6 +57,15 @@ class DefaultArtifactory implements Artifactory {
 	public Optional<VersionedArtifact> get(@NonNull ArtifactCoordinates coordinates) {
 		return createVersionedArtifactQuery()
 				.where(toCondition(coordinates))
+				.fetchOptional(DefaultArtifactory::toVersionedArtifact);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "artifactory.get-visible-versioned-artifact")
+	public Optional<VersionedArtifact> get(@Nullable Owner owner, @NonNull ArtifactCoordinates coordinates) {
+		return createVersionedArtifactQuery()
+				.where(DSL.and(toCondition(coordinates), visibilityCondition(owner)))
 				.fetchOptional(DefaultArtifactory::toVersionedArtifact);
 	}
 
@@ -71,10 +81,22 @@ class DefaultArtifactory implements Artifactory {
 		);
 	}
 
+	@Override
+	@Transactional(readOnly = true, label = "artifactory.visible-coordinates-exists")
+	public boolean exists(@Nullable Owner owner, @NonNull ArtifactCoordinates coordinates) {
+		return context.fetchExists(
+				DSL.select(ARTIFACT_VERSIONS.ID)
+						.from(ARTIFACT_VERSIONS)
+						.innerJoin(ARTIFACTS)
+						.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
+						.where(DSL.and(toCondition(coordinates), visibilityCondition(owner)))
+		);
+	}
+
 	@NonNull
 	@Override
 	@Transactional(readOnly = true, label = "artifactory.existing-coordinates")
-	public Set<Publication> existing(@NonNull Collection<ArtifactCoordinates> coordinates) {
+	public Set<Publication> existing(@NonNull Owner owner, @NonNull Collection<ArtifactCoordinates> coordinates) {
 		if (coordinates.isEmpty()) {
 			return Set.of();
 		}
@@ -84,10 +106,13 @@ class DefaultArtifactory implements Artifactory {
 		final String[] versions = coordinates.stream().map(coordinate -> coordinate.version().get()).toArray(String[]::new);
 
 		return createVersionedArtifactQuery()
-				.where(DSL.row(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, ARTIFACT_VERSIONS.VERSION)
-						.in(DSL.select(DSL.field("g", String.class), DSL.field("a", String.class), DSL.field("v", String.class))
-								.from("unnest({0}::text[], {1}::text[], {2}::text[]) AS t(g, a, v)",
-										groupIds, artifactIds, versions)))
+				.where(DSL.and(
+						DSL.row(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, ARTIFACT_VERSIONS.VERSION)
+								.in(DSL.select(DSL.field("g", String.class), DSL.field("a", String.class), DSL.field("v", String.class))
+										.from("unnest({0}::text[], {1}::text[], {2}::text[]) AS t(g, a, v)",
+												groupIds, artifactIds, versions)),
+						visibilityCondition(owner)
+				))
 				.fetchSet(DefaultArtifactory::toVersionedArtifact);
 	}
 
@@ -95,7 +120,7 @@ class DefaultArtifactory implements Artifactory {
 	@Observed(name = "konfigyr.artifactory.release")
 	@Transactional(label = "artifactory.release-artifact-component")
 	public VersionedArtifact publish(
-			@NonNull EntityId ownerId,
+			@NonNull Owner owner,
 			@NonNull
 			@ObservationKeyValue(key = "konfigyr.artifactory.artifact", expression = "#this")
 			ArtifactMetadata metadata
@@ -106,7 +131,8 @@ class DefaultArtifactory implements Artifactory {
 			throw new ArtifactVersionExistsException(coordinates);
 		}
 
-		assertCanRelease(ownerId, metadata.groupId());
+		assertCanRelease(owner, metadata.groupId());
+		assertSameOwner(owner, coordinates);
 
 		final ByteArray checksum;
 		final Resource resource;
@@ -121,12 +147,14 @@ class DefaultArtifactory implements Artifactory {
 			throw new ArtifactoryException("Unexpected error occurred while calculating metadata checksum for artifact: " + coordinates.format(), ex);
 		}
 
-		final Long artifactId = context.insertInto(ARTIFACTS)
+		final Record artifactRecord = context.insertInto(ARTIFACTS)
 				.set(
 						SettableRecord.of(context, ARTIFACTS)
 								.set(ARTIFACTS.ID, EntityId.generate().map(EntityId::get))
+								.set(ARTIFACTS.NAMESPACE_ID, owner.id().get())
 								.set(ARTIFACTS.GROUP_ID, coordinates.groupId())
 								.set(ARTIFACTS.ARTIFACT_ID, coordinates.artifactId())
+								.set(ARTIFACTS.VISIBILITY, ArtifactVisibility.PRIVATE.name())
 								.set(ARTIFACTS.NAME, metadata.name())
 								.set(ARTIFACTS.DESCRIPTION, metadata.description())
 								.set(ARTIFACTS.WEBSITE, metadata.website(), converters.uri())
@@ -142,8 +170,13 @@ class DefaultArtifactory implements Artifactory {
 				.set(ARTIFACTS.WEBSITE, converters.uri().to(metadata.website()))
 				.set(ARTIFACTS.REPOSITORY, converters.uri().to(metadata.repository()))
 				.set(ARTIFACTS.UPDATED_AT, OffsetDateTime.now())
-				.returning(ARTIFACTS.ID)
-				.fetchOne(ARTIFACTS.ID);
+				.returning(ARTIFACTS.ID, ARTIFACTS.VISIBILITY)
+				.fetchOne();
+
+		Assert.state(artifactRecord != null, "Failed to insert new artifact record");
+
+		final Long artifactId = artifactRecord.get(ARTIFACTS.ID);
+		final ArtifactVisibility visibility = artifactRecord.get(ARTIFACTS.VISIBILITY, ArtifactVisibility.class);
 
 		final Long artifactVersionId = context.insertInto(ARTIFACT_VERSIONS)
 				.set(
@@ -172,6 +205,8 @@ class DefaultArtifactory implements Artifactory {
 		return VersionedArtifact.from(metadata)
 				.id(artifactVersionId)
 				.artifact(artifactId)
+				.owner(owner)
+				.visibility(visibility)
 				.state(PublicationState.PENDING)
 				.checksum(checksum.encodeHex())
 				.publishedAt(Instant.now())
@@ -198,6 +233,31 @@ class DefaultArtifactory implements Artifactory {
 				.fetch(record -> toPropertyDefinition(record, converters));
 	}
 
+	@Override
+	@Transactional(label = "artifactory.change-visibility")
+	public void changeVisibility(
+			@NonNull Owner owner,
+			@NonNull String groupId,
+			@NonNull String artifactId,
+			@NonNull ArtifactVisibility visibility
+	) {
+		final Long existingOwnerId = context.select(ARTIFACTS.NAMESPACE_ID)
+				.from(ARTIFACTS)
+				.where(ARTIFACTS.GROUP_ID.eq(groupId), ARTIFACTS.ARTIFACT_ID.eq(artifactId))
+				.fetchOptional(ARTIFACTS.NAMESPACE_ID)
+				.orElseThrow(() -> new ArtifactDefinitionNotFoundException(groupId, artifactId));
+
+		if (!existingOwnerId.equals(owner.id().get())) {
+			throw new ArtifactOwnershipMismatchException(groupId, artifactId, owner);
+		}
+
+		context.update(ARTIFACTS)
+				.set(ARTIFACTS.VISIBILITY, visibility.name())
+				.set(ARTIFACTS.UPDATED_AT, OffsetDateTime.now())
+				.where(ARTIFACTS.GROUP_ID.eq(groupId), ARTIFACTS.ARTIFACT_ID.eq(artifactId))
+				.execute();
+	}
+
 	@NonNull
 	private SelectJoinStep<? extends Record> createVersionedArtifactQuery() {
 		return context.select(
@@ -207,6 +267,9 @@ class DefaultArtifactory implements Artifactory {
 						ARTIFACTS.ID,
 						ARTIFACTS.GROUP_ID,
 						ARTIFACTS.ARTIFACT_ID,
+						ARTIFACTS.VISIBILITY,
+						NAMESPACES.ID,
+						NAMESPACES.SLUG,
 						ARTIFACT_VERSIONS.VERSION,
 						ARTIFACTS.NAME,
 						ARTIFACTS.DESCRIPTION,
@@ -216,14 +279,42 @@ class DefaultArtifactory implements Artifactory {
 				)
 				.from(ARTIFACT_VERSIONS)
 				.innerJoin(ARTIFACTS)
-				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID));
+				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
+				.innerJoin(NAMESPACES)
+				.on(NAMESPACES.ID.eq(ARTIFACTS.NAMESPACE_ID));
 	}
 
-	private void assertCanRelease(EntityId ownerId, String groupId) {
-		final Owner owner = ownerResolver.resolve(ownerId);
-
+	private void assertCanRelease(Owner owner, String groupId) {
 		groupVerifications.findActiveCovering(owner, groupId)
 				.orElseThrow(() -> new GroupIdNotVerifiedException(groupId, owner));
+	}
+
+	private void assertSameOwner(Owner owner, ArtifactCoordinates coordinates) {
+		final boolean ownedByAnotherNamespace = context.fetchExists(
+				DSL.select(ARTIFACTS.ID)
+						.from(ARTIFACTS)
+						.where(
+								ARTIFACTS.GROUP_ID.eq(coordinates.groupId()),
+								ARTIFACTS.ARTIFACT_ID.eq(coordinates.artifactId()),
+								ARTIFACTS.NAMESPACE_ID.ne(owner.id().get())
+						)
+		);
+
+		if (ownedByAnotherNamespace) {
+			throw new ArtifactOwnershipMismatchException(coordinates, owner);
+		}
+	}
+
+	@NonNull
+	static Condition visibilityCondition(@Nullable Owner owner) {
+		if (owner == null) {
+			return ARTIFACTS.VISIBILITY.eq(ArtifactVisibility.PUBLIC.name());
+		}
+
+		return DSL.or(
+				ARTIFACTS.VISIBILITY.eq(ArtifactVisibility.PUBLIC.name()),
+				ARTIFACTS.NAMESPACE_ID.eq(owner.id().get())
+		);
 	}
 
 	@NonNull
@@ -236,11 +327,17 @@ class DefaultArtifactory implements Artifactory {
 	}
 
 	static VersionedArtifact toVersionedArtifact(Record record) {
+		return toVersionedArtifact(record, new Owner(EntityId.from(record.get(NAMESPACES.ID)), record.get(NAMESPACES.SLUG)));
+	}
+
+	static VersionedArtifact toVersionedArtifact(Record record, Owner owner) {
 		return VersionedArtifact.builder()
 				.id(record.get(ARTIFACT_VERSIONS.ID))
 				.artifact(record.get(ARTIFACTS.ID))
+				.owner(owner)
 				.groupId(record.get(ARTIFACTS.GROUP_ID))
 				.artifactId(record.get(ARTIFACTS.ARTIFACT_ID))
+				.visibility(record.get(ARTIFACTS.VISIBILITY, ArtifactVisibility.class))
 				.version(record.get(ARTIFACT_VERSIONS.VERSION))
 				.state(record.get(ARTIFACT_VERSIONS.STATE, PublicationState.class))
 				.checksum(record.get(ARTIFACT_VERSIONS.CHECKSUM, Converter.from(ByteArray.class, String.class, ByteArray::encodeHex)))

@@ -1,8 +1,8 @@
 package com.konfigyr.artifactory;
 
-import com.konfigyr.entity.EntityId;
 import org.jmolecules.event.annotation.DomainEventPublisher;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -44,6 +44,23 @@ public interface Artifactory {
 	Optional<VersionedArtifact> get(@NonNull ArtifactCoordinates coordinates);
 
 	/**
+	 * Resolves a specific artifact version identified by the provided coordinates, restricted to
+	 * what the given {@code owner} is allowed to see.
+	 * <p>
+	 * A {@link ArtifactVisibility#PUBLIC PUBLIC} artifact is always resolved. A
+	 * {@link ArtifactVisibility#PRIVATE PRIVATE} artifact is only resolved when {@code owner} is its
+	 * owning namespace; otherwise this behaves as if the coordinates did not exist, so that an
+	 * unauthorized caller can't distinguish "private, not yours" from "never existed".
+	 *
+	 * @param owner the namespace on whose behalf this lookup is performed, or {@literal null} if the
+	 *        caller has no namespace context, in which case only {@code PUBLIC} artifacts resolve
+	 * @param coordinates the artifact coordinates identifying the artifact version, can't {@literal null}
+	 * @return the resolved {@link VersionedArtifact}, or {@code empty} if none exists or is visible to {@code owner}
+	 */
+	@NonNull
+	Optional<VersionedArtifact> get(@Nullable Owner owner, @NonNull ArtifactCoordinates coordinates);
+
+	/**
 	 * Returns the property definitions associated with the specified artifact version.
 	 * <p>
 	 * Property definitions describe the configuration schema exposed by the artifact. Each definition specifies
@@ -71,6 +88,17 @@ public interface Artifactory {
 	boolean exists(@NonNull ArtifactCoordinates coordinates);
 
 	/**
+	 * Determines whether an artifact version exists for the given coordinates and is visible to the
+	 * given {@code owner} — see {@link #get(Owner, ArtifactCoordinates)} for the visibility rule.
+	 *
+	 * @param owner the namespace on whose behalf this check is performed, or {@literal null} if the
+	 *        caller has no namespace context, in which case only {@code PUBLIC} artifacts match
+	 * @param coordinates the artifact coordinates identifying the artifact version, can't {@literal null}
+	 * @return {@code true} if an artifact version exists and is visible to {@code owner}, otherwise {@code false}
+	 */
+	boolean exists(@Nullable Owner owner, @NonNull ArtifactCoordinates coordinates);
+
+	/**
 	 * Returns the {@link Publication} for each of the given {@link ArtifactCoordinates} that is already
 	 * indexed by this {@code Artifactory}.
 	 * <p>
@@ -83,12 +111,17 @@ public interface Artifactory {
 	 * are simply omitted from the returned set — they are not reported back as missing or invalid, since
 	 * "not yet indexed" is an expected, non-exceptional outcome for a batch existence check. Callers that
 	 * need to know which of their coordinates are absent should compute the difference against the input.
+	 * <p>
+	 * Only {@link ArtifactVisibility#PUBLIC PUBLIC} artifacts, and {@link ArtifactVisibility#PRIVATE PRIVATE}
+	 * artifacts owned by the given {@code owner}, are considered — a match that is {@code PRIVATE} to a
+	 * different namespace is treated the same as "not yet indexed" and omitted from the result.
 	 *
+	 * @param owner the namespace on whose behalf this batch check is performed, can't be {@literal null}
 	 * @param coordinates coordinates to check, can be empty
 	 * @return the publications matching the given coordinates that exist, never {@literal null}, empty if the input is empty
 	 */
 	@NonNull
-	Set<Publication> existing(@NonNull Collection<ArtifactCoordinates> coordinates);
+	Set<Publication> existing(@NonNull Owner owner, @NonNull Collection<ArtifactCoordinates> coordinates);
 
 	/**
 	 * Publishes a new artifact version based on the provided metadata.
@@ -108,19 +141,37 @@ public interface Artifactory {
 	 * a successful publication.
 	 * <p>
 	 * Publishing is restricted to owners that hold an active verification claim covering the artifact
-	 * {@code groupId}. The {@code ownerId} identifies the publishing namespace and is resolved to its
-	 * owner before the claim is checked.
+	 * {@code groupId}. The caller is expected to have already resolved the publishing namespace to
+	 * its {@link Owner}.
 	 *
-	 * @param ownerId the identifier of the namespace publishing the artifact, can't {@literal null}
+	 * @param owner the namespace publishing the artifact, can't {@literal null}
 	 * @param metadata the metadata describing the artifact version to publish, can't {@literal null}
 	 * @return the resulting {@link VersionedArtifact} representing the published artifact
 	 * @throws ArtifactVersionExistsException when an artifact with the same coordinates already exists
-	 * @throws OwnerNotFoundException when the owner cannot be resolved
-	 *         from the supplied {@code ownerId}
+	 * @throws ArtifactOwnershipMismatchException when the artifact already exists and is owned by a
+	 *         different namespace
 	 * @throws com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException when the owner does not hold
 	 *         an active verification claim covering the artifact {@code groupId}
 	 */
 	@DomainEventPublisher(publishes = "artifactory.artifact-version.publication-created")
-	VersionedArtifact publish(@NonNull EntityId ownerId, @NonNull ArtifactMetadata metadata);
+	VersionedArtifact publish(@NonNull Owner owner, @NonNull ArtifactMetadata metadata);
+
+	/**
+	 * Changes the {@link ArtifactVisibility} of the artifact identified by the given {@code groupId}
+	 * and {@code artifactId}.
+	 * <p>
+	 * Visibility is a {@code groupId}/{@code artifactId} level concern, not a version level one: it
+	 * applies to every {@link VersionedArtifact} published under those coordinates. Only the
+	 * namespace that owns the artifact may change its visibility. The caller is expected to have
+	 * already resolved the requesting namespace to its {@link Owner}.
+	 *
+	 * @param owner the namespace requesting the change, can't be {@literal null}
+	 * @param groupId the artifact {@code groupId} coordinate, can't be {@literal null}
+	 * @param artifactId the artifact {@code artifactId} coordinate, can't be {@literal null}
+	 * @param visibility the visibility to apply, can't be {@literal null}
+	 * @throws ArtifactDefinitionNotFoundException when no artifact exists for the given coordinates
+	 * @throws ArtifactOwnershipMismatchException when the given owner does not own the artifact
+	 */
+	void changeVisibility(@NonNull Owner owner, @NonNull String groupId, @NonNull String artifactId, @NonNull ArtifactVisibility visibility);
 
 }

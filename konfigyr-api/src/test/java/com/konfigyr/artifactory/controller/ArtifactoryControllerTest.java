@@ -120,6 +120,64 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should retrieve a private artifact for its owning namespace but not for another namespace")
+	void shouldRetrievePrivateArtifactOnlyForOwningNamespace() {
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-internal-secrets", "1.0.0");
+
+		mvc.get().uri(uriForArtifact(coordinates).toUri())
+				.with(readingAs(EntityId.from(2L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk();
+
+		mvc.get().uri(uriForArtifact(coordinates).toUri())
+				.with(readingAs(EntityId.from(1L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(ArtifactVersionNotFoundException.class, ex -> ex
+						.returns(coordinates, ArtifactVersionNotFoundException::getCoordinates)
+				));
+
+		mvc.get().uri(uriForArtifact(coordinates).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(ArtifactVersionNotFoundException.class, ex -> ex
+						.returns(coordinates, ArtifactVersionNotFoundException::getCoordinates)
+				));
+	}
+
+	@Test
+	@DisplayName("should perform an artifact existence check for a private artifact scoped to its owning namespace")
+	void shouldCheckPrivateArtifactExistenceOnlyForOwningNamespace() {
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-internal-secrets", "1.0.0");
+
+		mvc.head().uri(uriForArtifact(coordinates).toUri())
+				.with(readingAs(EntityId.from(2L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk();
+
+		mvc.head().uri(uriForArtifact(coordinates).toUri())
+				.with(readingAs(EntityId.from(1L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND);
+
+		mvc.head().uri(uriForArtifact(coordinates).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND);
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should upload new artifact and create a publication")
 	void shouldUploadNewArtifact() {
@@ -285,6 +343,35 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to upload a new version when the existing artifact is owned by a different namespace")
+	void uploadArtifactOwnedByDifferentNamespace() {
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "reclaimed-artifact", "1.0.0");
+		final var metadata = TestArtifacts.metadata(coordinates);
+
+		mvc.post().uri(uriForArtifact(coordinates).toUri())
+				.with(publishingTo(EntityId.from(2L)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(ArtifactOwnershipMismatchException.class, ex -> ex
+						.returns(HttpStatus.CONFLICT, ArtifactOwnershipMismatchException::getStatusCode)
+						.returns("com.konfigyr", ArtifactOwnershipMismatchException::getGroupId)
+						.returns("reclaimed-artifact", ArtifactOwnershipMismatchException::getArtifactId)
+				))
+				.satisfies(problemDetailFor(HttpStatus.CONFLICT, problem -> problem
+						.hasTitleContaining("Artifact ownership conflict")
+						.hasDetailContaining("The artifact 'com.konfigyr:reclaimed-artifact' is owned by a different " +
+								"namespace and cannot be published to or modified by 'konfigyr'.")
+				));
+
+		assertThat(store.get(coordinates))
+				.as("Should not store property descriptor when the artifact is owned by a different namespace")
+				.isEmpty();
+	}
+
+	@Test
 	@DisplayName("should fail to publish an artifact when the artifactory:publish scope is not present")
 	void uploadArtifactWithoutScope() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "3.0.0");
@@ -304,6 +391,95 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 		assertThat(store.get(coordinates))
 				.as("Should not store property descriptor when the scope is missing")
 				.isEmpty();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should change the visibility of an owned artifact")
+	void shouldChangeArtifactVisibility() {
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-internal-secrets", "1.0.0");
+
+		mvc.put().uri(uriForVisibility("com.konfigyr", "konfigyr-internal-secrets").toUri())
+				.with(publishingTo(EntityId.from(2L)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(new ArtifactoryController.ChangeVisibilityRequest(ArtifactVisibility.PUBLIC)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NO_CONTENT);
+
+		mvc.get().uri(uriForArtifact(coordinates).toUri())
+				.with(readingAs(EntityId.from(1L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should fail to change visibility when the caller does not own the artifact")
+	void shouldRejectChangeArtifactVisibilityForDifferentOwner() {
+		mvc.put().uri(uriForVisibility("com.konfigyr", "konfigyr-internal-secrets").toUri())
+				.with(publishingTo(EntityId.from(1L)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(new ArtifactoryController.ChangeVisibilityRequest(ArtifactVisibility.PUBLIC)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(ArtifactOwnershipMismatchException.class, ex -> ex
+						.returns(HttpStatus.CONFLICT, ArtifactOwnershipMismatchException::getStatusCode)
+						.returns("com.konfigyr", ArtifactOwnershipMismatchException::getGroupId)
+						.returns("konfigyr-internal-secrets", ArtifactOwnershipMismatchException::getArtifactId)
+				))
+				.satisfies(problemDetailFor(HttpStatus.CONFLICT, problem -> problem
+						.hasTitleContaining("Artifact ownership conflict")
+						.hasDetailContaining("The artifact 'com.konfigyr:konfigyr-internal-secrets' is owned by a different " +
+								"namespace and cannot be published to or modified by 'john-doe'.")
+				));
+
+		mvc.get().uri(uriForArtifact(ArtifactCoordinates.of("com.konfigyr", "konfigyr-internal-secrets", "1.0.0")).toUri())
+				.with(readingAs(EntityId.from(1L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND);
+	}
+
+	@Test
+	@DisplayName("should fail to change visibility for an unknown artifact")
+	void shouldRejectChangeArtifactVisibilityForUnknownArtifact() {
+		mvc.put().uri(uriForVisibility("com.konfigyr", "unknown").toUri())
+				.with(publishingTo(EntityId.from(2L)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(new ArtifactoryController.ChangeVisibilityRequest(ArtifactVisibility.PUBLIC)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(ArtifactDefinitionNotFoundException.class, ex -> ex
+						.returns(HttpStatus.NOT_FOUND, ArtifactDefinitionNotFoundException::getStatusCode)
+						.returns("com.konfigyr", ArtifactDefinitionNotFoundException::getGroupId)
+						.returns("unknown", ArtifactDefinitionNotFoundException::getArtifactId)
+				))
+				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+						.hasTitleContaining("Artifact not found")
+						.hasDetailContaining("Could not find an artifact with the following coordinates: 'com.konfigyr:unknown'.")
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to change visibility when the artifactory:publish scope is not present")
+	void shouldRejectChangeArtifactVisibilityWithoutScope() {
+		mvc.put().uri(uriForVisibility("com.konfigyr", "konfigyr-internal-secrets").toUri())
+				.with(authentication(claims -> claims
+						.subject(TestAccounts.jane().build().id().serialize())
+						.claim(KonfigyrClaimNames.NAMESPACE, EntityId.from(2L).serialize())))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(new ArtifactoryController.ChangeVisibilityRequest(ArtifactVisibility.PUBLIC)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.PUBLISH_ARTIFACTS));
 	}
 
 	@Test
@@ -391,10 +567,31 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.claim(OAuth2ParameterNames.SCOPE, OAuthScopes.of(OAuthScope.PUBLISH_ARTIFACTS).toString()));
 	}
 
+	/**
+	 * Creates an authentication post-processor whose access token carries the {@code namespace} claim,
+	 * so the reading principal resolves to the given namespace owner, and the {@code artifactory:read}
+	 * scope required by the read endpoints. Used to exercise visibility checks against a specific
+	 * namespace, as opposed to {@link TestPrincipals#john()} which carries no namespace claim at all.
+	 *
+	 * @param namespace the namespace identifier to embed as the reading owner, can't be {@literal null}
+	 * @return the authentication post-processor, never {@literal null}
+	 */
+	static RequestPostProcessor readingAs(EntityId namespace) {
+		return authentication(claims -> claims
+				.subject(TestAccounts.jane().build().id().serialize())
+				.claim(KonfigyrClaimNames.NAMESPACE, namespace.serialize())
+				.claim(OAuth2ParameterNames.SCOPE, OAuthScopes.of(OAuthScope.READ_ARTIFACTS).toString()));
+	}
+
 	static UriComponents uriForArtifact(ArtifactCoordinates coordinates, String... path) {
 		return UriComponentsBuilder.fromPath("/artifacts/{groupId}/{artifactId}/{version}")
 				.pathSegment(path)
 				.buildAndExpand(coordinates.groupId(), coordinates.artifactId(), coordinates.version().get());
+	}
+
+	static UriComponents uriForVisibility(String groupId, String artifactId) {
+		return UriComponentsBuilder.fromPath("/artifacts/{groupId}/{artifactId}/visibility")
+				.buildAndExpand(groupId, artifactId);
 	}
 
 }

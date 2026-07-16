@@ -18,11 +18,19 @@
 				<constraints primaryKey="true" nullable="false" />
 			</column>
 
+			<column name="namespace_id" type="bigint" remarks="The namespace that owns this artifact.">
+				<constraints nullable="false" />
+			</column>
+
 			<column name="group_id" type="varchar" remarks="The Maven coordinate `groupId` field.">
 				<constraints nullable="false" />
 			</column>
 
 			<column name="artifact_id" type="varchar" remarks="The Maven coordinate `artifactId` field.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="visibility" type="varchar(16)" remarks="Whether this artifact is readable by every namespace (PUBLIC) or only its owner (PRIVATE).">
 				<constraints nullable="false" />
 			</column>
 
@@ -56,6 +64,19 @@
 				columnNames="group_id,artifact_id"
 				constraintName="unique_artifact"
 		/>
+
+		<addForeignKeyConstraint
+				baseTableName="artifacts"
+				baseColumnNames="namespace_id"
+				constraintName="fk_artifact_owner"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="artifacts" indexName="idx_artifacts_owner">
+			<column name="namespace_id" />
+		</createIndex>
 	</changeSet>
 
 	<changeSet author="vspasic" id="1.0.0-create-artifact-versions-table" context="api">

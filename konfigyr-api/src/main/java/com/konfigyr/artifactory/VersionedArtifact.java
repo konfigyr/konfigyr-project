@@ -28,7 +28,9 @@ import java.util.List;
  *
  * @param id entity identifier for the artifact version, can't be {@literal null}.
  * @param artifact entity identifier for the artifact, can't be {@literal null}.
+ * @param owner the namespace that owns this artifact, can't be {@literal null}.
  * @param coordinates Maven coordinates of the artifact, can't be {@literal null}.
+ * @param visibility whether this artifact is readable by every namespace or only its owner, can't be {@literal null}.
  * @param name human-readable name of the artifact, may be {@literal null}.
  * @param description textual description of the artifact, may be {@literal null}.
  * @param state current publication state of the artifact version, can't be {@literal null}.
@@ -43,7 +45,9 @@ import java.util.List;
 public record VersionedArtifact(
 		@NonNull @Identity EntityId id,
 		@NonNull @Association(aggregateType = ArtifactDefinition.class) EntityId artifact,
+		@NonNull Owner owner,
 		@NonNull ArtifactCoordinates coordinates,
+		@NonNull ArtifactVisibility visibility,
 		@NonNull PublicationState state,
 		@Nullable String checksum,
 		@Nullable String name,
@@ -112,6 +116,20 @@ public record VersionedArtifact(
 	}
 
 	/**
+	 * Creates a new {@link VersionedArtifact} builder instance that uses the attributes from the
+	 * {@link ArtifactDefinition}, including its {@link Owner} and {@link ArtifactVisibility}.
+	 *
+	 * @param definition the artifact definition to copy the attributes from, can't be {@literal null}.
+	 * @return the versioned artifact builder, never {@literal null}.
+	 **/
+	@NonNull
+	public static Builder from(@NonNull ArtifactDefinition definition) {
+		return from((ArtifactDescriptor) definition)
+				.owner(definition.owner())
+				.visibility(definition.visibility());
+	}
+
+	/**
 	 * Creates a new {@link VersionedArtifact} builder instance.
 	 *
 	 * @return the versioned artifact builder, never {@literal null}.
@@ -130,9 +148,36 @@ public record VersionedArtifact(
 	public static final class Builder extends PublicationBuilder<VersionedArtifact, Builder> {
 		private EntityId id;
 		private EntityId artifact;
+		private Owner owner;
+		private ArtifactVisibility visibility;
 
 		private Builder() {
 			// use the builder static method
+		}
+
+		/**
+		 * Specify the {@link Owner} namespace for this {@link VersionedArtifact}.
+		 *
+		 * @param owner the owning namespace
+		 * @return versioned artifact builder
+		 */
+		@NonNull
+		public Builder owner(Owner owner) {
+			this.owner = owner;
+			return this;
+		}
+
+		/**
+		 * Specify whether this {@link VersionedArtifact} is readable by every namespace or only its
+		 * owner. Defaults to {@link ArtifactVisibility#PRIVATE} when not specified.
+		 *
+		 * @param visibility artifact visibility
+		 * @return versioned artifact builder
+		 */
+		@NonNull
+		public Builder visibility(ArtifactVisibility visibility) {
+			this.visibility = visibility;
+			return this;
 		}
 
 		/**
@@ -213,7 +258,7 @@ public record VersionedArtifact(
 		 */
 		@NonNull
 		public Builder publishedAt(OffsetDateTime publishedAt) {
-			return this.publishedAt(publishedAt == null ? null : publishedAt.toInstant());
+			return this.publishedAt(publishedAt.toInstant());
 		}
 
 		/**
@@ -227,12 +272,14 @@ public record VersionedArtifact(
 		public VersionedArtifact instantiate() {
 			Assert.notNull(id, "Versioned artifact entity identifier can not be null");
 			Assert.notNull(artifact, "Artifact entity identifier can not be null");
+			Assert.notNull(owner, "Artifact owner can not be null");
 			Assert.hasText(groupId, "Artifact groupId can not be null");
 			Assert.hasText(artifactId, "Artifact artifactId can not be null");
 			Assert.notNull(version, "Artifact version can not be null");
 			Assert.notNull(publishedAt, "Created date can not be null");
 
-			return new VersionedArtifact(id, artifact, ArtifactCoordinates.of(groupId, artifactId, version),
+			return new VersionedArtifact(id, artifact, owner, ArtifactCoordinates.of(groupId, artifactId, version),
+					visibility == null ? ArtifactVisibility.PRIVATE : visibility,
 					state == null ? PublicationState.PENDING : state, checksum, name, description, website,
 					repository, publishedAt);
 		}

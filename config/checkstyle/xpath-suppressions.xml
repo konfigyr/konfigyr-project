@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suppressions PUBLIC
+		"-//Checkstyle//DTD SuppressionXpathFilter Configuration 1.2//EN"
+		"https://checkstyle.org/dtds/suppressions_1_2_xpath.dtd">
+<suppressions>
+
+	<!-- @NoArgsConstructor(access = PRIVATE) / @UtilityClass on classes Checkstyle can't see the generated ctor for -->
+	<suppress-xpath checks="HideUtilityClassConstructor"
+					query="//CLASS_DEF[./MODIFIERS/ANNOTATION/IDENT[@text='UtilityClass']]"/>
+
+	<!-- @Value / @Data / @Getter / @Setter / @Builder generate methods with no explicit @Override,
+		 but MissingOverrideCheck only cares about actual overrides, so this is rarely needed —
+		 included for completeness if you ever hand-write a method Lombok also generates -->
+	<suppress-xpath checks="MissingOverride"
+					query="//METHOD_DEF[./MODIFIERS/ANNOTATION/IDENT[@text='Override']]"/>
+
+	<!-- @Builder / @Value / records: JavadocVariableCheck flags public fields with no Javadoc,
+		 but Lombok-generated builder fields or record components are never meant to carry one -->
+	<suppress-xpath checks="JavadocVariable"
+					query="//CLASS_DEF[./MODIFIERS/ANNOTATION/IDENT[@text='Builder' or @text='Value']]//VARIABLE_DEF"/>
+
+	<!-- @EqualsAndHashCode / @Data generate equals()/hashCode() as a pair, but if you ever
+		 hand-write one without the other, CovariantEquals/EqualsHashCode can misfire on the
+		 synthetic pairing — scope to classes carrying the annotation -->
+	<suppress-xpath checks="EqualsHashCode"
+					query="//CLASS_DEF[./MODIFIERS/ANNOTATION/IDENT[@text='EqualsAndHashCode' or @text='Data']]"/>
+
+	<!-- @Slf4j / @Log4j2 / @CommonsLog inject a `log` field with no declared visibility keyword
+		 in a source (Lombok adds it at compile time) — RedundantModifier / RequireThis can sometimes
+		 flag the generated field access pattern if you reference `log` inside inner classes -->
+	<suppress-xpath checks="RequireThis"
+					query="//VARIABLE_DEF[./IDENT[@text='log']]"/>
+
+	<!-- @FieldDefaults(makeFinal = true, level = PRIVATE) or @Value: fields have no explicit
+		 `final`/`private` keyword in a source even though Lombok enforces it — FinalClass /
+		 RedundantModifier checks operating on the visible modifiers can be confused by this -->
+	<suppress-xpath checks="RedundantModifier"
+					query="//CLASS_DEF[./MODIFIERS/ANNOTATION/IDENT[@text='Value' or @text='FieldDefaults']]"/>
+</suppressions>

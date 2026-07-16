@@ -6,6 +6,7 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.jooq.DSLContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 
 	@Autowired
 	MetadataStore store;
+
+	@Autowired
+	DSLContext context;
 
 	@Test
 	@DisplayName("should retrieve versioned artifact by coordinates")
@@ -80,7 +84,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var artifact = TestArtifacts.artifact(builder -> builder.version("3.0.0"));
 		final var metadata = TestArtifacts.metadata(artifact);
 
-		assertThat(artifactory.publish(EntityId.from(2L), metadata))
+		assertThat(artifactory.publish(Owners.konfigyr(), metadata))
 				.isNotNull()
 				.returns(artifact.groupId(), VersionedArtifact::groupId)
 				.returns(artifact.artifactId(), VersionedArtifact::artifactId)
@@ -112,7 +116,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var metadata = TestArtifacts.metadata(coordinates);
 
 		assertThatExceptionOfType(ArtifactVersionExistsException.class)
-				.isThrownBy(() -> artifactory.publish(EntityId.from(2L), metadata))
+				.isThrownBy(() -> artifactory.publish(Owners.konfigyr(), metadata))
 				.withMessageContaining("Artifact version already exists for following coordinates: %s", coordinates)
 				.returns(coordinates, ArtifactVersionExistsException::getCoordinates)
 				.withNoCause();
@@ -133,7 +137,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var metadata = TestArtifacts.metadata(coordinates);
 
 		assertThatExceptionOfType(GroupIdNotVerifiedException.class)
-				.isThrownBy(() -> artifactory.publish(EntityId.from(2L), metadata))
+				.isThrownBy(() -> artifactory.publish(Owners.konfigyr(), metadata))
 				.returns("com.unverified", GroupIdNotVerifiedException::getGroupId)
 				.returns("konfigyr", ex -> ex.getOwner().slug())
 				.returns(HttpStatus.BAD_REQUEST, GroupIdNotVerifiedException::getStatusCode);
@@ -145,16 +149,6 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		assertThat(events.ofType(ArtifactoryEvent.PublicationCreated.class))
 				.as("Should not publish any release event when ownership is not verified")
 				.isEmpty();
-	}
-
-	@Test
-	@DisplayName("should fail to release an artifact when the owner cannot be resolved")
-	void shouldRejectPublishForUnknownOwner() {
-		final var coordinates = ArtifactCoordinates.parse("com.unverified:some-artifact:1.0.0");
-		final var metadata = TestArtifacts.metadata(coordinates);
-
-		assertThatExceptionOfType(OwnerNotFoundException.class)
-				.isThrownBy(() -> artifactory.publish(EntityId.from(9999L), metadata));
 	}
 
 	@Test
@@ -209,7 +203,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		final var unknownVersion = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:9.0.0");
 		final var unknownArtifact = ArtifactCoordinates.parse("com.konfigyr:konfigyr-unknown:1.0.0");
 
-		assertThat(artifactory.existing(List.of(existing, alsoExisting, unknownVersion, unknownArtifact)))
+		assertThat(artifactory.existing(Owners.konfigyr(), List.of(existing, alsoExisting, unknownVersion, unknownArtifact)))
 				.extracting(ArtifactCoordinates::of)
 				.containsExactlyInAnyOrder(existing, alsoExisting);
 	}
@@ -219,15 +213,162 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 	void shouldResolveNoExistingCoordinates() {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-unknown:1.0.0");
 
-		assertThat(artifactory.existing(List.of(coordinates)))
+		assertThat(artifactory.existing(Owners.konfigyr(), List.of(coordinates)))
 				.isEmpty();
 	}
 
 	@Test
 	@DisplayName("should resolve an empty set of existing coordinates without querying when given an empty collection")
 	void shouldResolveExistingCoordinatesForEmptyCollection() {
-		assertThat(artifactory.existing(List.of()))
+		assertThat(artifactory.existing(Owners.konfigyr(), List.of()))
 				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should retrieve a public versioned artifact for any owner")
+	void shouldRetrieveVisiblePublicVersionedArtifact() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:1.0.0");
+
+		assertThat(artifactory.get(Owners.johnDoe(), coordinates))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(VersionedArtifact.class))
+				.returns(ArtifactVisibility.PUBLIC, VersionedArtifact::visibility);
+
+		assertThat(artifactory.get(null, coordinates))
+				.as("a caller with no namespace context should still see a public artifact")
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(VersionedArtifact.class))
+				.returns(ArtifactVisibility.PUBLIC, VersionedArtifact::visibility);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve a versioned artifact for any owner when no such version exists")
+	void shouldRetrieveNoVisibleVersionedArtifactWhenUnknown() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:99.0.0");
+
+		assertThat(artifactory.get(Owners.konfigyr(), coordinates))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should only retrieve a private versioned artifact for its owning namespace")
+	void shouldRetrieveVisiblePrivateVersionedArtifactOnlyForOwner() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-internal-secrets:1.0.0");
+
+		assertThat(artifactory.get(Owners.konfigyr(), coordinates))
+				.as("the owning namespace should see its own private artifact")
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(VersionedArtifact.class))
+				.returns(ArtifactVisibility.PRIVATE, VersionedArtifact::visibility);
+
+		assertThat(artifactory.get(Owners.johnDoe(), coordinates))
+				.as("a different namespace should not see a private artifact it doesn't own")
+				.isEmpty();
+
+		assertThat(artifactory.get(null, coordinates))
+				.as("a caller with no namespace context should not see a private artifact")
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should determine existence of a public artifact version for any owner")
+	void shouldDetermineExistenceOfVisiblePublicVersionedArtifact() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:1.0.0");
+
+		assertThat(artifactory.exists(Owners.johnDoe(), coordinates)).isTrue();
+
+		assertThat(artifactory.exists(null, coordinates))
+				.as("a caller with no namespace context should still see a public artifact exists")
+				.isTrue();
+	}
+
+	@Test
+	@DisplayName("should determine non-existence of an unknown artifact version for any owner")
+	void shouldDetermineNoExistenceOfVisibleVersionedArtifactWhenUnknown() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:99.0.0");
+
+		assertThat(artifactory.exists(Owners.konfigyr(), coordinates)).isFalse();
+	}
+
+	@Test
+	@DisplayName("should only determine existence of a private artifact version for its owning namespace")
+	void shouldDetermineExistenceOfVisiblePrivateVersionedArtifactOnlyForOwner() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-internal-secrets:1.0.0");
+
+		assertThat(artifactory.exists(Owners.konfigyr(), coordinates))
+				.as("the owning namespace should see its own private artifact exists")
+				.isTrue();
+
+		assertThat(artifactory.exists(Owners.johnDoe(), coordinates))
+				.as("a different namespace should not see a private artifact it doesn't own")
+				.isFalse();
+
+		assertThat(artifactory.exists(null, coordinates))
+				.as("a caller with no namespace context should not see a private artifact exists")
+				.isFalse();
+	}
+
+	@Test
+	@DisplayName("should reject publishing a new version when the existing artifact is owned by a different namespace")
+	void shouldRejectPublishWhenExistingArtifactOwnedByDifferentNamespace() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:reclaimed-artifact:1.0.0");
+		final var metadata = TestArtifacts.metadata(coordinates);
+
+		assertThatExceptionOfType(ArtifactOwnershipMismatchException.class)
+				.isThrownBy(() -> artifactory.publish(Owners.konfigyr(), metadata))
+				.returns("com.konfigyr", ArtifactOwnershipMismatchException::getGroupId)
+				.returns("reclaimed-artifact", ArtifactOwnershipMismatchException::getArtifactId)
+				.returns(HttpStatus.CONFLICT, ArtifactOwnershipMismatchException::getStatusCode);
+
+		assertThat(artifactory.exists(coordinates))
+				.as("no new version should have been created for the rejected publish attempt")
+				.isFalse();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should change visibility of an owned artifact")
+	void shouldChangeVisibilityForOwnedArtifact() {
+		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-internal-secrets:1.0.0");
+
+		assertThat(artifactory.get(Owners.johnDoe(), coordinates))
+				.as("should not yet be visible to a different namespace while still private")
+				.isEmpty();
+
+		artifactory.changeVisibility(Owners.konfigyr(), "com.konfigyr", "konfigyr-internal-secrets", ArtifactVisibility.PUBLIC);
+
+		assertThat(artifactory.get(Owners.johnDoe(), coordinates))
+				.as("should now be visible to a different namespace after becoming public")
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(VersionedArtifact.class))
+				.returns(ArtifactVisibility.PUBLIC, VersionedArtifact::visibility);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should reject changing visibility when the caller does not own the artifact")
+	void shouldRejectChangeVisibilityForDifferentOwner() {
+		assertThatExceptionOfType(ArtifactOwnershipMismatchException.class)
+				.isThrownBy(() -> artifactory.changeVisibility(Owners.johnDoe(), "com.konfigyr", "konfigyr-internal-secrets", ArtifactVisibility.PUBLIC))
+				.returns("com.konfigyr", ArtifactOwnershipMismatchException::getGroupId)
+				.returns("konfigyr-internal-secrets", ArtifactOwnershipMismatchException::getArtifactId)
+				.returns(HttpStatus.CONFLICT, ArtifactOwnershipMismatchException::getStatusCode);
+
+		assertThat(artifactory.get(Owners.konfigyr(), ArtifactCoordinates.parse("com.konfigyr:konfigyr-internal-secrets:1.0.0")))
+				.as("visibility must remain unchanged after a rejected attempt")
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(VersionedArtifact.class))
+				.returns(ArtifactVisibility.PRIVATE, VersionedArtifact::visibility);
+	}
+
+	@Test
+	@DisplayName("should reject changing visibility for an unknown artifact")
+	void shouldRejectChangeVisibilityForUnknownArtifact() {
+		assertThatExceptionOfType(ArtifactDefinitionNotFoundException.class)
+				.isThrownBy(() -> artifactory.changeVisibility(Owners.konfigyr(), "com.konfigyr", "konfigyr-does-not-exist", ArtifactVisibility.PUBLIC))
+				.returns("com.konfigyr", ArtifactDefinitionNotFoundException::getGroupId)
+				.returns("konfigyr-does-not-exist", ArtifactDefinitionNotFoundException::getArtifactId)
+				.returns(HttpStatus.NOT_FOUND, ArtifactDefinitionNotFoundException::getStatusCode);
 	}
 
 }
