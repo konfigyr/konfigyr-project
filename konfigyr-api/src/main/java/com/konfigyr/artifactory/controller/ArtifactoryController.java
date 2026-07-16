@@ -1,7 +1,6 @@
 package com.konfigyr.artifactory.controller;
 
 import com.konfigyr.artifactory.*;
-import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.security.AuthenticatedPrincipal;
@@ -18,6 +17,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -38,6 +38,7 @@ import java.util.Optional;
 class ArtifactoryController {
 
 	private final Artifactory artifactory;
+	private final OwnerResolver resolver;
 
 	@GetMapping("/{groupId}/{artifactId}/{version}")
 	EntityModel<VersionedArtifact> artifact(
@@ -46,7 +47,7 @@ class ArtifactoryController {
 			@PathVariable String version
 	) {
 		final ArtifactCoordinates coordinates = ArtifactCoordinates.of(groupId, artifactId, version);
-		final VersionedArtifact artifact = artifactory.get(coordinates).orElseThrow(
+		final VersionedArtifact artifact = artifactory.get(resolveOwner().orElse(null), coordinates).orElseThrow(
 				() -> new ArtifactVersionNotFoundException(coordinates)
 		);
 
@@ -60,7 +61,7 @@ class ArtifactoryController {
 			@PathVariable String version
 	) {
 		final ArtifactCoordinates coordinates = ArtifactCoordinates.of(groupId, artifactId, version);
-		final HttpStatus status = artifactory.exists(coordinates) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+		final HttpStatus status = artifactory.exists(resolveOwner().orElse(null), coordinates) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 
 		return ResponseEntity.status(status).build();
 	}
@@ -74,13 +75,14 @@ class ArtifactoryController {
 			@RequestBody @Validated ArtifactPublication publication,
 			BindingResult errors
 	) throws BindException {
-		final EntityId namespaceId = retrieveNamespaceIdentifier()
-				.orElseThrow(() -> new ArtifactoryException(HttpStatus.BAD_REQUEST, "Namespace id is not available for current principal"));
+		final Owner owner = resolveOwner().orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
+				"Could not extract namespace identifier from the current authenticated principal"
+		));
 
 		final ArtifactCoordinates coordinates = ArtifactCoordinates.of(groupId, artifactId, version);
 		publication.validate(coordinates, errors);
 
-		return EntityModel.of(artifactory.publish(namespaceId, publication.toArtifactMetadata()));
+		return EntityModel.of(artifactory.publish(owner, publication.toArtifactMetadata()));
 	}
 
 	@GetMapping("/{groupId}/{artifactId}/{version}/properties")
@@ -93,13 +95,27 @@ class ArtifactoryController {
 		return Assemblers.property(coordinates).assemble(artifactory.properties(coordinates));
 	}
 
-	static Optional<EntityId> retrieveNamespaceIdentifier() {
+	@PutMapping("/{groupId}/{artifactId}/visibility")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@RequiresScope(OAuthScope.PUBLISH_ARTIFACTS)
+	void changeVisibility(
+			@PathVariable String groupId,
+			@PathVariable String artifactId,
+			@RequestBody @Validated ChangeVisibilityRequest request
+	) {
+		final Owner owner = resolveOwner().orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
+				"Could not extract namespace identifier from the current authenticated principal"
+		));
+
+		artifactory.changeVisibility(owner, groupId, artifactId, request.visibility());
+	}
+
+	private Optional<Owner> resolveOwner() {
 		final AuthenticatedPrincipal principal = AuthenticatedPrincipal.resolve();
-
 		if (principal instanceof NamespacedPrincipal namespacedPrincipal) {
-			return namespacedPrincipal.getNamespaceId();
+			return namespacedPrincipal.getNamespaceId()
+					.map(resolver::resolve);
 		}
-
 		return Optional.empty();
 	}
 
@@ -180,4 +196,7 @@ class ArtifactoryController {
 		}
 
 	}
+
+	@NullUnmarked
+	record ChangeVisibilityRequest(@NotNull ArtifactVisibility visibility) { /* noop */ }
 }

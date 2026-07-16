@@ -368,8 +368,10 @@ class ServiceCatalogWorkerTest extends AbstractIntegrationTest {
 
 	private void insertArtifactMetadataPublication(ArtifactMetadata metadata) {
 		final Long artifactId = context.insertInto(ARTIFACTS)
+				.set(ARTIFACTS.NAMESPACE_ID, 2L)
 				.set(ARTIFACTS.GROUP_ID, metadata.groupId())
 				.set(ARTIFACTS.ARTIFACT_ID, metadata.artifactId())
+				.set(ARTIFACTS.VISIBILITY, ArtifactVisibility.PRIVATE.name())
 				.set(ARTIFACTS.NAME, metadata.name())
 				.set(ARTIFACTS.DESCRIPTION, metadata.description())
 				.set(ARTIFACTS.WEBSITE, Objects.toString(metadata.website(), null))

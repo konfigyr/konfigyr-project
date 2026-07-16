@@ -20,6 +20,7 @@ class ArtifactTest {
 	void createArtifact() {
 		final var artifact = ArtifactDefinition.builder()
 				.id(93645L)
+				.owner(Owners.konfigyr())
 				.groupId("com.konfigyr")
 				.artifactId("konfigyr-api")
 				.name("Konfigyr API")
@@ -32,8 +33,10 @@ class ArtifactTest {
 
 		assertThat(artifact)
 				.returns(EntityId.from(93645L), ArtifactDefinition::id)
+				.returns(Owners.konfigyr(), ArtifactDefinition::owner)
 				.returns("com.konfigyr", ArtifactDefinition::groupId)
 				.returns("konfigyr-api", ArtifactDefinition::artifactId)
+				.returns(ArtifactVisibility.PRIVATE, ArtifactDefinition::visibility)
 				.returns("Konfigyr API", ArtifactDefinition::name)
 				.returns("Konfigyr REST API artifact", ArtifactDefinition::description)
 				.returns(URI.create("https://api.konfigyr.com"), ArtifactDefinition::website)
@@ -57,8 +60,9 @@ class ArtifactTest {
 		doReturn(URI.create("https://api.konfigyr.com")).when(descriptor).website();
 		doReturn(URI.create("https://github.com/konfigyr/konfigyr-project")).when(descriptor).repository();
 
-		assertThat(ArtifactDefinition.from(descriptor).id("000005KK96ZZP").build())
+		assertThat(ArtifactDefinition.from(descriptor).id("000005KK96ZZP").owner(Owners.konfigyr()).build())
 				.returns(EntityId.from(192846987254L), ArtifactDefinition::id)
+				.returns(Owners.konfigyr(), ArtifactDefinition::owner)
 				.returns("com.konfigyr", ArtifactDefinition::groupId)
 				.returns("konfigyr-api", ArtifactDefinition::artifactId)
 				.returns("Konfigyr API", ArtifactDefinition::name)
@@ -73,7 +77,7 @@ class ArtifactTest {
 	@Test
 	@DisplayName("should sort artifacts by groupId and artifactId")
 	void sortArtifacts() {
-		final var builder = ArtifactDefinition.builder().id(93645L);
+		final var builder = ArtifactDefinition.builder().id(93645L).owner(Owners.konfigyr());
 
 		final var springMail = builder.groupId("org.springframework.boot")
 				.artifactId("spring-boot-starter-mail")
@@ -97,6 +101,7 @@ class ArtifactTest {
 	void createVersionedArtifactFromDescriptor() {
 		final var artifact = ArtifactDefinition.builder()
 				.id(93645L)
+				.owner(Owners.konfigyr())
 				.groupId("com.konfigyr")
 				.artifactId("konfigyr-api")
 				.name("Konfigyr API")
@@ -118,6 +123,8 @@ class ArtifactTest {
 				.returns(EntityId.from(192846987254L), VersionedArtifact::artifact)
 				.returns(artifact.groupId(), VersionedArtifact::groupId)
 				.returns(artifact.artifactId(), VersionedArtifact::artifactId)
+				.returns(artifact.owner(), VersionedArtifact::owner)
+				.returns(artifact.visibility(), VersionedArtifact::visibility)
 				.returns(artifact.name(), VersionedArtifact::name)
 				.returns(artifact.description(), VersionedArtifact::description)
 				.returns(artifact.website(), VersionedArtifact::website)

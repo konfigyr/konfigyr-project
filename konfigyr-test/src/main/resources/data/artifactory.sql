@@ -1,16 +1,21 @@
-INSERT INTO artifacts(id, group_id, artifact_id, name, description, website, repository, created_at, updated_at) VALUES
-(1, 'doe.john', 'website', 'Johns Website', 'Personal website', 'john.doe', NULL,now() - interval '3 days', now() - interval '1 days'),
-(2, 'com.konfigyr', 'konfigyr-crypto-api', 'Konfigyr Crypto API', 'Spring Boot Crypto API library', NULL, 'https://github.com/konfigyr/konfigyr-crypto', now() - interval '7 days', now() - interval '1 days'),
-(3, 'com.konfigyr', 'konfigyr-crypto-tink', 'Konfigyr Crypto Tink', 'Tink support Konfigyr Crypto API library', NULL, 'https://github.com/konfigyr/konfigyr-crypto', now() - interval '5 days', now() - interval '2 days'),
-(4, 'com.konfigyr', 'konfigyr-licences', 'Konfigyr Licences', 'Private repository', NULL, NULL, now() - interval '1 days', now() - interval '1 hours'),
-(5, 'com.konfigyr', 'konfigyr-api', 'Konfigyr API', 'Private REST API', 'konfigyr.api', 'https://github.com/konfigyr/konfigyr-project', now() - interval '1 days', now() - interval '1 hours'),
-(6, 'org.springframework.boot', 'spring-boot', 'Spring Boot', 'Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 days'),
-(7, 'org.springframework.boot', 'spring-boot-autoconfigure', 'Spring Boot AutoConfigure', 'Spring Boot auto-configuration attempts to automatically configure your Spring applications', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
-(8, 'org.springframework.boot', 'spring-boot-actuator', 'Spring Boot Actuator', 'Spring Boot Actuator', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
-(9, 'org.springframework.modulith', 'spring-modulith-core', 'Spring Modulith Core', 'Modular monoliths with Spring Boot', 'https://spring.io/projects/spring-modulith/spring-modulith-core', 'https://github.com/spring-projects-experimental/spring-modulith', now() - interval '10 days', now() - interval '9 days'),
-(10, 'org.springframework.modulith', 'spring-modulith-moments', 'Spring Modulith Moments', 'Modular monoliths with Spring Boot', 'https://spring.io/projects/spring-modulith/spring-modulith-moments', 'https://github.com/spring-projects-experimental/spring-modulith', now() - interval '10 days', now() - interval '9 days'),
-(11, 'org.springframework.boot', 'spring-boot-jooq', 'Spring Boot jOOQ', 'Spring Boot jOOQ support', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
-(12, 'org.springframework.boot', 'spring-boot-liquibase', 'Spring Boot Liquibase', 'Spring Boot Liquibase support', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours');
+INSERT INTO artifacts(id, namespace_id, group_id, artifact_id, visibility, name, description, website, repository, created_at, updated_at) VALUES
+(1, 1, 'doe.john', 'website', 'PUBLIC', 'Johns Website', 'Personal website', 'john.doe', NULL,now() - interval '3 days', now() - interval '1 days'),
+(2, 2, 'com.konfigyr', 'konfigyr-crypto-api', 'PUBLIC', 'Konfigyr Crypto API', 'Spring Boot Crypto API library', NULL, 'https://github.com/konfigyr/konfigyr-crypto', now() - interval '7 days', now() - interval '1 days'),
+(3, 2, 'com.konfigyr', 'konfigyr-crypto-tink', 'PUBLIC', 'Konfigyr Crypto Tink', 'Tink support Konfigyr Crypto API library', NULL, 'https://github.com/konfigyr/konfigyr-crypto', now() - interval '5 days', now() - interval '2 days'),
+(4, 2, 'com.konfigyr', 'konfigyr-licences', 'PUBLIC', 'Konfigyr Licences', 'Private repository', NULL, NULL, now() - interval '1 days', now() - interval '1 hours'),
+(5, 2, 'com.konfigyr', 'konfigyr-api', 'PUBLIC', 'Konfigyr API', 'Private REST API', 'konfigyr.api', 'https://github.com/konfigyr/konfigyr-project', now() - interval '1 days', now() - interval '1 hours'),
+(6, 2, 'org.springframework.boot', 'spring-boot', 'PUBLIC', 'Spring Boot', 'Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 days'),
+(7, 2, 'org.springframework.boot', 'spring-boot-autoconfigure', 'PUBLIC', 'Spring Boot AutoConfigure', 'Spring Boot auto-configuration attempts to automatically configure your Spring applications', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
+(8, 2, 'org.springframework.boot', 'spring-boot-actuator', 'PUBLIC', 'Spring Boot Actuator', 'Spring Boot Actuator', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
+(9, 2, 'org.springframework.modulith', 'spring-modulith-core', 'PUBLIC', 'Spring Modulith Core', 'Modular monoliths with Spring Boot', 'https://spring.io/projects/spring-modulith/spring-modulith-core', 'https://github.com/spring-projects-experimental/spring-modulith', now() - interval '10 days', now() - interval '9 days'),
+(10, 2, 'org.springframework.modulith', 'spring-modulith-moments', 'PUBLIC', 'Spring Modulith Moments', 'Modular monoliths with Spring Boot', 'https://spring.io/projects/spring-modulith/spring-modulith-moments', 'https://github.com/spring-projects-experimental/spring-modulith', now() - interval '10 days', now() - interval '9 days'),
+(11, 2, 'org.springframework.boot', 'spring-boot-jooq', 'PUBLIC', 'Spring Boot jOOQ', 'Spring Boot jOOQ support', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
+(12, 2, 'org.springframework.boot', 'spring-boot-liquibase', 'PUBLIC', 'Spring Boot Liquibase', 'Spring Boot Liquibase support', 'https://spring.io/projects/spring-boot', 'https://github.com/spring-projects/spring-boot', now() - interval '6 days', now() - interval '1 hours'),
+/* private fixtures, one per namespace, used to exercise artifact visibility scenarios */
+(13, 1, 'doe.john', 'private-notes', 'PRIVATE', 'Johns Private Notes', 'A private personal artifact only visible to the john-doe namespace', NULL, NULL, now() - interval '2 days', now() - interval '2 days'),
+(14, 2, 'com.konfigyr', 'konfigyr-internal-secrets', 'PRIVATE', 'Konfigyr Internal Secrets', 'Internal configuration properties, private to the konfigyr namespace', NULL, NULL, now() - interval '2 days', now() - interval '2 days'),
+/* owned by john-doe under a groupId now actively claimed by konfigyr: owner namespace_id doesn't match the current active GroupVerification holder, used to exercise publish-time ownership mismatch */
+(15, 1, 'com.konfigyr', 'reclaimed-artifact', 'PRIVATE', 'Reclaimed Artifact', 'Owned by john-doe under a groupId whose active claim now belongs to a different namespace', NULL, NULL, now() - interval '30 days', now() - interval '30 days');
 
 INSERT INTO artifact_versions(id, artifact_id, version, state, checksum, released_at) VALUES
 (1, 1, '1.0.0', 'PUBLISHED', decode('lmUgkxFN4ru/3vuoTkcrYdf2Z5IfcSnmmtfnZJh+Lwo=', 'base64'), now() - interval '1 days'),
@@ -28,7 +33,11 @@ INSERT INTO artifact_versions(id, artifact_id, version, state, checksum, release
 (13, 12, '4.0.4', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '6 hours'),
 /* no artifact_version_properties attached: exercises the "declared version has no indexed property descriptors yet" catalog scenario */
 (14, 9, '2.0.3', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days'),
-(15, 10, '2.0.3', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days');
+(15, 10, '2.0.3', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '10 days'),
+/* private fixtures, one per namespace */
+(16, 13, '1.0.0', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '2 days'),
+(17, 14, '1.0.0', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '2 days'),
+(18, 14, '1.1.0', 'PUBLISHED', decode('7FTrQ6LxfT/s9QYsmHx5TqAl2iWN4LbqZINULveeP4o=', 'base64'), now() - interval '1 days');
 
 INSERT INTO property_definitions(id, artifact_id, checksum, name, type_name, schema, default_value, description, deprecation, occurrences, first_seen, last_seen) VALUES
 (1, 2, decode('cRJ8jlPpTPmTJEoZEZNDSjvdqafG05QkzNJplXyu9J0=', 'base64'), 'spring.application.name', 'java.lang.String', convert_to('{"type":"string"}', 'UTF-8'), NULL, 'Application name. Typically used with logging to help identify the application.', NULL, 1, '1.0.1', '1.0.1'),
@@ -50,7 +59,14 @@ INSERT INTO property_definitions(id, artifact_id, checksum, name, type_name, sch
 (13, 10, decode('vfWkFvWqOO2AH/j1J1L/8q1t0XDR5DE6bkGsGWlpXrs=', 'base64'), 'spring.modulith.moments.enable-time-machine', 'java.lang.Boolean', convert_to('{"type":"boolean"}', 'UTF-8'), 'false', NULL, NULL, 1, '2.0.4', '2.0.4'),
 (14, 10, decode('SMWccCBOl+JJOAD028wbsyESb+QscbuqbqF1Xm270Qk=', 'base64'), 'spring.modulith.moments.granularity', 'org.springframework.modulith.moments.support.MomentsProperties$Granularity', convert_to('{"enum":["DAYS","HOURS"],"type":"string"}', 'UTF-8'), 'hours', NULL, NULL, 1, '2.0.4', '2.0.4'),
 (15, 10, decode('sPa3aP2xi0pWOOqKc1o2BnAO5Vi2n/7CNwopYSmucIs=', 'base64'), 'spring.modulith.moments.locale', 'java.util.Locale', convert_to('{"format":"language","type":"string"}', 'UTF-8'), NULL, NULL, NULL, 1, '2.0.4', '2.0.4'),
-(16, 10, decode('tTlj+7N0mkLnn4uYgrmK4XDaCz72NCLR3z23D/DiTtc=', 'base64'), 'spring.modulith.moments.zone-id', 'java.time.ZoneId', convert_to('{"format":"time-zone","type":"string"}', 'UTF-8'), NULL, NULL, NULL, 1, '2.0.4', '2.0.4');
+(16, 10, decode('tTlj+7N0mkLnn4uYgrmK4XDaCz72NCLR3z23D/DiTtc=', 'base64'), 'spring.modulith.moments.zone-id', 'java.time.ZoneId', convert_to('{"format":"time-zone","type":"string"}', 'UTF-8'), NULL, NULL, NULL, 1, '2.0.4', '2.0.4'),
+/* John Doe private notes properties */
+(17, 13, decode('isIG+jszkxwwEC3TYxdq4fWYmsL3zGIAKPEe8j8ORjY=', 'base64'), 'doe.john.private-notes.secret-key', 'java.lang.String', convert_to('{"type":"string"}', 'UTF-8'), NULL, 'Secret key used by the private notes service.', NULL, 1, '1.0.0', '1.0.0'),
+(18, 13, decode('/g5YYP3OPjNWHsG798Lp2S2pJC2W2xRKmlPFVsYUlJo=', 'base64'), 'doe.john.private-notes.enabled', 'java.lang.Boolean', convert_to('{"type":"boolean"}', 'UTF-8'), 'true', 'Whether the private notes feature is enabled.', NULL, 1, '1.0.0', '1.0.0'),
+/* konfigyr-internal-secrets properties */
+(19, 14, decode('c81bzP9j0m8+6FyDQ76cgXwui4f78h7zFl6OQOR4zTc=', 'base64'), 'konfigyr.internal.encryption-key', 'java.lang.String', convert_to('{"type":"string"}', 'UTF-8'), NULL, 'Internal encryption key used by Konfigyr services.', NULL, 2, '1.0.0', '1.1.0'),
+(20, 14, decode('sNDSqTexnHiB+U95MxtoDkGpXqmlra5a6PaINpFZWlE=', 'base64'), 'konfigyr.internal.debug-mode', 'java.lang.Boolean', convert_to('{"type":"boolean"}', 'UTF-8'), 'false', 'Enables verbose internal debug logging.', NULL, 2, '1.0.0', '1.1.0'),
+(21, 14, decode('3psKDxrd7yVmtKFgXnORBg6Z8GjLoTheksQsGq7QHMI=', 'base64'), 'konfigyr.internal.audit-log-enabled', 'java.lang.Boolean', convert_to('{"type":"boolean"}', 'UTF-8'), 'false', 'Enables audit logging for internal secret access.', NULL, 1, '1.1.0', '1.1.0');
 
 INSERT INTO artifact_version_properties(artifact_version_id, property_definition_id) VALUES
 (3, 1),
@@ -73,7 +89,17 @@ INSERT INTO artifact_version_properties(artifact_version_id, property_definition
 (11, 13),
 (11, 14),
 (11, 15),
-(11, 16);
+(11, 16),
+/* Johns private notes 1.0.0 properties */
+(16, 17),
+(16, 18),
+/* Konfigyr internal secrets 1.0.0 properties */
+(17, 19),
+(17, 20),
+/* Konfigyr internal secrets 1.1.0 properties: carries the 1.0.0 properties forward plus the new one */
+(18, 19),
+(18, 20),
+(18, 21);
 
 INSERT INTO group_verifications(id, namespace_id, group_id, state, created_at, verified_at, revoked_at) VALUES
 (1, 2, 'com.konfigyr', 'ACTIVE', now() - interval '7 days', now() - interval '6 days', NULL),

@@ -89,6 +89,7 @@ class DefaultServiceManifests implements ServiceManifests {
 	private final Artifactory artifactory;
 	private final ArtifactoryConverters converters;
 	private final ApplicationEventPublisher publisher;
+	private final OwnerResolver ownerResolver;
 
 	@Override
 	@Transactional(readOnly = true, label = "service-manifest.get")
@@ -110,6 +111,7 @@ class DefaultServiceManifests implements ServiceManifests {
 		log.debug("Attempting to open a service manifest for {} with: {}", service, artifacts);
 
 		final EntityId releaseId = upsertRelease(service);
+		final Owner owner = ownerResolver.resolve(service.namespace());
 
 		// Convert the incoming candidates to their ArtifactCoordinates pairs...
 		final List<CandidateArtifact> candidates = artifacts.stream().map(CandidateArtifact::new).toList();
@@ -118,7 +120,7 @@ class DefaultServiceManifests implements ServiceManifests {
 		// overriding a real, previously uploaded checksum already recorded for this release: a
 		// LOCAL row with a non-null checksum is settled and must win over merely being indexed.
 		final Map<ArtifactCoordinates, ExistingArtifact> existing = new LinkedHashMap<>();
-		existing.putAll(loadExistingPublications(artifacts));
+		existing.putAll(loadExistingPublications(owner, artifacts));
 		existing.putAll(loadExistingServiceArtifacts(releaseId));
 
 		final OffsetDateTime timestamp = OffsetDateTime.now();
@@ -529,10 +531,11 @@ class DefaultServiceManifests implements ServiceManifests {
 	 * available. Candidates with no matching {@link Publication} are simply absent from the result,
 	 * since they haven't been indexed yet.
 	 *
+	 * @param owner the namespace on whose behalf the release is being resolved, can't be {@literal null}.
 	 * @param candidates the release candidates to resolve against the Artifactory, can't be {@literal null}.
 	 * @return existing publications keyed by their coordinates, never {@literal null}.
 	 */
-	private Map<ArtifactCoordinates, ExistingArtifact> loadExistingPublications(Collection<ServiceReleaseCandidate> candidates) {
+	private Map<ArtifactCoordinates, ExistingArtifact> loadExistingPublications(Owner owner, Collection<ServiceReleaseCandidate> candidates) {
 		final Map<ArtifactCoordinates, ExistingArtifact> existing = new LinkedHashMap<>();
 
 		if (candidates.isEmpty()) {
@@ -544,7 +547,7 @@ class DefaultServiceManifests implements ServiceManifests {
 			coordinates.add(ArtifactCoordinates.of(candidate));
 		}
 
-		for (Publication publication : artifactory.existing(coordinates)) {
+		for (Publication publication : artifactory.existing(owner, coordinates)) {
 			existing.put(ArtifactCoordinates.of(publication), new ExistingArtifact(publication));
 		}
 

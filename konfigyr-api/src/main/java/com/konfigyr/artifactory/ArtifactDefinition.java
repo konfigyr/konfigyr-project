@@ -24,8 +24,10 @@ import java.util.Comparator;
  * {@link PropertyDefinition} entities.
  *
  * @param id entity identifier for the artifact, can't be {@literal null}.
+ * @param owner the namespace that owns this artifact, can't be {@literal null}.
  * @param groupId Maven coordinate {@code groupId} of the artifact, can't be {@literal null}.
  * @param artifactId Maven coordinate {@code artifactId} of the artifact, can't be {@literal null}.
+ * @param visibility whether this artifact is readable by every namespace or only its owner, can't be {@literal null}.
  * @param name human-readable name of the artifact, may be {@literal null}.
  * @param description textual description of the artifact, may be {@literal null}.
  * @param website external URL for documentation or homepage, may be {@literal null}.
@@ -38,8 +40,10 @@ import java.util.Comparator;
 @AggregateRoot
 public record ArtifactDefinition(
 	@NonNull @Identity EntityId id,
+	@NonNull Owner owner,
 	@NonNull String groupId,
 	@NonNull String artifactId,
+	@NonNull ArtifactVisibility visibility,
 	@Nullable String name,
 	@Nullable String description,
 	@Nullable URI website,
@@ -92,8 +96,10 @@ public record ArtifactDefinition(
 	 */
 	public static final class Builder {
 		private EntityId id;
+		private Owner owner;
 		private String groupId;
 		private String artifactId;
+		private ArtifactVisibility visibility;
 		private String name;
 		private String description;
 		private URI website;
@@ -140,6 +146,18 @@ public record ArtifactDefinition(
 		}
 
 		/**
+		 * Specify the {@link Owner} namespace for this {@link ArtifactDefinition}.
+		 *
+		 * @param owner the owning namespace
+		 * @return artifact builder
+		 */
+		@NonNull
+		public Builder owner(Owner owner) {
+			this.owner = owner;
+			return this;
+		}
+
+		/**
 		 * Specify the {@code groupId} coordinate for this {@link ArtifactDefinition}.
 		 *
 		 * @param groupId artifact {@code groupId} coordinate
@@ -160,6 +178,19 @@ public record ArtifactDefinition(
 		@NonNull
 		public Builder artifactId(String artifactId) {
 			this.artifactId = artifactId;
+			return this;
+		}
+
+		/**
+		 * Specify whether this {@link ArtifactDefinition} is readable by every namespace or only its
+		 * owner. Defaults to {@link ArtifactVisibility#PRIVATE} when not specified.
+		 *
+		 * @param visibility artifact visibility
+		 * @return artifact builder
+		 */
+		@NonNull
+		public Builder visibility(ArtifactVisibility visibility) {
+			this.visibility = visibility;
 			return this;
 		}
 
@@ -288,13 +319,16 @@ public record ArtifactDefinition(
 		 */
 		public ArtifactDefinition build() {
 			Assert.notNull(id, "Artifact entity identifier can not be null");
+			Assert.notNull(owner, "Artifact owner can not be null");
 			Assert.hasText(groupId, "Artifact groupId can not be null");
 			Assert.hasText(artifactId, "Artifact artifactId can not be null");
 
 			return new ArtifactDefinition(
 					id,
+					owner,
 					groupId,
 					artifactId,
+					visibility == null ? ArtifactVisibility.PRIVATE : visibility,
 					name,
 					description,
 					website,

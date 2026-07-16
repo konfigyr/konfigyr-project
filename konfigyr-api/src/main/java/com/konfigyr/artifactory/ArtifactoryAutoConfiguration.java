@@ -57,9 +57,8 @@ public class ArtifactoryAutoConfiguration implements WebMvcConfigurer {
 			MetadataStore store,
 			ArtifactoryConverters converters,
 			ApplicationEventPublisher eventPublisher,
-			OwnerResolver ownerResolver,
 			GroupVerifications groupVerifications
 	) {
-		return new DefaultArtifactory(context, store, converters, eventPublisher, ownerResolver, groupVerifications);
+		return new DefaultArtifactory(context, store, converters, eventPublisher, groupVerifications);
 	}
 }
