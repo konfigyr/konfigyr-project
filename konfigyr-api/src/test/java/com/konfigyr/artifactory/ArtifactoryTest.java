@@ -20,7 +20,6 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
 import static org.assertj.core.api.Assertions.*;
 
 class ArtifactoryTest extends AbstractIntegrationTest {
