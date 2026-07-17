@@ -230,7 +230,7 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 	 * <p>
 	 * Only ever called from {@link #accept(ArtifactOwnershipTransfer)}, after {@link #resolve(ArtifactOwnershipTransfer, TransferState)}
 	 * has already confirmed the transfer was in a state that could transition to {@link TransferState#ACCEPTED},
-	 * i.e. that both parties have consented.
+	 * i.e., that both parties have consented.
 	 *
 	 * @param from the namespace that currently owns the affected artifacts
 	 * @param to the namespace that should become the new owner
