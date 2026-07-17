@@ -33,12 +33,11 @@ import static com.konfigyr.data.tables.ArtifactOwnershipTransfers.ARTIFACT_OWNER
 import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 
-/**
- * Every read or write against {@code ARTIFACTS.NAMESPACE_ID} that this transfer workflow needs is
- * performed directly by this class rather than delegated to {@code Artifactory}. That interface is the
- * general-purpose, broadly-held entry point to the artifact repository domain; a bulk
- * {@code UPDATE ARTIFACTS} reassigning ownership has no business being reachable from it outside the
- * two-party consent handshake modeled here.
+/*
+ * Every read or write against ARTIFACTS.NAMESPACE_ID that this transfer workflow needs is performed
+ * directly by this class rather than delegated to Artifactory. That interface is the general-purpose,
+ * broadly-held entry point to the artifact repository domain; a bulk UPDATE ARTIFACTS reassigning
+ * ownership has no business being reachable from it outside the two-party consent handshake modeled here.
  */
 @Slf4j
 @NullMarked
@@ -176,10 +175,10 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 		return resolved;
 	}
 
-	/**
-	 * Returns the distinct namespaces, other than {@code excluding}, that own at least one artifact under
-	 * the given {@code groupId}. Used to validate a transfer {@link #request(Owner, String, Owner) request}:
-	 * the requested {@code from} namespace must appear in this set before a transfer can be created.
+	/*
+	 * Returns the distinct namespaces, other than excluding, that own at least one artifact under the
+	 * given groupId. Used to validate a transfer request: the requested 'from' namespace must appear in
+	 * this set before a transfer can be created.
 	 */
 	private Set<Owner> findArtifactOwners(String groupId, Owner excluding) {
 		return context.selectDistinct(ARTIFACTS.NAMESPACE_ID, NAMESPACES.SLUG)
@@ -191,11 +190,10 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 				.fetchSet(record -> new Owner(EntityId.from(record.get(ARTIFACTS.NAMESPACE_ID)), record.get(NAMESPACES.SLUG)));
 	}
 
-	/**
-	 * Moves ownership of every artifact the {@code from} namespace holds under the given {@code groupId} to
-	 * the {@code to} namespace, in a single bulk operation. Artifact visibility is untouched. Only ever
-	 * called from {@link #accept(ArtifactOwnershipTransfer)}, after the transition assertion above has
-	 * already confirmed both parties consented.
+	/*
+	 * Moves ownership of every artifact the 'from' namespace holds under the given groupId to the 'to'
+	 * namespace, in a single bulk operation. Artifact visibility is untouched. Only ever called from
+	 * accept(), after the transition assertion above has already confirmed both parties consented.
 	 */
 	private void transferArtifacts(Owner from, Owner to, String groupId) {
 		context.update(ARTIFACTS)
