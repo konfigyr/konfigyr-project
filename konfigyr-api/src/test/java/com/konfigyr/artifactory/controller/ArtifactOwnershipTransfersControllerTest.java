@@ -30,7 +30,7 @@ class ArtifactOwnershipTransfersControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should fail to list transfers for an unknown namespace")
 	void shouldFailFindOwner() {
-		mvc.get().uri("/namespaces/{namespace}/artifact-transfers?direction=INCOMING", "fake-namespace")
+		mvc.get().uri("/namespaces/{namespace}/artifact-transfers/incoming", "fake-namespace")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -45,7 +45,7 @@ class ArtifactOwnershipTransfersControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should list incoming transfers for a namespace")
 	void shouldListIncomingTransfers() {
-		mvc.get().uri("/namespaces/{namespace}/artifact-transfers?direction=INCOMING", "konfigyr")
+		mvc.get().uri("/namespaces/{namespace}/artifact-transfers/incoming", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -61,7 +61,7 @@ class ArtifactOwnershipTransfersControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should list outgoing transfers for a namespace")
 	void shouldListOutgoingTransfers() {
-		mvc.get().uri("/namespaces/{namespace}/artifact-transfers?direction=OUTGOING", "ebf")
+		mvc.get().uri("/namespaces/{namespace}/artifact-transfers/outgoing", "ebf")
 				.with(authentication(TestPrincipals.max(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -77,7 +77,7 @@ class ArtifactOwnershipTransfersControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should list transfers filtered by search term")
 	void shouldListTransfersFilteredByTerm() {
-		mvc.get().uri("/namespaces/{namespace}/artifact-transfers?direction=INCOMING&term=billing", "konfigyr")
+		mvc.get().uri("/namespaces/{namespace}/artifact-transfers/incoming?term=billing", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
@@ -91,16 +91,14 @@ class ArtifactOwnershipTransfersControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should fail to list transfers without direction query parameter")
-	void shouldFailListingWithoutDirection() {
+	@DisplayName("should not support listing transfers on the base collection path")
+	void shouldFailListingOnBasePath() {
 		mvc.get().uri("/namespaces/{namespace}/artifact-transfers", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(problemDetailFor(HttpStatus.BAD_REQUEST, problem -> problem
-						.hasTitle("Bad Request")
-						.hasDetailContaining("Required parameter 'direction' is not present")));
+				.hasStatus(HttpStatus.METHOD_NOT_ALLOWED);
 	}
 
 	@Test

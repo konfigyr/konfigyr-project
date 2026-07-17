@@ -33,27 +33,32 @@ class ArtifactOwnershipTransfersController {
 	private final ArtifactOwnershipTransfers transfers;
 	private final OwnerResolver ownerResolver;
 
-	@GetMapping
+	@GetMapping("/incoming")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
-	PagedModel<EntityModel<ArtifactOwnershipTransfer>> getArtifactOwnershipTransfers(
+	PagedModel<EntityModel<ArtifactOwnershipTransfer>> getIncomingTransfers(
 			@PathVariable String namespace,
-			@RequestParam Direction direction,
 			@Nullable @RequestParam(required = false) String term,
 			Pageable pageable
 	) {
 		final Owner owner = ownerResolver.resolve(namespace);
+		final SearchQuery query = SearchQuery.builder().pageable(pageable).term(term).build();
 
-		final SearchQuery query = SearchQuery.builder()
-				.pageable(pageable)
-				.term(term)
-				.build();
+		return Assemblers.artifactOwnershipTransfer(owner).assemble(transfers.findIncoming(owner, query));
+	}
 
-		final var page = direction == Direction.INCOMING
-				? transfers.findIncoming(owner, query)
-				: transfers.findOutgoing(owner, query);
+	@GetMapping("/outgoing")
+	@PreAuthorize("isAdmin(#namespace)")
+	@RequiresScope(OAuthScope.READ_NAMESPACES)
+	PagedModel<EntityModel<ArtifactOwnershipTransfer>> getOutgoingTransfers(
+			@PathVariable String namespace,
+			@Nullable @RequestParam(required = false) String term,
+			Pageable pageable
+	) {
+		final Owner owner = ownerResolver.resolve(namespace);
+		final SearchQuery query = SearchQuery.builder().pageable(pageable).term(term).build();
 
-		return Assemblers.artifactOwnershipTransfer(owner).assemble(page);
+		return Assemblers.artifactOwnershipTransfer(owner).assemble(transfers.findOutgoing(owner, query));
 	}
 
 	@GetMapping("/{id}")
@@ -131,11 +136,6 @@ class ArtifactOwnershipTransfersController {
 		}
 
 		return transfer;
-	}
-
-	enum Direction {
-		INCOMING,
-		OUTGOING
 	}
 
 	record TransferRequest(@NotBlank String groupId, @NotBlank String fromNamespace) { /* noop */ }
