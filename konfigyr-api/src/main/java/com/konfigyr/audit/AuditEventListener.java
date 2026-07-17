@@ -495,6 +495,18 @@ class AuditEventListener {
 		);
 	}
 
+	@TransactionalEventListener(id = "audit.ownership-transfer-accepted", classes = ArtifactoryEvent.OwnershipTransferAccepted.class)
+	void on(ArtifactoryEvent.OwnershipTransferAccepted event) {
+		insert(event, builder -> builder
+				.entityType("artifact-ownership-transfer")
+				.entityId(event.id())
+				.eventType("artifactory.ownership-transfer.accepted")
+				.details("groupId", event.groupId())
+				.details("from", event.from().slug())
+				.details("to", event.to().slug())
+		);
+	}
+
 	private void insert(EntityEvent event, Consumer<AuditEvent.Builder> factory) {
 		AuditObservation.create(observationRegistry, event).observe(() -> {
 			try {

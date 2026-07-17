@@ -34,6 +34,15 @@ public interface TestPrincipals {
 	}
 
 	/**
+	 * Creates an {@link Authentication} for <code>max.mustermann@ebf.com</code> test account.
+	 *
+	 * @return Max Mustermann authentication, never {@literal null}
+	 */
+	static @NonNull Authentication max() {
+		return from(TestAccounts.max().build());
+	}
+
+	/**
 	 * Creates an {@link Authentication} for a {@link com.konfigyr.namespace.NamespaceApplication}
 	 * that is identified by the given <code>client_id</code>.
 	 *

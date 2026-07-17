@@ -11,7 +11,8 @@ import org.jspecify.annotations.NonNull;
  * @author Vladimir Spasic
  * @since 1.0.0
  **/
-public abstract sealed class ArtifactoryEvent extends EntityEvent permits ArtifactoryEvent.ArtifactEvent {
+public abstract sealed class ArtifactoryEvent extends EntityEvent
+		permits ArtifactoryEvent.ArtifactEvent, ArtifactoryEvent.OwnershipTransferAccepted {
 
 	protected ArtifactoryEvent(EntityId id) {
 		super(id);
@@ -126,6 +127,63 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent permits Artifa
 		 */
 		public PublicationFailed(EntityId id, ArtifactCoordinates coordinates) {
 			super(id, coordinates);
+		}
+	}
+
+	/**
+	 * Event that would be published when an artifact ownership transfer request is accepted by the
+	 * current owner and ownership of the affected artifacts has moved.
+	 */
+	@DomainEvent(name = "ownership-transfer.accepted", namespace = "artifactory")
+	public static final class OwnershipTransferAccepted extends ArtifactoryEvent {
+
+		private final String groupId;
+		private final Owner from;
+		private final Owner to;
+
+		/**
+		 * Create a new {@link OwnershipTransferAccepted} event for the given accepted transfer request.
+		 *
+		 * @param id the entity identifier of the accepted transfer request, can't be {@literal null}.
+		 * @param groupId the artifact groupId coordinate whose artifacts were transferred, can't be {@literal null}.
+		 * @param from the namespace that owned the affected artifacts before the transfer, can't be {@literal null}.
+		 * @param to the namespace that now owns the affected artifacts, can't be {@literal null}.
+		 */
+		public OwnershipTransferAccepted(EntityId id, @NonNull String groupId, @NonNull Owner from, @NonNull Owner to) {
+			super(id);
+			this.groupId = groupId;
+			this.from = from;
+			this.to = to;
+		}
+
+		/**
+		 * Returns the Maven {@code groupId} coordinate whose artifacts were transferred.
+		 *
+		 * @return artifact groupId coordinate, never {@literal null}.
+		 */
+		@NonNull
+		public String groupId() {
+			return groupId;
+		}
+
+		/**
+		 * Returns the namespace that owned the affected artifacts before the transfer.
+		 *
+		 * @return previous owner, never {@literal null}.
+		 */
+		@NonNull
+		public Owner from() {
+			return from;
+		}
+
+		/**
+		 * Returns the namespace that now owns the affected artifacts.
+		 *
+		 * @return new owner, never {@literal null}.
+		 */
+		@NonNull
+		public Owner to() {
+			return to;
 		}
 	}
 
