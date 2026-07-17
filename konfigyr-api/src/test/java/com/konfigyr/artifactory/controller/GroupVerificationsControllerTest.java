@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.directory.InitialDirContext;
+import java.util.Set;
 
 import static com.konfigyr.artifactory.ownership.VerificationStrategyTestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -174,6 +175,82 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should surface conflicting owners when claiming a groupId with pre-existing artifacts from another namespace")
+	@Transactional
+	void shouldSurfaceConflictingOwnersOnClaim() {
+		mvc.post().uri("/namespaces/{namespace}/group-verifications", "konfigyr")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"groupId\":\"com.acme.widgets\",\"verificationMethod\":\"DNS\"}")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.CREATED)
+				.bodyJson()
+				.convertTo(ClaimResponse.class)
+				.returns("com.acme.widgets", ClaimResponse::groupId)
+				.returns(Set.of("ebf"), ClaimResponse::conflictingOwners);
+	}
+
+	@Test
+	@DisplayName("should not surface any conflicting owners when nobody else owns artifacts under the groupId")
+	@Transactional
+	void shouldNotSurfaceConflictingOwnersWhenNoneExist() {
+		mvc.post().uri("/namespaces/{namespace}/group-verifications", "konfigyr")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"groupId\":\"com.company.claim\",\"verificationMethod\":\"DNS\"}")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.CREATED)
+				.bodyJson()
+				.convertTo(ClaimResponse.class)
+				.returns(null, ClaimResponse::conflictingOwners);
+	}
+
+	@Test
+	@DisplayName("should surface conflicting owners when verifying a groupId with pre-existing artifacts from another namespace")
+	@Transactional
+	void shouldSurfaceConflictingOwnersOnVerify() {
+		final String namespace = "konfigyr";
+		final String groupId = "com.acme.widgets";
+
+		mvc.post().uri("/namespaces/{namespace}/group-verifications", namespace)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"groupId\":\"" + groupId + "\",\"verificationMethod\":\"DNS\"}")
+				.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.hasStatus(HttpStatus.CREATED);
+
+		final String token = mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}/challenges", namespace, groupId)
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.bodyJson()
+				.convertTo(collectionModel(VerificationChallenge.class))
+				.actual()
+				.getContent()
+				.iterator().next()
+				.token();
+
+		try (MockedConstruction<InitialDirContext> ignored = mockDns("acme.com", "some-other-record", "konfigyr-verification=" + token)) {
+			mvc.post().uri("/namespaces/{namespace}/group-verifications/{groupId}/verify", namespace, groupId)
+					.with(authentication(TestPrincipals.john(), OAuthScope.WRITE_NAMESPACES))
+					.exchange()
+					.assertThat()
+					.apply(log())
+					.hasStatusOk()
+					.bodyJson()
+					.convertTo(ClaimResponse.class)
+					.returns(groupId, ClaimResponse::groupId)
+					.returns(VerificationState.ACTIVE, ClaimResponse::state)
+					.returns(Set.of("ebf"), ClaimResponse::conflictingOwners);
+		}
+	}
+
+	@Test
 	@DisplayName("should fetch claim by group id")
 	void shouldFetchClaimByGroupId() {
 		mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}", "john-doe", "org.springframework.ai")
@@ -304,4 +381,6 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.returns(VerificationState.PENDING, GroupVerification::state)
 				.satisfies(it -> assertThat(it.createdAt()).isNotNull());
 	}
+
+	private record ClaimResponse(String groupId, VerificationState state, Set<String> conflictingOwners) { }
 }

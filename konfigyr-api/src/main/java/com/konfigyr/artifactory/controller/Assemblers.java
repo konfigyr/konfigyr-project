@@ -1,5 +1,7 @@
 package com.konfigyr.artifactory.controller;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.konfigyr.artifactory.ArtifactCoordinates;
 import com.konfigyr.artifactory.Owner;
 import com.konfigyr.artifactory.PropertyDefinition;
@@ -12,6 +14,9 @@ import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkBuilder;
 import com.konfigyr.hateoas.RepresentationModelAssembler;
 import org.springframework.http.HttpMethod;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 interface Assemblers {
 
@@ -27,6 +32,15 @@ interface Assemblers {
 
 	static RepresentationModelAssembler<GroupVerification, EntityModel<GroupVerification>> groupVerification(Owner owner) {
 		return verification -> EntityModel.of(verification, linkBuilder(owner, verification).selfRel())
+				.add(linkBuilder(owner, verification).method(HttpMethod.GET).path("challenges").rel("list verification challenges"))
+				.add(linkBuilder(owner, verification).method(HttpMethod.POST).path("verify").rel("verify"))
+				.add(linkBuilder(owner, verification).method(HttpMethod.DELETE).rel("revoke"));
+	}
+
+	static RepresentationModelAssembler<GroupVerification, EntityModel<GroupVerificationRepresentation>> groupVerification(Owner owner, Set<Owner> conflictingOwners) {
+		final Set<String> conflicts = conflictingOwners.stream().map(Owner::slug).collect(Collectors.toUnmodifiableSet());
+
+		return verification -> EntityModel.of(new GroupVerificationRepresentation(verification, conflicts), linkBuilder(owner, verification).selfRel())
 				.add(linkBuilder(owner, verification).method(HttpMethod.GET).path("challenges").rel("list verification challenges"))
 				.add(linkBuilder(owner, verification).method(HttpMethod.POST).path("verify").rel("verify"))
 				.add(linkBuilder(owner, verification).method(HttpMethod.DELETE).rel("revoke"));
@@ -69,4 +83,17 @@ interface Assemblers {
 				.path("artifact-transfers")
 				.path(transfer.id().serialize());
 	}
+
+	/**
+	 * Enriched {@link GroupVerification} representation returned by the {@code claim} and {@code verify}
+	 * endpoints, adding the {@code conflictingOwners} field alongside the verification's own fields.
+	 *
+	 * @param verification the claimed or verified {@link GroupVerification}
+	 * @param conflictingOwners slugs of namespaces, other than the caller, that already own artifacts under
+	 *        {@link GroupVerification#groupId()}
+	 */
+	record GroupVerificationRepresentation(
+			@JsonUnwrapped GroupVerification verification,
+			@JsonInclude(JsonInclude.Include.NON_EMPTY) Set<String> conflictingOwners
+	) { }
 }

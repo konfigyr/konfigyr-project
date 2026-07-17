@@ -59,6 +59,30 @@ class DefaultGroupVerificationsTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should find owners of artifacts under a groupId, excluding the given namespace")
+	void shouldFindOwnersExcludingGivenNamespace() {
+		final var result = verifications.findOwners("com.konfigyr", Owners.konfigyr());
+
+		assertThat(result).containsExactlyInAnyOrder(Owners.johnDoe(), Owners.ebf());
+	}
+
+	@Test
+	@DisplayName("should never include the excluded namespace among the owners it holds itself")
+	void shouldNeverIncludeExcludedNamespaceAmongOwners() {
+		final var result = verifications.findOwners("com.konfigyr", Owners.johnDoe());
+
+		assertThat(result).containsExactlyInAnyOrder(Owners.konfigyr(), Owners.ebf());
+	}
+
+	@Test
+	@DisplayName("should return an empty result when no artifacts exist under the groupId")
+	void shouldReturnEmptyOwnersForUnknownGroupId() {
+		final var result = verifications.findOwners("com.unknown", Owners.konfigyr());
+
+		assertThat(result).isEmpty();
+	}
+
+	@Test
 	@DisplayName("should find covering by owner")
 	void shouldFindCoveringByOwner() {
 		final var owner = Owners.johnDoe();
