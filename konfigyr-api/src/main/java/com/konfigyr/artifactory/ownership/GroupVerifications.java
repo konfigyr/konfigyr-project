@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Service for managing Maven {@code groupId} ownership claims and their verification attempts.
@@ -104,6 +105,22 @@ public interface GroupVerifications {
 	 * @return the matching claim if present; otherwise an empty optional
 	 */
 	Optional<GroupVerification> findByGroupId(Owner owner, String groupId);
+
+	/**
+	 * Returns the distinct namespaces, other than {@code excluding}, that own at least one artifact under
+	 * the given {@code groupId}.
+	 * <p>
+	 * Used to surface pre-existing ownership conflicts: by {@link #claim(Owner, String, VerificationMethod)}
+	 * and {@link #verify(Owner, String)} callers to inform a namespace claiming or verifying a {@code groupId}
+	 * that another namespace already owns artifacts under it, and by
+	 * {@code com.konfigyr.artifactory.transfer.ArtifactOwnershipTransfers#request} to validate that the
+	 * requested {@code from} namespace actually owns something worth transferring.
+	 *
+	 * @param groupId the Maven group identifier to inspect
+	 * @param excluding the namespace to exclude from the result
+	 * @return the distinct owning namespaces other than {@code excluding}, never {@literal null}, empty if none exist
+	 */
+	Set<Owner> findOwners(String groupId, Owner excluding);
 
 	/**
 	 * Finds the single {@link ChallengeState#UNVERIFIED} challenge attached to a verification claim.

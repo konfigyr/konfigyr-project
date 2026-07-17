@@ -65,11 +65,12 @@ class GroupVerificationsController {
 	@PreAuthorize("isAdmin(#namespace)")
 	@ResponseStatus(HttpStatus.CREATED)
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
-	EntityModel<GroupVerification> claim(@PathVariable String namespace, @RequestBody @Validated ClaimRequest request) {
+	EntityModel<Assemblers.GroupVerificationRepresentation> claim(@PathVariable String namespace, @RequestBody @Validated ClaimRequest request) {
 		final Owner owner = ownerResolver.resolve(namespace);
+		final GroupVerification verification = groupVerifications.claim(owner, request.groupId(), request.verificationMethod());
 
-		return Assemblers.groupVerification(owner)
-				.assemble(groupVerifications.claim(owner, request.groupId(), request.verificationMethod()));
+		return Assemblers.groupVerification(owner, groupVerifications.findOwners(request.groupId(), owner))
+				.assemble(verification);
 	}
 
 	@GetMapping("/{groupId}/challenges")
@@ -87,14 +88,15 @@ class GroupVerificationsController {
 	@PostMapping("/{groupId}/verify")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.WRITE_NAMESPACES)
-	EntityModel<GroupVerification> verify(
+	EntityModel<Assemblers.GroupVerificationRepresentation> verify(
 			@PathVariable String namespace,
 			@PathVariable String groupId
 	) {
 		final Owner owner = ownerResolver.resolve(namespace);
+		final GroupVerification verification = groupVerifications.verify(owner, groupId);
 
-		return Assemblers.groupVerification(owner)
-				.assemble(groupVerifications.verify(owner, groupId));
+		return Assemblers.groupVerification(owner, groupVerifications.findOwners(groupId, owner))
+				.assemble(verification);
 	}
 
 	@DeleteMapping("/{groupId}")

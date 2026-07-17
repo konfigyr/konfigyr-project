@@ -24,7 +24,9 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
 import static com.konfigyr.data.tables.GroupVerificationChallenges.GROUP_VERIFICATION_CHALLENGES;
 import static com.konfigyr.data.tables.GroupVerifications.GROUP_VERIFICATIONS;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
@@ -102,6 +104,17 @@ class DefaultGroupVerifications implements GroupVerifications {
 				.where(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(owner.id().get()))
 				.and(GROUP_VERIFICATIONS.GROUP_ID.eq(groupId))
 				.fetchOptional(DefaultGroupVerifications::toGroupVerification);
+	}
+
+	@Override
+	@Transactional(readOnly = true, label = "group-verifications.find-owners")
+	public Set<Owner> findOwners(String groupId, Owner excluding) {
+		return context.selectDistinct(ARTIFACTS.NAMESPACE_ID, NAMESPACES.SLUG)
+				.from(ARTIFACTS)
+				.innerJoin(NAMESPACES).on(NAMESPACES.ID.eq(ARTIFACTS.NAMESPACE_ID))
+				.where(ARTIFACTS.GROUP_ID.eq(groupId))
+				.and(ARTIFACTS.NAMESPACE_ID.ne(excluding.id().get()))
+				.fetchSet(DefaultGroupVerifications::toOwner);
 	}
 
 	@Override
@@ -256,49 +269,6 @@ class DefaultGroupVerifications implements GroupVerifications {
 				.where(condition);
 	}
 
-	private static Condition prefixOf(String groupId) {
-		return DSL.val(groupId)
-				.like(DSL.concat(GROUP_VERIFICATIONS.GROUP_ID, DSL.val(".%")))
-				.or(GROUP_VERIFICATIONS.GROUP_ID.eq(groupId));
-	}
-
-	private static Condition overlaps(String groupId) {
-		return prefixOf(groupId)
-				.or(GROUP_VERIFICATIONS.GROUP_ID.like(DSL.concat(DSL.val(groupId), DSL.val(".%"))));
-	}
-
-	private static GroupVerification toGroupVerification(Record record) {
-		return toGroupVerification(record, new Owner(
-				record.get(GROUP_VERIFICATIONS.NAMESPACE_ID, EntityId.class),
-				record.get(NAMESPACES.SLUG)
-		));
-	}
-
-	private static GroupVerification toGroupVerification(Record record, Owner owner) {
-		return GroupVerification.builder()
-				.id(record.get(GROUP_VERIFICATIONS.ID, EntityId.class))
-				.owner(owner)
-				.groupId(record.get(GROUP_VERIFICATIONS.GROUP_ID))
-				.state(record.get(GROUP_VERIFICATIONS.STATE, VerificationState.class))
-				.createdAt(record.get(GROUP_VERIFICATIONS.CREATED_AT))
-				.verifiedAt(record.get(GROUP_VERIFICATIONS.VERIFIED_AT))
-				.revokedAt(record.get(GROUP_VERIFICATIONS.REVOKED_AT))
-				.build();
-	}
-
-	private static VerificationChallenge toVerificationChallenge(Record record) {
-		return VerificationChallenge.builder()
-				.id(record.get(GROUP_VERIFICATION_CHALLENGES.ID))
-				.verificationId(record.get(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, EntityId.class))
-				.method(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, VerificationMethod.class))
-				.token(record.get(GROUP_VERIFICATION_CHALLENGES.CHALLENGE_TOKEN))
-				.state(record.get(GROUP_VERIFICATION_CHALLENGES.STATE, ChallengeState.class))
-				.createdAt(record.get(GROUP_VERIFICATION_CHALLENGES.CREATED_AT))
-				.verifiedAt(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT))
-				.expiresAt(record.get(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT))
-				.build();
-	}
-
 	private void expireActiveChallenges(GroupVerification verification) {
 		final int expired = context.update(GROUP_VERIFICATION_CHALLENGES)
 				.set(GROUP_VERIFICATION_CHALLENGES.STATE, ChallengeState.EXPIRED.name())
@@ -370,6 +340,56 @@ class DefaultGroupVerifications implements GroupVerifications {
 				updated.owner().slug(), updated.owner().id(), updated.groupId(), challenge.method(), challenge.state());
 
 		return updated;
+	}
+
+	private static Condition prefixOf(String groupId) {
+		return DSL.val(groupId)
+				.like(DSL.concat(GROUP_VERIFICATIONS.GROUP_ID, DSL.val(".%")))
+				.or(GROUP_VERIFICATIONS.GROUP_ID.eq(groupId));
+	}
+
+	private static Condition overlaps(String groupId) {
+		return prefixOf(groupId)
+				.or(GROUP_VERIFICATIONS.GROUP_ID.like(DSL.concat(DSL.val(groupId), DSL.val(".%"))));
+	}
+
+	private static Owner toOwner(Record record) {
+		return new Owner(
+				record.get(ARTIFACTS.NAMESPACE_ID, EntityId.class),
+				record.get(NAMESPACES.SLUG)
+		);
+	}
+
+	private static GroupVerification toGroupVerification(Record record) {
+		return toGroupVerification(record, new Owner(
+				record.get(GROUP_VERIFICATIONS.NAMESPACE_ID, EntityId.class),
+				record.get(NAMESPACES.SLUG)
+		));
+	}
+
+	private static GroupVerification toGroupVerification(Record record, Owner owner) {
+		return GroupVerification.builder()
+				.id(record.get(GROUP_VERIFICATIONS.ID, EntityId.class))
+				.owner(owner)
+				.groupId(record.get(GROUP_VERIFICATIONS.GROUP_ID))
+				.state(record.get(GROUP_VERIFICATIONS.STATE, VerificationState.class))
+				.createdAt(record.get(GROUP_VERIFICATIONS.CREATED_AT))
+				.verifiedAt(record.get(GROUP_VERIFICATIONS.VERIFIED_AT))
+				.revokedAt(record.get(GROUP_VERIFICATIONS.REVOKED_AT))
+				.build();
+	}
+
+	private static VerificationChallenge toVerificationChallenge(Record record) {
+		return VerificationChallenge.builder()
+				.id(record.get(GROUP_VERIFICATION_CHALLENGES.ID))
+				.verificationId(record.get(GROUP_VERIFICATION_CHALLENGES.GROUP_VERIFICATION_ID, EntityId.class))
+				.method(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFICATION_METHOD, VerificationMethod.class))
+				.token(record.get(GROUP_VERIFICATION_CHALLENGES.CHALLENGE_TOKEN))
+				.state(record.get(GROUP_VERIFICATION_CHALLENGES.STATE, ChallengeState.class))
+				.createdAt(record.get(GROUP_VERIFICATION_CHALLENGES.CREATED_AT))
+				.verifiedAt(record.get(GROUP_VERIFICATION_CHALLENGES.VERIFIED_AT))
+				.expiresAt(record.get(GROUP_VERIFICATION_CHALLENGES.EXPIRES_AT))
+				.build();
 	}
 
 }
