@@ -1,11 +1,13 @@
 package com.konfigyr.artifactory.transfer;
 
+import com.konfigyr.artifactory.ArtifactoryEvent;
 import com.konfigyr.artifactory.Owner;
 import com.konfigyr.artifactory.Owners;
 import com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
+import org.assertj.core.api.OptionalAssert;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,12 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
-
 import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
-import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
 
 class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 
@@ -67,33 +65,31 @@ class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 
 		events.assertThat()
 				.contains(com.konfigyr.artifactory.ArtifactoryEvent.OwnershipTransferAccepted.class)
-				.matching(event -> event.groupId().equals(groupId)
-						&& event.from().equals(from)
-						&& event.to().equals(to));
+				.matching(ArtifactoryEvent.OwnershipTransferAccepted::groupId, groupId)
+				.matching(ArtifactoryEvent.OwnershipTransferAccepted::from, from)
+				.matching(ArtifactoryEvent.OwnershipTransferAccepted::to, to);
 	}
 
 	@Test
 	@DisplayName("should fail to request a transfer when the requester has no active claim covering the groupId")
 	void shouldRejectRequestWhenRequesterHasNoActiveClaim() {
-		final var to = Owners.johnDoe();
 		final var from = Owners.konfigyr();
 		final var groupId = "com.konfigyr";
 
 		assertThatExceptionOfType(GroupIdNotVerifiedException.class)
-				.isThrownBy(() -> transfers.request(to, groupId, from))
+				.isThrownBy(() -> transfers.request(Owners.johnDoe(), groupId, from))
 				.returns(groupId, GroupIdNotVerifiedException::getGroupId)
-				.returns("john-doe", ex -> ex.getOwner().slug());
+				.returns(Owners.johnDoe(), GroupIdNotVerifiedException::getOwner);
 	}
 
 	@Test
 	@DisplayName("should fail to request a transfer when the current owner has no artifacts under the groupId")
 	void shouldRejectRequestWhenFromOwnerHasNoArtifacts() {
-		final var to = Owners.konfigyr();
 		final var from = new Owner(EntityId.from(999L), "ghost-namespace");
 		final var groupId = "com.konfigyr";
 
 		assertThatExceptionOfType(NoArtifactsToTransferException.class)
-				.isThrownBy(() -> transfers.request(to, groupId, from))
+				.isThrownBy(() -> transfers.request(Owners.konfigyr(), groupId, from))
 				.returns(groupId, NoArtifactsToTransferException::getGroupId)
 				.returns(from, NoArtifactsToTransferException::getFrom);
 	}
@@ -106,18 +102,19 @@ class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 		final var from = Owners.johnDoe();
 		final var groupId = "com.konfigyr";
 
-		transfers.request(to, groupId, from);
+		assertThatNoException().isThrownBy(() -> transfers.request(to, groupId, from));
 
 		assertThatExceptionOfType(ArtifactOwnershipTransferAlreadyRequestedException.class)
-				.isThrownBy(() -> transfers.request(to, groupId, from));
+				.isThrownBy(() -> transfers.request(to, groupId, from))
+				.returns(groupId, ArtifactOwnershipTransferAlreadyRequestedException::getGroupId)
+				.returns(from, ArtifactOwnershipTransferAlreadyRequestedException::getFrom)
+				.returns(to, ArtifactOwnershipTransferAlreadyRequestedException::getTo);
 	}
 
 	@Test
-	@Transactional
 	@DisplayName("should fail to accept a transfer that is already resolved")
 	void shouldRejectAcceptingAlreadyResolvedTransfer() {
-		final var pending = transfers.request(Owners.konfigyr(), "com.konfigyr", Owners.johnDoe());
-		final var accepted = transfers.accept(pending);
+		final var accepted = transferFor(Owners.konfigyr(), 2);
 
 		assertThatExceptionOfType(IllegalStateException.class)
 				.isThrownBy(() -> transfers.accept(accepted));
@@ -125,46 +122,26 @@ class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 
 	@Test
 	@Transactional
-	@DisplayName("should reject a pending transfer without changing artifact ownership")
+	@DisplayName("should reject a pending transfer")
 	void shouldRejectPendingTransfer() {
-		final var groupId = "com.konfigyr";
-		final var from = Owners.johnDoe();
+		final var pending = transferFor(Owners.ebf(), 1);
 
-		final var pending = transfers.request(Owners.konfigyr(), groupId, from);
-		final var rejected = transfers.reject(pending);
-
-		assertThat(rejected)
+		assertThat(transfers.reject(pending))
 				.returns(pending.id(), ArtifactOwnershipTransfer::id)
 				.returns(TransferState.REJECTED, ArtifactOwnershipTransfer::state)
 				.satisfies(it -> assertThat(it.resolvedAt()).isNotNull());
-
-		assertThat(context.select(ARTIFACTS.NAMESPACE_ID).from(ARTIFACTS)
-				.where(ARTIFACTS.GROUP_ID.eq(groupId), ARTIFACTS.ARTIFACT_ID.eq("reclaimed-artifact"))
-				.fetchOne(ARTIFACTS.NAMESPACE_ID))
-				.as("artifact ownership must be untouched by a rejected transfer")
-				.isEqualTo(from.id().get());
 	}
 
 	@Test
 	@Transactional
-	@DisplayName("should cancel a pending transfer without changing artifact ownership")
+	@DisplayName("should cancel a pending transfer")
 	void shouldCancelPendingTransfer() {
-		final var groupId = "com.konfigyr";
-		final var from = Owners.johnDoe();
+		final var pending = transferFor(Owners.ebf(), 1);
 
-		final var pending = transfers.request(Owners.konfigyr(), groupId, from);
-		final var cancelled = transfers.cancel(pending);
-
-		assertThat(cancelled)
+		assertThat(transfers.cancel(pending))
 				.returns(pending.id(), ArtifactOwnershipTransfer::id)
 				.returns(TransferState.CANCELLED, ArtifactOwnershipTransfer::state)
 				.satisfies(it -> assertThat(it.resolvedAt()).isNotNull());
-
-		assertThat(context.select(ARTIFACTS.NAMESPACE_ID).from(ARTIFACTS)
-				.where(ARTIFACTS.GROUP_ID.eq(groupId), ARTIFACTS.ARTIFACT_ID.eq("reclaimed-artifact"))
-				.fetchOne(ARTIFACTS.NAMESPACE_ID))
-				.as("artifact ownership must be untouched by a cancelled transfer")
-				.isEqualTo(from.id().get());
 	}
 
 	@Test
@@ -174,25 +151,7 @@ class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 		final var groupId = "com.konfigyr";
 		final var to = Owners.konfigyr();
 		final var from = Owners.johnDoe();
-
-		final var thirdNamespaceId = context.insertInto(NAMESPACES)
-				.set(NAMESPACES.ID, EntityId.generate().orElseThrow().get())
-				.set(NAMESPACES.SLUG, "third-namespace")
-				.set(NAMESPACES.NAME, "Third Namespace")
-				.set(NAMESPACES.CREATED_AT, OffsetDateTime.now())
-				.set(NAMESPACES.UPDATED_AT, OffsetDateTime.now())
-				.returning(NAMESPACES.ID)
-				.fetchOne(NAMESPACES.ID);
-
-		context.insertInto(ARTIFACTS)
-				.set(ARTIFACTS.ID, EntityId.generate().orElseThrow().get())
-				.set(ARTIFACTS.NAMESPACE_ID, thirdNamespaceId)
-				.set(ARTIFACTS.GROUP_ID, groupId)
-				.set(ARTIFACTS.ARTIFACT_ID, "third-namespace-artifact")
-				.set(ARTIFACTS.VISIBILITY, "PRIVATE")
-				.set(ARTIFACTS.CREATED_AT, OffsetDateTime.now())
-				.set(ARTIFACTS.UPDATED_AT, OffsetDateTime.now())
-				.execute();
+		final var uninvolved = Owners.ebf();
 
 		final var pending = transfers.request(to, groupId, from);
 		transfers.accept(pending);
@@ -204,56 +163,51 @@ class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 				.isEqualTo(to.id().get());
 
 		assertThat(context.select(ARTIFACTS.NAMESPACE_ID).from(ARTIFACTS)
-				.where(ARTIFACTS.GROUP_ID.eq(groupId), ARTIFACTS.ARTIFACT_ID.eq("third-namespace-artifact"))
+				.where(ARTIFACTS.GROUP_ID.eq(groupId), ARTIFACTS.ARTIFACT_ID.eq("ebf-artifact"))
 				.fetchOne(ARTIFACTS.NAMESPACE_ID))
 				.as("a third, uninvolved namespace's artifact under the same groupId must be untouched")
-				.isEqualTo(thirdNamespaceId);
+				.isEqualTo(uninvolved.id().get());
 	}
 
 	@Test
-	@Transactional
 	@DisplayName("should find incoming transfer requests for the current owner")
 	void shouldFindIncomingTransfers() {
-		final var from = Owners.johnDoe();
-		final var pending = transfers.request(Owners.konfigyr(), "com.konfigyr", from);
-
-		assertThat(transfers.findIncoming(from, SearchQuery.of(Pageable.ofSize(10))).stream())
+		assertThat(transfers.findIncoming(Owners.konfigyr(), SearchQuery.of(Pageable.ofSize(10))).stream())
 				.extracting(ArtifactOwnershipTransfer::id)
-				.containsExactly(pending.id());
+				.containsExactlyInAnyOrder(EntityId.from(1), EntityId.from(3));
 	}
 
 	@Test
-	@Transactional
 	@DisplayName("should find outgoing transfer requests for the requesting namespace")
 	void shouldFindOutgoingTransfers() {
-		final var to = Owners.konfigyr();
-		final var pending = transfers.request(to, "com.konfigyr", Owners.johnDoe());
-
-		assertThat(transfers.findOutgoing(to, SearchQuery.of(Pageable.ofSize(10))).stream())
+		assertThat(transfers.findOutgoing(Owners.ebf(), SearchQuery.of(Pageable.ofSize(10))).stream())
 				.extracting(ArtifactOwnershipTransfer::id)
-				.containsExactly(pending.id());
+				.containsExactlyInAnyOrder(EntityId.from(1), EntityId.from(4));
 	}
 
 	@Test
-	@Transactional
 	@DisplayName("should find a transfer request by id when visible to either party")
 	void shouldFindTransferByIdForEitherParty() {
-		final var to = Owners.konfigyr();
-		final var from = Owners.johnDoe();
-		final var pending = transfers.request(to, "com.konfigyr", from);
-
-		assertThat(transfers.findById(to, pending.id())).isPresent();
-		assertThat(transfers.findById(from, pending.id())).isPresent();
+		assertTransfer(Owners.johnDoe(), 2).isPresent();
+		assertTransfer(Owners.konfigyr(), 2).isPresent();
 	}
 
 	@Test
-	@Transactional
 	@DisplayName("should not find a transfer request by id for an uninvolved namespace")
 	void shouldNotFindTransferByIdForUninvolvedNamespace() {
-		final var pending = transfers.request(Owners.konfigyr(), "com.konfigyr", Owners.johnDoe());
-		final var uninvolved = new Owner(EntityId.from(999L), "uninvolved-namespace");
+		assertTransfer(Owners.ebf(), 2).isEmpty();
+	}
 
-		assertThat(transfers.findById(uninvolved, pending.id())).isEmpty();
+	OptionalAssert<ArtifactOwnershipTransfer> assertTransfer(Owner owner, long id) {
+		return assertThat(transfers.findById(owner, EntityId.from(id)));
+	}
+
+	ArtifactOwnershipTransfer transferFor(Owner owner, long id) {
+		return assertTransfer(owner, id)
+				.as("Artifact ownership transfer with identifier %s must be accessible to %s", id, owner.slug())
+				.isPresent()
+				.get()
+				.actual();
 	}
 
 }

@@ -20,7 +20,8 @@ public interface TestAccounts {
 	 * @return John Doe account builder, never {@literal null}
 	 */
 	static Account.Builder john() {
-		return Account.builder().id(1L)
+		return Account.builder()
+				.id(1L)
 				.status(AccountStatus.ACTIVE)
 				.email("john.doe@konfigyr.com")
 				.firstName("John")
@@ -34,11 +35,26 @@ public interface TestAccounts {
 	 * @return Jane Doe account builder, never {@literal null}
 	 */
 	static Account.Builder jane() {
-		return Account.builder().id(2L)
+		return Account.builder()
+				.id(2L)
 				.status(AccountStatus.ACTIVE)
 				.email("jane.doe@konfigyr.com")
 				.firstName("Jane")
 				.lastName("Doe");
+	}
+
+	/**
+	 * Creates a {@link Account.Builder} for <code>max.mustermann@ebf.com</code> test account.
+	 *
+	 * @return Max Mustermann account builder, never {@literal null}
+	 */
+	static Account.Builder max() {
+		return Account.builder()
+				.id(3L)
+				.status(AccountStatus.ACTIVE)
+				.email("max.mustermann@ebf.com")
+				.firstName("Max")
+				.lastName("Mustermann");
 	}
 
 }

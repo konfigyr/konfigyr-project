@@ -23,7 +23,7 @@ public class GroupIdNotVerifiedException extends ArtifactoryException {
 	private final Owner owner;
 
 	/**
-	 * Create new instance when a namespace lacks an active claim covering the supplied groupId.
+	 * Create a new instance when a namespace lacks an active claim covering the supplied groupId.
 	 *
 	 * @param groupId the artifact groupId that is not verified, can't be {@literal null}
 	 * @param owner the namespace owner that attempted to publish, can't be {@literal null}

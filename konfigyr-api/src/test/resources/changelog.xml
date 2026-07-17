@@ -11,6 +11,7 @@
 		<sqlFile path="data/invitations.sql" />
 		<sqlFile path="data/kms.sql" />
 		<sqlFile path="data/vault.sql" />
+		<sqlFile path="data/artifact-ownership-transfers.sql" />
     </changeSet>
 
 </databaseChangeLog>
