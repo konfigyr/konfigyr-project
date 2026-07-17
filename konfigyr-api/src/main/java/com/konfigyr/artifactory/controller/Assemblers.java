@@ -6,6 +6,7 @@ import com.konfigyr.artifactory.PropertyDefinition;
 import com.konfigyr.artifactory.VersionedArtifact;
 import com.konfigyr.artifactory.ownership.GroupVerification;
 import com.konfigyr.artifactory.ownership.VerificationChallenge;
+import com.konfigyr.artifactory.transfer.ArtifactOwnershipTransfer;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.Link;
 import com.konfigyr.hateoas.LinkBuilder;
@@ -38,6 +39,13 @@ interface Assemblers {
 		);
 	}
 
+	static RepresentationModelAssembler<ArtifactOwnershipTransfer, EntityModel<ArtifactOwnershipTransfer>> artifactOwnershipTransfer(Owner owner) {
+		return transfer -> EntityModel.of(transfer, linkBuilder(owner, transfer).selfRel())
+				.add(linkBuilder(owner, transfer).method(HttpMethod.POST).path("accept").rel("Accept ownership transfer request"))
+				.add(linkBuilder(owner, transfer).method(HttpMethod.POST).path("reject").rel("Reject ownership transfer request"))
+				.add(linkBuilder(owner, transfer).method(HttpMethod.DELETE).rel("Cancel ownership transfer request"));
+	}
+
 	static LinkBuilder linkBuilder(ArtifactCoordinates coordinates) {
 		return Link.builder()
 				.path("artifacts")
@@ -52,5 +60,13 @@ interface Assemblers {
 				.path(owner.slug())
 				.path("group-verifications")
 				.path(verification.groupId());
+	}
+
+	static LinkBuilder linkBuilder(Owner owner, ArtifactOwnershipTransfer transfer) {
+		return Link.builder()
+				.path("namespaces")
+				.path(owner.slug())
+				.path("artifact-transfers")
+				.path(transfer.id().serialize());
 	}
 }
