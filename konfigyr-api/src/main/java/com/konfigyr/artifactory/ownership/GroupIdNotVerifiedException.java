@@ -44,4 +44,9 @@ public class GroupIdNotVerifiedException extends ArtifactoryException {
 		return owner;
 	}
 
+	@Override
+	public Object[] getDetailMessageArguments() {
+		return new Object[] { groupId };
+	}
+
 }
