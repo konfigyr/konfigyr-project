@@ -376,4 +376,77 @@
 		<rollback>DROP INDEX idx_unique_unverified_group_verification_challenge;</rollback>
 	</changeSet>
 
+	<changeSet author="vspasic" id="1.0.0-create-artifact-ownership-transfers-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="artifact_ownership_transfers" />
+			</not>
+		</preConditions>
+
+		<comment>Initial artifact ownership transfers table migration</comment>
+
+		<createTable tableName="artifact_ownership_transfers" remarks="Two-party request to move ownership of artifacts under a groupId from one namespace to another.">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+
+			<column name="group_id" type="varchar(255)" remarks="The Maven coordinate `groupId` under which artifacts should be transferred.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="from_namespace_id" type="bigint" remarks="The namespace that currently owns the artifacts being requested.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="to_namespace_id" type="bigint" remarks="The namespace requesting the transfer of ownership.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="state" type="varchar(16)" remarks="The transfer request lifecycle state.">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="requested_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="resolved_at" type="timestamptz">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="artifact_ownership_transfers"
+				baseColumnNames="from_namespace_id"
+				constraintName="fk_artifact_ownership_transfer_from"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="artifact_ownership_transfers"
+				baseColumnNames="to_namespace_id"
+				constraintName="fk_artifact_ownership_transfer_to"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="artifact_ownership_transfers" indexName="idx_artifact_ownership_transfers_group_from_to">
+			<column name="group_id" />
+			<column name="from_namespace_id" />
+			<column name="to_namespace_id" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-idx_unique_pending_artifact_ownership_transfer" context="api">
+		<sql>
+			CREATE UNIQUE INDEX idx_unique_pending_artifact_ownership_transfer
+				ON artifact_ownership_transfers (group_id, from_namespace_id, to_namespace_id)
+				WHERE state = 'PENDING';
+		</sql>
+		<rollback>DROP INDEX idx_unique_pending_artifact_ownership_transfer;</rollback>
+	</changeSet>
+
 </databaseChangeLog>
