@@ -33,11 +33,38 @@ import static com.konfigyr.data.tables.ArtifactOwnershipTransfers.ARTIFACT_OWNER
 import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
 import static com.konfigyr.data.tables.Namespaces.NAMESPACES;
 
-/*
- * Every read or write against ARTIFACTS.NAMESPACE_ID that this transfer workflow needs is performed
- * directly by this class rather than delegated to Artifactory. That interface is the general-purpose,
- * broadly-held entry point to the artifact repository domain; a bulk UPDATE ARTIFACTS reassigning
- * ownership has no business being reachable from it outside the two-party consent handshake modeled here.
+/**
+ * Default {@link ArtifactOwnershipTransfers} implementation.
+ * <p>
+ * {@link #request(Owner, String, Owner)}, {@link #accept(ArtifactOwnershipTransfer)}, {@link #reject(ArtifactOwnershipTransfer)}
+ * and {@link #cancel(ArtifactOwnershipTransfer)} drive the {@code artifact_ownership_transfers} table through
+ * the {@link TransferState} lifecycle, following the same shape as
+ * {@code com.konfigyr.artifactory.ownership.DefaultGroupVerifications}: a mapper method converts jOOQ
+ * {@link Record records} into the aggregate, and each mutation re-reads the resulting state from the
+ * database rather than trusting the in-memory copy.
+ * <p>
+ * Two of those methods also read or write {@code ARTIFACTS.NAMESPACE_ID} directly: {@link #findArtifactOwners(String, Owner)}
+ * resolves the candidate owners a {@link #request(Owner, String, Owner) request} can be made against, and
+ * {@link #transferArtifacts(Owner, Owner, String)} performs the bulk reassignment once
+ * {@link #accept(ArtifactOwnershipTransfer)} has confirmed the transition is valid. Elsewhere in this module,
+ * {@code com.konfigyr.artifactory.DefaultArtifactory} is the sole writer of that column; it is bypassed here
+ * on purpose. Exposing a generic "move these artifacts" method on the public {@code Artifactory} interface
+ * would let any holder of that interface reassign ownership outside this two-party consent flow entirely,
+ * which is exactly the failure mode this aggregate exists to prevent. Keeping both operations private to this
+ * class means the only path to a bulk ownership move is through an {@link ArtifactOwnershipTransfer} that has
+ * actually been accepted.
+ * <p>
+ * {@link #accept(ArtifactOwnershipTransfer)} performs its state transition and the {@link #transferArtifacts(Owner, Owner, String)}
+ * write in the same database transaction, and only publishes {@link ArtifactoryEvent.OwnershipTransferAccepted}
+ * once both have succeeded. This is deliberate: if the two were split across a transaction boundary, for
+ * instance by moving the artifacts from an {@code @TransactionalEventListener} reacting to the event instead,
+ * a failure in the second step would leave a transfer permanently marked {@link TransferState#ACCEPTED} whose
+ * artifacts never actually moved — the same unresolvable, stuck state this whole feature was built to eliminate.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ * @see ArtifactOwnershipTransfer
+ * @see TransferState
  */
 @Slf4j
 @NullMarked
@@ -175,10 +202,17 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 		return resolved;
 	}
 
-	/*
-	 * Returns the distinct namespaces, other than excluding, that own at least one artifact under the
-	 * given groupId. Used to validate a transfer request: the requested 'from' namespace must appear in
-	 * this set before a transfer can be created.
+	/**
+	 * Returns the distinct namespaces, other than {@code excluding}, that own at least one artifact under
+	 * the given {@code groupId}.
+	 * <p>
+	 * Called from {@link #request(Owner, String, Owner)} to validate that the requested {@code from}
+	 * namespace actually owns something worth transferring before a {@link ArtifactOwnershipTransfer} is
+	 * created for it.
+	 *
+	 * @param groupId the Maven group identifier to inspect
+	 * @param excluding the namespace to exclude from the result, namely the requesting {@code to} namespace
+	 * @return the distinct owning namespaces other than {@code excluding}, never {@literal null}, empty if none exist
 	 */
 	private Set<Owner> findArtifactOwners(String groupId, Owner excluding) {
 		return context.selectDistinct(ARTIFACTS.NAMESPACE_ID, NAMESPACES.SLUG)
@@ -190,10 +224,17 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 				.fetchSet(record -> new Owner(EntityId.from(record.get(ARTIFACTS.NAMESPACE_ID)), record.get(NAMESPACES.SLUG)));
 	}
 
-	/*
-	 * Moves ownership of every artifact the 'from' namespace holds under the given groupId to the 'to'
-	 * namespace, in a single bulk operation. Artifact visibility is untouched. Only ever called from
-	 * accept(), after the transition assertion above has already confirmed both parties consented.
+	/**
+	 * Moves ownership of every artifact the {@code from} namespace holds under the given {@code groupId} to
+	 * the {@code to} namespace, in a single bulk operation. Artifact visibility is untouched.
+	 * <p>
+	 * Only ever called from {@link #accept(ArtifactOwnershipTransfer)}, after {@link #resolve(ArtifactOwnershipTransfer, TransferState)}
+	 * has already confirmed the transfer was in a state that could transition to {@link TransferState#ACCEPTED},
+	 * i.e. that both parties have consented.
+	 *
+	 * @param from the namespace that currently owns the affected artifacts
+	 * @param to the namespace that should become the new owner
+	 * @param groupId the artifact {@code groupId} coordinate whose artifacts should move
 	 */
 	private void transferArtifacts(Owner from, Owner to, String groupId) {
 		context.update(ARTIFACTS)
