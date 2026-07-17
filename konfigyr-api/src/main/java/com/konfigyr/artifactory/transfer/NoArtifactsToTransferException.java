@@ -19,7 +19,14 @@ public class NoArtifactsToTransferException extends ArtifactoryException {
 	@Serial
 	private static final long serialVersionUID = 5145318207572830461L;
 
+	/**
+	 * Maven {@code groupId} coordinate under which the {@code from} namespace owns no artifacts.
+	 */
 	private final String groupId;
+
+	/**
+	 * The namespace that was expected to own artifacts under the {@code groupId} but does not.
+	 */
 	private final Owner from;
 
 	/**
@@ -35,14 +42,28 @@ public class NoArtifactsToTransferException extends ArtifactoryException {
 		this.from = from;
 	}
 
+	/**
+	 * Returns the {@code groupId} coordinate under which the {@code from} namespace owns no artifacts.
+	 *
+	 * @return the {@code groupId} coordinate, never {@literal null}
+	 */
 	@NonNull
 	public String getGroupId() {
 		return groupId;
 	}
 
+	/**
+	 * Returns the namespace that was expected to own artifacts under the {@code groupId} but does not.
+	 *
+	 * @return the namespace with no artifacts under the {@code groupId}, never {@literal null}
+	 */
 	@NonNull
 	public Owner getFrom() {
 		return from;
 	}
 
+	@Override
+	public Object[] getDetailMessageArguments() {
+		return new Object[] { groupId, from.slug() };
+	}
 }
