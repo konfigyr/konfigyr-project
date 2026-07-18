@@ -202,7 +202,7 @@ export function ConflictingOwnersAlert ({ conflictingOwners }: { conflictingOwne
           description="Banner description listing namespaces that already own artifacts under a claimed or verified groupId."
           values={{
             count: conflictingOwners.length,
-            owners: <strong>{conflictingOwners.join(', ')}</strong>,
+            owners: conflictingOwners.join(', '),
           }}
         />
       }
