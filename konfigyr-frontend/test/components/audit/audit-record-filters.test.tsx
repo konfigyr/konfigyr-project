@@ -62,7 +62,7 @@ describe('components | audit | <AuditRecordFilters/>', () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
 
-    const { getAllByRole, getByRole, findByRole } = renderWithMessageProvider(
+    const { getByRole, findByRole } = renderWithMessageProvider(
       <AuditRecordFilters debounceMs={0} query={{ entityType: 'namespace', size: 20 }} onQueryChange={onChange} />,
     );
 
@@ -71,9 +71,13 @@ describe('components | audit | <AuditRecordFilters/>', () => {
     const listbox = await findByRole('listbox');
     const options = within(listbox).getAllByRole('option');
 
-    expect(options).toHaveLength(5);
+    expect(options).toHaveLength(9);
     expect(within(listbox).getByRole('option', { name: 'Namespace' })).toBeInTheDocument();
     expect(within(listbox).getByRole('option', { name: 'Application' })).toBeInTheDocument();
+    expect(within(listbox).getByRole('option', { name: 'Trusted issuer' })).toBeInTheDocument();
+    expect(within(listbox).getByRole('option', { name: 'Invitation' })).toBeInTheDocument();
+    expect(within(listbox).getByRole('option', { name: 'Artifact version' })).toBeInTheDocument();
+    expect(within(listbox).getByRole('option', { name: 'Ownership transfer' })).toBeInTheDocument();
     expect(within(listbox).getByRole('option', { name: 'KMS Keyset' })).toBeInTheDocument();
     expect(within(listbox).getByRole('option', { name: 'Service' })).toBeInTheDocument();
     expect(within(listbox).getByRole('option', { name: 'Service profile' })).toBeInTheDocument();
