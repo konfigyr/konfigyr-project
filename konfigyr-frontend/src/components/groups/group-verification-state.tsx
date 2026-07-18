@@ -1,8 +1,8 @@
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { Badge } from '@konfigyr/components/ui/badge';
 
 import { SimpleAlert } from '@konfigyr/components/ui/alert';
-import { AlertCircleIcon, CheckCircle2Icon, CircleAlertIcon, Trash2Icon } from 'lucide-react';
+import { AlertCircleIcon, CheckCircle2Icon, CircleAlertIcon, Trash2Icon, TriangleAlertIcon } from 'lucide-react';
 import { sourceCodeHostLabel } from '@konfigyr/components/groups/group-verification-method';
 import type { ComponentProps } from 'react';
 import type { VerificationMethod, VerificationState } from '@konfigyr/hooks/types';
@@ -180,6 +180,33 @@ function FailedStateAlert () {
         />
       }
       variant="destructive"
+    />
+  );
+}
+
+export function ConflictingOwnersAlert ({ conflictingOwners }: { conflictingOwners: Array<string> }) {
+  return (
+    <SimpleAlert
+      icon={
+        <TriangleAlertIcon className="size-8"/>
+      }
+      title={
+        <FormattedMessage
+          defaultMessage="Other namespaces already own artifacts here"
+          description="Banner title shown when other namespaces already own artifacts under a claimed or verified groupId."
+        />
+      }
+      description={
+        <FormattedMessage
+          defaultMessage="{count, plural, one {Namespace} other {Namespaces}} {owners} already {count, plural, one {publishes} other {publish}} artifacts under this groupId. You may need to request an ownership transfer before you can publish."
+          description="Banner description listing namespaces that already own artifacts under a claimed or verified groupId."
+          values={{
+            count: conflictingOwners.length,
+            owners: conflictingOwners.join(', '),
+          }}
+        />
+      }
+      variant="warning"
     />
   );
 }

@@ -22,11 +22,32 @@ const pendingVerification: GroupVerification = {
   revokedAt: null,
 };
 
+const conflictedVerification: GroupVerification = {
+  id: 'verification-conflicted',
+  groupId: 'com.acme.widgets',
+  state: 'PENDING',
+  createdAt: '2026-07-09T00:00:00Z',
+  verifiedAt: null,
+  revokedAt: null,
+  conflictingOwners: ['ebf'],
+};
+
 const verificationChallenge: VerificationChallenge = {
   id: 'challenge-pending',
   verificationId: pendingVerification.id,
   method: 'SOURCE_CODE',
   token: 'token-123',
+  state: 'UNVERIFIED',
+  createdAt: '2026-07-09T00:00:00Z',
+  verifiedAt: null,
+  expiresAt: null,
+};
+
+const conflictedChallenge: VerificationChallenge = {
+  id: 'challenge-conflicted',
+  verificationId: conflictedVerification.id,
+  method: 'DNS',
+  token: 'token-456',
   state: 'UNVERIFIED',
   createdAt: '2026-07-09T00:00:00Z',
   verifiedAt: null,
@@ -71,6 +92,10 @@ const get = http.get('http://localhost/api/namespaces/:slug/group-verifications/
     return HttpResponse.json(pendingVerification);
   }
 
+  if (groupId === conflictedVerification.groupId) {
+    return HttpResponse.json(conflictedVerification);
+  }
+
   return HttpResponse.json({
     status: 404,
     title: 'Not found',
@@ -81,7 +106,19 @@ const get = http.get('http://localhost/api/namespaces/:slug/group-verifications/
 const challenges = http.get('http://localhost/api/namespaces/:slug/group-verifications/:groupId/challenges', ({ params }) => {
   const { slug, groupId } = params;
 
-  if (slug !== namespaces.konfigyr.slug || groupId !== pendingVerification.groupId) {
+  if (slug !== namespaces.konfigyr.slug) {
+    const response: CollectionResponse<VerificationChallenge> = { data: [] };
+    return HttpResponse.json(response);
+  }
+
+  if (groupId === conflictedVerification.groupId) {
+    const response: CollectionResponse<VerificationChallenge> = {
+      data: [conflictedChallenge],
+    };
+    return HttpResponse.json(response);
+  }
+
+  if (groupId !== pendingVerification.groupId) {
     const response: CollectionResponse<VerificationChallenge> = { data: [] };
     return HttpResponse.json(response);
   }
@@ -109,14 +146,19 @@ const create = http.post('http://localhost/api/namespaces/:slug/group-verificati
     verificationMethod?: VerificationMethod;
   };
 
-  return HttpResponse.json({
+  const response: GroupVerification = {
     id: `${body.groupId}-claim`,
-    groupId: body.groupId,
+    groupId: body.groupId!,
     state: 'PENDING',
     createdAt: '2026-07-10T00:00:00Z',
     verifiedAt: null,
     revokedAt: null,
-  }, { status: 201 });
+    ...(body.groupId === conflictedVerification.groupId
+      ? { conflictingOwners: conflictedVerification.conflictingOwners }
+      : {}),
+  };
+
+  return HttpResponse.json(response, { status: 201 });
 });
 
 export default [

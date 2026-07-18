@@ -29,4 +29,27 @@ describe('routes | namespace | groups | detail', () => {
       expect(getByRole('button', { name: 'Verify claim' })).toBeInTheDocument();
     });
   });
+
+  test('should not render a conflict banner when there are no conflicting owners', async () => {
+    const { getByText, queryByText } = renderWithRouter('/namespace/konfigyr/groups/com.example.group/');
+
+    await waitFor(() => {
+      expect(getByText('Ownership verified')).toBeInTheDocument();
+    });
+
+    expect(queryByText('Other namespaces already own artifacts here')).not.toBeInTheDocument();
+  });
+
+  test('should surface conflicting owners on the detail page', async () => {
+    const { getAllByRole, getByText } = renderWithRouter('/namespace/konfigyr/groups/com.acme.widgets/');
+
+    await waitFor(() => {
+      expect(getByText('Other namespaces already own artifacts here')).toBeInTheDocument();
+      expect(getByText(
+        'Namespace ebf already publishes artifacts under this groupId. You may need to request an ownership transfer before you can publish.',
+      )).toBeInTheDocument();
+    });
+
+    expect(getAllByRole('alert')).toHaveLength(2);
+  });
 });

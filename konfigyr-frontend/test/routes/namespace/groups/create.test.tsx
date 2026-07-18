@@ -28,4 +28,17 @@ describe('routes | namespace | groups | create', () => {
       expect(router.state.location.pathname).toBe('/namespace/konfigyr/groups/io.github.acme');
     });
   });
+
+  test('should surface conflicting owners immediately after claiming a groupId with pre-existing artifacts', async () => {
+    const user = userEvent.setup();
+    const { getByRole, getByText, router, findByLabelText } = renderWithRouter('/namespace/konfigyr/groups/create');
+
+    await user.type(await findByLabelText('Group Id'), 'com.acme.widgets');
+    await user.click(getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/namespace/konfigyr/groups/com.acme.widgets');
+      expect(getByText('Other namespaces already own artifacts here')).toBeInTheDocument();
+    });
+  });
 });

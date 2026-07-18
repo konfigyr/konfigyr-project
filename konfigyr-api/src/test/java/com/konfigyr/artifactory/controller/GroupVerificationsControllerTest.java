@@ -260,9 +260,26 @@ class GroupVerificationsControllerTest extends AbstractControllerTest {
 				.apply(log())
 				.hasStatusOk()
 				.bodyJson()
-				.convertTo(GroupVerification.class)
-				.returns("org.springframework.ai", GroupVerification::groupId)
-				.returns(VerificationState.FAILED, GroupVerification::state);
+				.convertTo(ClaimResponse.class)
+				.returns("org.springframework.ai", ClaimResponse::groupId)
+				.returns(VerificationState.FAILED, ClaimResponse::state)
+				.returns(null, ClaimResponse::conflictingOwners);
+	}
+
+	@Test
+	@DisplayName("should surface conflicting owners when fetching a claim with pre-existing artifacts from another namespace")
+	void shouldSurfaceConflictingOwnersOnGetGroupVerification() {
+		mvc.get().uri("/namespaces/{namespace}/group-verifications/{groupId}", "konfigyr", "com.konfigyr")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ClaimResponse.class)
+				.returns("com.konfigyr", ClaimResponse::groupId)
+				.returns(VerificationState.ACTIVE, ClaimResponse::state)
+				.returns(Set.of("john-doe", "ebf"), ClaimResponse::conflictingOwners);
 	}
 
 	@Test

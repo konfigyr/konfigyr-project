@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import {
+  ConflictingOwnersAlert,
   GroupVerificationState,
   GroupVerificationStateAlert,
   GroupVerificationStateBadge,
@@ -167,6 +168,32 @@ describe('components | groups | <GroupVerificationStateAlert/>', () => {
     expect(getByRole('alert')).toHaveAccessibleName('Claim revoked');
     expect(getByRole('alert')).toHaveAccessibleDescription(
       'Publishing under com.example.group is blocked. You can claim this groupId again at any time.',
+    );
+  });
+});
+
+describe('components | groups | <ConflictingOwnersAlert/>', () => {
+  afterEach(() => cleanup());
+
+  test('should render a warning banner listing a single conflicting owner', () => {
+    const { getByRole } = renderWithMessageProvider(
+      <ConflictingOwnersAlert conflictingOwners={['ebf']} />,
+    );
+
+    expect(getByRole('alert')).toBeInTheDocument();
+    expect(getByRole('alert')).toHaveAccessibleName('Other namespaces already own artifacts here');
+    expect(getByRole('alert')).toHaveAccessibleDescription(
+      'Namespace ebf already publishes artifacts under this groupId. You may need to request an ownership transfer before you can publish.',
+    );
+  });
+
+  test('should render a warning banner listing multiple conflicting owners', () => {
+    const { getByRole } = renderWithMessageProvider(
+      <ConflictingOwnersAlert conflictingOwners={['ebf', 'acme-legacy']} />,
+    );
+
+    expect(getByRole('alert')).toHaveAccessibleDescription(
+      'Namespaces ebf, acme-legacy already publish artifacts under this groupId. You may need to request an ownership transfer before you can publish.',
     );
   });
 });

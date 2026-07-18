@@ -53,12 +53,13 @@ class GroupVerificationsController {
 	@GetMapping("/{groupId}")
 	@PreAuthorize("isAdmin(#namespace)")
 	@RequiresScope(OAuthScope.READ_NAMESPACES)
-	EntityModel<GroupVerification> getGroupVerification(@PathVariable String namespace, @PathVariable String groupId) {
+	EntityModel<Assemblers.GroupVerificationRepresentation> getGroupVerification(@PathVariable String namespace, @PathVariable String groupId) {
 		final Owner owner = ownerResolver.resolve(namespace);
 		final GroupVerification verification = groupVerifications.findByGroupId(owner, groupId)
 				.orElseThrow(() -> new GroupVerificationNotFoundException(owner, groupId));
 
-		return Assemblers.groupVerification(owner).assemble(verification);
+		return Assemblers.groupVerification(owner, groupVerifications.findOwners(verification.groupId(), owner))
+				.assemble(verification);
 	}
 
 	@PostMapping
