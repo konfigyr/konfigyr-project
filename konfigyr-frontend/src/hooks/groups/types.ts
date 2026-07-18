@@ -11,6 +11,7 @@ export interface GroupVerification {
   createdAt: string;
   verifiedAt: string | null;
   revokedAt: string | null;
+  conflictingOwners?: Array<string>;
 }
 
 export interface VerificationChallenge {

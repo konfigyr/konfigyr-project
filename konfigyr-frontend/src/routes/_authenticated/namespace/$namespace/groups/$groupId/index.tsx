@@ -9,7 +9,7 @@ import {
 } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
-import { GroupVerificationStateAlert } from '@konfigyr/components/groups/group-verification-state';
+import { ConflictingOwnersAlert, GroupVerificationStateAlert } from '@konfigyr/components/groups/group-verification-state';
 import { Button, buttonVariants } from '@konfigyr/components/ui/button';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { GroupVerification } from '@konfigyr/components/groups/group-verification-challenge';
@@ -108,6 +108,10 @@ function RouteComponent () {
             </div>
 
             {banner}
+
+            {!!verification.conflictingOwners?.length && (
+              <ConflictingOwnersAlert conflictingOwners={verification.conflictingOwners}/>
+            )}
 
             <GroupVerification verification={verification} challenge={challenge}/>
 
