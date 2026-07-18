@@ -168,6 +168,10 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 	public ArtifactOwnershipTransfer reject(ArtifactOwnershipTransfer transfer) {
 		final ArtifactOwnershipTransfer rejected = resolve(transfer, TransferState.REJECTED);
 
+		eventPublisher.publishEvent(new ArtifactoryEvent.OwnershipTransferRejected(
+				rejected.id(), rejected.groupId(), rejected.from(), rejected.to()
+		));
+
 		log.info("Successfully rejected artifact ownership transfer {} for groupId '{}'", rejected.id(), rejected.groupId());
 
 		return rejected;
@@ -177,6 +181,10 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 	@Transactional(label = "artifact-ownership-transfers.cancel")
 	public ArtifactOwnershipTransfer cancel(ArtifactOwnershipTransfer transfer) {
 		final ArtifactOwnershipTransfer cancelled = resolve(transfer, TransferState.CANCELLED);
+
+		eventPublisher.publishEvent(new ArtifactoryEvent.OwnershipTransferCancelled(
+				cancelled.id(), cancelled.groupId(), cancelled.from(), cancelled.to()
+		));
 
 		log.info("Successfully cancelled artifact ownership transfer {} for groupId '{}'", cancelled.id(), cancelled.groupId());
 

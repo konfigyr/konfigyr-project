@@ -938,6 +938,62 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should persist two audit records for an accepted ownership transfer, one per namespace")
+	void shouldAuditOwnershipTransferAccepted() {
+		final var from = new Owner(EntityId.from(1210), "from-namespace");
+		final var to = new Owner(EntityId.from(1211), "to-namespace");
+
+		listener.on(new ArtifactoryEvent.OwnershipTransferAccepted(EntityId.from(1212), "com.konfigyr", from, to));
+
+		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1212), "artifact-ownership-transfer.received")
+				.returns(to.id(), AuditRecord::namespaceId)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("groupId", "com.konfigyr")
+						.containsEntry("from", from.slug())
+						.containsEntry("to", to.slug())
+				)
+				.satisfies(assertAuditRecordMessage("You are now the owner of '%s'", "com.konfigyr"));
+
+		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1212), "artifact-ownership-transfer.transferred")
+				.returns(from.id(), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("You have transferred '%s' to '%s'", "com.konfigyr", to.slug()));
+	}
+
+	@Test
+	@DisplayName("should persist two audit records for a rejected ownership transfer, one per namespace")
+	void shouldAuditOwnershipTransferRejected() {
+		final var from = new Owner(EntityId.from(1220), "from-namespace");
+		final var to = new Owner(EntityId.from(1221), "to-namespace");
+
+		listener.on(new ArtifactoryEvent.OwnershipTransferRejected(EntityId.from(1222), "com.konfigyr", from, to));
+
+		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1222), "artifact-ownership-transfer.request-rejected")
+				.returns(to.id(), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("Your request to transfer '%s' was rejected by '%s'", "com.konfigyr", from.slug()));
+
+		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1222), "artifact-ownership-transfer.rejected")
+				.returns(from.id(), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("You rejected the transfer request for '%s' from '%s'", "com.konfigyr", to.slug()));
+	}
+
+	@Test
+	@DisplayName("should persist two audit records for a cancelled ownership transfer, one per namespace")
+	void shouldAuditOwnershipTransferCancelled() {
+		final var from = new Owner(EntityId.from(1230), "from-namespace");
+		final var to = new Owner(EntityId.from(1231), "to-namespace");
+
+		listener.on(new ArtifactoryEvent.OwnershipTransferCancelled(EntityId.from(1232), "com.konfigyr", from, to));
+
+		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1232), "artifact-ownership-transfer.cancelled")
+				.returns(to.id(), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("You cancelled your request to transfer '%s'", "com.konfigyr"));
+
+		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1232), "artifact-ownership-transfer.request-cancelled")
+				.returns(from.id(), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("The transfer request for '%s' from '%s' was cancelled", "com.konfigyr", to.slug()));
+	}
+
+	@Test
 	@DisplayName("should not propagate persistence failures from the audit event listener")
 	void shouldNotPropagatePersistenceFailures() {
 		final var repository = mock(AuditEventRepository.class);

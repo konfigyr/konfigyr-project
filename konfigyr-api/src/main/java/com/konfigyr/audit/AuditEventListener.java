@@ -498,9 +498,63 @@ class AuditEventListener {
 	@TransactionalEventListener(id = "audit.ownership-transfer-accepted", classes = ArtifactoryEvent.OwnershipTransferAccepted.class)
 	void on(ArtifactoryEvent.OwnershipTransferAccepted event) {
 		insert(event, builder -> builder
+				.namespace(event.to().id())
 				.entityType("artifact-ownership-transfer")
 				.entityId(event.id())
-				.eventType("artifactory.ownership-transfer.accepted")
+				.eventType("artifact-ownership-transfer.received")
+				.details("groupId", event.groupId())
+				.details("from", event.from().slug())
+				.details("to", event.to().slug())
+		);
+		insert(event, builder -> builder
+				.namespace(event.from().id())
+				.entityType("artifact-ownership-transfer")
+				.entityId(event.id())
+				.eventType("artifact-ownership-transfer.transferred")
+				.details("groupId", event.groupId())
+				.details("from", event.from().slug())
+				.details("to", event.to().slug())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.ownership-transfer-rejected", classes = ArtifactoryEvent.OwnershipTransferRejected.class)
+	void on(ArtifactoryEvent.OwnershipTransferRejected event) {
+		insert(event, builder -> builder
+				.namespace(event.to().id())
+				.entityType("artifact-ownership-transfer")
+				.entityId(event.id())
+				.eventType("artifact-ownership-transfer.request-rejected")
+				.details("groupId", event.groupId())
+				.details("from", event.from().slug())
+				.details("to", event.to().slug())
+		);
+		insert(event, builder -> builder
+				.namespace(event.from().id())
+				.entityType("artifact-ownership-transfer")
+				.entityId(event.id())
+				.eventType("artifact-ownership-transfer.rejected")
+				.details("groupId", event.groupId())
+				.details("from", event.from().slug())
+				.details("to", event.to().slug())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.ownership-transfer-cancelled", classes = ArtifactoryEvent.OwnershipTransferCancelled.class)
+	void on(ArtifactoryEvent.OwnershipTransferCancelled event) {
+		insert(event, builder -> builder
+				.namespace(event.to().id())
+				.entityType("artifact-ownership-transfer")
+				.entityId(event.id())
+				.eventType("artifact-ownership-transfer.cancelled")
+				.details("groupId", event.groupId())
+				.details("from", event.from().slug())
+				.details("to", event.to().slug())
+		);
+		insert(event, builder -> builder
+				.namespace(event.from().id())
+				.entityType("artifact-ownership-transfer")
+				.entityId(event.id())
+				.eventType("artifact-ownership-transfer.request-cancelled")
 				.details("groupId", event.groupId())
 				.details("from", event.from().slug())
 				.details("to", event.to().slug())

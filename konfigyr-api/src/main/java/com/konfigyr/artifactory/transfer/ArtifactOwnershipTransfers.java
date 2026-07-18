@@ -107,6 +107,7 @@ public interface ArtifactOwnershipTransfers {
 	 * @return the rejected transfer with {@code resolvedAt} populated
 	 * @throws IllegalStateException when the transfer is not in a state that can transition to {@link TransferState#REJECTED}
 	 */
+	@DomainEventPublisher(publishes = "artifactory.ownership-transfer.rejected")
 	ArtifactOwnershipTransfer reject(ArtifactOwnershipTransfer transfer);
 
 	/**
@@ -116,6 +117,7 @@ public interface ArtifactOwnershipTransfers {
 	 * @return the cancelled transfer with {@code resolvedAt} populated
 	 * @throws IllegalStateException when the transfer is not in a state that can transition to {@link TransferState#CANCELLED}
 	 */
+	@DomainEventPublisher(publishes = "artifactory.ownership-transfer.cancelled")
 	ArtifactOwnershipTransfer cancel(ArtifactOwnershipTransfer transfer);
 
 }
