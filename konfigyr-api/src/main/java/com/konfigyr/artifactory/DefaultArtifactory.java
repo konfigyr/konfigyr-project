@@ -53,6 +53,36 @@ class DefaultArtifactory implements Artifactory {
 
 	@NonNull
 	@Override
+	@Transactional(readOnly = true, label = "artifactory.get-artifact-definition")
+	public Optional<ArtifactDefinition> get(@NonNull ArtifactKey key) {
+		return createArtifactDefinitionQuery()
+				.where(toCondition(key))
+				.fetchOptional(DefaultArtifactory::toArtifactDefinition);
+	}
+
+	@NonNull
+	@Override
+	@Transactional(readOnly = true, label = "artifactory.get-visible-artifact-definition")
+	public Optional<ArtifactDefinition> get(@Nullable Owner owner, @NonNull ArtifactKey key) {
+		return createArtifactDefinitionQuery()
+				.where(DSL.and(visibilityCondition(owner), toCondition(key)))
+				.fetchOptional(DefaultArtifactory::toArtifactDefinition);
+	}
+
+	@Override
+	@Transactional(readOnly = true, label = "artifactory.artifact-key-exists")
+	public boolean exists(@NonNull ArtifactKey key) {
+		return context.fetchExists(ARTIFACTS, toCondition(key));
+	}
+
+	@Override
+	@Transactional(readOnly = true, label = "artifactory.visible-artifact-key-exists")
+	public boolean exists(@Nullable Owner owner, @NonNull ArtifactKey key) {
+		return context.fetchExists(ARTIFACTS, DSL.and(toCondition(key), visibilityCondition(owner)));
+	}
+
+	@NonNull
+	@Override
 	@Transactional(readOnly = true, label = "artifactory.get-versioned-artifact")
 	public Optional<VersionedArtifact> get(@NonNull ArtifactCoordinates coordinates) {
 		return createVersionedArtifactQuery()
@@ -257,6 +287,15 @@ class DefaultArtifactory implements Artifactory {
 	}
 
 	@NonNull
+	private SelectJoinStep<? extends Record> createArtifactDefinitionQuery() {
+		return context.select(ARTIFACTS.fields())
+				.select(NAMESPACES.ID, NAMESPACES.SLUG)
+				.from(ARTIFACTS)
+				.innerJoin(NAMESPACES)
+				.on(NAMESPACES.ID.eq(ARTIFACTS.NAMESPACE_ID));
+	}
+
+	@NonNull
 	private SelectJoinStep<? extends Record> createVersionedArtifactQuery() {
 		return context.select(
 						ARTIFACT_VERSIONS.ID,
@@ -345,6 +384,22 @@ class DefaultArtifactory implements Artifactory {
 
 	static Owner toOwner(Record record) {
 		return new Owner(record.get(NAMESPACES.ID, EntityId.class), record.get(NAMESPACES.SLUG));
+	}
+
+	static ArtifactDefinition toArtifactDefinition(Record record) {
+		return ArtifactDefinition.builder()
+				.id(record.get(ARTIFACTS.ID))
+				.owner(toOwner(record))
+				.groupId(record.get(ARTIFACTS.GROUP_ID))
+				.artifactId(record.get(ARTIFACTS.ARTIFACT_ID))
+				.visibility(record.get(ARTIFACTS.VISIBILITY, ArtifactVisibility.class))
+				.name(record.get(ARTIFACTS.NAME))
+				.description(record.get(ARTIFACTS.DESCRIPTION))
+				.website(record.get(ARTIFACTS.WEBSITE))
+				.repository(record.get(ARTIFACTS.REPOSITORY))
+				.createdAt(record.get(ARTIFACTS.CREATED_AT))
+				.updatedAt(record.get(ARTIFACTS.UPDATED_AT))
+				.build();
 	}
 
 	static VersionedArtifact toVersionedArtifact(Record record) {

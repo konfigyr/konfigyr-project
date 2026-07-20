@@ -32,6 +32,7 @@ public class ArtifactDefinitionNotFoundException extends ArtifactoryException {
 		super(HttpStatus.NOT_FOUND, "Can not find artifact with following coordinates: %s".formatted(
 				ArtifactKey.format(key.groupId(), key.artifactId())));
 		this.key = key;
+		getBody().setProperty("coordinates", key.format());
 	}
 
 	@Override
