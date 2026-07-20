@@ -25,6 +25,8 @@ import java.io.Serial;
  *
  * @param id entity identifier for the property definition, can't be {@literal null}.
  * @param artifact entity identifier of the artifact that owns the property, can't be {@literal null}.
+ * @param key the {@code groupId}/{@code artifactId} identity of the artifact that owns the property, can't be {@literal null}.
+ * @param owner the namespace that owns the artifact that owns the property, can't be {@literal null}.
  * @param checksum unique checksum identifying this specific configuration definition, can't be {@literal null}.
  * @param name name of the configuration property, for example {@code spring.datasource.url}. Can't be {@literal null}.
  * @param typeName fully qualified Java type name, for example {@code java.lang.String}. Can't be {@literal null}.
@@ -42,6 +44,8 @@ import java.io.Serial;
 public record PropertyDefinition(
 		@NonNull @Identity EntityId id,
 		@NonNull @Association(aggregateType = ArtifactDefinition.class) EntityId artifact,
+		@NonNull ArtifactKey key,
+		@NonNull Owner owner,
 		@NonNull ByteArray checksum,
 		@NonNull String name,
 		@NonNull String typeName,
@@ -81,6 +85,9 @@ public record PropertyDefinition(
 
 		private EntityId id;
 		private EntityId artifact;
+		private String groupId;
+		private String artifactId;
+		private Owner owner;
 		private ByteArray checksum;
 		private int occurrences = 1;
 		private Version firstSeen;
@@ -151,6 +158,56 @@ public record PropertyDefinition(
 		@NonNull
 		public Builder artifact(EntityId artifact) {
 			this.artifact = artifact;
+			return this;
+		}
+
+		/**
+		 * Sets the {@code groupId} coordinate of the artifact that owns this property.
+		 *
+		 * @param groupId {@code groupId} coordinate of the owning artifact.
+		 * @return property definition builder
+		 */
+		@NonNull
+		public Builder groupId(String groupId) {
+			this.groupId = groupId;
+			return this;
+		}
+
+		/**
+		 * Sets the {@code artifactId} coordinate of the artifact that owns this property.
+		 *
+		 * @param artifactId {@code artifactId} coordinate of the owning artifact.
+		 * @return property definition builder
+		 */
+		@NonNull
+		public Builder artifactId(String artifactId) {
+			this.artifactId = artifactId;
+			return this;
+		}
+
+		/**
+		 * Sets the {@code groupId}/{@code artifactId} identity of the artifact that owns this property,
+		 * deconstructing it into its two coordinate fields.
+		 *
+		 * @param key the {@link ArtifactKey} of the owning artifact.
+		 * @return property definition builder
+		 */
+		@NonNull
+		public Builder key(ArtifactKey key) {
+			this.groupId = key.groupId();
+			this.artifactId = key.artifactId();
+			return this;
+		}
+
+		/**
+		 * Sets the namespace that owns the artifact that owns this property.
+		 *
+		 * @param owner the owning namespace.
+		 * @return property definition builder
+		 */
+		@NonNull
+		public Builder owner(Owner owner) {
+			this.owner = owner;
 			return this;
 		}
 
@@ -234,6 +291,9 @@ public record PropertyDefinition(
 		protected PropertyDefinition instantiate() {
 			Assert.notNull(id, "Property definition entity identifier must not be null");
 			Assert.notNull(artifact, "Artifact entity identifier must not be null");
+			Assert.hasText(groupId, "Artifact groupId must not be blank");
+			Assert.hasText(artifactId, "Artifact artifactId must not be blank");
+			Assert.notNull(owner, "Artifact owner must not be null");
 			Assert.notNull(checksum, "Property checksum must not be null");
 			Assert.notNull(name, "Property name must not be null");
 			Assert.notNull(typeName, "Property type name must not be null");
@@ -241,8 +301,8 @@ public record PropertyDefinition(
 			Assert.notNull(firstSeen, "First seen version must not be null");
 			Assert.notNull(lastSeen, "Last seen version must not be null");
 
-			return new PropertyDefinition(id, artifact, checksum, name, typeName, schema, defaultValue,
-					description, deprecation, occurrences, firstSeen, lastSeen);
+			return new PropertyDefinition(id, artifact, ArtifactKey.of(groupId, artifactId), owner, checksum, name, typeName,
+					schema, defaultValue, description, deprecation, occurrences, firstSeen, lastSeen);
 		}
 	}
 

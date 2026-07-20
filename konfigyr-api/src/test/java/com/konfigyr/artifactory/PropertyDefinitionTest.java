@@ -19,6 +19,9 @@ class PropertyDefinitionTest {
 		final var property = PropertyDefinition.builder()
 				.id(1236L)
 				.artifact(1453L)
+				.groupId("com.konfigyr")
+				.artifactId("konfigyr-api")
+				.owner(Owners.konfigyr())
 				.typeName("java.lang.String")
 				.schema(StringSchema.builder()
 						.example("super-app")
@@ -39,6 +42,8 @@ class PropertyDefinitionTest {
 				.isNotNull()
 				.returns(EntityId.from(1236L), PropertyDefinition::id)
 				.returns(EntityId.from(1453L), PropertyDefinition::artifact)
+				.returns(ArtifactKey.of("com.konfigyr", "konfigyr-api"), PropertyDefinition::key)
+				.returns(Owners.konfigyr(), PropertyDefinition::owner)
 				.returns("java.lang.String", PropertyDefinition::typeName)
 				.returns("spring.application.name", PropertyDefinition::name)
 				.returns("The name of the Spring application", PropertyDefinition::description)
@@ -58,11 +63,34 @@ class PropertyDefinitionTest {
 	}
 
 	@Test
+	@DisplayName("should set the artifact key by deconstructing it into groupId and artifactId")
+	void createPropertyFromKey() {
+		final var property = PropertyDefinition.builder()
+				.id(1236L)
+				.artifact(1453L)
+				.key(ArtifactKey.of("com.konfigyr", "konfigyr-api"))
+				.owner(Owners.konfigyr())
+				.typeName("java.lang.String")
+				.schema(StringSchema.instance())
+				.name("spring.application.name")
+				.checksum(ByteArray.fromString("checksum"))
+				.firstSeen("1.0.0")
+				.lastSeen("1.1.0")
+				.build();
+
+		assertThat(property)
+				.returns(ArtifactKey.of("com.konfigyr", "konfigyr-api"), PropertyDefinition::key);
+	}
+
+	@Test
 	@DisplayName("should sort property definition by name")
 	void sortProperties() {
 		final var builder = PropertyDefinition.builder()
 				.id("000013229FPVS")
 				.artifact("000005KK96ZZP")
+				.groupId("com.konfigyr")
+				.artifactId("konfigyr-api")
+				.owner(Owners.konfigyr())
 				.typeName("java.lang.String")
 				.schema(StringSchema.instance())
 				.checksum(ByteArray.fromString("checksum"))

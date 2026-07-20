@@ -157,8 +157,7 @@ public interface Artifactory {
 	VersionedArtifact publish(@NonNull Owner owner, @NonNull ArtifactMetadata metadata);
 
 	/**
-	 * Changes the {@link ArtifactVisibility} of the artifact identified by the given {@code groupId}
-	 * and {@code artifactId}.
+	 * Changes the {@link ArtifactVisibility} of the artifact identified by the given {@link ArtifactKey}.
 	 * <p>
 	 * Visibility is a {@code groupId}/{@code artifactId} level concern, not a version level one: it
 	 * applies to every {@link VersionedArtifact} published under those coordinates. Only the
@@ -166,12 +165,11 @@ public interface Artifactory {
 	 * already resolved the requesting namespace to its {@link Owner}.
 	 *
 	 * @param owner the namespace requesting the change, can't be {@literal null}
-	 * @param groupId the artifact {@code groupId} coordinate, can't be {@literal null}
-	 * @param artifactId the artifact {@code artifactId} coordinate, can't be {@literal null}
+	 * @param key the {@code groupId}/{@code artifactId} identity of the artifact, can't be {@literal null}
 	 * @param visibility the visibility to apply, can't be {@literal null}
 	 * @throws ArtifactDefinitionNotFoundException when no artifact exists for the given coordinates
 	 * @throws ArtifactOwnershipMismatchException when the given owner does not own the artifact
 	 */
-	void changeVisibility(@NonNull Owner owner, @NonNull String groupId, @NonNull String artifactId, @NonNull ArtifactVisibility visibility);
+	void changeVisibility(@NonNull Owner owner, @NonNull ArtifactKey key, @NonNull ArtifactVisibility visibility);
 
 }

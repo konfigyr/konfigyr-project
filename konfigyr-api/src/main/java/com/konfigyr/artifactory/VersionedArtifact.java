@@ -55,7 +55,7 @@ public record VersionedArtifact(
 		@Nullable URI website,
 		@Nullable URI repository,
 		@NonNull Instant publishedAt
-) implements ArtifactDescriptor, Publication {
+) implements ArtifactKey, ArtifactDescriptor, Publication {
 
 	@Serial
 	private static final long serialVersionUID = 2501993329087351789L;

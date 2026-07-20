@@ -107,7 +107,7 @@ class ArtifactoryController {
 				"Could not extract namespace identifier from the current authenticated principal"
 		));
 
-		artifactory.changeVisibility(owner, groupId, artifactId, request.visibility());
+		artifactory.changeVisibility(owner, ArtifactKey.of(groupId, artifactId), request.visibility());
 	}
 
 	private Optional<Owner> resolveOwner() {

@@ -10,7 +10,7 @@ import java.io.Serial;
  * {@link ArtifactVisibility} of, an artifact that is owned by a different namespace.
  * <p>
  * Ownership is a {@code groupId}/{@code artifactId} level concern, not a version level one, so
- * this exception carries the artifact coordinates without a version.
+ * this exception carries the artifact key without a version.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
@@ -21,14 +21,9 @@ public class ArtifactOwnershipMismatchException extends ArtifactoryException {
 	private static final long serialVersionUID = -1523069864217405721L;
 
 	/**
-	 * Maven {@code groupId} coordinate of the artifact owned by a different namespace.
+	 * The {@code groupId}/{@code artifactId} identity of the artifact owned by a different namespace.
 	 */
-	private final String groupId;
-
-	/**
-	 * Maven {@code artifactId} coordinate of the artifact owned by a different namespace.
-	 */
-	private final String artifactId;
+	private final ArtifactKey key;
 
 	/**
 	 * The namespace that attempted to publish or change the visibility of the artifact.
@@ -36,29 +31,33 @@ public class ArtifactOwnershipMismatchException extends ArtifactoryException {
 	private final Owner owner;
 
 	/**
-	 * Create a new instance when the given {@link Owner} does not match the namespace that
-	 * already owns the artifact identified by the supplied {@code groupId} and {@code artifactId}.
+	 * Create a new instance when the given {@link Owner} does not match the namespace that already owns
+	 * the artifact identified by the supplied {@link ArtifactKey}.
+	 * <p>
+	 * Accepts any {@link ArtifactKey}, including an {@link ArtifactCoordinates} instance.
 	 *
-	 * @param groupId the {@code groupId} coordinate of the artifact owned by a different namespace, can't be {@literal null}
-	 * @param artifactId the {@code artifactId} coordinate of the artifact owned by a different namespace, can't be {@literal null}
-	 * @param owner the namespace that attempted to publish or change the visibility of the artifact, can't be {@literal null}
+	 * @param key the {@code groupId}/{@code artifactId} identity of the artifact owned by a different
+	 *        namespace, can't be {@literal null}
+	 * @param owner the namespace that attempted to publish or change the visibility of the artifact,
+	 *        can't be {@literal null}
 	 */
-	public ArtifactOwnershipMismatchException(@NonNull String groupId, @NonNull String artifactId, @NonNull Owner owner) {
-		super(HttpStatus.CONFLICT, "Artifact '%s:%s' is owned by a '%s' namespace".formatted(groupId, artifactId, owner.slug()));
-		this.groupId = groupId;
-		this.artifactId = artifactId;
+	public ArtifactOwnershipMismatchException(@NonNull ArtifactKey key, @NonNull Owner owner) {
+		// uses the static ArtifactKey.format(groupId, artifactId) rather than key.format(): if key is an
+		// ArtifactCoordinates, its overridden format() renders the version too, which this message must not leak
+		super(HttpStatus.CONFLICT, "Artifact '%s' is owned by a '%s' namespace"
+				.formatted(ArtifactKey.format(key.groupId(), key.artifactId()), owner.slug()));
+		this.key = key;
 		this.owner = owner;
 	}
 
 	/**
-	 * Create a new instance when the given {@link Owner} does not match the namespace that
-	 * already owns the artifact identified by the supplied {@link ArtifactCoordinates}.
+	 * Returns the {@link ArtifactKey} of the artifact owned by a different namespace.
 	 *
-	 * @param coordinates the coordinates of the artifact owned by a different namespace, can't be {@literal null}
-	 * @param owner the namespace that attempted to publish or change the visibility of the artifact, can't be {@literal null}
+	 * @return the {@link ArtifactKey}, never {@literal null}
 	 */
-	public ArtifactOwnershipMismatchException(@NonNull ArtifactCoordinates coordinates, @NonNull Owner owner) {
-		this(coordinates.groupId(), coordinates.artifactId(), owner);
+	@NonNull
+	public ArtifactKey getKey() {
+		return key;
 	}
 
 	/**
@@ -68,7 +67,7 @@ public class ArtifactOwnershipMismatchException extends ArtifactoryException {
 	 */
 	@NonNull
 	public String getGroupId() {
-		return groupId;
+		return key.groupId();
 	}
 
 	/**
@@ -78,7 +77,7 @@ public class ArtifactOwnershipMismatchException extends ArtifactoryException {
 	 */
 	@NonNull
 	public String getArtifactId() {
-		return artifactId;
+		return key.artifactId();
 	}
 
 	/**
@@ -93,7 +92,7 @@ public class ArtifactOwnershipMismatchException extends ArtifactoryException {
 
 	@Override
 	public Object[] getDetailMessageArguments() {
-		return new Object[] { groupId, artifactId, owner.slug() };
+		return new Object[] { ArtifactKey.format(key.groupId(), key.artifactId()), owner.slug() };
 	}
 
 }

@@ -2,7 +2,8 @@ package com.konfigyr.artifactory;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.konfigyr.version.Version;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import java.io.Serial;
@@ -10,11 +11,8 @@ import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-record SimpleArtifactCoordinates(
-		@NonNull String groupId,
-		@NonNull String artifactId,
-		@NonNull Version version
-) implements ArtifactCoordinates {
+@NullMarked
+record SimpleArtifactCoordinates(String groupId, String artifactId, Version version) implements ArtifactCoordinates {
 
 	@Serial
 	private static final long serialVersionUID = 1L;
@@ -26,7 +24,7 @@ record SimpleArtifactCoordinates(
 			.thenComparing(ArtifactCoordinates::artifactId)
 			.thenComparing(ArtifactCoordinates::version);
 
-	static SimpleArtifactCoordinates parse(String coordinates) {
+	static SimpleArtifactCoordinates parse(@Nullable String coordinates) {
 		Assert.hasText(coordinates, "Artifact coordinates must not be null or blank");
 
 		final Matcher matcher = PATTERN.matcher(coordinates);
@@ -43,19 +41,15 @@ record SimpleArtifactCoordinates(
 	}
 
 	SimpleArtifactCoordinates(String groupId, String artifactId, String version) {
-		this(groupId, artifactId, version == null ? null : Version.of(version));
+		this(groupId, artifactId, Version.of(version));
 	}
 
-	SimpleArtifactCoordinates(String groupId, String artifactId, Version version) {
+	SimpleArtifactCoordinates {
 		Assert.hasText(groupId, "Group ID cannot be empty");
 		Assert.hasText(artifactId, "Artifact ID cannot be empty");
 		Assert.notNull(version, "Version cannot be null");
-		this.groupId = groupId;
-		this.artifactId = artifactId;
-		this.version = version;
 	}
 
-	@NonNull
 	@Override
 	@JsonValue
 	public String toString() {
