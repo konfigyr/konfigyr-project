@@ -3,6 +3,7 @@ package com.konfigyr.namespace.catalog;
 import com.konfigyr.artifactory.ArtifactCoordinates;
 import com.konfigyr.artifactory.ArtifactoryEvent;
 import com.konfigyr.artifactory.Manifest;
+import com.konfigyr.artifactory.Owner;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.ServiceEvent;
@@ -217,7 +218,7 @@ class ServiceCatalogQueueListenerTest extends AbstractIntegrationTest {
 	}
 
 	static ArtifactoryEvent.PublicationCompleted createReleaseCompletedEvent(long id) {
-		return new ArtifactoryEvent.PublicationCompleted(EntityId.from(id), mock(ArtifactCoordinates.class));
+		return new ArtifactoryEvent.PublicationCompleted(EntityId.from(id), mock(Owner.class), mock(ArtifactCoordinates.class));
 	}
 
 	static ServiceEvent.Released createManifestReleasedEvent(long id) {

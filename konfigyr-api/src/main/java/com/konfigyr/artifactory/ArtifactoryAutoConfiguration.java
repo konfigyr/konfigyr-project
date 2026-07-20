@@ -46,19 +46,29 @@ public class ArtifactoryAutoConfiguration implements WebMvcConfigurer {
 	}
 
 	@Bean
+	ArtifactoryQueries artifactoryQueries(DSLContext context, ArtifactoryConverters artifactoryConverters) {
+		return new ArtifactoryQueries(context, artifactoryConverters);
+	}
+
+	@Bean
 	MetadataStore metadataStore(@Value("${konfigyr.artifactory.metadata-store.root}") URI root) {
 		return new FileSystemMetadataStore(Path.of(root));
 	}
 
 	@Bean
 	@ConditionalOnMissingBean(Artifactory.class)
-	Artifactory defaultArtifactory(
-			DSLContext context,
+	Artifactory defaultArtifactory(ArtifactoryQueries queries) {
+		return new DefaultArtifactory(queries);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(Publications.class)
+	Publications defaultPublications(
 			MetadataStore store,
-			ArtifactoryConverters converters,
+			ArtifactoryQueries queries,
 			ApplicationEventPublisher eventPublisher,
 			GroupVerifications groupVerifications
 	) {
-		return new DefaultArtifactory(context, store, converters, eventPublisher, groupVerifications);
+		return new DefaultPublications(store, queries, groupVerifications, eventPublisher);
 	}
 }

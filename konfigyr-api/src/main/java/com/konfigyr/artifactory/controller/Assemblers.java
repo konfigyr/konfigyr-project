@@ -21,10 +21,22 @@ interface Assemblers {
 		return definition -> EntityModel.of(definition, linkBuilder(definition).selfRel());
 	}
 
+	static RepresentationModelAssembler<ArtifactDefinition, EntityModel<ArtifactDefinition>> definition(Owner owner) {
+		return definition -> EntityModel.of(definition, linkBuilder(owner, definition).selfRel())
+				.add(linkBuilder(owner, definition).path("versions").rel("List artifact versions"))
+				.add(linkBuilder(owner, definition).path("visibility").method(HttpMethod.PUT).rel("Update artifact visibility"))
+				.add(linkBuilder(owner, definition).method(HttpMethod.DELETE).rel("Deregister artifact"));
+	}
+
 	static RepresentationModelAssembler<VersionedArtifact, EntityModel<VersionedArtifact>> artifact(ArtifactCoordinates coordinates) {
 		return artifact -> EntityModel.of(artifact, linkBuilder(coordinates).selfRel())
 				.add(linkBuilder(coordinates).method(HttpMethod.POST).rel("publish"))
 				.add(linkBuilder(coordinates).method(HttpMethod.GET).rel("properties"));
+	}
+
+	static RepresentationModelAssembler<VersionedArtifact, EntityModel<VersionedArtifact>> artifact(Owner owner) {
+		return artifact -> EntityModel.of(artifact, linkBuilder(owner, (Artifact) artifact).selfRel())
+				.add(linkBuilder(owner, (Artifact) artifact).method(HttpMethod.DELETE).rel("Retract artifact version"));
 	}
 
 	static RepresentationModelAssembler<PropertyDefinition, EntityModel<PropertyDefinition>> property(ArtifactCoordinates coordinates) {
@@ -71,6 +83,25 @@ interface Assemblers {
 	static LinkBuilder linkBuilder(ArtifactCoordinates coordinates) {
 		return linkBuilder((ArtifactKey) coordinates)
 				.path(coordinates.version().get());
+	}
+
+	static LinkBuilder linkBuilder(Owner owner, ArtifactKey key) {
+		return Link.builder()
+				.path("namespaces")
+				.path(owner.slug())
+				.path("artifacts")
+				.path(key.groupId())
+				.path(key.artifactId());
+	}
+
+	static LinkBuilder linkBuilder(Owner owner, Artifact artifact) {
+		return Link.builder()
+				.path("namespaces")
+				.path(owner.slug())
+				.path("artifacts")
+				.path(artifact.groupId())
+				.path(artifact.artifactId())
+				.path(artifact.version());
 	}
 
 	static LinkBuilder linkBuilder(Owner owner, GroupVerification verification) {

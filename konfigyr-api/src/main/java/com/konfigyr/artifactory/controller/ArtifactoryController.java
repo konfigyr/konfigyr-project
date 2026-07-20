@@ -37,8 +37,9 @@ import java.util.Optional;
 @RequiresScope(OAuthScope.READ_ARTIFACTS)
 class ArtifactoryController {
 
-	private final Artifactory artifactory;
 	private final OwnerResolver resolver;
+	private final Artifactory artifactory;
+	private final Publications publications;
 
 	@GetMapping("/{groupId}/{artifactId}")
 	EntityModel<ArtifactDefinition> definition(
@@ -106,7 +107,7 @@ class ArtifactoryController {
 		final ArtifactCoordinates coordinates = ArtifactCoordinates.of(groupId, artifactId, version);
 		publication.validate(coordinates, errors);
 
-		return EntityModel.of(artifactory.publish(owner, publication.toArtifactMetadata()));
+		return EntityModel.of(publications.publish(owner, publication.toArtifactMetadata()));
 	}
 
 	@GetMapping("/{groupId}/{artifactId}/{version}/properties")
@@ -131,7 +132,7 @@ class ArtifactoryController {
 				"Could not extract namespace identifier from the current authenticated principal"
 		));
 
-		artifactory.changeVisibility(owner, ArtifactKey.of(groupId, artifactId), request.visibility());
+		publications.changeVisibility(owner, ArtifactKey.of(groupId, artifactId), request.visibility());
 	}
 
 	private Optional<Owner> resolveOwner() {

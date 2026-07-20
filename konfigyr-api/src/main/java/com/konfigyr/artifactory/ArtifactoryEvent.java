@@ -12,17 +12,30 @@ import org.jspecify.annotations.NonNull;
  * @since 1.0.0
  **/
 public abstract sealed class ArtifactoryEvent extends EntityEvent
-		permits ArtifactoryEvent.ArtifactEvent, ArtifactoryEvent.OwnershipTransferEvent {
+		permits ArtifactoryEvent.ArtifactEvent, ArtifactoryEvent.DefinitionEvent, ArtifactoryEvent.OwnershipTransferEvent {
 
-	protected ArtifactoryEvent(EntityId id) {
+	private final Owner owner;
+
+	protected ArtifactoryEvent(EntityId id, @NonNull Owner owner) {
 		super(id);
+		this.owner = owner;
+	}
+
+	/**
+	 * The owner of the {@code Artifact} that was the subject of the event.
+	 *
+	 * @return the artifact owner, never {@literal null}.
+	 */
+	@NonNull
+	public Owner owner() {
+		return this.owner;
 	}
 
 	/**
 	 * Abstract event type used for events related to a {@link VersionedArtifact}.
 	 */
 	public static sealed abstract class ArtifactEvent extends ArtifactoryEvent
-			permits PublicationCreated, PublicationCompleted, PublicationFailed {
+			permits PublicationCreated, PublicationCompleted, PublicationFailed, PublicationRetracted {
 
 		private final ArtifactCoordinates coordinates;
 
@@ -32,7 +45,7 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * @param artifact artifact version to create the event for, can't be {@literal null}.
 		 */
 		protected ArtifactEvent(@NonNull VersionedArtifact artifact) {
-			this(artifact.id(), artifact.coordinates());
+			this(artifact.id(), artifact.owner(), artifact.coordinates());
 		}
 
 		/**
@@ -40,10 +53,11 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * of the {@link VersionedArtifact} and it's coordinates.
 		 *
 		 * @param id entity identifier of the created artifact version, can't be {@literal null}.
+		 * @param owner the owner of the created artifact version, can't be {@literal null}.
 		 * @param coordinates the artifact coordinates of the created artifact version, can't be {@literal null}.
 		 */
-		protected ArtifactEvent(EntityId id, @NonNull ArtifactCoordinates coordinates) {
-			super(id);
+		protected ArtifactEvent(EntityId id, @NonNull Owner owner, @NonNull ArtifactCoordinates coordinates) {
+			super(id, owner);
 			this.coordinates = coordinates;
 		}
 
@@ -69,10 +83,11 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * {@link VersionedArtifact} that was just created by the {@link Artifactory}.
 		 *
 		 * @param id entity identifier of the created artifact version
+		 * @param owner the owner of the created artifact version that was just published
 		 * @param coordinates the artifact coordinates of the created artifact version
 		 */
-		public PublicationCreated(EntityId id, ArtifactCoordinates coordinates) {
-			super(id, coordinates);
+		public PublicationCreated(EntityId id, Owner owner, ArtifactCoordinates coordinates) {
+			super(id, owner, coordinates);
 		}
 	}
 
@@ -88,7 +103,7 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * @param artifact affected artifact version, can't be {@literal null}.
 		 */
 		public PublicationCompleted(VersionedArtifact artifact) {
-			this(artifact.id(), artifact.coordinates());
+			super(artifact);
 		}
 
 		/**
@@ -96,10 +111,11 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * {@link VersionedArtifact} that was successfully published by the {@link Artifactory}.
 		 *
 		 * @param id entity identifier of the artifact version
+		 * @param owner the owner of the artifact version
 		 * @param coordinates the artifact coordinates of the artifact version
 		 */
-		public PublicationCompleted(EntityId id, ArtifactCoordinates coordinates) {
-			super(id, coordinates);
+		public PublicationCompleted(EntityId id, Owner owner, ArtifactCoordinates coordinates) {
+			super(id, owner, coordinates);
 		}
 	}
 
@@ -115,7 +131,7 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * @param artifact affected artifact version, can't be {@literal null}.
 		 */
 		public PublicationFailed(VersionedArtifact artifact) {
-			this(artifact.id(), artifact.coordinates());
+			super(artifact);
 		}
 
 		/**
@@ -123,10 +139,111 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * {@link VersionedArtifact} that was could not be published by the {@link Artifactory}.
 		 *
 		 * @param id entity identifier of the artifact version
+		 * @param owner the owner of the artifact version
 		 * @param coordinates the artifact coordinates of the artifact version
 		 */
-		public PublicationFailed(EntityId id, ArtifactCoordinates coordinates) {
-			super(id, coordinates);
+		public PublicationFailed(EntityId id, Owner owner, ArtifactCoordinates coordinates) {
+			super(id, owner, coordinates);
+		}
+	}
+
+	/**
+	 * Event that would be published when a previously published {@link VersionedArtifact} is retracted.
+	 */
+	@DomainEvent(name = "artifact-version.publication-retracted", namespace = "artifactory")
+	public static final class PublicationRetracted extends ArtifactEvent {
+
+		/**
+		 * Create a new {@link PublicationRetracted} event for the {@link VersionedArtifact} that was retracted.
+		 *
+		 * @param id entity identifier of the retracted artifact version, can't be {@literal null}.
+		 * @param owner the owner of the retracted artifact version
+		 * @param coordinates the artifact coordinates of the retracted artifact version, can't be {@literal null}.
+		 */
+		public PublicationRetracted(EntityId id, @NonNull Owner owner, @NonNull ArtifactCoordinates coordinates) {
+			super(id, owner, coordinates);
+		}
+	}
+
+	/**
+	 * Abstract event type used for events related to an {@link ArtifactDefinition}.
+	 */
+	public static sealed abstract class DefinitionEvent extends ArtifactoryEvent
+			permits Deregistered, VisibilityChanged {
+
+		private final ArtifactKey key;
+
+		/**
+		 * Create a new {@link DefinitionEvent} event for the {@link ArtifactDefinition}.
+		 *
+		 * @param id entity identifier of the affected artifact definition, can't be {@literal null}.
+		 * @param owner the owner of the affected artifact definition
+		 * @param key the {@code groupId}/{@code artifactId} identity of the affected artifact, can't be {@literal null}.
+		 */
+		protected DefinitionEvent(EntityId id, @NonNull Owner owner, @NonNull ArtifactKey key) {
+			super(id, owner);
+			this.key = key;
+		}
+
+		/**
+		 * Returns the {@link ArtifactKey} of the affected {@link ArtifactDefinition}.
+		 *
+		 * @return artifact key, never {@literal null}.
+		 */
+		@NonNull
+		public ArtifactKey key() {
+			return key;
+		}
+	}
+
+	/**
+	 * Event that would be published when an {@link ArtifactDefinition}, together with every
+	 * {@link VersionedArtifact} published under it, is deregistered from the registry.
+	 */
+	@DomainEvent(name = "artifact-definition.deregistered", namespace = "artifactory")
+	public static final class Deregistered extends DefinitionEvent {
+
+		/**
+		 * Create a new {@link Deregistered} event for the {@link ArtifactDefinition} that was removed.
+		 *
+		 * @param id entity identifier of the deregistered artifact definition, can't be {@literal null}.
+		 * @param owner the owner of the deregistered artifact definition
+		 * @param key the {@code groupId}/{@code artifactId} identity of the deregistered artifact, can't be {@literal null}.
+		 */
+		public Deregistered(EntityId id, @NonNull Owner owner, @NonNull ArtifactKey key) {
+			super(id, owner, key);
+		}
+	}
+
+	/**
+	 * Event that would be published when the {@link ArtifactVisibility} of an {@link ArtifactDefinition} changes.
+	 */
+	@DomainEvent(name = "artifact-definition.visibility-changed", namespace = "artifactory")
+	public static final class VisibilityChanged extends DefinitionEvent {
+
+		private final ArtifactVisibility visibility;
+
+		/**
+		 * Create a new {@link VisibilityChanged} event for the {@link ArtifactDefinition} whose visibility changed.
+		 *
+		 * @param id entity identifier of the affected artifact definition, can't be {@literal null}.
+		 * @param owner the owner of the affected artifact definition
+		 * @param key the {@code groupId}/{@code artifactId} identity of the affected artifact, can't be {@literal null}.
+		 * @param visibility the {@link ArtifactVisibility} that was applied, can't be {@literal null}.
+		 */
+		public VisibilityChanged(EntityId id, @NonNull Owner owner, @NonNull ArtifactKey key, @NonNull ArtifactVisibility visibility) {
+			super(id, owner, key);
+			this.visibility = visibility;
+		}
+
+		/**
+		 * Returns the {@link ArtifactVisibility} that was applied to the affected {@link ArtifactDefinition}.
+		 *
+		 * @return the new visibility, never {@literal null}.
+		 */
+		@NonNull
+		public ArtifactVisibility visibility() {
+			return visibility;
 		}
 	}
 
@@ -150,7 +267,7 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * @param to the namespace that requested ownership of the affected artifacts, can't be {@literal null}.
 		 */
 		protected OwnershipTransferEvent(EntityId id, @NonNull String groupId, @NonNull Owner from, @NonNull Owner to) {
-			super(id);
+			super(id, from);
 			this.groupId = groupId;
 			this.from = from;
 			this.to = to;
