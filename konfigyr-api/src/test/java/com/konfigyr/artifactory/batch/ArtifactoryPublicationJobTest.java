@@ -47,13 +47,13 @@ class ArtifactoryPublicationJobTest extends AbstractIntegrationTest {
 
 	@AfterAll
 	static void cleanup(ApplicationContext context) {
-		final long id = context.getBean(DSLContext.class).deleteFrom(ARTIFACT_VERSIONS)
+		final List<Long> versions = context.getBean(DSLContext.class).deleteFrom(ARTIFACT_VERSIONS)
 				.where(ARTIFACT_VERSIONS.ARTIFACT_ID.eq(4L))
 				.returning(ARTIFACT_VERSIONS.ID)
-				.execute();
+				.fetch(ARTIFACT_VERSIONS.ID);
 
 		context.getBean(DSLContext.class).deleteFrom(AUDIT_EVENTS)
-				.where(AUDIT_EVENTS.ENTITY_ID.eq(id))
+				.where(AUDIT_EVENTS.ENTITY_ID.in(versions))
 				.execute();
 	}
 
