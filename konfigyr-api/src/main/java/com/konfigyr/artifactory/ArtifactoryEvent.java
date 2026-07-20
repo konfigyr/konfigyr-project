@@ -12,7 +12,7 @@ import org.jspecify.annotations.NonNull;
  * @since 1.0.0
  **/
 public abstract sealed class ArtifactoryEvent extends EntityEvent
-		permits ArtifactoryEvent.ArtifactEvent, ArtifactoryEvent.OwnershipTransferAccepted {
+		permits ArtifactoryEvent.ArtifactEvent, ArtifactoryEvent.OwnershipTransferEvent {
 
 	protected ArtifactoryEvent(EntityId id) {
 		super(id);
@@ -131,15 +131,68 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 	}
 
 	/**
-	 * Event that would be published when an artifact ownership transfer request is accepted by the
-	 * current owner and ownership of the affected artifacts has moved.
+	 * Abstract event type used for events related to the resolution of an
+	 * {@code com.konfigyr.artifactory.transfer.ArtifactOwnershipTransfer}.
 	 */
-	@DomainEvent(name = "ownership-transfer.accepted", namespace = "artifactory")
-	public static final class OwnershipTransferAccepted extends ArtifactoryEvent {
+	public static sealed abstract class OwnershipTransferEvent extends ArtifactoryEvent
+			permits OwnershipTransferAccepted, OwnershipTransferRejected, OwnershipTransferCancelled {
 
 		private final String groupId;
 		private final Owner from;
 		private final Owner to;
+
+		/**
+		 * Create a new {@link OwnershipTransferEvent} event for the given resolved transfer request.
+		 *
+		 * @param id the entity identifier of the resolved transfer request, can't be {@literal null}.
+		 * @param groupId the artifact groupId coordinate the transfer request pertains to, can't be {@literal null}.
+		 * @param from the namespace that owns the affected artifacts, can't be {@literal null}.
+		 * @param to the namespace that requested ownership of the affected artifacts, can't be {@literal null}.
+		 */
+		protected OwnershipTransferEvent(EntityId id, @NonNull String groupId, @NonNull Owner from, @NonNull Owner to) {
+			super(id);
+			this.groupId = groupId;
+			this.from = from;
+			this.to = to;
+		}
+
+		/**
+		 * Returns the Maven {@code groupId} coordinate the transfer request pertains to.
+		 *
+		 * @return artifact groupId coordinate, never {@literal null}.
+		 */
+		@NonNull
+		public String groupId() {
+			return groupId;
+		}
+
+		/**
+		 * Returns the namespace that owns the affected artifacts.
+		 *
+		 * @return current owner, never {@literal null}.
+		 */
+		@NonNull
+		public Owner from() {
+			return from;
+		}
+
+		/**
+		 * Returns the namespace that requested ownership of the affected artifacts.
+		 *
+		 * @return requesting namespace, never {@literal null}.
+		 */
+		@NonNull
+		public Owner to() {
+			return to;
+		}
+	}
+
+	/**
+	 * Event that would be published when an artifact ownership transfer request is accepted by the
+	 * current owner and ownership of the affected artifacts has moved.
+	 */
+	@DomainEvent(name = "ownership-transfer.accepted", namespace = "artifactory")
+	public static final class OwnershipTransferAccepted extends OwnershipTransferEvent {
 
 		/**
 		 * Create a new {@link OwnershipTransferAccepted} event for the given accepted transfer request.
@@ -150,40 +203,47 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		 * @param to the namespace that now owns the affected artifacts, can't be {@literal null}.
 		 */
 		public OwnershipTransferAccepted(EntityId id, @NonNull String groupId, @NonNull Owner from, @NonNull Owner to) {
-			super(id);
-			this.groupId = groupId;
-			this.from = from;
-			this.to = to;
+			super(id, groupId, from, to);
 		}
+	}
+
+	/**
+	 * Event that would be published when an artifact ownership transfer request is rejected by the
+	 * current owner. No artifact ownership is changed.
+	 */
+	@DomainEvent(name = "ownership-transfer.rejected", namespace = "artifactory")
+	public static final class OwnershipTransferRejected extends OwnershipTransferEvent {
 
 		/**
-		 * Returns the Maven {@code groupId} coordinate whose artifacts were transferred.
+		 * Create a new {@link OwnershipTransferRejected} event for the given rejected transfer request.
 		 *
-		 * @return artifact groupId coordinate, never {@literal null}.
+		 * @param id the entity identifier of the rejected transfer request, can't be {@literal null}.
+		 * @param groupId the artifact groupId coordinate whose transfer was rejected, can't be {@literal null}.
+		 * @param from the namespace that owns the affected artifacts and rejected the request, can't be {@literal null}.
+		 * @param to the namespace whose request to claim ownership was rejected, can't be {@literal null}.
 		 */
-		@NonNull
-		public String groupId() {
-			return groupId;
+		public OwnershipTransferRejected(EntityId id, @NonNull String groupId, @NonNull Owner from, @NonNull Owner to) {
+			super(id, groupId, from, to);
 		}
+	}
+
+	/**
+	 * Event that would be published when an artifact ownership transfer request is cancelled by the
+	 * requesting namespace. No artifact ownership is changed.
+	 */
+	@DomainEvent(name = "ownership-transfer.cancelled", namespace = "artifactory")
+	public static final class OwnershipTransferCancelled extends OwnershipTransferEvent {
 
 		/**
-		 * Returns the namespace that owned the affected artifacts before the transfer.
+		 * Create a new {@link OwnershipTransferCancelled} event for the given cancelled transfer request.
 		 *
-		 * @return previous owner, never {@literal null}.
+		 * @param id the entity identifier of the cancelled transfer request, can't be {@literal null}.
+		 * @param groupId the artifact groupId coordinate whose transfer was cancelled, can't be {@literal null}.
+		 * @param from the namespace that owns the affected artifacts, can't be {@literal null}.
+		 * @param to the namespace that cancelled its own request, can't be {@literal null}.
 		 */
-		@NonNull
-		public Owner from() {
-			return from;
-		}
-
-		/**
-		 * Returns the namespace that now owns the affected artifacts.
-		 *
-		 * @return new owner, never {@literal null}.
-		 */
-		@NonNull
-		public Owner to() {
-			return to;
+		public OwnershipTransferCancelled(EntityId id, @NonNull String groupId, @NonNull Owner from, @NonNull Owner to) {
+			super(id, groupId, from, to);
 		}
 	}
 

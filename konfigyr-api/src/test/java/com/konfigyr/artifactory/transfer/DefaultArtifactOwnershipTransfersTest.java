@@ -123,25 +123,37 @@ class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 	@Test
 	@Transactional
 	@DisplayName("should reject a pending transfer")
-	void shouldRejectPendingTransfer() {
+	void shouldRejectPendingTransfer(AssertablePublishedEvents events) {
 		final var pending = transferFor(Owners.ebf(), 1);
 
 		assertThat(transfers.reject(pending))
 				.returns(pending.id(), ArtifactOwnershipTransfer::id)
 				.returns(TransferState.REJECTED, ArtifactOwnershipTransfer::state)
 				.satisfies(it -> assertThat(it.resolvedAt()).isNotNull());
+
+		events.assertThat()
+				.contains(ArtifactoryEvent.OwnershipTransferRejected.class)
+				.matching(ArtifactoryEvent.OwnershipTransferRejected::groupId, pending.groupId())
+				.matching(ArtifactoryEvent.OwnershipTransferRejected::from, pending.from())
+				.matching(ArtifactoryEvent.OwnershipTransferRejected::to, pending.to());
 	}
 
 	@Test
 	@Transactional
 	@DisplayName("should cancel a pending transfer")
-	void shouldCancelPendingTransfer() {
+	void shouldCancelPendingTransfer(AssertablePublishedEvents events) {
 		final var pending = transferFor(Owners.ebf(), 1);
 
 		assertThat(transfers.cancel(pending))
 				.returns(pending.id(), ArtifactOwnershipTransfer::id)
 				.returns(TransferState.CANCELLED, ArtifactOwnershipTransfer::state)
 				.satisfies(it -> assertThat(it.resolvedAt()).isNotNull());
+
+		events.assertThat()
+				.contains(ArtifactoryEvent.OwnershipTransferCancelled.class)
+				.matching(ArtifactoryEvent.OwnershipTransferCancelled::groupId, pending.groupId())
+				.matching(ArtifactoryEvent.OwnershipTransferCancelled::from, pending.from())
+				.matching(ArtifactoryEvent.OwnershipTransferCancelled::to, pending.to());
 	}
 
 	@Test

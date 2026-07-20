@@ -26,6 +26,10 @@ import type { DateRange } from '@konfigyr/components/ui/calendar';
 const ENTITY_TYPES = [
   'namespace',
   'namespace-application',
+  'namespace-trusted-issuer',
+  'invitation',
+  'artifact-version',
+  'artifact-ownership-transfer',
   'keyset',
   'service',
   'profile',
