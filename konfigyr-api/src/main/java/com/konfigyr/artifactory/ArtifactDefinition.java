@@ -50,7 +50,7 @@ public record ArtifactDefinition(
 	@Nullable URI repository,
 	@Nullable OffsetDateTime createdAt,
 	@Nullable OffsetDateTime updatedAt
-) implements ArtifactDescriptor, Comparable<ArtifactDefinition> {
+) implements ArtifactKey, ArtifactDescriptor, Comparable<ArtifactDefinition> {
 
 	@Serial
 	private static final long serialVersionUID = 8664247652890518668L;

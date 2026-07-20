@@ -18,31 +18,35 @@ public class ArtifactDefinitionNotFoundException extends ArtifactoryException {
 	private static final long serialVersionUID = 6236774637610101542L;
 
 	/**
-	 * Maven {@code groupId} coordinate of the artifact that could not be found.
+	 * The {@code groupId}/{@code artifactId} identity of the artifact that could not be found.
 	 */
-	private final String groupId;
+	private final ArtifactKey key;
 
 	/**
-	 * Maven {@code artifactId} coordinate of the artifact that could not be found.
-	 */
-	private final String artifactId;
-
-	/**
-	 * Create a new instance when no artifact exists for the given {@code groupId} and
-	 * {@code artifactId} coordinates.
+	 * Create a new instance when no artifact exists for the given {@link ArtifactKey}.
 	 *
-	 * @param groupId the artifact {@code groupId} coordinate that could not be found, can't be {@literal null}
-	 * @param artifactId the artifact {@code artifactId} coordinate that could not be found, can't be {@literal null}
+	 * @param key the {@code groupId}/{@code artifactId} identity of the artifact that could not be found,
+	 *        can't be {@literal null}
 	 */
-	public ArtifactDefinitionNotFoundException(@NonNull String groupId, @NonNull String artifactId) {
-		super(HttpStatus.NOT_FOUND, "Can not find artifact with following coordinates: %s:%s".formatted(groupId, artifactId));
-		this.groupId = groupId;
-		this.artifactId = artifactId;
+	public ArtifactDefinitionNotFoundException(@NonNull ArtifactKey key) {
+		super(HttpStatus.NOT_FOUND, "Can not find artifact with following coordinates: %s".formatted(
+				ArtifactKey.format(key.groupId(), key.artifactId())));
+		this.key = key;
 	}
 
 	@Override
 	public Object[] getDetailMessageArguments() {
-		return new Object[] { groupId, artifactId };
+		return new Object[] { ArtifactKey.format(key.groupId(), key.artifactId()) };
+	}
+
+	/**
+	 * Returns the {@link ArtifactKey} of the artifact that could not be found.
+	 *
+	 * @return the {@link ArtifactKey}, never {@literal null}
+	 */
+	@NonNull
+	public ArtifactKey getKey() {
+		return key;
 	}
 
 	/**
@@ -52,7 +56,7 @@ public class ArtifactDefinitionNotFoundException extends ArtifactoryException {
 	 */
 	@NonNull
 	public String getGroupId() {
-		return groupId;
+		return key.groupId();
 	}
 
 	/**
@@ -62,7 +66,7 @@ public class ArtifactDefinitionNotFoundException extends ArtifactoryException {
 	 */
 	@NonNull
 	public String getArtifactId() {
-		return artifactId;
+		return key.artifactId();
 	}
 
 }

@@ -1,11 +1,10 @@
 package com.konfigyr.artifactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.konfigyr.support.SearchQuery;
 import com.konfigyr.version.Version;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.io.Serializable;
 
 /**
  * Interface that describes the Maven Coordinates that artifacts use.
@@ -13,12 +12,23 @@ import java.io.Serializable;
  * Coordinates consists out of the three integral fields: {@code groupId:artifactId:version}.
  * These three fields act much like an address and timestamp in one. This marks a specific place in
  * a repository, acting like a coordinate system for Maven projects.
+ * <p>
+ * The {@code groupId:artifactId} pair, without the version, is described by the parent {@link ArtifactKey}
+ * interface.
  *
  * @author Vladimir Spasic
  * @since 1.0.0
+ * @see ArtifactKey
  */
 @NullMarked
-public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Serializable {
+public interface ArtifactCoordinates extends ArtifactKey, Comparable<ArtifactCoordinates> {
+
+	/**
+	 * The {@link SearchQuery.Criteria} descriptor used to narrow down the search of artifacts
+	 * or property descriptors by their {@link ArtifactCoordinates groupId:artifactId:version} coordinates.
+	 */
+	SearchQuery.Criteria<ArtifactCoordinates> CRITERIA =
+			SearchQuery.criteria("artifact.coordinates", ArtifactCoordinates.class);
 
 	/**
 	 * Parses the given textual representation of Maven coordinates and creates an
@@ -43,6 +53,17 @@ public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Se
 	 */
 	static ArtifactCoordinates of(Artifact artifact) {
 		return new SimpleArtifactCoordinates(artifact.groupId(), artifact.artifactId(), artifact.version());
+	}
+
+	/**
+	 * Creates an {@link ArtifactCoordinates} instance from the given {@link ArtifactKey} and {@code version}.
+	 *
+	 * @param key the artifact key used to build the coordinates, can't be {@literal null}
+	 * @param version the version of the artifact, can't be {@literal null}
+	 * @return the artifact coordinates, never {@literal null}
+	 */
+	static ArtifactCoordinates of(ArtifactKey key, String version) {
+		return new SimpleArtifactCoordinates(key.groupId(), key.artifactId(), version);
 	}
 
 	/**
@@ -114,20 +135,6 @@ public interface ArtifactCoordinates extends Comparable<ArtifactCoordinates>, Se
 	static int compare(ArtifactCoordinates a, ArtifactCoordinates b) {
 		return SimpleArtifactCoordinates.COMPARATOR.compare(a, b);
 	}
-
-	/**
-	 * Returns the {@code groupId} Maven coordinate of the artifact.
-	 *
-	 * @return the {@code groupId} Maven coordinate, can't be {@literal null}
-	 */
-	String groupId();
-
-	/**
-	 * Returns the {@code artifactId} Maven coordinate of the artifact.
-	 *
-	 * @return the {@code artifactId} Maven coordinate, can't be {@literal null}
-	 */
-	String artifactId();
 
 	/**
 	 * Returns the {@code version} Maven coordinate of the artifact.

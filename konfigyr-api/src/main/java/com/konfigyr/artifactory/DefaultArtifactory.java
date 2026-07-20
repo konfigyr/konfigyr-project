@@ -225,9 +225,8 @@ class DefaultArtifactory implements Artifactory {
 				.fetchOptional(ARTIFACT_VERSIONS.ID)
 				.orElseThrow(() -> new ArtifactVersionNotFoundException(coordinates));
 
-		return context.select(PROPERTY_DEFINITIONS.fields())
-				.from(ARTIFACT_VERSION_PROPERTIES)
-				.innerJoin(PROPERTY_DEFINITIONS)
+		return createPropertySearchQuery()
+				.innerJoin(ARTIFACT_VERSION_PROPERTIES)
 				.on(PROPERTY_DEFINITIONS.ID.eq(ARTIFACT_VERSION_PROPERTIES.PROPERTY_DEFINITION_ID))
 				.where(ARTIFACT_VERSION_PROPERTIES.ARTIFACT_VERSION_ID.eq(artifactVersionId))
 				.fetch(record -> toPropertyDefinition(record, converters));
@@ -237,24 +236,23 @@ class DefaultArtifactory implements Artifactory {
 	@Transactional(label = "artifactory.change-visibility")
 	public void changeVisibility(
 			@NonNull Owner owner,
-			@NonNull String groupId,
-			@NonNull String artifactId,
+			@NonNull ArtifactKey key,
 			@NonNull ArtifactVisibility visibility
 	) {
 		final Long existingOwnerId = context.select(ARTIFACTS.NAMESPACE_ID)
 				.from(ARTIFACTS)
-				.where(ARTIFACTS.GROUP_ID.eq(groupId), ARTIFACTS.ARTIFACT_ID.eq(artifactId))
+				.where(toCondition(key))
 				.fetchOptional(ARTIFACTS.NAMESPACE_ID)
-				.orElseThrow(() -> new ArtifactDefinitionNotFoundException(groupId, artifactId));
+				.orElseThrow(() -> new ArtifactDefinitionNotFoundException(key));
 
 		if (!existingOwnerId.equals(owner.id().get())) {
-			throw new ArtifactOwnershipMismatchException(groupId, artifactId, owner);
+			throw new ArtifactOwnershipMismatchException(key, owner);
 		}
 
 		context.update(ARTIFACTS)
 				.set(ARTIFACTS.VISIBILITY, visibility.name())
 				.set(ARTIFACTS.UPDATED_AT, OffsetDateTime.now())
-				.where(ARTIFACTS.GROUP_ID.eq(groupId), ARTIFACTS.ARTIFACT_ID.eq(artifactId))
+				.where(toCondition(key))
 				.execute();
 	}
 
@@ -280,6 +278,17 @@ class DefaultArtifactory implements Artifactory {
 				.from(ARTIFACT_VERSIONS)
 				.innerJoin(ARTIFACTS)
 				.on(ARTIFACTS.ID.eq(ARTIFACT_VERSIONS.ARTIFACT_ID))
+				.innerJoin(NAMESPACES)
+				.on(NAMESPACES.ID.eq(ARTIFACTS.NAMESPACE_ID));
+	}
+
+	@NonNull
+	private SelectJoinStep<? extends Record> createPropertySearchQuery() {
+		return context.select(PROPERTY_DEFINITIONS.fields())
+				.select(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, NAMESPACES.ID, NAMESPACES.SLUG)
+				.from(PROPERTY_DEFINITIONS)
+				.innerJoin(ARTIFACTS)
+				.on(ARTIFACTS.ID.eq(PROPERTY_DEFINITIONS.ARTIFACT_ID))
 				.innerJoin(NAMESPACES)
 				.on(NAMESPACES.ID.eq(ARTIFACTS.NAMESPACE_ID));
 	}
@@ -318,6 +327,14 @@ class DefaultArtifactory implements Artifactory {
 	}
 
 	@NonNull
+	static Condition toCondition(@NonNull ArtifactKey key) {
+		return DSL.and(
+				ARTIFACTS.GROUP_ID.eq(key.groupId()),
+				ARTIFACTS.ARTIFACT_ID.eq(key.artifactId())
+		);
+	}
+
+	@NonNull
 	static Condition toCondition(@NonNull ArtifactCoordinates coordinates) {
 		return DSL.and(
 				ARTIFACTS.GROUP_ID.eq(coordinates.groupId()),
@@ -326,8 +343,12 @@ class DefaultArtifactory implements Artifactory {
 		);
 	}
 
+	static Owner toOwner(Record record) {
+		return new Owner(record.get(NAMESPACES.ID, EntityId.class), record.get(NAMESPACES.SLUG));
+	}
+
 	static VersionedArtifact toVersionedArtifact(Record record) {
-		return toVersionedArtifact(record, new Owner(EntityId.from(record.get(NAMESPACES.ID)), record.get(NAMESPACES.SLUG)));
+		return toVersionedArtifact(record, toOwner(record));
 	}
 
 	static VersionedArtifact toVersionedArtifact(Record record, Owner owner) {
@@ -353,6 +374,9 @@ class DefaultArtifactory implements Artifactory {
 		return PropertyDefinition.builder()
 				.id(record.get(PROPERTY_DEFINITIONS.ID))
 				.artifact(record.get(PROPERTY_DEFINITIONS.ARTIFACT_ID))
+				.groupId(record.get(ARTIFACTS.GROUP_ID))
+				.artifactId(record.get(ARTIFACTS.ARTIFACT_ID))
+				.owner(toOwner(record))
 				.checksum(record.get(PROPERTY_DEFINITIONS.CHECKSUM))
 				.name(record.get(PROPERTY_DEFINITIONS.NAME))
 				.typeName(record.get(PROPERTY_DEFINITIONS.TYPE_NAME))

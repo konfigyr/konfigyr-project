@@ -335,7 +335,7 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 				.as("should not yet be visible to a different namespace while still private")
 				.isEmpty();
 
-		artifactory.changeVisibility(Owners.konfigyr(), "com.konfigyr", "konfigyr-internal-secrets", ArtifactVisibility.PUBLIC);
+		artifactory.changeVisibility(Owners.konfigyr(), coordinates, ArtifactVisibility.PUBLIC);
 
 		assertThat(artifactory.get(Owners.johnDoe(), coordinates))
 				.as("should now be visible to a different namespace after becoming public")
@@ -348,13 +348,16 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 	@Transactional
 	@DisplayName("should reject changing visibility when the caller does not own the artifact")
 	void shouldRejectChangeVisibilityForDifferentOwner() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets");
+
 		assertThatExceptionOfType(ArtifactOwnershipMismatchException.class)
-				.isThrownBy(() -> artifactory.changeVisibility(Owners.johnDoe(), "com.konfigyr", "konfigyr-internal-secrets", ArtifactVisibility.PUBLIC))
-				.returns("com.konfigyr", ArtifactOwnershipMismatchException::getGroupId)
-				.returns("konfigyr-internal-secrets", ArtifactOwnershipMismatchException::getArtifactId)
+				.isThrownBy(() -> artifactory.changeVisibility(Owners.johnDoe(), key, ArtifactVisibility.PUBLIC))
+				.returns(key, ArtifactOwnershipMismatchException::getKey)
+				.returns(key.groupId(), ArtifactOwnershipMismatchException::getGroupId)
+				.returns(key.artifactId(), ArtifactOwnershipMismatchException::getArtifactId)
 				.returns(HttpStatus.CONFLICT, ArtifactOwnershipMismatchException::getStatusCode);
 
-		assertThat(artifactory.get(Owners.konfigyr(), ArtifactCoordinates.parse("com.konfigyr:konfigyr-internal-secrets:1.0.0")))
+		assertThat(artifactory.get(Owners.konfigyr(), ArtifactCoordinates.of(key, "1.0.0")))
 				.as("visibility must remain unchanged after a rejected attempt")
 				.isPresent()
 				.get(InstanceOfAssertFactories.type(VersionedArtifact.class))
@@ -364,10 +367,13 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 	@Test
 	@DisplayName("should reject changing visibility for an unknown artifact")
 	void shouldRejectChangeVisibilityForUnknownArtifact() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-does-not-exist");
+
 		assertThatExceptionOfType(ArtifactDefinitionNotFoundException.class)
-				.isThrownBy(() -> artifactory.changeVisibility(Owners.konfigyr(), "com.konfigyr", "konfigyr-does-not-exist", ArtifactVisibility.PUBLIC))
-				.returns("com.konfigyr", ArtifactDefinitionNotFoundException::getGroupId)
-				.returns("konfigyr-does-not-exist", ArtifactDefinitionNotFoundException::getArtifactId)
+				.isThrownBy(() -> artifactory.changeVisibility(Owners.konfigyr(), key, ArtifactVisibility.PUBLIC))
+				.returns(key, ArtifactDefinitionNotFoundException::getKey)
+				.returns(key.groupId(), ArtifactDefinitionNotFoundException::getGroupId)
+				.returns(key.artifactId(), ArtifactDefinitionNotFoundException::getArtifactId)
 				.returns(HttpStatus.NOT_FOUND, ArtifactDefinitionNotFoundException::getStatusCode);
 	}
 
