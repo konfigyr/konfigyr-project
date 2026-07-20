@@ -2,10 +2,7 @@ package com.konfigyr.artifactory.controller;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.konfigyr.artifactory.ArtifactCoordinates;
-import com.konfigyr.artifactory.Owner;
-import com.konfigyr.artifactory.PropertyDefinition;
-import com.konfigyr.artifactory.VersionedArtifact;
+import com.konfigyr.artifactory.*;
 import com.konfigyr.artifactory.ownership.GroupVerification;
 import com.konfigyr.artifactory.ownership.VerificationChallenge;
 import com.konfigyr.artifactory.transfer.ArtifactOwnershipTransfer;
@@ -19,6 +16,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 interface Assemblers {
+
+	static RepresentationModelAssembler<ArtifactDefinition, EntityModel<ArtifactDefinition>> definition() {
+		return definition -> EntityModel.of(definition, linkBuilder(definition).selfRel());
+	}
 
 	static RepresentationModelAssembler<VersionedArtifact, EntityModel<VersionedArtifact>> artifact(ArtifactCoordinates coordinates) {
 		return artifact -> EntityModel.of(artifact, linkBuilder(coordinates).selfRel())
@@ -60,11 +61,15 @@ interface Assemblers {
 				.add(linkBuilder(owner, transfer).method(HttpMethod.DELETE).rel("Cancel ownership transfer request"));
 	}
 
-	static LinkBuilder linkBuilder(ArtifactCoordinates coordinates) {
+	static LinkBuilder linkBuilder(ArtifactKey key) {
 		return Link.builder()
 				.path("artifacts")
-				.path(coordinates.groupId())
-				.path(coordinates.artifactId())
+				.path(key.groupId())
+				.path(key.artifactId());
+	}
+
+	static LinkBuilder linkBuilder(ArtifactCoordinates coordinates) {
+		return linkBuilder((ArtifactKey) coordinates)
 				.path(coordinates.version().get());
 	}
 

@@ -40,6 +40,138 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	MetadataStore store;
 
 	@Test
+	@DisplayName("should retrieve details about the specific artifact definition")
+	void retrieveArtifactDefinition() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-api");
+
+		mvc.get().uri(uriForArtifact(key).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(ArtifactDefinition.class)
+				.returns(EntityId.from(5), ArtifactDefinition::id)
+				.returns(Owners.konfigyr(), ArtifactDefinition::owner)
+				.returns(key.groupId(), ArtifactDefinition::groupId)
+				.returns(key.artifactId(), ArtifactDefinition::artifactId)
+				.returns("Konfigyr API", ArtifactDefinition::name)
+				.returns("Private REST API", ArtifactDefinition::description)
+				.returns(URI.create("konfigyr.api"), ArtifactDefinition::website)
+				.returns(URI.create("https://github.com/konfigyr/konfigyr-project"), ArtifactDefinition::repository);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve details about an unknown artifact definition")
+	void retrieveUnknownArtifactDefinition() {
+		final var key = ArtifactKey.of("com.konfigyr", "unknown");
+
+		mvc.get().uri(uriForArtifact(key).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(ArtifactDefinitionNotFoundException.class, ex -> ex
+						.returns(key, ArtifactDefinitionNotFoundException::getKey)
+						.hasNoCause()
+				))
+				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+						.hasTitleContaining("Artifact not found")
+						.hasDetailContaining("Could not find an artifact with the following coordinates: '%s'", key.format())
+						.hasProperty("coordinates", key.format())
+				));
+	}
+
+	@Test
+	@DisplayName("should retrieve a private artifact definition for its owning namespace but not for another namespace")
+	void shouldRetrievePrivateArtifactDefinitionOnlyForOwningNamespace() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets");
+
+		mvc.get().uri(uriForArtifact(key).toUri())
+				.with(readingAs(EntityId.from(2L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk();
+
+		mvc.get().uri(uriForArtifact(key).toUri())
+				.with(readingAs(EntityId.from(1L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(ArtifactDefinitionNotFoundException.class, ex -> ex
+						.returns(key, ArtifactDefinitionNotFoundException::getKey)
+				));
+
+		mvc.get().uri(uriForArtifact(key).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(hasFailedWithException(ArtifactDefinitionNotFoundException.class, ex -> ex
+						.returns(key, ArtifactDefinitionNotFoundException::getKey)
+				));
+	}
+
+	@Test
+	@DisplayName("should perform an artifact definition check on an existing release")
+	void shouldCheckExistingArtifactDefinition() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-api");
+
+		mvc.head().uri(uriForArtifact(key).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.body()
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should perform an artifact definition check on an unknown release")
+	void shouldCheckUnknownArtifactDefinition() {
+		final var key = ArtifactKey.of("com.konfigyr", "unknown");
+
+		mvc.head().uri(uriForArtifact(key).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND)
+				.body()
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should perform an artifact definition existence check for a private artifact scoped to its owning namespace")
+	void shouldCheckPrivateArtifactDefinitionExistenceOnlyForOwningNamespace() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets");
+
+		mvc.head().uri(uriForArtifact(key).toUri())
+				.with(readingAs(EntityId.from(2L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk();
+
+		mvc.head().uri(uriForArtifact(key).toUri())
+				.with(readingAs(EntityId.from(1L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND);
+
+		mvc.head().uri(uriForArtifact(key).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.NOT_FOUND);
+	}
+
+	@Test
 	@DisplayName("should retrieve details about the specific artifact release version")
 	void retrieveReleasedArtifact() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "1.0.0");
@@ -581,6 +713,12 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.subject(TestAccounts.jane().build().id().serialize())
 				.claim(KonfigyrClaimNames.NAMESPACE, namespace.serialize())
 				.claim(OAuth2ParameterNames.SCOPE, OAuthScopes.of(OAuthScope.READ_ARTIFACTS).toString()));
+	}
+
+	static UriComponents uriForArtifact(ArtifactKey key, String... path) {
+		return UriComponentsBuilder.fromPath("/artifacts/{groupId}/{artifactId}")
+				.pathSegment(path)
+				.buildAndExpand(key.groupId(), key.artifactId());
 	}
 
 	static UriComponents uriForArtifact(ArtifactCoordinates coordinates, String... path) {

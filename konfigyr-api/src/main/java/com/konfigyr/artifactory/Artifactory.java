@@ -29,6 +29,60 @@ import java.util.Set;
 public interface Artifactory {
 
 	/**
+	 * Resolves a specific artifact definition identified by the provided artifact key.
+	 * <p>
+	 * If an artifact with the given {@link ArtifactKey} exists, the corresponding {@link ArtifactDefinition}
+	 * is returned. Otherwise, an empty {@link Optional} is returned.
+	 * <p>
+	 * This operation is typically used by consumers that need to retrieve the information about the
+	 * artifact that is already indexed by this {@code Artifactory}.
+	 *
+	 * @param key the artifact key identifying the artifact, can't {@literal null}
+	 * @return the resolved {@link ArtifactDefinition}, or {@code empty} if no artifact exists for the given key
+	 */
+	@NonNull
+	Optional<ArtifactDefinition> get(@NonNull ArtifactKey key);
+
+	/**
+	 * Resolves a specific artifact definition identified by the provided key, restricted to
+	 * what the given {@code owner} is allowed to see.
+	 * <p>
+	 * A {@link ArtifactVisibility#PUBLIC PUBLIC} artifact is always resolved. A
+	 * {@link ArtifactVisibility#PRIVATE PRIVATE} artifact is only resolved when {@code owner} is its
+	 * owning namespace; otherwise this behaves as if the coordinates did not exist, so that an
+	 * unauthorized caller can't distinguish "private, not yours" from "never existed".
+	 *
+	 * @param owner the namespace on whose behalf this lookup is performed, or {@literal null} if the
+	 *        caller has no namespace context, in which case only {@code PUBLIC} artifacts resolve
+	 * @param key the artifact key identifying the artifact version, can't {@literal null}
+	 * @return the resolved {@link ArtifactDefinition}, or {@code empty} if none exists or is visible to {@code owner}
+	 */
+	@NonNull
+	Optional<ArtifactDefinition> get(@Nullable Owner owner, @NonNull ArtifactKey key);
+
+	/**
+	 * Determines whether an artifact definition exists for the given artifact key.
+	 * <p>
+	 * This is a lightweight existence check intended for validation and conditional logic where loading
+	 * the full {@link ArtifactDefinition} would be unnecessary.
+	 *
+	 * @param key the artifact key identifying the artifact, can't {@literal null}
+	 * @return {@code true} if an artifact definition exists, otherwise {@code false}
+	 */
+	boolean exists(@NonNull ArtifactKey key);
+
+	/**
+	 * Determines whether an artifact definition exists for the given key and is visible to the
+	 * given {@code owner}, see {@link #get(Owner, ArtifactKey)} for the visibility rule.
+	 *
+	 * @param owner the namespace on whose behalf this check is performed, or {@literal null} if the
+	 *        caller has no namespace context, in which case only {@code PUBLIC} artifacts match
+	 * @param key the artifact key identifying the artifact, can't {@literal null}
+	 * @return {@code true} if an artifact definition exists and is visible to {@code owner}, otherwise {@code false}
+	 */
+	boolean exists(@Nullable Owner owner, @NonNull ArtifactKey key);
+
+	/**
 	 * Resolves a specific artifact version identified by the provided coordinates.
 	 * <p>
 	 * If an artifact with the given {@link ArtifactCoordinates} exists, the corresponding {@link VersionedArtifact}
@@ -89,7 +143,7 @@ public interface Artifactory {
 
 	/**
 	 * Determines whether an artifact version exists for the given coordinates and is visible to the
-	 * given {@code owner} — see {@link #get(Owner, ArtifactCoordinates)} for the visibility rule.
+	 * given {@code owner}, see {@link #get(Owner, ArtifactCoordinates)} for the visibility rule.
 	 *
 	 * @param owner the namespace on whose behalf this check is performed, or {@literal null} if the
 	 *        caller has no namespace context, in which case only {@code PUBLIC} artifacts match

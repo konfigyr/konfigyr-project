@@ -6,7 +6,6 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.jooq.DSLContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +29,128 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 	@Autowired
 	MetadataStore store;
 
-	@Autowired
-	DSLContext context;
+	@Test
+	@DisplayName("should retrieve the artifact overview strictly scoped to its owner")
+	void shouldGetArtifactDefinitionForOwner() {
+		assertThat(artifactory.get(Owners.konfigyr(), ArtifactKey.of("com.konfigyr", "konfigyr-api")))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(ArtifactDefinition.class))
+				.returns("com.konfigyr", ArtifactDefinition::groupId)
+				.returns("konfigyr-api", ArtifactDefinition::artifactId)
+				.returns(ArtifactVisibility.PUBLIC, ArtifactDefinition::visibility)
+				.returns("Konfigyr API", ArtifactDefinition::name)
+				.returns("Private REST API", ArtifactDefinition::description);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve the artifact overview for unknown coordinates")
+	void shouldFailToGetArtifactDefinitionForUnknownCoordinates() {
+		assertThat(artifactory.get(Owners.konfigyr(), ArtifactKey.of("com.konfigyr", "konfigyr-does-not-exist")))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve the artifact overview when owned by a different namespace")
+	void shouldFailToGetArtifactDefinitionOwnedByDifferentNamespace() {
+		assertThat(artifactory.get(Owners.konfigyr(), ArtifactKey.of("com.konfigyr", "reclaimed-artifact")))
+				.as("the artifact is owned by john-doe, not konfigyr, despite the matching groupId")
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should retrieve an artifact definition for a given key regardless of owner")
+	void shouldGetArtifactDefinitionForKey() {
+		assertThat(artifactory.get(ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets")))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(ArtifactDefinition.class))
+				.returns(ArtifactVisibility.PRIVATE, ArtifactDefinition::visibility);
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve an artifact definition for an unknown key")
+	void shouldFailToGetArtifactDefinitionForUnknownKey() {
+		assertThat(artifactory.get(ArtifactKey.of("com.konfigyr", "konfigyr-does-not-exist")))
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should retrieve a public artifact definition for any owner")
+	void shouldRetrieveVisiblePublicArtifactDefinition() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-api");
+
+		assertThat(artifactory.get(Owners.johnDoe(), key))
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(ArtifactDefinition.class))
+				.returns(ArtifactVisibility.PUBLIC, ArtifactDefinition::visibility);
+
+		assertThat(artifactory.get(null, key))
+				.as("a caller with no namespace context should still see a public artifact definition")
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(ArtifactDefinition.class))
+				.returns(ArtifactVisibility.PUBLIC, ArtifactDefinition::visibility);
+	}
+
+	@Test
+	@DisplayName("should only retrieve a private artifact definition for its owning namespace")
+	void shouldRetrieveVisiblePrivateArtifactDefinitionOnlyForOwner() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets");
+
+		assertThat(artifactory.get(Owners.konfigyr(), key))
+				.as("the owning namespace should see its own private artifact definition")
+				.isPresent()
+				.get(InstanceOfAssertFactories.type(ArtifactDefinition.class))
+				.returns(ArtifactVisibility.PRIVATE, ArtifactDefinition::visibility);
+
+		assertThat(artifactory.get(Owners.johnDoe(), key))
+				.as("a different namespace should not see a private artifact definition it doesn't own")
+				.isEmpty();
+
+		assertThat(artifactory.get(null, key))
+				.as("a caller with no namespace context should not see a private artifact definition")
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should determine existence of an artifact for a given key regardless of owner")
+	void shouldDetermineExistenceOfArtifactKey() {
+		assertThat(artifactory.exists(ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets"))).isTrue();
+	}
+
+	@Test
+	@DisplayName("should determine non-existence of an unknown artifact key")
+	void shouldDetermineNoExistenceOfUnknownArtifactKey() {
+		assertThat(artifactory.exists(ArtifactKey.of("com.konfigyr", "konfigyr-does-not-exist"))).isFalse();
+	}
+
+	@Test
+	@DisplayName("should determine existence of a public artifact key for any owner")
+	void shouldDetermineExistenceOfVisiblePublicArtifactKey() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-api");
+
+		assertThat(artifactory.exists(Owners.johnDoe(), key)).isTrue();
+
+		assertThat(artifactory.exists(null, key))
+				.as("a caller with no namespace context should still see a public artifact key exists")
+				.isTrue();
+	}
+
+	@Test
+	@DisplayName("should only determine existence of a private artifact key for its owning namespace")
+	void shouldDetermineExistenceOfVisiblePrivateArtifactKeyOnlyForOwner() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets");
+
+		assertThat(artifactory.exists(Owners.konfigyr(), key))
+				.as("the owning namespace should see its own private artifact key exists")
+				.isTrue();
+
+		assertThat(artifactory.exists(Owners.johnDoe(), key))
+				.as("a different namespace should not see a private artifact key it doesn't own")
+				.isFalse();
+
+		assertThat(artifactory.exists(null, key))
+				.as("a caller with no namespace context should not see a private artifact key exists")
+				.isFalse();
+	}
 
 	@Test
 	@DisplayName("should retrieve versioned artifact by coordinates")

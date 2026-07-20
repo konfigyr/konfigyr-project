@@ -40,6 +40,30 @@ class ArtifactoryController {
 	private final Artifactory artifactory;
 	private final OwnerResolver resolver;
 
+	@GetMapping("/{groupId}/{artifactId}")
+	EntityModel<ArtifactDefinition> definition(
+			@PathVariable String groupId,
+			@PathVariable String artifactId
+	) {
+		final ArtifactKey key = ArtifactKey.of(groupId, artifactId);
+		final ArtifactDefinition artifact = artifactory.get(resolveOwner().orElse(null), key).orElseThrow(
+				() -> new ArtifactDefinitionNotFoundException(key)
+		);
+
+		return Assemblers.definition().assemble(artifact);
+	}
+
+	@RequestMapping(method = RequestMethod.HEAD, path = "/{groupId}/{artifactId}")
+	ResponseEntity<Void> exists(
+			@PathVariable String groupId,
+			@PathVariable String artifactId
+	) {
+		final ArtifactKey key = ArtifactKey.of(groupId, artifactId);
+		final HttpStatus status = artifactory.exists(resolveOwner().orElse(null), key) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+
+		return ResponseEntity.status(status).build();
+	}
+
 	@GetMapping("/{groupId}/{artifactId}/{version}")
 	EntityModel<VersionedArtifact> artifact(
 			@PathVariable String groupId,
