@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
+import static com.konfigyr.data.tables.AuditEvents.AUDIT_EVENTS;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 
@@ -46,8 +47,13 @@ class ArtifactoryPublicationJobTest extends AbstractIntegrationTest {
 
 	@AfterAll
 	static void cleanup(ApplicationContext context) {
-		context.getBean(DSLContext.class).deleteFrom(ARTIFACT_VERSIONS)
+		final List<Long> versions = context.getBean(DSLContext.class).deleteFrom(ARTIFACT_VERSIONS)
 				.where(ARTIFACT_VERSIONS.ARTIFACT_ID.eq(4L))
+				.returning(ARTIFACT_VERSIONS.ID)
+				.fetch(ARTIFACT_VERSIONS.ID);
+
+		context.getBean(DSLContext.class).deleteFrom(AUDIT_EVENTS)
+				.where(AUDIT_EVENTS.ENTITY_ID.in(versions))
 				.execute();
 	}
 

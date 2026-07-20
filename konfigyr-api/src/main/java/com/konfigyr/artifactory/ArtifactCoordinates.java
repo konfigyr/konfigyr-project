@@ -25,10 +25,9 @@ public interface ArtifactCoordinates extends ArtifactKey, Comparable<ArtifactCoo
 
 	/**
 	 * The {@link SearchQuery.Criteria} descriptor used to narrow down the search of artifacts
-	 * or property descriptors by their {@link ArtifactCoordinates groupId:artifactId:version} coordinates.
+	 * or property descriptors by their {@code version} Maven coordinates.
 	 */
-	SearchQuery.Criteria<ArtifactCoordinates> CRITERIA =
-			SearchQuery.criteria("artifact.coordinates", ArtifactCoordinates.class);
+	SearchQuery.Criteria<String> VERSION_CRITERIA = SearchQuery.criteria("artifact.coordinates.version", String.class);
 
 	/**
 	 * Parses the given textual representation of Maven coordinates and creates an

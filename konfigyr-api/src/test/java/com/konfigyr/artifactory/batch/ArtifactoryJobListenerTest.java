@@ -2,6 +2,7 @@ package com.konfigyr.artifactory.batch;
 
 import com.konfigyr.artifactory.ArtifactCoordinates;
 import com.konfigyr.artifactory.ArtifactoryEvent;
+import com.konfigyr.artifactory.Owners;
 import com.konfigyr.entity.EntityId;
 import org.apache.commons.lang3.function.Consumers;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,7 @@ class ArtifactoryJobListenerTest {
 	void launchPublishJob() throws Exception {
 		final var event = new ArtifactoryEvent.PublicationCreated(
 				EntityId.from(1L),
+				Owners.konfigyr(),
 				ArtifactCoordinates.parse("com.konfigyr:konfigyr-licences:1.0.0")
 		);
 

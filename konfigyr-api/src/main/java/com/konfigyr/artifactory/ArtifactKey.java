@@ -23,9 +23,15 @@ public interface ArtifactKey extends Serializable {
 
 	/**
 	 * The {@link SearchQuery.Criteria} descriptor used to narrow down the search of artifacts
-	 * or property descriptors by their {@link ArtifactKey groupId:artifactId pair}.
+	 * or property descriptors by their {@code groupId} Maven coordinate.
 	 */
-	SearchQuery.Criteria<ArtifactKey> CRITERIA = SearchQuery.criteria("artifact.key", ArtifactKey.class);
+	SearchQuery.Criteria<String> GROUP_ID_CRITERIA = SearchQuery.criteria("artifact.coordinates.group_id", String.class);
+
+	/**
+	 * The {@link SearchQuery.Criteria} descriptor used to narrow down the search of artifacts
+	 * or property descriptors by their {@code artifactId} Maven coordinate.
+	 */
+	SearchQuery.Criteria<String> ARTIFACT_ID_CRITERIA = SearchQuery.criteria("artifact.coordinates.artifact_id", String.class);
 
 	/**
 	 * Parses the given textual representation of a Maven {@code groupId:artifactId} pair and creates an

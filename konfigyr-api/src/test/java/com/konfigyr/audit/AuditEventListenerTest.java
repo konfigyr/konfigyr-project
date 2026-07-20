@@ -892,12 +892,13 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditPublicationCreated() {
 		setSecurityContext(TestPrincipals.application("test-oauth-application"));
 
+		final var owner = Owners.konfigyr();
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-core", "2.0.0");
 
-		listener.on(new ArtifactoryEvent.PublicationCreated(EntityId.from(1200), coordinates));
+		listener.on(new ArtifactoryEvent.PublicationCreated(EntityId.from(1200), owner, coordinates));
 
 		assertAuditRecord("artifact-version", EntityId.from(1200))
-				.returns(null, AuditRecord::namespaceId)
+				.returns(owner.id(), AuditRecord::namespaceId)
 				.returns("artifact-version", AuditRecord::entityType)
 				.returns("artifact-version.publication-created", AuditRecord::eventType)
 				.satisfies(it -> assertThat(it.details())
@@ -916,9 +917,11 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditPublicationCompleted() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-core", "2.0.0");
 
-		listener.on(new ArtifactoryEvent.PublicationCompleted(EntityId.from(1201), coordinates));
+		final var owner = Owners.konfigyr();
+		listener.on(new ArtifactoryEvent.PublicationCompleted(EntityId.from(1201), owner, coordinates));
 
 		assertAuditRecord("artifact-version", EntityId.from(1201))
+				.returns(owner.id(), AuditRecord::namespaceId)
 				.returns("artifact-version.publication-completed", AuditRecord::eventType)
 				.returns(AuditEventListener.SYSTEM_ACTOR, AuditRecord::actor)
 				.satisfies(assertAuditRecordMessage("Artifact %s has been successfully published", coordinates.format()));
@@ -929,12 +932,66 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	void shouldAuditPublicationFailed() {
 		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-core", "2.0.0");
 
-		listener.on(new ArtifactoryEvent.PublicationFailed(EntityId.from(1202), coordinates));
+		final var owner = Owners.konfigyr();
+		listener.on(new ArtifactoryEvent.PublicationFailed(EntityId.from(1202), owner, coordinates));
 
 		assertAuditRecord("artifact-version", EntityId.from(1202))
+				.returns(owner.id(), AuditRecord::namespaceId)
 				.returns("artifact-version.publication-failed", AuditRecord::eventType)
 				.returns(AuditEventListener.SYSTEM_ACTOR, AuditRecord::actor)
 				.satisfies(assertAuditRecordMessage("Failed to publish %s Artifact", coordinates.format()));
+	}
+
+	@Test
+	@DisplayName("should persist audit record for artifact publication retracted event")
+	void shouldAuditPublicationRetracted() {
+		final var owner = Owners.konfigyr();
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-core", "2.0.0");
+
+		listener.on(new ArtifactoryEvent.PublicationRetracted(EntityId.from(1203), owner, coordinates));
+
+		assertAuditRecord("artifact-version", EntityId.from(1203))
+				.returns(owner.id(), AuditRecord::namespaceId)
+				.returns("artifact-version.publication-retracted", AuditRecord::eventType)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("coordinates", coordinates.format())
+				)
+				.satisfies(assertAuditRecordMessage("Artifact %s was retracted", coordinates.format()));
+	}
+
+	@Test
+	@DisplayName("should persist audit record for artifact deregistered event")
+	void shouldAuditArtifactDeregistered() {
+		final var owner = Owners.konfigyr();
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-core");
+
+		listener.on(new ArtifactoryEvent.Deregistered(EntityId.from(1204), owner, key));
+
+		assertAuditRecord("artifact-definition", EntityId.from(1204))
+				.returns(owner.id(), AuditRecord::namespaceId)
+				.returns("artifact-definition.deregistered", AuditRecord::eventType)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("key", key.format())
+				)
+				.satisfies(assertAuditRecordMessage("Artifact %s was deregistered", key.format()));
+	}
+
+	@Test
+	@DisplayName("should persist audit record for artifact visibility changed event")
+	void shouldAuditArtifactVisibilityChanged() {
+		final var owner = Owners.konfigyr();
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-core");
+
+		listener.on(new ArtifactoryEvent.VisibilityChanged(EntityId.from(1205), owner, key, ArtifactVisibility.PUBLIC));
+
+		assertAuditRecord("artifact-definition", EntityId.from(1205))
+				.returns(owner.id(), AuditRecord::namespaceId)
+				.returns("artifact-definition.visibility-changed", AuditRecord::eventType)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("key", key.format())
+						.containsEntry("visibility", ArtifactVisibility.PUBLIC.name())
+				)
+				.satisfies(assertAuditRecordMessage("Visibility of artifact %s was changed to %s", key.format(), ArtifactVisibility.PUBLIC.name()));
 	}
 
 	@Test

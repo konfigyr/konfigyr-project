@@ -552,6 +552,8 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	@Transactional
 	@DisplayName("should fail to change visibility when the caller does not own the artifact")
 	void shouldRejectChangeArtifactVisibilityForDifferentOwner() {
+		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets");
+
 		mvc.put().uri(uriForVisibility("com.konfigyr", "konfigyr-internal-secrets").toUri())
 				.with(publishingTo(EntityId.from(1L)))
 				.contentType(MediaType.APPLICATION_JSON)
@@ -559,15 +561,11 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(hasFailedWithException(ArtifactOwnershipMismatchException.class, ex -> ex
-						.returns(HttpStatus.CONFLICT, ArtifactOwnershipMismatchException::getStatusCode)
-						.returns("com.konfigyr", ArtifactOwnershipMismatchException::getGroupId)
-						.returns("konfigyr-internal-secrets", ArtifactOwnershipMismatchException::getArtifactId)
+				.satisfies(hasFailedWithException(ArtifactDefinitionNotFoundException.class, ex -> ex
+						.returns(key, ArtifactDefinitionNotFoundException::getKey)
 				))
-				.satisfies(problemDetailFor(HttpStatus.CONFLICT, problem -> problem
-						.hasTitleContaining("Artifact ownership conflict")
-						.hasDetailContaining("The artifact 'com.konfigyr:konfigyr-internal-secrets' is owned by a different " +
-								"namespace and cannot be published to or modified by 'john-doe'.")
+				.satisfies(problemDetailFor(HttpStatus.NOT_FOUND, problem -> problem
+						.hasTitleContaining("Artifact not found")
 				));
 
 		mvc.get().uri(uriForArtifact(ArtifactCoordinates.of("com.konfigyr", "konfigyr-internal-secrets", "1.0.0")).toUri())

@@ -468,6 +468,7 @@ class AuditEventListener {
 	@TransactionalEventListener(id = "audit.publication-created", classes = ArtifactoryEvent.PublicationCreated.class)
 	void on(ArtifactoryEvent.PublicationCreated event) {
 		insert(event, builder -> builder
+				.namespace(event.owner().id())
 				.entityType("artifact-version")
 				.entityId(event.id())
 				.eventType("artifact-version.publication-created")
@@ -478,6 +479,7 @@ class AuditEventListener {
 	@TransactionalEventListener(id = "audit.publication-completed", classes = ArtifactoryEvent.PublicationCompleted.class)
 	void on(ArtifactoryEvent.PublicationCompleted event) {
 		insert(event, builder -> builder
+				.namespace(event.owner().id())
 				.entityType("artifact-version")
 				.entityId(event.id())
 				.eventType("artifact-version.publication-completed")
@@ -488,10 +490,45 @@ class AuditEventListener {
 	@TransactionalEventListener(id = "audit.publication-failed", classes = ArtifactoryEvent.PublicationFailed.class)
 	void on(ArtifactoryEvent.PublicationFailed event) {
 		insert(event, builder -> builder
+				.namespace(event.owner().id())
 				.entityType("artifact-version")
 				.entityId(event.id())
 				.eventType("artifact-version.publication-failed")
 				.details("coordinates", event.coordinates().format())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.publication-retracted", classes = ArtifactoryEvent.PublicationRetracted.class)
+	void on(ArtifactoryEvent.PublicationRetracted event) {
+		insert(event, builder -> builder
+				.namespace(event.owner().id())
+				.entityType("artifact-version")
+				.entityId(event.id())
+				.eventType("artifact-version.publication-retracted")
+				.details("coordinates", event.coordinates().format())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.artifact-deregistered", classes = ArtifactoryEvent.Deregistered.class)
+	void on(ArtifactoryEvent.Deregistered event) {
+		insert(event, builder -> builder
+				.namespace(event.owner().id())
+				.entityType("artifact-definition")
+				.entityId(event.id())
+				.eventType("artifact-definition.deregistered")
+				.details("key", event.key().format())
+		);
+	}
+
+	@TransactionalEventListener(id = "audit.artifact-visibility-changed", classes = ArtifactoryEvent.VisibilityChanged.class)
+	void on(ArtifactoryEvent.VisibilityChanged event) {
+		insert(event, builder -> builder
+				.namespace(event.owner().id())
+				.entityType("artifact-definition")
+				.entityId(event.id())
+				.eventType("artifact-definition.visibility-changed")
+				.details("key", event.key().format())
+				.details("visibility", event.visibility().name())
 		);
 	}
 

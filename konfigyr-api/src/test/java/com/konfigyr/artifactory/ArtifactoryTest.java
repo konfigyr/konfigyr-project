@@ -1,7 +1,5 @@
 package com.konfigyr.artifactory;
 
-import com.konfigyr.artifactory.ownership.GroupIdNotVerifiedException;
-import com.konfigyr.artifactory.store.MetadataStore;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
 import com.konfigyr.test.AbstractIntegrationTest;
@@ -10,11 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.modulith.test.AssertablePublishedEvents;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -25,9 +20,6 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 
 	@Autowired
 	Artifactory artifactory;
-
-	@Autowired
-	MetadataStore store;
 
 	@Test
 	@DisplayName("should retrieve the artifact overview strictly scoped to its owner")
@@ -197,80 +189,6 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@Transactional
-	@DisplayName("should create a new artifact release")
-	void shouldPublishArtifact(AssertablePublishedEvents events) {
-		final var artifact = TestArtifacts.artifact(builder -> builder.version("3.0.0"));
-		final var metadata = TestArtifacts.metadata(artifact);
-
-		assertThat(artifactory.publish(Owners.konfigyr(), metadata))
-				.isNotNull()
-				.returns(artifact.groupId(), VersionedArtifact::groupId)
-				.returns(artifact.artifactId(), VersionedArtifact::artifactId)
-				.returns(artifact.version(), VersionedArtifact::version)
-				.returns(artifact.name(), VersionedArtifact::name)
-				.returns(artifact.description(), VersionedArtifact::description)
-				.returns(artifact.website(), VersionedArtifact::website)
-				.returns(artifact.repository(), VersionedArtifact::repository)
-				.returns(PublicationState.PENDING, VersionedArtifact::state)
-				.returns("8d9d53cfd5d27febf82baf0f8d801545358c1cf21e3d54cf9c2e5c5ba1754b98", VersionedArtifact::checksum)
-				.satisfies(it -> assertThat(it.publishedAt())
-						.isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS))
-				);
-
-		assertThat(store.get(ArtifactCoordinates.of(artifact)))
-				.as("Should store property descriptor in the metadata store")
-				.isPresent();
-
-		events.assertThat()
-				.as("Should publish an event for the new artifact release")
-				.contains(ArtifactoryEvent.PublicationCreated.class)
-				.matching(ArtifactoryEvent.PublicationCreated::coordinates, ArtifactCoordinates.of(artifact));
-	}
-
-	@Test
-	@DisplayName("should fail to create a new artifact release when version already exists")
-	void shouldPublishExistingArtifact(AssertablePublishedEvents events) {
-		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-api:1.0.0");
-		final var metadata = TestArtifacts.metadata(coordinates);
-
-		assertThatExceptionOfType(ArtifactVersionExistsException.class)
-				.isThrownBy(() -> artifactory.publish(Owners.konfigyr(), metadata))
-				.withMessageContaining("Artifact version already exists for following coordinates: %s", coordinates)
-				.returns(coordinates, ArtifactVersionExistsException::getCoordinates)
-				.withNoCause();
-
-		assertThat(store.get(coordinates))
-				.as("Should not store property descriptor in the metadata store")
-				.isEmpty();
-
-		assertThat(events.ofType(ArtifactoryEvent.PublicationCreated.class))
-				.as("Should not publish any release event when artifact release fails")
-				.isEmpty();
-	}
-
-	@Test
-	@DisplayName("should fail to release an artifact when the owner has no active claim covering the groupId")
-	void shouldRejectPublishForUnverifiedGroupId(AssertablePublishedEvents events) {
-		final var coordinates = ArtifactCoordinates.parse("com.unverified:some-artifact:1.0.0");
-		final var metadata = TestArtifacts.metadata(coordinates);
-
-		assertThatExceptionOfType(GroupIdNotVerifiedException.class)
-				.isThrownBy(() -> artifactory.publish(Owners.konfigyr(), metadata))
-				.returns("com.unverified", GroupIdNotVerifiedException::getGroupId)
-				.returns("konfigyr", ex -> ex.getOwner().slug())
-				.returns(HttpStatus.BAD_REQUEST, GroupIdNotVerifiedException::getStatusCode);
-
-		assertThat(store.get(coordinates))
-				.as("Should not store property descriptor when the groupId is not verified")
-				.isEmpty();
-
-		assertThat(events.ofType(ArtifactoryEvent.PublicationCreated.class))
-				.as("Should not publish any release event when ownership is not verified")
-				.isEmpty();
-	}
-
-	@Test
 	@DisplayName("should retrieve properties for an artifact version")
 	void retrieveArtifactProperties() {
 		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-crypto-api:1.0.1");
@@ -425,75 +343,6 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		assertThat(artifactory.exists(null, coordinates))
 				.as("a caller with no namespace context should not see a private artifact exists")
 				.isFalse();
-	}
-
-	@Test
-	@DisplayName("should reject publishing a new version when the existing artifact is owned by a different namespace")
-	void shouldRejectPublishWhenExistingArtifactOwnedByDifferentNamespace() {
-		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:reclaimed-artifact:1.0.0");
-		final var metadata = TestArtifacts.metadata(coordinates);
-
-		assertThatExceptionOfType(ArtifactOwnershipMismatchException.class)
-				.isThrownBy(() -> artifactory.publish(Owners.konfigyr(), metadata))
-				.returns("com.konfigyr", ArtifactOwnershipMismatchException::getGroupId)
-				.returns("reclaimed-artifact", ArtifactOwnershipMismatchException::getArtifactId)
-				.returns(HttpStatus.CONFLICT, ArtifactOwnershipMismatchException::getStatusCode);
-
-		assertThat(artifactory.exists(coordinates))
-				.as("no new version should have been created for the rejected publish attempt")
-				.isFalse();
-	}
-
-	@Test
-	@Transactional
-	@DisplayName("should change visibility of an owned artifact")
-	void shouldChangeVisibilityForOwnedArtifact() {
-		final var coordinates = ArtifactCoordinates.parse("com.konfigyr:konfigyr-internal-secrets:1.0.0");
-
-		assertThat(artifactory.get(Owners.johnDoe(), coordinates))
-				.as("should not yet be visible to a different namespace while still private")
-				.isEmpty();
-
-		artifactory.changeVisibility(Owners.konfigyr(), coordinates, ArtifactVisibility.PUBLIC);
-
-		assertThat(artifactory.get(Owners.johnDoe(), coordinates))
-				.as("should now be visible to a different namespace after becoming public")
-				.isPresent()
-				.get(InstanceOfAssertFactories.type(VersionedArtifact.class))
-				.returns(ArtifactVisibility.PUBLIC, VersionedArtifact::visibility);
-	}
-
-	@Test
-	@Transactional
-	@DisplayName("should reject changing visibility when the caller does not own the artifact")
-	void shouldRejectChangeVisibilityForDifferentOwner() {
-		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-internal-secrets");
-
-		assertThatExceptionOfType(ArtifactOwnershipMismatchException.class)
-				.isThrownBy(() -> artifactory.changeVisibility(Owners.johnDoe(), key, ArtifactVisibility.PUBLIC))
-				.returns(key, ArtifactOwnershipMismatchException::getKey)
-				.returns(key.groupId(), ArtifactOwnershipMismatchException::getGroupId)
-				.returns(key.artifactId(), ArtifactOwnershipMismatchException::getArtifactId)
-				.returns(HttpStatus.CONFLICT, ArtifactOwnershipMismatchException::getStatusCode);
-
-		assertThat(artifactory.get(Owners.konfigyr(), ArtifactCoordinates.of(key, "1.0.0")))
-				.as("visibility must remain unchanged after a rejected attempt")
-				.isPresent()
-				.get(InstanceOfAssertFactories.type(VersionedArtifact.class))
-				.returns(ArtifactVisibility.PRIVATE, VersionedArtifact::visibility);
-	}
-
-	@Test
-	@DisplayName("should reject changing visibility for an unknown artifact")
-	void shouldRejectChangeVisibilityForUnknownArtifact() {
-		final var key = ArtifactKey.of("com.konfigyr", "konfigyr-does-not-exist");
-
-		assertThatExceptionOfType(ArtifactDefinitionNotFoundException.class)
-				.isThrownBy(() -> artifactory.changeVisibility(Owners.konfigyr(), key, ArtifactVisibility.PUBLIC))
-				.returns(key, ArtifactDefinitionNotFoundException::getKey)
-				.returns(key.groupId(), ArtifactDefinitionNotFoundException::getGroupId)
-				.returns(key.artifactId(), ArtifactDefinitionNotFoundException::getArtifactId)
-				.returns(HttpStatus.NOT_FOUND, ArtifactDefinitionNotFoundException::getStatusCode);
 	}
 
 }
