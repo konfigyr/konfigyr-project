@@ -88,6 +88,18 @@ public sealed interface SearchQuery permits CriteriaSearchQuery {
 	}
 
 	/**
+	 * Returns an {@link Optional} that may contain the search term, split into {@link Tokens} by the
+	 * given {@code tokenizer}.
+	 *
+	 * @param tokenizer the tokenizer used to split the search term, can't be {@literal null}
+	 * @return the tokenized search term or an empty {@link Optional}, never {@literal null}.
+	 */
+	@NonNull
+	default Optional<Tokens> term(Tokenizer tokenizer) {
+		return term().map(tokenizer::tokenize);
+	}
+
+	/**
 	 * Returns an {@link Optional} that may contain the {@link Criteria search query critera}
 	 * value that is used to filter results.
 	 *

@@ -1,13 +1,14 @@
 package com.konfigyr.namespace.catalog;
 
-import com.konfigyr.artifactory.ArtifactoryConverters;
-import com.konfigyr.artifactory.PropertyDescriptor;
+import com.konfigyr.artifactory.*;
 import com.konfigyr.data.PageableExecutor;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.ServiceCatalog;
 import com.konfigyr.namespace.ServiceEvent;
 import com.konfigyr.support.SearchQuery;
+import com.konfigyr.support.Tokenizer;
+import com.konfigyr.support.Tokens;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.*;
@@ -21,10 +22,13 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import static com.konfigyr.data.tables.PropertyDefinitions.PROPERTY_DEFINITIONS;
 import static com.konfigyr.data.tables.ServiceConfigurationCatalog.SERVICE_CONFIGURATION_CATALOG;
 
 /**
@@ -61,6 +65,14 @@ class ConfigurationCatalogService implements ServiceCatalogSource {
 	 */
 	private static final String CREATE_PARTITION_COMMAND = "CREATE TABLE {0} PARTITION OF {1} FOR VALUES IN ({2});";
 
+	/**
+	 * Splits a search term into words the same way the {@code service_configuration_catalog} search vector
+	 * trigger normalizes {@code name} (see {@code namespaces-1.0.0.xml}), any run of non-alphanumeric
+	 * characters, so a dotted/hyphenated term like {@code spring.datasource.url} is treated as three
+	 * separate words.
+	 */
+	private static final Tokenizer TERM_TOKENIZER = Tokenizer.alphanumeric();
+
 	static final PageableExecutor serviceCatalogExecutor = PageableExecutor.builder()
 			.defaultSortField(SERVICE_CONFIGURATION_CATALOG.NAME.asc())
 			.build();
@@ -71,8 +83,8 @@ class ConfigurationCatalogService implements ServiceCatalogSource {
 	@Override
 	@Transactional(readOnly = true, label = "retrieve-service-catalog")
 	public ServiceCatalog get(Service service) {
-		final List<ServiceCatalog.Property> properties =
-				createServiceCatalogQuery(SERVICE_CONFIGURATION_CATALOG.SERVICE_ID.eq(service.id().get()))
+		final List<ServiceCatalog.Property> properties = createServiceCatalogQuery()
+				.where(SERVICE_CONFIGURATION_CATALOG.SERVICE_ID.eq(service.id().get()))
 				.orderBy(SERVICE_CONFIGURATION_CATALOG.NAME)
 				.fetch(this::toPropertyDescriptor);
 
@@ -80,21 +92,22 @@ class ConfigurationCatalogService implements ServiceCatalogSource {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	@Transactional(readOnly = true, label = "search-service-catalog")
 	public Page<PropertyDescriptor> query(Service service, SearchQuery query) {
 		final List<Condition> conditions = new ArrayList<>();
 		conditions.add(SERVICE_CONFIGURATION_CATALOG.SERVICE_ID.eq(service.id().get()));
 
-		query.term().ifPresent(term -> conditions.add(DSL.or(
-				SERVICE_CONFIGURATION_CATALOG.NAME.likeIgnoreCase(term),
-				DSL.condition("search_vector @@ plainto_tsquery('simple', ?)", term)
-		)));
+		final String rankSearchTerm = query.term(TERM_TOKENIZER)
+				.map(ConfigurationCatalogService::toPrefixTsQuery)
+				.filter(StringUtils::hasText)
+				.orElse(null);
 
-		return serviceCatalogExecutor.execute(
-				createServiceCatalogQuery(DSL.and(conditions)),
+		return serviceCatalogExecutor.rankBy(rankSearchTerm, SERVICE_CONFIGURATION_CATALOG.SEARCH_VECTOR).execute(
+				this::createServiceCatalogQuery,
+				() -> DSL.and(conditions),
 				this::toPropertyDescriptor,
-				query.pageable(),
-				() -> context.fetchCount(createServiceCatalogQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
@@ -124,20 +137,24 @@ class ConfigurationCatalogService implements ServiceCatalogSource {
 		log.info(PARTITION_MARKER, "Successfully dropped configuration catalog partition for service: {}", event.id());
 	}
 
-	private SelectConditionStep<Record> createServiceCatalogQuery(Condition condition) {
+	private SelectJoinStep<Record> createServiceCatalogQuery() {
 		return context.select(SERVICE_CONFIGURATION_CATALOG.fields())
-				.from(SERVICE_CONFIGURATION_CATALOG)
-				.where(condition);
+				.from(SERVICE_CONFIGURATION_CATALOG);
 	}
 
 	private ServiceCatalog.Property toPropertyDescriptor(Record record) {
+		final JsonSchema schema = Objects.requireNonNullElseGet(
+				record.get(PROPERTY_DEFINITIONS.SCHEMA, converters.schema()),
+				NullSchema::instance
+		);
+
 		return ServiceCatalog.Property.builder()
 				.groupId(record.get(SERVICE_CONFIGURATION_CATALOG.GROUP_ID))
 				.artifactId(record.get(SERVICE_CONFIGURATION_CATALOG.ARTIFACT_ID))
 				.version(record.get(SERVICE_CONFIGURATION_CATALOG.VERSION))
 				.name(record.get(SERVICE_CONFIGURATION_CATALOG.NAME))
 				.typeName(record.get(SERVICE_CONFIGURATION_CATALOG.TYPE_NAME))
-				.schema(record.get(SERVICE_CONFIGURATION_CATALOG.SCHEMA, converters.schema()))
+				.schema(schema)
 				.description(record.get(SERVICE_CONFIGURATION_CATALOG.DESCRIPTION))
 				.defaultValue(record.get(SERVICE_CONFIGURATION_CATALOG.DEFAULT_VALUE))
 				.deprecation(record.get(SERVICE_CONFIGURATION_CATALOG.DEPRECATION, converters.deprecation()))
@@ -146,5 +163,21 @@ class ConfigurationCatalogService implements ServiceCatalogSource {
 
 	static Name formatPartitionTableName(EntityId id) {
 		return DSL.name(SERVICE_CONFIGURATION_CATALOG.getName() + "_" + id.get());
+	}
+
+	/**
+	 * Builds a {@code tsquery} expression from a search term already split into words by {@link #TERM_TOKENIZER}
+	 * (the same normalization the search vector trigger applies to {@code name}), requiring every word to be
+	 * present as a prefix ({@code word:*}), so a partial term like {@code spring.appl} matches a property
+	 * named {@code spring.application.name}, and a full dotted name matches by requiring each of its segments
+	 * as its own word.
+	 *
+	 * @param words the search term, already split into words, can't be {@literal null}
+	 * @return the {@code tsquery} expression text, or {@literal empty} if {@code words} has no alphanumeric words
+	 */
+	static String toPrefixTsQuery(Tokens words) {
+		return words.filter(StringUtils::hasText)
+				.map(word -> word + ":*")
+				.join(" & ");
 	}
 }

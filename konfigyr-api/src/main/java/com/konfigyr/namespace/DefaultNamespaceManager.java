@@ -106,10 +106,10 @@ class DefaultNamespaceManager implements NamespaceManager {
 		}
 
 		return namespaceExecutor.execute(
-				createNamespaceQuery(DSL.and(conditions)),
+				this::createNamespaceQuery,
+				() -> DSL.and(conditions),
 				DefaultNamespaceManager::toNamespace,
-				query.pageable(),
-				() -> context.fetchCount(createNamespaceQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
@@ -276,10 +276,10 @@ class DefaultNamespaceManager implements NamespaceManager {
 		}
 
 		return applicationsExecutor.execute(
-				createApplicationsQuery(DSL.and(conditions)),
+				this::createApplicationsQuery,
+				() -> DSL.and(conditions),
 				this::toApplication,
-				query.pageable(),
-				() -> context.fetchCount(createApplicationsQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 
 	}
@@ -288,7 +288,8 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@Override
 	@Transactional(label = "namespace-get-application", readOnly = true)
 	public Optional<NamespaceApplication> getApplication(@NonNull EntityId application) {
-		return createApplicationsQuery(OAUTH_APPLICATIONS.ID.eq(application.get()))
+		return createApplicationsQuery()
+				.where(OAUTH_APPLICATIONS.ID.eq(application.get()))
 				.fetchOptional(this::toApplication);
 	}
 
@@ -445,10 +446,10 @@ class DefaultNamespaceManager implements NamespaceManager {
 		)));
 
 		return trustedIssuersExecutor.execute(
-				createTrustedIssuersQuery(DSL.and(conditions)),
+				this::createTrustedIssuersQuery,
+				() -> DSL.and(conditions),
 				this::toTrustedIssuer,
-				query.pageable(),
-				() -> context.fetchCount(createTrustedIssuersQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
@@ -456,7 +457,7 @@ class DefaultNamespaceManager implements NamespaceManager {
 	@Override
 	@Transactional(readOnly = true, label = "namespace-get-trusted-issuer")
 	public Optional<NamespaceTrustedIssuer> getTrustedIssuer(@NonNull Namespace namespace, @NonNull EntityId id) {
-		return createTrustedIssuersQuery(DSL.and(
+		return createTrustedIssuersQuery().where(DSL.and(
 				NAMESPACE_TRUSTED_ISSUERS.NAMESPACE_ID.eq(namespace.id().get()),
 				NAMESPACE_TRUSTED_ISSUERS.ID.eq(id.get())
 		)).fetchOptional(this::toTrustedIssuer);
@@ -557,10 +558,9 @@ class DefaultNamespaceManager implements NamespaceManager {
 	}
 
 	@NonNull
-	private SelectConditionStep<? extends Record> createTrustedIssuersQuery(@NonNull Condition condition) {
+	private SelectWhereStep<Record> createTrustedIssuersQuery() {
 		return context.select(NAMESPACE_TRUSTED_ISSUERS.fields())
-				.from(NAMESPACE_TRUSTED_ISSUERS)
-				.where(condition);
+				.from(NAMESPACE_TRUSTED_ISSUERS);
 	}
 
 	@NonNull
@@ -581,16 +581,17 @@ class DefaultNamespaceManager implements NamespaceManager {
 	}
 
 	@NonNull
-	private SelectConditionStep<Record> createNamespaceQuery(@NonNull Condition condition) {
+	private SelectWhereStep<Record> createNamespaceQuery() {
 		return context
 				.select(NAMESPACES.fields())
-				.from(NAMESPACES)
-				.where(condition);
+				.from(NAMESPACES);
 	}
 
 	@NonNull
 	private Optional<Namespace> fetch(@NonNull Condition condition) {
-		return createNamespaceQuery(condition).fetchOptional(DefaultNamespaceManager::toNamespace);
+		return createNamespaceQuery()
+				.where(condition)
+				.fetchOptional(DefaultNamespaceManager::toNamespace);
 	}
 
 	@NonNull
@@ -633,8 +634,8 @@ class DefaultNamespaceManager implements NamespaceManager {
 	}
 
 	@NonNull
-	private SelectConditionStep<? extends Record> createApplicationsQuery(@NonNull Condition condition) {
-		return context.select(
+	private SelectOnConditionStep<Record> createApplicationsQuery() {
+		return context.select(List.of(
 						OAUTH_APPLICATIONS.ID,
 						OAUTH_APPLICATIONS.NAMESPACE_ID,
 						OAUTH_APPLICATIONS.TYPE,
@@ -645,16 +646,15 @@ class DefaultNamespaceManager implements NamespaceManager {
 						OAUTH_APPLICATIONS.EXPIRES_AT,
 						OAUTH_APPLICATIONS.CREATED_AT,
 						OAUTH_APPLICATIONS.UPDATED_AT
-				)
+				))
 				.from(OAUTH_APPLICATIONS)
 				.innerJoin(NAMESPACES)
-				.on(NAMESPACES.ID.eq(OAUTH_APPLICATIONS.NAMESPACE_ID))
-				.where(condition);
+				.on(NAMESPACES.ID.eq(OAUTH_APPLICATIONS.NAMESPACE_ID));
 	}
 
 	@NonNull
 	private Optional<? extends Record> lookupApplication(@NonNull EntityId namespace, @NonNull EntityId application) {
-		return createApplicationsQuery(DSL.and(
+		return createApplicationsQuery().where(DSL.and(
 				OAUTH_APPLICATIONS.ID.eq(application.get()),
 				OAUTH_APPLICATIONS.NAMESPACE_ID.eq(namespace.get())
 		)).fetchOptional();

@@ -6,6 +6,7 @@ import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiresScope(OAuthScope.READ_ARTIFACTS)
 class PublicationsController {
 
+	private final Artifactory artifactory;
 	private final Publications publications;
 	private final OwnerResolver ownerResolver;
 
@@ -185,6 +187,27 @@ class PublicationsController {
 	) {
 		final Owner owner = ownerResolver.resolve(namespace);
 		publications.retract(owner, ArtifactCoordinates.of(groupId, artifactId, version));
+	}
+
+	@GetMapping("/artifacts/search")
+	@PreAuthorize("isMember(#namespace)")
+	PagedModel<EntityModel<PropertyDefinition>> search(
+			@PathVariable String namespace,
+			@Nullable @RequestParam(required = false) String groupId,
+			@Nullable @RequestParam(required = false) String artifactId,
+			@Nullable @RequestParam(required = false) String version,
+			@NotBlank @RequestParam String term,
+			Pageable pageable
+	) {
+		final SearchQuery query = SearchQuery.builder()
+				.criteria(ArtifactKey.GROUP_ID_CRITERIA, groupId)
+				.criteria(ArtifactKey.ARTIFACT_ID_CRITERIA, artifactId)
+				.criteria(ArtifactCoordinates.VERSION_CRITERIA, version)
+				.pageable(pageable)
+				.term(term)
+				.build();
+
+		return Assemblers.property().assemble(artifactory.search(ownerResolver.resolve(namespace), query));
 	}
 
 	record ChangeVisibilityRequest(@NotNull ArtifactVisibility visibility) { /* noop */ }

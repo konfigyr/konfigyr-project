@@ -11,10 +11,8 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.support.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.ApplicationEventPublisher;
@@ -100,10 +98,12 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 	@Override
 	@Transactional(readOnly = true, label = "artifact-ownership-transfers.find-by-id")
 	public Optional<ArtifactOwnershipTransfer> findById(Owner owner, EntityId id) {
-		return createTransferQuery(DSL.and(
+		return createTransferQuery().where(DSL.and(
 				ARTIFACT_OWNERSHIP_TRANSFERS.ID.eq(id.get()),
-				ARTIFACT_OWNERSHIP_TRANSFERS.FROM_NAMESPACE_ID.eq(owner.id().get())
-						.or(ARTIFACT_OWNERSHIP_TRANSFERS.TO_NAMESPACE_ID.eq(owner.id().get()))
+				DSL.or(
+						ARTIFACT_OWNERSHIP_TRANSFERS.FROM_NAMESPACE_ID.eq(owner.id().get()),
+						ARTIFACT_OWNERSHIP_TRANSFERS.TO_NAMESPACE_ID.eq(owner.id().get())
+				)
 		)).fetchOptional(DefaultArtifactOwnershipTransfers::toArtifactOwnershipTransfer);
 	}
 
@@ -239,20 +239,19 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 		query.term().ifPresent(term -> conditions.add(ARTIFACT_OWNERSHIP_TRANSFERS.GROUP_ID.containsIgnoreCase(term)));
 
 		return transferPageableExecutor.execute(
-				createTransferQuery(DSL.and(conditions)),
+				this::createTransferQuery,
+				() -> DSL.and(conditions),
 				DefaultArtifactOwnershipTransfers::toArtifactOwnershipTransfer,
-				query.pageable(),
-				() -> context.fetchCount(createTransferQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
-	private SelectConditionStep<? extends Record> createTransferQuery(Condition condition) {
+	private SelectWhereStep<Record> createTransferQuery() {
 		return context.select(ARTIFACT_OWNERSHIP_TRANSFERS.fields())
 				.select(FROM_NAMESPACES.SLUG, TO_NAMESPACES.SLUG)
 				.from(ARTIFACT_OWNERSHIP_TRANSFERS)
 				.innerJoin(FROM_NAMESPACES).on(FROM_NAMESPACES.ID.eq(ARTIFACT_OWNERSHIP_TRANSFERS.FROM_NAMESPACE_ID))
-				.innerJoin(TO_NAMESPACES).on(TO_NAMESPACES.ID.eq(ARTIFACT_OWNERSHIP_TRANSFERS.TO_NAMESPACE_ID))
-				.where(condition);
+				.innerJoin(TO_NAMESPACES).on(TO_NAMESPACES.ID.eq(ARTIFACT_OWNERSHIP_TRANSFERS.TO_NAMESPACE_ID));
 	}
 
 	private static ArtifactOwnershipTransfer toArtifactOwnershipTransfer(Record record) {

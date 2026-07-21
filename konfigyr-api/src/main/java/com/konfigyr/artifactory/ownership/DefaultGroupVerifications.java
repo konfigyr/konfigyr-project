@@ -8,10 +8,8 @@ import com.konfigyr.support.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
@@ -87,10 +85,10 @@ class DefaultGroupVerifications implements GroupVerifications {
 		));
 
 		return groupVerificationPageableExecutor.execute(
-				createGroupVerificationsQuery(DSL.and(conditions)),
+				this::createGroupVerificationsQuery,
+				() -> DSL.and(conditions),
 				DefaultGroupVerifications::toGroupVerification,
-				query.pageable(),
-				() -> context.fetchCount(createGroupVerificationsQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
@@ -261,12 +259,11 @@ class DefaultGroupVerifications implements GroupVerifications {
 		return Hex.encodeHexString(seed);
 	}
 
-	private SelectConditionStep<? extends Record> createGroupVerificationsQuery(Condition condition) {
+	private SelectWhereStep<Record> createGroupVerificationsQuery() {
 		return context.select(GROUP_VERIFICATIONS.fields())
 				.select(NAMESPACES.SLUG)
 				.from(GROUP_VERIFICATIONS)
-				.join(NAMESPACES).on(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(NAMESPACES.ID))
-				.where(condition);
+				.join(NAMESPACES).on(GROUP_VERIFICATIONS.NAMESPACE_ID.eq(NAMESPACES.ID));
 	}
 
 	private void expireActiveChallenges(GroupVerification verification) {

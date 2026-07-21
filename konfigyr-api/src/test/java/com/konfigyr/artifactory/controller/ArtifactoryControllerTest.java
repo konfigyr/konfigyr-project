@@ -681,6 +681,149 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				));
 	}
 
+	@Test
+	@DisplayName("should search properties, ranking a name match above a description-only match")
+	void shouldSearchPropertiesRankingNameMatchFirst() {
+		mvc.get().uri("/artifacts/search?term=application")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.as("id=1 and id=11 match by name, id=12 only matches through its description")
+						.extracting(PropertyDefinition::id)
+						.containsExactly(EntityId.from(1), EntityId.from(11), EntityId.from(12))
+				);
+	}
+
+	@Test
+	@DisplayName("should search properties by a partial, autocomplete-style term")
+	void shouldSearchPropertiesByPartialTerm() {
+		mvc.get().uri("/artifacts/search?term=spring.appl")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(PropertyDefinition::id)
+						.containsExactly(EntityId.from(1), EntityId.from(12))
+				);
+	}
+
+	@Test
+	@DisplayName("should only surface a private property in search results for its owning namespace")
+	void shouldScopePropertySearchToOwningNamespace() {
+		mvc.get().uri("/artifacts/search?term=notes")
+				.with(readingAs(EntityId.from(1L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.as("john-doe should see its own private-notes properties")
+						.extracting(PropertyDefinition::id)
+						.containsExactlyInAnyOrder(EntityId.from(17), EntityId.from(18))
+				);
+
+		mvc.get().uri("/artifacts/search?term=notes")
+				.with(readingAs(EntityId.from(2L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.as("konfigyr must not see john-doe's private properties")
+						.isEmpty()
+				);
+	}
+
+	@Test
+	@DisplayName("should filter property search by groupId, artifactId and version query parameters")
+	void shouldFilterPropertySearchByQueryParameters() {
+		mvc.get().uri("/artifacts/search?term=internal&artifactId=konfigyr-internal-secrets&version=1.0.0")
+				.with(readingAs(EntityId.from(2L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.as("id=21 was only ever declared on version 1.1.0, not 1.0.0")
+						.extracting(PropertyDefinition::id)
+						.containsExactlyInAnyOrder(EntityId.from(19), EntityId.from(20))
+				);
+
+		mvc.get().uri("/artifacts/search?term=internal&groupId=doe.john")
+				.with(readingAs(EntityId.from(1L)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent()).isEmpty());
+	}
+
+	@Test
+	@DisplayName("should return an empty search result when no property matches the term")
+	void shouldReturnEmptySearchResultForUnmatchedTerm() {
+		mvc.get().uri("/artifacts/search?term=does-not-match-anything")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent()).isEmpty());
+	}
+
+	@Test
+	@DisplayName("should reject a property search with a blank term")
+	void shouldRejectSearchWithBlankTerm() {
+		mvc.get().uri("/artifacts/search?term=")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	@DisplayName("should reject a property search with a missing term")
+	void shouldRejectSearchWithMissingTerm() {
+		mvc.get().uri("/artifacts/search")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	@DisplayName("should fail to search properties when the artifactory:read scope is not present")
+	void shouldRejectSearchWithoutScope() {
+		mvc.get().uri("/artifacts/search?term=application")
+				.with(authentication(claims -> claims
+						.subject(TestAccounts.jane().build().id().serialize())
+						.claim(KonfigyrClaimNames.NAMESPACE, EntityId.from(2L).serialize())))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden(OAuthScope.READ_ARTIFACTS));
+	}
+
 	/**
 	 * Creates an authentication post-processor whose access token carries the {@code namespace} claim,
 	 * so the publishing principal resolves to the given namespace owner, and the {@code artifactory:publish}

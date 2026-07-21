@@ -91,10 +91,10 @@ public class ChangeRequestManager {
 		)));
 
 		return pageableExecutor.execute(
-				createChangeRequestQuery(DSL.and(conditions)),
+				this::createChangeRequestQuery,
+				() -> DSL.and(conditions),
 				record -> toChangeRequest(service, record),
-				query.pageable(),
-				() -> context.fetchCount(createChangeRequestQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
@@ -304,9 +304,10 @@ public class ChangeRequestManager {
 	 * @throws ChangeRequestNotFoundException if the change request does not exist
 	 */
 	public ChangeRequest update(ChangeRequestUpdateCommand command) {
-		final Record record = createChangeRequestQuery(
-				toChangeRequestNumberCondition(command.service(), command.number())
-		).fetchOptional().orElseThrow(() -> new ChangeRequestNotFoundException(command.service(), command.number()));
+		final Record record = createChangeRequestQuery()
+				.where(toChangeRequestNumberCondition(command.service(), command.number()))
+				.fetchOptional()
+				.orElseThrow(() -> new ChangeRequestNotFoundException(command.service(), command.number()));
 
 		final Long id = record.get(VAULT_CHANGE_REQUESTS.ID);
 		boolean transitioned = false;
@@ -443,8 +444,8 @@ public class ChangeRequestManager {
 		return request;
 	}
 
-	private SelectConditionStep<? extends Record> createChangeRequestQuery(Condition condition) {
-		return context.select(
+	private SelectOnConditionStep<Record> createChangeRequestQuery() {
+		return context.select(List.of(
 						VAULT_PROFILES.ID,
 						VAULT_PROFILES.SERVICE_ID,
 						VAULT_PROFILES.SLUG,
@@ -465,15 +466,15 @@ public class ChangeRequestManager {
 						VAULT_CHANGE_REQUESTS.CREATED_BY,
 						VAULT_CHANGE_REQUESTS.CREATED_AT,
 						VAULT_CHANGE_REQUESTS.UPDATED_AT
-				)
+				))
 				.from(VAULT_CHANGE_REQUESTS)
 				.innerJoin(VAULT_PROFILES)
-				.on(VAULT_PROFILES.ID.eq(VAULT_CHANGE_REQUESTS.PROFILE_ID))
-				.where(condition);
+				.on(VAULT_PROFILES.ID.eq(VAULT_CHANGE_REQUESTS.PROFILE_ID));
 	}
 
 	private Optional<ChangeRequest> lookupChangeRequest(Service service, Condition condition) {
-		return createChangeRequestQuery(condition)
+		return createChangeRequestQuery()
+				.where(condition)
 				.fetchOptional(record -> toChangeRequest(service, record));
 	}
 
