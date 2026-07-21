@@ -2,11 +2,11 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
-import { VerifyGroupVerificationButton } from '@konfigyr/components/groups/verify-group-verification';
+import { VerifyGroupVerificationButton } from '@konfigyr/components/artifactory/groups/verify-group-verification';
 import {
   ClaimVerifiedSuccessMessage,
   ClaimVerifiedWarningMessage,
-} from '@konfigyr/components/groups/messages';
+} from '@konfigyr/components/artifactory/groups/messages';
 
 import type { GroupVerification } from '@konfigyr/hooks/types';
 

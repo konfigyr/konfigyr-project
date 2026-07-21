@@ -6,7 +6,7 @@ import {
   GroupVerificationState,
   GroupVerificationStateAlert,
   GroupVerificationStateBadge,
-} from '@konfigyr/components/groups/group-verification-state';
+} from '@konfigyr/components/artifactory/groups/group-verification-state';
 
 describe('components | groups | <GroupVerificationState/>', () => {
   afterEach(() => cleanup());

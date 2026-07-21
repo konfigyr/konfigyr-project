@@ -1,6 +1,6 @@
 import { FormattedMessage, useIntl } from 'react-intl';
-import { GroupVerificationState } from '@konfigyr/components/groups/group-verification-state';
-import { VerificationMethodName } from '@konfigyr/components/groups/group-verification-method';
+import { GroupVerificationState } from '@konfigyr/components/artifactory/groups/group-verification-state';
+import { VerificationMethodName } from '@konfigyr/components/artifactory/groups/group-verification-method';
 import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
 import {
   ChallengeStateLabel,
@@ -9,12 +9,12 @@ import {
   RevokedAtLabel,
   StateLabel,
   VerifiedAtLabel,
-} from '@konfigyr/components/groups/messages';
+} from '@konfigyr/components/artifactory/groups/messages';
 import { CreatedAtLabel } from '@konfigyr/components/messages';
 import {
   DnsActivationInstruction,
   SourceCodeActivationInstruction,
-} from '@konfigyr/components/groups/group-verification-instruction';
+} from '@konfigyr/components/artifactory/groups/group-verification-instruction';
 import type { ChallengeState, GroupVerification, VerificationChallenge } from '@konfigyr/hooks/types';
 import type { ReactNode } from 'react';
 

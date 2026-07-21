@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@konf
 import { Field, FieldDescription } from '@konfigyr/components/ui/field';
 import { Input } from '@konfigyr/components/ui/input';
 import { CancelLabel, SaveLabel } from '@konfigyr/components/messages';
-import { GroupVerificationMethodSelector } from '@konfigyr/components/groups/group-verification-method';
+import { GroupVerificationMethodSelector } from '@konfigyr/components/artifactory/groups/group-verification-method';
 import { z } from 'zod';
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
-import { GroupIdLabel } from '@konfigyr/components/groups/messages';
+import { GroupIdLabel } from '@konfigyr/components/artifactory/groups/messages';
 
 function isValidGroupId (groupId: string) {
   const segments = groupId.split('.');

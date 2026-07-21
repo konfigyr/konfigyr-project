@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
-import { GroupVerificationTable } from '@konfigyr/components/groups/group-verification-table';
+import { GroupVerificationTable } from '@konfigyr/components/artifactory/groups/group-verification-table';
 
 import type { GroupVerification, PageResponse } from '@konfigyr/hooks/types';
 

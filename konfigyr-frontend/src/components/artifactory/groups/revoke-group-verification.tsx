@@ -22,30 +22,32 @@ import {
   CancelVerificationClaimTitle, ClaimCanceledSuccessMessage, ClaimRevokedSuccessMessage,
   RevokeClaimLabel, RevokeVerificationClaimDescription,
   RevokeVerificationClaimTitle,
-} from '@konfigyr/components/groups/messages';
-import type { ReactElement, ReactNode } from 'react';
+} from '@konfigyr/components/artifactory/groups/messages';
+import type { AriaRole, ReactElement, ReactNode } from 'react';
 import type { GroupVerification } from '@konfigyr/hooks/types';
 
 type RevokeGroupVerificationButtonProps = {
   namespace: string;
   verification: GroupVerification;
-  action: 'CANCEL' | 'REVOKE'
-  children: ReactElement
-  onOpenChange?: (open: boolean) => void
+  action: 'CANCEL' | 'REVOKE';
+  children: ReactElement;
+  role?: AriaRole,
+  nativeButton?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export function RevokeGroupVerificationButton ({ namespace, verification, children, onOpenChange }: { namespace: string, verification: GroupVerification, children: ReactElement, onOpenChange?: (open: boolean) => void }) {
+export function RevokeGroupVerificationButton({ children, ...props }: Omit<RevokeGroupVerificationButtonProps, 'action'>) {
   return (
-    <RevokeButton namespace={namespace} verification={verification} action={'REVOKE'} onOpenChange={onOpenChange}>
-      {(children)}
+    <RevokeButton action="REVOKE" {...props}>
+      {children}
     </RevokeButton>
   );
 }
 
-export function CancelGroupVerificationButton ({ namespace, verification, children, onOpenChange }: { namespace: string, verification: GroupVerification, children: ReactElement, onOpenChange?: (open: boolean) => void }) {
+export function CancelGroupVerificationButton({ children, ...props }: Omit<RevokeGroupVerificationButtonProps, 'action'>) {
   return (
-    <RevokeButton namespace={namespace} verification={verification} action={'CANCEL'} onOpenChange={onOpenChange}>
-      {(children)}
+    <RevokeButton action="CANCEL" {...props}>
+      {children}
     </RevokeButton>
   );
 }
@@ -54,7 +56,9 @@ function RevokeButton ({
   namespace,
   verification,
   action,
+  role,
   children,
+  nativeButton,
   onOpenChange,
 }: RevokeGroupVerificationButtonProps) {
   const errorNotification = useErrorNotification();
@@ -84,23 +88,32 @@ function RevokeButton ({
 
   return (
     <AlertDialog onOpenChange={onOpenChange}>
-      <AlertDialogTrigger render={(children)}/>
+      <AlertDialogTrigger
+        nativeButton={nativeButton}
+        role={role}
+        render={children}
+      />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <TriangleAlert className="h-5 w-5 text-destructive shrink-0"/>
-            {(title)}
+            {title}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {(description)}
+            {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>
             <CancelLabel/>
           </AlertDialogCancel>
-          <AlertDialogAction variant="destructive" disabled={isPending} loading={isPending} onClick={onRevoke}>
-            {(submitLabel)}
+          <AlertDialogAction
+            variant="destructive"
+            disabled={isPending}
+            loading={isPending}
+            onClick={onRevoke}
+          >
+            {submitLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

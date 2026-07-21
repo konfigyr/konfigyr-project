@@ -1,7 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
 import { ClipboardButton } from '@konfigyr/components/clipboard';
-import { sourceCodeHostLabel } from '@konfigyr/components/groups/group-verification-method';
+import { sourceCodeHostLabel } from '@konfigyr/components/artifactory/groups/group-verification-method';
 import type { VerificationChallenge } from '@konfigyr/hooks/groups/types';
 import type { ReactNode } from 'react';
 

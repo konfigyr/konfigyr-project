@@ -5,7 +5,7 @@ import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import {
   DnsActivationInstruction,
   SourceCodeActivationInstruction,
-} from '@konfigyr/components/groups/group-verification-instruction';
+} from '@konfigyr/components/artifactory/groups/group-verification-instruction';
 
 import type { VerificationChallenge } from '@konfigyr/hooks/types';
 
