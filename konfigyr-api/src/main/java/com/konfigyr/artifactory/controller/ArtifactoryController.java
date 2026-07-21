@@ -3,10 +3,12 @@ package com.konfigyr.artifactory.controller;
 import com.konfigyr.artifactory.*;
 import com.konfigyr.hateoas.CollectionModel;
 import com.konfigyr.hateoas.EntityModel;
+import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.NamespacedPrincipal;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
+import com.konfigyr.support.SearchQuery;
 import com.konfigyr.version.Version;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -15,6 +17,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -40,6 +44,25 @@ class ArtifactoryController {
 	private final OwnerResolver resolver;
 	private final Artifactory artifactory;
 	private final Publications publications;
+
+	@GetMapping("/search")
+	PagedModel<EntityModel<PropertyDefinition>> search(
+			@Nullable @RequestParam(required = false) String groupId,
+			@Nullable @RequestParam(required = false) String artifactId,
+			@Nullable @RequestParam(required = false) String version,
+			@NotBlank @RequestParam String term,
+			Pageable pageable
+	) {
+		final SearchQuery query = SearchQuery.builder()
+				.criteria(ArtifactKey.GROUP_ID_CRITERIA, groupId)
+				.criteria(ArtifactKey.ARTIFACT_ID_CRITERIA, artifactId)
+				.criteria(ArtifactCoordinates.VERSION_CRITERIA, version)
+				.pageable(pageable)
+				.term(term)
+				.build();
+
+		return Assemblers.property().assemble(artifactory.search(resolveOwner().orElse(null), query));
+	}
 
 	@GetMapping("/{groupId}/{artifactId}")
 	EntityModel<ArtifactDefinition> definition(

@@ -187,6 +187,8 @@
 			<column name="last_seen" type="varchar" remarks="The artifact version where this property was seen for the last time.">
 				<constraints nullable="true" />
 			</column>
+
+			<column name="search_vector" type="tsvector" />
 		</createTable>
 
 		<addUniqueConstraint
@@ -203,6 +205,57 @@
 				referencedColumnNames="id"
 				onDelete="CASCADE"
 		/>
+	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-property-definitions-search-vector-trigger" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<indexExists tableName="property_definitions" indexName="idx_property_definitions_search" />
+			</not>
+		</preConditions>
+
+		<comment>
+			Creates a `generate_property_definitions_search_vector` function that would be used by the
+			`trg_property_definitions_search_vector` trigger to generate a `ts_vector` value for the `search_vector`
+			column. The trigger would be invoked for each insert event or when `name` or `description` fields are
+			updated. This migration also backfills the `search_vector` column for pre-existing rows and adds the
+			supporting GIN index.
+
+			`name` values are dotted/hyphenated identifiers (e.g. `spring.datasource.url`), which Postgres'
+			`simple` parser otherwise tokenizes as a single, indivisible "host"-like lexeme. Non-alphanumeric
+			separators are replaced with spaces before tokenizing so each segment becomes its own searchable word.
+		</comment>
+
+		<sql>
+			CREATE OR REPLACE FUNCTION generate_property_definitions_search_vector() RETURNS trigger AS '
+				BEGIN
+					NEW.search_vector :=
+					                  setweight(to_tsvector(''simple'', regexp_replace(NEW.name, ''[^a-zA-Z0-9]+'', '' '', ''g'')), ''A'') ||
+					                  setweight(to_tsvector(''simple'', coalesce(NEW.description,'''')), ''B'');
+					RETURN NEW;
+				END;
+			' LANGUAGE plpgsql;
+		</sql>
+
+		<sql>
+			CREATE OR REPLACE TRIGGER trg_property_definitions_search_vector
+				BEFORE INSERT OR UPDATE OF name, description
+								 ON property_definitions FOR EACH ROW EXECUTE FUNCTION generate_property_definitions_search_vector();
+		</sql>
+
+		<createIndex tableName="property_definitions" indexName="idx_property_definitions_search" using="gin">
+			<column name="search_vector"/>
+		</createIndex>
+
+		<sql>
+			UPDATE property_definitions SET name = name;
+		</sql>
+
+		<rollback>
+			DROP INDEX IF EXISTS idx_property_definitions_search;
+			DROP TRIGGER IF EXISTS trg_property_definitions_search_vector ON property_definitions;
+			DROP FUNCTION IF EXISTS generate_property_definitions_search_vector();
+		</rollback>
 	</changeSet>
 
 	<changeSet author="vspasic" id="1.0.0-create-artifact-version-properties-table" context="api">

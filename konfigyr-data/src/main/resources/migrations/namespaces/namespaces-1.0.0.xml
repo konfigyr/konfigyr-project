@@ -474,6 +474,10 @@
 			fields are updated. This migration would also create a default partition with name:
 			`service_configuration_catalog_default` that would be used as a fallback in case the service specific
 			partition can't be created.
+
+			`name` values are dotted/hyphenated identifiers (e.g. `spring.datasource.url`), which Postgres'
+			`simple` parser otherwise tokenizes as a single, indivisible "host"-like lexeme. Non-alphanumeric
+			separators are replaced with spaces before tokenizing so each segment becomes its own searchable word.
 		</comment>
 
 		<sql>
@@ -517,7 +521,7 @@
 			CREATE OR REPLACE FUNCTION generate_service_configuration_catalog_search_vector() RETURNS trigger AS '
 				BEGIN
 					NEW.search_vector :=
-					                  setweight(to_tsvector(''simple'', NEW.name), ''A'') ||
+					                  setweight(to_tsvector(''simple'', regexp_replace(NEW.name, ''[^a-zA-Z0-9]+'', '' '', ''g'')), ''A'') ||
 					                  setweight(to_tsvector(''simple'', coalesce(NEW.description,'''')), ''B'');
 					RETURN NEW;
 				END;

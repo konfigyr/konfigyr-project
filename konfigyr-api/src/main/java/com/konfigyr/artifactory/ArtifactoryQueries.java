@@ -10,6 +10,7 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
@@ -37,11 +38,6 @@ final class ArtifactoryQueries {
 			.sortField("version", ARTIFACT_VERSIONS.VERSION)
 			.build();
 
-	private static final PageableExecutor propertySearchPageableExecutor = PageableExecutor.builder()
-			.defaultSortField(PROPERTY_DEFINITIONS.NAME.asc())
-			.sortField("name", PROPERTY_DEFINITIONS.NAME)
-			.build();
-
 	private final DSLContext context;
 	private final ArtifactoryConverters converters;
 
@@ -55,10 +51,10 @@ final class ArtifactoryQueries {
 
 	Page<ArtifactDefinition> definitions(Condition condition, Pageable pageable) {
 		return artifactDefinitionPageableExecutor.execute(
-				createArtifactDefinitionQuery().where(condition),
+				this::createArtifactDefinitionQuery,
+				() -> condition,
 				ArtifactoryQueries::toArtifactDefinition,
-				pageable,
-				() -> context.fetchCount(createArtifactDefinitionQuery().where(condition))
+				pageable
 		);
 	}
 
@@ -70,10 +66,10 @@ final class ArtifactoryQueries {
 
 	Page<VersionedArtifact> versions(Condition condition, Pageable pageable) {
 		return versionedArtifactPageableExecutor.execute(
-				createVersionedArtifactQuery().where(condition),
+				this::createVersionedArtifactQuery,
+				() -> condition,
 				ArtifactoryQueries::toVersionedArtifact,
-				pageable,
-				() -> context.fetchCount(createVersionedArtifactQuery().where(condition))
+				pageable
 		);
 	}
 
@@ -83,12 +79,12 @@ final class ArtifactoryQueries {
 				.fetchOptional(ArtifactoryQueries::toVersionedArtifact);
 	}
 
-	Page<PropertyDefinition> properties(Condition condition, Pageable pageable) {
-		return propertySearchPageableExecutor.execute(
-				createPropertySearchQuery().where(condition),
+	Page<PropertyDefinition> properties(PageableExecutor executor, Condition condition, Pageable pageable) {
+		return executor.execute(
+				this::createPropertySearchQuery,
+				() -> condition,
 				record -> toPropertyDefinition(record, converters),
-				pageable,
-				() -> context.fetchCount(createPropertySearchQuery().where(condition))
+				pageable
 		);
 	}
 
@@ -98,7 +94,7 @@ final class ArtifactoryQueries {
 				.fetchOptional(record -> toPropertyDefinition(record, converters));
 	}
 
-	SelectJoinStep<? extends Record> createArtifactDefinitionQuery() {
+	SelectJoinStep<Record> createArtifactDefinitionQuery() {
 		return context.select(ARTIFACTS.fields())
 				.select(NAMESPACES.ID, NAMESPACES.SLUG)
 				.from(ARTIFACTS)
@@ -106,7 +102,7 @@ final class ArtifactoryQueries {
 				.on(NAMESPACES.ID.eq(ARTIFACTS.NAMESPACE_ID));
 	}
 
-	SelectJoinStep<? extends Record> createVersionedArtifactQuery() {
+	SelectJoinStep<Record> createVersionedArtifactQuery() {
 		return context.select(ARTIFACT_VERSIONS.fields())
 				.select(ARTIFACTS.ID, ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, ARTIFACTS.VISIBILITY,
 						ARTIFACTS.NAME, ARTIFACTS.DESCRIPTION, ARTIFACTS.WEBSITE, ARTIFACTS.REPOSITORY)
@@ -118,7 +114,7 @@ final class ArtifactoryQueries {
 				.on(NAMESPACES.ID.eq(ARTIFACTS.NAMESPACE_ID));
 	}
 
-	SelectJoinStep<? extends Record> createPropertySearchQuery() {
+	SelectJoinStep<Record> createPropertySearchQuery() {
 		return context.select(PROPERTY_DEFINITIONS.fields())
 				.select(ARTIFACTS.GROUP_ID, ARTIFACTS.ARTIFACT_ID, NAMESPACES.ID, NAMESPACES.SLUG)
 				.from(PROPERTY_DEFINITIONS)
@@ -175,6 +171,11 @@ final class ArtifactoryQueries {
 	}
 
 	static PropertyDefinition toPropertyDefinition(Record record, ArtifactoryConverters converters) {
+		final JsonSchema schema = Objects.requireNonNullElseGet(
+				record.get(PROPERTY_DEFINITIONS.SCHEMA, converters.schema()),
+				NullSchema::instance
+		);
+
 		return PropertyDefinition.builder()
 				.id(record.get(PROPERTY_DEFINITIONS.ID))
 				.artifact(record.get(PROPERTY_DEFINITIONS.ARTIFACT_ID))
@@ -186,7 +187,7 @@ final class ArtifactoryQueries {
 				.typeName(record.get(PROPERTY_DEFINITIONS.TYPE_NAME))
 				.defaultValue(record.get(PROPERTY_DEFINITIONS.DEFAULT_VALUE))
 				.description(record.get(PROPERTY_DEFINITIONS.DESCRIPTION))
-				.schema(record.get(PROPERTY_DEFINITIONS.SCHEMA, converters.schema()))
+				.schema(schema)
 				.deprecation(record.get(PROPERTY_DEFINITIONS.DEPRECATION, converters.deprecation()))
 				.occurrences(record.get(PROPERTY_DEFINITIONS.OCCURRENCES))
 				.firstSeen(record.get(PROPERTY_DEFINITIONS.FIRST_SEEN))

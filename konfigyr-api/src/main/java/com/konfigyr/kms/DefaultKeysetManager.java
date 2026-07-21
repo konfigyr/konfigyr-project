@@ -133,20 +133,22 @@ class DefaultKeysetManager implements KeysetManager {
 		}
 
 		return keysetMetadataExecutor.execute(
-				createKeysetMetadataQuery(DSL.and(conditions)),
+				this::createKeysetMetadataQuery,
+				() -> DSL.and(conditions),
 				DefaultKeysetManager::toKeysetMetadata,
-				query.pageable(),
-				() -> context.fetchCount(createKeysetMetadataQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
 	@Override
 	@Transactional(readOnly = true, label = "kms.find-by-id")
 	public Optional<KeysetMetadata> get(Namespace namespace, EntityId id) {
-		return createKeysetMetadataQuery(DSL.and(
-				KMS_KEYSET_METADATA.ID.eq(id.get()),
-				KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.id().get())
-		)).fetchOptional(DefaultKeysetManager::toKeysetMetadata);
+		return createKeysetMetadataQuery()
+				.where(DSL.and(
+						KMS_KEYSET_METADATA.ID.eq(id.get()),
+						KMS_KEYSET_METADATA.NAMESPACE_ID.eq(namespace.id().get())
+				))
+				.fetchOptional(DefaultKeysetManager::toKeysetMetadata);
 	}
 
 	@Override
@@ -161,7 +163,8 @@ class DefaultKeysetManager implements KeysetManager {
 	@Override
 	@Transactional(readOnly = true, label = "kms.keys-by-id")
 	public List<KeyMetadata> keys(KeysetMetadata keyset) {
-		return createKeyMetadataQuery(KMS_KEYSET_METADATA.ID.eq(keyset.id().get()))
+		return createKeyMetadataQuery()
+				.where(KMS_KEYSET_METADATA.ID.eq(keyset.id().get()))
 				.orderBy(KEYSET_KEYS.CREATED_AT.desc())
 				.fetch(DefaultKeysetManager::toKeyMetadata);
 	}
@@ -324,7 +327,8 @@ class DefaultKeysetManager implements KeysetManager {
 
 	// used internally to retrieve the metadata from the db, usually after a successful update...
 	private KeysetMetadata lookup(EntityId id) {
-		return createKeysetMetadataQuery(KMS_KEYSET_METADATA.ID.eq(id.get()))
+		return createKeysetMetadataQuery()
+				.where(KMS_KEYSET_METADATA.ID.eq(id.get()))
 				.fetchOptional(DefaultKeysetManager::toKeysetMetadata)
 				.orElseThrow(() -> new IllegalStateException("Failed to lookup keyset metadata with id: " + id.get()));
 	}
@@ -349,7 +353,7 @@ class DefaultKeysetManager implements KeysetManager {
 		}
 	}
 
-	private SelectConditionStep<Record> createKeysetMetadataQuery(Condition condition) {
+	private SelectWhereStep<Record> createKeysetMetadataQuery() {
 		return context.select(KEYSET_METADATA_FIELDS)
 				.from(KMS_KEYSET_METADATA)
 				.innerJoin(KEYSETS)
@@ -357,18 +361,16 @@ class DefaultKeysetManager implements KeysetManager {
 				.innerJoin(KEYSET_KEYS)
 				.on(KEYSET_KEYS.KEYSET_NAME.eq(KEYSETS.KEYSET_NAME).and(KEYSET_KEYS.KEY_PRIMARY.isTrue()))
 				.innerJoin(NAMESPACES)
-				.on(NAMESPACES.ID.eq(KMS_KEYSET_METADATA.NAMESPACE_ID))
-				.where(condition);
+				.on(NAMESPACES.ID.eq(KMS_KEYSET_METADATA.NAMESPACE_ID));
 	}
 
-	private SelectConditionStep<Record> createKeyMetadataQuery(Condition condition) {
+	private SelectWhereStep<Record> createKeyMetadataQuery() {
 		return context.select(KEYS_METADATA_FIELDS)
 				.from(KMS_KEYSET_METADATA)
 				.innerJoin(KEYSETS)
 				.on(KEYSETS.KEYSET_NAME.eq(KMS_KEYSET_METADATA.KEYSET_ID))
 				.innerJoin(KEYSET_KEYS)
-				.on(KEYSET_KEYS.KEYSET_NAME.eq(KEYSETS.KEYSET_NAME))
-				.where(condition);
+				.on(KEYSET_KEYS.KEYSET_NAME.eq(KEYSETS.KEYSET_NAME));
 	}
 
 	private Optional<KeysetInformation> lookupKeysetInformation(Namespace namespace, EntityId id) {

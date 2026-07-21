@@ -10,10 +10,8 @@ import com.konfigyr.support.FullName;
 import com.konfigyr.support.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
@@ -67,10 +65,10 @@ class DefaultMemberships implements Memberships {
 		}
 
 		return membersExecutor.execute(
-				createMembersQuery(DSL.and(conditions)),
+				this::createMembersQuery,
+				() -> DSL.and(conditions),
 				DefaultMemberships::toMember,
-				query.pageable(),
-				() -> context.fetchCount(createMembersQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
@@ -78,7 +76,7 @@ class DefaultMemberships implements Memberships {
 	@Override
 	@Transactional(readOnly = true, label = "namespace-get-member")
 	public Optional<Member> get(@NonNull Namespace namespace, @NonNull EntityId id) {
-		return createMembersQuery(DSL.and(
+		return createMembersQuery().where(DSL.and(
 				NAMESPACE_MEMBERS.ID.eq(id.get()),
 				NAMESPACE_MEMBERS.NAMESPACE_ID.eq(namespace.id().get())
 		)).fetchOptional(DefaultMemberships::toMember);
@@ -100,7 +98,8 @@ class DefaultMemberships implements Memberships {
 				))
 				.execute();
 
-		final Member member = createMembersQuery(NAMESPACE_MEMBERS.ID.eq(id.get()))
+		final Member member = createMembersQuery()
+				.where(NAMESPACE_MEMBERS.ID.eq(id.get()))
 				.fetchOptional(DefaultMemberships::toMember)
 				.orElseThrow(() -> new NamespaceException("Failed to update unknown member with: " + id));
 
@@ -162,8 +161,8 @@ class DefaultMemberships implements Memberships {
 	}
 
 	@NonNull
-	private SelectConditionStep<? extends Record> createMembersQuery(@NonNull Condition condition) {
-		return context.select(
+	private SelectOnConditionStep<Record> createMembersQuery() {
+		return context.select(List.of(
 						NAMESPACE_MEMBERS.ID,
 						NAMESPACE_MEMBERS.NAMESPACE_ID,
 						NAMESPACE_MEMBERS.ACCOUNT_ID,
@@ -173,13 +172,12 @@ class DefaultMemberships implements Memberships {
 						ACCOUNTS.FIRST_NAME,
 						ACCOUNTS.LAST_NAME,
 						ACCOUNTS.AVATAR
-				)
+				))
 				.from(NAMESPACE_MEMBERS)
 				.innerJoin(NAMESPACES)
 				.on(NAMESPACES.ID.eq(NAMESPACE_MEMBERS.NAMESPACE_ID))
 				.innerJoin(ACCOUNTS)
-				.on(ACCOUNTS.ID.eq(NAMESPACE_MEMBERS.ACCOUNT_ID))
-				.where(condition);
+				.on(ACCOUNTS.ID.eq(NAMESPACE_MEMBERS.ACCOUNT_ID));
 	}
 
 	@NonNull

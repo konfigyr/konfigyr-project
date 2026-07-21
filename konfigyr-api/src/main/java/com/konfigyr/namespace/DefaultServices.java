@@ -62,10 +62,10 @@ class DefaultServices implements Services {
 		}
 
 		return servicesExecutor.execute(
-				createServicesQuery(DSL.and(conditions)),
+				this::createServicesQuery,
+				() -> DSL.and(conditions),
 				DefaultServices::toService,
-				query.pageable(),
-				() -> context.fetchCount(createServicesQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
@@ -231,16 +231,17 @@ class DefaultServices implements Services {
 	}
 
 	@NonNull
-	private SelectConditionStep<Record> createServicesQuery(@NonNull Condition condition) {
+	private SelectWhereStep<Record> createServicesQuery() {
 		return context
 				.select(SERVICES.fields())
-				.from(SERVICES)
-				.where(condition);
+				.from(SERVICES);
 	}
 
 	@NonNull
 	private Optional<Service> fetch(@NonNull Condition condition) {
-		return createServicesQuery(condition).fetchOptional(DefaultServices::toService);
+		return createServicesQuery()
+				.where(condition)
+				.fetchOptional(DefaultServices::toService);
 	}
 
 	@NonNull

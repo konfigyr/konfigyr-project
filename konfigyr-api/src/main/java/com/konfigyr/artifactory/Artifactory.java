@@ -1,7 +1,9 @@
 package com.konfigyr.artifactory;
 
-import org.jspecify.annotations.NonNull;
+import com.konfigyr.support.SearchQuery;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.Set;
  * @since 1.0.0
  * @see Publications
  */
+@NullMarked
 public interface Artifactory {
 
 	/**
@@ -36,8 +39,7 @@ public interface Artifactory {
 	 * @param key the artifact key identifying the artifact, can't {@literal null}
 	 * @return the resolved {@link ArtifactDefinition}, or {@code empty} if no artifact exists for the given key
 	 */
-	@NonNull
-	Optional<ArtifactDefinition> get(@NonNull ArtifactKey key);
+	Optional<ArtifactDefinition> get(ArtifactKey key);
 
 	/**
 	 * Resolves a specific artifact definition identified by the provided key, restricted to
@@ -53,8 +55,7 @@ public interface Artifactory {
 	 * @param key the artifact key identifying the artifact version, can't {@literal null}
 	 * @return the resolved {@link ArtifactDefinition}, or {@code empty} if none exists or is visible to {@code owner}
 	 */
-	@NonNull
-	Optional<ArtifactDefinition> get(@Nullable Owner owner, @NonNull ArtifactKey key);
+	Optional<ArtifactDefinition> get(@Nullable Owner owner, ArtifactKey key);
 
 	/**
 	 * Determines whether an artifact definition exists for the given artifact key.
@@ -65,7 +66,7 @@ public interface Artifactory {
 	 * @param key the artifact key identifying the artifact, can't {@literal null}
 	 * @return {@code true} if an artifact definition exists, otherwise {@code false}
 	 */
-	boolean exists(@NonNull ArtifactKey key);
+	boolean exists(ArtifactKey key);
 
 	/**
 	 * Determines whether an artifact definition exists for the given key and is visible to the
@@ -76,7 +77,7 @@ public interface Artifactory {
 	 * @param key the artifact key identifying the artifact, can't {@literal null}
 	 * @return {@code true} if an artifact definition exists and is visible to {@code owner}, otherwise {@code false}
 	 */
-	boolean exists(@Nullable Owner owner, @NonNull ArtifactKey key);
+	boolean exists(@Nullable Owner owner, ArtifactKey key);
 
 	/**
 	 * Resolves a specific artifact version identified by the provided coordinates.
@@ -90,8 +91,7 @@ public interface Artifactory {
 	 * @param coordinates the artifact coordinates identifying the artifact version, can't {@literal null}
 	 * @return the resolved {@link VersionedArtifact}, or {@code empty} if no artifact exists for the given coordinates
 	 */
-	@NonNull
-	Optional<VersionedArtifact> get(@NonNull ArtifactCoordinates coordinates);
+	Optional<VersionedArtifact> get(ArtifactCoordinates coordinates);
 
 	/**
 	 * Resolves a specific artifact version identified by the provided coordinates, restricted to
@@ -107,8 +107,7 @@ public interface Artifactory {
 	 * @param coordinates the artifact coordinates identifying the artifact version, can't {@literal null}
 	 * @return the resolved {@link VersionedArtifact}, or {@code empty} if none exists or is visible to {@code owner}
 	 */
-	@NonNull
-	Optional<VersionedArtifact> get(@Nullable Owner owner, @NonNull ArtifactCoordinates coordinates);
+	Optional<VersionedArtifact> get(@Nullable Owner owner, ArtifactCoordinates coordinates);
 
 	/**
 	 * Returns the property definitions associated with the specified artifact version.
@@ -123,8 +122,43 @@ public interface Artifactory {
 	 * @return the list of property definitions associated with the artifact, never {@literal null}
 	 * @throws ArtifactVersionNotFoundException if no artifact exists for the given coordinates
 	 */
-	@NonNull
-	List<PropertyDefinition> properties(@NonNull ArtifactCoordinates coordinates);
+	List<PropertyDefinition> properties(ArtifactCoordinates coordinates);
+
+	/**
+	 * Searches {@link PropertyDefinition property definitions} across every artifact indexed by this
+	 * {@code Artifactory}, restricted to what the given {@code owner} is allowed to see, the same
+	 * {@link ArtifactVisibility#PUBLIC PUBLIC}/{@link ArtifactVisibility#PRIVATE PRIVATE} rule described
+	 * on {@link #get(Owner, ArtifactKey)} applies here, evaluated per property's owning artifact.
+	 * <p>
+	 * The {@link SearchQuery} may combine:
+	 * <ul>
+	 *     <li>{@link SearchQuery#term()}: split into words and matched, each as a prefix, against the
+	 *     property's {@code name} and {@code description} using the {@code property_definitions.search_vector}
+	 *     column (a {@code tsvector} maintained by a database trigger). Splitting on non-alphanumeric
+	 *     characters means a dotted/hyphenated term like {@code spring.datasource.url} is treated as three
+	 *     separate words, each of which must be present (as a prefix) somewhere in the match — so a partial
+	 *     term like {@code spring.appl} still matches {@code spring.application.name}. A property whose
+	 *     {@code name} matches is ranked above one that only matches through its {@code description}; the
+	 *     ranking replaces whatever sort the {@link SearchQuery#pageable()} would otherwise apply,
+	 *     matching-name-first always wins when a term is present.</li>
+	 *     <li>{@link ArtifactKey#GROUP_ID_CRITERIA} / {@link ArtifactKey#ARTIFACT_ID_CRITERIA}: restricts
+	 *     results to properties owned by artifacts with a matching {@code groupId}/{@code artifactId}.</li>
+	 *     <li>{@link ArtifactCoordinates#VERSION_CRITERIA}: restricts results to properties that are
+	 *     still declared by at least one artifact version matching this exact version string.</li>
+	 * </ul>
+	 * None of the above are required; a {@link SearchQuery} with no term and no criteria returns every
+	 * property visible to {@code owner}, sorted by name.
+	 * <p>
+	 * Implementation note: pagination and sorting here are handled directly rather than through the
+	 * shared {@code PageableExecutor}, since the term-based ranking is a computed SQL expression, not a
+	 * field that a static sort-field mapping could express.
+	 *
+	 * @param owner the namespace on whose behalf this search is performed, or {@literal null} if the
+	 *        caller has no namespace context, in which case only {@code PUBLIC} properties are returned
+	 * @param query the search query used to filter, rank, and page through the results, can't be {@literal null}
+	 * @return the page of matching property definitions visible to {@code owner}, never {@literal null}
+	 */
+	Page<PropertyDefinition> search(@Nullable Owner owner, SearchQuery query);
 
 	/**
 	 * Determines whether an artifact version exists for the given coordinates.
@@ -135,7 +169,7 @@ public interface Artifactory {
 	 * @param coordinates the artifact coordinates identifying the artifact version, can't {@literal null}
 	 * @return {@code true} if an artifact version exists, otherwise {@code false}
 	 */
-	boolean exists(@NonNull ArtifactCoordinates coordinates);
+	boolean exists(ArtifactCoordinates coordinates);
 
 	/**
 	 * Determines whether an artifact version exists for the given coordinates and is visible to the
@@ -146,7 +180,7 @@ public interface Artifactory {
 	 * @param coordinates the artifact coordinates identifying the artifact version, can't {@literal null}
 	 * @return {@code true} if an artifact version exists and is visible to {@code owner}, otherwise {@code false}
 	 */
-	boolean exists(@Nullable Owner owner, @NonNull ArtifactCoordinates coordinates);
+	boolean exists(@Nullable Owner owner, ArtifactCoordinates coordinates);
 
 	/**
 	 * Returns the {@link Publication} for each of the given {@link ArtifactCoordinates} that is already
@@ -170,7 +204,6 @@ public interface Artifactory {
 	 * @param coordinates coordinates to check, can be empty
 	 * @return the publications matching the given coordinates that exist, never {@literal null}, empty if the input is empty
 	 */
-	@NonNull
-	Set<Publication> existing(@NonNull Owner owner, @NonNull Collection<ArtifactCoordinates> coordinates);
+	Set<Publication> existing(Owner owner, Collection<ArtifactCoordinates> coordinates);
 
 }

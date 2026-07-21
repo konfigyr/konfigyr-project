@@ -12,10 +12,8 @@ import com.konfigyr.feature.LimitedFeatureValue;
 import com.konfigyr.namespace.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -31,6 +29,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -71,26 +70,22 @@ class DefaultInvitations implements Invitations {
 	@Override
 	@Transactional(readOnly = true, label = "invitations-find-for-recipient")
 	public Page<Invitation> find(Account recipient, Pageable pageable) {
-		final Condition condition = INVITATIONS.RECIPIENT_EMAIL.equalIgnoreCase(recipient.email());
-
 		return executor.execute(
-				createInvitationsQuery(condition),
+				this::createInvitationsQuery,
+				() -> INVITATIONS.RECIPIENT_EMAIL.equalIgnoreCase(recipient.email()),
 				DefaultInvitations::invitation,
-				pageable,
-				() -> context.fetchCount(createInvitationsQuery(condition))
+				pageable
 		);
 	}
 
 	@Override
 	@Transactional(readOnly = true, label = "invitations-find-for-namespace")
 	public Page<Invitation> find(Namespace namespace, Pageable pageable) {
-		final Condition condition = INVITATIONS.NAMESPACE_ID.eq(namespace.id().get());
-
 		return executor.execute(
-				createInvitationsQuery(condition),
+				this::createInvitationsQuery,
+				() -> INVITATIONS.NAMESPACE_ID.eq(namespace.id().get()),
 				DefaultInvitations::invitation,
-				pageable,
-				() -> context.fetchCount(createInvitationsQuery(condition))
+				pageable
 		);
 	}
 
@@ -250,8 +245,10 @@ class DefaultInvitations implements Invitations {
 		}
 	}
 
-	private Optional<Invitation> lookupInvitation(Condition predicate) {
-		return createInvitationsQuery(predicate).fetchOptional(DefaultInvitations::invitation);
+	private Optional<Invitation> lookupInvitation(Condition condition) {
+		return createInvitationsQuery()
+				.where(condition)
+				.fetchOptional(DefaultInvitations::invitation);
 	}
 
 	private void removeInvitation(Invitation invitation) {
@@ -263,9 +260,9 @@ class DefaultInvitations implements Invitations {
 				.execute();
 	}
 
-	private SelectConditionStep<? extends Record> createInvitationsQuery(Condition condition) {
+	private SelectOnConditionStep<Record> createInvitationsQuery() {
 		return context
-				.select(
+				.select(List.of(
 						NAMESPACES.ID,
 						NAMESPACES.SLUG,
 						NAMESPACES.NAME,
@@ -281,15 +278,14 @@ class DefaultInvitations implements Invitations {
 						INVITATIONS.RECIPIENT_EMAIL,
 						INVITATIONS.ROLE,
 						INVITATIONS.CREATED_AT,
-						INVITATIONS.EXPIRY_DATE)
+						INVITATIONS.EXPIRY_DATE))
 				.from(INVITATIONS)
 				.fullOuterJoin(SENDER_ACCOUNTS)
 				.on(SENDER_ACCOUNTS.ID.eq(INVITATIONS.SENDER_ID))
 				.fullOuterJoin(RECIPIENT_ACCOUNTS)
 				.on(RECIPIENT_ACCOUNTS.ID.eq(INVITATIONS.RECIPIENT_ID))
 				.innerJoin(NAMESPACES)
-				.on(NAMESPACES.ID.eq(INVITATIONS.NAMESPACE_ID))
-				.where(condition);
+				.on(NAMESPACES.ID.eq(INVITATIONS.NAMESPACE_ID));
 	}
 
 	private Optional<NamespaceInvitationContext> lookupNamespaceInvitationContext(Namespace namespace, Invite invite) {

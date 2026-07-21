@@ -157,12 +157,71 @@ class PageableExecutorTest {
 				.containsExactly(1L, 2L);
 	}
 
+	@Test
+	@DisplayName("should apply the supplied condition to both the content and the total element count")
+	void shouldExecuteWithCondition() {
+		final var pageable = Pageable.ofSize(10);
+
+		assertThatObject(execute(pageable, TESTING_TABLE.STATUS.eq("ACTIVE")))
+				.isNotNull()
+				.returns(10, Page::getSize)
+				.returns(0, Page::getNumber)
+				.returns(1, Page::getTotalPages)
+				.returns(1L, Page::getTotalElements)
+				.returns(1, Page::getNumberOfElements)
+				.asInstanceOf(iterable(Long.class))
+				.containsExactly(1L);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should keep the total element count consistent with the condition across multiple pages")
+	void shouldExecuteWithConditionAcrossMultiplePages() {
+		insertTestData(3, "ACTIVE", OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(10));
+		insertTestData(4, "ACTIVE", OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(20));
+
+		// page size equal to the number of matches on this page forces PageableExecutionUtils
+		// to invoke the total count query instead of deriving the total from the content size
+		final var pageable = PageRequest.of(0, 1, Sort.by("id"));
+
+		assertThatObject(execute(pageable, TESTING_TABLE.STATUS.eq("ACTIVE")))
+				.isNotNull()
+				.returns(1, Page::getNumberOfElements)
+				.returns(3, Page::getTotalPages)
+				.as("total must reflect only ACTIVE rows, not every row in the table")
+				.returns(3L, Page::getTotalElements)
+				.asInstanceOf(iterable(Long.class))
+				.containsExactly(1L);
+	}
+
+	@Test
+	@DisplayName("should return an empty page when the supplied condition matches nothing")
+	void shouldExecuteWithConditionMatchingNothing() {
+		final var pageable = Pageable.ofSize(10);
+
+		assertThatObject(execute(pageable, TESTING_TABLE.STATUS.eq("DOES-NOT-EXIST")))
+				.isNotNull()
+				.returns(0, Page::getTotalPages)
+				.returns(0L, Page::getTotalElements)
+				.returns(0, Page::getNumberOfElements)
+				.asInstanceOf(iterable(Long.class))
+				.isEmpty();
+	}
+
 	private Page<@NonNull Long> execute(Pageable pageable) {
 		return executor.execute(
-				context.select(TESTING_TABLE.fields()).from(TESTING_TABLE),
+				() -> context.select(TESTING_TABLE.fields()).from(TESTING_TABLE),
 				record -> record.get(TESTING_TABLE.ID),
-				pageable,
-				() -> context.fetchCount(context.select(TESTING_TABLE.ID).from(TESTING_TABLE))
+				pageable
+		);
+	}
+
+	private Page<@NonNull Long> execute(Pageable pageable, Condition condition) {
+		return executor.execute(
+				() -> context.select(TESTING_TABLE.fields()).from(TESTING_TABLE),
+				() -> condition,
+				record -> record.get(TESTING_TABLE.ID),
+				pageable
 		);
 	}
 

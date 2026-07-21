@@ -2,11 +2,13 @@ package com.konfigyr.artifactory;
 
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 import java.net.URI;
@@ -343,6 +345,182 @@ class ArtifactoryTest extends AbstractIntegrationTest {
 		assertThat(artifactory.exists(null, coordinates))
 				.as("a caller with no namespace context should not see a private artifact exists")
 				.isFalse();
+	}
+
+	@Test
+	@DisplayName("should search public property definitions for a caller with no namespace context")
+	void shouldSearchPublicPropertyDefinitionsForAnyOwner() {
+		final var result = artifactory.search(null, SearchQuery.of(Pageable.ofSize(20)));
+
+		assertThat(result.stream())
+				.as("only properties owned by PUBLIC artifacts should be visible")
+				.extracting(PropertyDefinition::id)
+				.containsExactlyInAnyOrder(
+						EntityId.from(1), EntityId.from(2), EntityId.from(3), EntityId.from(4),
+						EntityId.from(5), EntityId.from(6), EntityId.from(7), EntityId.from(8),
+						EntityId.from(9), EntityId.from(10), EntityId.from(11), EntityId.from(12),
+						EntityId.from(13), EntityId.from(14), EntityId.from(15), EntityId.from(16)
+				);
+	}
+
+	@Test
+	@DisplayName("should include a namespace's own private property definitions alongside public ones")
+	void shouldSearchIncludesOwnPrivatePropertyDefinitions() {
+		final var result = artifactory.search(Owners.konfigyr(), SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("internal")
+				.build());
+
+		assertThat(result.stream())
+				.as("konfigyr should see its own private konfigyr-internal-secrets properties")
+				.extracting(PropertyDefinition::id)
+				.containsExactlyInAnyOrder(EntityId.from(19), EntityId.from(20), EntityId.from(21));
+	}
+
+	@Test
+	@DisplayName("should never surface a private property definition owned by a different namespace")
+	void shouldSearchNeverIncludesPrivatePropertyDefinitionsOwnedByDifferentNamespace() {
+		final var query = SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("internal")
+				.build();
+
+		assertThat(artifactory.search(Owners.johnDoe(), query))
+				.as("john-doe must not see konfigyr's private properties, even by term match")
+				.isEmpty();
+
+		assertThat(artifactory.search(null, query))
+				.as("a caller with no namespace context must not see private properties")
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should only surface a private property definition for its owning namespace")
+	void shouldSearchPrivatePropertyDefinitionOnlyForOwner() {
+		final var query = SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("notes")
+				.build();
+
+		assertThat(artifactory.search(Owners.johnDoe(), query).stream())
+				.as("john-doe should see its own private-notes properties")
+				.extracting(PropertyDefinition::id)
+				.containsExactlyInAnyOrder(EntityId.from(17), EntityId.from(18));
+
+		assertThat(artifactory.search(Owners.konfigyr(), query))
+				.as("konfigyr must not see john-doe's private properties")
+				.isEmpty();
+
+		assertThat(artifactory.search(null, query))
+				.as("a caller with no namespace context must not see john-doe's private properties")
+				.isEmpty();
+	}
+
+	@Test
+	@DisplayName("should match a property definition by its description alone, without a name match")
+	void shouldSearchMatchPropertyByDescriptionOnly() {
+		final var result = artifactory.search(null, SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("logging")
+				.build());
+
+		assertThat(result.stream())
+				.as("'logging' only appears in spring.application.name's description, never in its name")
+				.extracting(PropertyDefinition::id)
+				.containsExactly(EntityId.from(1));
+	}
+
+	@Test
+	@DisplayName("should rank a property definition matching by name above one matching only by description")
+	void shouldSearchRankNameMatchAboveDescriptionOnlyMatch() {
+		final var result = artifactory.search(null, SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("application")
+				.build());
+
+		assertThat(result.stream())
+				.as("id=1 and id=11 match 'application' by name, id=12 only matches through its description")
+				.extracting(PropertyDefinition::id)
+				.containsExactly(EntityId.from(1), EntityId.from(11), EntityId.from(12));
+	}
+
+	@Test
+	@DisplayName("should match a property definition by a partial, autocomplete-style term")
+	void shouldSearchMatchByPartialTerm() {
+		final var result = artifactory.search(null, SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("spring.appl")
+				.build());
+
+		assertThat(result.stream())
+				.as("'spring.appl' should prefix-match 'spring' and 'application' as separate words")
+				.extracting(PropertyDefinition::id)
+				.containsExactly(EntityId.from(1), EntityId.from(12));
+	}
+
+	@Test
+	@DisplayName("should filter property definition search by groupId criteria")
+	void shouldSearchFilterByGroupIdCriteria() {
+		final var result = artifactory.search(Owners.konfigyr(), SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.criteria(ArtifactKey.GROUP_ID_CRITERIA, "org.springframework.modulith")
+				.build());
+
+		assertThat(result.stream())
+				.extracting(PropertyDefinition::id)
+				.containsExactlyInAnyOrder(
+						EntityId.from(12), EntityId.from(13), EntityId.from(14),
+						EntityId.from(15), EntityId.from(16)
+				);
+	}
+
+	@Test
+	@DisplayName("should filter property definition search by artifactId criteria")
+	void shouldSearchFilterByArtifactIdCriteria() {
+		final var result = artifactory.search(Owners.konfigyr(), SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.criteria(ArtifactKey.ARTIFACT_ID_CRITERIA, "spring-boot-actuator")
+				.build());
+
+		assertThat(result.stream())
+				.extracting(PropertyDefinition::id)
+				.containsExactlyInAnyOrder(EntityId.from(8), EntityId.from(9), EntityId.from(10), EntityId.from(11));
+	}
+
+	@Test
+	@DisplayName("should filter property definition search by version criteria")
+	void shouldSearchFilterByVersionCriteria() {
+		final var matchingBothVersions = artifactory.search(Owners.konfigyr(), SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("internal")
+				.criteria(ArtifactCoordinates.VERSION_CRITERIA, "1.0.0")
+				.build());
+
+		assertThat(matchingBothVersions.stream())
+				.as("id=21 was only ever declared on version 1.1.0, not 1.0.0")
+				.extracting(PropertyDefinition::id)
+				.containsExactlyInAnyOrder(EntityId.from(19), EntityId.from(20));
+
+		final var matchingLatestVersion = artifactory.search(Owners.konfigyr(), SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("internal")
+				.criteria(ArtifactCoordinates.VERSION_CRITERIA, "1.1.0")
+				.build());
+
+		assertThat(matchingLatestVersion.stream())
+				.extracting(PropertyDefinition::id)
+				.containsExactlyInAnyOrder(EntityId.from(19), EntityId.from(20), EntityId.from(21));
+	}
+
+	@Test
+	@DisplayName("should return an empty search result when no property definition matches the term")
+	void shouldSearchReturnEmptyResultForUnmatchedTerm() {
+		final var result = artifactory.search(Owners.konfigyr(), SearchQuery.builder()
+				.pageable(Pageable.ofSize(20))
+				.term("does-not-match-anything")
+				.build());
+
+		assertThat(result).isEmpty();
 	}
 
 }

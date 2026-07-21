@@ -76,10 +76,10 @@ class DefaultProfileManager implements ProfileManager {
 		}
 
 		return profilesExecutor.execute(
-				createProfilesQuery(DSL.and(conditions)),
+				this::createProfilesQuery,
+				() -> DSL.and(conditions),
 				DefaultProfileManager::toProfile,
-				query.pageable(),
-				() -> context.fetchCount(createProfilesQuery(DSL.and(conditions)))
+				query.pageable()
 		);
 	}
 
@@ -190,7 +190,9 @@ class DefaultProfileManager implements ProfileManager {
 	}
 
 	private Optional<Profile> fetchProfile(Condition condition) {
-		return createProfilesQuery(condition).fetchOptional(DefaultProfileManager::toProfile);
+		return createProfilesQuery()
+				.where(condition)
+				.fetchOptional(DefaultProfileManager::toProfile);
 	}
 
 	private void delete(Profile profile) {
@@ -205,10 +207,9 @@ class DefaultProfileManager implements ProfileManager {
 		publisher.publishEvent(new ProfileEvent.Deleted(profile));
 	}
 
-	private SelectConditionStep<Record> createProfilesQuery(Condition condition) {
+	private SelectWhereStep<Record> createProfilesQuery() {
 		return context.select(PROFILE_FIELDS)
-				.from(VAULT_PROFILES)
-				.where(condition);
+				.from(VAULT_PROFILES);
 	}
 
 	private void assertServiceExists(EntityId service) {

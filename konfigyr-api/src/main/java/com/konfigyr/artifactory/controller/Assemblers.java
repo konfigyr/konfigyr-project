@@ -39,6 +39,10 @@ interface Assemblers {
 				.add(linkBuilder(owner, (Artifact) artifact).method(HttpMethod.DELETE).rel("Retract artifact version"));
 	}
 
+	static RepresentationModelAssembler<PropertyDefinition, EntityModel<PropertyDefinition>> property() {
+		return EntityModel::of;
+	}
+
 	static RepresentationModelAssembler<PropertyDefinition, EntityModel<PropertyDefinition>> property(ArtifactCoordinates coordinates) {
 		return property -> EntityModel.of(property, linkBuilder(coordinates).path(property.id().serialize()).selfRel());
 	}
