@@ -3,14 +3,14 @@ import { toast } from 'sonner';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useClaimGroupVerification, useNamespace } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
-import { GroupVerificationForm } from '@konfigyr/components/groups/group-verification-form';
+import { GroupsBreadcrumbs } from '@konfigyr/components/artifactory/groups/breadcrumbs';
+import { GroupVerificationForm } from '@konfigyr/components/artifactory/groups/group-verification-form';
 import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
-import { GroupClaimsLabel } from '@konfigyr/components/groups/messages';
-import type { GroupVerificationFormValues } from '@konfigyr/components/groups/group-verification-form';
+import { GroupClaimsLabel } from '@konfigyr/components/artifactory/groups/messages';
+import type { GroupVerificationFormValues } from '@konfigyr/components/artifactory/groups/group-verification-form';
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/groups/create',
+  '/_authenticated/namespace/$namespace/artifactory/groups/create',
 )({
   component: RouteComponent,
 });
@@ -36,7 +36,7 @@ function RouteComponent() {
       ));
 
       await navigate({
-        to: '/namespace/$namespace/groups/$groupId',
+        to: '/namespace/$namespace/artifactory/groups/$groupId',
         params: { namespace: namespace.slug, groupId: created.groupId },
       });
     } catch (error) {
@@ -59,7 +59,7 @@ function RouteComponent() {
           <GroupVerificationForm
             defaultValues={defaultValues}
             onSubmit={onSubmit}
-            onCancel={() => navigate({ to: '/namespace/$namespace/groups', params: { namespace: namespace.slug } })}
+            onCancel={() => navigate({ to: '/namespace/$namespace/artifactory/groups', params: { namespace: namespace.slug } })}
           />
         </div>
       </div>

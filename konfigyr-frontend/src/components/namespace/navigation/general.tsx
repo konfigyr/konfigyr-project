@@ -2,7 +2,6 @@ import {
   ActivityIcon,
   MonitorCloudIcon,
   MonitorIcon,
-  Package,
   SendIcon,
   Settings2Icon,
   UsersIcon,
@@ -63,16 +62,6 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
                 activeProps={{ 'data-active': true }}
               >
                 <Settings2Icon /> Settings
-              </Link>
-            } />
-            <SidebarMenuButton render={
-              <Link
-                to="/namespace/$namespace/groups"
-                params={{ namespace: namespace.slug }}
-                className="truncate"
-                activeProps={{ 'data-active': true }}
-              >
-                <Package /> Group claims
               </Link>
             } />
             <SidebarMenuButton render={

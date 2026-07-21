@@ -7,7 +7,7 @@ import {
   BreadcrumbSeparator,
 } from '@konfigyr/components/ui/breadcrumb';
 
-import { GroupClaimsLabel } from '@konfigyr/components/groups/messages';
+import { GroupClaimsLabel } from '@konfigyr/components/artifactory/groups/messages';
 import type { ReactNode } from 'react';
 import type { Namespace } from '@konfigyr/hooks/types';
 
@@ -19,7 +19,7 @@ export function GroupsBreadcrumbs({ namespace, children }: { namespace: Namespac
           <BreadcrumbLink
             render={
               <Link
-                to="/namespace/$namespace/groups"
+                to="/namespace/$namespace/artifactory/groups"
                 params={{ namespace: namespace.slug }}
               >
                 <GroupClaimsLabel />

@@ -8,16 +8,16 @@ import {
   useNamespace,
 } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
-import { GroupVerificationForm } from '@konfigyr/components/groups/group-verification-form';
-import { ClaimAgainLabel, EditClaimLabel } from '@konfigyr/components/groups/messages';
+import { GroupsBreadcrumbs } from '@konfigyr/components/artifactory/groups/breadcrumbs';
+import { GroupVerificationForm } from '@konfigyr/components/artifactory/groups/group-verification-form';
+import { ClaimAgainLabel, EditClaimLabel } from '@konfigyr/components/artifactory/groups/messages';
 import { BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@konfigyr/components/ui/breadcrumb';
-import { GroupVerificationDetailsLink } from '@konfigyr/components/groups/group-verification-table';
+import { GroupVerificationDetailsLink } from '@konfigyr/components/artifactory/groups/group-verification-table';
 import { useMemo } from 'react';
-import type { GroupVerificationFormValues } from '@konfigyr/components/groups/group-verification-form';
+import type { GroupVerificationFormValues } from '@konfigyr/components/artifactory/groups/group-verification-form';
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/groups/$groupId/edit',
+  '/_authenticated/namespace/$namespace/artifactory/groups/$groupId/edit',
 )({
   component: RouteComponent,
 });
@@ -61,7 +61,7 @@ function RouteComponent () {
       ));
 
       await navigate({
-        to: '/namespace/$namespace/groups/$groupId',
+        to: '/namespace/$namespace/artifactory/groups/$groupId',
         params: { namespace: namespace.slug, groupId: updated.groupId },
       });
     } catch (error) {
@@ -87,7 +87,7 @@ function RouteComponent () {
         <GroupVerificationForm
           defaultValues={defaultValues}
           onSubmit={onSubmit}
-          onCancel={() => navigate({ to: '/namespace/$namespace/groups/$groupId', params: { namespace: namespace.slug, groupId } })}
+          onCancel={() => navigate({ to: '/namespace/$namespace/artifactory/groups/$groupId', params: { namespace: namespace.slug, groupId } })}
         />
       </div>
     </>

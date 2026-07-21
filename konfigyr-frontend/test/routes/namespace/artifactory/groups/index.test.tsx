@@ -6,7 +6,7 @@ describe('routes | namespace | groups', () => {
   afterEach(() => cleanup());
 
   test('should render the group claims list for a populated namespace', async () => {
-    const { getByRole, getByText } = renderWithRouter('/namespace/konfigyr/groups');
+    const { getByRole, getByText } = renderWithRouter('/namespace/konfigyr/artifactory/groups');
 
     await waitFor(() => {
       expect(getByRole('link', { name: 'Claim a groupId' })).toBeInTheDocument();
@@ -18,7 +18,7 @@ describe('routes | namespace | groups', () => {
   });
 
   test('should render an empty state when no group claims exist', async () => {
-    const { getByRole, getByText } = renderWithRouter('/namespace/john-doe/groups');
+    const { getByRole, getByText } = renderWithRouter('/namespace/john-doe/artifactory/groups');
 
     await waitFor(() => {
       expect(getByRole('link', { name: 'Claim a groupId' })).toBeInTheDocument();

@@ -3,7 +3,7 @@ import { Badge } from '@konfigyr/components/ui/badge';
 
 import { SimpleAlert } from '@konfigyr/components/ui/alert';
 import { AlertCircleIcon, CheckCircle2Icon, CircleAlertIcon, Trash2Icon, TriangleAlertIcon } from 'lucide-react';
-import { sourceCodeHostLabel } from '@konfigyr/components/groups/group-verification-method';
+import { sourceCodeHostLabel } from '@konfigyr/components/artifactory/groups/group-verification-method';
 import type { ComponentProps } from 'react';
 import type { VerificationMethod, VerificationState } from '@konfigyr/hooks/types';
 

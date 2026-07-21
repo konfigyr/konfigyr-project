@@ -5,11 +5,11 @@ import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import {
   CancelGroupVerificationButton,
   RevokeGroupVerificationButton,
-} from '@konfigyr/components/groups/revoke-group-verification';
+} from '@konfigyr/components/artifactory/groups/revoke-group-verification';
 import {
   ClaimCanceledSuccessMessage,
   ClaimRevokedSuccessMessage,
-} from '@konfigyr/components/groups/messages';
+} from '@konfigyr/components/artifactory/groups/messages';
 
 import type { GroupVerification } from '@konfigyr/hooks/types';
 

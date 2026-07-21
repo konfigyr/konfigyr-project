@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
-import { DATE_FORMAT_OPTIONS, GroupVerification } from '@konfigyr/components/groups/group-verification-challenge';
+import { DATE_FORMAT_OPTIONS, GroupVerification } from '@konfigyr/components/artifactory/groups/group-verification-challenge';
 
 import type { GroupVerification as GroupVerificationType, VerificationChallenge } from '@konfigyr/hooks/types';
 

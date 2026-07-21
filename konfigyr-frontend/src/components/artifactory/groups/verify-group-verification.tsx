@@ -21,7 +21,7 @@ import {
   ClaimVerifiedSuccessMessage,
   ClaimVerifiedWarningMessage,
   VerifyClaimLabel,
-} from '@konfigyr/components/groups/messages';
+} from '@konfigyr/components/artifactory/groups/messages';
 import { FormattedMessage } from 'react-intl';
 import type { ReactElement } from 'react';
 import type { GroupVerification } from '@konfigyr/hooks/types';

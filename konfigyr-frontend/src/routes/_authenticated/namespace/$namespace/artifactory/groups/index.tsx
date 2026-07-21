@@ -6,8 +6,8 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useGetGroupVerifications, useNamespace } from '@konfigyr/hooks';
 import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
 import { Button, buttonVariants } from '@konfigyr/components/ui/button';
-import { GroupVerificationFilters } from '@konfigyr/components/groups/group-verification-filters';
-import { GroupVerificationTable } from '@konfigyr/components/groups/group-verification-table';
+import { GroupVerificationFilters } from '@konfigyr/components/artifactory/groups/group-verification-filters';
+import { GroupVerificationTable } from '@konfigyr/components/artifactory/groups/group-verification-table';
 
 import type { GroupVerificationQuery } from '@konfigyr/hooks/types';
 
@@ -18,7 +18,7 @@ const searchQuerySchema = z.object({
 });
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/groups/',
+  '/_authenticated/namespace/$namespace/artifactory/groups/',
 )({
   validateSearch: searchQuerySchema,
   component: RouteComponent,
@@ -55,7 +55,7 @@ function RouteComponent() {
           />
 
           <Link
-            to="/namespace/$namespace/groups/create"
+            to="/namespace/$namespace/artifactory/groups/create"
             params={{ namespace: namespace.slug }}
             className={buttonVariants({ variant: 'ghost' })}
           >

@@ -8,25 +8,25 @@ import {
   useNamespace,
 } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { GroupsBreadcrumbs } from '@konfigyr/components/groups/breadcrumbs';
-import { ConflictingOwnersAlert, GroupVerificationStateAlert } from '@konfigyr/components/groups/group-verification-state';
+import { GroupsBreadcrumbs } from '@konfigyr/components/artifactory/groups/breadcrumbs';
+import { ConflictingOwnersAlert, GroupVerificationStateAlert } from '@konfigyr/components/artifactory/groups/group-verification-state';
 import { Button, buttonVariants } from '@konfigyr/components/ui/button';
 import { EmptyState } from '@konfigyr/components/ui/empty';
-import { GroupVerification } from '@konfigyr/components/groups/group-verification-challenge';
+import { GroupVerification } from '@konfigyr/components/artifactory/groups/group-verification-challenge';
 import {
   CancelClaimLabel,
   ClaimAgainLabel,
   RevokeClaimLabel,
   VerifyClaimLabel,
-} from '@konfigyr/components/groups/messages';
+} from '@konfigyr/components/artifactory/groups/messages';
 import {
   CancelGroupVerificationButton,
   RevokeGroupVerificationButton,
-} from '@konfigyr/components/groups/revoke-group-verification';
-import { VerifyGroupVerificationButton } from '@konfigyr/components/groups/verify-group-verification';
+} from '@konfigyr/components/artifactory/groups/revoke-group-verification';
+import { VerifyGroupVerificationButton } from '@konfigyr/components/artifactory/groups/verify-group-verification';
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/groups/$groupId/',
+  '/_authenticated/namespace/$namespace/artifactory/groups/$groupId/',
 )({
   component: RouteComponent,
 });
@@ -145,7 +145,7 @@ function RouteComponent () {
 
               {verification.state === 'REVOKED' && (
                 <Link
-                  to="/namespace/$namespace/groups/$groupId/edit"
+                  to="/namespace/$namespace/artifactory/groups/$groupId/edit"
                   params={{ namespace: namespace.slug, groupId }}
                   className={buttonVariants({ variant: 'default' })}
                 >

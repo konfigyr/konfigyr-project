@@ -23,7 +23,7 @@ import {
   RevokeClaimLabel,
   StateLabel,
   VerifiedAtLabel,
-} from '@konfigyr/components/groups/messages';
+} from '@konfigyr/components/artifactory/groups/messages';
 import { useState } from 'react';
 import {
   DropdownMenu,
@@ -44,7 +44,7 @@ export function GroupVerificationDetailsLink ({ namespace, groupId, children }: 
 }) {
   return (
     <Link
-      to="/namespace/$namespace/groups/$groupId"
+      to="/namespace/$namespace/artifactory/groups/$groupId"
       params={{ namespace, groupId }}
     >
       {children ? children : groupId}
@@ -80,9 +80,13 @@ function GroupVerificationRowActions ({ namespace, verification }: {
         </GroupVerificationDetailsLink>
 
         {verification.state === 'ACTIVE' && (
-          <RevokeGroupVerificationButton namespace={namespace}
+          <RevokeGroupVerificationButton
+            nativeButton={false}
+            role="menuitem"
+            namespace={namespace}
             verification={verification}
-            onOpenChange={handleDialogOpenChange}>
+            onOpenChange={handleDialogOpenChange}
+          >
             <DropdownMenuItem closeOnClick={false}>
               <RevokeClaimLabel/>
             </DropdownMenuItem>
@@ -90,8 +94,13 @@ function GroupVerificationRowActions ({ namespace, verification }: {
         )}
 
         {verification.state === 'PENDING' && (
-          <CancelGroupVerificationButton namespace={namespace} verification={verification}
-            onOpenChange={handleDialogOpenChange}>
+          <CancelGroupVerificationButton
+            nativeButton={false}
+            role="menuitem"
+            namespace={namespace}
+            verification={verification}
+            onOpenChange={handleDialogOpenChange}
+          >
             <DropdownMenuItem closeOnClick={false}>
               <CancelClaimLabel/>
             </DropdownMenuItem>

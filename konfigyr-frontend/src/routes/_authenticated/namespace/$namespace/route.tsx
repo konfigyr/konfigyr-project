@@ -3,6 +3,7 @@ import {
   LayoutSidebar,
 } from '@konfigyr/components/layout';
 import { NamespaceProvider } from '@konfigyr/components/namespace/context';
+import { NamespaceArtifactoryNavigationMenu } from '@konfigyr/components/namespace/navigation/artifactory';
 import { NamespaceNavigationMenu } from '@konfigyr/components/namespace/navigation/general';
 import { NamespaceKmsNavigationMenu } from '@konfigyr/components/namespace/navigation/kms';
 import { NamespacePkiNavigationMenu } from '@konfigyr/components/namespace/navigation/pki';
@@ -32,6 +33,7 @@ function RouteComponent() {
         <LayoutSidebar account={account} namespace={namespace}>
           <NamespaceNavigationMenu namespace={namespace} />
           <NamespaceServicesNavigationMenu namespace={namespace} />
+          <NamespaceArtifactoryNavigationMenu namespace={namespace} />
           <NamespaceKmsNavigationMenu namespace={namespace} />
           <NamespacePkiNavigationMenu />
         </LayoutSidebar>

@@ -6,7 +6,7 @@ describe('routes | namespace | groups | detail', () => {
   afterEach(() => cleanup());
 
   test('should render an active group claim detail page', async () => {
-    const { getByRole, getByText } = renderWithRouter('/namespace/konfigyr/groups/com.example.group/');
+    const { getByRole, getByText } = renderWithRouter('/namespace/konfigyr/artifactory/groups/com.example.group/');
 
     await waitFor(() => {
       expect(getByRole('heading', { name: 'com.example.group' })).toBeInTheDocument();
@@ -18,7 +18,7 @@ describe('routes | namespace | groups | detail', () => {
   });
 
   test('should render a pending group claim detail page', async () => {
-    const { getByRole, getByText } = renderWithRouter('/namespace/konfigyr/groups/io.github.acme/');
+    const { getByRole, getByText } = renderWithRouter('/namespace/konfigyr/artifactory/groups/io.github.acme/');
 
     await waitFor(() => {
       expect(getByRole('heading', { name: 'io.github.acme' })).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe('routes | namespace | groups | detail', () => {
   });
 
   test('should not render a conflict banner when there are no conflicting owners', async () => {
-    const { getByText, queryByText } = renderWithRouter('/namespace/konfigyr/groups/com.example.group/');
+    const { getByText, queryByText } = renderWithRouter('/namespace/konfigyr/artifactory/groups/com.example.group/');
 
     await waitFor(() => {
       expect(getByText('Ownership verified')).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('routes | namespace | groups | detail', () => {
   });
 
   test('should surface conflicting owners on the detail page', async () => {
-    const { getAllByRole, getByText } = renderWithRouter('/namespace/konfigyr/groups/com.acme.widgets/');
+    const { getAllByRole, getByText } = renderWithRouter('/namespace/konfigyr/artifactory/groups/com.acme.widgets/');
 
     await waitFor(() => {
       expect(getByText('Other namespaces already own artifacts here')).toBeInTheDocument();
