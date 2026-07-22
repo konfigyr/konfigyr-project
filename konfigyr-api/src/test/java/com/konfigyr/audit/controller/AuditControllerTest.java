@@ -33,7 +33,7 @@ class AuditControllerTest extends AbstractControllerTest {
 				.bodyJson()
 				.convertTo(cursorModel(AuditRecord.class))
 				.extracting(CursorModel::getContent, InstanceOfAssertFactories.iterable(AuditRecord.class))
-				.hasSize(10)
+				.hasSize(11)
 				.allSatisfy(record -> assertThat(record)
 						.returns(EntityId.from(2), AuditRecord::namespaceId)
 						.satisfies(it -> assertThat(it.message()).isNotBlank())
@@ -180,7 +180,7 @@ class AuditControllerTest extends AbstractControllerTest {
 				.bodyJson()
 				.convertTo(cursorModel(AuditRecord.class))
 				.extracting(CursorModel::getContent, InstanceOfAssertFactories.iterable(AuditRecord.class))
-				.hasSize(1)
+				.hasSize(2)
 				.first()
 				.satisfies(record -> {
 					assertThat(record.eventType()).isEqualTo("service.created");
