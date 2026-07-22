@@ -7,6 +7,13 @@ export const TransfersLabel = () => (
   />
 );
 
+export const TransferDetailsLabel = () => (
+  <FormattedMessage
+    defaultMessage="Ownership transfer details"
+    description="Label for the ownership transfers details page."
+  />
+);
+
 export const GroupIdLabel = () => (
   <FormattedMessage
     defaultMessage="Group Id"
@@ -35,6 +42,20 @@ export const ResolvedAtLabel = () => (
   />
 );
 
+export const CurrentOwnerLabel = () => (
+  <FormattedMessage
+    defaultMessage="Current owner"
+    description="Label that shows the current owner of a groupId that is being transferred."
+  />
+);
+
+export const RequestingNamespaceLabel = () => (
+  <FormattedMessage
+    defaultMessage="Request namespace"
+    description="Label that shows the namespace that requested the groupId transfer."
+  />
+);
+
 export const IncomingLabel = () => (
   <FormattedMessage
     defaultMessage="Incoming"
@@ -58,7 +79,7 @@ export const RequestTransferLabel = () => (
 
 export const AcceptTransferLabel = () => (
   <FormattedMessage
-    defaultMessage="Accept"
+    defaultMessage="Accept and move artifacts"
     description="Button label that accepts an ownership transfer request."
   />
 );

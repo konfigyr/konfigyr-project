@@ -14,7 +14,7 @@ describe('components | transfers | <TransferDetails/>', () => {
       <TransferDetails namespace={namespaces.konfigyr} transfer={transfers.incomingPending}/>,
     );
 
-    expect(getByRole('button', { name: 'Accept' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Accept and move artifacts' })).toBeInTheDocument();
     expect(getByRole('button', { name: 'Reject' })).toBeInTheDocument();
     expect(queryByRole('button', { name: 'Cancel request' })).not.toBeInTheDocument();
   });

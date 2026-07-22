@@ -81,7 +81,9 @@ describe('components | transfers | <AcceptTransferButton/>', () => {
 
     await user.click(getByRole('button', { name: 'Accept transfer' }));
 
-    const submitButton = await waitFor(() => getByRole('button', { name: 'Accept' }));
+    const submitButton = await waitFor(() => getByRole(
+      'button', { name: 'Accept and move artifacts' },
+    ));
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -109,7 +111,9 @@ describe('components | transfers | <AcceptTransferButton/>', () => {
 
     await user.click(getByRole('button', { name: 'Accept transfer' }));
 
-    const submitButton = await waitFor(() => getByRole('button', { name: 'Accept' }));
+    const submitButton = await waitFor(() => getByRole(
+      'button', { name: 'Accept and move artifacts' },
+    ));
     await user.click(submitButton);
 
     await waitFor(() => {
