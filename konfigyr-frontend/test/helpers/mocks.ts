@@ -6,6 +6,10 @@ export * as accounts from './mocks/account';
 export * as kms from './mocks/kms';
 export * as namespaces from './mocks/namespace';
 export * as applications from './mocks/application';
+export * as transfers from './mocks/transfers';
+export * as groupVerifications from './mocks/group-verifications';
+export * as changeRequests from './mocks/change-requests';
+export * as audit from './mocks/audit';
 
 export const isValidProfile = (slug?: string | unknown) => (
   slug === profiles.development.slug || slug === profiles.staging.slug || slug === profiles.deprecated.slug

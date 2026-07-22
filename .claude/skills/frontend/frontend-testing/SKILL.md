@@ -1,9 +1,36 @@
 ---
 name: frontend-testing
-description: Testing React components and hooks with @testing-library, MSW for API mocking, test utilities, and Arrange-Act-Assert pattern. Use when writing tests for components, hooks, or routes.
+description: Testing React components and hooks with @testing-library, MSW for API mocking, the route-vs-component test split, and Arrange-Act-Assert pattern. Use when writing or reorganizing tests for components, hooks, or routes.
 ---
 
 # Frontend Testing
+
+## Route vs Component Test Split
+
+Route tests (`test/routes/**`) go through the real router + MSW via `renderWithRouter` — real navigation, real HTTP round-trips, expensive per test. Component tests (`test/components/**`) render the component directly — much cheaper. Default: if a route delegates its content to a dedicated component, that component owns the interaction tests (form validation, table rendering, filters, role-gating); the route test is trimmed to one smoke test plus whatever's genuinely route-owned — redirects, search-param sync, loader behavior, `useLocation().state` passthrough.
+
+| Helper | Location | When |
+|---|---|---|
+| `renderWithQueryClient` | `test/helpers/query-client.tsx` | No `<Link>`s, no router context needed |
+| `renderComponentWithRouter` | `test/helpers/router.tsx` | Renders real `<Link>`s/pagination but no specific URL needed |
+| `renderWithRouter(path)` | `test/helpers/router.tsx` | Full route test — reserve for the route-owned concerns above |
+
+## Don't mock `@konfigyr/hooks` — use real hooks + MSW + factories
+
+Component tests should call the real hooks and let MSW (`test/helpers/server/**`) answer them, using fixtures from `test/helpers/mocks/*.ts` (`namespaces`, `applications`, `services`, `transfers`, `groupVerifications`, `changeRequests`, `audit`, ...) — not `vi.mock('@konfigyr/hooks', ...)` with hand-rolled data. Mocking the hook bypasses this file's own checklist rules below ("No real API calls", "No hardcoded test data") and duplicates fixtures that already exist.
+
+```typescript
+// Don't:
+vi.mock('@konfigyr/hooks', () => ({
+  useGetGroupVerifications: () => ({ data: { data: [/* hand-rolled */] } }),
+}))
+
+// Do — MSW already serves real data for this namespace:
+import { namespaces } from '@konfigyr/test/helpers/mocks'
+renderComponentWithRouter(<TransferRequestForm namespace={namespaces.konfigyr.slug} .../>)
+```
+
+Exception: it's fine to leave a hook unmocked-but-unexercised rather than mock it — e.g. a `useMutation` hook whose button is never clicked in that test, or a side-effect hook like `useErrorNotification` with no MSW-relevant behavior. If a scenario needs a fixture that doesn't exist yet, add it under `test/helpers/mocks/` (mirroring `namespace.ts`/`application.ts`) and have the matching MSW handler import from there too, so both share one source of truth instead of drifting apart.
 
 ## Test Structure
 

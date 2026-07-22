@@ -1,68 +1,16 @@
 import { HttpResponse, http } from 'msw';
 import { namespaces } from '../../mocks';
+import {
+  activeConflictedVerification,
+  activeVerification,
+  conflictedChallenge,
+  conflictedVerification,
+  pendingVerification,
+  verificationChallenge,
+} from '../../mocks/group-verifications';
 
 import type { CollectionResponse, PageResponse } from '@konfigyr/hooks/hateoas/types';
 import type { GroupVerification, VerificationChallenge, VerificationMethod } from '@konfigyr/hooks/groups/types';
-
-const activeVerification: GroupVerification = {
-  id: 'verification-active',
-  groupId: 'com.example.group',
-  state: 'ACTIVE',
-  createdAt: '2026-07-07T00:00:00Z',
-  verifiedAt: '2026-07-08T00:00:00Z',
-  revokedAt: null,
-};
-
-const pendingVerification: GroupVerification = {
-  id: 'verification-pending',
-  groupId: 'io.github.acme',
-  state: 'PENDING',
-  createdAt: '2026-07-09T00:00:00Z',
-  verifiedAt: null,
-  revokedAt: null,
-};
-
-const conflictedVerification: GroupVerification = {
-  id: 'verification-conflicted',
-  groupId: 'com.acme.widgets',
-  state: 'PENDING',
-  createdAt: '2026-07-09T00:00:00Z',
-  verifiedAt: null,
-  revokedAt: null,
-  conflictingOwners: ['ebf'],
-};
-
-const activeConflictedVerification: GroupVerification = {
-  id: 'verification-active-conflicted',
-  groupId: 'com.acme.transfer-ready',
-  state: 'ACTIVE',
-  createdAt: '2026-07-05T00:00:00Z',
-  verifiedAt: '2026-07-06T00:00:00Z',
-  revokedAt: null,
-  conflictingOwners: ['ebf'],
-};
-
-const verificationChallenge: VerificationChallenge = {
-  id: 'challenge-pending',
-  verificationId: pendingVerification.id,
-  method: 'SOURCE_CODE',
-  token: 'token-123',
-  state: 'UNVERIFIED',
-  createdAt: '2026-07-09T00:00:00Z',
-  verifiedAt: null,
-  expiresAt: null,
-};
-
-const conflictedChallenge: VerificationChallenge = {
-  id: 'challenge-conflicted',
-  verificationId: conflictedVerification.id,
-  method: 'DNS',
-  token: 'token-456',
-  state: 'UNVERIFIED',
-  createdAt: '2026-07-09T00:00:00Z',
-  verifiedAt: null,
-  expiresAt: null,
-};
 
 const list = http.get('http://localhost/api/namespaces/:slug/group-verifications', ({ params, request }) => {
   const { slug } = params;

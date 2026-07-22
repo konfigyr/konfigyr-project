@@ -1,10 +1,13 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { userEvent } from '@testing-library/user-event';
 import { cleanup, waitFor } from '@testing-library/react';
 import { renderWithRouter } from '@konfigyr/test/helpers/router';
 
 describe('routes | namespace | service | manifest | properties', () => {
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
 
   test('should render service manifest properties page', async () => {
     const { getByText } = renderWithRouter('/namespace/konfigyr/services/konfigyr-api/manifest');
@@ -19,35 +22,36 @@ describe('routes | namespace | service | manifest | properties', () => {
   });
 
   test('should search for properties', async () => {
-    const user = userEvent.setup();
-    const { getByRole, queryByText } = renderWithRouter('/namespace/konfigyr/services/konfigyr-api/manifest');
-
-    await waitFor(async () => {
-      await user.type(
-        getByRole('searchbox'),
-        'spring.aop.auto',
-      );
-    });
+    const { getByRole, queryByText, router } = renderWithRouter('/namespace/konfigyr/services/konfigyr-api/manifest');
 
     await waitFor(() => {
-      expect(queryByText('spring.web.resources.chain.strategy.content.paths')).not.toBeInTheDocument();
-    });
-  });
-
-  test('should search for properties and not find any match', async () => {
-    const user = userEvent.setup();
-    const { getByRole, queryByText } = renderWithRouter('/namespace/konfigyr/services/konfigyr-api/manifest');
-
-    await waitFor(async () => {
-      await user.type(
-        getByRole('searchbox'),
-        'missing property',
-      );
+      expect(router.state.status).to.equal('idle');
     });
 
-    await waitFor(() => {
-      expect(queryByText('No matching properties found')).toBeInTheDocument();
+    vi.useFakeTimers();
+
+    const user = userEvent.setup({
+      delay: null,
+      advanceTimers: vi.advanceTimersByTime,
     });
+
+    user.type(
+      getByRole('searchbox'),
+      'spring.aop.auto',
+    );
+
+    vi.advanceTimersByTime(500);
+
+    expect(queryByText('spring.web.resources.chain.strategy.content.paths')).not.toBeInTheDocument();
+
+    user.type(
+      getByRole('searchbox'),
+      'missing property',
+    );
+
+    vi.advanceTimersByTime(500);
+
+    expect(queryByText('No matching properties found')).toBeInTheDocument();
   });
 
   test('should render an empty service manifest properties page', async () => {
