@@ -140,6 +140,8 @@ class DefaultArtifactOwnershipTransfers implements ArtifactOwnershipTransfers {
 			log.info("Successfully requested artifact ownership transfer {} for groupId '{}' from namespace {} ({}) to namespace {} ({})",
 					transfer.id(), groupId, from.slug(), from.id(), to.slug(), to.id());
 
+			eventPublisher.publishEvent(new ArtifactoryEvent.OwnershipTransferRequested(transfer.id(), groupId, from, to));
+
 			return transfer;
 		} catch (DataIntegrityViolationException ex) {
 			throw new ArtifactOwnershipTransferAlreadyRequestedException(groupId, from, to);

@@ -125,6 +125,49 @@ class AuditControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should filter audit events by entity type and entity identifier")
+	void shouldFilterByEntityTypeAndId() {
+		mvc.get().uri("/namespaces/{slug}/audit", "konfigyr")
+				.queryParam("entityType", "service")
+				.queryParam("entityId", EntityId.from(3).serialize())
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(cursorModel(AuditRecord.class))
+				.extracting(CursorModel::getContent, InstanceOfAssertFactories.iterable(AuditRecord.class))
+				.hasSize(1)
+				.allSatisfy(record -> assertThat(record)
+						.returns(EntityId.from(3), AuditRecord::entityId)
+						.returns("service", AuditRecord::entityType)
+						.returns("service.created", AuditRecord::eventType)
+				);
+	}
+
+	@Test
+	@DisplayName("should filter audit events by entity type and event type")
+	void shouldFilterByEntityTypeAndEventType() {
+		mvc.get().uri("/namespaces/{slug}/audit", "konfigyr")
+				.queryParam("entityType", "service")
+				.queryParam("eventType", "service.created")
+				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(cursorModel(AuditRecord.class))
+				.extracting(CursorModel::getContent, InstanceOfAssertFactories.iterable(AuditRecord.class))
+				.hasSize(2)
+				.allSatisfy(record -> assertThat(record)
+						.returns("service", AuditRecord::entityType)
+						.returns("service.created", AuditRecord::eventType)
+				);
+	}
+
+	@Test
 	@DisplayName("should filter audit events by event type")
 	void shouldFilterByEventType() {
 		mvc.get().uri("/namespaces/{slug}/audit", "konfigyr")

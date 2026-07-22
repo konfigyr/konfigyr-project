@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
-import { DATE_FORMAT_OPTIONS, GroupVerification } from '@konfigyr/components/artifactory/groups/group-verification-challenge';
+import { DATE_FORMAT_OPTIONS, GroupVerificationChallenge } from '@konfigyr/components/artifactory/groups/group-verification-challenge';
 
 import type { GroupVerification as GroupVerificationType, VerificationChallenge } from '@konfigyr/hooks/types';
 
 const dateFormat = new Intl.DateTimeFormat('en', DATE_FORMAT_OPTIONS );
 
-describe('components | groups | <GroupVerification/>', () => {
+describe('components | groups | <GroupVerificationChallenge/>', () => {
   afterEach(() => cleanup());
 
   test('should render the verification details card', () => {
@@ -32,7 +32,7 @@ describe('components | groups | <GroupVerification/>', () => {
     };
 
     const { getByText } = renderWithMessageProvider(
-      <GroupVerification verification={verification} challenge={challenge} />,
+      <GroupVerificationChallenge verification={verification} challenge={challenge} />,
     );
 
     expect(getByText('Group verification details')).toBeInTheDocument();
@@ -81,7 +81,7 @@ describe('components | groups | <GroupVerification/>', () => {
     };
 
     const { getByText } = renderWithMessageProvider(
-      <GroupVerification verification={verification} challenge={challenge} />,
+      <GroupVerificationChallenge verification={verification} challenge={challenge} />,
     );
 
     expect(getByText('Add a DNS TXT record')).toBeInTheDocument();
@@ -111,7 +111,7 @@ describe('components | groups | <GroupVerification/>', () => {
     };
 
     const { getByText } = renderWithMessageProvider(
-      <GroupVerification verification={verification} challenge={challenge} />,
+      <GroupVerificationChallenge verification={verification} challenge={challenge} />,
     );
 
     expect(getByText('Create a public repository on GitHub')).toBeInTheDocument();
@@ -141,7 +141,7 @@ describe('components | groups | <GroupVerification/>', () => {
     };
 
     const { queryByText } = renderWithMessageProvider(
-      <GroupVerification verification={verification} challenge={challenge} />,
+      <GroupVerificationChallenge verification={verification} challenge={challenge} />,
     );
 
     expect(queryByText('Add a DNS TXT record')).not.toBeInTheDocument();

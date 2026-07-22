@@ -32,6 +32,16 @@ const conflictedVerification: GroupVerification = {
   conflictingOwners: ['ebf'],
 };
 
+const activeConflictedVerification: GroupVerification = {
+  id: 'verification-active-conflicted',
+  groupId: 'com.acme.transfer-ready',
+  state: 'ACTIVE',
+  createdAt: '2026-07-05T00:00:00Z',
+  verifiedAt: '2026-07-06T00:00:00Z',
+  revokedAt: null,
+  conflictingOwners: ['ebf'],
+};
+
 const verificationChallenge: VerificationChallenge = {
   id: 'challenge-pending',
   verificationId: pendingVerification.id,
@@ -54,11 +64,17 @@ const conflictedChallenge: VerificationChallenge = {
   expiresAt: null,
 };
 
-const list = http.get('http://localhost/api/namespaces/:slug/group-verifications', ({ params }) => {
+const list = http.get('http://localhost/api/namespaces/:slug/group-verifications', ({ params, request }) => {
   const { slug } = params;
-  const data = slug === namespaces.konfigyr.slug
-    ? [activeVerification, pendingVerification]
+  const state = new URL(request.url).searchParams.get('state');
+
+  let data = slug === namespaces.konfigyr.slug
+    ? [activeVerification, pendingVerification, activeConflictedVerification]
     : [];
+
+  if (state) {
+    data = data.filter(verification => verification.state === state);
+  }
 
   const response: PageResponse<GroupVerification> = {
     data,
@@ -94,6 +110,10 @@ const get = http.get('http://localhost/api/namespaces/:slug/group-verifications/
 
   if (groupId === conflictedVerification.groupId) {
     return HttpResponse.json(conflictedVerification);
+  }
+
+  if (groupId === activeConflictedVerification.groupId) {
+    return HttpResponse.json(activeConflictedVerification);
   }
 
   return HttpResponse.json({

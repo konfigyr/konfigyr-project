@@ -34,9 +34,19 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
                 />
               </Link>
             } />
-            <SidebarMenuButton disabled>
-              <span className="truncate">Ownership transfers</span>
-            </SidebarMenuButton>
+            <SidebarMenuButton render={
+              <Link
+                to="/namespace/$namespace/artifactory/transfers"
+                params={{ namespace: namespace.slug }}
+                className="truncate"
+                activeProps={{ 'data-active': true }}
+              >
+                <FormattedMessage
+                  defaultMessage="Ownership transfers"
+                  description="Label for the Ownership transfers page"
+                />
+              </Link>
+            } />
             <SidebarMenuButton disabled>
               <span className="truncate">Artifact registry</span>
             </SidebarMenuButton>

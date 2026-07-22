@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.konfigyr.data.tables.Artifacts.ARTIFACTS;
 import static org.assertj.core.api.Assertions.*;
 
-class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
+class ArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 
 	@Autowired
 	ArtifactOwnershipTransfers transfers;
@@ -62,6 +62,12 @@ class DefaultArtifactOwnershipTransfersTest extends AbstractIntegrationTest {
 				.fetchOne(ARTIFACTS.NAMESPACE_ID))
 				.as("artifact ownership should have moved to the new claimant")
 				.isEqualTo(to.id().get());
+
+		events.assertThat()
+				.contains(ArtifactoryEvent.OwnershipTransferRequested.class)
+				.matching(ArtifactoryEvent.OwnershipTransferRequested::groupId, groupId)
+				.matching(ArtifactoryEvent.OwnershipTransferRequested::from, from)
+				.matching(ArtifactoryEvent.OwnershipTransferRequested::to, to);
 
 		events.assertThat()
 				.contains(com.konfigyr.artifactory.ArtifactoryEvent.OwnershipTransferAccepted.class)

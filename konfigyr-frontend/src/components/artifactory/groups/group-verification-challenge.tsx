@@ -30,7 +30,7 @@ export const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
  * @param verification the group verification record to display
  * @param challenge the optional verification challenge used to render the method, challenge state, and activation instructions
  */
-export function GroupVerification ({ verification, challenge }: {
+export function GroupVerificationChallenge ({ verification, challenge }: {
   verification: GroupVerification;
   challenge?: VerificationChallenge | undefined;
 }) {

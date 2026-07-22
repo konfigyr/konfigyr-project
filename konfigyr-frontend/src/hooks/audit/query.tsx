@@ -23,7 +23,7 @@ export const getAuditRecordsQuery = (namespace: Namespace, query: AuditRecordQue
         .json<CursorResponse<AuditRecord>>();
     },
     placeholderData: previousData => previousData,
-    staleTime: Infinity,
+    staleTime: 5000,
   });
 };
 

@@ -84,6 +84,7 @@ public interface ArtifactOwnershipTransfers {
 	 * @throws ArtifactOwnershipTransferAlreadyRequestedException when a pending request already exists for the
 	 *         same {@code groupId}, {@code from} and {@code to} combination
 	 */
+	@DomainEventPublisher(publishes = "artifactory.ownership-transfer.requested")
 	ArtifactOwnershipTransfer request(Owner to, String groupId, Owner from);
 
 	/**

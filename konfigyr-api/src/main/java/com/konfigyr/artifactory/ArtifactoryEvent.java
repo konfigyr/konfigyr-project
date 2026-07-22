@@ -252,7 +252,7 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 	 * {@code com.konfigyr.artifactory.transfer.ArtifactOwnershipTransfer}.
 	 */
 	public static sealed abstract class OwnershipTransferEvent extends ArtifactoryEvent
-			permits OwnershipTransferAccepted, OwnershipTransferRejected, OwnershipTransferCancelled {
+			permits OwnershipTransferRequested, OwnershipTransferAccepted, OwnershipTransferRejected, OwnershipTransferCancelled {
 
 		private final String groupId;
 		private final Owner from;
@@ -301,6 +301,25 @@ public abstract sealed class ArtifactoryEvent extends EntityEvent
 		@NonNull
 		public Owner to() {
 			return to;
+		}
+	}
+
+	/**
+	 * Event that would be published when an artifact ownership transfer request is created by the owner.
+	 */
+	@DomainEvent(name = "ownership-transfer.requested", namespace = "artifactory")
+	public static final class OwnershipTransferRequested extends OwnershipTransferEvent {
+
+		/**
+		 * Create a new {@link OwnershipTransferAccepted} event for the created transfer request.
+		 *
+		 * @param id the entity identifier of the transfer request that was created, can't be {@literal null}.
+		 * @param groupId the artifact groupId coordinate whose artifacts were requested, can't be {@literal null}.
+		 * @param from the namespace that ownes the requested artifacts, can't be {@literal null}.
+		 * @param to the namespace that requested the artifact transfer, can't be {@literal null}.
+		 */
+		public OwnershipTransferRequested(EntityId id, @NonNull String groupId, @NonNull Owner from, @NonNull Owner to) {
+			super(id, groupId, from, to);
 		}
 	}
 

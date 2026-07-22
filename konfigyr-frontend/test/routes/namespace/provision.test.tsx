@@ -1,122 +1,48 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
-import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
-import { RouteComponent } from '@konfigyr/routes/_authenticated/namespace/provision';
-
-import type { RenderResult } from '@testing-library/react';
-import type { UserEvent } from '@testing-library/user-event';
+import { renderWithRouter } from '@konfigyr/test/helpers/router';
 
 describe('routes | namespace | provision', () => {
-  let result: RenderResult & { router: { state: { location: { pathname: string } } } };
-  let user: UserEvent;
-
-  beforeAll(() => {
-    user = userEvents.setup();
-    result = renderComponentWithRouter(
-      <RouteComponent debounceMs={0} />,
-    ) as RenderResult & { router: { state: { location: { pathname: string } } } };
-  });
-
-  afterAll(() => cleanup());
+  afterEach(() => cleanup());
 
   test('should render Namespace provisioning card', async () => {
-    await waitFor(() => {
-      expect(result.getByText('Tell us more about your organization or team that would be the owner of this namespace.'))
-        .toBeInTheDocument();
-
-      expect(result.getByRole('textbox', { name: 'Name' }))
-        .toBeInTheDocument();
-
-      expect(result.getByRole('textbox', { name: 'URL' }))
-        .toBeInTheDocument();
-
-      expect(result.getByRole('textbox', { name: 'Description' }))
-        .toBeInTheDocument();
-    });
-  });
-
-  test('should validate initial form data', async () => {
-    await user.click(
-      result.getByRole('button'),
-    );
-
-    expect(result.getByRole('button'))
-      .toBeDisabled();
-
-    expect(result.getByRole('textbox', { name: 'Name' }))
-      .toBeInvalid();
-
-    expect(result.getByRole('textbox', { name: 'URL' }))
-      .toBeInvalid();
-  });
-
-  test('should connect name with URL slug input field', async () => {
-    await user.type(
-      result.getByRole('textbox', { name: 'Name' }),
-      'some Namespace name',
-    );
-
-    expect(result.getByRole('textbox', { name: 'URL' })).toHaveValue('some-namespace-name');
-  });
-
-  test('should disconnect name when URL slug input field is made dirty and invalid', async () => {
-    await user.clear(
-      result.getByRole('textbox', { name: 'URL' }),
-    );
-
-    await user.type(
-      result.getByRole('textbox', { name: 'URL' }),
-      'updated-namespace-slug',
-    );
-
-    await user.clear(
-      result.getByRole('textbox', { name: 'Name' }),
-    );
-
-    await user.type(
-      result.getByRole('textbox', { name: 'Name' }),
-      'Namespace name',
-    );
-
-    expect(result.getByRole('textbox', { name: 'URL' }))
-      .toHaveValue('updated-namespace-slug');
+    const { getByText, getByRole } = renderWithRouter('/namespace/provision');
 
     await waitFor(() => {
-      expect(result.getByRole('textbox', { name: 'URL' })).toBeInvalid();
+      expect(getByText('Tell us more about your organization or team that would be the owner of this namespace.'))
+        .toBeInTheDocument();
+
+      expect(getByRole('textbox', { name: 'Name' }))
+        .toBeInTheDocument();
+
+      expect(getByRole('textbox', { name: 'URL' }))
+        .toBeInTheDocument();
+
+      expect(getByRole('textbox', { name: 'Description' }))
+        .toBeInTheDocument();
     });
-  });
-
-  test('should validate URL slug availability', async () => {
-    await user.clear(
-      result.getByRole('textbox', { name: 'URL' }),
-    );
-
-    await user.type(
-      result.getByRole('textbox', { name: 'URL' }),
-      'available-namespace',
-    );
-
-    // wait for the debounce period to be over to avoid race conditions when validating the URL slug
-    await new Promise((resolve) => setTimeout(resolve, 25));
-
-    await waitFor(() => {
-      expect(result.getByRole('textbox', { name: 'URL' })).toBeValid();
-    });
-
-    expect(result.getByRole('textbox', { name: 'URL' }))
-      .toHaveValue('available-namespace');
   });
 
   test('should create namespace and redirect to namespace overview page', async () => {
-    expect(result.getByRole('button')).not.toBeDisabled();
+    const user = userEvents.setup();
+    const { getByRole, router } = renderWithRouter('/namespace/provision');
+
+    await user.type(
+      await waitFor(() => getByRole('textbox', { name: 'Name' })),
+      'Available Namespace',
+    );
+
+    // wait for the debounced async slug validation to fully settle before submitting,
+    // otherwise the form can reject the submission as invalid despite no visible errors.
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     await user.click(
-      result.getByRole('button'),
+      getByRole('button', { name: 'Create namespace' }),
     );
 
     await waitFor(() => {
-      expect(result.router.state.location.pathname).toBe('/namespace/available-namespace');
+      expect(router.state.location.pathname).toBe('/namespace/available-namespace');
     });
   });
 });

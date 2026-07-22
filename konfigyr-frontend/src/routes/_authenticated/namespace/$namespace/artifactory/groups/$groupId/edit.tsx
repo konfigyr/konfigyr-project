@@ -48,6 +48,11 @@ function RouteComponent () {
     verificationMethod: challenge?.method ?? 'DNS',
   };
 
+  const onCancel = () => navigate({
+    to: '/namespace/$namespace/artifactory/groups/$groupId',
+    params: { namespace: namespace.slug, groupId },
+  });
+
   const onSubmit = async ({ value }: { value: typeof defaultValues }) => {
     try {
       const updated = await claimGroupVerification(value);
@@ -87,7 +92,7 @@ function RouteComponent () {
         <GroupVerificationForm
           defaultValues={defaultValues}
           onSubmit={onSubmit}
-          onCancel={() => navigate({ to: '/namespace/$namespace/artifactory/groups/$groupId', params: { namespace: namespace.slug, groupId } })}
+          onCancel={onCancel}
         />
       </div>
     </>

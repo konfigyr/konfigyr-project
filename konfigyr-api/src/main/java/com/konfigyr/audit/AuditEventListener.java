@@ -532,6 +532,28 @@ class AuditEventListener {
 		);
 	}
 
+	@TransactionalEventListener(id = "audit.ownership-transfer-requested", classes = ArtifactoryEvent.OwnershipTransferRequested.class)
+	void on(ArtifactoryEvent.OwnershipTransferRequested event) {
+		insert(event, builder -> builder
+				.namespace(event.to().id())
+				.entityType("artifact-ownership-transfer")
+				.entityId(event.id())
+				.eventType("artifact-ownership-transfer.sent")
+				.details("groupId", event.groupId())
+				.details("from", event.from().slug())
+				.details("to", event.to().slug())
+		);
+		insert(event, builder -> builder
+				.namespace(event.from().id())
+				.entityType("artifact-ownership-transfer")
+				.entityId(event.id())
+				.eventType("artifact-ownership-transfer.requested")
+				.details("groupId", event.groupId())
+				.details("from", event.from().slug())
+				.details("to", event.to().slug())
+		);
+	}
+
 	@TransactionalEventListener(id = "audit.ownership-transfer-accepted", classes = ArtifactoryEvent.OwnershipTransferAccepted.class)
 	void on(ArtifactoryEvent.OwnershipTransferAccepted event) {
 		insert(event, builder -> builder
