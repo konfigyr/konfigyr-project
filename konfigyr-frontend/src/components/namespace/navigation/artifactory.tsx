@@ -47,9 +47,19 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
                 />
               </Link>
             } />
-            <SidebarMenuButton disabled>
-              <span className="truncate">Artifact registry</span>
-            </SidebarMenuButton>
+            <SidebarMenuButton render={
+              <Link
+                to="/namespace/$namespace/artifactory/registry"
+                params={{ namespace: namespace.slug }}
+                className="truncate"
+                activeProps={{ 'data-active': true }}
+              >
+                <FormattedMessage
+                  defaultMessage="Artifact registry"
+                  description="Label for the Artifact registry page"
+                />
+              </Link>
+            } />
             <SidebarMenuButton disabled>
               <span className="truncate">Property search</span>
             </SidebarMenuButton>
