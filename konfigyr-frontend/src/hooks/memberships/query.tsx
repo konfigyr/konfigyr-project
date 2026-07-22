@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 import { useAccount } from '@konfigyr/hooks/account/context';
@@ -102,15 +103,14 @@ export const useGetNamespaceMembers = (namespace: Namespace) => {
   return useQuery(getNamespaceMembers(namespace));
 };
 
-export const useCurrentNamespaceMember = (namespace: Namespace): Member | undefined => {
+export const useIsNamespaceAdmin = (namespace: Namespace): boolean => {
   const account = useAccount();
   const { data: members } = useGetNamespaceMembers(namespace);
-  return members?.find(member => member.email === account.email);
-};
 
-export const useIsNamespaceAdmin = (namespace: Namespace): boolean => {
-  const member = useCurrentNamespaceMember(namespace);
-  return member?.role === NamespaceRole.ADMIN;
+  return useMemo(() => {
+    const member = members?.find(it => it.email === account.email);
+    return member?.role === NamespaceRole.ADMIN;
+  }, [account, members]);
 };
 
 export const useInviteNamespaceMember = (namespace: Namespace) => {
