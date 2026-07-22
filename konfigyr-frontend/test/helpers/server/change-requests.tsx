@@ -1,14 +1,12 @@
 import { HttpResponse, http } from 'msw';
 import {
   ChangeRequestHistoryType,
-  ChangeRequestMergeStatus,
-  ChangeRequestState,
   PropertyTransitionType,
 } from '@konfigyr/hooks/vault/types';
 import { subMinutes } from 'date-fns';
 import { konfigyr } from '../mocks/namespace';
 import { konfigyrApi, konfigyrId } from '../mocks/services';
-import { development, staging } from '../mocks/profile';
+import { firstChangeRequest, secondChangeRequest } from '../mocks/change-requests';
 
 const list = http.get('http://localhost/api/namespaces/:namespace/services/:service/changes', ({ params }) => {
   if (params.namespace !== konfigyr.slug) {
@@ -20,7 +18,7 @@ const list = http.get('http://localhost/api/namespaces/:namespace/services/:serv
   }
 
   if (params.service === konfigyrId.slug) {
-    return HttpResponse.json({ data: [], metadata: { total: 0 } });
+    return HttpResponse.json({ data: [], metadata: { number: 1, size: 20, total: 0, pages: 0 } });
   }
 
   if (params.service !== konfigyrApi.slug) {
@@ -32,38 +30,8 @@ const list = http.get('http://localhost/api/namespaces/:namespace/services/:serv
   }
 
   return HttpResponse.json({
-    data: [{
-      id: 'first-change-request',
-      service: konfigyrApi,
-      profile: development,
-      number: 1,
-      state: ChangeRequestState.OPEN,
-      mergeState: ChangeRequestMergeStatus.MERGEABLE,
-      subject: 'Update application name',
-      description: {
-        html: '<p>Align the application name with the new naming convention</p>',
-        markdown: 'Align the application name with the new naming convention',
-      },
-      createdBy: 'John Doe',
-      createdAt: subMinutes(new Date(), 12).toISOString(),
-      updatedAt: subMinutes(new Date(), 7).toISOString(),
-    }, {
-      id: 'second-change-request',
-      service: konfigyrApi,
-      profile: staging,
-      number: 2,
-      state: ChangeRequestState.OPEN,
-      mergeState: ChangeRequestMergeStatus.MERGEABLE,
-      subject: 'Update datasource URL',
-      description: {
-        html: '<p>Point to the staging database</p>',
-        markdown: 'Point to the staging database',
-      },
-      createdBy: 'John Doe',
-      createdAt: subMinutes(new Date(), 7).toISOString(),
-      updatedAt: subMinutes(new Date(), 2).toISOString(),
-    }],
-    metadata: { page: 2, size: 5 },
+    data: [firstChangeRequest, secondChangeRequest],
+    metadata: { number: 1, size: 20, total: 2, pages: 1 },
   });
 });
 
@@ -101,23 +69,9 @@ const withValidChangerRequest = (
 };
 
 const get = http.get('http://localhost/api/namespaces/:namespace/services/:service/changes/:number', ({ params }) => {
-  return withValidChangerRequest(params.namespace as string, params.service as string, params.number as string, () => HttpResponse.json({
-    id: 'first-change-request',
-    service: konfigyrApi,
-    profile: development,
-    number: 1,
-    state: ChangeRequestState.OPEN,
-    mergeState: ChangeRequestMergeStatus.MERGEABLE,
-    count: 3,
-    subject: 'Update application name',
-    description: {
-      html: '<p>Align the application name with the new naming convention</p>',
-      markdown: 'Align the application name with the new naming convention',
-    },
-    createdBy: 'John Doe',
-    createdAt: subMinutes(new Date(), 12).toISOString(),
-    updatedAt: subMinutes(new Date(), 7).toISOString(),
-  }));
+  return withValidChangerRequest(params.namespace as string, params.service as string, params.number as string, () => HttpResponse.json(
+    firstChangeRequest,
+  ));
 });
 
 const changes = http.get('http://localhost/api/namespaces/:namespace/services/:service/changes/:number/changes', ({ params }) => {
@@ -162,20 +116,12 @@ const update = http.put('http://localhost/api/namespaces/:namespace/services/:se
   };
 
   return withValidChangerRequest(params.namespace as string, params.service as string, params.number as string, () => HttpResponse.json({
-    id: 'first-change-request',
-    service: konfigyrApi,
-    profile: development,
-    number: 1,
-    state: ChangeRequestState.OPEN,
-    mergeState: ChangeRequestMergeStatus.MERGEABLE,
-    count: 3,
-    subject: subject ?? 'Update application name',
+    ...firstChangeRequest,
+    subject: subject ?? firstChangeRequest.subject,
     description: {
-      html: description ?? '<p>Align the application name with the new naming convention</p>',
-      markdown: description ?? 'Align the application name with the new naming convention',
+      html: description ?? firstChangeRequest.description!.html,
+      markdown: description ?? firstChangeRequest.description!.markdown,
     },
-    createdBy: 'John Doe',
-    createdAt: subMinutes(new Date(), 12).toISOString(),
     updatedAt: new Date().toISOString(),
   }));
 });

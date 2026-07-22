@@ -20,6 +20,44 @@ describe('components | vault | change-request | <ChangeRequestDetails/>', () => 
     expect(container.querySelector('[data-slot="change-request-details-skeleton"]')).toBeInTheDocument();
   });
 
+  test('should render loaded change request with actions and property changes', async () => {
+    const { getByRole, getByText } = renderWithQueryClient(
+      <ChangeRequestDetails
+        namespace={namespaces.konfigyr}
+        service={services.konfigyrApi}
+        number="1"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(getByText('Update application name')).toBeInTheDocument();
+    });
+
+    expect(getByRole('button', { name: 'Merge changes' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Submit review' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Discard change request' })).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(getByText('logging.file.max-size')).toBeInTheDocument();
+      expect(getByText('logging.level.com.konfigyr.test')).toBeInTheDocument();
+      expect(getByText('logging.file.max-history')).toBeInTheDocument();
+    });
+  });
+
+  test('should render an error state when the change request is not found', async () => {
+    const { getByText } = renderWithQueryClient(
+      <ChangeRequestDetails
+        namespace={namespaces.konfigyr}
+        service={services.konfigyrApi}
+        number="2"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(getByText('Change request not found')).toBeInTheDocument();
+    });
+  });
+
   test('should update change request name using the inline edit', async () => {
     const user = userEvents.setup();
     const { getByRole } = renderWithQueryClient(

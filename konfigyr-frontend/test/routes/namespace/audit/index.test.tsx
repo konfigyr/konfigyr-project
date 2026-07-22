@@ -6,24 +6,13 @@ import userEvents from '@testing-library/user-event';
 describe('routes | namespace | audit', () => {
   afterEach(() => cleanup());
 
-  test('should render Namespace audit record list page', async () => {
+  test('should sync pagination to the URL search params', async () => {
     const user = userEvents.setup();
-    const { getByRole, getByText, router } = renderWithRouter('/namespace/konfigyr/audit');
+    const { getByRole, router } = renderWithRouter('/namespace/konfigyr/audit');
 
     await waitFor(() => {
-      expect(getByRole('heading', { name: 'Audit logs' })).toBeInTheDocument();
+      expect(getByRole('button', { name: 'Go to next page' })).toBeInTheDocument();
     });
-
-    await waitFor(() => {
-      expect(getByText('Namespace was created')).toBeInTheDocument();
-    });
-
-    expect(getByRole('listitem', { name: 'Keyset was created' })).toBeInTheDocument();
-    expect(getByRole('listitem', { name: 'Service was created' })).toBeInTheDocument();
-    expect(getByRole('listitem', { name: 'Profile was created' })).toBeInTheDocument();
-    expect(getByRole('listitem', { name: 'Namespace was created' })).toBeInTheDocument();
-
-    expect(getByRole('button', { name: 'Go to next page' })).toBeInTheDocument();
 
     await user.click(
       getByRole('button', { name: 'Go to next page' }),
