@@ -12,6 +12,10 @@ coverage:
         target: auto
         threshold: 5%
 
+codecov:
+  ## Codecov will reject reports that are over 12 hours old, this should be disabled
+  max_report_age: off
+
 component_management:
   default_rules:
     statuses:
