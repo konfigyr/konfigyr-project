@@ -1,3 +1,5 @@
+import type { Pageable } from '@konfigyr/hooks/hateoas/types';
+
 export interface Artifact {
   id: string;
   groupId: string;
@@ -7,6 +9,55 @@ export interface Artifact {
   description?: string;
   website?: string;
   repository?: string;
+}
+
+export type ArtifactVisibility = 'PUBLIC' | 'PRIVATE';
+
+export interface ArtifactDefinition {
+  id: string;
+  groupId: string;
+  artifactId: string;
+  visibility: ArtifactVisibility;
+  name?: string;
+  description?: string;
+  website?: string;
+  repository?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface VersionedArtifact {
+  id: string;
+  groupId: string;
+  artifactId: string;
+  version: string;
+  visibility: ArtifactVisibility;
+  name?: string;
+  description?: string;
+  website?: string;
+  repository?: string;
+  publishedAt: string;
+}
+
+export interface ArtifactQuery extends Pageable {
+  term?: string;
+}
+
+export interface ArtifactVersionQuery extends Pageable {
+  term?: string;
+}
+
+export interface PropertySearchQuery extends Pageable {
+  groupId: string;
+  artifactId: string;
+  version?: string;
+  term: string;
+}
+
+export interface ChangeArtifactVisibilityPayload {
+  groupId: string;
+  artifactId: string;
+  visibility: ArtifactVisibility;
 }
 
 export interface PropertyJsonSchema {

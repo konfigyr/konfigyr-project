@@ -5,6 +5,7 @@ import kms from './server/kms';
 import memberships from './server/memberships';
 import namespaces from './server/namespaces';
 import applications from './server/namespace/applications';
+import artifacts from './server/namespace/artifacts';
 import groups from './server/namespace/groups';
 import invitations from './server/namespace/invitations';
 import transfers from './server/namespace/transfers';
@@ -21,6 +22,7 @@ export const handlers = [
   ...memberships,
   ...namespaces,
   ...applications,
+  ...artifacts,
   ...groups,
   ...invitations,
   ...transfers,

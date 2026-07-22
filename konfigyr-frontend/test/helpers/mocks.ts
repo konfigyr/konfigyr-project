@@ -3,6 +3,7 @@ import * as services from './mocks/services';
 
 export * as propertyDescriptors from './mocks/property-descriptors';
 export * as accounts from './mocks/account';
+export * as artifacts from './mocks/artifacts';
 export * as kms from './mocks/kms';
 export * as namespaces from './mocks/namespace';
 export * as applications from './mocks/application';

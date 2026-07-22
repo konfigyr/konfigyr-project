@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
+import { useAccount } from '@konfigyr/hooks/account/context';
 import { NamespaceRole } from './types';
 
 import type { PageResponse, Pageable } from '@konfigyr/hooks/hateoas/types';
@@ -99,6 +101,16 @@ export const getNamespaceInvitation = (namespace: Namespace, key: string) => {
 
 export const useGetNamespaceMembers = (namespace: Namespace) => {
   return useQuery(getNamespaceMembers(namespace));
+};
+
+export const useIsNamespaceAdmin = (namespace: Namespace): boolean => {
+  const account = useAccount();
+  const { data: members } = useGetNamespaceMembers(namespace);
+
+  return useMemo(() => {
+    const member = members?.find(it => it.email === account.email);
+    return member?.role === NamespaceRole.ADMIN;
+  }, [account, members]);
 };
 
 export const useInviteNamespaceMember = (namespace: Namespace) => {

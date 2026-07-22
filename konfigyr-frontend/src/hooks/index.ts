@@ -1,5 +1,6 @@
 export * from './account/context';
 export * from './account/query';
+export * from './artifactory/query';
 export * from './audit/query';
 export * from './groups/query';
 export * from './kms/query';

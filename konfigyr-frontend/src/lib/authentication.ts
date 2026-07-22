@@ -20,7 +20,7 @@ import type {
 
 const logger = createLogger('services/authentication');
 
-const DEFAULT_SCOPES = 'openid namespaces profiles';
+const DEFAULT_SCOPES = 'openid namespaces profiles artifactory:publish';
 
 export class AuthenticationError extends Error {
 
