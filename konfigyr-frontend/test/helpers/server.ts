@@ -7,6 +7,7 @@ import namespaces from './server/namespaces';
 import applications from './server/namespace/applications';
 import groups from './server/namespace/groups';
 import invitations from './server/namespace/invitations';
+import transfers from './server/namespace/transfers';
 import audit from './server/audit';
 import oidc from './server/oidc';
 import proxy from './server/proxy';
@@ -22,6 +23,7 @@ export const handlers = [
   ...applications,
   ...groups,
   ...invitations,
+  ...transfers,
   ...audit,
   ...oidc,
   ...proxy,

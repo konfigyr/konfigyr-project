@@ -196,4 +196,24 @@ describe('components | groups | <ConflictingOwnersAlert/>', () => {
       'Namespaces ebf, acme-legacy already publish artifacts under this groupId. You may need to request an ownership transfer before you can publish.',
     );
   });
+
+  test('should render the action slot when provided', () => {
+    const { getByRole } = renderWithMessageProvider(
+      <ConflictingOwnersAlert
+        conflictingOwners={['ebf']}
+        action={<button type="button">Request transfer</button>}
+      />,
+    );
+
+    expect(getByRole('alert')).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Request transfer' })).toBeInTheDocument();
+  });
+
+  test('should render nothing in the action slot by default', () => {
+    const { queryByRole } = renderWithMessageProvider(
+      <ConflictingOwnersAlert conflictingOwners={['ebf']} />,
+    );
+
+    expect(queryByRole('button')).not.toBeInTheDocument();
+  });
 });

@@ -99,7 +99,7 @@ function AuditRecordSkeleton() {
   );
 }
 
-function AuditRecordListContent({ data, error, isPending = false }: {
+export function AuditRecordListContent({ data, error, isPending = false }: {
   data?: CursorResponse<AuditRecord>;
   error?: Error | null;
   isPending?: boolean;

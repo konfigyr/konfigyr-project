@@ -3,6 +3,7 @@ package com.konfigyr.audit.controller;
 import com.konfigyr.audit.AuditEventRepository;
 import com.konfigyr.audit.AuditRecord;
 import com.konfigyr.data.CursorPageable;
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.CursorModel;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.RepresentationModelAssembler;
@@ -15,6 +16,7 @@ import com.konfigyr.support.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,35 +38,27 @@ class AuditController {
 	@PreAuthorize("isMember(#slug)")
 	CursorModel<EntityModel<AuditRecord>> find(
 			@PathVariable String slug,
-			@Nullable @RequestParam(required = false) String entityType,
 			@Nullable @RequestParam(required = false) String eventType,
+			@Nullable @RequestParam(required = false) String entityType,
+			@Nullable @RequestParam(required = false) EntityId entityId,
 			@Nullable @RequestParam(required = false) String actor,
 			@Nullable @RequestParam(required = false) OffsetDateTime from,
 			@Nullable @RequestParam(required = false) OffsetDateTime to,
 			CursorPageable pageable
 	) {
 		final Namespace namespace = namespaces.findBySlug(slug).orElseThrow(() -> new NamespaceNotFoundException(slug));
+		final SearchQuery query = SearchQuery.builder()
+				.criteria(AuditRecord.NAMESPACE_ID_CRITERIA, namespace.id())
+				.criteria(AuditRecord.EVENT_TYPE_CRITERIA, eventType)
+				.criteria(AuditRecord.ENTITY_TYPE_CRITERIA, entityType)
+				.criteria(AuditRecord.ENTITY_ID_CRITERIA, entityId)
+				.criteria(AuditRecord.ACTOR_ID_CRITERIA, actor)
+				.criteria(AuditRecord.FROM_CRITERIA, from)
+				.criteria(AuditRecord.TO_CRITERIA, to)
+				.pageable(Pageable.unpaged())
+				.build();
 
-		final SearchQuery.Builder builder = SearchQuery.builder()
-				.criteria(AuditRecord.NAMESPACE_ID_CRITERIA, namespace.id());
-
-		if (entityType != null) {
-			builder.criteria(AuditRecord.ENTITY_TYPE_CRITERIA, entityType);
-		}
-		if (eventType != null) {
-			builder.criteria(AuditRecord.EVENT_TYPE_CRITERIA, eventType);
-		}
-		if (actor != null) {
-			builder.criteria(AuditRecord.ACTOR_ID_CRITERIA, actor);
-		}
-		if (from != null) {
-			builder.criteria(AuditRecord.FROM_CRITERIA, from);
-		}
-		if (to != null) {
-			builder.criteria(AuditRecord.TO_CRITERIA, to);
-		}
-
-		return assembler.assemble(repository.find(builder.build(), pageable));
+		return assembler.assemble(repository.find(query, pageable));
 	}
 
 }

@@ -995,6 +995,28 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("should persist two audit records for a requested ownership transfer, one per namespace")
+	void shouldAuditOwnershipTransferRequested() {
+		final var from = new Owner(EntityId.from(1210), "from-namespace");
+		final var to = new Owner(EntityId.from(1211), "to-namespace");
+
+		listener.on(new ArtifactoryEvent.OwnershipTransferRequested(EntityId.from(1200), "com.konfigyr", from, to));
+
+		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1200), "artifact-ownership-transfer.sent")
+				.returns(to.id(), AuditRecord::namespaceId)
+				.satisfies(it -> assertThat(it.details())
+						.containsEntry("groupId", "com.konfigyr")
+						.containsEntry("from", from.slug())
+						.containsEntry("to", to.slug())
+				)
+				.satisfies(assertAuditRecordMessage("Ownership transfer request for '%s' was successfully sent to '%s'", "com.konfigyr", from.slug()));
+
+		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1200), "artifact-ownership-transfer.requested")
+				.returns(from.id(), AuditRecord::namespaceId)
+				.satisfies(assertAuditRecordMessage("Ownership transfer for '%s' was requested from '%s'", "com.konfigyr", to.slug()));
+	}
+
+	@Test
 	@DisplayName("should persist two audit records for an accepted ownership transfer, one per namespace")
 	void shouldAuditOwnershipTransferAccepted() {
 		final var from = new Owner(EntityId.from(1210), "from-namespace");
@@ -1009,11 +1031,11 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 						.containsEntry("from", from.slug())
 						.containsEntry("to", to.slug())
 				)
-				.satisfies(assertAuditRecordMessage("You are now the owner of '%s'", "com.konfigyr"));
+				.satisfies(assertAuditRecordMessage("Ownership of '%s' was transferred from '%s'", "com.konfigyr", from.slug()));
 
 		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1212), "artifact-ownership-transfer.transferred")
 				.returns(from.id(), AuditRecord::namespaceId)
-				.satisfies(assertAuditRecordMessage("You have transferred '%s' to '%s'", "com.konfigyr", to.slug()));
+				.satisfies(assertAuditRecordMessage("Ownership of '%s' was transferred to '%s'", "com.konfigyr", to.slug()));
 	}
 
 	@Test
@@ -1026,11 +1048,11 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1222), "artifact-ownership-transfer.request-rejected")
 				.returns(to.id(), AuditRecord::namespaceId)
-				.satisfies(assertAuditRecordMessage("Your request to transfer '%s' was rejected by '%s'", "com.konfigyr", from.slug()));
+				.satisfies(assertAuditRecordMessage("Request to transfer '%s' was rejected by '%s'", "com.konfigyr", from.slug()));
 
 		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1222), "artifact-ownership-transfer.rejected")
 				.returns(from.id(), AuditRecord::namespaceId)
-				.satisfies(assertAuditRecordMessage("You rejected the transfer request for '%s' from '%s'", "com.konfigyr", to.slug()));
+				.satisfies(assertAuditRecordMessage("Transfer request for '%s' from '%s' was rejected", "com.konfigyr", to.slug()));
 	}
 
 	@Test
@@ -1043,11 +1065,11 @@ class AuditEventListenerTest extends AbstractIntegrationTest {
 
 		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1232), "artifact-ownership-transfer.cancelled")
 				.returns(to.id(), AuditRecord::namespaceId)
-				.satisfies(assertAuditRecordMessage("You cancelled your request to transfer '%s'", "com.konfigyr"));
+				.satisfies(assertAuditRecordMessage("Request to transfer '%s' was cancelled", "com.konfigyr"));
 
 		assertAuditRecord("artifact-ownership-transfer", EntityId.from(1232), "artifact-ownership-transfer.request-cancelled")
 				.returns(from.id(), AuditRecord::namespaceId)
-				.satisfies(assertAuditRecordMessage("The transfer request for '%s' from '%s' was cancelled", "com.konfigyr", to.slug()));
+				.satisfies(assertAuditRecordMessage("Transfer request for '%s' from '%s' was cancelled", "com.konfigyr", to.slug()));
 	}
 
 	@Test

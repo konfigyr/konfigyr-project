@@ -158,7 +158,7 @@ class AuditEventRepositoryTest extends AbstractIntegrationTest {
 
 		assertThatObject(thirdPage)
 				.as("Should return the last page of 3")
-				.returns(2, CursorPage::size)
+				.returns(3, CursorPage::size)
 				.returns(false, CursorPage::hasNext)
 				.returns(true, CursorPage::hasPrevious);
 

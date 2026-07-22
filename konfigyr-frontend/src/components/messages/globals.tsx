@@ -54,6 +54,13 @@ export const OAuthErrorDetail = () => (
   />
 );
 
+export const NamespaceLabel = () => (
+  <FormattedMessage
+    defaultMessage="Namespace"
+    description="Simple namespace label text."
+  />
+);
+
 export const HomeLabel = () => (
   <FormattedMessage
     defaultMessage="Home"

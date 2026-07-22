@@ -12,6 +12,7 @@ INSERT INTO audit_events(id, namespace_id, entity_type, entity_id, event_type, a
 -- Service events for konfigyr namespace
 ('019690a1-b4a0-7000-8000-000000000005', 2, 'service', 2, 'service.created', 'john.doe@konfigyr.com', 'user', 'John Doe', '{"name": "config-service", "@class": "java.util.Collections$UnmodifiableMap"}', now() - interval '20 days'),
 ('019690a1-b4a0-7000-8000-000000000006', 2, 'service', 2, 'service.updated', 'jane.doe@konfigyr.com', 'user', 'Jane Doe', NULL, now() - interval '15 days'),
+('019690a1-b4a0-7000-8000-000000000014', 2, 'service', 3, 'service.created', 'jane.doe@konfigyr.com', 'user', 'Jane Doe', '{"name": "konfigyr-api", "@class": "java.util.Collections$UnmodifiableMap"}', now() - interval '2 days'),
 -- KMS events
 ('019690a1-b4a0-7000-8000-000000000007', 2, 'kms', 1, 'kms.key.rotated', 'system', 'system', 'System', '{"algorithm": "AES-256", "@class": "java.util.Collections$UnmodifiableMap"}', now() - interval '10 days'),
 -- Invitation events

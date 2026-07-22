@@ -17,6 +17,7 @@ export interface AuditRecord {
 
 export interface AuditRecordQuery {
   entityType?: string;
+  entityId?: string;
   from?: string;
   to?: string;
   token?: string;

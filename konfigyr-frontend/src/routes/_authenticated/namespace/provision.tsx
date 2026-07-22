@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_authenticated/namespace/provision')({
   preload: false,
 });
 
-export function RouteComponent({ debounceMs = 300 }: { debounceMs?: number } = {}) {
+function RouteComponent() {
   const navigate = useNavigate();
 
   const onNamespaceCreate = useCallback(async (namespace: Namespace) => {
@@ -56,7 +56,7 @@ export function RouteComponent({ debounceMs = 300 }: { debounceMs?: number } = {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <CreateNamespaceForm onCreate={onNamespaceCreate} debounceMs={debounceMs} />
+          <CreateNamespaceForm onCreate={onNamespaceCreate} />
         </CardContent>
       </Card>
     </LayoutContent>

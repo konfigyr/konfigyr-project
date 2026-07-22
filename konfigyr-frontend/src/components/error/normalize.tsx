@@ -1,4 +1,5 @@
 import { HTTPError } from 'ky';
+import { useMemo } from 'react';
 import {
   GeneralErrorDetail,
   GeneralErrorTitle,
@@ -10,6 +11,15 @@ export interface NormalizedError {
   title: string | ReactNode,
   detail: string | ReactNode;
 }
+
+export const useNormalizeError = (error?: any): NormalizedError | null => useMemo(
+  () => {
+    if (error === undefined || error === null) {
+      return null;
+    }
+    return normalizeError(error);
+  }, [error],
+);
 
 export const normalizeError = (error: any): NormalizedError => {
   let title, detail;

@@ -4,7 +4,57 @@ import * as namespaces from '../mocks/namespace';
 
 import type { AuditRecord, CursorResponse } from '@konfigyr/hooks/types';
 
-const search = http.get('http://localhost/api/namespaces/:slug/audit', ({ params }) => {
+const allRecords: Array<AuditRecord> = [{
+  id: 'fourth-audit-record',
+  entityType: 'keyset',
+  entityId: 'kms-keyset',
+  eventType: 'keyset.created',
+  message: 'Keyset was created',
+  actor: {
+    id: janeDoe.id,
+    type: 'USER_ACCOUNT',
+    name: janeDoe.fullName ?? janeDoe.email,
+  },
+  createdAt: '2026-04-28T20:51:56.341973+02:00',
+}, {
+  id: 'third-audit-record',
+  entityType: 'profile',
+  entityId: 'development',
+  eventType: 'profile.created',
+  message: 'Profile was created',
+  actor: {
+    id: johnDoe.id,
+    type: 'USER_ACCOUNT',
+    name: johnDoe.fullName ?? johnDoe.email,
+  },
+  createdAt: '2026-04-28T20:51:56.341973+02:00',
+}, {
+  id: 'second-audit-record',
+  entityType: 'service',
+  entityId: 'konfgyr-api',
+  eventType: 'service.created',
+  message: 'Service was created',
+  actor: {
+    id: johnDoe.id,
+    type: 'USER_ACCOUNT',
+    name: johnDoe.fullName ?? johnDoe.email,
+  },
+  createdAt: '2026-04-28T20:51:56.341973+02:00',
+}, {
+  id: 'first-audit-record',
+  entityType: 'namespace',
+  entityId: namespaces.konfigyr.id,
+  eventType: 'namespace.created',
+  message: 'Namespace was created',
+  actor: {
+    id: johnDoe.id,
+    type: 'USER_ACCOUNT',
+    name: johnDoe.fullName ?? johnDoe.email,
+  },
+  createdAt: '2026-04-28T20:51:39.399083+02:00',
+}];
+
+const search = http.get('http://localhost/api/namespaces/:slug/audit', ({ params, request }) => {
   if (params.slug === namespaces.unknown.slug) {
     return HttpResponse.json({
       status: 404,
@@ -17,59 +67,25 @@ const search = http.get('http://localhost/api/namespaces/:slug/audit', ({ params
     return HttpResponse.json({ data: [] });
   }
 
+  const url = new URL(request.url);
+  const entityType = url.searchParams.get('entityType');
+  const entityId = url.searchParams.get('entityId');
+
+  let data = allRecords;
+
+  if (entityType) {
+    data = data.filter(record => record.entityType === entityType);
+  }
+
+  if (entityId) {
+    data = data.filter(record => record.entityId === entityId);
+  }
+
   const response: CursorResponse<AuditRecord> = {
-    data: [{
-      id: 'fourth-audit-record',
-      entityType: 'keyset',
-      entityId: 'kms-keyset',
-      eventType: 'keyset.created',
-      message: 'Keyset was created',
-      actor: {
-        id: janeDoe.id,
-        type: 'USER_ACCOUNT',
-        name: janeDoe.fullName ?? janeDoe.email,
-      },
-      createdAt: '2026-04-28T20:51:56.341973+02:00',
-    }, {
-      id: 'third-audit-record',
-      entityType: 'profile',
-      entityId: 'development',
-      eventType: 'profile.created',
-      message: 'Profile was created',
-      actor: {
-        id: johnDoe.id,
-        type: 'USER_ACCOUNT',
-        name: johnDoe.fullName ?? johnDoe.email,
-      },
-      createdAt: '2026-04-28T20:51:56.341973+02:00',
-    }, {
-      id: 'second-audit-record',
-      entityType: 'service',
-      entityId: 'konfgyr-api',
-      eventType: 'service.created',
-      message: 'Service was created',
-      actor: {
-        id: johnDoe.id,
-        type: 'USER_ACCOUNT',
-        name: johnDoe.fullName ?? johnDoe.email,
-      },
-      createdAt: '2026-04-28T20:51:56.341973+02:00',
-    }, {
-      id: 'first-audit-record',
-      entityType: 'namespace',
-      entityId: namespaces.konfigyr.id,
-      eventType: 'namespace.created',
-      message: 'Namespace was created',
-      actor: {
-        id: johnDoe.id,
-        type: 'USER_ACCOUNT',
-        name: johnDoe.fullName ?? johnDoe.email,
-      },
-      createdAt: '2026-04-28T20:51:39.399083+02:00',
-    }],
+    data,
     metadata: {
       size: 20,
-      next: 'next-token',
+      ...(data.length === allRecords.length ? { next: 'next-token' } : {}),
     },
   };
 
