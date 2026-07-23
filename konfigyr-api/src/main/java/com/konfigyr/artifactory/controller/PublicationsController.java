@@ -6,7 +6,6 @@ import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
