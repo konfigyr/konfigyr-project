@@ -196,7 +196,7 @@ class PublicationsController {
 			@Nullable @RequestParam(required = false) String groupId,
 			@Nullable @RequestParam(required = false) String artifactId,
 			@Nullable @RequestParam(required = false) String version,
-			@NotBlank @RequestParam String term,
+			@Nullable @RequestParam(required = false) String term,
 			Pageable pageable
 	) {
 		final SearchQuery query = SearchQuery.builder()

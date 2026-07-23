@@ -121,24 +121,3 @@ export const NoVersionsFoundTitle = () => (
     description="Empty state title when an artifact has no published versions."
   />
 );
-
-export const SearchPropertiesPromptTitle = () => (
-  <FormattedMessage
-    defaultMessage="Search this version's properties"
-    description="Empty state title shown before a property search term has been entered on the version detail page."
-  />
-);
-
-export const SearchPropertiesPromptDescription = () => (
-  <FormattedMessage
-    defaultMessage="Type a property name or description to see matching configuration properties published with this version."
-    description="Empty state description shown before a property search term has been entered on the version detail page."
-  />
-);
-
-export const NoMatchingPropertiesTitle = () => (
-  <FormattedMessage
-    defaultMessage="No matching properties found"
-    description="Empty state title when no properties match the search term on the version detail page."
-  />
-);
