@@ -1,90 +1,44 @@
-import { useCallback, useState } from 'react';
-import { FormattedDate, useIntl } from 'react-intl';
-import { SearchIcon, TagIcon } from 'lucide-react';
-import { useDebouncedCallback } from 'use-debounce';
+import { FormattedDate, FormattedMessage, useIntl } from 'react-intl';
+import { TagIcon } from 'lucide-react';
 import { useSearchArtifactProperties } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { PropertyDeprecation } from '@konfigyr/components/artifactory/property-deprecation';
-import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
-import { PropertyName } from '@konfigyr/components/artifactory/property-name';
-import { PropertySchema } from '@konfigyr/components/artifactory/property-schema';
-import { PropertyDefaultValue } from '@konfigyr/components/artifactory/property-default-value';
-import { PropertyTypeName } from '@konfigyr/components/artifactory/property-type-name';
-import { Card, CardContent } from '@konfigyr/components/ui/card';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@konfigyr/components/ui/input-group';
-import { Item, ItemContent, ItemGroup, ItemTitle } from '@konfigyr/components/ui/item';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { ArtifactVisibilityBadge } from '@konfigyr/components/artifactory/registry/visibility-badge';
-import {
-  NoMatchingPropertiesTitle,
-  PublishedAtLabel,
-  SearchPropertiesPromptDescription,
-  SearchPropertiesPromptTitle,
-} from '@konfigyr/components/artifactory/registry/messages';
+import { PropertyTable } from '@konfigyr/components/artifactory/search/property-table';
+import { PropertySearchField } from '@konfigyr/components/artifactory/search/property-search-field';
+import { PublishedAtLabel } from '@konfigyr/components/artifactory/registry/messages';
 
-import type { ChangeEvent } from 'react';
-import type { PropertyDescriptor, VersionedArtifact } from '@konfigyr/hooks/artifactory/types';
-
-function PropertyItem({ property }: { property: PropertyDescriptor }) {
-  return (
-    <Item variant="list">
-      <ItemContent>
-        <ItemTitle>
-          <PropertyName value={property.name}/>
-          <PropertyTypeName value={property.typeName}/>
-          <PropertyDeprecation deprecation={property.deprecation}/>
-        </ItemTitle>
-        <PropertyDescription value={property.description}/>
-        <div className="text-xs mt-2 space-y-1">
-          <PropertyDefaultValue variant="labeled" value={property.defaultValue}/>
-          <p>
-            <span className="text-muted-foreground mr-1">JSON Schema type:</span>
-            <PropertySchema value={property.schema}/>
-          </p>
-        </div>
-      </ItemContent>
-    </Item>
-  );
-}
+import type { VersionedArtifact } from '@konfigyr/hooks/artifactory/types';
 
 function PropertySearchForm({ term, onTermChange }: { term: string; onTermChange: (term: string) => void }) {
   const intl = useIntl();
-  const debounced = useDebouncedCallback((value: string) => onTermChange(value), 260);
-
-  const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    debounced(event.target.value);
-  }, [debounced]);
 
   return (
-    <InputGroup className="max-w-sm">
-      <InputGroupInput
-        type="search"
-        defaultValue={term}
-        placeholder={intl.formatMessage({
-          defaultMessage: 'Search properties...',
-          description: 'Placeholder for the version property search input.',
-        })}
-        aria-label={intl.formatMessage({
-          defaultMessage: 'Search properties in this version',
-          description: 'Aria label for the version property search input.',
-        })}
-        onChange={onChange}
-      />
-      <InputGroupAddon>
-        <SearchIcon size="1rem" className="text-muted-foreground"/>
-      </InputGroupAddon>
-    </InputGroup>
+    <PropertySearchField
+      term={term}
+      label={intl.formatMessage({
+        defaultMessage: 'Search properties in this version',
+        description: 'Aria label for the version property search input.',
+      })}
+      onTermChange={onTermChange}
+    />
   );
 }
 
-export function VersionDetail({ namespace, version }: { namespace: string; version: VersionedArtifact }) {
-  const [term, setTerm] = useState('');
-
+export function VersionDetail({ namespace, version, term, page, size, onTermChange }: {
+  namespace: string;
+  version: VersionedArtifact;
+  term?: string;
+  page?: number;
+  size?: number;
+  onTermChange: (term: string) => void;
+}) {
   const { data, error, isPending, isError } = useSearchArtifactProperties(namespace, {
     groupId: version.groupId,
     artifactId: version.artifactId,
     version: version.version,
+    page,
+    size,
     term,
   });
 
@@ -113,46 +67,36 @@ export function VersionDetail({ namespace, version }: { namespace: string; versi
         />
       </div>
 
-      <PropertySearchForm term={term} onTermChange={setTerm}/>
+      <PropertySearchForm term={term ?? ''} onTermChange={onTermChange}/>
 
-      <Card className="border">
-        <CardContent>
-          {term.trim().length === 0 && (
-            <EmptyState
-              icon={<SearchIcon size="2rem"/>}
-              title={<SearchPropertiesPromptTitle/>}
-              description={<SearchPropertiesPromptDescription/>}
-            />
-          )}
+      {isPending && (
+        <div data-slot="property-search-skeleton" className="border border-accent rounded-xl p-4">
+          <Skeleton className="h-4 w-72 mb-2"/>
+          <Skeleton className="h-4 w-48 mb-3"/>
+          <Skeleton className="h-4 w-56 mb-1"/>
+          <Skeleton className="h-4 w-64"/>
+        </div>
+      )}
 
-          {term.trim().length > 0 && isPending && (
-            <div data-slot="property-search-skeleton" className="space-y-3">
-              <Skeleton className="h-4 w-64"/>
-              <Skeleton className="h-4 w-48"/>
-              <Skeleton className="h-4 w-56"/>
-            </div>
-          )}
+      {isError && (
+        <ErrorState error={error} />
+      )}
 
-          {isError && (
-            <ErrorState error={error} className="border-none"/>
-          )}
-
-          {term.trim().length > 0 && data?.data.length === 0 && (
-            <EmptyState
-              icon={<SearchIcon size="2rem"/>}
-              title={<NoMatchingPropertiesTitle/>}
-            />
-          )}
-
-          {data && data.data.length > 0 && (
-            <ItemGroup>
-              {data.data.map(property => (
-                <PropertyItem key={property.name} property={property}/>
-              ))}
-            </ItemGroup>
-          )}
-        </CardContent>
-      </Card>
+      {data && (
+        <div>
+          <div className="flex justify-between mb-2">
+            <p className="font-heading font-semibold test-lg">Property definitions</p>
+            <p className="text-sm text-muted-foreground">
+              <FormattedMessage
+                defaultMessage="{count, plural, one {1 property} other {# properties}}"
+                description="Label used to describe the number of properties in a version."
+                values={{ count: data.metadata.total }}
+              />
+            </p>
+          </div>
+          <PropertyTable page={page} size={size} properties={data} variant="version" />
+        </div>
+      )}
     </>
   );
 }

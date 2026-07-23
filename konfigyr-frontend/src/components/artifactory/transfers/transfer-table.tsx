@@ -11,15 +11,7 @@ import { ErrorState } from '@konfigyr/components/error';
 import { buttonVariants } from '@konfigyr/components/ui/button';
 import { Card, CardContent } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationRange,
-} from '@konfigyr/components/ui/pagination';
+import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@konfigyr/components/ui/table';
 import { GroupIdLabel, StateLabel } from '@konfigyr/components/artifactory/transfers/messages';
@@ -81,52 +73,6 @@ function TransferSkeleton () {
       <TableCell><Skeleton className="h-5 w-24"/></TableCell>
       <TableCell><Skeleton className="h-5 w-24 ml-auto"/></TableCell>
     </TableRow>
-  );
-}
-
-function TransferPagination ({ page = 1, size = 20, data }: {
-  page?: number;
-  size?: number;
-  data?: PageResponse<ArtifactOwnershipTransfer>;
-}) {
-  const pages = data?.metadata.pages || 1;
-  const total = data?.metadata.total || 0;
-
-  if (pages < 2) {
-    return null;
-  }
-
-  return (
-    <Pagination page={page} pages={pages} total={total} size={size} className="mt-4">
-      <PaginationContent>
-        <PaginationItem>
-          <PaginationPrevious
-            render={(
-              <Link to="." search={search => ({ ...search, page: page - 1 })}/>
-            )}
-          />
-        </PaginationItem>
-        <PaginationRange>
-          {(state) => (
-            <PaginationLink
-              isActive={state.active}
-              render={(
-                <Link to="." search={search => ({ ...search, page: state.page })}>
-                  {state.page}
-                </Link>
-              )}
-            />
-          )}
-        </PaginationRange>
-        <PaginationItem>
-          <PaginationNext
-            render={(
-              <Link to="." search={search => ({ ...search, page: page + 1 })}/>
-            )}
-          />
-        </PaginationItem>
-      </PaginationContent>
-    </Pagination>
   );
 }
 
@@ -211,7 +157,7 @@ export function TransferTable ({ namespace, direction, data, error, isPending, p
         </CardContent>
       </Card>
 
-      <TransferPagination page={page} size={size} data={data}/>
+      <PageResponsePagination page={page} size={size} response={data} className="mt-4"/>
     </>
   );
 }

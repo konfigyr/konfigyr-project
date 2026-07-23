@@ -19,16 +19,27 @@ describe('components | namespace | navigation | <NamespaceArtifactoryNavigationM
       .toBe('/namespace/konfigyr/artifactory/registry');
   });
 
-  test('should render the group verifications and ownership transfers links', () => {
+  test('should render the group claims and ownership transfers links', () => {
     const { getByRole } = renderComponentWithRouter(
       <Layout>
         <NamespaceArtifactoryNavigationMenu namespace={namespaces.konfigyr}/>
       </Layout>,
     );
 
-    expect(getByRole('link', { name: 'Group verifications' }).getAttribute('href'))
+    expect(getByRole('link', { name: 'Group claims' }).getAttribute('href'))
       .toBe('/namespace/konfigyr/artifactory/groups');
     expect(getByRole('link', { name: 'Ownership transfers' }).getAttribute('href'))
       .toBe('/namespace/konfigyr/artifactory/transfers');
+  });
+
+  test('should render a link to the property search page', () => {
+    const { getByRole } = renderComponentWithRouter(
+      <Layout>
+        <NamespaceArtifactoryNavigationMenu namespace={namespaces.konfigyr}/>
+      </Layout>,
+    );
+
+    expect(getByRole('link', { name: 'Property search' }).getAttribute('href'))
+      .toBe('/namespace/konfigyr/artifactory/search');
   });
 });

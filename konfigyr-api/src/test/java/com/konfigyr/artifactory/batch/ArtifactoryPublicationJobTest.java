@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static com.konfigyr.data.tables.PropertyDefinitions.PROPERTY_DEFINITIONS;
 import static com.konfigyr.data.tables.ArtifactVersions.ARTIFACT_VERSIONS;
 import static com.konfigyr.data.tables.AuditEvents.AUDIT_EVENTS;
 import static org.assertj.core.api.Assertions.*;
@@ -51,6 +52,10 @@ class ArtifactoryPublicationJobTest extends AbstractIntegrationTest {
 				.where(ARTIFACT_VERSIONS.ARTIFACT_ID.eq(4L))
 				.returning(ARTIFACT_VERSIONS.ID)
 				.fetch(ARTIFACT_VERSIONS.ID);
+
+		context.getBean(DSLContext.class).deleteFrom(PROPERTY_DEFINITIONS)
+				.where(PROPERTY_DEFINITIONS.ARTIFACT_ID.eq(4L))
+				.execute();
 
 		context.getBean(DSLContext.class).deleteFrom(AUDIT_EVENTS)
 				.where(AUDIT_EVENTS.ENTITY_ID.in(versions))

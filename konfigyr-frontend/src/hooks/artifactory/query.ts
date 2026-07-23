@@ -7,7 +7,7 @@ import type {
   ArtifactQuery,
   ArtifactVersionQuery,
   ChangeArtifactVisibilityPayload,
-  PropertyDescriptor,
+  PropertyDefinition,
   PropertySearchQuery,
   VersionedArtifact,
 } from './types';
@@ -73,12 +73,11 @@ export const getArtifactVersion = (namespace: string, groupId: string, artifactI
 export const searchArtifactProperties = (namespace: string, query: PropertySearchQuery) => {
   return queryOptions({
     queryKey: registryKeys.properties(namespace, query),
-    queryFn: async ({ signal }): Promise<PageResponse<PropertyDescriptor>> => {
+    queryFn: async ({ signal }): Promise<PageResponse<PropertyDefinition>> => {
       return await request
         .get(`api/namespaces/${namespace}/artifacts/search`, { signal, searchParams: { ...query } })
         .json();
     },
-    enabled: query.term.trim().length > 0,
     placeholderData: previousData => previousData,
   });
 };
