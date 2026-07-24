@@ -9,6 +9,8 @@ import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.test.AbstractIntegrationTest;
 import com.konfigyr.test.TestPrincipals;
 import com.konfigyr.vault.*;
+import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,11 +19,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
 
+import static com.konfigyr.data.tables.VaultProperties.VAULT_PROPERTIES;
 import static org.assertj.core.api.Assertions.*;
 
 class ChangeHistoryServiceTest extends AbstractIntegrationTest {
+
+	@Autowired
+	DSLContext context;
 
 	@Autowired
 	ProfileManager profiles;
@@ -368,6 +375,147 @@ class ChangeHistoryServiceTest extends AbstractIntegrationTest {
 	@DisplayName("should create partitions for change and property history tables")
 	void createTablePartitions() {
 		assertThatNoException().isThrownBy(chronicle::createPartitions);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should upsert added properties and update the checksum, timestamp and author on a later sync")
+	void synchronizeAddedAndUpdatedProperties() {
+		final var john = (AuthenticatedPrincipal) TestPrincipals.john().getPrincipal();
+
+		chronicle.synchronize(EntityId.from(1), applyResult("revision-1", john, Set.of(
+				PropertyTransition.added("sync-test.logging.level.root", value("info")),
+				PropertyTransition.added("sync-test.logging.level.web", value("debug")),
+				PropertyTransition.added("sync-test.server.port", value("8080"))
+		)));
+
+		assertThat(fetchProperties(1))
+				.extracting(r -> r.get(VAULT_PROPERTIES.NAME))
+				.contains("sync-test.logging.level.root", "sync-test.logging.level.web", "sync-test.server.port");
+
+		final String originalChecksum = fetchProperty(1, "sync-test.logging.level.root").get(VAULT_PROPERTIES.CHECKSUM);
+
+		final var jane = (AuthenticatedPrincipal) TestPrincipals.jane().getPrincipal();
+
+		chronicle.synchronize(EntityId.from(1), applyResult("revision-2", jane, Set.of(
+				PropertyTransition.updated("sync-test.logging.level.root", value("info"), value("warn"))
+		)));
+
+		assertThat(fetchProperty(1, "sync-test.logging.level.root"))
+				.returns("revision-2", r -> r.get(VAULT_PROPERTIES.REVISION))
+				.returns("Jane Doe", r -> r.get(VAULT_PROPERTIES.AUTHOR_NAME))
+				.returns("USER_ACCOUNT", r -> r.get(VAULT_PROPERTIES.AUTHOR_TYPE))
+				.returns(jane.get(), r -> r.get(VAULT_PROPERTIES.AUTHOR_ID))
+				.satisfies(r -> assertThat(r.get(VAULT_PROPERTIES.CHECKSUM)).isNotEqualTo(originalChecksum))
+				.satisfies(r -> assertThat(r.get(VAULT_PROPERTIES.UPDATED_AT))
+						.isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS)));
+	}
+
+	@Test
+	@DisplayName("should fail to synchronize properties for unknown profile")
+	void synchronizePropertiesForUnknownProfile() {
+		assertThatExceptionOfType(ProfileNotFoundException.class)
+				.isThrownBy(() -> chronicle.synchronize(EntityId.from(9999), Mockito.mock(ApplyResult.class)));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should delete the property row when it is removed")
+	void synchronizeRemovedProperty() {
+		final var john = (AuthenticatedPrincipal) TestPrincipals.john().getPrincipal();
+
+		chronicle.synchronize(EntityId.from(2), applyResult(john, Set.of(
+				PropertyTransition.added("sync-test.application.name", value("service-a")),
+				PropertyTransition.added("sync-test.application.group", value("group-a")),
+				PropertyTransition.added("sync-test.server.port", value("8080"))
+		)));
+
+		chronicle.synchronize(EntityId.from(2), applyResult(john, Set.of(
+				PropertyTransition.removed("sync-test.server.port", value("8080"))
+		)));
+
+		assertThat(fetchProperties(2))
+				.extracting(r -> r.get(VAULT_PROPERTIES.NAME))
+				.contains("sync-test.application.name", "sync-test.application.group")
+				.doesNotContain("sync-test.server.port");
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should reflect only the net current state when a merge both adds and removes properties")
+	void synchronizeMixedAddAndRemove() {
+		final var john = (AuthenticatedPrincipal) TestPrincipals.john().getPrincipal();
+
+		chronicle.synchronize(EntityId.from(1), applyResult(john, Set.of(
+				PropertyTransition.added("sync-test.feature.toggle.a", value("true")),
+				PropertyTransition.added("sync-test.feature.toggle.b", value("true"))
+		)));
+
+		chronicle.synchronize(EntityId.from(1), applyResult(john, Set.of(
+				PropertyTransition.added("sync-test.feature.toggle.c", value("true")),
+				PropertyTransition.removed("sync-test.feature.toggle.a", value("true"))
+		)));
+
+		assertThat(fetchProperties(1))
+				.extracting(r -> r.get(VAULT_PROPERTIES.NAME))
+				.contains("sync-test.feature.toggle.b", "sync-test.feature.toggle.c")
+				.doesNotContain("sync-test.feature.toggle.a");
+	}
+
+	@Test
+	@DisplayName("should return zero rows for a profile that never had any properties synced")
+	void noPropertiesForUntouchedProfile() {
+		assertThat(fetchProperties(999999)).isEmpty();
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should isolate properties per profile even when property names overlap")
+	void synchronizeIsolatesPropertiesPerProfile() {
+		final var john = (AuthenticatedPrincipal) TestPrincipals.john().getPrincipal();
+
+		chronicle.synchronize(EntityId.from(1), applyResult(john, Set.of(
+				PropertyTransition.added("sync-test.application.name", value("service-a"))
+		)));
+
+		chronicle.synchronize(EntityId.from(2), applyResult(john, Set.of(
+				PropertyTransition.added("sync-test.application.name", value("service-b"))
+		)));
+
+		assertThat(fetchProperties(1))
+				.extracting(r -> r.get(VAULT_PROPERTIES.NAME))
+				.contains("sync-test.application.name");
+
+		assertThat(fetchProperties(2))
+				.extracting(r -> r.get(VAULT_PROPERTIES.NAME))
+				.contains("sync-test.application.name");
+
+		assertThat(fetchProperty(1, "sync-test.application.name").get(VAULT_PROPERTIES.CHECKSUM))
+				.isNotEqualTo(fetchProperty(2, "sync-test.application.name").get(VAULT_PROPERTIES.CHECKSUM));
+	}
+
+	private static PropertyValue value(String content) {
+		return PropertyValue.sealed(ByteArray.fromString(content), ByteArray.fromString(content));
+	}
+
+	private static ApplyResult applyResult(AuthenticatedPrincipal author, Set<PropertyTransition> changes) {
+		return applyResult("revision", author, changes);
+	}
+
+	private static ApplyResult applyResult(String revision, AuthenticatedPrincipal author, Set<PropertyTransition> changes) {
+		return new ApplyResult(revision, null, "Test changes", null, changes, author, OffsetDateTime.now());
+	}
+
+	private List<Record> fetchProperties(long profileId) {
+		return context.selectFrom(VAULT_PROPERTIES)
+				.where(VAULT_PROPERTIES.PROFILE_ID.eq(profileId))
+				.fetch();
+	}
+
+	private Record fetchProperty(long profileId, String name) {
+		return context.selectFrom(VAULT_PROPERTIES)
+				.where(VAULT_PROPERTIES.PROFILE_ID.eq(profileId), VAULT_PROPERTIES.NAME.eq(name))
+				.fetchOne();
 	}
 
 	private Profile profileFor(long id) {

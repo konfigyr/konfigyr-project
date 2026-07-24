@@ -502,4 +502,95 @@
 				onDelete="CASCADE"
 		/>
 	</changeSet>
+
+	<changeSet author="vspasic" id="1.0.0-create-vault-properties-table" context="api">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="vault_properties" />
+			</not>
+		</preConditions>
+
+		<comment>Vault Properties table, stores the currently active property state per profile.</comment>
+
+		<createTable tableName="vault_properties" remarks="Stores the currently active property names for a profile.">
+			<column name="namespace_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="service_id" type="bigint">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="profile_id" type="bigint">
+				<constraints nullable="false" primaryKey="true"/>
+			</column>
+
+			<column name="name" type="varchar(255)">
+				<constraints nullable="false" primaryKey="true"/>
+			</column>
+
+			<column name="revision" type="varchar(64)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="checksum" type="varchar(64)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="created_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="updated_at" type="timestamptz" defaultValue="NOW()">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="author_id" type="varchar(128)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="author_type" type="varchar(32)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="author_name" type="text">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_properties"
+				baseColumnNames="namespace_id"
+				constraintName="fk_vault_properties_namespace"
+				referencedTableName="namespaces"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_properties"
+				baseColumnNames="service_id"
+				constraintName="fk_vault_properties_service"
+				referencedTableName="services"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="vault_properties"
+				baseColumnNames="profile_id"
+				constraintName="fk_vault_properties_profile"
+				referencedTableName="vault_profiles"
+				referencedColumnNames="id"
+				onDelete="CASCADE"
+		/>
+
+		<createIndex tableName="vault_properties" indexName="idx_vault_properties_lookup">
+			<column name="profile_id" />
+		</createIndex>
+
+		<createIndex tableName="vault_properties" indexName="idx_vault_properties_namespace_lookup">
+			<column name="namespace_id" />
+		</createIndex>
+	</changeSet>
 </databaseChangeLog>
