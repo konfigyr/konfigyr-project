@@ -22,9 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.*;
 
+import static com.konfigyr.data.Keys.VAULT_PROPERTIES_PKEY;
 import static com.konfigyr.data.tables.Services.SERVICES;
 import static com.konfigyr.data.tables.VaultChangeHistory.VAULT_CHANGE_HISTORY;
 import static com.konfigyr.data.tables.VaultProfiles.VAULT_PROFILES;
+import static com.konfigyr.data.tables.VaultProperties.VAULT_PROPERTIES;
 import static com.konfigyr.data.tables.VaultPropertyHistory.VAULT_PROPERTY_HISTORY;
 
 @Slf4j
@@ -76,7 +78,7 @@ public class ChangeHistoryService implements VaultChronicle {
 	 */
 	@Transactional(label = "vault.commit-change-history")
 	void commit(EntityId profile, ApplyResult result) {
-		final ChangeHistoryOwnership ownership = lookupOwnership(profile);
+		final VaultOwnership ownership = lookupOwnership(profile);
 		final AuthenticatedPrincipal author = result.author();
 		final MarkdownContents description = MarkdownContents.ofNullable(result.description());
 
@@ -100,7 +102,6 @@ public class ChangeHistoryService implements VaultChronicle {
 				)
 				.returning(VAULT_CHANGE_HISTORY.ID)
 				.fetchOne(VAULT_CHANGE_HISTORY.ID);
-
 
 		InsertValuesStepN<Record> insert = context.insertInto(VAULT_PROPERTY_HISTORY)
 				.columns(List.of(
@@ -133,6 +134,42 @@ public class ChangeHistoryService implements VaultChronicle {
 		}
 
 		insert.execute();
+
+		log.info("Successfully committed change history for: [namespace={}, service={}, profile={}, revision={}]",
+				ownership.namespace(), ownership.service(), ownership.profile(), result.revision());
+	}
+
+	/**
+	 * Synchronizes the currently active property state for a {@link Profile} to reflect the
+	 * {@link PropertyTransition transitions} contained within the given {@link ApplyResult}.
+	 * <p>
+	 * Added or updated properties are upserted with a fresh checksum, timestamp and author. Removed
+	 * properties are deleted outright. Unlike {@link #commit(EntityId, ApplyResult)}, the underlying
+	 * table never retains historical rows, it always reflects the current state only.
+	 *
+	 * @param profile the entity identifier of the profile whose properties should be synchronized, must not be {@code null}
+	 * @param result the changes applied to the profile's configuration state, must not be {@code null}
+	 */
+	@Transactional(label = "vault.sync-properties")
+	void synchronize(EntityId profile, ApplyResult result) {
+		final VaultOwnership ownership = lookupOwnership(profile);
+
+		final List<String> removed = new ArrayList<>();
+		final List<PropertyTransition> upserts = new ArrayList<>();
+
+		for (PropertyTransition transition : result) {
+			if (transition.type() == PropertyTransitionType.REMOVED) {
+				removed.add(transition.name());
+			} else {
+				upserts.add(transition);
+			}
+		}
+
+		final long removedCount = removePropertiesFromIndex(ownership, removed);
+		final long upsertedCount = updatePropertiesIndex(ownership, result, upserts);
+
+		log.info("Successfully updated Vault property state for [namespace={}, service={}, profile={}, revision={}, removed={}, upserted={}]",
+				ownership.namespace(), ownership.service(), ownership.profile(), result.revision(), removedCount, upsertedCount);
 	}
 
 	@Override
@@ -304,6 +341,68 @@ public class ChangeHistoryService implements VaultChronicle {
 		Routines.createPropertyHistoryPartition(context.configuration(), tomorrow);
 	}
 
+	private long removePropertiesFromIndex(VaultOwnership ownership, Collection<String> propertyNames) {
+		if (propertyNames.isEmpty()) {
+			return 0;
+		}
+
+		return context.deleteFrom(VAULT_PROPERTIES)
+				.where(
+						VAULT_PROPERTIES.PROFILE_ID.eq(ownership.profile()),
+						VAULT_PROPERTIES.NAME.in(propertyNames)
+				)
+				.executeLarge();
+	}
+
+	private long updatePropertiesIndex(VaultOwnership ownership, ApplyResult result, Collection<PropertyTransition> transitions) {
+		if (transitions.isEmpty()) {
+			return 0;
+		}
+
+		final AuthenticatedPrincipal author = result.author();
+
+		InsertValuesStepN<Record> insert = context.insertInto(VAULT_PROPERTIES)
+				.columns(List.of(
+						VAULT_PROPERTIES.NAMESPACE_ID,
+						VAULT_PROPERTIES.SERVICE_ID,
+						VAULT_PROPERTIES.PROFILE_ID,
+						VAULT_PROPERTIES.NAME,
+						VAULT_PROPERTIES.REVISION,
+						VAULT_PROPERTIES.CHECKSUM,
+						VAULT_PROPERTIES.CREATED_AT,
+						VAULT_PROPERTIES.UPDATED_AT,
+						VAULT_PROPERTIES.AUTHOR_ID,
+						VAULT_PROPERTIES.AUTHOR_TYPE,
+						VAULT_PROPERTIES.AUTHOR_NAME
+				));
+
+		for (PropertyTransition transition : transitions) {
+			insert = insert.values(
+					ownership.namespace(),
+					ownership.service(),
+					ownership.profile(),
+					transition.name(),
+					result.revision(),
+					transition.to().checksum().encodeHex(),
+					result.timestamp(),
+					result.timestamp(),
+					author.get(),
+					author.getType().name(),
+					author.getDisplayName().orElse(null)
+			);
+		}
+
+		return insert.onConflictOnConstraint(VAULT_PROPERTIES_PKEY)
+				.doUpdate()
+				.set(VAULT_PROPERTIES.REVISION, DSL.excluded(VAULT_PROPERTIES.REVISION))
+				.set(VAULT_PROPERTIES.CHECKSUM, DSL.excluded(VAULT_PROPERTIES.CHECKSUM))
+				.set(VAULT_PROPERTIES.UPDATED_AT, DSL.excluded(VAULT_PROPERTIES.UPDATED_AT))
+				.set(VAULT_PROPERTIES.AUTHOR_ID, DSL.excluded(VAULT_PROPERTIES.AUTHOR_ID))
+				.set(VAULT_PROPERTIES.AUTHOR_TYPE, DSL.excluded(VAULT_PROPERTIES.AUTHOR_TYPE))
+				.set(VAULT_PROPERTIES.AUTHOR_NAME, DSL.excluded(VAULT_PROPERTIES.AUTHOR_NAME))
+				.executeLarge();
+	}
+
 	private SelectConditionStep<Record> createChangeHistoryQuery(Condition condition) {
 		return context.select(CHANGE_HISTORY_FIELDS)
 				.from(VAULT_CHANGE_HISTORY)
@@ -318,13 +417,13 @@ public class ChangeHistoryService implements VaultChronicle {
 				.where(condition);
 	}
 
-	private ChangeHistoryOwnership lookupOwnership(EntityId profile) {
+	private VaultOwnership lookupOwnership(EntityId profile) {
 		return context.select(SERVICES.NAMESPACE_ID, SERVICES.ID, VAULT_PROFILES.ID)
 				.from(VAULT_PROFILES)
 				.innerJoin(SERVICES)
 				.on(SERVICES.ID.eq(VAULT_PROFILES.SERVICE_ID))
 				.where(VAULT_PROFILES.ID.eq(profile.get()))
-				.fetchOptional(ChangeHistoryOwnership::new)
+				.fetchOptional(VaultOwnership::new)
 				.orElseThrow(() -> new ProfileNotFoundException(profile));
 	}
 
@@ -389,8 +488,8 @@ public class ChangeHistoryService implements VaultChronicle {
 		return PropertyValue.sealed(cipher, checksum);
 	}
 
-	private record ChangeHistoryOwnership(long namespace, long service, long profile) {
-		private ChangeHistoryOwnership(Record record) {
+	private record VaultOwnership(long namespace, long service, long profile) {
+		private VaultOwnership(Record record) {
 			this(
 					record.get(SERVICES.NAMESPACE_ID),
 					record.get(SERVICES.ID),
