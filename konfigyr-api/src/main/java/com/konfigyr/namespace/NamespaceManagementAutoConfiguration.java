@@ -3,7 +3,9 @@ package com.konfigyr.namespace;
 import com.konfigyr.artifactory.OwnerResolver;
 import com.konfigyr.feature.FeatureDefinition;
 import com.konfigyr.feature.FeatureDefinitionConfigurer;
+import com.konfigyr.feature.Features;
 import com.konfigyr.namespace.catalog.ServiceCatalogSource;
+import com.konfigyr.namespace.dashboard.Dashboards;
 import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -56,6 +58,11 @@ public class NamespaceManagementAutoConfiguration implements FeatureDefinitionCo
 	@Bean
 	OwnerResolver namespaceOwnerResolver(NamespaceManager namespaces) {
 		return new NamespaceOwnerResolver(namespaces);
+	}
+
+	@Bean
+	Dashboards namespaceDashboards(Features features) {
+		return new Dashboards(context, features);
 	}
 
 }
