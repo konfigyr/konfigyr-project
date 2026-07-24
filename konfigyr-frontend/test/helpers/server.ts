@@ -10,6 +10,7 @@ import groups from './server/namespace/groups';
 import invitations from './server/namespace/invitations';
 import transfers from './server/namespace/transfers';
 import audit from './server/audit';
+import dashboard from './server/dashboard';
 import oidc from './server/oidc';
 import proxy from './server/proxy';
 import services from './server/services';
@@ -27,6 +28,7 @@ export const handlers = [
   ...invitations,
   ...transfers,
   ...audit,
+  ...dashboard,
   ...oidc,
   ...proxy,
   ...services,
