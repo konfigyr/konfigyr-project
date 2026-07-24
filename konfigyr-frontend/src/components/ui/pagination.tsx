@@ -5,6 +5,7 @@ import {
   useMemo,
 } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { Link } from '@tanstack/react-router';
 import { mergeProps } from '@base-ui/react/merge-props';
 import { useRender } from '@base-ui/react/use-render';
 import {
@@ -17,6 +18,7 @@ import { buttonVariants } from '@konfigyr/components/ui/button';
 
 import type { ComponentProps, ReactNode } from 'react';
 import type { Button } from '@konfigyr/components/ui/button';
+import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
 
 export type PaginationProps = {
   /**
@@ -325,5 +327,51 @@ export function PaginationEllipsis({
         />
       </span>
     </span>
+  );
+}
+
+export function PageResponsePagination<T>({ page = 1, size = 20, response, ...props }: {
+  page?: number;
+  size?: number;
+  response?: PageResponse<T>;
+} & ComponentProps<'nav'>) {
+  const pages = response?.metadata.pages || 1;
+  const total = response?.metadata.total || 0;
+
+  if (pages < 2) {
+    return null;
+  }
+
+  return (
+    <Pagination page={page} pages={pages} total={total} size={size} {...props}>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            render={(
+              <Link to="." search={search => ({ ...search, page: page - 1 })}/>
+            )}
+          />
+        </PaginationItem>
+        <PaginationRange>
+          {(state) => (
+            <PaginationLink
+              isActive={state.active}
+              render={(
+                <Link to="." search={search => ({ ...search, page: state.page })}>
+                  {state.page}
+                </Link>
+              )}
+            />
+          )}
+        </PaginationRange>
+        <PaginationItem>
+          <PaginationNext
+            render={(
+              <Link to="." search={search => ({ ...search, page: page + 1 })}/>
+            )}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
   );
 }

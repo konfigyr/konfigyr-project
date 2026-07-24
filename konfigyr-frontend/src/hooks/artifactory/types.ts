@@ -48,10 +48,10 @@ export interface ArtifactVersionQuery extends Pageable {
 }
 
 export interface PropertySearchQuery extends Pageable {
-  groupId: string;
-  artifactId: string;
+  groupId?: string;
+  artifactId?: string;
   version?: string;
-  term: string;
+  term?: string;
 }
 
 export interface ChangeArtifactVisibilityPayload {
@@ -109,4 +109,14 @@ export interface PropertyDescriptor {
   description?: string;
   deprecation?: PropertyDeprecation;
   defaultValue?: string;
+}
+
+export interface PropertyDefinition extends PropertyDescriptor {
+  id: string;
+  key: string;
+  owner: { id: string, slug: string },
+  checksum: string,
+  occurrences: number,
+  firstSeen?: string,
+  lastSeen?: string,
 }

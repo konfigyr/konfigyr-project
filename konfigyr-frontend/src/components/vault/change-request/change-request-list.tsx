@@ -15,15 +15,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@konfigyr/components/ui/item';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationRange,
-} from '@konfigyr/components/ui/pagination';
+import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
 import { ChangeRequestFilters } from './change-request-filters';
 import { ChangeRequestStateIcon } from './change-request-state';
 
@@ -128,52 +120,6 @@ function ChangeRequestItemGroup({ namespace, service, data, error, isPending = f
   );
 }
 
-function ChangeRequestPagination({ page = 1, size = 20, data }: {
-  page?: number;
-  size?: number;
-  data?: PageResponse<ChangeRequest>;
-}) {
-  const pages = data?.metadata.pages || 1;
-  const total = data?.metadata.total || 0;
-
-  if (pages < 2) {
-    return null;
-  }
-
-  return (
-    <Pagination page={page} pages={pages} total={total} size={size} className="mt-4">
-      <PaginationContent>
-        <PaginationItem>
-          <PaginationPrevious
-            render={
-              <Link to="." search={search => ({ ...search, page: page - 1 })} />
-            }
-          />
-        </PaginationItem>
-        <PaginationRange>
-          {state => (
-            <PaginationLink
-              isActive={state.active}
-              render={
-                <Link to="." search={search => ({ ...search, page: state.page })}>
-                  {state.page}
-                </Link>
-              }
-            />
-          )}
-        </PaginationRange>
-        <PaginationItem>
-          <PaginationNext
-            render={
-              <Link to="." search={search => ({ ...search, page: page + 1 })} />
-            }
-          />
-        </PaginationItem>
-      </PaginationContent>
-    </Pagination>
-  );
-}
-
 export function ChangeRequestList({ namespace, service, query, onQueryChange }: {
   namespace: Namespace;
   service: Service;
@@ -199,10 +145,11 @@ export function ChangeRequestList({ namespace, service, query, onQueryChange }: 
         isPending={isPending}
       />
 
-      <ChangeRequestPagination
+      <PageResponsePagination
         page={query.page}
         size={query.size}
-        data={data}
+        response={data}
+        className="mt-4"
       />
     </>
   );

@@ -1,20 +1,11 @@
 import { FormattedDate, FormattedMessage } from 'react-intl';
 import { Link2OffIcon } from 'lucide-react';
-import { Link } from '@tanstack/react-router';
 import { useGetNamespaceInvitations } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { NamespaceRoleBadge } from '@konfigyr/components/namespace/role';
 import { Card, CardContent } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationRange,
-} from '@konfigyr/components/ui/pagination';
+import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
 import {
   Table,
@@ -25,53 +16,7 @@ import {
   TableRow,
 } from '@konfigyr/components/ui/table';
 
-import type { Invitation, Namespace, PageResponse, Pageable } from '@konfigyr/hooks/types';
-
-function InvitationPagination({ page = 1, size = 20, data }: {
-  page?: number;
-  size?: number;
-  data?: PageResponse<Invitation>;
-}) {
-  const pages = data?.metadata.pages || 1;
-  const total = data?.metadata.total || 0;
-
-  if (pages < 2) {
-    return null;
-  }
-
-  return (
-    <Pagination page={page} pages={pages} total={total} size={size} className="mt-4">
-      <PaginationContent>
-        <PaginationItem>
-          <PaginationPrevious
-            render={(
-              <Link to="." search={search => ({ ...search, page: page - 1 })} />
-            )}
-          />
-        </PaginationItem>
-        <PaginationRange>
-          {(state) => (
-            <PaginationLink
-              isActive={state.active}
-              render={(
-                <Link to="." search={search => ({ ...search, page: state.page })}>
-                  {state.page}
-                </Link>
-              )}
-            />
-          )}
-        </PaginationRange>
-        <PaginationItem>
-          <PaginationNext
-            render={(
-              <Link to="." search={search => ({ ...search, page: page + 1 })} />
-            )}
-          />
-        </PaginationItem>
-      </PaginationContent>
-    </Pagination>
-  );
-}
+import type { Namespace, Pageable } from '@konfigyr/hooks/types';
 
 export function Invitations({ namespace, pageable }: { namespace: Namespace, pageable?: Pageable }) {
   const { data: invitations, error, isError, isPending } = useGetNamespaceInvitations(namespace, pageable);
@@ -182,10 +127,11 @@ export function Invitations({ namespace, pageable }: { namespace: Namespace, pag
         </CardContent>
       </Card>
 
-      <InvitationPagination
+      <PageResponsePagination
         page={pageable?.page}
         size={pageable?.size}
-        data={invitations}
+        response={invitations}
+        className="mt-4"
       />
     </>
   );

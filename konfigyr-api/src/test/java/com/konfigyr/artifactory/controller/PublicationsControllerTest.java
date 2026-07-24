@@ -541,25 +541,39 @@ class PublicationsControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should reject a property search with a blank term")
-	void shouldRejectSearchWithBlankTerm() {
+	@DisplayName("should return every visible property when searching with a blank term")
+	void shouldSearchReturnAllVisiblePropertiesForBlankTerm() {
 		mvc.get().uri("/namespaces/{namespace}/artifacts/search?term=", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.hasStatus(HttpStatus.BAD_REQUEST);
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(PropertyDefinition::id)
+						.hasSize(19)
+						.contains(EntityId.from(19), EntityId.from(20), EntityId.from(21))
+						.doesNotContain(EntityId.from(17), EntityId.from(18)));
 	}
 
 	@Test
-	@DisplayName("should reject a property search with a missing term")
-	void shouldRejectSearchWithMissingTerm() {
+	@DisplayName("should return every visible property when the term query parameter is missing")
+	void shouldSearchReturnAllVisiblePropertiesForMissingTerm() {
 		mvc.get().uri("/namespaces/{namespace}/artifacts/search", "konfigyr")
 				.with(authentication(TestPrincipals.john(), OAuthScope.READ_ARTIFACTS))
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.hasStatus(HttpStatus.BAD_REQUEST);
+				.hasStatusOk()
+				.bodyJson()
+				.convertTo(pagedModel(PropertyDefinition.class))
+				.satisfies(it -> assertThat(it.getContent())
+						.extracting(PropertyDefinition::id)
+						.hasSize(19)
+						.contains(EntityId.from(19), EntityId.from(20), EntityId.from(21))
+						.doesNotContain(EntityId.from(17), EntityId.from(18)));
 	}
 
 	@Test

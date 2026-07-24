@@ -1,5 +1,4 @@
 import { PackageIcon } from 'lucide-react';
-import { FormattedMessage } from 'react-intl';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -9,6 +8,10 @@ import {
   SidebarMenuItem,
 } from '@konfigyr/components/ui/sidebar';
 import { Link } from '@tanstack/react-router';
+import { GroupClaimsLabel } from '@konfigyr/components/artifactory/groups/messages';
+import { RegistryLabel } from '@konfigyr/components/artifactory/registry/messages';
+import { PropertySearchLabel } from '@konfigyr/components/artifactory/search/messages';
+import { TransfersLabel } from '@konfigyr/components/artifactory/transfers/messages';
 
 import type { Namespace } from '@konfigyr/hooks/types';
 
@@ -23,17 +26,40 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
           <SidebarMenuItem>
             <SidebarMenuButton render={
               <Link
+                to="/namespace/$namespace/artifactory/registry"
+                params={{ namespace: namespace.slug }}
+                className="truncate"
+                activeProps={{ 'data-active': true }}
+              >
+                <RegistryLabel />
+              </Link>
+            } />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton render={
+              <Link
+                to="/namespace/$namespace/artifactory/search"
+                params={{ namespace: namespace.slug }}
+                className="truncate"
+                activeProps={{ 'data-active': true }}
+              >
+                <PropertySearchLabel />
+              </Link>
+            } />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton render={
+              <Link
                 to="/namespace/$namespace/artifactory/groups"
                 params={{ namespace: namespace.slug }}
                 className="truncate"
                 activeProps={{ 'data-active': true }}
               >
-                <FormattedMessage
-                  defaultMessage="Group verifications"
-                  description="Label for the Group verifications page"
-                />
+                <GroupClaimsLabel />
               </Link>
             } />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/artifactory/transfers"
@@ -41,28 +67,9 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
                 className="truncate"
                 activeProps={{ 'data-active': true }}
               >
-                <FormattedMessage
-                  defaultMessage="Ownership transfers"
-                  description="Label for the Ownership transfers page"
-                />
+                <TransfersLabel />
               </Link>
             } />
-            <SidebarMenuButton render={
-              <Link
-                to="/namespace/$namespace/artifactory/registry"
-                params={{ namespace: namespace.slug }}
-                className="truncate"
-                activeProps={{ 'data-active': true }}
-              >
-                <FormattedMessage
-                  defaultMessage="Artifact registry"
-                  description="Label for the Artifact registry page"
-                />
-              </Link>
-            } />
-            <SidebarMenuButton disabled>
-              <span className="truncate">Property search</span>
-            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>

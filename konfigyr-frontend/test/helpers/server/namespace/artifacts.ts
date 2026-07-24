@@ -1,6 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { namespaces } from '../../mocks';
 import {
+  platformSearchProperties,
   privateArtifact,
   publicArtifact,
   publicArtifactProperties,
@@ -11,7 +12,7 @@ import {
 } from '../../mocks/artifacts';
 
 import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
-import type { ArtifactDefinition, VersionedArtifact } from '@konfigyr/hooks/artifactory/types';
+import type { ArtifactDefinition, PropertyDefinition, VersionedArtifact } from '@konfigyr/hooks/artifactory/types';
 
 const artifacts = new Map<string, ArtifactDefinition>([
   [`${publicArtifact.groupId}:${publicArtifact.artifactId}`, publicArtifact],
@@ -108,19 +109,32 @@ const changeVisibility = http.put('http://localhost/api/namespaces/:slug/artifac
   return new HttpResponse(null, { status: 204 });
 });
 
-const search = http.get('http://localhost/api/namespaces/:slug/artifacts/search', ({ request }) => {
+const matchesPropertyTerm = (property: { name: string; description?: string }, term: string | null) => (
+  !term || term.trim().length === 0
+  || property.name.toLowerCase().includes(term.toLowerCase())
+  || (property.description?.toLowerCase().includes(term.toLowerCase()) ?? false)
+);
+
+const search = http.get('http://localhost/api/namespaces/:slug/artifacts/search', ({ params, request }) => {
+  const { slug } = params;
   const url = new URL(request.url);
   const term = url.searchParams.get('term');
   const groupId = url.searchParams.get('groupId');
   const artifactId = url.searchParams.get('artifactId');
   const version = url.searchParams.get('version');
 
-  if (!term || term.trim().length === 0) {
-    return HttpResponse.json({
-      status: 400,
-      title: 'Bad request',
-      detail: 'The term query parameter must not be blank.',
-    }, { status: 400 });
+  if (!groupId && !artifactId) {
+    const data: Array<PropertyDefinition> = platformSearchProperties
+      .filter(property => property.visibility === 'PUBLIC' || property.owner.slug === slug)
+      .filter(property => matchesPropertyTerm(property, term))
+      .map(({ visibility: _visibility, ...property }) => property);
+
+    const response: PageResponse<PropertyDefinition> = {
+      data,
+      metadata: { number: 1, size: 20, total: data.length, pages: 1 },
+    };
+
+    return HttpResponse.json(response);
   }
 
   let data = groupId === publicArtifact.groupId && artifactId === publicArtifact.artifactId
@@ -128,12 +142,9 @@ const search = http.get('http://localhost/api/namespaces/:slug/artifacts/search'
     ? publicArtifactProperties
     : [];
 
-  data = data.filter(property => (
-    property.name.toLowerCase().includes(term.toLowerCase())
-    || (property.description?.toLowerCase().includes(term.toLowerCase()) ?? false)
-  ));
+  data = data.filter(property => matchesPropertyTerm(property, term));
 
-  const response: PageResponse<typeof publicArtifactProperties[number]> = {
+  const response: PageResponse<PropertyDefinition> = {
     data,
     metadata: { number: 1, size: 20, total: data.length, pages: 1 },
   };
