@@ -11,6 +11,7 @@ export * as transfers from './mocks/transfers';
 export * as groupVerifications from './mocks/group-verifications';
 export * as changeRequests from './mocks/change-requests';
 export * as audit from './mocks/audit';
+export * as dashboard from './mocks/dashboard';
 
 export const isValidProfile = (slug?: string | unknown) => (
   slug === profiles.development.slug || slug === profiles.staging.slug || slug === profiles.deprecated.slug

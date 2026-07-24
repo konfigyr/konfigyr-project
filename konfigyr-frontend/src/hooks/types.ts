@@ -5,6 +5,7 @@ export type * from './groups/types';
 export type * from './hateoas/types';
 export type * from './kms/types';
 export type * from './memberships/types';
+export type * from './namespace/dashboard/types';
 export type * from './namespace/types';
 export type * from './transfers/types';
 export type * from './vault/types';

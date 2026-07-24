@@ -6,6 +6,7 @@ export * from './groups/query';
 export * from './kms/query';
 export * from './memberships/query';
 export * from './namespace/context';
+export * from './namespace/dashboard/query';
 export * from './namespace/query';
 export * from './transfers/query';
 export * from './vault/change-requests';
