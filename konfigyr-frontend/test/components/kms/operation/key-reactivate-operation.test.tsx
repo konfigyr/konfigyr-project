@@ -1,7 +1,7 @@
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
-import { Toaster } from '@konfigyr/components/ui/sonner';
+import { Toaster } from '@konfigyr/components/ui/toast';
 import { KeyOperationDialog } from '@konfigyr/components/kms/operation/key-operation-dialog';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { kms, namespaces } from '@konfigyr/test/helpers/mocks';

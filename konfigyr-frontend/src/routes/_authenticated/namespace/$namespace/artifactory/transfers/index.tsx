@@ -52,7 +52,7 @@ function DirectionToggle ({ direction, incoming, outgoing }: {
       <Link
         to="."
         search={search => ({ ...search, direction: 'incoming', page: 1 })}
-        className={buttonVariants({ variant: direction === 'incoming' ? 'secondary' : 'ghost' })}
+        className={buttonVariants({ variant: direction === 'incoming' ? 'default' : 'ghost' })}
       >
         <IncomingLabel/>
         <TransferCountBadge count={incoming} active={direction === 'incoming'}/>
@@ -60,7 +60,7 @@ function DirectionToggle ({ direction, incoming, outgoing }: {
       <Link
         to="."
         search={search => ({ ...search, direction: 'outgoing', page: 1 })}
-        className={buttonVariants({ variant: direction === 'outgoing' ? 'secondary' : 'ghost' })}
+        className={buttonVariants({ variant: direction === 'outgoing' ? 'default' : 'ghost' })}
       >
         <OutgoingLabel/>
         <TransferCountBadge count={outgoing} active={direction === 'outgoing'}/>

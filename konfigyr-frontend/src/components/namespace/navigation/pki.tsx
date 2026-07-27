@@ -20,9 +20,13 @@ export function NamespacePkiNavigationMenu() {
             <SidebarMenuButton disabled>
               <span className="truncate">Certificates</span>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton disabled>
               <span className="truncate">Authorities</span>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton disabled>
               <span className="truncate">Alerts</span>
             </SidebarMenuButton>

@@ -42,7 +42,7 @@ function LatestChangeHistory({ changeHistory, namespace, service, profile }: Lat
     <div
       role="log"
       aria-label={changeHistory.subject}
-      className="flex gap-4 rounded-lg border items-center py-2 px-4 text-sm"
+      className="flex gap-4 rounded-md bg-card border items-center py-2 px-4 text-sm"
     >
       <p className="font-bold">
         {changeHistory.appliedBy}
@@ -62,14 +62,14 @@ function LatestChangeHistory({ changeHistory, namespace, service, profile }: Lat
 
       <Link
         to="/namespace/$namespace/services/$service/profiles/$profile/history"
-        className={buttonVariants({ variant: 'outline', size: 'sm' })}
+        className={buttonVariants({ variant: 'ghost', size: 'sm' })}
         params={{
           namespace: namespace.slug,
           service: service.slug,
           profile: profile.slug,
         }}
       >
-        <HistoryIcon />
+        <HistoryIcon data-icon="icon-start"/>
         <FormattedMessage
           defaultMessage="View history"
           description="Label for the view Vault change history button."

@@ -38,7 +38,7 @@ export function PropertyItem({ property, variant = 'default' }: { property: Prop
     <Item variant="list">
       <ItemContent>
         <ItemTitle>
-          <PropertyName value={property.name}/>
+          <PropertyName value={property.name} className="font-semibold"/>
           <PropertyTypeName value={property.typeName}/>
           <PropertyDeprecation deprecation={property.deprecation}/>
         </ItemTitle>

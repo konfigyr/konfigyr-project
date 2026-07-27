@@ -11,14 +11,13 @@ import {
 import type { GroupVerification } from '@konfigyr/hooks/types';
 
 const toast = vi.hoisted(() => ({
-  success: vi.fn(),
-  warning: vi.fn(),
+  add: vi.fn(),
 }));
 
 const verifyGroupVerification = vi.hoisted(() => vi.fn());
 const errorNotification = vi.hoisted(() => vi.fn());
 
-vi.mock('sonner', () => ({ toast }));
+vi.mock('@konfigyr/components/ui/toast', () => ({ toast }));
 vi.mock('@konfigyr/hooks', () => ({
   useVerifyGroupVerification: () => ({
     isPending: false,
@@ -87,11 +86,9 @@ describe('components | groups | <VerifyGroupVerificationButton/>', () => {
 
     await waitFor(() => {
       expect(verifyGroupVerification).toHaveBeenCalledExactlyOnceWith(verification.groupId);
-      expect(toast.success).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({
-          type: ClaimVerifiedSuccessMessage,
-        }),
-      );
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+        type: 'success', title: <ClaimVerifiedSuccessMessage />,
+      });
       expect(queryByRole('alertdialog')).not.toBeInTheDocument();
     });
   });
@@ -117,11 +114,9 @@ describe('components | groups | <VerifyGroupVerificationButton/>', () => {
 
     await waitFor(() => {
       expect(verifyGroupVerification).toHaveBeenCalledExactlyOnceWith(verification.groupId);
-      expect(toast.warning).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({
-          type: ClaimVerifiedWarningMessage,
-        }),
-      );
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+        type: 'warning', title: <ClaimVerifiedWarningMessage />,
+      });
       expect(queryByRole('alertdialog')).not.toBeInTheDocument();
     });
   });
@@ -146,8 +141,7 @@ describe('components | groups | <VerifyGroupVerificationButton/>', () => {
     await waitFor(() => {
       expect(verifyGroupVerification).toHaveBeenCalledExactlyOnceWith(verification.groupId);
       expect(errorNotification).toHaveBeenCalledExactlyOnceWith(error);
-      expect(toast.success).not.toHaveBeenCalled();
-      expect(toast.warning).not.toHaveBeenCalled();
+      expect(toast.add).not.toHaveBeenCalled();
       expect(queryByRole('alertdialog')).not.toBeInTheDocument();
     });
   });

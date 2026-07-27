@@ -13,7 +13,6 @@ import {
 
 import { commands } from '@uiw/react-md-editor';
 
-import { Button } from '@konfigyr/components/ui/button';
 import { Kbd } from '@konfigyr/components/ui/kbd';
 import { Separator } from '@konfigyr/components/ui/separator';
 import {
@@ -140,6 +139,26 @@ function ActionShortcut({ shortcut }: { shortcut: Shortcut }) {
   );
 }
 
+function ToolbarButton({ className, children, ...props }: ComponentProps<'button'>) {
+  return (
+    <button
+      className={cn(
+        'inline-flex h-7 gap-1 px-2 shrink-0 items-center justify-center cursor-pointer',
+        'text-sm font-bold whitespace-nowrap rounded-md border-2 border-transparent transition-all outline-none select-none',
+        '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4',
+        'disabled:pointer-events-none disabled:opacity-50',
+        'hover:bg-accent hover:text-accent-foreground hover:border-accent-foreground/20',
+        'active:bg-primary/20 active:text-accent-foreground active:border-accent-foreground/20',
+        'focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:border-accent-foreground/40',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function ToolbarPlugin({
   editing = true,
   onCommand,
@@ -177,10 +196,8 @@ export function ToolbarPlugin({
       )}
       {...props}
     >
-      <Button
-        variant="outline"
-        size="sm"
-        className="group/editor-btn cursor-pointer px-4"
+      <ToolbarButton
+        className="group/editor-btn"
         onClick={onToggleEditing}
       >
         {editing ? (
@@ -200,7 +217,7 @@ export function ToolbarPlugin({
             />
           </>
         )}
-      </Button>
+      </ToolbarButton>
 
       <div className="flex items-center gap-1 flex-wrap">
         {TOOLBAR_ACTIONS.map((action, i) => {
@@ -218,15 +235,13 @@ export function ToolbarPlugin({
             <Tooltip key={action.id}>
               <TooltipTrigger
                 render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="cursor-pointer hover:text-foreground hover:bg-gray-200"
+                  <ToolbarButton
+                    className=""
                     onMouseDown={(event) => onMouseDown(event, action)}
                   >
                     {action.icon}
                     <span className="sr-only">{action.label}</span>
-                  </Button>
+                  </ToolbarButton>
                 }
               />
               <TooltipContent side="top" className="text-xs">

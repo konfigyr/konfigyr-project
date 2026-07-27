@@ -5,7 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useGetGroupVerifications, useNamespace } from '@konfigyr/hooks';
 import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
-import { Button, buttonVariants } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/components/ui/button';
 import { GroupVerificationFilters } from '@konfigyr/components/artifactory/groups/group-verification-filters';
 import { GroupVerificationTable } from '@konfigyr/components/artifactory/groups/group-verification-table';
 
@@ -57,15 +57,13 @@ function RouteComponent() {
           <Link
             to="/namespace/$namespace/artifactory/groups/create"
             params={{ namespace: namespace.slug }}
-            className={buttonVariants({ variant: 'ghost' })}
+            className={buttonVariants({ variant: 'default' })}
           >
-            <Button>
-              <PlusIcon data-icon="inline-start" />
-              <FormattedMessage
-                defaultMessage="Claim a groupId"
-                description="Label of the button that starts a new group verification claim."
-              />
-            </Button>
+            <PlusIcon data-icon="inline-start" />
+            <FormattedMessage
+              defaultMessage="Claim a groupId"
+              description="Label of the button that starts a new group verification claim."
+            />
           </Link>
         </div>
 

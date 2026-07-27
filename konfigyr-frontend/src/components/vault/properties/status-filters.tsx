@@ -50,10 +50,10 @@ function PropertyStatusFilter({ value, count, active, onChange }: {
       size="sm"
       variant="outline"
       onClick={() => onChange(value)}
-      className={cn(active && 'bg-foreground! text-background!')}
+      className={cn(active && 'bg-(--btn-outline-active-bg) border-(--btn-outline-active-bg) text-primary-foreground')}
     >
       {label}
-      <span className={cn('tabular-nums', active ? 'text-background/80' : 'text-muted-foreground/70')}>
+      <span className="tabular-nums">
         {count}
       </span>
     </Button>

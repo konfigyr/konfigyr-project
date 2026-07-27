@@ -1,6 +1,5 @@
 'use client';
 
-import { toast } from 'sonner';
 import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -16,6 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@konfigyr/components/ui/alert-dialog';
+import { toast } from '@konfigyr/components/ui/toast';
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
 import { useRemoveNamespaceApplication, useResetNamespaceApplication } from '@konfigyr/hooks';
 import { DeleteNamespaceApplicationLabel } from '@konfigyr/components/namespace/applications/messages';
@@ -44,14 +44,16 @@ export function ConfirmNamespaceApplicationDeleteAction ({ namespace, applicatio
       return errorNotification(error);
     }
 
-    toast.success(<FormattedMessage
-      defaultMessage="The {name} was successfully deleted."
-      values={{
-        name: <strong>{application.name}</strong>,
-      }}
-      description="Success message for deleting of an application"
-    />);
-
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="The {name} was successfully deleted."
+          description="Success message for deleting of an application"
+          values={{ name: <strong>{application.name}</strong> }}
+        />
+      ),
+    });
   }, [application, errorNotification]);
 
   return (
@@ -118,11 +120,16 @@ export function ConfirmNamespaceApplicationResetAction ({
       return errorNotification(error);
     }
 
-    toast.success(<FormattedMessage
-      defaultMessage="The {name} application was successfully reset."
-      values={{ name: application.name }}
-      description="Success message for resetting of an application"
-    />);
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="The {name} application was successfully reset."
+          description="Success message for resetting of an application"
+          values={{ name: application.name }}
+        />
+      ),
+    });
   }, [application, errorNotification]);
 
   return (

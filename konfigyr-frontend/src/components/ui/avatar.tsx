@@ -12,10 +12,12 @@ export const avatarVariants = cva(
   {
     variants: {
       size: {
-        default: 'size-8',
+        xs: 'size-5',
         sm: 'size-6',
-        lg: 'size-12',
-        xl: 'size-16',
+        default: 'size-8',
+        lg: 'size-10',
+        xl: 'size-14',
+        '2xl': 'size-20',
       },
     },
     defaultVariants: {
@@ -50,7 +52,9 @@ export function AvatarFallback({ className, ...props }: ComponentProps<typeof Av
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        'flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs',
+        'flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground',
+        'group-data-[size=xs]/avatar:text-[10px] group-data-[size=sm]/avatar:text-xs',
+        'group-data-[size=lg]/avatar:text-base group-data-[size=xl]/avatar:text-xl group-data-[size=2xl]/avatar:text-3xl',
         className,
       )}
       {...props}
@@ -64,10 +68,12 @@ export function AvatarBadge({ className, ...props }: ComponentProps<'span'>) {
       data-slot="avatar-badge"
       className={cn(
         'absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground bg-blend-color ring-2 ring-background select-none',
+        'group-data-[size=xs]/avatar:size-1.5 group-data-[size=xs]/avatar:[&>svg]:hidden',
         'group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden',
         'group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2',
         'group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2',
         'group-data-[size=xl]/avatar:size-3.5 group-data-[size=xl]/avatar:[&>svg]:size-2',
+        'group-data-[size=2xl]/avatar:size-4 group-data-[size=2xl]/avatar:[&>svg]:size-2.5',
         className,
       )}
       {...props}
@@ -91,9 +97,11 @@ export function AvatarGroupCount({ className, ...props }: ComponentProps<'div'>)
       data-slot="avatar-group-count"
       className={cn(
         'relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground ring-2 ring-background [&>svg]:size-4',
+        'group-has-data-[size=xs]/avatar-group:size-5 group-has-data-[size=xs]/avatar-group:[&>svg]:size-2.5',
         'group-has-data-[size=sm]/avatar-group:size-6 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3',
         'group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5',
-        'group-has-data-[size=xl]/avatar-group:size-12 group-has-data-[size=lg]/avatar-group:[&>svg]:size-6',
+        'group-has-data-[size=xl]/avatar-group:size-14 group-has-data-[size=xl]/avatar-group:[&>svg]:size-6',
+        'group-has-data-[size=2xl]/avatar-group:size-20 group-has-data-[size=2xl]/avatar-group:[&>svg]:size-8',
         className,
       )}
       {...props}

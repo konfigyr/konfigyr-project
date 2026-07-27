@@ -1,4 +1,4 @@
-import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@konfigyr/components/ui/item';
+import { useCallback, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
   AlertDialog,
@@ -12,13 +12,18 @@ import {
   AlertDialogTrigger,
 } from '@konfigyr/components/ui/alert-dialog';
 import { Button } from '@konfigyr/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@konfigyr/components/ui/card';
 import { Field } from '@konfigyr/components/ui/field';
 import { Input } from '@konfigyr/components/ui/input';
+import { toast } from '@konfigyr/components/ui/toast';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { useRemoveNamespaceService } from '@konfigyr/hooks';
-import { useCallback, useState } from 'react';
-import { toast } from 'sonner';
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
@@ -34,41 +39,21 @@ export function ServiceDestructiveActions ({ namespace, service, onDelete }: Ser
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FormattedMessage
-            defaultMessage="Destructive actions"
-            description="Section in service settings for actions that cannot be undone"
-          />
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-6">
-          <DeleteServiceItem namespace={namespace} service={service} onDelete={onDelete}/>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function DeleteServiceItem ({ namespace, service, onDelete }: ServiceSettingsProps) {
-  return (
-    <Item variant="list">
-      <ItemContent>
-        <ItemTitle>
-          <FormattedMessage
             defaultMessage="Delete this service"
             description="Permanently removes this service and all its data"
           />
-        </ItemTitle>
-        <ItemDescription>
+        </CardTitle>
+        <CardDescription>
           <FormattedMessage
             defaultMessage="This action permanently deletes the service and cannot be undone."
             description="Short description of the service deletion action"
           />
-        </ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <ConfirmDeleteServiceAction namespace={namespace} service={service} onDelete={onDelete}/>
-      </ItemActions>
-    </Item>
+        </CardDescription>
+        <CardAction>
+          <ConfirmDeleteServiceAction namespace={namespace} service={service} onDelete={onDelete}/>
+        </CardAction>
+      </CardHeader>
+    </Card>
   );
 }
 
@@ -90,13 +75,16 @@ export function ConfirmDeleteServiceAction ({ namespace, service, onDelete }: Se
       return errorNotification(error);
     }
 
-    toast.success(<FormattedMessage
-      defaultMessage="The {name}service was successfully deleted."
-      values={{
-        name: <strong>{service.name}</strong>,
-      }}
-      description="Success message for deleting of a service"
-    />);
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="The {name}service was successfully deleted."
+          description="Success message for deleting of a service"
+          values={{ name: <strong>{service.name}</strong> }}
+        />
+      ),
+    });
 
   }, [service, errorNotification]);
 

@@ -4,10 +4,11 @@ import userEvents from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { artifacts, namespaces } from '@konfigyr/test/helpers/mocks';
 import { ChangeVisibilityButton } from '@konfigyr/components/artifactory/registry/change-visibility-button';
+import { VisibilityChangedSuccessMessage } from '@konfigyr/components/artifactory/registry/messages';
 
-const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+const toast = vi.hoisted(() => ({ add: vi.fn() }));
 
-vi.mock('sonner', () => ({ toast }));
+vi.mock('@konfigyr/components/ui/toast', () => ({ toast }));
 
 describe('components | registry | <ChangeVisibilityButton/>', () => {
   afterEach(() => {
@@ -40,10 +41,13 @@ describe('components | registry | <ChangeVisibilityButton/>', () => {
     const dialog = await waitFor(() => getByRole('alertdialog'));
     await user.click(within(dialog).getByRole('button', { name: 'Make private' }));
 
+    const coordinates = `${artifacts.publicArtifact.groupId}:${artifacts.publicArtifact.artifactId}`;
+
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledOnce();
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+        type: 'success', title: <VisibilityChangedSuccessMessage artifact={coordinates} />,
+      });
     });
-    expect(toast.error).not.toHaveBeenCalled();
   });
 
   test('should report an error when the artifact can not be found', async () => {
@@ -61,8 +65,9 @@ describe('components | registry | <ChangeVisibilityButton/>', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Make private' }));
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledOnce();
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ type: 'error' }),
+      );
     });
-    expect(toast.success).not.toHaveBeenCalled();
   });
 });

@@ -14,6 +14,15 @@ describe('components | UI | <Avatar/>', () => {
     expect(screen.getByTestId('avatar')).toHaveClass('size-8');
   });
 
+  test('should render extra small avatar size', () => {
+    render(
+      <Avatar size="xs" data-testid="avatar" />,
+    );
+
+    expect(screen.getByTestId('avatar')).toBeInTheDocument();
+    expect(screen.getByTestId('avatar')).toHaveClass('size-5');
+  });
+
   test('should render small avatar size', () => {
     render(
       <Avatar size="sm" data-testid="avatar" />,
@@ -29,7 +38,7 @@ describe('components | UI | <Avatar/>', () => {
     );
 
     expect(screen.getByTestId('avatar')).toBeInTheDocument();
-    expect(screen.getByTestId('avatar')).toHaveClass('size-12');
+    expect(screen.getByTestId('avatar')).toHaveClass('size-10');
   });
 
   test('should render extra large avatar size', () => {
@@ -38,6 +47,6 @@ describe('components | UI | <Avatar/>', () => {
     );
 
     expect(screen.getByTestId('avatar')).toBeInTheDocument();
-    expect(screen.getByTestId('avatar')).toHaveClass('size-16');
+    expect(screen.getByTestId('avatar')).toHaveClass('size-14');
   });
 });

@@ -1,10 +1,12 @@
 import { FormattedMessage } from 'react-intl';
 import { Link } from '@tanstack/react-router';
-import { ChevronRightIcon, MonitorCloud, ScreenShareOff } from 'lucide-react';
+import { ChevronRightIcon, MonitorCloud, PlusIcon, ScreenShareOff } from 'lucide-react';
 import { useGetNamespaceApplications } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
+import { buttonVariants } from '@konfigyr/components/ui/button';
 import {
   Card,
+  CardAction,
   CardContent,
   CardHeader,
   CardIcon,
@@ -21,7 +23,11 @@ import {
   ItemTitle,
 } from '@konfigyr/components/ui/item';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import { CreateExpirationDateLabel, NamespaceApplicationTitle } from './messages';
+import {
+  CreateExpirationDateLabel,
+  CreateNamespaceApplicationLabel,
+  NamespaceApplicationTitle,
+} from './messages';
 import { ApplicationTypeBadge, ApplicationTypeIcon } from './application-type';
 
 import type { Namespace, NamespaceApplication } from '@konfigyr/hooks/types';
@@ -86,6 +92,16 @@ export function NamespaceApplications({ namespace }: { namespace: Namespace }) {
             </CardIcon>
             <NamespaceApplicationTitle />
           </CardTitle>
+          <CardAction>
+            <Link
+              to="/namespace/$namespace/applications/create"
+              params={{ namespace: namespace.slug }}
+              className={buttonVariants()}
+            >
+              <PlusIcon size="1rem"/>
+              <CreateNamespaceApplicationLabel />
+            </Link>
+          </CardAction>
         </CardHeader>
         <CardContent>
           {isPending && (

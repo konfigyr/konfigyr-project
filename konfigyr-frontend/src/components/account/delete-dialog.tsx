@@ -47,7 +47,7 @@ export function AccountDeleteConfirmationDialog({ account, onDelete }: { account
   return (
     <>
       <AlertDialog>
-        <Card className="border">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CardIcon>

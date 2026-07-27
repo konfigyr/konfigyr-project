@@ -157,7 +157,7 @@ function ChangeHistoryItem({ item, onSelect }: { item: ChangeHistory, onSelect?:
         <Tooltip>
           <TooltipTrigger
             render={
-              <Button variant="outline" size="xs" onClick={onClick}>
+              <Button variant="outline" size="sm" onClick={onClick}>
                 <code className="w-18 truncate">{item.revision}</code>
               </Button>
             }
@@ -172,8 +172,8 @@ function ChangeHistoryItem({ item, onSelect }: { item: ChangeHistory, onSelect?:
 
         <ClipboardIconButton
           text={item.revision}
-          variant="outline"
-          size="xs"
+          variant="ghost"
+          size="icon"
           tooltip={
             <FormattedMessage
               defaultMessage="Copy full revision hash to clipboard"

@@ -1,3 +1,4 @@
+import React, { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   AlertDialog,
@@ -11,8 +12,7 @@ import {
 } from '@konfigyr/components/ui/alert-dialog';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { useRemoveProfile } from '@konfigyr/hooks';
-import React, { useCallback, useMemo } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@konfigyr/components/ui/toast';
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { Profile } from '@konfigyr/hooks/vault/types';
@@ -42,13 +42,16 @@ export function DeleteConfigurationProfileAlert ({ namespace, service, profile, 
       return errorNotification(error);
     }
 
-    toast.success(<FormattedMessage
-      defaultMessage="The {name} profile was successfully deleted."
-      values={{
-        name: <strong>{profile?.name}</strong>,
-      }}
-      description="Success message for deleting of a profile"
-    />);
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="The {name} profile was successfully deleted."
+          description="Success message for deleting of a profile"
+          values={{ name: <strong>{profile?.name}</strong> }}
+        />
+      ),
+    });
     return onClose();
 
   }, [profile, errorNotification]);

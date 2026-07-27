@@ -4,6 +4,10 @@ import { useGetAuditRecords } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import {
+  Card,
+  CardContent,
+} from '@konfigyr/components/ui/card';
+import {
   Item,
   ItemContent,
   ItemDescription,
@@ -67,7 +71,7 @@ function AuditRecordListItem({ record }: { record: AuditRecord }) {
 
 function AuditRecordSkeleton() {
   return (
-    <div data-slot="audit-records-list-skeleton" className="border border-border/60 rounded-lg px-3 py-4 space-y-4">
+    <div data-slot="audit-records-list-skeleton" className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-2 min-w-0">
           <Skeleton className="size-6 rounded-lg" />
@@ -112,7 +116,7 @@ export function AuditRecordListContent({ data, error, isPending = false }: {
 
   if (error) {
     return (
-      <ErrorState error={error} />
+      <ErrorState error={error} className="border-none" />
     );
   }
 
@@ -137,7 +141,7 @@ export function AuditRecordListContent({ data, error, isPending = false }: {
   }
 
   return (
-    <ItemGroup size="xs" className="border rounded-lg px-3 py-1">
+    <ItemGroup size="xs">
       {data?.data.map(record => (
         <AuditRecordListItem
           key={record.id}
@@ -181,11 +185,15 @@ export function AuditRecordList({ namespace, query, onQueryChange }: {
         onQueryChange={onQueryChange}
       />
 
-      <AuditRecordListContent
-        data={data}
-        error={error}
-        isPending={isPending}
-      />
+      <Card>
+        <CardContent>
+          <AuditRecordListContent
+            data={data}
+            error={error}
+            isPending={isPending}
+          />
+        </CardContent>
+      </Card>
 
       <AuditRecordPagination
         size={query.size}

@@ -1,6 +1,5 @@
 'use client';
 
-import { toast } from 'sonner';
 import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useRemoveNamespaceMember } from '@konfigyr/hooks';
@@ -14,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@konfigyr/components/ui/alert-dialog';
+import { toast } from '@konfigyr/components/ui/toast';
 
 import { CancelLabel } from '@konfigyr/components/messages';
 import type { Member, Namespace } from '@konfigyr/hooks/types';
@@ -37,11 +37,16 @@ export function RemoveMemberForm({ namespace, member, onClose }: { namespace: Na
       return errorNotification(error);
     }
 
-    toast.success(<FormattedMessage
-      defaultMessage="Successfully removed {name} from {namespace}"
-      values={{ name: member?.fullName, namespace: namespace.name }}
-      description="Success message when member is removed from a namespace"
-    />);
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="Successfully removed {name} from {namespace}"
+          values={{ name: member?.fullName, namespace: namespace.name }}
+          description="Success message when member is removed from a namespace"
+        />
+      ),
+    });
 
     return onClose();
   }, [member, onClose, errorNotification]);

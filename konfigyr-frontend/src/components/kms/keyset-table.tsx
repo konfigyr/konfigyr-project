@@ -15,10 +15,6 @@ import {
 import { Badge } from '@konfigyr/components/ui/badge';
 import { Button } from '@konfigyr/components/ui/button';
 import {
-  Card,
-  CardContent,
-} from '@konfigyr/components/ui/card';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -84,7 +80,7 @@ function KeysetDropdownMenu({ namespace, keyset, onOperationSelected }: {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button size="sm" variant="ghost">
+          <Button size="icon" variant="ghost">
             <EllipsisVerticalIcon size="1rem" />
           </Button>
         }
@@ -214,71 +210,69 @@ export function KeysetTable({ namespace, keysets, error, isPending }: {
   const [operation, setOperation] = useState<null | SelectedOperation>(null);
 
   return (
-    <Card className="border">
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="min-w-64">
-                <KeysetNameLabel />
-              </TableHead>
-              <TableHead className="w-48">
-                <KeysetAlgorithmLabel />
-              </TableHead>
-              <TableHead className="w-32">
-                <KeysetStateLabel />
-              </TableHead>
-              <TableHead className="w-32">
-                <CreatedAtLabel />
-              </TableHead>
-              <TableHead className="w-32">
-                <UpdatedAtLabel />
-              </TableHead>
-              <TableHead className="w-6"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isPending && (
-              <LoadingSkeleton />
-            )}
+    <>
+      <Table variant="card">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="min-w-64">
+              <KeysetNameLabel />
+            </TableHead>
+            <TableHead className="w-48">
+              <KeysetAlgorithmLabel />
+            </TableHead>
+            <TableHead className="w-32">
+              <KeysetStateLabel />
+            </TableHead>
+            <TableHead className="w-32">
+              <CreatedAtLabel />
+            </TableHead>
+            <TableHead className="w-32">
+              <UpdatedAtLabel />
+            </TableHead>
+            <TableHead className="w-6"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isPending && (
+            <LoadingSkeleton />
+          )}
 
-            {error && (
-              <tr>
-                <td colSpan={6} className="p-6">
-                  <ErrorState error={error} />
-                </td>
-              </tr>
-            )}
+          {error && (
+            <tr>
+              <td colSpan={6} className="p-6">
+                <ErrorState error={error} />
+              </td>
+            </tr>
+          )}
 
-            {(keysets && keysets.length === 0) && (
-              <tr>
-                <td colSpan={6}>
-                  <EmptyState
-                    icon={<FolderLockIcon size="2rem" />}
-                    title={<FormattedMessage
-                      defaultMessage="No keysets found"
-                      description="Empty state title when no KMS keysets are found."
-                    />}
-                    description={<FormattedMessage
-                      defaultMessage="We could not find any keysets matching your search criteria. Why don't you create one?"
-                      description="Empty state description when no KMS keysets are found."
-                    />}
-                  />
-                </td>
-              </tr>
-            )}
+          {(keysets && keysets.length === 0) && (
+            <tr>
+              <td colSpan={6}>
+                <EmptyState
+                  icon={<FolderLockIcon size="2rem" />}
+                  title={<FormattedMessage
+                    defaultMessage="No keysets found"
+                    description="Empty state title when no KMS keysets are found."
+                  />}
+                  description={<FormattedMessage
+                    defaultMessage="We could not find any keysets matching your search criteria. Why don't you create one?"
+                    description="Empty state description when no KMS keysets are found."
+                  />}
+                />
+              </td>
+            </tr>
+          )}
 
-            {keysets?.map((keyset) => (
-              <KeysetRow
-                key={keyset.id}
-                namespace={namespace}
-                keyset={keyset}
-                onOperationSelected={setOperation}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
+          {keysets?.map((keyset) => (
+            <KeysetRow
+              key={keyset.id}
+              namespace={namespace}
+              keyset={keyset}
+              onOperationSelected={setOperation}
+            />
+          ))}
+        </TableBody>
+      </Table>
 
       {operation && (
         <KeysetOperationDialog
@@ -288,7 +282,7 @@ export function KeysetTable({ namespace, keysets, error, isPending }: {
           onClose={() => setOperation(null)}
         />
       )}
-    </Card>
+    </>
   );
 
 }

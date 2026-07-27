@@ -29,14 +29,12 @@ describe('routes | namespace | transfers | create', () => {
 
   test('should show a clear inline error when the backend rejects the request', async () => {
     const user = userEvent.setup();
-    const { getByRole, getByText, router } = renderWithRouter(
+    const { findByRole, getByRole, getByText, router } = renderWithRouter(
       '/namespace/konfigyr/artifactory/transfers/create?groupId=unverified.group&fromNamespace=ebf',
     );
 
-    await waitFor(() => {
-      expect(getByRole('combobox', { name: 'Group Id' })).toHaveValue('unverified.group');
-      expect(getByRole('radio', { name: 'ebf' })).toBeChecked();
-    });
+    expect(await findByRole('combobox', { name: 'Group Id' })).toHaveValue('unverified.group');
+    expect(await findByRole('radio', { name: 'ebf' })).toBeChecked();
 
     await user.click(getByRole('button', { name: 'Request transfer' }));
 

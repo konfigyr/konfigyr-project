@@ -26,8 +26,6 @@ describe('components | namespace | service | <ServiceDestructiveActions/>', () =
   });
 
   test('should render <ServiceDestructiveActions> component', () => {
-    expect(result.getByText('Destructive actions')).toBeInTheDocument();
-
     expect(result.getByText('Delete this service')).toBeInTheDocument();
     expect(result.getByText('This action permanently deletes the service and cannot be undone.')).toBeInTheDocument();
     expect(result.getByText('Delete service')).toBeInTheDocument();

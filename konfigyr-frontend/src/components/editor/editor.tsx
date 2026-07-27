@@ -140,7 +140,7 @@ export function Editor({
     >
       <div
         data-slot="editor-container"
-        className="rounded-xl border border-input transition-[color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+        className="rounded-lg border border-input transition-[color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
       >
         <ToolbarPlugin
           editing={isEditing}

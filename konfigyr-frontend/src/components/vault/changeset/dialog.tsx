@@ -251,7 +251,7 @@ export function ChangesetSubmitDialog({
       <DialogTrigger
         render={
           <Button size="sm" disabled={disabled}>
-            <CheckIcon />
+            <CheckIcon data-icon="icon-start" />
             {changeset.profile.policy === 'UNPROTECTED' ? (
               intl.formatMessage({
                 defaultMessage: 'Apply',

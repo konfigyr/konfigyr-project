@@ -66,7 +66,7 @@ function RouteComponent() {
       </Breadcrumb>
 
       <div className="w-full lg:w-3/5 xl:w-1/2 space-y-6 px-4 mx-auto">
-        <Card className="border">
+        <Card>
           <CardHeader>
             <CardTitle className="flex flex-col items-center gap-6 my-2">
               <FolderKeyIcon size={64} strokeWidth="1" className="text-secondary" />

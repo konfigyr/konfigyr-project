@@ -15,7 +15,7 @@ import type { Invitation } from '@konfigyr/hooks/types';
 
 export function JoinNamespace({ invitation, onAccept }: { invitation: Invitation, onAccept: () => void }) {
   return (
-    <Card className="border">
+    <Card>
       <CardHeader className="border-b">
         <p className="mb-2 font-mono text-sm font-medium uppercase text-muted-foreground/80">
           <FormattedMessage

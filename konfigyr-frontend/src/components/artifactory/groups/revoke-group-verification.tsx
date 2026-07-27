@@ -1,6 +1,5 @@
 'use client';
 
-import { toast } from 'sonner';
 import { useCallback } from 'react';
 import { useRevokeGroupVerification } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -23,6 +22,8 @@ import {
   RevokeClaimLabel, RevokeVerificationClaimDescription,
   RevokeVerificationClaimTitle,
 } from '@konfigyr/components/artifactory/groups/messages';
+import { toast } from '@konfigyr/components/ui/toast';
+
 import type { AriaRole, ReactElement, ReactNode } from 'react';
 import type { GroupVerification } from '@konfigyr/hooks/types';
 
@@ -83,7 +84,7 @@ function RevokeButton ({
       return errorNotification(error);
     }
 
-    toast.success(successMessage);
+    toast.add({ type: 'success', title: successMessage });
   }, [verification, errorNotification, revokeGroupVerification]);
 
   return (

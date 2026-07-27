@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { Toaster } from '@konfigyr/components/ui/sonner';
+import { Toaster } from '@konfigyr/components/ui/toast';
 import { TooltipProvider } from '@konfigyr/components/ui/tooltip';
 import styles from '@konfigyr/styles.css?url';
 import defaultMessages from '@konfigyr/translations/en.json';

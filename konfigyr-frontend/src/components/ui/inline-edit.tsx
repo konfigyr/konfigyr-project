@@ -248,7 +248,7 @@ export function InlineEditContainer<T>({ className, children, ...props }: Compon
     >
       <span
         className={cn(
-          'relative flex items-center gap-1.5',
+          'relative flex items-center gap-1',
           errors?.length && 'pl-7',
         )}
       >
@@ -263,7 +263,12 @@ export function InlineEditContainer<T>({ className, children, ...props }: Compon
       <Button
         variant="ghost"
         size="icon"
-        className="size-7 shrink-0 text-success hover:text-success/80 hover:bg-success/10 dark:hover:bg-success/20"
+        className={cn(
+          'shrink-0 text-success',
+          'hover:text-success/80 hover:bg-success/20 hover:border-success/40',
+          'active:text-success/80 active:bg-success/20 active:border-success/40',
+          'focus-visible:text-success/80 focus-visible:bg-success/20 focus-visible:border-success/80',
+        )}
         onMouseDown={(e) => e.preventDefault()}
         loading={isPending}
         onClick={onSave}
@@ -276,7 +281,12 @@ export function InlineEditContainer<T>({ className, children, ...props }: Compon
       <Button
         variant="ghost"
         size="icon"
-        className="size-7 shrink-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10 dark:hover:bg-destructive/20"
+        className={cn(
+          'shrink-0 text-destructive',
+          'hover:text-destructive/80 hover:bg-destructive/20 hover:border-destructive/40',
+          'active:text-destructive/80 active:bg-destructive/20 active:border-destructive/40',
+          'focus-visible:text-destructive/80 focus-visible:bg-destructive/20 focus-visible:border-destructive/80',
+        )}
         onMouseDown={(e) => e.preventDefault()}
         onClick={onCancel}
       >

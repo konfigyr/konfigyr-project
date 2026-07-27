@@ -34,6 +34,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
                 <MonitorIcon /> Overview
               </Link>
             } />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/members"
@@ -44,6 +46,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
                 <UsersIcon /> Members
               </Link>
             } />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/invitations"
@@ -54,6 +58,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
                 <SendIcon /> Invitations
               </Link>
             } />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/settings"
@@ -64,6 +70,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
                 <Settings2Icon /> Settings
               </Link>
             } />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/applications"
@@ -74,6 +82,8 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
                 <MonitorCloudIcon /> Applications
               </Link>
             } />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton render={
               <Link
                 to="/namespace/$namespace/audit"

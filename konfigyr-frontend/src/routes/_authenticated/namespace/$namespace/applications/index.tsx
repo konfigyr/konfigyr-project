@@ -1,13 +1,6 @@
-
-import { PlusIcon } from 'lucide-react';
 import { useNamespace } from '@konfigyr/hooks';
-import { buttonVariants } from '@konfigyr/components/ui/button';
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { NamespaceApplications } from '@konfigyr/components/namespace/applications/applications';
-import {
-  CreateNamespaceApplicationLabel,
-  NamespaceApplicationTitle,
-} from '@konfigyr/components/namespace/applications/messages';
 
 export const Route = createFileRoute(
   '/_authenticated/namespace/$namespace/applications/',
@@ -20,17 +13,6 @@ function RouteComponent() {
   return (
 
     <div className="lg:w-2/3 xl:w-3/5 px-4 mx-auto">
-      <div className="flex justify-end items-center gap-4 mb-4">
-        <Link
-          to="/namespace/$namespace/applications/create"
-          params={{ namespace: namespace.slug }}
-          className={buttonVariants({ variant: 'ghost' })}
-        >
-          <PlusIcon size="1rem"/>
-          <CreateNamespaceApplicationLabel />
-        </Link>
-      </div>
-
       <NamespaceApplications namespace={namespace}/>
     </div>
   );

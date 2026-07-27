@@ -459,7 +459,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd, debounceMs = 200 
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="outline" disabled={changeset.profile.policy === 'IMMUTABLE'}>
+          <Button disabled={changeset.profile.policy === 'IMMUTABLE'}>
             <PlusIcon />
             <AddPropertyLabel />
           </Button>
@@ -468,7 +468,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd, debounceMs = 200 
       <DialogContent className="sm:max-w-140">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <ListPlusIcon size="1rem" />
+            <ListPlusIcon size="1rem" data-icon="icon-start" />
             <FormattedMessage
               defaultMessage="Add configuration property"
               description="Label for the dialog that allows adding a new configuration property"

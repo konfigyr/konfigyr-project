@@ -60,7 +60,7 @@ function KeysetDropdownMenu({ value: key, onSelect }: { value: Key, onSelect: (o
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button size="sm" variant="ghost">
+          <Button size="icon" variant="ghost">
             <EllipsisVerticalIcon size="1rem" />
             <span className="sr-only">
               <FormattedMessage

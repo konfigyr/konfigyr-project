@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
 import { RemoveMemberForm } from '@konfigyr/components/namespace/members/remove-member';
-import { Toaster } from '@konfigyr/components/ui/sonner';
+import { Toaster } from '@konfigyr/components/ui/toast';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { namespaces } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';

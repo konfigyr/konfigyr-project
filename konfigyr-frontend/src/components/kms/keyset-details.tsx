@@ -28,11 +28,11 @@ import type { OperationDialogOperation } from './operation/keyset-operation-dial
 
 function KeysetCard({ label, value, description }: { label: ReactNode, value: ReactNode, description?: ReactNode }) {
   return (
-    <div className="px-3">
-      <p className="text-xs/relaxed font-medium text-muted-foreground uppercase">
+    <div>
+      <p className="text-xs/relaxed font-heading font-medium text-muted-foreground uppercase">
         {label}
       </p>
-      <p className="font-semibold text-base/loose">
+      <p className="font-heading font-bold text-base/loose">
         {value}
       </p>
       <p className="text-muted-foreground text-xs/relaxed">
@@ -117,30 +117,32 @@ export const KeysetDetails = ({ namespace, keyset, keys, onDelete, onChange }: {
         <KeyStatusAlert status={primary.status} />
       )}
 
-      <div className="grid grid-cols-3 gap-4 py-3 border rounded-xl *:border-r *:last:border-r-0">
-        <KeysetCard
-          label={<KeysetAlgorithmLabel />}
-          value={<KeysetAlgorithmName algorithm={keyset.algorithm} />}
-          description={<KeysetAlgorithmDescription algorithm={keyset.algorithm} />}
-        />
-        <KeysetCard
-          label={<KeysetRotationIntervalLabel />}
-          value={<KeysetRotationInterval interval={keyset.rotationInterval} />}
-          description={<KeysetRotationIntervalHelpText />}
-        />
-        <KeysetCard
-          label={<KeysetDeletionGracePeriodLabel />}
-          value={<KeysetDestructionGracePeriod interval={keyset.destructionGracePeriod} />}
-          description={<KeysetDeletionGracePeriodHelpText />}
-        />
-      </div>
+      <Card>
+        <CardContent className="grid grid-cols-3 gap-4 *:border-r *:last:border-r-0">
+          <KeysetCard
+            label={<KeysetAlgorithmLabel />}
+            value={<KeysetAlgorithmName algorithm={keyset.algorithm} />}
+            description={<KeysetAlgorithmDescription algorithm={keyset.algorithm} />}
+          />
+          <KeysetCard
+            label={<KeysetRotationIntervalLabel />}
+            value={<KeysetRotationInterval interval={keyset.rotationInterval} />}
+            description={<KeysetRotationIntervalHelpText />}
+          />
+          <KeysetCard
+            label={<KeysetDeletionGracePeriodLabel />}
+            value={<KeysetDestructionGracePeriod interval={keyset.destructionGracePeriod} />}
+            description={<KeysetDeletionGracePeriodHelpText />}
+          />
+        </CardContent>
+      </Card>
 
-      <Card className="border">
+      <Card className="pb-0">
         <CardHeader
           title="Keys"
           description="A keyset holds one or more keys. The primary key is used for all new operations; older keys are kept to read data they previously protected."
         />
-        <CardContent>
+        <CardContent className="px-0 border-t">
           <KeyTable
             namespace={namespace}
             keyset={keyset}

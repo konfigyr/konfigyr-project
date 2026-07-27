@@ -74,8 +74,8 @@ function ChangeHistoryTimestamp({ history }: { history: ChangeHistory }) {
 
 function ChangeHistoryStat({ label, value }: { label: ReactNode, value: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
-      <p className="text-xs font-heading font-medium text-muted-foreground">
+    <div className="flex flex-col">
+      <p className="text-xs font-heading font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
       <div className="text-sm text-foreground">

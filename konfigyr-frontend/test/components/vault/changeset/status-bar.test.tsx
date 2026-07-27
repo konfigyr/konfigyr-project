@@ -4,7 +4,7 @@ import { cleanup, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { ConfigurationPropertyState, PropertyTransitionType } from '@konfigyr/hooks/vault/types';
-import { Toaster } from '@konfigyr/components/ui/sonner';
+import { Toaster } from '@konfigyr/components/ui/toast';
 import { ChangesetStatusBar } from '@konfigyr/components/vault/changeset/status-bar';
 import { useChangesetState, useChangesetValidation } from '@konfigyr/hooks';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';

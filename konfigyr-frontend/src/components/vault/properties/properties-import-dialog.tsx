@@ -249,8 +249,8 @@ export function PropertiesImportDialog ({ catalog, profile, onImport }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="outline" disabled={profile.policy === 'IMMUTABLE'}>
-            <ImportIcon/>
+          <Button disabled={profile.policy === 'IMMUTABLE'}>
+            <ImportIcon data-icon="icon-start"/>
             <ImportPropertiesLabel/>
           </Button>
         }

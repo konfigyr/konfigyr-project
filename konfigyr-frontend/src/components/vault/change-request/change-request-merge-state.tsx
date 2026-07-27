@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
@@ -19,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@konfigyr/components/ui/card';
+import { toast } from '@konfigyr/components/ui/toast';
 import { cn } from '@konfigyr/components/utils';
 
 function ChangeRequestMergeStateIcon({ value, className }: { value: ChangeRequestMergeStatus, className?: string }) {
@@ -153,16 +153,19 @@ export function ChangeRequestMergeStateCard({ value, onMerge }: {
       return errorNotification(error);
     }
 
-    toast.success((
-      <FormattedMessage
-        defaultMessage="Change request was merged"
-        description="Notification message shown when change request was merged."
-      />
-    ));
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="Change request was merged"
+          description="Notification message shown when change request was merged."
+        />
+      ),
+    });
   }, [onMerge]);
 
   return (
-    <Card className="border">
+    <Card>
       <CardHeader className="flex gap-2">
         <ChangeRequestMergeStateIcon className="size-6" value={value} />
         <div>

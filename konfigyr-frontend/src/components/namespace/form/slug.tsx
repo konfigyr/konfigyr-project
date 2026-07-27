@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { toast } from 'sonner';
 import { useId, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Link2Icon } from 'lucide-react';
@@ -16,6 +15,7 @@ import {
   CardTitle,
 } from '@konfigyr/components/ui/card';
 import { useFieldContext, useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { toast } from '@konfigyr/components/ui/toast';
 import { cn } from '@konfigyr/components/utils';
 import { NamespaceSlugDescription } from './messages';
 import { useValidateSlug } from './validations';
@@ -85,12 +85,15 @@ export function NamespaceSlugForm({ namespace, debounceMs = 300 }: { namespace: 
         return errorNotification(error);
       }
 
-      return toast.success((
-        <FormattedMessage
-          defaultMessage="Your namespace was successfully renamed"
-          description="Notification message that is shown when namespace URL slug was successfully updated"
-        />
-      ));
+      return toast.add({
+        type: 'success',
+        title: (
+          <FormattedMessage
+            defaultMessage="Your namespace was successfully renamed"
+            description="Notification message that is shown when namespace URL slug was successfully updated"
+          />
+        ),
+      });
     },
   });
 
@@ -99,7 +102,7 @@ export function NamespaceSlugForm({ namespace, debounceMs = 300 }: { namespace: 
   return (
     <form.AppForm>
       <form name="namespace-slug-form" onSubmit={onSubmit}>
-        <Card className="border">
+        <Card>
           <CardHeader>
             <CardTitle id={`label-slug-${id}`} className="flex items-center gap-2">
               <CardIcon>

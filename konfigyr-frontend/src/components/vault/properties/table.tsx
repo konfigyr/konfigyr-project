@@ -183,14 +183,10 @@ function ActionButton({ tooltip, destructive = false, className, children, onCli
     <Tooltip>
       <TooltipTrigger delay={300} render={
         <Button
-          size="sm"
-          variant="ghost"
+          size="icon"
+          variant={destructive ? 'destructive' : 'ghost'}
           loading={isPending}
-          className={cn(
-            'text-muted-foreground',
-            destructive ? 'hover:text-destructive' : 'hover:text-foreground',
-            className,
-          )}
+          className={cn(!destructive && 'text-muted-foreground hover:text-foreground', className)}
           onClick={onClickAction}
         >
           {children}
@@ -226,7 +222,7 @@ function ActionsCell<T>({
     <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity duration-150">
       {property.value && (
         <ClipboardIconButton
-          size="sm"
+          size="icon"
           variant="ghost"
           text={property.value.encoded}
           delay={300}
@@ -264,8 +260,8 @@ export function PropertiesTable({
   onUpdate: (property: ConfigurationProperty<any>, value?: ConfigurationPropertyValue<any>) => void | Promise<void>,
 } & PropertyActionProps) {
   return (
-    <div className="rounded-lg border bg-card overflow-hidden">
-      <Table>
+    <div className="overflow-hidden">
+      <Table variant="card">
         <TableHeader>
           <TableRow className="hover:bg-transparent bg-muted/30">
             <TableHead className="w-[50%] min-w-80 pl-5">
