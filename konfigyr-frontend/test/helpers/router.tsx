@@ -57,7 +57,7 @@ export function renderWithRouter(path: string) {
   );
 
   return {
-    ...render(<RouterProvider router={router} />, { wrapper }),
+    ...render(<RouterProvider router={router} />, { wrapper, container: document, baseElement: document }),
     queryClient,
     router,
   };
