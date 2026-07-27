@@ -17,11 +17,6 @@ import { toast } from '@konfigyr/components/ui/toast';
 
 import type { Namespace } from '@konfigyr/hooks/types';
 
-interface Invitation {
-  email: string;
-  administrator: boolean;
-}
-
 export function InviteForm({ namespace }: { namespace: Namespace }) {
   const id = useId();
   const t = useIntl();
@@ -29,7 +24,7 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
   const { mutateAsync: inviteNamespaceMember } = useInviteNamespaceMember(namespace);
 
   const form = useForm({
-    defaultValues: { email: '', administrator: false } as Invitation,
+    defaultValues: { email: '', administrator: false },
     onSubmit: async ({ value }) => {
       try {
         await inviteNamespaceMember(value);

@@ -25,6 +25,7 @@ export function CreateKeysetForm({ namespace, onCreate }: { namespace: Namespace
   const { mutateAsync: createKeyset } = useCreateKeyset(namespace.slug);
 
   const form = useForm({
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     defaultValues: { algorithm: '', name: '', description: '', tags: [] } as z.infer<typeof keysetSchema>,
     validators: {
       onSubmit: keysetSchema,
