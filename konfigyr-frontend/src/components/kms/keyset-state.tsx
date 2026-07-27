@@ -20,7 +20,7 @@ const STATES: Array<KeysetState> = [
   'DESTROYED',
 ];
 
-export function KeysetState({ state }: { state?: string | KeysetState }) {
+export function KeysetStateLabel({ state }: { state?: string | KeysetState }) {
   switch (state) {
     case 'ACTIVE':
       return <FormattedMessage
@@ -50,7 +50,7 @@ export function KeysetState({ state }: { state?: string | KeysetState }) {
 export function KeysetStateBadge({ state, ...props }: {
   state?: string | KeysetState;
 } & Omit<ComponentProps<typeof Badge>, 'variant'>) {
-  const label = <KeysetState state={state} />;
+  const label = <KeysetStateLabel state={state} />;
   const icon = (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4" width="4" height="4">
       <circle cx="2" cy="2" r="1" fill="currentColor" />
@@ -92,7 +92,7 @@ export function KeysetStateSelect({ value, reset = false, placeholder, className
     <Select name="keyset-state" value={value} onValueChange={onChange}>
       <SelectTrigger className={className}>
         <SelectValue>
-          {value ? (<KeysetState state={value} />) : placeholder}
+          {value ? (<KeysetStateLabel state={value} />) : placeholder}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -105,7 +105,7 @@ export function KeysetStateSelect({ value, reset = false, placeholder, className
           </SelectLabel>
           {STATES.map((state) => (
             <SelectItem key={state} value={state}>
-              <KeysetState state={state} />
+              <KeysetStateLabel state={state} />
             </SelectItem>
           ))}
         </SelectGroup>
