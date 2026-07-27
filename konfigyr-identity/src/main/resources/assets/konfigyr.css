@@ -1,105 +1,346 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/rubik';
 
 @utility container {
   margin-inline: auto;
 }
 
-@theme {
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
+@custom-variant dark (&:is(.dark *));
 
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
+@theme inline {
+    --color-border: hsl(var(--border));
+    --color-input: hsl(var(--input));
+    --color-ring: hsl(var(--ring));
+    --color-background: hsl(var(--background));
+    --color-foreground: hsl(var(--foreground));
 
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
+    --color-primary: hsl(var(--primary));
+    --color-primary-foreground: hsl(var(--primary-foreground));
 
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
+    --color-secondary: hsl(var(--secondary));
+    --color-secondary-foreground: hsl(var(--secondary-foreground));
 
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
+    --color-destructive: hsl(var(--destructive));
+    --color-destructive-foreground: hsl(var(--destructive-foreground));
 
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
+    --color-muted: hsl(var(--muted));
+    --color-muted-foreground: hsl(var(--muted-foreground));
 
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
+    --color-accent: hsl(var(--accent));
+    --color-accent-foreground: hsl(var(--accent-foreground));
 
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
+    --color-popover: hsl(var(--popover));
+    --color-popover-foreground: hsl(var(--popover-foreground));
 
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+    --color-card: hsl(var(--card));
+    --color-card-foreground: hsl(var(--card-foreground));
+
+    /* State colors */
+    --color-warning: hsl(var(--warning));
+    --color-warning-foreground: hsl(var(--warning-foreground));
+
+    --color-info: hsl(var(--info));
+    --color-info-foreground: hsl(var(--info-foreground));
+
+    --color-success: hsl(var(--success));
+    --color-success-foreground: hsl(var(--success-foreground));
+
+    --radius-sm: calc(var(--radius) - 8px);
+    --radius-md: calc(var(--radius) - 4px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-2xl: 24px;
+    --radius-3xl: 32px;
+    --radius-4xl: 64px;
+
+    --shadow-sm: 0 2px 8px rgba(22, 31, 41, 0.08);
+    --shadow: 0 4px 14px rgba(22, 31, 41, 0.10);
+    --shadow-md: 0 8px 24px rgba(22, 31, 41, 0.12);
+    --shadow-lg: 0 16px 40px rgba(22, 31, 41, 0.16);
+    --shadow-xl: 0 24px 56px rgba(22, 31, 41, 0.20);
+    --shadow-2xl: 0 32px 72px rgba(22, 31, 41, 0.24);
+    --shadow-inner: inset 0 2px 4px rgba(22, 31, 41, 0.08);
+
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
 }
 
 /*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+  Design System — Light & Dark
+  ─────────────────────────────────────────────────────────────────────────────
+  Slot names are unchanged (shadcn convention) — only the underlying HSL
+  values were updated to the current brand palette.
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  Primary:     blue-500  #1271C5  (unchanged)
+  Foreground:  gray-900  #161F29 light / gray-100 #F1F2F2 dark
+  Border/Input: gray-300 #D5D7D9 light / gray-700 #5C6269 dark
+  Destructive: red-500   #FA7E75
+  Success:     green-500 #2DCE9B
+  Warning:     yellow-500 #FFBD08
+  Info:        blue-500  #1271C5 (same hue family as primary)
+
+  These signal colors aren't redefined per theme, so unlike the previous
+  scheme they're the same in light and dark mode.
+  ─────────────────────────────────────────────────────────────────────────────
 */
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
+
+:root {
+    --font-heading: "Rubik", sans-serif;
+    --font-sans:    "Inter Variable", sans-serif;
+    --font-mono:    "JetBrains Mono", monospace;
+
+    /* ── Palette (primitive color scale, identical light & dark) ──────────── */
+    --gray-100:   180   4%  95%;  /* #F1F2F2 */
+    --gray-200:   210   4%  89%;  /* #E3E4E5 */
+    --gray-300:   210   5%  84%;  /* #D5D7D9 */
+    --gray-400:   216   5%  79%;  /* #C7C9CC */
+    --gray-500:   210   4%  74%;  /* #B9BCBF */
+    --gray-600:   210   4%  56%;  /* #8A8F94 */
+    --gray-700:   212   7%  39%;  /* #5C6269 */
+    --gray-800:   212  16%  21%;  /* #2D353E */
+    --gray-900:   212  30%  12%;  /* #161F29 */
+
+    --blue-100:   207  59%  88%;  /* #D0E3F3 */
+    --blue-200:   208  61%  77%;  /* #A0C6E8 */
+    --blue-300:   208  60%  65%;  /* #71AADC */
+    --blue-400:   208  61%  54%;  /* #418DD1 */
+    --blue-500:   208  83%  42%;  /* #1271C5 */
+    --blue-600:   208  84%  34%;  /* #0E5A9E */
+    --blue-700:   208  83%  25%;  /* #0B4476 */
+    --blue-800:   208  84%  17%;  /* #072D4F */
+    --blue-900:   207  81%   8%;  /* #041727 */
+
+    --green-100:  161  62%  90%;  /* #D5F5EB */
+    --green-200:  161  62%  80%;  /* #ABEBD7 */
+    --green-300:  161  63%  70%;  /* #81E2C3 */
+    --green-400:  161  62%  59%;  /* #57D8AF */
+    --green-500:  161  64%  49%;  /* #2DCE9B */
+    --green-600:  161  64%  39%;  /* #24A57C */
+    --green-700:  161  64%  30%;  /* #1B7C5D */
+    --green-800:  161  64%  20%;  /* #12523E */
+    --green-900:  161  64%  10%;  /* #09291F */
+
+    --yellow-100:  44 100%  90%;  /* #FFF2CE */
+    --yellow-200:  44 100%  81%;  /* #FFE59C */
+    --yellow-300:  44 100%  71%;  /* #FFD76B */
+    --yellow-400:  44 100%  61%;  /* #FFCA39 */
+    --yellow-500:  44 100%  52%;  /* #FFBD08 */
+    --yellow-600:  44  94%  41%;  /* #CC9706 */
+    --yellow-700:  44  94%  31%;  /* #997105 */
+    --yellow-800:  44  94%  21%;  /* #664C03 */
+    --yellow-900:  44  92%  10%;  /* #332602 */
+
+    --red-100:     4  93%  94%;  /* #FEE5E3 */
+    --red-200:     3  93%  89%;  /* #FDCBC8 */
+    --red-300:     4  93%  83%;  /* #FCB2AC */
+    --red-400:     4  93%  78%;  /* #FB9891 */
+    --red-500:     4  93%  72%;  /* #FA7E75 */
+    --red-600:     4  49%  58%;  /* #C8655E */
+    --red-700:     4  36%  43%;  /* #964C46 */
+    --red-800:     3  36%  29%;  /* #64322F */
+    --red-900:     4  37%  14%;  /* #321917 */
+
+    /* ── Neutral surface ─────────────────────────────────────────────────── */
+    --background:         0    0%  100%;
+    --foreground:         var(--gray-900);
+
+    --muted:              210  25%  96%;
+    --muted-foreground:   var(--gray-700);
+
+    --border:             var(--gray-200);
+    --input:              var(--gray-200);
+    --ring:               var(--blue-500);
+
+    /* ── Cards / Popovers ────────────────────────────────────────────────── */
+    --card:               0    0%  100%;
+    --card-foreground:    var(--gray-900);
+
+    --popover:            0    0%  100%;
+    --popover-foreground: var(--gray-900);
+
+    /* ── Primary  #1271C5 ────────────────────────────────────────────────── */
+    --primary:            var(--blue-500);
+    --primary-foreground: 0    0%  100%;
+
+    /* ── Secondary  — pale blue-grey tint ───────────────────────────────── */
+    --secondary:          215  40%  94%;
+    --secondary-foreground: 215  35%  28%;
+
+    /* ── Accent  — barely-there blue hover surface ───────────────────────── */
+    --accent:             210  50%  95%;
+    --accent-foreground:  210  84%  35%;
+
+    /* ── Destructive ───────────────────────────────────────────────────── */
+    --destructive:        var(--red-500);
+    --destructive-foreground: 0  0%  100%;
+
+    /* ── State: Warning ────────────────────────────────────────────────── */
+    --warning:            var(--yellow-500);
+    --warning-foreground: 40   90%  25%;
+
+    /* ── State: Info  — same hue family as primary ────────────────────────── */
+    --info:               var(--blue-500);
+    --info-foreground:    0    0%  100%;
+
+    /* ── State: Success ────────────────────────────────────────────────── */
+    --success:            var(--green-500);
+    --success-foreground: 0    0%  100%;
+
+    /* ── Interactive states — Button/Input (identical light & dark) ──────── */
+    --btn-primary-hover-bg:      hsl(var(--green-500));
+    --btn-primary-active-bg:     hsl(var(--green-600));
+    --btn-primary-focus-bg:      hsl(var(--green-600));
+    --btn-primary-focus-border:  hsl(var(--green-800));
+
+    --btn-secondary-hover-text:   hsl(var(--green-500));
+    --btn-secondary-active-text:  hsl(var(--green-600));
+    --btn-secondary-focus-text:   hsl(var(--green-600));
+    --btn-secondary-focus-border: hsl(var(--blue-400));
+
+    --btn-outline-hover-bg:      hsl(var(--blue-500));
+    --btn-outline-hover-text:    #FFFFFF;
+    --btn-outline-active-bg:     hsl(var(--blue-400));
+    --btn-outline-active-border: hsl(var(--blue-400));
+    --btn-outline-focus-bg:      hsl(var(--blue-400));
+    --btn-outline-focus-border:  hsl(var(--blue-600));
+
+    --btn-ghost-hover-bg:        hsl(var(--blue-100));
+    --btn-ghost-hover-text:      hsl(var(--blue-600));
+    --btn-ghost-active-bg:       hsl(var(--blue-200));
+    --btn-ghost-focus-bg:        hsl(var(--blue-200));
+    --btn-ghost-focus-border:    hsl(var(--blue-600));
+
+    --input-disabled-bg:   hsl(var(--gray-200));
+    --input-disabled-text: hsl(var(--gray-600));
+
+    /* ── Radius ──────────────────────────────────────────────────────────── */
+    --radius: 12px;
+
+    /* ── Charts ──────────────────────────────────────────────────────────── */
+    --chart-1: oklch(0.500 0.190 250);
+    --chart-2: oklch(0.620 0.130 195);
+    --chart-3: oklch(0.580 0.130 152);
+    --chart-4: oklch(0.700 0.150  80);
+    --chart-5: oklch(0.620 0.200 290);
+
+    /* ── Sidebar ─────────────────────────────────────────────────────────── */
+    --sidebar:                    #FFFFFF;
+    --sidebar-foreground:         hsl(var(--gray-800));
+    --sidebar-primary:            oklch(0.400 0.175 255);
+    --sidebar-primary-foreground: oklch(0.985 0     0  );
+    --sidebar-accent:             hsl(var(--blue-100));
+    --sidebar-accent-foreground:  hsl(var(--blue-600));
+    --sidebar-border:             hsl(var(--gray-200));
+    --sidebar-ring:               hsl(var(--blue-500));
+
+    /* ── PrismJS ─────────────────────────────────────────────────────────── */
+    --prism-background:  var(--color-slate-50);
+    --prism-color:       var(--foreground);
+    --prism-comment:     var(--color-slate-500);
+    --prism-language:    var(--color-yellow-600);
+    --prism-class-name:  var(--color-cyan-700);
+    --prism-property:    var(--color-red-700);
+    --prism-operator:    var(--color-yellow-700);
+    --prism-punctuation: var(--color-slate-700);
+    --prism-selector:    var(--color-green-700);
+    --prism-tag:         var(--prism-property);
+    --prism-regex:       var(--color-amber-500);
 }
 
-@layer base {
-    :root {
-        --background: 0 0% 100%;
-        --foreground: 222.2 47.4% 11.2%;
-        --muted: 210 40% 96.1%;
-        --muted-foreground: 215.4 16.3% 46.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 222.2 47.4% 11.2%;
-        --border: 214.3 31.8% 91.4%;
-        --input: 214.3 31.8% 91.4%;
-        --card: 0 0% 100%;
-        --card-foreground: 222.2 47.4% 11.2%;
-        --primary: 222.2 47.4% 11.2%;
-        --primary-foreground: 210 40% 98%;
-        --secondary: 104 76% 48%;
-        --secondary-foreground: 222.2 47.4% 11.2%;
-        --accent: 210 40% 96.1%;
-        --accent-foreground: 222.2 47.4% 11.2%;
-        --destructive: 0 100% 50%;
-        --destructive-foreground: 210 40% 98%;
-        --ring: 215 20.2% 65.1%;
-        --radius: 0.5rem;
-    }
+/* ─────────────────────────────────────────────────────────────────────────────
+   DARK MODE
+   True-black page canvas, gray-900 card surfaces. Brand/signal colors are not
+   redefined per theme, so primary/destructive/warning/info/success match light.
+───────────────────────────────────────────────────────────────────────────── */
+.dark {
+    /* ── Neutral surface ─────────────────────────────────────────────────── */
+    --background:         0    0%   0%;
+    --foreground:         var(--gray-100);
 
-    .dark {
-        --background: 224 71% 4%;
-        --foreground: 213 31% 91%;
-        --muted: 223 47% 11%;
-        --muted-foreground: 215.4 16.3% 56.9%;
-        --accent: 216 34% 17%;
-        --accent-foreground: 210 40% 98%;
-        --popover: 224 71% 4%;
-        --popover-foreground: 215 20.2% 65.1%;
-        --border: 216 34% 17%;
-        --input: 216 34% 17%;
-        --card: 224 71% 4%;
-        --card-foreground: 213 31% 91%;
-        --primary: 210 40% 98%;
-        --primary-foreground: 222.2 47.4% 1.2%;
-        --secondary: 104 76% 48%;
-        --secondary-foreground: 210 40% 98%;
-        --destructive: 0 63% 31%;
-        --destructive-foreground: 210 40% 98%;
-        --ring: 216 34% 17%;
-    }
+    --muted:              220  32%  15%;
+    --muted-foreground:   var(--gray-200);
+
+    --border:             var(--gray-700);
+    --input:              var(--gray-700);
+    --ring:               var(--blue-500);
+
+    /* ── Cards / Popovers ────────────────────────────────────────────────── */
+    --card:               var(--gray-900);
+    --card-foreground:    var(--gray-100);
+
+    --popover:            var(--gray-900);
+    --popover-foreground: var(--gray-100);
+
+    /* ── Primary ───────────────────────────────────────────────────────────  */
+    --primary:            var(--blue-500);
+    --primary-foreground: 0    0%  100%;
+
+    /* ── Secondary ───────────────────────────────────────────────────────── */
+    --secondary:          222  38%  17%;
+    --secondary-foreground: 210  35%  84%;
+
+    /* ── Accent ──────────────────────────────────────────────────────────── */
+    --accent:             215  34%  22%;
+    --accent-foreground:  210  70%  72%;
+
+    /* ── Destructive ─────────────────────────────────────────────────────── */
+    --destructive:        var(--red-500);
+    --destructive-foreground: 0  0%  100%;
+
+    /* ── State: Warning ────────────────────────────────────────────────── */
+    --warning:            var(--yellow-500);
+    --warning-foreground: 32   90%  12%;
+
+    /* ── State: Info  — same hue family as primary ────────────────────────── */
+    --info:               var(--blue-500);
+    --info-foreground:    222  38%   9%;
+
+    /* ── State: Success ────────────────────────────────────────────────── */
+    --success:            var(--green-500);
+    --success-foreground: 0    0%  100%;
+
+    /* ── Charts ──────────────────────────────────────────────────────────── */
+    --chart-1: oklch(0.600 0.190 255);
+    --chart-2: oklch(0.670 0.140 195);
+    --chart-3: oklch(0.650 0.145 152);
+    --chart-4: oklch(0.750 0.155  80);
+    --chart-5: oklch(0.670 0.210 290);
+
+    /* ── Sidebar ─────────────────────────────────────────────────────────── */
+    --sidebar:                    #000000;
+    --sidebar-foreground:         hsl(var(--gray-200));
+    --sidebar-primary:            oklch(0.555 0.185 255);
+    --sidebar-primary-foreground: oklch(0.985 0     0  );
+    --sidebar-accent:             hsl(var(--blue-900));
+    --sidebar-accent-foreground:  hsl(var(--blue-300));
+    --sidebar-border:             hsl(var(--gray-800));
+    --sidebar-ring:               hsl(var(--blue-500));
+
+    /* ── PrismJS ─────────────────────────────────────────────────────────── */
+    --prism-background:  var(--color-slate-900);
+    --prism-color:       var(--foreground);
+    --prism-comment:     var(--color-slate-500);
+    --prism-language:    var(--color-yellow-600);
+    --prism-class-name:  var(--color-green-500);
+    --prism-property:    var(--color-red-400);
+    --prism-operator:    var(--color-yellow-500);
+    --prism-punctuation: var(--foreground);
+    --prism-selector:    var(--color-cyan-500);
+    --prism-tag:         var(--prism-property);
+    --prism-regex:       var(--color-amber-500);
 }
 
 @layer base {
@@ -142,6 +383,10 @@ body {
       display: block;
       flex-grow: 1
   }
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading), sans-serif;
 }
 
 .github {
