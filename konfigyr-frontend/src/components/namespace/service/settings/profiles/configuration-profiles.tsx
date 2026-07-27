@@ -22,7 +22,7 @@ import {
   DeleteConfigurationProfileAlert,
 } from '@konfigyr/components/namespace/service/settings/profiles/delete-profile-alert';
 import { InlineEdit, InlineEditInput, InlineEditPlaceholder } from '@konfigyr/components/ui/inline-edit';
-import { toast } from 'sonner';
+import { toast } from '@konfigyr/components/ui/toast';
 import { usePolicyDescription, usePolicyLabel } from '@konfigyr/components/vault/profile/policy-picker';
 import { ProfilePolicyLabel } from '@konfigyr/components/vault/profile/messages';
 
@@ -132,10 +132,13 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
       setOpen(false);
     }
 
-    return toast.success(intl.formatMessage({
-      defaultMessage: 'The profile policy was successfully updated.',
-      description: 'Success message for the profile policy update',
-    }));
+    return toast.add({
+      type: 'success',
+      title: intl.formatMessage({
+        defaultMessage: 'The profile policy was successfully updated.',
+        description: 'Success message for the profile policy update',
+      }),
+    });
   }, [profile]);
 
   const onNameUpdate = useCallback(async (value?: string) => {
@@ -214,6 +217,7 @@ export function ProfileItem ({ namespace, service, profile, onRemove }: ProfileI
       </div>
       <ItemActions>
         <Button
+          size="icon-lg"
           variant="destructive"
           onClick={() => onRemove(profile)}
           aria-label={intl.formatMessage({

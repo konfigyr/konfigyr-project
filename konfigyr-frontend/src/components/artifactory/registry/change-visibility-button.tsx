@@ -1,6 +1,5 @@
 'use client';
 
-import { toast } from 'sonner';
 import { useCallback } from 'react';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { useChangeArtifactVisibility } from '@konfigyr/hooks';
@@ -17,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from '@konfigyr/components/ui/alert-dialog';
 import { Button } from '@konfigyr/components/ui/button';
+import { toast } from '@konfigyr/components/ui/toast';
 import { CancelLabel } from '@konfigyr/components/messages';
 import {
   ChangeVisibilityTitle,
@@ -50,7 +50,7 @@ export function ChangeVisibilityButton({ namespace, artifact }: {
       return errorNotification(error);
     }
 
-    toast.success(<VisibilityChangedSuccessMessage artifact={coordinates}/>);
+    toast.add({ type: 'success', title: <VisibilityChangedSuccessMessage artifact={coordinates}/> });
   }, [artifact, nextVisibility, coordinates, errorNotification, changeVisibility]);
 
   return (

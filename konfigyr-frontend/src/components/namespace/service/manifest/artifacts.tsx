@@ -51,7 +51,7 @@ export function ServiceArtifacts({ namespace, service }: { namespace: Namespace,
   const { data: manifest, error, isPending, isError } = useServiceManifestQuery(namespace.slug, service.slug);
 
   return (
-    <Card className="border">
+    <Card>
       <CardContent>
         {isPending && (
           <SkeletonLoader />

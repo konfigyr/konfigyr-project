@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useUpdateNamespaceMember } from '@konfigyr/hooks';
@@ -17,6 +16,7 @@ import {
   DialogTitle,
 } from '@konfigyr/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@konfigyr/components/ui/radio-group';
+import { toast } from '@konfigyr/components/ui/toast';
 
 import type { Member, Namespace } from '@konfigyr/hooks/types';
 
@@ -37,11 +37,16 @@ export function UpdateMemberForm({ namespace, member, onClose }: { namespace: Na
         return errorNotification(error);
       }
 
-      toast.success(<FormattedMessage
-        defaultMessage="Successfully updated member role"
-        values={{ name: member?.fullName, role: value.role, namespace: namespace.name }}
-        description="Success message when member role is updated"
-      />);
+      toast.add({
+        type: 'success',
+        title: (
+          <FormattedMessage
+            defaultMessage="Successfully updated member role"
+            values={{ name: member?.fullName, role: value.role, namespace: namespace.name }}
+            description="Success message when member role is updated"
+          />
+        ),
+      });
 
       return onOpenChange(false);
     },

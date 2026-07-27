@@ -3,11 +3,7 @@ import {
   LayoutContent,
   LayoutNavbar,
 } from '@konfigyr/components/layout';
-import {
-  ActivityCard,
-  ActivityCardTitle,
-} from '@konfigyr/components/reporting/activity';
-import { ActivityCardList, RECENT_ACTIVITY_QUERY } from '@konfigyr/components/reporting/activity-item';
+import { ActivityCard, RECENT_ACTIVITY_QUERY } from '@konfigyr/components/reporting/activity';
 import { DashboardStats } from '@konfigyr/components/reporting/dashboard-stats';
 import { getAuditRecordsQuery, getDashboardQuery, useNamespace } from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
@@ -36,16 +32,7 @@ function RouteComponent() {
 
       <div className="w-full lg:w-4/5 xl:w-2/3 space-y-6 px-4 mx-auto">
         <DashboardStats namespace={namespace} />
-
-        <ActivityCard>
-          <ActivityCardTitle>
-            <FormattedMessage
-              defaultMessage="Recent activity"
-              description="Title of the recent activity card"
-            />
-          </ActivityCardTitle>
-          <ActivityCardList namespace={namespace} />
-        </ActivityCard>
+        <ActivityCard namespace={namespace} />
       </div>
     </LayoutContent>
   );

@@ -1,3 +1,4 @@
+import { Card, CardContent } from '@konfigyr/components/ui/card';
 import { cn } from '@konfigyr/components/utils';
 
 import type { ComponentProps, ReactNode } from 'react';
@@ -11,10 +12,10 @@ export function CounterStat({ title, counter, cta, footer, className }: {
 }) {
   return (
     <div className={cn('px-2 border-r last:border-none', className)}>
-      <div className="font-medium text-xs text-report-card-foreground/70">
+      <div className="font-heading font-medium text-sm uppercase leading-relaxed text-muted-foreground">
         {title}
       </div>
-      <div className="font-heading font-semibold text-3xl text-report-card-accent-foreground py-1">
+      <div className="font-heading font-semibold text-4xl py-2">
         {counter}
       </div>
       {cta && (
@@ -23,7 +24,7 @@ export function CounterStat({ title, counter, cta, footer, className }: {
         </div>
       )}
       {footer && (
-        <div className="text-xs text-report-card-foreground/70">
+        <div className="text-xs text-muted-foreground">
           {footer}
         </div>
       )}
@@ -31,19 +32,12 @@ export function CounterStat({ title, counter, cta, footer, className }: {
   );
 }
 
-export function StatsCard({ className, children, ...props }: ComponentProps<'div'>) {
+export function StatsCard({ className, children, size = 1, ...props }: ComponentProps<'div'> & { size?: number }) {
   return (
-    <div
-      data-slot="stats-card"
-      className={cn('bg-report-card text-report-card-foreground flex flex-col gap-2 rounded-xl shadow py-4', className)}
-      {...props}
-    >
-      <div
-        data-slot="stats-card-content"
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 px-6"
-      >
+    <Card className={cn('border', className)} {...props}>
+      <CardContent className={cn('grid grid-cols-1 gap-4 px-6', `grid-cols-${size}`)}>
         {children}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

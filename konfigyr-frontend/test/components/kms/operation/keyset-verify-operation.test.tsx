@@ -1,7 +1,7 @@
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
-import { Toaster } from '@konfigyr/components/ui/sonner';
+import { Toaster } from '@konfigyr/components/ui/toast';
 import { KeysetOperationDialog } from '@konfigyr/components/kms/operation/keyset-operation-dialog';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
@@ -110,10 +110,11 @@ describe('components | kms | operation | <KeysetVerifySignatureOperation/>', () 
   });
 
   test('should close the keyset operation dialog', async () => {
+    const dialog = result.getByRole('dialog', { name: 'Verify signature' });
     await user.click(result.getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => {
-      expect(result.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(dialog).not.toBeInTheDocument();
     });
   });
 });

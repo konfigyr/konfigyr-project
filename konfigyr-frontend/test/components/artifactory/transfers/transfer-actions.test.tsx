@@ -15,14 +15,14 @@ import {
 
 import type { ArtifactOwnershipTransfer } from '@konfigyr/hooks/types';
 
-const toast = vi.hoisted(() => ({ success: vi.fn() }));
+const toast = vi.hoisted(() => ({ add: vi.fn() }));
 
 const acceptTransfer = vi.hoisted(() => vi.fn());
 const rejectTransfer = vi.hoisted(() => vi.fn());
 const cancelTransfer = vi.hoisted(() => vi.fn());
 const errorNotification = vi.hoisted(() => vi.fn());
 
-vi.mock('sonner', () => ({ toast }));
+vi.mock('@konfigyr/components/ui/toast', () => ({ toast }));
 vi.mock('@konfigyr/hooks', () => ({
   useAcceptTransfer: () => ({ isPending: false, mutateAsync: acceptTransfer }),
   useRejectTransfer: () => ({ isPending: false, mutateAsync: rejectTransfer }),
@@ -88,12 +88,9 @@ describe('components | transfers | <AcceptTransferButton/>', () => {
 
     await waitFor(() => {
       expect(acceptTransfer).toHaveBeenCalledExactlyOnceWith(transfer.id);
-      expect(toast.success).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({
-          type: TransferAcceptedSuccessMessage,
-          props: expect.objectContaining({ groupId: transfer.groupId }),
-        }),
-      );
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+        type: 'success', title: <TransferAcceptedSuccessMessage groupId={transfer.groupId} />,
+      });
     });
   });
 
@@ -121,7 +118,7 @@ describe('components | transfers | <AcceptTransferButton/>', () => {
       expect(errorNotification).toHaveBeenCalledExactlyOnceWith(error);
     });
 
-    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.add).not.toHaveBeenCalled();
   });
 });
 
@@ -159,12 +156,9 @@ describe('components | transfers | <RejectTransferButton/>', () => {
 
     await waitFor(() => {
       expect(rejectTransfer).toHaveBeenCalledExactlyOnceWith(transfer.id);
-      expect(toast.success).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({
-          type: TransferRejectedSuccessMessage,
-          props: expect.objectContaining({ groupId: transfer.groupId }),
-        }),
-      );
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+        type: 'success', title: <TransferRejectedSuccessMessage groupId={transfer.groupId} />,
+      });
     });
   });
 });
@@ -203,12 +197,9 @@ describe('components | transfers | <CancelTransferButton/>', () => {
 
     await waitFor(() => {
       expect(cancelTransfer).toHaveBeenCalledExactlyOnceWith(transfer.id);
-      expect(toast.success).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({
-          type: TransferCanceledSuccessMessage,
-          props: expect.objectContaining({ groupId: transfer.groupId }),
-        }),
-      );
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+        type: 'success', title: <TransferCanceledSuccessMessage groupId={transfer.groupId} />,
+      });
     });
   });
 });

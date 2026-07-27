@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { toast } from 'sonner';
 import { FormattedMessage } from 'react-intl';
 import { useUpdateNamespaceService } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -11,6 +10,7 @@ import {
   CardHeader,
 } from '@konfigyr/components/ui/card';
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { toast } from '@konfigyr/components/ui/toast';
 import {
   ServiceDescriptionHelpText,
   ServiceDescriptionLabel,
@@ -48,12 +48,15 @@ export function ServiceUpdateForm({ namespace, service }: { namespace: Namespace
         return errorNotification(error);
       }
 
-      return toast.success((
-        <FormattedMessage
-          defaultMessage="Your service was updated"
-          description="Notification message that is shown when service was successfully updated"
-        />
-      ));
+      return toast.add({
+        type: 'success',
+        title: (
+          <FormattedMessage
+            defaultMessage="Your service was updated"
+            description="Notification message that is shown when service was successfully updated"
+          />
+        ),
+      });
     },
   });
 
@@ -62,7 +65,7 @@ export function ServiceUpdateForm({ namespace, service }: { namespace: Namespace
   return (
     <form.AppForm>
       <form name="namespace-name-form" onSubmit={onSubmit}>
-        <Card className="border">
+        <Card>
           <CardHeader title="General settings" />
           <CardContent className="grid gap-6">
             <form.AppField

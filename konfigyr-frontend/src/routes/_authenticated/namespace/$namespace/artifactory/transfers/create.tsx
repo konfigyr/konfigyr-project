@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { toast } from 'sonner';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useNamespace, useRequestTransfer } from '@konfigyr/hooks';
+import { toast } from '@konfigyr/components/ui/toast';
 import { TransfersBreadcrumbs } from '@konfigyr/components/artifactory/transfers/breadcrumbs';
 import { TransferRequestForm } from '@konfigyr/components/artifactory/transfers/transfer-request-form';
 import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
@@ -50,9 +50,7 @@ function RouteComponent() {
       return;
     }
 
-    toast.success((
-      <TransferRequestedSuccessMessage groupId={created.groupId}/>
-    ));
+    toast.add({ type: 'success', title: <TransferRequestedSuccessMessage groupId={created.groupId}/> });
 
     await navigate({
       to: '/namespace/$namespace/artifactory/transfers/$transferId',

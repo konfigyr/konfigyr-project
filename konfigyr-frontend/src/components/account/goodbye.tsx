@@ -7,7 +7,7 @@ export function Goodbye() {
   return (
     <div className="h-screen flex justify-center items-center">
       <div className="w-full md:w-1/2 lg:w-1/3 mx-auto">
-        <Card className="border">
+        <Card>
           <CardHeader className="flex items-center gap-2">
             <CardIcon>
               <HandIcon size="1.5rem" />

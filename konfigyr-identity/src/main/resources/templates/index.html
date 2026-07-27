@@ -11,14 +11,14 @@
                 <h1 class="text-2xl" th:utext="${#messages.msg('konfigyr.account.welcome', #authentication.principal.displayName)}">
                     Welcome back John Doe
                 </h1>
-                <p class="text-sm leading-relaxed mb-4" th:text="#{konfigyr.account.select-products}">
+                <p class="text-sm leading-relaxed text-muted-foreground mb-4" th:text="#{konfigyr.account.select-products}">
                     Select products
                 </p>
 
                 <div class="grid gap-4 py-6" th:with="products = ${ { 'registry', 'vault' } }">
-                    <a th:each="product : ${products}" th:href="@{/}" class="transition-all rounded border bg-card text-card-foreground shadow-sm hover:shadow-md p-6">
+                    <a th:each="product : ${products}" th:href="@{/}" class="p-5 rounded-md border bg-card text-card-foreground transition-all shadow-xs hover:shadow-sm">
                         <h2 class="text-2xl leading-none tracking-tight mb-2">
-                            <span class="text-secondary">konfigyr</span>.<small class="font-mono" th:text="${product}">vault</small>
+                            <span class="text-primary font-heading">konfigyr</span>.<small class="font-mono" th:text="${product}">vault</small>
                         </h2>
                         <p class="text-sm leading-relaxed" th:text="${#messages.msg('konfigyr.product.' + product + '.description')}">
                             Something about the product

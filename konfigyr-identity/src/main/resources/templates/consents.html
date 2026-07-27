@@ -21,16 +21,16 @@
         <div class="container">
             <div class="w-full md:w-1/2 lg:w-1/3 mx-auto">
                 <h1 class="text-center text-2xl mb-4">
-                    <span class="text-secondary">konfigyr</span>.<small class="font-mono">id</small>
+                    <span class="text-primary font-heading">konfigyr</span>.<small class="font-mono">id</small>
                 </h1>
 
                 <form id="consents" name="consents" th:method="post" th:action="@{/oauth/authorize}">
                     <input type="hidden" name="client_id" th:value="${client.clientId}" />
                     <input type="hidden" name="state" th:value="${state}" />
 
-                    <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
-                        <div class="flex flex-col space-y-1.5 p-6">
-                            <h2 class="font-semibold leading-none tracking-tight"
+                    <div class="rounded-md border bg-card text-card-foreground shadow-xs">
+                        <div class="flex flex-col space-y-1.5 p-5">
+                            <h2 class="font-heading text-lg leading-snug font-semibold"
                                 th:text="${#messages.msg('konfigyr.consent.card.title', client.clientName)}"
                             >
                                 Allow client to access your account?
@@ -40,7 +40,7 @@
                             </p>
                         </div>
 
-                        <div class="p-6 pt-0">
+                        <div class="p-5 pt-0">
                             <p class="text-sm mb-4" th:text="${#messages.msg('konfigyr.consent.card.contents', client.clientName)}">
                                 Client is requesting permission to access your account
                             </p>
@@ -69,7 +69,7 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center p-6 pt-0">
+                        <div class="flex items-center p-5 pt-0">
                             <div class="grid gap-2 grid-cols-2">
                                 <th:block th:replace="~{components/buttons :: primary (
                                     label=#{konfigyr.consent.card.submit},

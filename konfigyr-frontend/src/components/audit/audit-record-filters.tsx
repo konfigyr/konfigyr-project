@@ -105,14 +105,10 @@ export function AuditRecordFilters({ query, onQueryChange, debounceMs = 200 }: A
     }
 
     if (messages.length === 0) {
-      return (
-        <span className="text-muted-foreground">
-          {intl.formatMessage({
-            defaultMessage: 'Select date range',
-            description: 'Label for the audit record filter by date range dropdown.',
-          })}
-        </span>
-      );
+      return intl.formatMessage({
+        defaultMessage: 'Select date range',
+        description: 'Label for the audit record filter by date range dropdown.',
+      });
     }
 
     return messages.join(' - ');

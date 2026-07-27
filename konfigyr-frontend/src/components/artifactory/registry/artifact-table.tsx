@@ -4,7 +4,6 @@ import { Link } from '@tanstack/react-router';
 import { ActionsLabel, UpdatedAtLabel, ViewLabel } from '@konfigyr/components/messages';
 import { ErrorState } from '@konfigyr/components/error';
 import { buttonVariants } from '@konfigyr/components/ui/button';
-import { Card, CardContent } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
@@ -76,60 +75,60 @@ export function ArtifactTable({ namespace, data, error, isPending, page, size }:
   page?: number;
   size?: number;
 }) {
+  if (error) {
+    return (
+      <ErrorState error={error}/>
+    );
+  }
+
   return (
     <>
-      <Card className="border">
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-64">
-                  Coordinates
-                </TableHead>
-                <TableHead className="w-48">
-                  Name
-                </TableHead>
-                <TableHead className="w-32">
-                  <VisibilityLabel/>
-                </TableHead>
-                <TableHead className="w-32">
-                  <UpdatedAtLabel/>
-                </TableHead>
-                <TableHead className="w-48 text-right">
-                  <ActionsLabel/>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isPending && (
-                <>
-                  <ArtifactSkeleton/>
-                  <ArtifactSkeleton/>
-                  <ArtifactSkeleton/>
-                </>
-              )}
+      <Table variant="card">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="min-w-64">
+              Coordinates
+            </TableHead>
+            <TableHead className="w-48">
+              Name
+            </TableHead>
+            <TableHead className="w-32">
+              <VisibilityLabel/>
+            </TableHead>
+            <TableHead className="w-32">
+              <UpdatedAtLabel/>
+            </TableHead>
+            <TableHead className="w-48 text-right">
+              <ActionsLabel/>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isPending && (
+            <>
+              <ArtifactSkeleton/>
+              <ArtifactSkeleton/>
+              <ArtifactSkeleton/>
+            </>
+          )}
 
-              {data?.data.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <EmptyState
-                      icon={<PackageIcon size="2rem"/>}
-                      title={<NoArtifactsFoundTitle/>}
-                      description={<NoArtifactsFoundDescription/>}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
+          {data?.data.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5}>
+                <EmptyState
+                  icon={<PackageIcon size="2rem"/>}
+                  title={<NoArtifactsFoundTitle/>}
+                  description={<NoArtifactsFoundDescription/>}
+                />
+              </TableCell>
+            </TableRow>
+          )}
 
-              {data?.data.map((artifact) => (
-                <ArtifactRow key={artifact.id} namespace={namespace} artifact={artifact}/>
-              ))}
-            </TableBody>
-          </Table>
-
-          {error && <ErrorState error={error}/>}
-        </CardContent>
-      </Card>
+          {data?.data.map((artifact) => (
+            <ArtifactRow key={artifact.id} namespace={namespace} artifact={artifact}/>
+          ))}
+        </TableBody>
+      </Table>
 
       <PageResponsePagination page={page} size={size} response={data} className="mt-4"/>
     </>

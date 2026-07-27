@@ -1,7 +1,7 @@
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest';
-import { cleanup, waitFor } from '@testing-library/react';
+import { cleanup, waitFor, within } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
-import { Toaster } from '@konfigyr/components/ui/sonner';
+import { Toaster } from '@konfigyr/components/ui/toast';
 import { KeysetOperationDialog } from '@konfigyr/components/kms/operation/keyset-operation-dialog';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { kms, namespaces } from '@konfigyr/test/helpers/mocks';
@@ -91,13 +91,14 @@ describe('components | kms | operation | <KeysetEncryptOperation/>', () => {
   });
 
   test('should close the keyset operation dialog', async () => {
-    const closeButtons = result.getAllByRole('button', { name: 'Close' });
+    const dialog = result.getByRole('dialog', { name: 'Encrypt data' });
+    const closeButtons = within(dialog).getAllByRole('button', { name: 'Close' });
     expect(closeButtons).toHaveLength(2);
 
     await user.click(closeButtons[1]);
 
     await waitFor(() => {
-      expect(result.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(dialog).not.toBeInTheDocument();
     });
   });
 });

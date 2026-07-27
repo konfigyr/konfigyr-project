@@ -22,17 +22,13 @@ export function DashboardStats({ namespace }: { namespace: Namespace }) {
 
   if (error) {
     return (
-      <StatsCard>
-        <ErrorState error={error} className="col-span-full" />
-      </StatsCard>
+      <ErrorState error={error} />
     );
   }
 
   if (isPending) {
     return (
-      <StatsCard>
-        <SkeletonStat />
-        <SkeletonStat />
+      <StatsCard size={3}>
         <SkeletonStat />
         <SkeletonStat />
         <SkeletonStat />
@@ -41,98 +37,102 @@ export function DashboardStats({ namespace }: { namespace: Namespace }) {
   }
 
   return (
-    <StatsCard>
-      <CounterStat
-        title={(
-          <FormattedMessage
-            defaultMessage="Active services"
-            description="Title of the active services stat tile on the namespace dashboard"
-          />
-        )}
-        counter={data.activeServices}
-        footer={(
-          <FormattedMessage
-            defaultMessage="Deployed here"
-            description="Footer label of the active services stat tile on the namespace dashboard"
-          />
-        )}
-      />
-      <CounterStat
-        title={(
-          <FormattedMessage
-            defaultMessage="Active configurations"
-            description="Title of the active configurations stat tile on the namespace dashboard"
-          />
-        )}
-        counter={data.activeConfigurations}
-        footer={(
-          <FormattedMessage
-            defaultMessage="{count, plural, =0 {No services created} one {Across # service} other {Across # services}}"
-            description="Footer label of the active configurations stat tile on the namespace dashboard"
-            values={{ count: data.activeServices }}
-          />
-        )}
-      />
-      <CounterStat
-        title={(
-          <FormattedMessage
-            defaultMessage="Open change requests"
-            description="Title of the open change requests stat tile on the namespace dashboard"
-          />
-        )}
-        counter={data.openChangeRequests}
-        footer={(
-          <FormattedMessage
-            defaultMessage="{count, plural, =0 {All caught up} other {Awaiting review}}"
-            description="Footer label of the open change requests stat tile on the namespace dashboard"
-            values={{ count: data.openChangeRequests }}
-          />
-        )}
-      />
-      <CounterStat
-        title={(
-          <FormattedMessage
-            defaultMessage="Artifacts owned"
-            description="Title of the artifacts owned stat tile on the namespace dashboard"
-          />
-        )}
-        counter={data.artifactsOwned}
-        cta={(
-          <Link
-            to="/namespace/$namespace/artifactory/registry"
-            params={{ namespace: namespace.slug }}
-            className="flex items-center justify-between gap-1"
-          >
+    <>
+      <StatsCard size={3}>
+        <CounterStat
+          title={(
             <FormattedMessage
-              defaultMessage="Browse artifacts"
-              description="Link label in the artifacts owned stat tile on the namespace dashboard"
+              defaultMessage="Active services"
+              description="Title of the active services stat tile on the namespace dashboard"
             />
-            <ChevronRightIcon/>
-          </Link>
-        )}
-      />
-      <CounterStat
-        title={(
-          <FormattedMessage
-            defaultMessage="Active members"
-            description="Title of the active members stat tile on the namespace dashboard"
-          />
-        )}
-        counter={data.members.limit === null ? data.members.count : `${data.members.count} / ${data.members.limit}`}
-        cta={(
-          <Link
-            to="/namespace/$namespace/members"
-            params={{ namespace: namespace.slug }}
-            className="flex items-center justify-between gap-1"
-          >
+          )}
+          counter={data.activeServices}
+          footer={(
             <FormattedMessage
-              defaultMessage="Manage members"
-              description="Link label in the active members stat tile on the namespace dashboard"
+              defaultMessage="Deployed here"
+              description="Footer label of the active services stat tile on the namespace dashboard"
             />
-            <ChevronRightIcon />
-          </Link>
-        )}
-      />
-    </StatsCard>
+          )}
+        />
+        <CounterStat
+          title={(
+            <FormattedMessage
+              defaultMessage="Active configurations"
+              description="Title of the active configurations stat tile on the namespace dashboard"
+            />
+          )}
+          counter={data.activeConfigurations}
+          footer={(
+            <FormattedMessage
+              defaultMessage="{count, plural, =0 {No services created} one {Across # service} other {Across # services}}"
+              description="Footer label of the active configurations stat tile on the namespace dashboard"
+              values={{ count: data.activeServices }}
+            />
+          )}
+        />
+        <CounterStat
+          title={(
+            <FormattedMessage
+              defaultMessage="Open change requests"
+              description="Title of the open change requests stat tile on the namespace dashboard"
+            />
+          )}
+          counter={data.openChangeRequests}
+          footer={(
+            <FormattedMessage
+              defaultMessage="{count, plural, =0 {All caught up} other {Awaiting review}}"
+              description="Footer label of the open change requests stat tile on the namespace dashboard"
+              values={{ count: data.openChangeRequests }}
+            />
+          )}
+        />
+      </StatsCard>
+      <StatsCard size={2}>
+        <CounterStat
+          title={(
+            <FormattedMessage
+              defaultMessage="Artifacts owned"
+              description="Title of the artifacts owned stat tile on the namespace dashboard"
+            />
+          )}
+          counter={data.artifactsOwned}
+          cta={(
+            <Link
+              to="/namespace/$namespace/artifactory/registry"
+              params={{ namespace: namespace.slug }}
+              className="flex items-center justify-between gap-1"
+            >
+              <FormattedMessage
+                defaultMessage="Browse artifacts"
+                description="Link label in the artifacts owned stat tile on the namespace dashboard"
+              />
+              <ChevronRightIcon/>
+            </Link>
+          )}
+        />
+        <CounterStat
+          title={(
+            <FormattedMessage
+              defaultMessage="Active members"
+              description="Title of the active members stat tile on the namespace dashboard"
+            />
+          )}
+          counter={data.members.limit === null ? data.members.count : `${data.members.count} / ${data.members.limit}`}
+          cta={(
+            <Link
+              to="/namespace/$namespace/members"
+              params={{ namespace: namespace.slug }}
+              className="flex items-center justify-between gap-1"
+            >
+              <FormattedMessage
+                defaultMessage="Manage members"
+                description="Link label in the active members stat tile on the namespace dashboard"
+              />
+              <ChevronRightIcon />
+            </Link>
+          )}
+        />
+      </StatsCard>
+    </>
   );
 }

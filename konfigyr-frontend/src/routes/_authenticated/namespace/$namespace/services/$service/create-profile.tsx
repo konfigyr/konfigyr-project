@@ -1,7 +1,7 @@
-import { toast } from 'sonner';
 import { useCallback } from 'react';
 import { VaultIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
+import { toast } from '@konfigyr/components/ui/toast';
 import {
   Card,
   CardContent,
@@ -31,11 +31,16 @@ function RouteComponent() {
   const { namespace, service } = Route.parentRoute.useLoaderData();
 
   const onProfileCreate = useCallback(async (profile: Profile) => {
-    toast.success(<FormattedMessage
-      defaultMessage="{name} was successfully created"
-      values={{ name: profile.name }}
-      description="Notification message shown when profile was successfully created"
-    />);
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="{name} was successfully created"
+          description="Notification message shown when profile was successfully created"
+          values={{ name: profile.name }}
+        />
+      ),
+    });
 
     await navigate({
       to: '/namespace/$namespace/services/$service/profiles/$profile',
@@ -45,7 +50,7 @@ function RouteComponent() {
 
   return (
     <div className="lg:w-2/3 xl:w-3/5 px-4 mx-auto">
-      <Card className="border">
+      <Card>
         <CardHeader>
           <CardTitle className="flex flex-col items-center gap-6 my-2">
             <VaultIcon size={64} strokeWidth="1" className="text-secondary" />

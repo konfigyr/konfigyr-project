@@ -46,12 +46,12 @@ vi.mock('@tanstack/react-start/server', async () => {
 });
 
 const updateSessionAccessToken = async (data?: Partial<AccessToken>) => {
-  const token = {
+  const token: AccessToken = {
     accessToken: 'access-token',
     refreshToken: 'refresh-token',
     expiresAt: Date.now() + 1000 * 60 * 60,
     ...(data || {}),
-  } as AccessToken;
+  };
 
   await authenticationSession.update({ token });
 };

@@ -1,6 +1,5 @@
 'use client';
 
-import { toast } from 'sonner';
 import {
   useCallback,
   useEffect,
@@ -8,7 +7,7 @@ import {
   useState,
 } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { AlertCircleIcon, CircleXIcon, PencilIcon, SaveIcon } from 'lucide-react';
+import { AlertCircleIcon, PencilIcon, SaveIcon } from 'lucide-react';
 import { cva } from 'class-variance-authority';
 import {
   useApplyChangeset,
@@ -24,6 +23,7 @@ import {
   InlineEditInput,
   InlineEditPlaceholder,
 } from '@konfigyr/components/ui/inline-edit';
+import { toast } from '@konfigyr/components/ui/toast';
 import {
   ChangesCountLabel,
   useLabelForTransitionType,
@@ -40,7 +40,7 @@ export const changesetStatusBarVariants = cva(
   {
     variants: {
       variant: {
-        inline: 'px-4 rounded-lg border border-info/20 bg-info/5',
+        inline: 'px-4 rounded-md border border-info/20 bg-info/5',
         sticky: null,
       },
     },
@@ -203,23 +203,25 @@ function DiscardButton({ changeset, onDiscarded, onError }: {
 
     await onDiscarded?.(changeset);
 
-    return toast.success((
-      <FormattedMessage
-        defaultMessage="Your changes were discarded"
-        description="Notification message that is shown when changeset state was discarded."
-      />
-    ));
+    return toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="Your changes were discarded"
+          description="Notification message that is shown when changeset state was discarded."
+        />
+      ),
+    });
   }, [changeset]);
 
   return (
     <Button
       size="sm"
-      variant="outline"
+      variant="ghost"
       loading={isPending}
       disabled={isPending}
       onClick={onDiscard}
     >
-      <CircleXIcon />
       <FormattedMessage
         defaultMessage="Discard"
         description="Label for the discard button in the changeset status bar."
@@ -256,12 +258,15 @@ function ChangesetStatusBarContents({
 
     await onChangesetApplied?.(changeset);
 
-    return toast.success((
-      <FormattedMessage
-        defaultMessage="Your changes were successfully applied"
-        description="Notification message that is shown when changeset state was applied."
-      />
-    ));
+    return toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="Your changes were successfully applied"
+          description="Notification message that is shown when changeset state was applied."
+        />
+      ),
+    });
   }, []);
 
   const onSubmit = useCallback(async (payload: ChangesetState) => {
@@ -277,12 +282,14 @@ function ChangesetStatusBarContents({
 
     onChangeRequestCreated?.(changeRequest);
 
-    toast.success((
-      <FormattedMessage
-        defaultMessage="Change request created"
-        description="Notification message subject that is shown when changeset state was submitted and change request is created."
-      />
-    ), {
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="Change request created"
+          description="Notification message subject that is shown when changeset state was submitted and change request is created."
+        />
+      ),
       description: (
         <FormattedMessage
           defaultMessage="Your changes were submitted for review and are now waiting for approval."

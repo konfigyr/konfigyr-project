@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { toast } from 'sonner';
 import { useCallback, useId } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
@@ -27,6 +26,7 @@ import {
   useFormSubmit,
 } from '@konfigyr/components/ui/form';
 import { Button } from '@konfigyr/components/ui/button';
+import { toast } from '@konfigyr/components/ui/toast';
 import {
   ChangeRequestReviewTypeDescription,
   ChangeRequestReviewTypeLabel,
@@ -92,10 +92,13 @@ export function ChangeRequestSubmitReview({ onDiscard, onReview }: {
         return errorNotification(error);
       }
 
-      toast.success(intl.formatMessage({
-        defaultMessage: 'Your review was successfully submitted',
-        description: 'Notification message that is shown when user successfully submits a change request review.',
-      }));
+      toast.add({
+        type: 'success',
+        title: intl.formatMessage({
+          defaultMessage: 'Your review was successfully submitted',
+          description: 'Notification message that is shown when user successfully submits a change request review.',
+        }),
+      });
 
       form.reset();
     },
@@ -109,16 +112,19 @@ export function ChangeRequestSubmitReview({ onDiscard, onReview }: {
       return errorNotification(error);
     }
 
-    toast.success(intl.formatMessage({
-      defaultMessage: 'Change request was discarded',
-      description: 'Notification message shown when change request was discarded.',
-    }));
+    toast.add({
+      type: 'success',
+      title: intl.formatMessage({
+        defaultMessage: 'Change request was discarded',
+        description: 'Notification message shown when change request was discarded.',
+      }),
+    });
   }, [onDiscard]);
 
   return (
     <form.AppForm>
       <form name="change-request-review-form" onSubmit={onSubmit}>
-        <Card className="border">
+        <Card>
           <CardHeader>
             <CardTitle>
               <FormattedMessage
@@ -161,8 +167,8 @@ export function ChangeRequestSubmitReview({ onDiscard, onReview }: {
             />
           </CardContent>
           <CardFooter className="justify-end gap-2">
-            <Button variant="outline" onClick={onDiscardChangeRequest}>
-              <GitPullRequestClosedIcon className="text-destructive" />
+            <Button variant="destructive" onClick={onDiscardChangeRequest}>
+              <GitPullRequestClosedIcon />
               <DiscardChangeRequestReviewLabel />
             </Button>
 

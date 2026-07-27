@@ -35,7 +35,7 @@ function OAuthError() {
 
   return (
     <LayoutContent variant="fullscreen">
-      <Card className="border w-[32rem]">
+      <Card className="w-[32rem]">
         <CardHeader
           title={<OAuthErrorTitle />}
           description={<OAuthErrorDetail />}

@@ -71,7 +71,7 @@ function FieldGroup({ label, value, description, copy = true }: {
         />
         {copy && (
           <InputGroupAddon align="inline-end">
-            <ClipboardIconButton text={value} size="xs" variant="link" className="cursor-pointer" />
+            <ClipboardIconButton text={value} size="sm" variant="link" className="cursor-pointer" />
           </InputGroupAddon>
         )}
       </InputGroup>

@@ -66,7 +66,7 @@ function ChangeRequestSubject({ changeRequest, onChange }: {
             <span className="font-heading font-medium">
               {changeRequest.subject}
             </span>
-            <Button variant="ghost" size="icon-sm" className="cursor-pointer">
+            <Button variant="ghost" size="icon" className="cursor-pointer">
               <PencilIcon />
             </Button>
           </span>
@@ -102,7 +102,7 @@ function ChangeRequestDescription({
   }
 
   return (
-    <Card className="border">
+    <Card>
       <CardHeader>
         <CardTitle>
           <FormattedMessage

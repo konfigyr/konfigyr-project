@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { toast } from 'sonner';
 import { useId } from 'react';
 import { IdCardIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
@@ -15,6 +14,7 @@ import {
   CardTitle,
 } from '@konfigyr/components/ui/card';
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { toast } from '@konfigyr/components/ui/toast';
 import {
   NamespaceNameDescription,
   NamespaceNameLabel,
@@ -47,12 +47,15 @@ export function NamespaceNameForm({ namespace }: { namespace: Namespace }) {
         return errorNotification(error);
       }
 
-      return toast.success((
-        <FormattedMessage
-          defaultMessage="Your namespace name was updated"
-          description="Notification message that is shown when namespace name was successfully updated"
-        />
-      ));
+      return toast.add({
+        type: 'success',
+        title: (
+          <FormattedMessage
+            defaultMessage="Your namespace name was updated"
+            description="Notification message that is shown when namespace name was successfully updated"
+          />
+        ),
+      });
     },
   });
 

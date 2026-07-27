@@ -4,7 +4,6 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { Search } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
-import { Button } from '@konfigyr/components/ui/button';
 import { Input } from '@konfigyr/components/ui/input';
 import { Kbd, KbdGroup } from '@konfigyr/components/ui/kbd';
 import { cn } from '@konfigyr/components/utils';
@@ -98,30 +97,31 @@ export function SearchToggle({ className, ...props }: ComponentProps<'button'>) 
 
   return (
     <>
-      <Button
+      <button
         {...props}
-        size="sm"
-        variant="outline"
         className={cn(
-          'min-w-7 md:min-w-3xs bg-surface text-foreground dark:bg-card relative items-center justify-start pl-3 font-medium',
+          'flex justify-between items-center gap-1 px-3 py-1 h-9 min-w-7 md:min-w-3xs',
+          'shadow-xs transition-[color,box-shadow] outline-none cursor-text',
+          'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+          'rounded-md border border-input bg-transparent text-foreground',
           className,
         )}
         onClick={() => setOpen(true)}
       >
         <Search size="1rem" />
-        <span className="sr-only md:flex text-muted-foreground">
+        <span className="grow hidden md:flex text-sm text-muted-foreground">
           <FormattedMessage
             defaultMessage="Search..."
             description="Label for the search toggle button"
           />
         </span>
-        <div className="absolute right-1.5 hidden gap-1 md:flex">
+        <div className="hidden gap-1 md:flex">
           <KbdGroup aria-hidden>
             <Kbd className="border">⌘</Kbd>
             <Kbd className="border">K</Kbd>
           </KbdGroup>
         </div>
-      </Button>
+      </button>
 
       <SearchDialog open={open} onOpenChange={setOpen} />
     </>

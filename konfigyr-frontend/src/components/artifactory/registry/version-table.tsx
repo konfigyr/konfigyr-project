@@ -4,7 +4,6 @@ import { Link } from '@tanstack/react-router';
 import { ActionsLabel, ViewLabel } from '@konfigyr/components/messages';
 import { ErrorState } from '@konfigyr/components/error';
 import { buttonVariants } from '@konfigyr/components/ui/button';
-import { Card, CardContent } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
@@ -65,55 +64,55 @@ export function VersionTable({ namespace, data, error, isPending, page, size }: 
   page?: number;
   size?: number;
 }) {
+  if (error) {
+    return (
+      <ErrorState error={error}/>
+    );
+  }
+
   return (
     <>
-      <Card className="border">
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-32">
-                  Version
-                </TableHead>
-                <TableHead className="w-32">
-                  <VisibilityLabel/>
-                </TableHead>
-                <TableHead className="w-32">
-                  <PublishedAtLabel/>
-                </TableHead>
-                <TableHead className="w-48 text-right">
-                  <ActionsLabel/>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isPending && (
-                <>
-                  <VersionSkeleton/>
-                  <VersionSkeleton/>
-                </>
-              )}
+      <Table variant="card">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="min-w-32">
+              Version
+            </TableHead>
+            <TableHead className="w-32">
+              <VisibilityLabel/>
+            </TableHead>
+            <TableHead className="w-32">
+              <PublishedAtLabel/>
+            </TableHead>
+            <TableHead className="w-48 text-right">
+              <ActionsLabel/>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isPending && (
+            <>
+              <VersionSkeleton/>
+              <VersionSkeleton/>
+            </>
+          )}
 
-              {data?.data.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4}>
-                    <EmptyState
-                      icon={<TagIcon size="2rem"/>}
-                      title={<NoVersionsFoundTitle/>}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
+          {data?.data.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={4}>
+                <EmptyState
+                  icon={<TagIcon size="2rem"/>}
+                  title={<NoVersionsFoundTitle/>}
+                />
+              </TableCell>
+            </TableRow>
+          )}
 
-              {data?.data.map((version) => (
-                <VersionRow key={version.id} namespace={namespace} version={version}/>
-              ))}
-            </TableBody>
-          </Table>
-
-          {error && <ErrorState error={error}/>}
-        </CardContent>
-      </Card>
+          {data?.data.map((version) => (
+            <VersionRow key={version.id} namespace={namespace} version={version}/>
+          ))}
+        </TableBody>
+      </Table>
 
       <PageResponsePagination page={page} size={size} response={data} className="mt-4"/>
     </>

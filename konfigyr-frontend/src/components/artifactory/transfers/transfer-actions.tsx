@@ -1,6 +1,6 @@
 'use client';
 
-import { toast } from 'sonner';
+import { toast } from '@konfigyr/components/ui/toast';
 import { useCallback } from 'react';
 import { CheckCircle2Icon, TriangleAlert } from 'lucide-react';
 import { useAcceptTransfer, useCancelTransfer, useRejectTransfer } from '@konfigyr/hooks';
@@ -116,7 +116,7 @@ export function AcceptTransferButton ({ namespace, transfer, children, role, nat
       return errorNotification(error);
     }
 
-    toast.success(<TransferAcceptedSuccessMessage groupId={transfer.groupId}/>);
+    toast.add({ type: 'success', title: <TransferAcceptedSuccessMessage groupId={transfer.groupId}/> });
   }, [transfer, errorNotification, acceptTransfer]);
 
   return (
@@ -148,7 +148,7 @@ export function RejectTransferButton ({ namespace, transfer, children, role, nat
       return errorNotification(error);
     }
 
-    toast.success(<TransferRejectedSuccessMessage groupId={transfer.groupId}/>);
+    toast.add({ type: 'success', title: <TransferRejectedSuccessMessage groupId={transfer.groupId}/> });
   }, [transfer, errorNotification, rejectTransfer]);
 
   return (
@@ -180,7 +180,7 @@ export function CancelTransferButton ({ namespace, transfer, children, role, nat
       return errorNotification(error);
     }
 
-    toast.success(<TransferCanceledSuccessMessage groupId={transfer.groupId}/>);
+    toast.add({ type: 'success', title: <TransferCanceledSuccessMessage groupId={transfer.groupId}/> });
   }, [transfer, errorNotification, cancelTransfer]);
 
   return (

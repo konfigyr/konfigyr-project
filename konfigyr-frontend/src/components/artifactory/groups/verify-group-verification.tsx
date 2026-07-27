@@ -1,7 +1,7 @@
 'use client';
 
-import { toast } from 'sonner';
 import { useCallback, useState } from 'react';
+import { FormattedMessage } from 'react-intl';
 import { useVerifyGroupVerification } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
 import {
@@ -22,7 +22,8 @@ import {
   ClaimVerifiedWarningMessage,
   VerifyClaimLabel,
 } from '@konfigyr/components/artifactory/groups/messages';
-import { FormattedMessage } from 'react-intl';
+import { toast } from '@konfigyr/components/ui/toast';
+
 import type { ReactElement } from 'react';
 import type { GroupVerification } from '@konfigyr/hooks/types';
 
@@ -49,10 +50,10 @@ export function VerifyGroupVerificationButton ({
     try {
       const { state } = await verifyGroupVerification(verification.groupId);
       if (state !== 'ACTIVE') {
-        toast.warning(<ClaimVerifiedWarningMessage />);
+        toast.add({ type: 'warning', title: <ClaimVerifiedWarningMessage /> });
         return;
       }
-      toast.success(<ClaimVerifiedSuccessMessage />);
+      toast.add({ type: 'success', title: <ClaimVerifiedSuccessMessage /> });
     } catch (error) {
       return errorNotification(error);
     } finally {

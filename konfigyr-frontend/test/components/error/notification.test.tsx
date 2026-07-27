@@ -7,10 +7,10 @@ import { GeneralErrorDetail, GeneralErrorTitle } from '@konfigyr/components/mess
 import type { NormalizedOptions } from 'ky';
 
 const toast = vi.hoisted(() => ({
-  error: vi.fn(),
+  add: vi.fn(),
 }));
 
-vi.mock('sonner', () => ({ toast }));
+vi.mock('@konfigyr/components/ui/toast', () => ({ toast }));
 
 describe('components | error | notification', () => {
   afterEach(() => {
@@ -26,9 +26,9 @@ describe('components | error | notification', () => {
 
     act(() => result.current(error));
 
-    expect(toast.error).toHaveBeenCalledExactlyOnceWith(
-      <GeneralErrorTitle />, { description: <GeneralErrorDetail /> },
-    );
+    expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+      type: 'error', title: <GeneralErrorTitle />, description: <GeneralErrorDetail />,
+    });
   });
 
   test('should show notification for an HTTP error', () => {
@@ -41,15 +41,15 @@ describe('components | error | notification', () => {
     error.problem = { title: 'Test error', detail: 'Test detail' };
 
     const { result } = renderHook(() => useErrorNotification({
-      duration: 1000,
+      timeout: 1000,
     }));
 
     expect(result.current).toBeInstanceOf(Function);
 
     act(() => result.current(error));
 
-    expect(toast.error).toHaveBeenCalledExactlyOnceWith(
-      error.problem.title, { description: error.problem.detail, duration: 1000 },
-    );
+    expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+      timeout: 1000, type: 'error', title: error.problem.title, description: error.problem.detail,
+    });
   });
 });

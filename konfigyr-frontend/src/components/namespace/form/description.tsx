@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { toast } from 'sonner';
 import { useId } from 'react';
 import { TextSelectIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
@@ -15,6 +14,7 @@ import {
   CardTitle,
 } from '@konfigyr/components/ui/card';
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { toast } from '@konfigyr/components/ui/toast';
 import {
   NamespaceDescriptionHelpText,
   NamespaceDescriptionLabel,
@@ -46,12 +46,15 @@ export function NamespaceDescriptionForm({ namespace }: { namespace: Namespace }
         return errorNotification(error);
       }
 
-      return toast.success((
-        <FormattedMessage
-          defaultMessage="Your namespace description was updated"
-          description="Notification message that is shown when namespace description was successfully updated"
-        />
-      ));
+      return toast.add({
+        type: 'success',
+        title: (
+          <FormattedMessage
+            defaultMessage="Your namespace description was updated"
+            description="Notification message that is shown when namespace description was successfully updated"
+          />
+        ),
+      });
     },
   });
 
@@ -60,7 +63,7 @@ export function NamespaceDescriptionForm({ namespace }: { namespace: Namespace }
   return (
     <form.AppForm>
       <form name="namespace-description-form" onSubmit={onSubmit}>
-        <Card className="border">
+        <Card>
           <CardHeader>
             <CardTitle id={`label-description-${id}`} className="flex items-center gap-2">
               <CardIcon>

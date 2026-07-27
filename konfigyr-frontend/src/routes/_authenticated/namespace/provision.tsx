@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { CircuitBoardIcon } from 'lucide-react';
@@ -10,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@konfigyr/components/ui/card';
+import { toast } from '@konfigyr/components/ui/toast';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import type { Namespace } from '@konfigyr/hooks/types';
@@ -31,18 +31,23 @@ function RouteComponent() {
   const navigate = useNavigate();
 
   const onNamespaceCreate = useCallback(async (namespace: Namespace) => {
-    toast.success(<FormattedMessage
-      defaultMessage="{name} was successfully created"
-      values={{ name: namespace.name }}
-      description="Notification message shown when namespace was successfully created"
-    />);
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="{name} was successfully created"
+          values={{ name: namespace.name }}
+          description="Notification message shown when namespace was successfully created"
+        />
+      ),
+    });
 
     await navigate({ to: '/namespace/$namespace', params: { namespace: namespace.slug } });
   }, [navigate]);
 
   return (
     <LayoutContent variant="centered">
-      <Card className="border">
+      <Card>
         <CardHeader>
           <CardTitle className="flex flex-col items-center gap-6 my-2">
             <CircuitBoardIcon size={64} strokeWidth="1" className="text-secondary" />

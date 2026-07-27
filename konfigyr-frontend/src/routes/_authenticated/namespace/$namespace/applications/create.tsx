@@ -64,7 +64,7 @@ function RouteComponent() {
         {!type ? (
           <ApplicationTypeForm onSubmit={onTypeSelect} />
         ) : (
-          <Card className="border">
+          <Card>
             <CardHeader>
               <CardTitle className="flex flex-col items-center gap-6 my-2">
                 <MonitorCloudIcon size={64} strokeWidth="1" className="text-secondary" />

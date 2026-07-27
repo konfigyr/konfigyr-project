@@ -14,13 +14,13 @@ import {
 import type { GroupVerification } from '@konfigyr/hooks/types';
 
 const toast = vi.hoisted(() => ({
-  success: vi.fn(),
+  add: vi.fn(),
 }));
 
 const revokeGroupVerification = vi.hoisted(() => vi.fn());
 const errorNotification = vi.hoisted(() => vi.fn());
 
-vi.mock('sonner', () => ({ toast }));
+vi.mock('@konfigyr/components/ui/toast', () => ({ toast }));
 vi.mock('@konfigyr/hooks', () => ({
   useRevokeGroupVerification: () => ({
     isPending: false,
@@ -87,14 +87,13 @@ describe('components | groups | <RevokeGroupVerificationButton/>', () => {
 
     await waitFor(() => {
       expect(revokeGroupVerification).toHaveBeenCalledExactlyOnceWith(verification.groupId);
-      expect(toast.success).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+        type: 'success',
+        title: expect.objectContaining({
           type: ClaimRevokedSuccessMessage,
-          props: expect.objectContaining({
-            groupId: verification.groupId,
-          }),
+          props: { groupId: verification.groupId },
         }),
-      );
+      });
     });
   });
 
@@ -138,14 +137,13 @@ describe('components | groups | <RevokeGroupVerificationButton/>', () => {
 
     await waitFor(() => {
       expect(revokeGroupVerification).toHaveBeenCalledExactlyOnceWith(verification.groupId);
-      expect(toast.success).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({
+      expect(toast.add).toHaveBeenCalledExactlyOnceWith({
+        type: 'success',
+        title: expect.objectContaining({
           type: ClaimCanceledSuccessMessage,
-          props: expect.objectContaining({
-            groupId: verification.groupId,
-          }),
+          props: { groupId: verification.groupId },
         }),
-      );
+      });
     });
   });
 
@@ -171,7 +169,7 @@ describe('components | groups | <RevokeGroupVerificationButton/>', () => {
       expect(errorNotification).toHaveBeenCalledExactlyOnceWith(error);
     });
 
-    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.add).not.toHaveBeenCalled();
   });
 
   test('should report errors for the cancel action', async () => {
@@ -196,6 +194,6 @@ describe('components | groups | <RevokeGroupVerificationButton/>', () => {
       expect(errorNotification).toHaveBeenCalledExactlyOnceWith(error);
     });
 
-    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.add).not.toHaveBeenCalled();
   });
 });

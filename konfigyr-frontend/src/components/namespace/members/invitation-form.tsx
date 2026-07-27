@@ -1,5 +1,4 @@
 import { useId } from 'react';
-import { toast } from 'sonner';
 import { SendIcon } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useInviteNamespaceMember } from '@konfigyr/hooks';
@@ -14,13 +13,9 @@ import {
   CardTitle,
 } from '@konfigyr/components/ui/card';
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { toast } from '@konfigyr/components/ui/toast';
 
 import type { Namespace } from '@konfigyr/hooks/types';
-
-interface Invitation {
-  email: string;
-  administrator: boolean;
-}
 
 export function InviteForm({ namespace }: { namespace: Namespace }) {
   const id = useId();
@@ -29,7 +24,7 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
   const { mutateAsync: inviteNamespaceMember } = useInviteNamespaceMember(namespace);
 
   const form = useForm({
-    defaultValues: { email: '', administrator: false } as Invitation,
+    defaultValues: { email: '', administrator: false },
     onSubmit: async ({ value }) => {
       try {
         await inviteNamespaceMember(value);
@@ -39,12 +34,15 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
 
       form.reset();
 
-      return toast.success((
-        <FormattedMessage
-          defaultMessage="Invitation has been succesfully sent"
-          description="Notification message that is shown when invitation has been created and sent"
-        />
-      ));
+      return toast.add({
+        type: 'success',
+        title: (
+          <FormattedMessage
+            defaultMessage="Invitation has been succesfully sent"
+            description="Notification message that is shown when invitation has been created and sent"
+          />
+        ),
+      });
     },
   });
 
@@ -91,7 +89,7 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
           )}
         />
 
-        <form.Submit variant="ghost">
+        <form.Submit>
           <FormattedMessage
             defaultMessage="Invite"
             description="Submit button label for the namespace members invite form."
@@ -104,7 +102,7 @@ export function InviteForm({ namespace }: { namespace: Namespace }) {
 
 export function InviteFormCard({ namespace }: { namespace: Namespace }) {
   return (
-    <Card className="border">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CardIcon>

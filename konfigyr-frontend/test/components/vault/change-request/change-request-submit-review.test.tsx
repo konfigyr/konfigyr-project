@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
-import { Toaster } from '@konfigyr/components/ui/sonner';
+import { Toaster } from '@konfigyr/components/ui/toast';
 import { ChangeRequestReviewType } from '@konfigyr/hooks/vault/types';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { ChangeRequestSubmitReview } from '@konfigyr/components/vault/change-request/change-request-submit-review';

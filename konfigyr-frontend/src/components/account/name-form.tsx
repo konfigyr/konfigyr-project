@@ -2,7 +2,6 @@
 
 import { z } from 'zod';
 import { useId } from 'react';
-import { toast } from 'sonner';
 import { IdCardIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -16,6 +15,7 @@ import {
   CardTitle,
 } from '@konfigyr/components/ui/card';
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { toast } from '@konfigyr/components/ui/toast';
 import { useUpdateAccountName } from '@konfigyr/hooks';
 
 import type { Account } from '@konfigyr/hooks/types';
@@ -40,12 +40,15 @@ export function AccountNameForm({ account }: { account: Account }) {
       try {
         await mutateAsync(value.name);
 
-        toast.success((
-          <FormattedMessage
-            defaultMessage="Your display name was updated"
-            description="Notification message that is shown when user account display name was successfully updated"
-          />
-        ));
+        toast.add({
+          type: 'success',
+          title: (
+            <FormattedMessage
+              defaultMessage="Your display name was updated"
+              description="Notification message that is shown when user account display name was successfully updated"
+            />
+          ),
+        });
       } catch (error) {
         errorNotification(error);
       }
@@ -57,7 +60,7 @@ export function AccountNameForm({ account }: { account: Account }) {
   return (
     <form.AppForm>
       <form name="account-name-form" onSubmit={onSubmit}>
-        <Card className="border">
+        <Card>
           <CardHeader>
             <CardTitle id={`label-name-${id}`} className="flex items-center gap-2">
               <CardIcon>

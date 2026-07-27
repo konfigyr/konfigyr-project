@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 import { MonitorCloud } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { createFileRoute, useLocation } from '@tanstack/react-router';
@@ -11,6 +10,7 @@ import {
   useGetNamespaceApplication,
   useNamespace,
 } from '@konfigyr/hooks';
+import { toast } from '@konfigyr/components/ui/toast';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
 import { ApplicationsBreadcrumbs } from '@konfigyr/components/namespace/applications/breadcrumbs';
 import { ApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
@@ -38,11 +38,16 @@ function RouteComponent() {
   const onNamespaceApplicationUpdate = async (value: CreateNamespaceApplication) => {
     await editNamespaceApplication(value);
 
-    toast.success(<FormattedMessage
-      defaultMessage="The {application} was successfully updated."
-      values={{ application: application!.name }}
-      description="Success message"
-    />);
+    toast.add({
+      type: 'success',
+      title: (
+        <FormattedMessage
+          defaultMessage="The {application} was successfully updated."
+          values={{ application: application!.name }}
+          description="Success message"
+        />
+      ),
+    });
   };
 
   return (
@@ -76,7 +81,7 @@ function RouteComponent() {
               }}
             />
 
-            <Card className="border">
+            <Card>
               <CardContent>
                 <NamespaceApplicationForm
                   namespace={namespace}

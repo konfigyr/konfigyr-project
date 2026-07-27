@@ -236,13 +236,13 @@ export function PaginationLink({
       'aria-disabled': disabled,
       tabIndex: disabled ? -1 : undefined,
       className: cn(
-        'cursor-pointer',
-        isActive && 'w-lg',
-        disabled && 'pointer-events-none opacity-50',
         buttonVariants({
           variant: isActive ? 'outline' : 'ghost',
           size,
         }),
+        disabled && 'pointer-events-none opacity-50',
+        !isActive && 'text-foreground',
+        'cursor-pointer',
         className,
       ),
     }, props),

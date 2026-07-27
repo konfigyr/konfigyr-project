@@ -1,5 +1,4 @@
 import { FormattedMessage } from 'react-intl';
-import { toast } from 'sonner';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
   useClaimGroupVerification,
@@ -7,10 +6,11 @@ import {
   useGetVerificationChallenges,
   useNamespace,
 } from '@konfigyr/hooks';
+import { toast } from '@konfigyr/components/ui/toast';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/artifactory/groups/breadcrumbs';
 import { GroupVerificationForm } from '@konfigyr/components/artifactory/groups/group-verification-form';
-import { ClaimAgainLabel, EditClaimLabel } from '@konfigyr/components/artifactory/groups/messages';
+import { ClaimAgainLabel } from '@konfigyr/components/artifactory/groups/messages';
 import { BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@konfigyr/components/ui/breadcrumb';
 import { GroupVerificationDetailsLink } from '@konfigyr/components/artifactory/groups/group-verification-table';
 import { useMemo } from 'react';
@@ -57,13 +57,16 @@ function RouteComponent () {
     try {
       const updated = await claimGroupVerification(value);
 
-      toast.success((
-        <FormattedMessage
-          defaultMessage="Claim for {groupId} was updated"
-          description="Notification message that is shown when a group verification claim was successfully updated from the edit page."
-          values={{ groupId: updated.groupId }}
-        />
-      ));
+      toast.add({
+        type: 'success',
+        title: (
+          <FormattedMessage
+            defaultMessage="Claim for {groupId} was updated"
+            description="Notification message that is shown when a group verification claim was successfully updated from the edit page."
+            values={{ groupId: updated.groupId }}
+          />
+        ),
+      });
 
       await navigate({
         to: '/namespace/$namespace/artifactory/groups/$groupId',

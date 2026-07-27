@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router';
 import { ActionsLabel, CreatedAtLabel, ViewLabel } from '@konfigyr/components/messages';
 import { ErrorState } from '@konfigyr/components/error';
 import { Button } from '@konfigyr/components/ui/button';
-import { Card, CardContent } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
@@ -59,7 +58,7 @@ function GroupVerificationRowActions ({ namespace, verification }: {
     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost">
+          <Button variant="ghost" size="icon">
             <EllipsisVerticalIcon/>
           </Button>
         }
@@ -159,70 +158,70 @@ export function GroupVerificationTable ({ namespace, data, error, isPending, pag
   page?: number;
   size?: number;
 }) {
+  if (error) {
+    return (
+      <ErrorState error={error}/>
+    );
+  }
+
   return (
     <>
-      <Card className="border">
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-64">
-                  <GroupIdLabel/>
-                </TableHead>
-                <TableHead className="w-32">
-                  <StateLabel/>
-                </TableHead>
-                <TableHead className="w-32">
-                  <CreatedAtLabel/>
-                </TableHead>
-                <TableHead className="w-32">
-                  <VerifiedAtLabel/>
-                </TableHead>
-                <TableHead className="w-48 text-right">
-                  <ActionsLabel/>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isPending && (
-                <>
-                  <GroupVerificationSkeleton/>
-                  <GroupVerificationSkeleton/>
-                  <GroupVerificationSkeleton/>
-                </>
-              )}
+      <Table variant="card">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="min-w-64">
+              <GroupIdLabel/>
+            </TableHead>
+            <TableHead className="w-32">
+              <StateLabel/>
+            </TableHead>
+            <TableHead className="w-32">
+              <CreatedAtLabel/>
+            </TableHead>
+            <TableHead className="w-32">
+              <VerifiedAtLabel/>
+            </TableHead>
+            <TableHead className="w-48 text-right">
+              <ActionsLabel/>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isPending && (
+            <>
+              <GroupVerificationSkeleton/>
+              <GroupVerificationSkeleton/>
+              <GroupVerificationSkeleton/>
+            </>
+          )}
 
-              {data?.data.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <EmptyState
-                      icon={<ShieldCheckIcon size="2rem"/>}
-                      title={
-                        <FormattedMessage
-                          defaultMessage="No group claims found"
-                          description="Empty state title when no group verification claims are found."
-                        />
-                      }
-                      description={
-                        <FormattedMessage
-                          defaultMessage="This namespace has not claimed any Maven groupId coordinates yet."
-                          description="Empty state description when no group verification claims are found."
-                        />
-                      }
+          {data?.data.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5}>
+                <EmptyState
+                  icon={<ShieldCheckIcon size="2rem"/>}
+                  title={
+                    <FormattedMessage
+                      defaultMessage="No group claims found"
+                      description="Empty state title when no group verification claims are found."
                     />
-                  </TableCell>
-                </TableRow>
-              )}
+                  }
+                  description={
+                    <FormattedMessage
+                      defaultMessage="This namespace has not claimed any Maven groupId coordinates yet."
+                      description="Empty state description when no group verification claims are found."
+                    />
+                  }
+                />
+              </TableCell>
+            </TableRow>
+          )}
 
-              {data?.data.map((verification) => (
-                <GroupVerificationRow key={verification.id} namespace={namespace} verification={verification}/>
-              ))}
-            </TableBody>
-          </Table>
-
-          {error && <ErrorState error={error}/>}
-        </CardContent>
-      </Card>
+          {data?.data.map((verification) => (
+            <GroupVerificationRow key={verification.id} namespace={namespace} verification={verification}/>
+          ))}
+        </TableBody>
+      </Table>
 
       <PageResponsePagination page={page} size={size} response={data} className="mt-4"/>
     </>

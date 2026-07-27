@@ -2,7 +2,6 @@
 
 import { z } from 'zod';
 import { useId } from 'react';
-import { toast } from 'sonner';
 import { AtSignIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
@@ -16,6 +15,7 @@ import {
   CardTitle,
 } from '@konfigyr/components/ui/card';
 import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { toast } from '@konfigyr/components/ui/toast';
 import {
   useConfirmAccountEmailChange,
   useUpdateAccountEmail,
@@ -50,7 +50,6 @@ export function AccountEmailForm({ account }: { account: Account }) {
     },
     onSubmit: async ({ value }) => {
       try {
-
         if (isTokenPresent) {
           await verifyCode(value);
           form.reset();
@@ -59,12 +58,15 @@ export function AccountEmailForm({ account }: { account: Account }) {
           return form.setFieldValue('token', token);
         }
 
-        toast.success((
-          <FormattedMessage
-            defaultMessage="Your email address was updated"
-            description="Notification message that is shown when user email address was successfully updated"
-          />
-        ));
+        toast.add({
+          type: 'success',
+          title: (
+            <FormattedMessage
+              defaultMessage="Your email address was updated"
+              description="Notification message that is shown when user email address was successfully updated"
+            />
+          ),
+        });
       } catch (error) {
         errorNotification(error);
       }
@@ -78,7 +80,7 @@ export function AccountEmailForm({ account }: { account: Account }) {
   return (
     <form.AppForm>
       <form name="account-email-form" onSubmit={onSubmit}>
-        <Card className="border">
+        <Card>
           <CardHeader>
             <CardTitle id={`label-email-${id}`} className="flex items-center gap-2">
               <CardIcon>

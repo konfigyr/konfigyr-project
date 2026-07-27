@@ -80,7 +80,7 @@ export function MemberArticle({ member, onEdit, onRemove }: MemberArticleProps) 
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" aria-label="More options">
+              <Button variant="ghost" size="icon" aria-label="More options">
                 <EllipsisVerticalIcon />
               </Button>
             }
@@ -115,7 +115,7 @@ export function Members({ namespace }: { namespace: Namespace }) {
 
   return (
     <>
-      <Card className="border">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CardIcon>

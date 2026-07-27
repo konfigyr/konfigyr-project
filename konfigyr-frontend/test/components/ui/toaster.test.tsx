@@ -1,7 +1,6 @@
-import { toast } from 'sonner';
 import { afterEach, describe, expect, test } from 'vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { Toaster } from '@konfigyr/components/ui/sonner';
+import { Toaster, toast } from '@konfigyr/components/ui/toast';
 
 describe('components | UI | <Toaster/>', () => {
   afterEach(() => cleanup());
@@ -9,9 +8,9 @@ describe('components | UI | <Toaster/>', () => {
   test('should render Toast notification container', async () => {
     const { getByLabelText, getByText } = render(<Toaster data-testid="container"/>);
 
-    expect(getByLabelText('Notifications alt+T')).toBeInTheDocument();
+    expect(getByLabelText('Notifications')).toBeInTheDocument();
 
-    act(() => toast('Test toast'));
+    await act(() => toast.add({ title: 'Test toast' }));
 
     await waitFor(() => {
       expect(getByText('Test toast')).toBeInTheDocument();

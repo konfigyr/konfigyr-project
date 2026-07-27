@@ -37,7 +37,7 @@
 
     <th:block th:fragment="button (label, type, href, variant, class, target)">
         <th:block th:switch="${variant}">
-            <th:block th:case="'outline-solid'" th:with="classNames = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground'">
+            <th:block th:case="'outline'" th:with="classNames = 'inline-flex shrink-0 items-center justify-center rounded-full border-2 bg-clip-padding text-sm font-bold whitespace-nowrap transition-all outline-none select-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground active:bg-(--btn-outline-active-bg) active:border-(--btn-outline-active-bg) active:text-primary-foreground aria-expanded:bg-(--btn-outline-active-bg) aria-expanded:border-(--btn-outline-active-bg) aria-expanded:text-primary-foreground focus-visible:bg-(--btn-outline-focus-bg) focus-visible:border-(--btn-outline-focus-border) focus-visible:text-primary-foreground h-9 gap-1.5 px-6 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2'">
                 <button th:unless="${href}" th:type="${type}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
                     Outline button
                 </button>
@@ -53,7 +53,7 @@
                     Link button
                 </a>
             </th:block>
-            <th:block th:case="*" th:with="classNames = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'">
+            <th:block th:case="*" th:with="classNames = 'inline-flex shrink-0 items-center justify-center rounded-full border-2 border-transparent bg-clip-padding text-sm font-bold whitespace-nowrap transition-all outline-none select-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 bg-primary text-primary-foreground hover:bg-(--btn-primary-hover-bg) active:bg-(--btn-primary-active-bg) focus-visible:bg-(--btn-primary-focus-bg) focus-visible:border-(--btn-primary-focus-border) h-9 gap-1.5 px-6 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2'">
                 <button th:unless="${href}" th:type="${type}" th:text="${label}" th:classappend="${class}" th:class="${classNames}">
                     Link button
                 </button>

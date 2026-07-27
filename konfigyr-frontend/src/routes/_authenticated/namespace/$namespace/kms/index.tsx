@@ -49,7 +49,7 @@ function RouteComponent() {
         <Link
           to="/namespace/$namespace/kms/create"
           params={{ namespace: namespace.slug }}
-          className={buttonVariants({ variant: 'ghost' })}
+          className={buttonVariants()}
         >
           <PlusIcon data-icon="inline-start"/>
           <CreateKeysetLabel />

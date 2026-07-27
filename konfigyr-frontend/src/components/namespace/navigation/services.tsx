@@ -69,6 +69,7 @@ function ServicesMenu({ namespace }: { namespace: Namespace }) {
             <Link
               to="/namespace/$namespace/services/$service"
               params={{ namespace: namespace.slug, service: service.slug }}
+              activeProps={{ 'data-active': true }}
             >
               {service.slug}
             </Link>
@@ -102,7 +103,7 @@ function ServiceDialog({ namespace }: { namespace: Namespace }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="ghost" size="sm" aria-label={createServiceLabel}>
+          <Button variant="ghost" size="icon-sm" aria-label={createServiceLabel}>
             <PlusIcon size="1rem"/>
           </Button>
         }
