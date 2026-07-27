@@ -37,6 +37,7 @@ import org.springframework.security.web.authentication.rememberme.RememberMeAuth
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
@@ -148,6 +149,9 @@ public class SecurityConfiguration {
 				.rememberMe(remember -> remember
 						.key(rememberMeServices.getKey())
 						.rememberMeServices(rememberMeServices)
+				)
+				.csrf(csrf -> csrf
+						.csrfTokenRepository(new HttpSessionCsrfTokenRepository())
 				)
 				.oauth2Login(login -> login
 						.loginPage(KonfigyrIdentityRequestMatchers.LOGIN_PAGE)
