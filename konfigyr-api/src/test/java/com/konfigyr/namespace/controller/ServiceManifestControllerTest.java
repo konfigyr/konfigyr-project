@@ -3,7 +3,9 @@ package com.konfigyr.namespace.controller;
 import com.konfigyr.artifactory.*;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.io.ByteArray;
+import com.konfigyr.security.KonfigyrClaimNames;
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.OAuthScopes;
 import com.konfigyr.test.AbstractControllerTest;
 import com.konfigyr.test.TestPrincipals;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -17,217 +19,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.konfigyr.data.tables.ServiceArtifacts.SERVICE_ARTIFACTS;
 import static com.konfigyr.data.tables.ServiceConfigurationCatalog.SERVICE_CONFIGURATION_CATALOG;
 import static com.konfigyr.data.tables.ServiceReleases.SERVICE_RELEASES;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 class ServiceManifestControllerTest extends AbstractControllerTest {
 
-	// matches the checksum seeded for artifact_versions rows referenced by konfigyr-id's manifest, see artifactory.sql
-	private static final String EXISTING_ARTIFACT_VERSION_CHECKSUM = "ec54eb43a2f17d3fecf5062c987c794ea025da258de0b6ea6483542ef79e3f8a";
+	private static final EntityId JOHN_DOE_NAMESPACE = EntityId.from(1);
+	private static final EntityId KONFIGYR_NAMESPACE = EntityId.from(2);
+	private static final String JOHN_DOE_BLOG_SERVICE = "john-doe-blog";
 
 	static Artifact konfigyrArtifactoryArtifact = Artifact.of("com.konfigyr", "konfigyr-artifactory", "1.2.0");
 	static Artifact konfigyrCryptoApiArtifact = Artifact.of("com.konfigyr", "konfigyr-crypto-api", "1.1.0");
 
 	@Autowired
 	DSLContext context;
-
-	@Test
-	@DisplayName("should retrieve the latest namespace service manifest")
-	void retrieveServiceManifest() {
-		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(Manifest.class)
-				.returns(EntityId.from(1).serialize(), Manifest::id)
-				.returns("Konfigyr ID", Manifest::name)
-				.satisfies(it -> assertThat(it.artifacts())
-						.hasSize(8)
-						.usingRecursiveFieldByFieldElementComparatorIgnoringFields("resolvedAt")
-						.containsExactly(
-								ManifestEntry.builder()
-										.groupId("com.acme")
-										.artifactId("spring-boot-service")
-										.version("1.0.0")
-										.name("Acme Spring Boot service")
-										.description("Spring Boot service")
-										.website("https://acme.com/service")
-										.repository("https://github.com/acme/service")
-										.checksum("6QRgbo04ZnpKhc3o5yZckptP+61bzEBhwNibipufooU=")
-										.source(ArtifactSource.LOCAL)
-										.resolvedAt(Instant.EPOCH)
-										.build(),
-								ManifestEntry.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot")
-										.version("4.0.4")
-										.name("Spring Boot")
-										.description("Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications")
-										.website("https://spring.io/projects/spring-boot")
-										.repository("https://github.com/spring-projects/spring-boot")
-										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
-										.source(ArtifactSource.ARTIFACTORY)
-										.resolvedAt(Instant.EPOCH)
-										.build(),
-								ManifestEntry.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot-actuator")
-										.version("4.0.4")
-										.name("Spring Boot Actuator")
-										.description("Spring Boot Actuator")
-										.website("https://spring.io/projects/spring-boot")
-										.repository("https://github.com/spring-projects/spring-boot")
-										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
-										.source(ArtifactSource.ARTIFACTORY)
-										.resolvedAt(Instant.EPOCH)
-										.build(),
-								ManifestEntry.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot-autoconfigure")
-										.version("4.0.4")
-										.name("Spring Boot AutoConfigure")
-										.description("Spring Boot auto-configuration attempts to automatically configure your Spring applications")
-										.website("https://spring.io/projects/spring-boot")
-										.repository("https://github.com/spring-projects/spring-boot")
-										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
-										.source(ArtifactSource.ARTIFACTORY)
-										.resolvedAt(Instant.EPOCH)
-										.build(),
-								ManifestEntry.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot-jooq")
-										.version("4.0.4")
-										.name("Spring Boot jOOQ")
-										.description("Spring Boot jOOQ support")
-										.website("https://spring.io/projects/spring-boot")
-										.repository("https://github.com/spring-projects/spring-boot")
-										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
-										.source(ArtifactSource.ARTIFACTORY)
-										.resolvedAt(Instant.EPOCH)
-										.build(),
-								ManifestEntry.builder()
-										.groupId("org.springframework.boot")
-										.artifactId("spring-boot-liquibase")
-										.version("4.0.4")
-										.name("Spring Boot Liquibase")
-										.description("Spring Boot Liquibase support")
-										.website("https://spring.io/projects/spring-boot")
-										.repository("https://github.com/spring-projects/spring-boot")
-										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
-										.source(ArtifactSource.ARTIFACTORY)
-										.resolvedAt(Instant.EPOCH)
-										.build(),
-								ManifestEntry.builder()
-										.groupId("org.springframework.modulith")
-										.artifactId("spring-modulith-core")
-										.version("2.0.3")
-										.name("Spring Modulith Core")
-										.description("Modular monoliths with Spring Boot")
-										.website("https://spring.io/projects/spring-modulith/spring-modulith-core")
-										.repository("https://github.com/spring-projects-experimental/spring-modulith")
-										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
-										.source(ArtifactSource.ARTIFACTORY)
-										.resolvedAt(Instant.EPOCH)
-										.build(),
-								ManifestEntry.builder()
-										.groupId("org.springframework.modulith")
-										.artifactId("spring-modulith-moments")
-										.version("2.0.3")
-										.name("Spring Modulith Moments")
-										.description("Modular monoliths with Spring Boot")
-										.website("https://spring.io/projects/spring-modulith/spring-modulith-moments")
-										.repository("https://github.com/spring-projects-experimental/spring-modulith")
-										.checksum(EXISTING_ARTIFACT_VERSION_CHECKSUM)
-										.source(ArtifactSource.ARTIFACTORY)
-										.resolvedAt(Instant.EPOCH)
-										.build()
-						)
-				)
-				.satisfies(it -> assertThat(it.createdAt())
-						.isCloseTo(Instant.now().minus(3, ChronoUnit.DAYS), within(1, ChronoUnit.HOURS))
-				);
-	}
-
-	@Test
-	@DisplayName("should retrieve an empty manifest for service that was not yet released")
-	void retrieveManifestForUnreleasedService() {
-		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatusOk()
-				.bodyJson()
-				.convertTo(Manifest.class)
-				.returns(EntityId.from(1).serialize(), Manifest::id)
-				.returns("John Doe Blog", Manifest::name)
-				.returns(List.of(), Manifest::artifacts)
-				.satisfies(it -> assertThat(it.createdAt())
-						.isCloseTo(Instant.now(), within(5, ChronoUnit.MINUTES))
-				);
-	}
-
-	@Test
-	@DisplayName("should fail to retrieve manifest for unknown service")
-	void retrieveManifestForUnknownService() {
-		mvc.get().uri("/namespaces/konfigyr/services/unknown-service/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(serviceNotFound("unknown-service"));
-	}
-
-	@Test
-	@DisplayName("should not retrieve a service manifest for an unknown namespace")
-	void retrieveManifestForUnknownNamespace() {
-		mvc.get().uri("/namespaces/unknown-namespace/services/unknown-service/manifest")
-				.with(authentication(TestPrincipals.john(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.hasStatus(HttpStatus.NOT_FOUND)
-				.satisfies(namespaceNotFound("unknown-namespace"));
-	}
-
-	@Test
-	@DisplayName("should not retrieve service manifest when namespaces:read scope is not present")
-	void retrieveManifestWithoutScope() {
-		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/manifest")
-				.with(authentication(TestPrincipals.jane()))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden(OAuthScope.READ_NAMESPACES));
-	}
-
-	@Test
-	@DisplayName("should not retrieve service manifest when user is not a member of a namespace")
-	void retrieveManifestWithoutMembership() {
-		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/manifest")
-				.with(authentication(TestPrincipals.jane(), OAuthScope.READ_NAMESPACES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden());
-	}
 
 	@Test
 	@Transactional
@@ -522,8 +341,8 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 				.returns(ReleaseState.PENDING, ServiceRelease::state)
 				.actual();
 
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/artifacts", release.id())
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		mvc.post().uri("/releases/{service}/{id}/artifacts", JOHN_DOE_BLOG_SERVICE, release.id())
+				.with(namespaceClient(JOHN_DOE_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{not-valid-json")
 				.exchange()
@@ -537,8 +356,8 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	void shouldRejectUnknownServiceForArtifactUpload() {
 		final var metadata = metadata(konfigyrCryptoApiArtifact, "crypto-checksum");
 
-		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}/artifacts", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		mvc.post().uri("/releases/{service}/{id}/artifacts", "unknown-service", EntityId.from(999).serialize())
+				.with(namespaceClient(KONFIGYR_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(metadata))
 				.exchange()
@@ -634,8 +453,8 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should fail to complete a release for an unknown service")
 	void shouldRejectCompleteForUnknownService() {
-		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}/complete", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		mvc.post().uri("/releases/{service}/{id}/complete", "unknown-service", EntityId.from(999).serialize())
+				.with(namespaceClient(KONFIGYR_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -727,8 +546,8 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should fail to retrieve a release for an unknown service")
 	void shouldRejectRetrieveForUnknownService() {
-		mvc.get().uri("/namespaces/konfigyr/services/unknown-service/releases/{id}", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		mvc.get().uri("/releases/{service}/{id}", "unknown-service", EntityId.from(999).serialize())
+				.with(namespaceClient(KONFIGYR_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -736,21 +555,10 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should not retrieve a release when user is not a member of the namespace")
-	void shouldRejectRetrieveWhenNotAMember() {
-		mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_RELEASES))
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden());
-	}
-
-	@Test
 	@DisplayName("should not retrieve a release when the publish-releases scope is not present")
 	void shouldRejectRetrieveWithoutScope() {
-		mvc.get().uri("/namespaces/konfigyr/services/konfigyr-id/releases/{id}", EntityId.from(999).serialize())
-				.with(authentication(TestPrincipals.john()))
+		mvc.get().uri("/releases/{service}/{id}", "konfigyr-id", EntityId.from(999).serialize())
+				.with(namespaceClient(KONFIGYR_NAMESPACE))
 				.exchange()
 				.assertThat()
 				.apply(log())
@@ -758,23 +566,10 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should not resolve a release when user is not a member of the namespace")
-	void shouldRejectWhenNotAMember() {
-		mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.jane(), OAuthScope.PUBLISH_RELEASES))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("[]")
-				.exchange()
-				.assertThat()
-				.apply(log())
-				.satisfies(forbidden());
-	}
-
-	@Test
 	@DisplayName("should not resolve a release when the publish-releases scope is not present")
 	void shouldRejectWithoutScope() {
-		mvc.post().uri("/namespaces/konfigyr/services/konfigyr-id/releases")
-				.with(authentication(TestPrincipals.john()))
+		mvc.post().uri("/releases/{service}", "konfigyr-id")
+				.with(namespaceClient(KONFIGYR_NAMESPACE))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("[]")
 				.exchange()
@@ -786,8 +581,8 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	@Test
 	@DisplayName("should fail to resolve a release for an unknown service")
 	void shouldRejectUnknownService() {
-		mvc.post().uri("/namespaces/konfigyr/services/unknown-service/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		mvc.post().uri("/releases/{service}", "unknown-service")
+				.with(namespaceClient(KONFIGYR_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("[]")
 				.exchange()
@@ -797,16 +592,62 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	@DisplayName("should fail to resolve a release for an unknown namespace")
-	void shouldRejectUnknownNamespace() {
-		mvc.post().uri("/namespaces/unknown-namespace/services/unknown-service/releases")
+	@DisplayName("should reject a namespace client token that is missing its namespace claim")
+	void shouldRejectMissingNamespaceClaim() {
+		// a human account token can carry the publish-releases scope (e.g. via the aggregate
+		// "namespaces" scope) without ever being scoped to a namespace by a claim
+		mvc.post().uri("/releases/{service}", JOHN_DOE_BLOG_SERVICE)
 				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("[]")
 				.exchange()
 				.assertThat()
 				.apply(log())
-				.satisfies(namespaceNotFound("unknown-namespace"));
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@DisplayName("should reject a namespace client token whose namespace claim does not match a known namespace")
+	void shouldRejectUnknownNamespaceClaim() {
+		mvc.post().uri("/releases/{service}", JOHN_DOE_BLOG_SERVICE)
+				.with(namespaceClient(EntityId.from(999_999), OAuthScope.PUBLISH_RELEASES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("[]")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should not allow a namespace client to read a release for a service owned by another namespace")
+	void shouldRejectCrossNamespaceRetrieve() {
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(konfigyrArtifactoryArtifact, "checksum")).actual();
+
+		mvc.get().uri("/releases/{service}/{id}", JOHN_DOE_BLOG_SERVICE, release.id())
+				.with(namespaceClient(KONFIGYR_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound(JOHN_DOE_BLOG_SERVICE));
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should not allow a namespace client to upload artifacts for a release owned by another namespace")
+	void shouldRejectCrossNamespaceUpload() {
+		final var metadata = metadata(konfigyrArtifactoryArtifact, "checksum");
+		final var release = assertThatRelease(ServiceReleaseCandidate.of(metadata)).actual();
+
+		mvc.post().uri("/releases/{service}/{id}/artifacts", JOHN_DOE_BLOG_SERVICE, release.id())
+				.with(namespaceClient(KONFIGYR_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(serviceNotFound(JOHN_DOE_BLOG_SERVICE));
 	}
 
 	private ObjectAssert<ServiceRelease> assertThatRelease(ServiceReleaseCandidate... candidates) {
@@ -814,8 +655,8 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	private ObjectAssert<ServiceRelease> assertThatRelease(List<ServiceReleaseCandidate> candidates) {
-		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases")
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		return mvc.post().uri("/releases/{service}", JOHN_DOE_BLOG_SERVICE)
+				.with(namespaceClient(JOHN_DOE_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(candidates))
 				.exchange()
@@ -828,16 +669,16 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	private MvcTestResultAssert assertThatRelease(String id) {
-		return mvc.get().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}", id)
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		return mvc.get().uri("/releases/{service}/{id}", JOHN_DOE_BLOG_SERVICE, id)
+				.with(namespaceClient(JOHN_DOE_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log());
 	}
 
 	private MvcTestResultAssert assertThatUpload(String id, ArtifactMetadata metadata) {
-		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/artifacts", id)
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		return mvc.post().uri("/releases/{service}/{id}/artifacts", JOHN_DOE_BLOG_SERVICE, id)
+				.with(namespaceClient(JOHN_DOE_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsBytes(metadata))
 				.exchange()
@@ -846,11 +687,19 @@ class ServiceManifestControllerTest extends AbstractControllerTest {
 	}
 
 	private MvcTestResultAssert assertThatComplete(String id) {
-		return mvc.post().uri("/namespaces/john-doe/services/john-doe-blog/releases/{id}/complete", id)
-				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_RELEASES))
+		return mvc.post().uri("/releases/{service}/{id}/complete", JOHN_DOE_BLOG_SERVICE, id)
+				.with(namespaceClient(JOHN_DOE_NAMESPACE, OAuthScope.PUBLISH_RELEASES))
 				.exchange()
 				.assertThat()
 				.apply(log());
+	}
+
+	private static RequestPostProcessor namespaceClient(EntityId namespace, OAuthScope... scopes) {
+		return authentication(claims -> claims
+				.subject("kfg-test-client")
+				.claim(KonfigyrClaimNames.NAMESPACE, namespace.serialize())
+				.claim(OAuth2ParameterNames.SCOPE, OAuthScopes.of(scopes).toString())
+		);
 	}
 
 	private static ArtifactMetadata metadata(Artifact artifact, String checksum) {

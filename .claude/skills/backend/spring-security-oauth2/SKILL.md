@@ -21,7 +21,7 @@ The Identity Provider is an **identity broker**: it accepts authentication from 
 
 **Machine token flow (namespace OAuth2 clients):**
 1. CI/CD pipeline or build plugin authenticates via Client Credentials with konfigyr-identity
-2. konfigyr-identity issues PS256 JWT with `scope` claim and `kfg_namespace` claim
+2. konfigyr-identity issues PS256 JWT with `scope` claim and `namespace` claim
 3. Plugin/pipeline includes token in `Authorization: Bearer <token>` header
 4. Same scope enforcement applies
 
@@ -31,12 +31,14 @@ There are two distinct token personas. Code that reads JWT claims must account f
 
 | Claim | User token | Namespace client token |
 |-------|-----------|----------------------|
-| `sub` | Konfigyr Account ID (internal, **not** the external provider's UID) | OAuth2 client ID |
+| `sub` | Konfigyr Account ID (internal, **not** the external provider's UID) | OAuth2 client ID (starts with `kfg-`) |
 | `email` | User's email address | not present |
-| `scope` | User's granted scopes | Client's granted scopes (e.g. `metadata:upload`) |
-| `kfg_namespace` | not present | Namespace `EntityId` — use this to identify which namespace the client belongs to |
+| `scope` | User's granted scopes | Client's granted scopes (e.g. `namespaces:publish-releases`) |
+| `namespace` (`KonfigyrClaimNames.NAMESPACE`) | not present | Namespace `EntityId` (serialized) — identifies which namespace the client belongs to |
 
 > `sub` is always a Konfigyr-internal identifier. It will never be a GitHub username or external UID — the broker normalises all external identities before issuing the token.
+>
+> The `namespace` claim name is defined by the `KonfigyrClaimNames.NAMESPACE` constant (`konfigyr-core`) — always reference the constant, never the raw string literal.
 
 ---
 
@@ -91,32 +93,43 @@ class NamespaceController {
 @RequiresScope("read:namespaces")
 ```
 
-**Common scopes:**
+**Scopes** (`OAuthScope` enum, `konfigyr-core`):
+- `OPENID` — OIDC identity verification
 - `READ_NAMESPACES` — Read namespace metadata
-- `WRITE_NAMESPACES` — Create/update namespaces
-- `DELETE_NAMESPACES` — Delete namespaces
-- `READ_VAULT` — Read vault entries
-- `WRITE_VAULT` — Write vault entries
-- `READ_AUDIT` — Read audit logs
-- `MANAGE_KMS` — Manage encryption keys
-- `MANAGE_MEMBERS` — Invite/remove members
+- `WRITE_NAMESPACES` — Create/update namespaces (implies `READ_NAMESPACES`)
+- `DELETE_NAMESPACES` — Delete namespaces (implies `WRITE_NAMESPACES`)
+- `INVITE_MEMBERS` — Create and manage invitations (implies `READ_NAMESPACES`)
+- `PUBLISH_RELEASES` — Resolve, upload to, and complete service releases (implies `READ_NAMESPACES`)
+- `NAMESPACES` — Aggregate: all of the above namespace scopes
+- `READ_ARTIFACTS` — Read Artifactory artifacts and their property definitions
+- `PUBLISH_ARTIFACTS` — Publish new artifact versions (implies `READ_ARTIFACTS`)
+- `READ_PROFILES` — Read service profiles
+- `WRITE_PROFILES` — Write service profiles (implies `READ_PROFILES`)
+- `DELETE_PROFILES` — Delete service profiles (implies `WRITE_PROFILES`)
+- `PROFILES` — Aggregate: all of the above profile scopes
 
 ---
 
 ## Scope Hierarchy
 
-Scopes form a hierarchy—broader scopes imply narrower ones:
+Scopes form a hierarchy—broader scopes imply narrower ones. Each `OAuthScope` enum constant declares its included scopes directly (see `OAuthScope#getIncluded()`), rather than following one blanket READ → WRITE → DELETE rule:
 
 ```
-WRITE implies READ
-DELETE is independent
-MANAGE_* scopes don't imply READ/WRITE
+DELETE_NAMESPACES implies WRITE_NAMESPACES implies READ_NAMESPACES
+INVITE_MEMBERS implies READ_NAMESPACES
+PUBLISH_RELEASES implies READ_NAMESPACES
+NAMESPACES implies all of the above namespace scopes
+
+PUBLISH_ARTIFACTS implies READ_ARTIFACTS
+
+DELETE_PROFILES implies WRITE_PROFILES implies READ_PROFILES
+PROFILES implies all of the above profile scopes
 ```
 
 **Examples:**
 - Client with `WRITE_NAMESPACES` can also call `READ_NAMESPACES` endpoints
-- Client with `DELETE_NAMESPACES` can only delete (must separately grant READ or WRITE)
-- `MANAGE_KMS` doesn't grant READ/WRITE to other resources
+- Client with `PUBLISH_RELEASES` can also call `READ_NAMESPACES` endpoints, but not `WRITE_NAMESPACES` ones
+- Scopes across different resource families never imply one another — `PUBLISH_ARTIFACTS` doesn't grant anything in the `NAMESPACES` or `PROFILES` families
 
 ---
 
@@ -292,10 +305,10 @@ Apply same scope to all methods in a controller:
 
 ```java
 @RestController
-@RequestMapping("/vault")
-@RequiresScope(OAuthScope.READ_VAULT)
-class VaultController {
-    // All methods require READ_VAULT or higher
+@RequestMapping("/namespaces/{namespace}/services")
+@RequiresScope(OAuthScope.READ_NAMESPACES)
+class ServicesController {
+    // All methods require READ_NAMESPACES or higher
 }
 ```
 
@@ -304,12 +317,49 @@ class VaultController {
 If endpoint requires multiple scopes, list them:
 
 ```java
-@PostMapping("/entries")
-@RequiresScope({OAuthScope.WRITE_VAULT, OAuthScope.ADMIN})
-ResponseEntity<Void> createEntry(@RequestBody VaultEntry entry) {
-    // Accepts if client has WRITE_VAULT OR ADMIN
+@PostMapping("/{slug}/trusted-issuers")
+@RequiresScope({OAuthScope.WRITE_NAMESPACES, OAuthScope.INVITE_MEMBERS})
+ResponseEntity<Void> createTrustedIssuer(@RequestBody NamespaceTrustedIssuerDefinition definition) {
+    // Accepts if client has WRITE_NAMESPACES OR INVITE_MEMBERS
 }
 ```
+
+### Machine Client: Resolving the Namespace from the Token Claim
+
+Namespace-scoped OAuth2 clients (e.g. build plugins with `PUBLISH_RELEASES`) never pass their namespace
+as a path variable — resolve it from the trusted `namespace` JWT claim instead, via `NamespacedPrincipal`:
+
+```java
+@PostMapping
+@RequiresScope(OAuthScope.PUBLISH_RELEASES)
+EntityModel<ServiceRelease> resolve(@RequestBody List<ServiceReleaseCandidate> candidates) {
+    final Namespace ns = currentNamespace();
+    // ...
+}
+
+@NonNull
+private Namespace currentNamespace() {
+    final AuthenticatedPrincipal principal = AuthenticatedPrincipal.resolve();
+
+    if (!(principal instanceof NamespacedPrincipal namespaced)) {
+        throw new AccessDeniedException("Authenticated principal is not scoped to a namespace");
+    }
+
+    final EntityId id = namespaced.getNamespaceId().orElseThrow(
+            () -> new AccessDeniedException("Authenticated principal is missing its namespace claim")
+    );
+
+    return namespaces.findById(id).orElseThrow(
+            () -> new AccessDeniedException("Authenticated principal's namespace claim does not match a known namespace")
+    );
+}
+```
+
+Treat every failure to resolve a namespace this way as an authorization failure (`AccessDeniedException`,
+403), not a not-found or server error: a token that reaches the endpoint without a resolvable namespace
+claim isn't entitled to act on any namespace, regardless of the reason. `AccessDeniedException`'s detail
+message is replaced app-wide by a generic message (see `problem-detail.properties`), so it's safe to
+describe the failure reason in the exception message without leaking it to the client.
 
 ### Accessing Token Claims
 
@@ -454,7 +504,7 @@ String getData(@RequestParam String scope) {
 }
 
 // ✓ Correct: Use authenticated token
-@RequiresScope(OAuthScope.ADMIN)
+@RequiresScope(OAuthScope.NAMESPACES)
 String getData() { ... }
 ```
 
@@ -465,12 +515,11 @@ String getData() { ... }
 ### Be Specific
 
 ```java
-// ✗ Too broad: One scope for everything
-@RequiresScope(OAuthScope.ADMIN)
+// ✗ Too broad: One aggregate scope for a narrow operation
+@RequiresScope(OAuthScope.NAMESPACES)
 
-// ✓ Specific: Granular scopes
-@RequiresScope(OAuthScope.READ_AUDIT)
-@RequiresScope(OAuthScope.WRITE_VAULT)
+// ✓ Specific: Granular scope for what the endpoint actually needs
+@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 ```
 
 ### Follow Hierarchy

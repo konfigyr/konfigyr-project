@@ -21,7 +21,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -123,7 +123,7 @@ class ArtifactoryController {
 			@RequestBody @Validated ArtifactPublication publication,
 			BindingResult errors
 	) throws BindException {
-		final Owner owner = resolveOwner().orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
+		final Owner owner = resolveOwner().orElseThrow(() -> new AccessDeniedException(
 				"Could not extract namespace identifier from the current authenticated principal"
 		));
 
@@ -151,7 +151,7 @@ class ArtifactoryController {
 			@PathVariable String artifactId,
 			@RequestBody @Validated ChangeVisibilityRequest request
 	) {
-		final Owner owner = resolveOwner().orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
+		final Owner owner = resolveOwner().orElseThrow(() -> new AccessDeniedException(
 				"Could not extract namespace identifier from the current authenticated principal"
 		));
 

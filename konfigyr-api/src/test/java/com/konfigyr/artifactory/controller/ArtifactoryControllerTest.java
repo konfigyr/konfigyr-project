@@ -526,6 +526,26 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should fail to publish an artifact when the principal carries no namespace claim")
+	void uploadArtifactWithoutNamespaceClaim() {
+		final var coordinates = ArtifactCoordinates.of("com.konfigyr", "konfigyr-api", "3.0.0");
+		final var metadata = TestArtifacts.metadata(coordinates);
+
+		mvc.post().uri(uriForArtifact(coordinates).toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_ARTIFACTS))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(metadata))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
+
+		assertThat(store.get(coordinates))
+				.as("Should not store property descriptor when the principal has no namespace claim")
+				.isEmpty();
+	}
+
+	@Test
 	@Transactional
 	@DisplayName("should change the visibility of an owned artifact")
 	void shouldChangeArtifactVisibility() {
@@ -610,6 +630,19 @@ class ArtifactoryControllerTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.satisfies(forbidden(OAuthScope.PUBLISH_ARTIFACTS));
+	}
+
+	@Test
+	@DisplayName("should fail to change visibility when the principal carries no namespace claim")
+	void shouldRejectChangeArtifactVisibilityWithoutNamespaceClaim() {
+		mvc.put().uri(uriForVisibility("com.konfigyr", "konfigyr-internal-secrets").toUri())
+				.with(authentication(TestPrincipals.john(), OAuthScope.PUBLISH_ARTIFACTS))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsBytes(new ArtifactoryController.ChangeVisibilityRequest(ArtifactVisibility.PUBLIC)))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(forbidden());
 	}
 
 	@Test
