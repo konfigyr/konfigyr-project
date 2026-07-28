@@ -33,19 +33,21 @@ interface Assemblers {
 	static RepresentationModelAssembler<Service, EntityModel<Service>> service(Namespace namespace) {
 		return service -> EntityModel.of(service, linkBuilder(namespace, service).selfRel())
 				.add(linkBuilder(namespace, service).path("manifest").rel("manifest"))
-				.add(linkBuilder(namespace, service).method(HttpMethod.POST).path("manifest").rel("release"))
 				.add(linkBuilder(namespace, service).method(HttpMethod.DELETE).rel("delete"));
 	}
 
 	static RepresentationModelAssembler<Manifest, EntityModel<Manifest>> manifest(Namespace namespace, Service service) {
-		return manifest -> EntityModel.of(manifest, linkBuilder(namespace, service).path("manifest").selfRel())
-				.add(linkBuilder(namespace, service).path("manifest").method(HttpMethod.POST).rel("release"));
+		return manifest -> EntityModel.of(manifest, linkBuilder(namespace, service).path("manifest").selfRel());
 	}
 
 	static RepresentationModelAssembler<ServiceRelease, EntityModel<ServiceRelease>> release(Namespace namespace, Service service) {
-		return release -> EntityModel.of(release, linkBuilder(namespace, service, release).selfRel())
-				.add(linkBuilder(namespace, service, release).path("artifacts").method(HttpMethod.POST).rel("upload artifact metadata"))
-				.add(linkBuilder(namespace, service, release).path("complete").method(HttpMethod.POST).rel("complete service release"));
+		return release -> EntityModel.of(release, linkBuilder(namespace, service, release).selfRel());
+	}
+
+	static RepresentationModelAssembler<ServiceRelease, EntityModel<ServiceRelease>> release(Service service) {
+		return release -> EntityModel.of(release, linkBuilder(service, release).selfRel())
+				.add(linkBuilder(service, release).path("artifacts").method(HttpMethod.POST).rel("upload artifact metadata"))
+				.add(linkBuilder(service, release).path("complete").method(HttpMethod.POST).rel("complete service release"));
 	}
 
 	static RepresentationModelAssembler<ServiceCatalog, EntityModel<ServiceCatalog>> catalog(Namespace namespace) {
@@ -97,6 +99,12 @@ interface Assemblers {
 	static LinkBuilder linkBuilder(Namespace namespace, Service service, ServiceRelease release) {
 		return linkBuilder(namespace, service)
 				.path("releases")
+				.path(release.id());
+	}
+
+	static LinkBuilder linkBuilder(Service service, ServiceRelease release) {
+		return Link.builder().path("releases")
+				.path(service.slug())
 				.path(release.id());
 	}
 }

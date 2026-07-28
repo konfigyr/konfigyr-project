@@ -5,121 +5,127 @@ import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.NamespaceManager;
-import com.konfigyr.namespace.NamespaceNotFoundException;
 import com.konfigyr.namespace.Service;
 import com.konfigyr.namespace.ServiceNotFoundException;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.namespace.manifest.ReleaseNotFoundException;
 import com.konfigyr.namespace.manifest.ServiceManifests;
+import com.konfigyr.security.AuthenticatedPrincipal;
+import com.konfigyr.security.NamespacedPrincipal;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller used by build plugins to resolve, upload artifacts to, and complete a {@link Service}
+ * release. Endpoints are namespace-free: the owning {@link Namespace} is resolved from the namespace
+ * claim carried by the authenticated namespace client's OAuth2 token rather than a URL path variable.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/namespaces/{namespace}/services/{slug}")
+@RequestMapping("/releases/{service}")
 class ServiceManifestController {
 
 	private final NamespaceManager namespaces;
 	private final Services services;
 	private final ServiceManifests manifests;
 
-	@GetMapping("manifest")
-	@PreAuthorize("isMember(#namespace)")
-	@RequiresScope(OAuthScope.READ_NAMESPACES)
-	EntityModel<Manifest> manifest(@PathVariable @NonNull String namespace, @PathVariable @NonNull String slug) {
-		final Namespace ns = lookupNamespace(namespace);
-		final Service service = services.get(ns, slug).orElseThrow(
-				() -> new ServiceNotFoundException(namespace, slug)
-		);
-
-		return Assemblers.manifest(ns, service).assemble(manifests.get(service));
-	}
-
-	@PostMapping("releases")
-	@PreAuthorize("isMember(#namespace)")
+	@PostMapping
 	@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 	EntityModel<ServiceRelease> resolve(
-			@PathVariable String namespace,
-			@PathVariable String slug,
+			@PathVariable String service,
 			@RequestBody List<ServiceReleaseCandidate> candidates
 	) {
-		final Namespace ns = lookupNamespace(namespace);
-		final Service service = services.get(ns, slug).orElseThrow(
-				() -> new ServiceNotFoundException(namespace, slug)
-		);
+		final Service svc = lookupService(service);
 
-		return Assemblers.release(ns, service).assemble(manifests.open(service, candidates));
+		return Assemblers.release(svc).assemble(manifests.open(svc, candidates));
 	}
 
-	@GetMapping("/releases/{id}")
-	@PreAuthorize("isMember(#namespace)")
+	@GetMapping("/{id}")
 	@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 	EntityModel<ServiceRelease> release(
-			@PathVariable String namespace,
-			@PathVariable String slug,
+			@PathVariable String service,
 			@PathVariable EntityId id
 	) {
-		final Namespace ns = lookupNamespace(namespace);
-		final Service service = services.get(ns, slug).orElseThrow(
-				() -> new ServiceNotFoundException(namespace, slug)
-		);
+		final Service svc = lookupService(service);
 
-		final ServiceRelease release = manifests.get(service, id).orElseThrow(
+		final ServiceRelease release = manifests.get(svc, id).orElseThrow(
 				() -> new ReleaseNotFoundException(id)
 		);
 
-		return Assemblers.release(ns, service).assemble(release);
+		return Assemblers.release(svc).assemble(release);
 	}
 
-	@PostMapping("/releases/{id}/artifacts")
+	@PostMapping("/{id}/artifacts")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@PreAuthorize("isMember(#namespace)")
 	@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 	void upload(
-			@PathVariable String namespace,
-			@PathVariable String slug,
+			@PathVariable String service,
 			@PathVariable EntityId id,
 			@RequestBody ArtifactMetadata metadata
 	) {
-		final Namespace ns = lookupNamespace(namespace);
-		final Service service = services.get(ns, slug).orElseThrow(
-				() -> new ServiceNotFoundException(namespace, slug)
-		);
-
-		manifests.upload(service, id, metadata);
+		manifests.upload(lookupService(service), id, metadata);
 	}
 
-	@PostMapping("/releases/{id}/complete")
-	@PreAuthorize("isMember(#namespace)")
+	@PostMapping("/{id}/complete")
 	@RequiresScope(OAuthScope.PUBLISH_RELEASES)
 	ResponseEntity<EntityModel<ServiceRelease>> complete(
-			@PathVariable String namespace,
-			@PathVariable String slug,
+			@PathVariable String service,
 			@PathVariable EntityId id
 	) {
-		final Namespace ns = lookupNamespace(namespace);
-		final Service service = services.get(ns, slug).orElseThrow(
-				() -> new ServiceNotFoundException(namespace, slug)
-		);
+		final Service svc = lookupService(service);
 
-		final ServiceRelease release = manifests.complete(service, id);
+		final ServiceRelease release = manifests.complete(svc, id);
 		final HttpStatus status = release.state() == ReleaseState.FAILED ? HttpStatus.CONFLICT : HttpStatus.OK;
 
 		return ResponseEntity.status(status)
-				.body(Assemblers.release(ns, service).assemble(release));
+				.body(Assemblers.release(svc).assemble(release));
 	}
 
 	@NonNull
-	Namespace lookupNamespace(@NonNull String slug) {
-		return namespaces.findBySlug(slug).orElseThrow(() -> new NamespaceNotFoundException(slug));
+	private Service lookupService(@NonNull String slug) {
+		final Namespace namespace = currentNamespace();
+
+		return services.get(namespace, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace.slug(), slug)
+		);
+	}
+
+	/**
+	 * Resolves the {@link Namespace} that owns the authenticated namespace client, using the
+	 * namespace claim carried by its OAuth2 token rather than a URL path variable.
+	 * <p>
+	 * Any failure to establish this namespace context is treated as an authorization failure rather
+	 * than a not-found or server error: a token that reaches this endpoint without a resolvable
+	 * namespace claim is not entitled to act on any namespace, regardless of the reason.
+	 *
+	 * @return the owning namespace resolved from the current authentication, never {@literal null}
+	 */
+	@NonNull
+	private Namespace currentNamespace() {
+		final AuthenticatedPrincipal principal = AuthenticatedPrincipal.resolve();
+
+		if (!(principal instanceof NamespacedPrincipal namespaced)) {
+			throw new AccessDeniedException("Authenticated principal is not scoped to a namespace");
+		}
+
+		final EntityId id = namespaced.getNamespaceId().orElseThrow(
+				() -> new AccessDeniedException("Authenticated principal is missing its namespace claim")
+		);
+
+		return namespaces.findById(id).orElseThrow(
+				() -> new AccessDeniedException("Authenticated principal's namespace claim does not match a known namespace")
+		);
 	}
 
 }

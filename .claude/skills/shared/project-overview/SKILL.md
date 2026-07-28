@@ -351,6 +351,36 @@ PUT      /namespaces/{namespace}/kms/{id}/keys/{key}/{deactivate|reactivate|comp
 POST     /namespaces/{namespace}/kms/{id}/{encrypt|decrypt|sign|verify}   isMember, @RequiresScope(WRITE_NAMESPACES)
 ```
 
+### Service Manifest / Release Endpoints
+
+Split by audience into two controllers, each with a different auth model — there is no shared
+namespace-scoped `/releases` path used by both:
+
+`ServiceManifestController` — plugin-only, namespace-free. Authenticated as a namespace OAuth2 client
+(`NamespaceClientId`, `kfg-` prefixed `client_id`); the owning namespace is resolved from the `namespace`
+JWT claim (`KonfigyrClaimNames.NAMESPACE`) via `NamespacedPrincipal`, never from a path variable. No
+`isMember`/`isAdmin` check — namespace isolation comes from the trusted claim plus `Services.get(ns, slug)`
+scoping the service lookup to that namespace.
+
+```
+POST   /releases/{service}                  @RequiresScope(PUBLISH_RELEASES)   resolve/open a release
+GET    /releases/{service}/{id}             @RequiresScope(PUBLISH_RELEASES)
+POST   /releases/{service}/{id}/artifacts   @RequiresScope(PUBLISH_RELEASES)   upload artifact metadata
+POST   /releases/{service}/{id}/complete    @RequiresScope(PUBLISH_RELEASES)
+```
+
+`ServicesController` — UI-only, namespace-path-scoped, session-authenticated, unchanged `isMember` +
+`READ_NAMESPACES` pattern used by the rest of this controller. Read-only: no resolve/upload/complete.
+
+```
+GET    /namespaces/{namespace}/services/{slug}/manifest        isMember, @RequiresScope(READ_NAMESPACES)
+GET    /namespaces/{namespace}/services/{slug}/releases/{id}   isMember, @RequiresScope(READ_NAMESPACES)
+```
+
+Root is `/releases`, matching the `ServiceRelease` aggregate — deliberately not `/publish` (reserved for
+the Artifactory bounded context: `PublicationsController`/`Publications`) and not nested under a generic
+`/services` wrapper.
+
 ## Frontend Routes
 
 File-based TanStack Start routing under `konfigyr-frontend/src/routes`. Most app routes sit under a

@@ -1,9 +1,14 @@
 package com.konfigyr.namespace.controller;
 
+import com.konfigyr.artifactory.Manifest;
 import com.konfigyr.artifactory.PropertyDescriptor;
+import com.konfigyr.artifactory.ServiceRelease;
+import com.konfigyr.entity.EntityId;
 import com.konfigyr.hateoas.EntityModel;
 import com.konfigyr.hateoas.PagedModel;
 import com.konfigyr.namespace.*;
+import com.konfigyr.namespace.manifest.ReleaseNotFoundException;
+import com.konfigyr.namespace.manifest.ServiceManifests;
 import com.konfigyr.security.OAuthScope;
 import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
@@ -26,6 +31,7 @@ class ServicesController {
 
 	private final Services services;
 	private final NamespaceManager namespaces;
+	private final ServiceManifests manifests;
 
 	@GetMapping
 	@PreAuthorize("isMember(#namespace)")
@@ -93,6 +99,36 @@ class ServicesController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void delete(@PathVariable @NonNull String namespace, @PathVariable @NonNull String slug) {
 		services.delete(lookupNamespace(namespace), slug);
+	}
+
+	@GetMapping("{slug}/manifest")
+	@PreAuthorize("isMember(#namespace)")
+	EntityModel<Manifest> manifest(@PathVariable @NonNull String namespace, @PathVariable @NonNull String slug) {
+		final Namespace ns = lookupNamespace(namespace);
+		final Service service = services.get(ns, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace, slug)
+		);
+
+		return Assemblers.manifest(ns, service).assemble(manifests.get(service));
+	}
+
+	@GetMapping("{slug}/releases/{id}")
+	@PreAuthorize("isMember(#namespace)")
+	EntityModel<ServiceRelease> release(
+			@PathVariable @NonNull String namespace,
+			@PathVariable @NonNull String slug,
+			@PathVariable EntityId id
+	) {
+		final Namespace ns = lookupNamespace(namespace);
+		final Service service = services.get(ns, slug).orElseThrow(
+				() -> new ServiceNotFoundException(namespace, slug)
+		);
+
+		final ServiceRelease release = manifests.get(service, id).orElseThrow(
+				() -> new ReleaseNotFoundException(id)
+		);
+
+		return Assemblers.release(ns, service).assemble(release);
 	}
 
 	@GetMapping("{slug}/catalog")
