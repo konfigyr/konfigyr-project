@@ -27,6 +27,9 @@ import java.util.List;
  * Controller used by build plugins to resolve, upload artifacts to, and complete a {@link Service}
  * release. Endpoints are namespace-free: the owning {@link Namespace} is resolved from the namespace
  * claim carried by the authenticated namespace client's OAuth2 token rather than a URL path variable.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
  */
 @RestController
 @RequiredArgsConstructor
@@ -105,6 +108,8 @@ class ServiceManifestController {
 	 * Any failure to establish this namespace context is treated as an authorization failure rather
 	 * than a not-found or server error: a token that reaches this endpoint without a resolvable
 	 * namespace claim is not entitled to act on any namespace, regardless of the reason.
+	 *
+	 * @return the owning namespace resolved from the current authentication, never {@literal null}
 	 */
 	@NonNull
 	private Namespace currentNamespace() {
