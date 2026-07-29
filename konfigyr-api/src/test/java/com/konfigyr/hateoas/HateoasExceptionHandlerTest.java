@@ -254,10 +254,10 @@ class HateoasExceptionHandlerTest {
 	@MethodSource("authentication")
 	@DisplayName("should handle authentication exceptions")
 	@ParameterizedTest(name = "should create error response for exception {0} with status code {1}")
-	void shouldHandleAuthenticationException(Class<? extends AuthenticationException> type, HttpStatusCode status) {
+	void shouldHandleAuthenticationException(Class<? extends AuthenticationException> type, HttpStatusCode status, HttpHeaders headers) {
 		final var ex = mock(type);
 
-		expectProblemDetail(ex, status)
+		expectProblemDetail(ex, status, headers)
 				.hasDefaultType()
 				.satisfies(it -> assertThat(it.getTitle())
 						.isNotBlank()
@@ -272,21 +272,28 @@ class HateoasExceptionHandlerTest {
 	}
 
 	static Stream<Arguments> authentication() {
+		final var headers = new HttpHeaders();
+		headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer resource_metadata=http://localhost/.well-known/oauth-protected-resource");
+
 		return Stream.of(
-				Arguments.of(InternalAuthenticationServiceException.class, HttpStatus.INTERNAL_SERVER_ERROR),
-				Arguments.of(ProviderNotFoundException.class, HttpStatus.INTERNAL_SERVER_ERROR),
-				Arguments.of(InvalidCookieException.class, HttpStatus.INTERNAL_SERVER_ERROR),
-				Arguments.of(InsufficientAuthenticationException.class, HttpStatus.FORBIDDEN),
-				Arguments.of(AuthenticationCredentialsNotFoundException.class, HttpStatus.UNAUTHORIZED),
-				Arguments.of(BadCredentialsException.class, HttpStatus.UNAUTHORIZED)
+				Arguments.of(InternalAuthenticationServiceException.class, HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaders.EMPTY),
+				Arguments.of(ProviderNotFoundException.class, HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaders.EMPTY),
+				Arguments.of(InvalidCookieException.class, HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaders.EMPTY),
+				Arguments.of(InsufficientAuthenticationException.class, HttpStatus.FORBIDDEN, HttpHeaders.EMPTY),
+				Arguments.of(AuthenticationCredentialsNotFoundException.class, HttpStatus.UNAUTHORIZED, headers),
+				Arguments.of(BadCredentialsException.class, HttpStatus.UNAUTHORIZED, headers)
 		);
 	}
 
 	ProblemDetailAssert expectProblemDetail(Exception ex, HttpStatusCode status) {
+		return expectProblemDetail(ex, status, HttpHeaders.EMPTY);
+	}
+
+	ProblemDetailAssert expectProblemDetail(Exception ex, HttpStatusCode status, HttpHeaders headers) {
 		return assertThat(handler.handle(request, response, ex))
 				.isNotNull()
 				.returns(status, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
+				.returns(headers, HttpEntity::getHeaders)
 				.extracting(HttpEntity::getBody)
 				.isInstanceOf(ProblemDetail.class)
 				.asInstanceOf(ProblemDetailAssert.factory())
