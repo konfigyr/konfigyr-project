@@ -28,6 +28,9 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.authorization.ExpressionAuthorizationDecision;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.web.authentication.rememberme.InvalidCookieException;
 import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.csrf.InvalidCsrfTokenException;
@@ -254,10 +257,10 @@ class HateoasExceptionHandlerTest {
 	@MethodSource("authentication")
 	@DisplayName("should handle authentication exceptions")
 	@ParameterizedTest(name = "should create error response for exception {0} with status code {1}")
-	void shouldHandleAuthenticationException(Class<? extends AuthenticationException> type, HttpStatusCode status) {
+	void shouldHandleAuthenticationException(Class<? extends AuthenticationException> type, HttpStatusCode status, HttpHeaders headers) {
 		final var ex = mock(type);
 
-		expectProblemDetail(ex, status)
+		expectProblemDetail(ex, status, headers)
 				.hasDefaultType()
 				.satisfies(it -> assertThat(it.getTitle())
 						.isNotBlank()
@@ -272,21 +275,40 @@ class HateoasExceptionHandlerTest {
 	}
 
 	static Stream<Arguments> authentication() {
+		final var headers = new HttpHeaders();
+		headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer resource_metadata=\"http://localhost/.well-known/oauth-protected-resource\"");
+
 		return Stream.of(
-				Arguments.of(InternalAuthenticationServiceException.class, HttpStatus.INTERNAL_SERVER_ERROR),
-				Arguments.of(ProviderNotFoundException.class, HttpStatus.INTERNAL_SERVER_ERROR),
-				Arguments.of(InvalidCookieException.class, HttpStatus.INTERNAL_SERVER_ERROR),
-				Arguments.of(InsufficientAuthenticationException.class, HttpStatus.FORBIDDEN),
-				Arguments.of(AuthenticationCredentialsNotFoundException.class, HttpStatus.UNAUTHORIZED),
-				Arguments.of(BadCredentialsException.class, HttpStatus.UNAUTHORIZED)
+				Arguments.of(InternalAuthenticationServiceException.class, HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaders.EMPTY),
+				Arguments.of(ProviderNotFoundException.class, HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaders.EMPTY),
+				Arguments.of(InvalidCookieException.class, HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaders.EMPTY),
+				Arguments.of(InsufficientAuthenticationException.class, HttpStatus.FORBIDDEN, HttpHeaders.EMPTY),
+				Arguments.of(AuthenticationCredentialsNotFoundException.class, HttpStatus.UNAUTHORIZED, headers),
+				Arguments.of(BadCredentialsException.class, HttpStatus.UNAUTHORIZED, headers)
 		);
 	}
 
+	@Test
+	@DisplayName("should include OAuth2 error details in the WWW-Authenticate header")
+	void shouldHandleOAuth2AuthenticationException() {
+		final var error = new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN, "The Jwt has expired", null);
+
+		final var headers = new HttpHeaders();
+		headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer error=\"invalid_token\", error_description=\"The Jwt has expired\", " +
+				"resource_metadata=\"http://localhost/.well-known/oauth-protected-resource\"");
+
+		expectProblemDetail(new OAuth2AuthenticationException(error), HttpStatus.UNAUTHORIZED, headers);
+	}
+
 	ProblemDetailAssert expectProblemDetail(Exception ex, HttpStatusCode status) {
+		return expectProblemDetail(ex, status, HttpHeaders.EMPTY);
+	}
+
+	ProblemDetailAssert expectProblemDetail(Exception ex, HttpStatusCode status, HttpHeaders headers) {
 		return assertThat(handler.handle(request, response, ex))
 				.isNotNull()
 				.returns(status, ResponseEntity::getStatusCode)
-				.returns(HttpHeaders.EMPTY, HttpEntity::getHeaders)
+				.returns(headers, HttpEntity::getHeaders)
 				.extracting(HttpEntity::getBody)
 				.isInstanceOf(ProblemDetail.class)
 				.asInstanceOf(ProblemDetailAssert.factory())

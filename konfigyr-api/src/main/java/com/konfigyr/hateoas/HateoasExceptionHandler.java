@@ -17,7 +17,11 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.authentication.rememberme.InvalidCookieException;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
@@ -30,9 +34,11 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -88,9 +94,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 			case InsufficientAuthenticationException exception -> handleException(
 					exception, HttpStatus.FORBIDDEN, headers, request
 			);
-			default -> handleException(
-					ex, HttpStatus.UNAUTHORIZED, headers, request
-			);
+			default -> handleUnauthorizedException(ex, headers, request);
 		};
 	}
 
@@ -117,6 +121,35 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	) {
 		final ProblemDetail body = errorResponse.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
 		return createResponseEntity(body, errorResponse.getHeaders(), errorResponse.getStatusCode(), request);
+	}
+
+	protected ResponseEntity<@NonNull Object> handleUnauthorizedException(
+			@NonNull AuthenticationException ex, @NonNull HttpHeaders headers, @NonNull WebRequest request
+	) {
+		final Map<String, String> parameters = new LinkedHashMap<>();
+
+		if (ex instanceof OAuth2AuthenticationException oauth) {
+			final OAuth2Error error = oauth.getError();
+
+			if (StringUtils.hasText(error.getErrorCode())) {
+				parameters.put(OAuth2ParameterNames.ERROR, error.getErrorCode());
+			}
+			if (StringUtils.hasText(error.getDescription())) {
+				parameters.put(OAuth2ParameterNames.ERROR_DESCRIPTION, error.getDescription());
+			}
+			if (StringUtils.hasText(error.getUri())) {
+				parameters.put(OAuth2ParameterNames.ERROR_URI, error.getUri());
+			}
+		}
+
+		if (request instanceof ServletWebRequest servletWebRequest) {
+			parameters.put("resource_metadata", ServletUriComponentsBuilder.fromContextPath(servletWebRequest.getRequest())
+					.path("/.well-known/oauth-protected-resource")
+					.toUriString());
+		}
+
+		headers.add(HttpHeaders.WWW_AUTHENTICATE, createBearerChallenge(parameters));
+		return handleException(ex, HttpStatus.UNAUTHORIZED, headers, request);
 	}
 
 	protected ResponseEntity<@NonNull Object> handleAuthorizationDeniedException(
@@ -270,6 +303,16 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 
 	protected static String authoritiesToString(Collection<? extends GrantedAuthority> authorities) {
 		return authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(" "));
+	}
+
+	private static String createBearerChallenge(Map<String, String> parameters) {
+		if (parameters.isEmpty()) {
+			return "Bearer";
+		}
+
+		return parameters.entrySet().stream()
+				.map(entry -> entry.getKey() + "=\"" + entry.getValue() + "\"")
+				.collect(Collectors.joining(", ", "Bearer ", ""));
 	}
 
 }

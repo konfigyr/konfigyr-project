@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers;
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.assertj.MvcTestResultAssert;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
@@ -178,6 +180,67 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 		assertThatRequest(token)
 				.hasStatus(HttpStatus.UNAUTHORIZED)
 				.matches(SecurityMockMvcResultMatchers.unauthenticated());
+	}
+
+	@Test
+	@DisplayName("should return OAuth 2.0 Protected Resource Metadata URI when unauthenticated")
+	void shouldExposeProtectedResourceMetadataEndpointWithoutAuthentication() {
+		mvc.get().uri("/namespaces")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.hasHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer resource_metadata=\"http://localhost/.well-known/oauth-protected-resource\"");
+	}
+
+	@Test
+	@DisplayName("should return OAuth error and Protected Resource Metadata URI when access token is invalid")
+	void shouldExposeOAuthErrorAndProtectedResourceMetadataEndpoint() {
+		final String token = generateAccessToken(KeyGenerator.getInstance().generate(), claims -> claims
+				.issuer(wiremock.baseUrl())
+				.subject(TestPrincipals.john().getName())
+		);
+
+		assertThatRequest(token)
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.matches(SecurityMockMvcResultMatchers.unauthenticated())
+				.headers()
+				.hasHeaderSatisfying(HttpHeaders.WWW_AUTHENTICATE, values -> Assertions.assertThat(values)
+						.singleElement(InstanceOfAssertFactories.STRING)
+						.startsWith("Bearer")
+						.contains("error=\"invalid_token\"")
+						.contains("error_description=\"")
+						.contains("error_uri=\"")
+						.contains("resource_metadata=\"http://localhost/.well-known/oauth-protected-resource\""));
+	}
+
+	@Test
+	@DisplayName("should expose OAuth 2.0 Protected Resource Metadata without authentication")
+	void shouldExposeProtectedResourceMetadata() {
+		mvc.get().uri("/.well-known/oauth-protected-resource")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatusOk()
+				.hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+				.bodyJson()
+				.hasPathSatisfying("$.resource", resource -> resource.assertThat()
+						.asString()
+						.isNotBlank())
+				.hasPathSatisfying("$.resource_name", name -> name.assertThat()
+						.asString()
+						.isEqualTo("Konfigyr REST API"))
+				.hasPathSatisfying("$.bearer_methods_supported", servers -> servers.assertThat()
+						.asArray()
+						.containsExactly("header"))
+				.hasPathSatisfying("$.authorization_servers", servers -> servers.assertThat()
+						.asArray()
+						.containsExactly(wiremock.baseUrl()))
+				.hasPathSatisfying("$.scopes_supported", servers -> servers.assertThat()
+						.asArray()
+						.containsExactlyInAnyOrderElementsOf(
+								ResourceServerScopes.get().to(new ArrayList<>(), OAuthScope::getAuthority)
+						));
 	}
 
 	static MvcTestResultAssert assertThatRequest(String token) {
