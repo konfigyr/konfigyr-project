@@ -190,7 +190,28 @@ public class SecurityIntegrationTest extends AbstractControllerTest {
 				.assertThat()
 				.apply(log())
 				.hasStatus(HttpStatus.UNAUTHORIZED)
-				.hasHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer resource_metadata=http://localhost/.well-known/oauth-protected-resource");
+				.hasHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer resource_metadata=\"http://localhost/.well-known/oauth-protected-resource\"");
+	}
+
+	@Test
+	@DisplayName("should return OAuth error and Protected Resource Metadata URI when access token is invalid")
+	void shouldExposeOAuthErrorAndProtectedResourceMetadataEndpoint() {
+		final String token = generateAccessToken(KeyGenerator.getInstance().generate(), claims -> claims
+				.issuer(wiremock.baseUrl())
+				.subject(TestPrincipals.john().getName())
+		);
+
+		assertThatRequest(token)
+				.hasStatus(HttpStatus.UNAUTHORIZED)
+				.matches(SecurityMockMvcResultMatchers.unauthenticated())
+				.headers()
+				.hasHeaderSatisfying(HttpHeaders.WWW_AUTHENTICATE, values -> Assertions.assertThat(values)
+						.singleElement(InstanceOfAssertFactories.STRING)
+						.startsWith("Bearer")
+						.contains("error=\"invalid_token\"")
+						.contains("error_description=\"")
+						.contains("error_uri=\"")
+						.contains("resource_metadata=\"http://localhost/.well-known/oauth-protected-resource\""));
 	}
 
 	@Test

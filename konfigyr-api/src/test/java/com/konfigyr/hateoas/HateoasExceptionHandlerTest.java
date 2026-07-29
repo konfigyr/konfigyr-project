@@ -28,6 +28,9 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.authorization.ExpressionAuthorizationDecision;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.web.authentication.rememberme.InvalidCookieException;
 import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.csrf.InvalidCsrfTokenException;
@@ -273,7 +276,7 @@ class HateoasExceptionHandlerTest {
 
 	static Stream<Arguments> authentication() {
 		final var headers = new HttpHeaders();
-		headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer resource_metadata=http://localhost/.well-known/oauth-protected-resource");
+		headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer resource_metadata=\"http://localhost/.well-known/oauth-protected-resource\"");
 
 		return Stream.of(
 				Arguments.of(InternalAuthenticationServiceException.class, HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaders.EMPTY),
@@ -283,6 +286,18 @@ class HateoasExceptionHandlerTest {
 				Arguments.of(AuthenticationCredentialsNotFoundException.class, HttpStatus.UNAUTHORIZED, headers),
 				Arguments.of(BadCredentialsException.class, HttpStatus.UNAUTHORIZED, headers)
 		);
+	}
+
+	@Test
+	@DisplayName("should include OAuth2 error details in the WWW-Authenticate header")
+	void shouldHandleOAuth2AuthenticationException() {
+		final var error = new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN, "The Jwt has expired", null);
+
+		final var headers = new HttpHeaders();
+		headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer error=\"invalid_token\", error_description=\"The Jwt has expired\", " +
+				"resource_metadata=\"http://localhost/.well-known/oauth-protected-resource\"");
+
+		expectProblemDetail(new OAuth2AuthenticationException(error), HttpStatus.UNAUTHORIZED, headers);
 	}
 
 	ProblemDetailAssert expectProblemDetail(Exception ex, HttpStatusCode status) {
