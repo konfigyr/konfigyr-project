@@ -30,9 +30,11 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -88,9 +90,7 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 			case InsufficientAuthenticationException exception -> handleException(
 					exception, HttpStatus.FORBIDDEN, headers, request
 			);
-			default -> handleException(
-					ex, HttpStatus.UNAUTHORIZED, headers, request
-			);
+			default -> handleUnauthorizedException(ex, headers, request);
 		};
 	}
 
@@ -117,6 +117,20 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 	) {
 		final ProblemDetail body = errorResponse.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
 		return createResponseEntity(body, errorResponse.getHeaders(), errorResponse.getStatusCode(), request);
+	}
+
+	protected ResponseEntity<@NonNull Object> handleUnauthorizedException(
+			@NonNull AuthenticationException ex, @NonNull HttpHeaders headers, @NonNull WebRequest request
+	) {
+		if (request instanceof ServletWebRequest servletWebRequest) {
+			final String resourceMetadataUri = ServletUriComponentsBuilder.fromContextPath(servletWebRequest.getRequest())
+					.path("/.well-known/oauth-protected-resource")
+					.toUriString();
+
+			headers.add(HttpHeaders.WWW_AUTHENTICATE, "Bearer resource_metadata=" + resourceMetadataUri);
+		}
+
+		return handleException(ex, HttpStatus.UNAUTHORIZED, headers, request);
 	}
 
 	protected ResponseEntity<@NonNull Object> handleAuthorizationDeniedException(

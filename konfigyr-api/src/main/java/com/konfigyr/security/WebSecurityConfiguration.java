@@ -3,11 +3,13 @@ package com.konfigyr.security;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.konfigyr.security.basic.NamespaceApplicationDetailsService;
 import com.konfigyr.security.oauth.AuthenticatedPrincipalAuthenticationToken;
+import com.konfigyr.security.oauth.OAuthProtectedResourceMetadataCustomizer;
 import com.konfigyr.security.oauth.RequestAttributeBearerTokenResolver;
 import com.konfigyr.web.WebExceptionHandler;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.security.oauth2.server.resource.autoconfigure.OAuth2ResourceServerProperties;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -89,7 +91,11 @@ public class WebSecurityConfiguration {
 
 	@Bean
 	@Order(2)
-	SecurityFilterChain konfigyrSecurityFilterChain(HttpSecurity http, ProblemDetailsAuthenticationExceptionHandler exceptionHandler) {
+	SecurityFilterChain konfigyrSecurityFilterChain(
+			HttpSecurity http,
+			OAuth2ResourceServerProperties properties,
+			ProblemDetailsAuthenticationExceptionHandler exceptionHandler
+	) {
 		final BearerTokenResolver bearerTokenResolver = new RequestAttributeBearerTokenResolver();
 
 		return http
@@ -108,6 +114,9 @@ public class WebSecurityConfiguration {
 				.oauth2ResourceServer(server -> server
 						.jwt(jwt -> jwt
 								.jwtAuthenticationConverter(AuthenticatedPrincipalAuthenticationToken::of)
+						)
+						.protectedResourceMetadata(metadata -> metadata
+								.protectedResourceMetadataCustomizer(new OAuthProtectedResourceMetadataCustomizer(properties))
 						)
 						.bearerTokenResolver(bearerTokenResolver)
 						.authenticationEntryPoint(exceptionHandler)

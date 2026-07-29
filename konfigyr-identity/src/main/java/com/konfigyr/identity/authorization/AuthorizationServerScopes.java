@@ -6,6 +6,15 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 
+/**
+ * Registry of {@link OAuthScope OAuth scopes} that are supported and issued by the Konfigyr
+ * Authorization Server (Identity Provider).
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ * @see OAuthScope
+ * @see OAuthScopes
+ */
 public final class AuthorizationServerScopes {
 
 	private static final OAuthScopes scopes = OAuthScopes.of(
@@ -36,15 +45,7 @@ public final class AuthorizationServerScopes {
 	 * @param scopes collection of scopes to be customized, never {@literal null}
 	 */
 	public static void register(Collection<String> scopes) {
-		AuthorizationServerScopes.get().forEach(scope -> {
-			if (scopes.contains(scope.getAuthority())) {
-				return;
-			}
-
-			scopes.add(scope.getAuthority());
-
-			scope.getIncluded().forEach(included -> scopes.add(included.getAuthority()));
-		});
+		AuthorizationServerScopes.get().to(scopes, OAuthScope::getAuthority);
 	}
 
 }
