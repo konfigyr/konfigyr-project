@@ -21,7 +21,8 @@ public final class AuthorizationServerScopes {
 			OAuthScope.OPENID,
 			OAuthScope.NAMESPACES,
 			OAuthScope.PUBLISH_ARTIFACTS,
-			OAuthScope.PROFILES
+			OAuthScope.PROFILES,
+			OAuthScope.MCP
 	);
 
 	private AuthorizationServerScopes() {

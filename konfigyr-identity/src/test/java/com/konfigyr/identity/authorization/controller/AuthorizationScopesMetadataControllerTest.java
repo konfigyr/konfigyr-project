@@ -70,7 +70,8 @@ class AuthorizationScopesMetadataControllerTest extends AbstractControllerIntegr
 						),
 						new ScopeMetadata(OAuthScope.READ_PROFILES.getAuthority(), "Grants read-only access to profile."),
 						new ScopeMetadata(OAuthScope.WRITE_PROFILES.getAuthority(), "Grants read and write access to profile."),
-						new ScopeMetadata(OAuthScope.DELETE_PROFILES.getAuthority(), "Grants read, write and delete access to profile.")
+						new ScopeMetadata(OAuthScope.DELETE_PROFILES.getAuthority(), "Grants read, write and delete access to profile."),
+						new ScopeMetadata(OAuthScope.MCP.getAuthority(), "Grants access to Konfigyr MCP server.")
 				);
 	}
 

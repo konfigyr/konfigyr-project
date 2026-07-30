@@ -18,6 +18,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-restclient")
 
+    implementation(libs.mcp.sdk)
+
     implementation(libs.konfigyr.artifactory)
 
     implementation("org.springframework.boot:spring-boot-starter-cache")
