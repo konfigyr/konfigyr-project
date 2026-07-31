@@ -7,6 +7,7 @@ com.konfigyr.feature.FeaturesAutoConfiguration
 com.konfigyr.artifactory.ownership.OwnershipAutoConfiguration
 com.konfigyr.kms.KeysetManagerAutoConfiguration
 com.konfigyr.markdown.MarkdownAutoconfiguration
+com.konfigyr.mcp.McpAutoConfiguration
 com.konfigyr.membership.MembershipAutoConfiguration
 com.konfigyr.namespace.NamespaceManagementAutoConfiguration
 com.konfigyr.queue.WorkerQueueAutoConfiguration

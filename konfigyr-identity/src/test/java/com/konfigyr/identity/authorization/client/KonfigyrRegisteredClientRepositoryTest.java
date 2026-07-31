@@ -93,7 +93,8 @@ class KonfigyrRegisteredClientRepositoryTest implements ClientRepositoryTestSupp
 						"profiles",
 						"profiles:read",
 						"profiles:write",
-						"profiles:delete"
+						"profiles:delete",
+						"mcp"
 				))
 				.satisfies(assertAuthorizationGrantTypes(
 						AuthorizationGrantType.AUTHORIZATION_CODE,

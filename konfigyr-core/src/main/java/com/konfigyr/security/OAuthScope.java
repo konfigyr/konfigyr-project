@@ -90,7 +90,12 @@ public enum OAuthScope implements GrantedAuthority {
 	/**
 	 * Grants full access to profile operations like read, write, and delete.
 	 */
-	PROFILES("profiles", READ_PROFILES, WRITE_PROFILES, DELETE_PROFILES);
+	PROFILES("profiles", READ_PROFILES, WRITE_PROFILES, DELETE_PROFILES),
+
+	/**
+	 * Grants access to invoke tools exposed by the Konfigyr MCP server.
+	 */
+	MCP("mcp");
 
 	private final String value;
 	private final Set<OAuthScope> included;

@@ -18,7 +18,8 @@ public final class ResourceServerScopes {
 
 	private static final OAuthScopes scopes = OAuthScopes.of(
 			OAuthScope.NAMESPACES,
-			OAuthScope.PROFILES
+			OAuthScope.PROFILES,
+			OAuthScope.MCP
 	);
 
 	private ResourceServerScopes() {
