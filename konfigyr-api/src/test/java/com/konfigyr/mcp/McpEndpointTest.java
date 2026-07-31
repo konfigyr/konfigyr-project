@@ -91,6 +91,77 @@ class McpEndpointTest extends AbstractControllerTest {
 	}
 
 	@Test
+	@DisplayName("should reject MCP request with a malformed JSON body")
+	void shouldRejectMalformedJsonBody() {
+		mvc.post().uri("/mcp")
+				.with(authentication(TestPrincipals.john(), OAuthScope.MCP))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{not valid json")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.bodyJson()
+				.hasPathSatisfying("$.id", path -> path.assertThat()
+						.isNull())
+				.hasPathSatisfying("$.error.code", path -> path.assertThat()
+						.isEqualTo(McpSchema.ErrorCodes.PARSE_ERROR));
+	}
+
+	@Test
+	@DisplayName("should reject MCP request whose body matches no known JSON-RPC message shape")
+	void shouldRejectUnrecognizedJsonRpcShape() {
+		mvc.post().uri("/mcp")
+				.with(authentication(TestPrincipals.john(), OAuthScope.MCP))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"foo\":\"bar\"}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.bodyJson()
+				.hasPathSatisfying("$.id", path -> path.assertThat()
+						.isNull())
+				.hasPathSatisfying("$.error.code", path -> path.assertThat()
+						.isEqualTo(McpSchema.ErrorCodes.PARSE_ERROR));
+	}
+
+	@Test
+	@DisplayName("should reject MCP request whose body is a JSON-RPC response instead of a request or notification")
+	void shouldRejectJsonRpcResponseMessage() {
+		mvc.post().uri("/mcp")
+				.with(authentication(TestPrincipals.john(), OAuthScope.MCP))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.BAD_REQUEST)
+				.bodyJson()
+				.hasPathSatisfying("$.error.code", path -> path.assertThat()
+						.isEqualTo(McpSchema.ErrorCodes.INVALID_REQUEST))
+				.hasPathSatisfying("$.error.message", path -> path.assertThat()
+						.isEqualTo("The server accepts either requests or notifications"));
+	}
+
+	@Test
+	@DisplayName("should accept MCP notification when MCP scope is granted")
+	void shouldAcceptNotificationWithMcpScope() {
+		mvc.post().uri("/mcp")
+				.with(authentication(TestPrincipals.john(), OAuthScope.MCP))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}")
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.hasStatus(HttpStatus.ACCEPTED);
+	}
+
+	@Test
 	@DisplayName("should list registered tools when MCP scope is granted")
 	void shouldListToolsWithMcpScope() {
 		mvc.post().uri("/mcp")
