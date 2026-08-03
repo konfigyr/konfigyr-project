@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Generate and submit dependency graph
-        uses: gradle/actions/dependency-submission@v6
+        uses: gradle/actions/dependency-submission@v6.2.0
         with:
           artifact-retention-days: 1
           dependency-graph: 'generate-and-submit'
