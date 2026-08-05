@@ -18,6 +18,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.modulith.NamedInterface;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -53,6 +54,7 @@ import static com.konfigyr.data.tables.VaultProfiles.VAULT_PROFILES;
  */
 @NullMarked
 @Repository
+@NamedInterface
 @RequiredArgsConstructor
 public class ChangeRequestManager {
 
