@@ -7,6 +7,7 @@ import com.konfigyr.artifactory.ServiceReleaseCandidate;
 import com.konfigyr.entity.EntityId;
 import com.konfigyr.namespace.Service;
 import org.jspecify.annotations.NonNull;
+import org.springframework.modulith.NamedInterface;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import java.util.Optional;
  * @since 1.0.0
  * @see ServiceRelease
  **/
+@NamedInterface
 public interface ServiceManifests {
 
 	/**

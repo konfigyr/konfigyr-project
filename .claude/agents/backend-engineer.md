@@ -16,6 +16,7 @@ Spring Modulith, jOOQ, and DDD patterns.
 - `/skill spring-testing` — Integration tests, unit tests, controller tests
 - `/skill entity-modeling` — Aggregates, value objects, builders
 - `/skill cross-module-events` — Event publishing, listeners, domain events
+- `/skill mcp-server` — Registering `@McpTool`/`@McpResource`, namespace scoping, JSON-RPC error conventions
 
 ---
 

@@ -39,6 +39,8 @@ There are two distinct token personas. Code that reads JWT claims must account f
 > `sub` is always a Konfigyr-internal identifier. It will never be a GitHub username or external UID — the broker normalises all external identities before issuing the token.
 >
 > The `namespace` claim name is defined by the `KonfigyrClaimNames.NAMESPACE` constant (`konfigyr-core`) — always reference the constant, never the raw string literal.
+>
+> The claim is added whenever the *registered client's* `ClientSettings` carries a `NamespaceClientSettingNames.NAMESPACE` setting (`TokenCustomizer.customize(...)`, `konfigyr-identity`) — independent of grant or authentication type, and independent of `NamespaceClientType`. It's still absent from every user token issued today only because no currently provisioned registered client that can authorize a Konfigyr account is namespace-owned: the frontend's own client isn't one, and none of `SERVICE_ACCOUNT`, `AGENT`, or `WORKLOAD` currently has a client provisioned that authenticates a real member. If that ever changes for any of these types, the resulting token would carry the `namespace` claim despite being a user token by grant shape.
 
 ---
 

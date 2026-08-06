@@ -40,6 +40,45 @@ spring:
     problemdetails:
       enabled: true
 
+konfigyr:
+  mcp:
+    version: ${build.version}
+    description: >
+      Konfigyr's MCP server for Spring Boot configuration management: namespaces, per-service
+      Vault profiles with change-request review, and an Artifactory of build-time configuration
+      metadata.
+    instructions: |
+      Konfigyr manages Spring Boot application configuration: namespaces, per-service Vault
+      profiles with a change-request approval workflow, and an Artifactory that indexes
+      build-time configuration metadata for every artifact version in use.
+
+      Resources (read a known document by identity - no query needed):
+      - service_manifest: a service's current artifact/version manifest.
+      - service_catalog: a service's current full list of available configuration properties.
+      - artifact_metadata: one exact artifact version's property list.
+
+      Tools:
+      - list_services: discover a namespace's services and resolve a name to its exact slug.
+      - search_service_catalog: ranked search of properties currently available to one
+        service's current release.
+      - search_artifactory_properties: ranked search across every artifact visible to you
+        (public, plus your namespace's private artifacts), independent of whether any service
+        depends on it yet.
+      - list_profiles: discover a service's profile slugs and their policy (UNPROTECTED,
+        PROTECTED, or IMMUTABLE).
+      - get_profile_properties: current decrypted values for one profile. Every value is
+        returned in plaintext; treat the whole response as sensitive.
+      - propose_profile_change: create a change request for human review. This never writes
+        to a profile directly, even when its policy would technically allow it - a human
+        must separately approve and merge before any value changes.
+      - list_change_requests: check for an existing open proposal before creating a duplicate.
+      - get_change_request: one change request's full state, property diff, and review history.
+
+      Typical flow for changing a value: list_profiles -> get_profile_properties ->
+      list_change_requests (check for a duplicate) -> propose_profile_change (submit) ->
+      get_change_request (poll status). Only a human can approve and merge a change request;
+      this server has no tool that does either.
+
 management:
   info:
     java:

@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.konfigyr.io.ByteArray;
 import tools.jackson.databind.module.SimpleModule;
 
-final class CryptographyJacksonModule extends SimpleModule {
+public final class CryptographyJacksonModule extends SimpleModule {
 
-	CryptographyJacksonModule() {
+	public CryptographyJacksonModule() {
 		super(CryptographyJacksonModule.class.getSimpleName());
 	}
 

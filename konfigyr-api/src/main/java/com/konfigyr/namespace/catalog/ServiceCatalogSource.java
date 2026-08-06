@@ -7,6 +7,7 @@ import com.konfigyr.namespace.ServiceCatalog;
 import com.konfigyr.support.SearchQuery;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
+import org.springframework.modulith.NamedInterface;
 
 /**
  * Interface that is used to retrieve or query the service catalog.
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
  * @see ServiceCatalog
  */
 @NullMarked
+@NamedInterface
 public interface ServiceCatalogSource {
 
 	/**
