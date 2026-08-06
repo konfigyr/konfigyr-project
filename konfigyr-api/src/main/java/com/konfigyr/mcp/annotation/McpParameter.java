@@ -24,6 +24,8 @@ public @interface McpParameter {
 	 * The name of the raw argument to bind to the annotated parameter.
 	 * <p>
 	 * Left blank, the annotated parameter's own (compiled-in) name is used instead.
+	 *
+	 * @return the name of the raw argument to bind to the annotated parameter.
 	 */
 	String name() default "";
 

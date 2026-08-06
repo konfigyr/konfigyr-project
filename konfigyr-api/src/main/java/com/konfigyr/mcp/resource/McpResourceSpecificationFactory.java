@@ -17,6 +17,18 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
+/**
+ * Builds an {@link AsyncResourceTemplateSpecification} for every {@link McpResource}-annotated
+ * method in a {@link McpAnnotationRegistry}.
+ * <p>
+ * Each specification pairs a {@link ResourceTemplate} - built from the annotation's
+ * {@code uri}, {@code name}, {@code title}, {@code description}, and {@code mimeType} - with an
+ * {@link McpResourceInvoker} that reads the annotated method through an
+ * {@link McpHandlerMethodFactory}-built {@link com.konfigyr.mcp.invoke.McpHandlerMethod}.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ */
 @NullMarked
 @RequiredArgsConstructor
 public final class McpResourceSpecificationFactory {

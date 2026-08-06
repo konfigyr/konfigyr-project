@@ -14,6 +14,7 @@ import java.io.Serializable;
  * {@link #description()} is applied directly onto whatever {@link JsonSchema} builder gets
  * resolved for the type, regardless of which provider or fallback produced it.
  *
+ * @param description a description of the type, can be {@literal null}
  * @author Vladimir Spasic
  * @since 1.0.0
  */

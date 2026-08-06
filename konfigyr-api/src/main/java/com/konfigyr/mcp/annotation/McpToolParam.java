@@ -26,6 +26,8 @@ public @interface McpToolParam {
 	/**
 	 * Alias for {@link #name()}, letting the argument name be set without the {@code name=}
 	 * prefix, e.g. {@code @McpToolParam("query")}.
+	 *
+	 * @return the name of the tool call argument to extract and bind to the annotated parameter.
 	 */
 	@AliasFor(annotation = McpParameter.class, attribute = "name")
 	String value() default "";
@@ -35,18 +37,24 @@ public @interface McpToolParam {
 	 * the key this parameter is registered under in the tool's generated input schema.
 	 * <p>
 	 * Left blank, the annotated parameter's own name is used instead.
+	 *
+	 * @return the name of the tool call argument to extract and bind to the annotated parameter.
 	 */
 	@AliasFor(annotation = McpParameter.class, attribute = "name")
 	String name() default "";
 
 	/**
 	 * Whether this argument is included in the tool's input schema's {@code required} list.
+	 *
+	 * @return whether this argument is required, defaults to {@code true}.
 	 */
 	boolean required() default true;
 
 	/**
 	 * Human-readable description of this argument, included in the tool's input schema to
 	 * help the model understand what value to supply. Left blank, no description is included.
+	 *
+	 * @return human-readable description of this argument.
 	 */
 	String description() default "";
 

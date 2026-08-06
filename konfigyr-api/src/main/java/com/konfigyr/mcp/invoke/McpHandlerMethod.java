@@ -38,6 +38,8 @@ public final class McpHandlerMethod implements Iterable<McpHandlerParameter> {
 	private final List<McpHandlerParameter> parameters;
 
 	/**
+	 * Creates a new {@link McpHandlerMethod} for the given {@code method} on {@code bean}.
+	 *
 	 * @param bean the bean instance {@code method} will be invoked on, can't be {@literal null}
 	 * @param method the handler method, can't be {@literal null}
 	 * @param converter converter used to bind raw argument values to each parameter's declared

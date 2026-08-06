@@ -129,7 +129,7 @@ final class TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext>
 				.claim(StandardClaimNames.NAME, identity.getDisplayName())
 				.claim(StandardClaimNames.PICTURE, identity.getAvatar().get());
 	}
-	
+
 	private void registerNamespaceClaim(ClientSettings settings, JwtClaimsSet.Builder claims) {
 		final EntityId namespace = settings.getSetting(NamespaceClientSettingNames.NAMESPACE);
 

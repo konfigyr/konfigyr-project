@@ -30,6 +30,8 @@ public @interface McpComponent {
 
 	/**
 	 * The Spring bean name for this component, aliased to {@link Component#value()}.
+	 *
+	 * @return the bean name, never {@literal null}
 	 */
 	@AliasFor(annotation = Component.class)
 	String value() default "";

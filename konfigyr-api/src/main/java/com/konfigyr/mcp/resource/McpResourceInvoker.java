@@ -23,6 +23,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * {@link AbstractMcpHandlerMethodInvoker} for {@code resources/read} requests.
+ * <p>
+ * Extracts URI template variables as the handler method's arguments, then converts its return
+ * value into one or more {@link McpSchema.ResourceContents}: a {@link String} becomes text
+ * content, a {@link ByteArray} or {@link InputStreamSource} is read and base64-encoded into a
+ * blob, a {@link Collection} is flattened, and anything else is serialized to JSON. The
+ * declared {@code mimeType} is applied to every content produced this way, except the JSON
+ * fallback, which is always {@code application/json}.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ */
 @NullMarked
 final class McpResourceInvoker extends AbstractMcpHandlerMethodInvoker<ReadResourceRequest, ReadResourceResult> {
 

@@ -33,6 +33,8 @@ public @interface McpTemplateVariable {
 	 * Left blank, the parameter's own name is used instead. Either way, the parameter is
 	 * bound to {@code null} if the resolved name doesn't match a variable actually present
 	 * in the enclosing resource's URI template.
+	 *
+	 * @return the name of the URI template variable to extract and bind to the annotated parameter.
 	 */
 	@AliasFor(annotation = McpParameter.class, attribute = "name")
 	String value() default "";

@@ -21,6 +21,8 @@ public @interface McpTool {
 	/**
 	 * The name of the tool, used when calling it. If not provided, the method name will be
 	 * used.
+	 *
+	 * @return unique tool name, never {@literal null}
 	 */
 	String name() default "";
 
@@ -31,23 +33,31 @@ public @interface McpTool {
 	 * <p>
 	 * This value is used both as the tool's own title and as its annotation hint's title;
 	 * clients should give this precedence over {@link #name()} when displaying the tool.
+	 *
+	 * @return human-readable tool title
 	 */
 	String title() default "";
 
 	/**
-	 * A human-readable description of what the tool does. This can be used by clients to
-	 * improve the LLM's understanding of available tools.
+	 * A human-readable description of what the tool does. Clients can use this to improve
+	 * the LLM's understanding of available tools.
+	 *
+	 * @return description for the MCP tool
 	 */
 	String description() default "";
 
 	/**
 	 * If true, the tool will generate an output schema for non-primitive output types. If
 	 * false, the tool will not automatically generate an output schema.
+	 *
+	 * @return whether to generate an output schema, defaults to {@code false}
 	 */
 	boolean generateOutputSchema() default false;
 
 	/**
 	 * If true, the tool does not modify its environment.
+	 *
+	 * @return whether the tool is read-only, defaults to {@code true}
 	 */
 	boolean readOnlyHint() default true;
 
@@ -56,6 +66,8 @@ public @interface McpTool {
 	 * the tool performs only additive updates.
 	 * <p>
 	 * (This property is meaningful only when readOnlyHint == false)
+	 *
+	 * @return whether the tool is destructive, defaults to {@code false}
 	 */
 	boolean destructiveHint() default false;
 
@@ -64,6 +76,8 @@ public @interface McpTool {
 	 * additional effect on its environment.
 	 * <p>
 	 * (This property is meaningful only when readOnlyHint == false)
+	 *
+	 * @return whether the tool is idempotent, defaults to {@code false}
 	 */
 	boolean idempotentHint() default false;
 
@@ -71,6 +85,8 @@ public @interface McpTool {
 	 * If true, this tool may interact with an "open world" of external entities. If
 	 * false, the tool's domain of interaction is closed. For example, the world of a
 	 * web search tool is open, whereas that of a memory tool is not.
+	 *
+	 * @return whether the tool is open world, defaults to {@code false}
 	 */
 	boolean openWorldHint() default false;
 

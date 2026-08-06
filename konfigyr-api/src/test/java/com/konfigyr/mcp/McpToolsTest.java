@@ -13,10 +13,8 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Map;
 
@@ -25,16 +23,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 
 class McpToolsTest extends AbstractMcpTest {
 
-	@Autowired
-	JsonMapper mapper;
-
 	@Test
 	@DisplayName("should list services within the current namespace")
 	void shouldListServices() {
 		final var request = McpSchema.CallToolRequest.builder("list_services").build();
 
 		mvc.post().uri("/mcp")
-				.with(authentication(EntityId.from(2), OAuthScope.MCP))
+				.with(authentication(EntityId.from(2), OAuthScope.MCP, OAuthScope.READ_NAMESPACES))
 				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
@@ -53,6 +48,25 @@ class McpToolsTest extends AbstractMcpTest {
 	}
 
 	@Test
+	@DisplayName("should require the READ_NAMESPACES scope to list services")
+	void shouldRequireScopeToListServices() {
+		final var request = McpSchema.CallToolRequest.builder("list_services").build();
+
+		mvc.post().uri("/mcp")
+				.with(authentication(EntityId.from(2), OAuthScope.MCP))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(mcpErrorFor(HttpStatus.INTERNAL_SERVER_ERROR, error -> error
+						.hasErrorCode(McpSchema.ErrorCodes.INTERNAL_ERROR)
+						.hasMessage("Access Denied")
+				));
+	}
+
+	@Test
 	@DisplayName("should list a service's profiles")
 	void shouldListProfiles() {
 		final var request = McpSchema.CallToolRequest.builder("list_profiles")
@@ -60,7 +74,7 @@ class McpToolsTest extends AbstractMcpTest {
 				.build();
 
 		mvc.post().uri("/mcp")
-				.with(authentication(EntityId.from(2), OAuthScope.MCP))
+				.with(authentication(EntityId.from(2), OAuthScope.MCP, OAuthScope.READ_PROFILES))
 				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
@@ -88,6 +102,48 @@ class McpToolsTest extends AbstractMcpTest {
 				.build();
 
 		mvc.post().uri("/mcp")
+				.with(authentication(EntityId.from(2), OAuthScope.MCP, OAuthScope.READ_PROFILES))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(mcpErrorFor(HttpStatus.INTERNAL_SERVER_ERROR, error -> error
+						.hasErrorCode(McpSchema.ErrorCodes.INTERNAL_ERROR)
+						.hasMessage("Could not find a service with the following name: unknown-service within a konfigyr Namespace")
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to list profiles for a service that belongs to a different namespace")
+	void shouldListProfilesForServiceInDifferentNamespace() {
+		final var request = McpSchema.CallToolRequest.builder("list_profiles")
+				.arguments(Map.of("service", "john-doe-blog"))
+				.build();
+
+		mvc.post().uri("/mcp")
+				.with(authentication(EntityId.from(2), OAuthScope.MCP, OAuthScope.READ_PROFILES))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(mcpErrorFor(HttpStatus.INTERNAL_SERVER_ERROR, error -> error
+						.hasErrorCode(McpSchema.ErrorCodes.INTERNAL_ERROR)
+						.hasMessage("Could not find a service with the following name: john-doe-blog within a konfigyr Namespace")
+				));
+	}
+
+	@Test
+	@DisplayName("should require the READ_PROFILES scope to list a service's profiles")
+	void shouldRequireScopeToListProfiles() {
+		final var request = McpSchema.CallToolRequest.builder("list_profiles")
+				.arguments(Map.of("service", "konfigyr-id"))
+				.build();
+
+		mvc.post().uri("/mcp")
 				.with(authentication(EntityId.from(2), OAuthScope.MCP))
 				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -97,7 +153,7 @@ class McpToolsTest extends AbstractMcpTest {
 				.apply(log())
 				.satisfies(mcpErrorFor(HttpStatus.INTERNAL_SERVER_ERROR, error -> error
 						.hasErrorCode(McpSchema.ErrorCodes.INTERNAL_ERROR)
-						.hasMessage("No value present")
+						.hasMessage("Access Denied")
 				));
 	}
 
@@ -142,6 +198,48 @@ class McpToolsTest extends AbstractMcpTest {
 	}
 
 	@Test
+	@DisplayName("should require the READ_PROFILES scope to list change requests")
+	void shouldRequireScopeToListChangeRequests() {
+		final var request = McpSchema.CallToolRequest.builder("list_change_requests")
+				.arguments(Map.of("service", "konfigyr-id"))
+				.build();
+
+		mvc.post().uri("/mcp")
+				.with(authentication(EntityId.from(2), OAuthScope.MCP))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(mcpErrorFor(HttpStatus.INTERNAL_SERVER_ERROR, error -> error
+						.hasErrorCode(McpSchema.ErrorCodes.INTERNAL_ERROR)
+						.hasMessage("Access Denied")
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to list change requests for a service that belongs to a different namespace")
+	void shouldListChangeRequestsForServiceInDifferentNamespace() {
+		final var request = McpSchema.CallToolRequest.builder("list_change_requests")
+				.arguments(Map.of("service", "john-doe-blog"))
+				.build();
+
+		mvc.post().uri("/mcp")
+				.with(authentication(EntityId.from(2), OAuthScope.MCP, OAuthScope.READ_PROFILES))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(mcpErrorFor(HttpStatus.INTERNAL_SERVER_ERROR, error -> error
+						.hasErrorCode(McpSchema.ErrorCodes.INTERNAL_ERROR)
+						.hasMessage("Could not find a service with the following name: john-doe-blog within a konfigyr Namespace")
+				));
+	}
+
+	@Test
 	@DisplayName("should retrieve a single change request by its number")
 	void shouldRetrieveChangeRequest() {
 		final var request = McpSchema.CallToolRequest.builder("get_change_request")
@@ -149,7 +247,7 @@ class McpToolsTest extends AbstractMcpTest {
 				.build();
 
 		mvc.post().uri("/mcp")
-				.with(authentication(EntityId.from(2), OAuthScope.MCP))
+				.with(authentication(EntityId.from(2), OAuthScope.MCP, OAuthScope.PROFILES))
 				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
@@ -170,9 +268,51 @@ class McpToolsTest extends AbstractMcpTest {
 				.satisfies(changeRequest -> assertThat(changeRequest.service().slug()).isEqualTo("konfigyr-id"));
 	}
 
+	@Test
+	@DisplayName("should require the READ_PROFILES scope to retrieve a change request")
+	void shouldRequireScopeToRetrieveChangeRequest() {
+		final var request = McpSchema.CallToolRequest.builder("get_change_request")
+				.arguments(Map.of("service", "konfigyr-id", "number", 2))
+				.build();
+
+		mvc.post().uri("/mcp")
+				.with(authentication(EntityId.from(2), OAuthScope.MCP))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(mcpErrorFor(HttpStatus.INTERNAL_SERVER_ERROR, error -> error
+						.hasErrorCode(McpSchema.ErrorCodes.INTERNAL_ERROR)
+						.hasMessage("Access Denied")
+				));
+	}
+
+	@Test
+	@DisplayName("should fail to retrieve a change request for a service that belongs to a different namespace")
+	void shouldRetrieveChangeRequestForServiceInDifferentNamespace() {
+		final var request = McpSchema.CallToolRequest.builder("get_change_request")
+				.arguments(Map.of("service", "john-doe-blog", "number", 1))
+				.build();
+
+		mvc.post().uri("/mcp")
+				.with(authentication(EntityId.from(2), OAuthScope.MCP, OAuthScope.READ_PROFILES))
+				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))
+				.exchange()
+				.assertThat()
+				.apply(log())
+				.satisfies(mcpErrorFor(HttpStatus.INTERNAL_SERVER_ERROR, error -> error
+						.hasErrorCode(McpSchema.ErrorCodes.INTERNAL_ERROR)
+						.hasMessage("Could not find a service with the following name: john-doe-blog within a konfigyr Namespace")
+				));
+	}
+
 	private ListAssert<ChangeRequest> assertThatChangeRequests(McpSchema.CallToolRequest request) {
 		return mvc.post().uri("/mcp")
-				.with(authentication(EntityId.from(2), OAuthScope.MCP))
+				.with(authentication(EntityId.from(2), OAuthScope.MCP, OAuthScope.READ_PROFILES))
 				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(serializeMcpRequest(McpSchema.METHOD_TOOLS_CALL, request))

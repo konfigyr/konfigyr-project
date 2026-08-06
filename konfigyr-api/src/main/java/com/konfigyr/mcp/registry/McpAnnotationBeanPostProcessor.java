@@ -40,6 +40,9 @@ public final class McpAnnotationBeanPostProcessor implements BeanPostProcessor {
 	private final McpAnnotationRegistry registry;
 
 	/**
+	 * Creates a new {@link McpAnnotationBeanPostProcessor} that will register discovered
+	 * MCP candidate beans into the given {@link McpAnnotationRegistry}.
+	 *
 	 * @param registry registry that discovered {@link McpResource}/{@link McpTool} methods are
 	 * registered into, can't be {@literal null}
 	 */

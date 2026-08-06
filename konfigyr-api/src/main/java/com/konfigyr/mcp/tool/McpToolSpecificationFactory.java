@@ -11,7 +11,6 @@ import com.konfigyr.mcp.registry.McpAnnotationRegistry;
 import com.konfigyr.mcp.schema.JsonSchemaGenerator;
 import com.konfigyr.mcp.schema.JsonSchemaGeneratorHints;
 import io.modelcontextprotocol.json.McpJsonMapper;
-import io.modelcontextprotocol.json.TypeRef;
 import io.modelcontextprotocol.server.McpStatelessServerFeatures.AsyncToolSpecification;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 import io.modelcontextprotocol.spec.McpSchema.ToolAnnotations;
@@ -24,11 +23,22 @@ import org.springframework.core.annotation.MergedAnnotation;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Builds an {@link AsyncToolSpecification} for every {@link McpTool}-annotated method in a
+ * {@link McpAnnotationRegistry}.
+ * <p>
+ * Each specification pairs a {@link Tool} - its input schema generated from the method's
+ * {@link McpToolParam}-annotated parameters, its output schema generated from the method's
+ * return type when {@link McpTool#generateOutputSchema()} is set - with an
+ * {@link McpToolInvoker} that reads the annotated method through an
+ * {@link McpHandlerMethodFactory}-built {@link McpHandlerMethod}.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ */
 @NullMarked
 @RequiredArgsConstructor
 public final class McpToolSpecificationFactory {
-
-	static final TypeRef<Map<String, Object>> JSON_SCHEMA_TYPE = new TypeRef<>() {};
 
 	private final McpJsonMapper jsonMapper;
 	private final McpHandlerMethodFactory handlerMethodFactory;
@@ -71,7 +81,7 @@ public final class McpToolSpecificationFactory {
 			}
 		});
 
-		return jsonMapper.convertValue(builder.build(), JSON_SCHEMA_TYPE);
+		return jsonMapper.convertValue(builder.build(), McpToolInvoker.OBJECT_MAP_TYPE);
 	}
 
 	@Nullable
@@ -80,7 +90,7 @@ public final class McpToolSpecificationFactory {
 
 		if (tool.generateOutputSchema() && StructuredOutput.class.isAssignableFrom(returnType.toClass())) {
 			final JsonSchema schema = jsonSchemaGenerator.generate(returnType);
-			return jsonMapper.convertValue(schema, JSON_SCHEMA_TYPE);
+			return jsonMapper.convertValue(schema, McpToolInvoker.OBJECT_MAP_TYPE);
 		}
 
 		return null;

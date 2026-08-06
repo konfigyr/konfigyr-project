@@ -18,10 +18,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * {@link AbstractMcpHandlerMethodInvoker} for {@code tools/call} requests.
+ * <p>
+ * Uses the request's {@code arguments} map directly as the handler method's named arguments.
+ * Converts its return value into a {@link CallToolResult}: an {@link McpSchema.Content} or
+ * {@link CharSequence} is wrapped as-is, a {@link StructuredOutput} is serialized to both its
+ * JSON text and structured content representations, and anything else is serialized to JSON
+ * text only.
+ *
+ * @author Vladimir Spasic
+ * @since 1.0.0
+ */
 @NullMarked
 final class McpToolInvoker extends AbstractMcpHandlerMethodInvoker<CallToolRequest, CallToolResult> {
 
-	private static final TypeRef<Map<String, Object>> STRUCTURED_CONTENT_TYPE_REF = new TypeRef<>() {};
+	static final TypeRef<Map<String, Object>> OBJECT_MAP_TYPE = new TypeRef<>() { /**/ };
 
 	static CallToolResult EMPTY_RESULT = CallToolResult
 			.builder(List.of())
@@ -77,7 +89,7 @@ final class McpToolInvoker extends AbstractMcpHandlerMethodInvoker<CallToolReque
 			final String contents;
 
 			try {
-				structuredContent = mapper.convertValue(output, STRUCTURED_CONTENT_TYPE_REF);
+				structuredContent = mapper.convertValue(output, OBJECT_MAP_TYPE);
 				contents = mapper.writeValueAsString(structuredContent);
 			} catch (IOException ex) {
 				throw new IllegalStateException("Could not write structured tool output", ex);

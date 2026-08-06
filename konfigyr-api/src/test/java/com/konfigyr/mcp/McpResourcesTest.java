@@ -11,14 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 class McpResourcesTest extends AbstractMcpTest {
 
 	@Autowired
-	JsonMapper mapper;
+	private ObjectMapper objectMapper;
 
 	@Test
 	@DisplayName("should retrieve Artifact metadata resource")
@@ -45,7 +45,7 @@ class McpResourcesTest extends AbstractMcpTest {
 				.returns(MediaType.APPLICATION_JSON_VALUE, McpSchema.TextResourceContents::mimeType)
 				.returns(null, McpSchema.TextResourceContents::meta)
 				.extracting(
-						contents -> mapper.readValue(contents.text(), ArtifactMetadata.class),
+						contents -> objectMapper.readValue(contents.text(), ArtifactMetadata.class),
 						InstanceOfAssertFactories.type(ArtifactMetadata.class)
 				)
 				.returns("com.konfigyr", ArtifactDescriptor::groupId)
@@ -124,7 +124,7 @@ class McpResourcesTest extends AbstractMcpTest {
 				.returns(MediaType.APPLICATION_JSON_VALUE, McpSchema.TextResourceContents::mimeType)
 				.returns(null, McpSchema.TextResourceContents::meta)
 				.extracting(
-						contents -> mapper.readValue(contents.text(), Manifest.class),
+						contents -> objectMapper.readValue(contents.text(), Manifest.class),
 						InstanceOfAssertFactories.type(Manifest.class)
 				)
 				.returns(EntityId.from(1).serialize(), Manifest::id)
@@ -198,7 +198,7 @@ class McpResourcesTest extends AbstractMcpTest {
 				.returns(MediaType.APPLICATION_JSON_VALUE, McpSchema.TextResourceContents::mimeType)
 				.returns(null, McpSchema.TextResourceContents::meta)
 				.extracting(
-						contents -> mapper.readValue(contents.text(), ServiceCatalog.class),
+						contents -> objectMapper.readValue(contents.text(), ServiceCatalog.class),
 						InstanceOfAssertFactories.type(ServiceCatalog.class)
 				)
 				.returns(EntityId.from(2), ServiceCatalog::id)

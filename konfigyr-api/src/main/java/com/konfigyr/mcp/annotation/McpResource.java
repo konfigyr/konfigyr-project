@@ -21,11 +21,15 @@ public @interface McpResource {
 	/**
 	 * Intended for programmatic or logical use, but used as a display name in past specs
 	 * or as a fallback if {@link #title()} isn't present.
+	 *
+	 * @return unique MCP resource name, never {@literal null}
 	 */
 	String name() default "";
 
 	/**
 	 * Optional human-readable title of this resource, used by clients for display purposes.
+	 *
+	 * @return human-readable title of this resource, never {@literal null}
 	 */
 	String title() default "";
 
@@ -35,6 +39,8 @@ public @interface McpResource {
 	 * extracted from the incoming request's URI.
 	 *
 	 * @see <a href="https://datatracker.ietf.org/doc/html/rfc6570">RFC 6570</a>
+	 *
+	 * @return URI template for this resource, never {@literal null}
 	 */
 	String uri() default "";
 
@@ -42,12 +48,16 @@ public @interface McpResource {
 	 * A description of what this resource represents. This can be used by clients to
 	 * improve the LLM's understanding of available resources. It can be thought of like a
 	 * "hint" to the model.
+	 *
+	 * @return description of this resource, never {@literal null}
 	 */
 	String description() default "";
 
 	/**
 	 * The MIME type of this resource's content, if known. Defaults to {@code text/plain}
 	 * when not set.
+	 *
+	 * @return MIME type of this resource's content, never {@literal null}
 	 */
 	String mimeType() default "text/plain";
 

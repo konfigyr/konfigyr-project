@@ -125,6 +125,7 @@ Verification:
 | `spring-testing` | Writing integration tests, unit tests, controller tests |
 | `entity-modeling` | Designing domain objects, value objects, aggregates |
 | `cross-module-events` | Publishing/listening to domain events between modules |
+| `mcp-server` | Adding/changing MCP tools or resources, `@RequiresScope` on `com.konfigyr.mcp` beans |
 
 ---
 
@@ -205,6 +206,7 @@ When making changes that affect documented architecture, update the relevant ski
 | Frontend routes or loaders                                       | `project-overview`, `tanstack-routing` |
 | Domain entity design, value objects, aggregates                  | `entity-modeling` |
 | Namespace roles, membership model                                | `project-overview` |
+| New/changed MCP tool, resource, or annotation                    | `project-overview`, `mcp-server` |
 
 ---
 

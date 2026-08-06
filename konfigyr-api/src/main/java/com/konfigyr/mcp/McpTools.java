@@ -8,9 +8,11 @@ import com.konfigyr.mcp.tool.StructuredEntityOutput;
 import com.konfigyr.mcp.tool.StructuredOutput;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.namespace.Service;
+import com.konfigyr.namespace.ServiceNotFoundException;
 import com.konfigyr.namespace.Services;
 import com.konfigyr.security.KonfigyrClaimNames;
 import com.konfigyr.security.OAuthScope;
+import com.konfigyr.security.oauth.RequiresScope;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.vault.*;
 import com.konfigyr.vault.changes.ChangeRequestManager;
@@ -44,6 +46,7 @@ class McpTools {
 					"resolve it to the exact slug required by every other tool or resource that takes a `service` " +
 					"parameter. Returns each match's slug, name, and description."
 	)
+	@RequiresScope(OAuthScope.READ_NAMESPACES)
 	StructuredCollectionOutput<Service> listServices(
 			McpTransportContext context,
 			@McpToolParam(description = "Search term", required = false) String term
@@ -65,13 +68,13 @@ class McpTools {
 					"`propose_profile_change` to confirm a profile slug exists and isn't `IMMUTABLE` - proposing " +
 					"changes against an `IMMUTABLE` profile will be rejected."
 	)
+	@RequiresScope(OAuthScope.READ_PROFILES)
 	StructuredCollectionOutput<Profile> listProfiles(
 			McpTransportContext context,
 			@McpToolParam(name = "service", description = "Unique service slug") String slug,
 			@McpToolParam(description = "Profile search term", required = false) String term
 	) {
-		final Namespace namespace = (Namespace) context.get(KonfigyrClaimNames.NAMESPACE);
-		final Service service = services.get(namespace, slug).orElseThrow();
+		final Service service = lookupService(context, slug);
 
 		final SearchQuery query = SearchQuery.builder()
 				.term(term)
@@ -89,6 +92,7 @@ class McpTools {
 					"Use before `propose_profile_change` to check for an existing open proposal covering the same " +
 					"property before creating a duplicate."
 	)
+	@RequiresScope(OAuthScope.READ_PROFILES)
 	StructuredCollectionOutput<ChangeRequest> listChangeRequests(
 			McpTransportContext context,
 			@McpToolParam(name = "service", description = "Unique service slug") String slug,
@@ -96,8 +100,7 @@ class McpTools {
 			@McpToolParam(description = "The change request state filter", required = false) ChangeRequestState state,
 			@McpToolParam(description = "Change request search term", required = false) String term
 	) {
-		final Namespace namespace = (Namespace) context.get(KonfigyrClaimNames.NAMESPACE);
-		final Service service = services.get(namespace, slug).orElseThrow();
+		final Service service = lookupService(context, slug);
 
 		final SearchQuery query = SearchQuery.builder()
 				.term(term)
@@ -118,17 +121,22 @@ class McpTools {
 					"`mergeStatus` is recomputed asynchronously and can briefly lag the latest history event, " +
 					"don't treat a mismatch between the two as an error."
 	)
+	@RequiresScope(OAuthScope.READ_PROFILES)
 	StructuredEntityOutput<ChangeRequest> getChangeRequest(
 			McpTransportContext context,
 			@McpToolParam(name = "service", description = "Unique service slug") String slug,
 			@McpToolParam(name = "number", description = "Change request number") Long number
 	) {
-		final Namespace namespace = (Namespace) context.get(KonfigyrClaimNames.NAMESPACE);
-		final Service service = services.get(namespace, slug).orElseThrow();
+		final Service service = lookupService(context, slug);
 
 		return changeRequests.get(service, number)
 				.map(StructuredOutput::of)
-				.orElseThrow();
+				.orElseThrow(() -> new ChangeRequestNotFoundException(service, number));
+	}
+
+	private Service lookupService(McpTransportContext context, String slug) {
+		final Namespace namespace = (Namespace) context.get(KonfigyrClaimNames.NAMESPACE);
+		return services.get(namespace, slug).orElseThrow(() -> new ServiceNotFoundException(namespace.slug(), slug));
 	}
 
 }
