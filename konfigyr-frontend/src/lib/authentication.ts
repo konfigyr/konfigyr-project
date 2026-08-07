@@ -114,7 +114,7 @@ export default class Authentication {
   static #configuration: Configuration | null = null;
 
   #session: AuthenticationSession;
-  #metadata: Configuration;
+  readonly #metadata: Configuration;
 
   static async get(): Promise<Authentication> {
     const session = await useAuthenticationSession();

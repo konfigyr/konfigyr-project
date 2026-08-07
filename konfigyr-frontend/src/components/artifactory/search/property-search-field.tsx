@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { FormattedDate, useIntl } from 'react-intl';
-import { SearchIcon, TagIcon } from 'lucide-react';
+import { useIntl } from 'react-intl';
+import { SearchIcon } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@konfigyr/components/ui/input-group';
 

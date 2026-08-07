@@ -1,6 +1,8 @@
 import { cn } from '@konfigyr/components/utils';
 
-export function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
+import type { ComponentProps } from 'react';
+
+export function Skeleton({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
       data-slot="skeleton"
