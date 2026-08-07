@@ -13,7 +13,7 @@ import {
 
 import type { Invitation } from '@konfigyr/hooks/types';
 
-export function JoinNamespace({ invitation, onAccept }: { invitation: Invitation, onAccept: () => void }) {
+export function JoinNamespace({ invitation, onAccept, onDecline }: { invitation: Invitation, onAccept: () => void, onDecline: () => void }) {
   return (
     <Card>
       <CardHeader className="border-b">
@@ -57,6 +57,13 @@ export function JoinNamespace({ invitation, onAccept }: { invitation: Invitation
             values={{ namespace: invitation.organization.name }}
           />
           <ArrowRightIcon />
+        </Button>
+
+        <Button className="w-full mt-2 tracking-wide" size="lg" variant="ghost" onClick={onDecline}>
+          <FormattedMessage
+            defaultMessage="Decline invitation"
+            description="The button label that is shown on the namespace join page to let the user decline the invitation."
+          />
         </Button>
 
         <p className="mt-3 text-muted-foreground" role="note">

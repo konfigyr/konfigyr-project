@@ -6,6 +6,7 @@ export * as accounts from './mocks/account';
 export * as artifacts from './mocks/artifacts';
 export * as kms from './mocks/kms';
 export * as namespaces from './mocks/namespace';
+export * as invitations from './mocks/invitations';
 export * as applications from './mocks/application';
 export * as transfers from './mocks/transfers';
 export * as groupVerifications from './mocks/group-verifications';

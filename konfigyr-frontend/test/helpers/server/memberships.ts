@@ -1,36 +1,22 @@
 import { HttpResponse, http } from 'msw';
-import { parseISO } from 'date-fns';
-import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
-import { accounts, namespaces } from '../mocks';
+import { invitations } from '../mocks';
 
 import type { Invitation, PageResponse } from '@konfigyr/hooks/types';
 
-const INVITATION: Invitation = {
-  key: '0b9f514567f6cd9bb393a06388fc3dd7',
-  organization: {
-    ...namespaces.konfigyr,
-  },
-  sender: {
-    id: accounts.johnDoe.id,
-    email: accounts.johnDoe.email,
-    name: accounts.johnDoe.fullName,
-  },
-  recipient: {
-    email: 'recipient-user@konfigyr.com',
-  },
-  role: NamespaceRole.USER,
-  expired: false,
-  createdAt: parseISO('2026-04-17T09:45:12'),
-  expiryDate: parseISO('2026-04-28T19:45:16'),
-};
+const ACCOUNT_INVITATIONS: Record<string, Invitation | undefined> = Object.values(invitations)
+  .reduce((state, invitation) => ({
+    ...state, [invitation.key]: invitation,
+  }), {});
 
-const list = http.get('http://localhost/api/account/invitations', ( ) => {
+const list = http.get('http://localhost/api/account/invitations', () => {
+  const data = Object.values(ACCOUNT_INVITATIONS) as Array<Invitation>;
+
   const response: PageResponse<Invitation> = {
-    data: [INVITATION],
+    data,
     metadata: {
       number: 1,
-      size: 1,
-      total: 1,
+      size: data.length,
+      total: data.length,
       pages: 1,
     },
   };
@@ -39,7 +25,9 @@ const list = http.get('http://localhost/api/account/invitations', ( ) => {
 });
 
 const get = http.get('http://localhost/api/account/invitations/:key', ({ params }) => {
-  if (INVITATION.key !== params.key) {
+  const invitation = ACCOUNT_INVITATIONS[params.key as string];
+
+  if (!invitation) {
     return HttpResponse.json({
       status: 404,
       title: 'Not found',
@@ -47,11 +35,23 @@ const get = http.get('http://localhost/api/account/invitations/:key', ({ params 
     }, { status: 404 });
   }
 
-  return HttpResponse.json(INVITATION);
+  return HttpResponse.json(invitation);
 });
 
 const accept = http.post('http://localhost/api/account/invitations/:key', ({ params }) => {
-  if (INVITATION.key !== params.key) {
+  if (!ACCOUNT_INVITATIONS[params.key as string]) {
+    return HttpResponse.json({
+      status: 404,
+      title: 'Not found',
+      detail: `Invitation with key '${params.key}' not found.`,
+    }, { status: 404 });
+  }
+
+  return new HttpResponse(null, { status: 204 });
+});
+
+const decline = http.delete('http://localhost/api/account/invitations/:key', ({ params }) => {
+  if (!ACCOUNT_INVITATIONS[params.key as string]) {
     return HttpResponse.json({
       status: 404,
       title: 'Not found',
@@ -66,4 +66,5 @@ export default [
   list,
   get,
   accept,
+  decline,
 ];

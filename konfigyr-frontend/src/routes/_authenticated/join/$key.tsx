@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { getAccountInvitation, useAcceptInvitation } from '@konfigyr/hooks';
-import { JoinNamespace } from '@konfigyr/components/namespace/members/join';
+import { getAccountInvitation, useAcceptInvitation, useDeclineInvitation } from '@konfigyr/hooks';
+import { useErrorNotification } from '@konfigyr/components/error';
+import { JoinNamespace } from '@konfigyr/components/account/join';
 
 export const Route = createFileRoute('/_authenticated/join/$key')({
   component: RouteComponent,
@@ -11,12 +12,29 @@ export const Route = createFileRoute('/_authenticated/join/$key')({
 function RouteComponent() {
   const navigate = Route.useNavigate();
   const invitation = Route.useLoaderData();
-  const { mutateAsync: acceptInvitation } = useAcceptInvitation();
+  const errorNotification = useErrorNotification();
+  const { mutateAsync: acceptInvitation } = useAcceptInvitation(invitation.key);
+  const { mutateAsync: declineInvitation } = useDeclineInvitation(invitation.key);
 
   const onAccept = useCallback(async () => {
-    await acceptInvitation(invitation.key);
-    await navigate({ to: '/namespace/$namespace', params: { namespace: invitation.organization.slug } });
-  }, [invitation]);
+    try {
+      await acceptInvitation();
+    } catch (error) {
+      return errorNotification(error);
+    }
+
+    return navigate({ to: '/namespace/$namespace', params: { namespace: invitation.organization.slug } });
+  }, [invitation, acceptInvitation, errorNotification, navigate]);
+
+  const onDecline = useCallback(async () => {
+    try {
+      await declineInvitation();
+    } catch (error) {
+      return errorNotification(error);
+    }
+
+    return navigate({ to: '/' });
+  }, [declineInvitation, errorNotification, navigate]);
 
   return (
     <div className="h-screen flex items-center justify-center bg-neutral-50">
@@ -24,6 +42,7 @@ function RouteComponent() {
         <JoinNamespace
           invitation={invitation}
           onAccept={onAccept}
+          onDecline={onDecline}
         />
       </div>
     </div>
