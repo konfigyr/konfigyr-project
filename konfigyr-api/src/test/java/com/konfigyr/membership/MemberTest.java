@@ -72,21 +72,17 @@ class MemberTest {
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Member email address can not be blank");
 
-		assertThatThrownBy(() -> builder.email("jane.doe@konfigyr.com").build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Member full name can not be null");
-
-		assertThat(builder.fullName("Jane Doe").build())
+		assertThat(builder.email("jane.doe@konfigyr.com").build())
 				.returns(EntityId.from(12476518224L), Member::id)
 				.returns(EntityId.from(12476518224L), Member::namespace)
 				.returns(EntityId.from(12476518224L), Member::account)
 				.returns(NamespaceRole.USER, Member::role)
 				.returns("jane.doe@konfigyr.com", Member::email)
-				.returns(FullName.of("Jane", "Doe"), Member::fullName)
-				.returns("Jane Doe", Member::displayName)
-				.returns("Jane", Member::firstName)
-				.returns("Doe", Member::lastName)
-				.returns(Avatar.generate(EntityId.from(12476518224L), "JD"), Member::avatar)
+				.returns(null, Member::fullName)
+				.returns("jane.doe@konfigyr.com", Member::displayName)
+				.returns(null, Member::firstName)
+				.returns(null, Member::lastName)
+				.returns(Avatar.generate(EntityId.from(12476518224L), "J"), Member::avatar)
 				.returns(null, Member::since);
 	}
 
