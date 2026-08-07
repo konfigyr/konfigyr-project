@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 import { useAccount } from '@konfigyr/hooks/account/context';
+import { namespaceKeys } from '@konfigyr/hooks/namespace/query';
 import { NamespaceRole } from './types';
 
 import type { PageResponse, Pageable } from '@konfigyr/hooks/hateoas/types';
@@ -61,6 +62,8 @@ export const useAcceptInvitation = (key: string) => {
         }
         return invitations.filter(it => it.key !== key);
       });
+
+      client.invalidateQueries({ queryKey: namespaceKeys.getNamespaces() });
     },
   });
 };

@@ -1,11 +1,20 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Link2OffIcon } from 'lucide-react';
 import { FormattedDate, FormattedMessage } from 'react-intl';
-import { useAcceptInvitation, useDeclineInvitation } from '@konfigyr/hooks';
+import { Link } from '@tanstack/react-router';
+import { useAcceptInvitation, useAccountContext, useDeclineInvitation, useLastUsedNamespace } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { NamespaceRoleBadge } from '@konfigyr/components/namespace/role';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button, buttonVariants } from '@konfigyr/components/ui/button';
+import { Card, CardContent } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@konfigyr/components/ui/select';
 import {
   Table,
   TableBody,
@@ -21,72 +30,128 @@ import type { Invitation } from '@konfigyr/hooks/types';
 export function AccountInvitations({ invitations }: { invitations: Array<Invitation> }) {
   const errorNotification = useErrorNotification();
 
-  return (
-    <Table variant="card">
-      <TableHeader>
-        <TableRow>
-          <TableHead>
-            <FormattedMessage
-              defaultMessage="Namespace"
-              description="Label for the namespace column in the account invitations table."
-            />
-          </TableHead>
-          <TableHead>
-            <FormattedMessage
-              defaultMessage="Role"
-              description="Label for the role column in the account invitations table."
-            />
-          </TableHead>
-          <TableHead>
-            <FormattedMessage
-              defaultMessage="Sender"
-              description="Label for the sender column in the account invitations table."
-            />
-          </TableHead>
-          <TableHead>
-            <FormattedMessage
-              defaultMessage="Created at"
-              description="Label for the created at column in the account invitations table."
-            />
-          </TableHead>
-          <TableHead>
-            <FormattedMessage
-              defaultMessage="Expires at"
-              description="Label for the expires at column in the account invitations table."
-            />
-          </TableHead>
-          <TableHead>
-            <span className="sr-only">
-              <FormattedMessage
-                defaultMessage="Actions"
-                description="Label for the actions column in the account invitations table."
-              />
-            </span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {invitations.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={6}>
-              <EmptyState
-                title="No pending invitations"
-                description="You don't have any pending invitations to accept or decline."
-                icon={<Link2OffIcon size="2rem" />}
-              />
-            </TableCell>
-          </TableRow>
-        )}
+  if (invitations.length === 0) {
+    return (
+      <div className="lg:w-1/3 xl:w1/5 mx-auto p-4">
+        <AccountInvitationsEmptyState />
+      </div>
+    );
+  }
 
-        {invitations.map(invitation => (
-          <AccountInvitationRow
-            key={invitation.key}
-            invitation={invitation}
-            onError={errorNotification}
-          />
-        ))}
-      </TableBody>
-    </Table>
+  return (
+    <div className="container">
+      <Table variant="card">
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              <FormattedMessage
+                defaultMessage="Namespace"
+                description="Label for the namespace column in the account invitations table."
+              />
+            </TableHead>
+            <TableHead>
+              <FormattedMessage
+                defaultMessage="Role"
+                description="Label for the role column in the account invitations table."
+              />
+            </TableHead>
+            <TableHead>
+              <FormattedMessage
+                defaultMessage="Sender"
+                description="Label for the sender column in the account invitations table."
+              />
+            </TableHead>
+            <TableHead>
+              <FormattedMessage
+                defaultMessage="Created at"
+                description="Label for the created at column in the account invitations table."
+              />
+            </TableHead>
+            <TableHead>
+              <FormattedMessage
+                defaultMessage="Expires at"
+                description="Label for the expires at column in the account invitations table."
+              />
+            </TableHead>
+            <TableHead>
+              <span className="sr-only">
+                <FormattedMessage
+                  defaultMessage="Actions"
+                  description="Label for the actions column in the account invitations table."
+                />
+              </span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invitations.map(invitation => (
+            <AccountInvitationRow
+              key={invitation.key}
+              invitation={invitation}
+              onError={errorNotification}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function AccountInvitationsEmptyState() {
+  const { memberships } = useAccountContext();
+  const [lastUsedNamespace] = useLastUsedNamespace();
+  const [namespace, setNamespace] = useState<string | undefined>(lastUsedNamespace ?? memberships[0]?.slug);
+
+  const selected = memberships.find(membership => membership.slug === namespace);
+
+  return (
+    <Card>
+      <CardContent>
+        <EmptyState
+          title="No pending invitations"
+          description="You don't have any pending invitations to accept or decline."
+          icon={<Link2OffIcon size="2rem" />}
+        >
+          <div className="flex w-full flex-col gap-3">
+            {memberships.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Select value={namespace} onValueChange={value => setNamespace(value ?? undefined)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>{selected?.name}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {memberships.map(membership => (
+                      <SelectItem key={membership.slug} value={membership.slug}>
+                        {membership.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Link
+                  to="/namespace/$namespace"
+                  params={{ namespace: namespace ?? memberships[0].slug }}
+                  className={buttonVariants()}
+                >
+                  <FormattedMessage
+                    defaultMessage="Go"
+                    description="Label for the button that takes the user to the selected namespace once every account invitation has been resolved."
+                  />
+                </Link>
+              </div>
+            )}
+            <Link
+              to="/namespace/provision"
+              className={buttonVariants({ variant: memberships.length > 0 ? 'ghost' : 'default' })}
+            >
+              <FormattedMessage
+                defaultMessage="Create a namespace"
+                description="Label for the button that takes the user to namespace provisioning once every account invitation has been resolved."
+              />
+            </Link>
+          </div>
+        </EmptyState>
+      </CardContent>
+    </Card>
   );
 }
 

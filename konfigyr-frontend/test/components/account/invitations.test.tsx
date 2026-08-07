@@ -2,13 +2,16 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { HttpResponse, http } from 'msw';
 import { cleanup, waitFor, within } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
+import { AccountContext } from '@konfigyr/hooks';
 import { AccountInvitations } from '@konfigyr/components/account/invitations';
 import { Toaster } from '@konfigyr/components/ui/toast';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
-import { invitations } from '@konfigyr/test/helpers/mocks';
+import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
+import { accounts, invitations, namespaces } from '@konfigyr/test/helpers/mocks';
 import { server } from '@konfigyr/test/helpers/server';
 
-import type { Invitation } from '@konfigyr/hooks/types';
+import type { ReactNode } from 'react';
+import type { Invitation, Namespace } from '@konfigyr/hooks/types';
 
 const render = (data: Array<Invitation>) => renderWithQueryClient((
   <>
@@ -17,14 +20,46 @@ const render = (data: Array<Invitation>) => renderWithQueryClient((
   </>
 ));
 
+const withAccount = (children: ReactNode, memberships: Array<Namespace> = []) => (
+  <AccountContext.Provider value={{ account: accounts.johnDoe, memberships }}>
+    {children}
+  </AccountContext.Provider>
+);
+
+const renderEmptyState = (memberships: Array<Namespace> = []) => renderComponentWithRouter(
+  withAccount(<AccountInvitations invitations={[]} />, memberships),
+);
+
 describe('components | account | <AccountInvitations/>', () => {
   afterEach(() => cleanup());
 
-  test('should render empty state when there are no pending invitations', () => {
-    const { getByRole, getByText } = render([]);
+  test('should render only the create-namespace action when the account has no memberships', () => {
+    const { queryByRole, getByRole, getByText } = renderEmptyState([]);
 
-    expect(getByRole('table')).toBeInTheDocument();
     expect(getByText('No pending invitations')).toBeInTheDocument();
+    expect(queryByRole('combobox')).not.toBeInTheDocument();
+    expect(queryByRole('link', { name: 'Go' })).not.toBeInTheDocument();
+    expect(getByRole('link', { name: 'Create a namespace' })).toHaveAttribute('href', '/namespace/provision');
+  });
+
+  test('should render a namespace selector prefilled with the first membership alongside the create-namespace action', () => {
+    const { getByRole } = renderEmptyState([namespaces.konfigyr, namespaces.johnDoe]);
+
+    expect(getByRole('combobox')).toHaveTextContent('Konfigyr');
+    expect(getByRole('link', { name: 'Go' })).toHaveAttribute('href', '/namespace/konfigyr');
+    expect(getByRole('link', { name: 'Create a namespace' })).toHaveAttribute('href', '/namespace/provision');
+  });
+
+  test('should navigate to the namespace selected from the selector', async () => {
+    const user = userEvents.setup();
+    const { getByRole } = renderEmptyState([namespaces.konfigyr, namespaces.johnDoe]);
+
+    await user.click(getByRole('combobox'));
+    await user.click(await waitFor(() => getByRole('option', { name: 'John Doe' })));
+
+    await waitFor(() => {
+      expect(getByRole('link', { name: 'Go' })).toHaveAttribute('href', '/namespace/john-doe');
+    });
   });
 
   test('should render invitations spanning multiple namespaces', () => {
