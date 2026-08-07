@@ -10,6 +10,7 @@ import org.jmolecules.ddd.annotation.Identity;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -107,19 +108,20 @@ public record Invitation(
 	 *
 	 * @param id    entity identifier of the sender account, can't be {@literal null}
 	 * @param email email address of the sender account, can't be {@literal null}
-	 * @param name  full name of the sender account, can't be {@literal null}
+	 * @param name  full name of the sender account, can be {@literal null} when the sender account
+	 *              has no name set
 	 */
 	public record Sender(
 			@NonNull EntityId id,
 			@NonNull String email,
-			@NonNull FullName name
+			@Nullable FullName name
 	) implements Serializable {
 
 		@Serial
 		private static final long serialVersionUID = Invitation.serialVersionUID;
 
 		public Sender(@NonNull EntityId id, @NonNull String email, String firstName, String lastName) {
-			this(id, email, FullName.of(firstName, lastName));
+			this(id, email, StringUtils.hasText(firstName) ? FullName.of(firstName, lastName) : null);
 		}
 	}
 

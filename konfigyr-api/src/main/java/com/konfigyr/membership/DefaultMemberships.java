@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -182,10 +183,10 @@ class DefaultMemberships implements Memberships {
 
 	@NonNull
 	static Member toMember(@NonNull Record record) {
-		final FullName fullName = FullName.of(
-				record.get(ACCOUNTS.FIRST_NAME),
-				record.get(ACCOUNTS.LAST_NAME)
-		);
+		final String firstName = record.get(ACCOUNTS.FIRST_NAME);
+		final FullName fullName = StringUtils.hasText(firstName)
+				? FullName.of(firstName, record.get(ACCOUNTS.LAST_NAME))
+				: null;
 
 		return Member.builder()
 				.id(record.get(NAMESPACE_MEMBERS.ID))

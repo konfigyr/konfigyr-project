@@ -35,7 +35,7 @@ import java.time.ZoneOffset;
  * @param account identifier of the account used by the member, can't be {@literal null}
  * @param role role of this member within the namespace, can't be {@literal null}
  * @param email email address of this member, can't be {@literal null}
- * @param fullName full name of this member, can't be {@literal null}
+ * @param fullName full name of this member, can be {@literal null} when the account has no name set
  * @param avatar member profile avatar, can't be {@literal null}
  * @param since when did this member join the namespace, can be {@literal null}
  * @author Vladimir Spasic
@@ -48,7 +48,7 @@ public record Member(
 		@NonNull EntityId account,
 		@NonNull NamespaceRole role,
 		@NonNull String email,
-		@NonNull FullName fullName,
+		@Nullable FullName fullName,
 		@NonNull Avatar avatar,
 		@Nullable OffsetDateTime since
 ) implements Serializable {
@@ -57,33 +57,33 @@ public record Member(
 	private static final long serialVersionUID = -9192528953125322241L;
 
 	/**
-	 * Returns the first name for this {@link Member}.
+	 * Returns the first name for this {@link Member} if the {@link FullName} is known.
 	 *
-	 * @return member's first name, can't be {@literal null}
+	 * @return member's first name, can be {@literal null}
 	 */
-	@NonNull
+	@Nullable
 	public String firstName() {
-		return fullName.firstName();
+		return fullName == null ? null : fullName.firstName();
 	}
 
 	/**
-	 * Returns the last name for this {@link Member}.
+	 * Returns the last name for this {@link Member} if the {@link FullName} is known.
 	 *
-	 * @return member's last name, can't be {@literal null}
+	 * @return member's last name, can be {@literal null}
 	 */
-	@NonNull
+	@Nullable
 	public String lastName() {
-		return fullName.lastName();
+		return fullName == null ? null : fullName.lastName();
 	}
 
 	/**
-	 * Returns the full name as a string to display the full name of the {@link Member}.
+	 * Returns the full name or email address to display for this {@link Member}.
 	 *
-	 * @return full name string representation, can't be {@literal null}
+	 * @return full name or email address, can't be {@literal null}
 	 */
 	@NonNull
 	public String displayName() {
-		return fullName.get();
+		return fullName == null ? email : fullName.get();
 	}
 
 	/**
@@ -333,10 +333,9 @@ public record Member(
 			Assert.notNull(account, "Account entity identifier can not be null");
 			Assert.notNull(role, "Namespace role can not be null");
 			Assert.hasText(email, "Member email address can not be blank");
-			Assert.notNull(fullName, "Member full name can not be null");
 
 			if (avatar == null) {
-				avatar = Avatar.generate(account, fullName.initials());
+				avatar = Avatar.generate(account, fullName == null ? email.substring(0, 1) : fullName.initials());
 			}
 
 			return new Member(id, namespace, account, role, email, fullName, avatar, since);

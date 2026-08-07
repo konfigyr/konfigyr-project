@@ -15,6 +15,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
@@ -55,13 +56,18 @@ class InvitationSender {
 				.pathSegment("join", event.key())
 				.toUriString();
 
+		final String firstName = invitation.get(ACCOUNTS.FIRST_NAME);
+		final String sender = StringUtils.hasText(firstName)
+				? FullName.of(firstName, invitation.get(ACCOUNTS.LAST_NAME)).get()
+				: invitation.get(ACCOUNTS.EMAIL);
+
 		final Mail mail = Mail.builder()
 				.subject("mail.invitation.subject", invitation.get(NAMESPACES.NAME))
 				.template("mail/invitation")
 				.to(invitation.get(INVITATIONS.RECIPIENT_EMAIL))
 				.attribute("invitation", invitation)
 				.attribute("namespace", invitation.get(NAMESPACES.NAME))
-				.attribute("sender", FullName.of(invitation.get(ACCOUNTS.FIRST_NAME), invitation.get(ACCOUNTS.LAST_NAME)))
+				.attribute("sender", sender)
 				.attribute("expiration", invitation.get(INVITATIONS.EXPIRY_DATE))
 				.attribute("link", invitationLink)
 				.build();
@@ -81,6 +87,7 @@ class InvitationSender {
 		return context.select(
 						NAMESPACES.SLUG,
 						NAMESPACES.NAME,
+						ACCOUNTS.EMAIL,
 						ACCOUNTS.FIRST_NAME,
 						ACCOUNTS.LAST_NAME,
 						INVITATIONS.RECIPIENT_EMAIL,

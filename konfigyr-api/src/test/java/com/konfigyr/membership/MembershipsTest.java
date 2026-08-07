@@ -7,12 +7,14 @@ import com.konfigyr.namespace.NamespaceManager;
 import com.konfigyr.namespace.NamespaceRole;
 import com.konfigyr.support.SearchQuery;
 import com.konfigyr.test.AbstractIntegrationTest;
+import org.jooq.DSLContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
 import static org.assertj.core.api.Assertions.*;
 
 class MembershipsTest extends AbstractIntegrationTest {
@@ -22,6 +24,9 @@ class MembershipsTest extends AbstractIntegrationTest {
 
 	@Autowired
 	Memberships members;
+
+	@Autowired
+	DSLContext context;
 
 	@Test
 	@DisplayName("should lookup namespace members by entity identifier")
@@ -75,6 +80,29 @@ class MembershipsTest extends AbstractIntegrationTest {
 				.returns(EntityId.from(1), Member::account)
 				.returns(EntityId.from(2), Member::namespace)
 				.returns(NamespaceRole.ADMIN, Member::role);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should retrieve namespace members whose account has no name set")
+	void shouldRetrieveMemberWithoutName() {
+		context.update(ACCOUNTS)
+				.setNull(ACCOUNTS.FIRST_NAME)
+				.setNull(ACCOUNTS.LAST_NAME)
+				.where(ACCOUNTS.ID.eq(1L))
+				.execute();
+
+		assertThat(members.get(lookupNamespace("konfigyr"), EntityId.from(2)))
+				.isPresent()
+				.get()
+				.returns(null, Member::fullName)
+				.returns(null, Member::firstName)
+				.returns(null, Member::lastName)
+				.returns("john.doe@konfigyr.com", Member::displayName);
+
+		assertThat(members.find(lookupNamespace("konfigyr")))
+				.extracting(Member::id, Member::displayName)
+				.contains(tuple(EntityId.from(2), "john.doe@konfigyr.com"));
 	}
 
 	@Test

@@ -5,7 +5,6 @@ import com.konfigyr.mail.Mail;
 import com.konfigyr.mail.Recipient;
 import com.konfigyr.mail.test.MailAssert;
 import com.konfigyr.namespace.NamespaceManager;
-import com.konfigyr.support.FullName;
 import com.konfigyr.test.AbstractIntegrationTest;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -20,9 +19,11 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSendException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 
+import static com.konfigyr.data.tables.Accounts.ACCOUNTS;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -64,7 +65,7 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 				.hasSubject("mail.invitation.subject", "Konfigyr")
 				.hasTemplate("mail/invitation")
 				.hasRecipients(Recipient.to("invitee@konfigyr.com"))
-				.hasAttribute("sender", FullName.of("John", "Doe"))
+				.hasAttribute("sender", "John Doe")
 				.hasAttribute("namespace", "Konfigyr")
 				.hasAttribute("link", "https://konfigyr.com/join/09320d7f8e21143b2957f1caded74cbc")
 				.hasAttributeSatisfying("expiration", date -> Assertions.assertThat(date)
@@ -72,6 +73,27 @@ class InvitationSenderTest extends AbstractIntegrationTest {
 						.asInstanceOf(InstanceOfAssertFactories.OFFSET_DATE_TIME)
 						.isInTheFuture()
 				);
+	}
+
+	@Test
+	@Transactional
+	@DisplayName("should send invitation email using sender email address when sender has no name")
+	void shouldSendInvitationForSenderWithoutName() {
+		context.update(ACCOUNTS)
+				.setNull(ACCOUNTS.FIRST_NAME)
+				.setNull(ACCOUNTS.LAST_NAME)
+				.where(ACCOUNTS.ID.eq(1L))
+				.execute();
+
+		final var namespace = namespaces.findBySlug("konfigyr").orElseThrow();
+		final var event = new InvitationEvent.Created(namespace, "09320d7f8e21143b2957f1caded74cbc");
+
+		assertThatNoException().isThrownBy(() -> sender.send(event));
+
+		verify(mailer).send(captor.capture());
+
+		MailAssert.assertThat(captor.getValue())
+				.hasAttribute("sender", "john.doe@konfigyr.com");
 	}
 
 	@Test
