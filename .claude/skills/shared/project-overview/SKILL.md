@@ -389,6 +389,7 @@ pathless `_authenticated` layout; `/auth/*`, `/api/$`, and `/error` do not.
 ```
 /                                                          Dashboard
 /account                                                   User account page
+/invitations                                               Pending invitations across all namespaces
 /join/$key                                                 Invitation acceptance
 /namespace/provision                                       Namespace onboarding
 /namespace/$namespace                                      Namespace detail
