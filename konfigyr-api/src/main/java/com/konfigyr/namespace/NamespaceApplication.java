@@ -54,12 +54,13 @@ import java.time.ZoneOffset;
  *             client authentication methods, and security constraints applied at registration
  * @param name Human-readable name of the application, can't be {@literal null}.
  * @param clientId public identifier of the OAuth2 client associated with this application, can't be {@literal null}.
- * @param clientSecret confidential secret associated with the OAuth2 client. Present for
- *                     {@link NamespaceClientType#SERVICE_ACCOUNT} and
- *                     {@link NamespaceClientType#WORKLOAD} applications, returned once on creation
- *                     and once on rotation, then never again. Always {@literal null} for
+ * @param clientSecret confidential secret associated with the OAuth2 client. Present only for
+ *                     {@link NamespaceClientType#SERVICE_ACCOUNT} applications, returned once on
+ *                     creation and once on rotation, then never again. Always {@literal null} for
  *                     {@link NamespaceClientType#AGENT}, which is a public client running on a
- *                     user's device where a secret cannot be stored securely.
+ *                     user's device where a secret cannot be stored securely, and for
+ *                     {@link NamespaceClientType#WORKLOAD}, which authenticates via a signed
+ *                     external OIDC token instead of a stored secret.
  * @param settings     type-specific configuration for this application.
  * @param scopes set of OAuth2 scopes granted to this application, can't be {@literal null}.
  * @param expiresAt expiration timestamp for this application’s credentials. When defined, the client credentials

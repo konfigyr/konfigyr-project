@@ -19,13 +19,17 @@ Domain events are sealed class hierarchies representing state changes. Each modu
 
 ### Basic Event Hierarchy
 
+This is the real, current `NamespaceEvent` — accurate as of this writing:
+
 ```java
 // namespace/NamespaceEvent.java
 public abstract sealed class NamespaceEvent extends EntityEvent implements Supplier<Namespace>
         permits NamespaceEvent.Created, 
                 NamespaceEvent.Renamed, 
                 NamespaceEvent.Deleted,
-                NamespaceEvent.StatusChanged {
+                NamespaceEvent.MembershipEvent,
+                NamespaceEvent.ApplicationEvent,
+                NamespaceEvent.TrustedIssuerEvent {
 
     private final Namespace namespace;
 
@@ -71,21 +75,10 @@ public abstract sealed class NamespaceEvent extends EntityEvent implements Suppl
         }
     }
 
-    // ===== Status Changed Event =====
-    @DomainEvent(name = "statusChanged", namespace = "namespaces")
-    public static final class StatusChanged extends NamespaceEvent {
-        private final NamespaceStatus from;
-        private final NamespaceStatus to;
-
-        public StatusChanged(Namespace namespace, NamespaceStatus from, NamespaceStatus to) {
-            super(namespace);
-            this.from = from;
-            this.to = to;
-        }
-
-        public NamespaceStatus from() { return from; }
-        public NamespaceStatus to() { return to; }
-    }
+    // MembershipEvent (MemberAdded/MemberUpdated/MemberRemoved), ApplicationEvent (4 variants), and
+    // TrustedIssuerEvent (3 variants) are further nested sealed sub-hierarchies, each carrying the
+    // affected object alongside the namespace. See "Namespace & Membership Domain" in project-overview
+    // for the full breakdown — omitted here to keep this example focused on the flat-event pattern.
 }
 ```
 

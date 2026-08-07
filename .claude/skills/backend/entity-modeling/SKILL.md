@@ -80,40 +80,37 @@ public record Namespace(
 }
 ```
 
-### Aggregate Root with Behavior
+### Behavior Methods on Entities
 
-Aggregates can have behavior methods (not just getters):
+Records can have behavior methods, not just getters. Real example from `com.konfigyr.membership.Member` —
+note it's an `@Entity`, not an `@AggregateRoot`: it references its owning `Namespace` aggregate by
+`EntityId` rather than embedding it (see "Aggregate Boundaries" below):
 
 ```java
-@AggregateRoot
-public record Namespace(
-        @NonNull EntityId id,
-        @NonNull String slug,
-        @NonNull String name,
-        @NonNull NamespaceStatus status
+@Entity
+public record Member(
+        @NonNull @Identity EntityId id,
+        @NonNull EntityId namespace,
+        @NonNull EntityId account,
+        @NonNull NamespaceRole role,
+        @NonNull String email,
+        @Nullable FullName fullName,
+        @NonNull Avatar avatar,
+        @Nullable OffsetDateTime since
 ) implements Serializable {
 
-    public static Builder builder() { return new Builder(); }
-
-    // Behavior: transition state
-    public NamespaceEvent.StatusChanged changeStatus(NamespaceStatus newStatus) {
-        if (status == newStatus) {
-            throw new InvalidStateTransitionException("Already in " + status);
-        }
-        
-        if (status == ARCHIVED && newStatus != ACTIVE) {
-            throw new InvalidStateTransitionException("Cannot change status of archived namespace");
-        }
-
-        return new NamespaceEvent.StatusChanged(this, status, newStatus);
+    // Behavior: prefer the full name, fall back to email when the account has none set
+    @NonNull
+    public String displayName() {
+        return fullName == null ? email : fullName.get();
     }
 
-    // Behavior: check if namespace is active
-    public boolean isActive() {
-        return status == NamespaceStatus.ACTIVE;
+    // Behavior: check membership without a separate repository lookup
+    public boolean isMemberOf(@NonNull Namespace namespace) {
+        return this.namespace.equals(namespace.id());
     }
 
-    // ... rest of builder omitted
+    // ... firstName()/lastName() and Builder omitted, see com.konfigyr.membership.Member
 }
 ```
 
@@ -233,20 +230,17 @@ public record Avatar(
 
 Commands represent user intent. They're typically value objects passed to service methods.
 
+This is exactly what `com.konfigyr.namespace.NamespaceDefinition` is — the real command type accepted by
+`NamespaceManager.create(@NonNull NamespaceDefinition definition)`:
+
 ```java
 @ValueObject
-public record CreateNamespaceCommand(
+public record NamespaceDefinition(
         @NonNull EntityId owner,
         @NonNull Slug slug,
         @NonNull String name,
         @Nullable String description
 ) implements Serializable {
-
-    public CreateNamespaceCommand {
-        Assert.notNull(owner, "Owner is required");
-        Assert.notNull(slug, "Slug is required");
-        Assert.hasText(name, "Name is required");
-    }
 
     public static Builder builder() {
         return new Builder();
@@ -263,26 +257,17 @@ public record CreateNamespaceCommand(
         public Builder name(String name) { this.name = name; return this; }
         public Builder description(String description) { this.description = description; return this; }
 
-        public CreateNamespaceCommand build() {
-            return new CreateNamespaceCommand(owner, slug, name, description);
-        }
+        // ... build() with Assert.notNull/hasText validation omitted, see NamespaceDefinition.Builder
     }
 }
 
-// Usage in service
+// Usage in service (see DefaultNamespaceManager.create() for the real, fuller implementation —
+// it also inserts the initial administrator Member and publishes NamespaceEvent.Created)
 @Override
-public Namespace create(CreateNamespaceCommand command) {
-    // command is already validated by constructor
-    Namespace namespace = new Namespace(
-            EntityId.generate(),
-            command.slug(),
-            command.name(),
-            command.description(),
-            Avatar.empty(),
-            OffsetDateTime.now(),
-            OffsetDateTime.now()
-    );
-    return repository.save(namespace);
+public Namespace create(NamespaceDefinition definition) {
+    // definition is already validated by its Builder
+    Namespace namespace = repository.insert(definition);
+    return namespace;
 }
 ```
 
@@ -290,31 +275,37 @@ public Namespace create(CreateNamespaceCommand command) {
 
 ## Enums as Value Objects
 
+Not every enum needs behavior — `com.konfigyr.namespace.NamespaceRole` is a plain two-value enum
+(`ADMIN`, `USER`) with no methods at all, and that's fine when there's no per-value logic to encapsulate.
+
+When an enum does carry per-value data and behavior, real example from
+`com.konfigyr.security.NamespaceClientType`:
+
 ```java
 @ValueObject
-public enum NamespaceRole {
-    OWNER("Namespace owner with full access"),
-    ADMIN("Administrator with most permissions"),
-    MEMBER("Regular member with read access"),
-    VIEWER("Read-only access");
+public enum NamespaceClientType {
 
-    private final String description;
+    SERVICE_ACCOUNT((byte) 0x01, "Service Account"),
+    AGENT((byte) 0x02, "AI Agent"),
+    WORKLOAD((byte) 0x03, "Workload Identity");
 
-    NamespaceRole(String description) {
-        this.description = description;
+    private final byte code;
+    private final String displayName;
+
+    NamespaceClientType(byte code, String displayName) {
+        this.code = code;
+        this.displayName = displayName;
     }
 
-    public String getDescription() {
-        return description;
+    public String displayName() {
+        return displayName;
     }
 
-    public boolean canDelete() {
-        return this == OWNER;
+    public boolean requiresSecret() {
+        return this == SERVICE_ACCOUNT;
     }
 
-    public boolean canManageMembers() {
-        return this == OWNER || this == ADMIN;
-    }
+    // ... code()/of(byte) omitted, see com.konfigyr.security.NamespaceClientType
 }
 ```
 
@@ -363,22 +354,26 @@ Aggregates should be:
 
 ### Good Aggregate Design
 
+This is a real, current example — `Member` isn't just a separate aggregate, it lives in an entirely
+separate module (`com.konfigyr.membership`) from `Namespace` (`com.konfigyr.namespace`), referencing it
+purely by `EntityId`:
+
 ```java
-// Aggregate: Namespace
+// Aggregate: Namespace (module: com.konfigyr.namespace)
 // Root entity: Namespace
-// Child entities: None (members are in separate aggregate)
+// Child entities: None (members live in a separate module's aggregate)
 @AggregateRoot
 public record Namespace(...) { }
 
-// Aggregate: NamespaceMember
-// Root entity: NamespaceMember
-// References: namespace_id (foreign key, not object reference)
-@AggregateRoot
-public record NamespaceMember(
-        @NonNull EntityId id,
-        @NonNull EntityId namespaceId,  // Reference, not embedded object
-        @NonNull EntityId accountId,
+// Entity: Member (module: com.konfigyr.membership)
+// References: namespace (EntityId, not an object reference)
+@Entity
+public record Member(
+        @NonNull @Identity EntityId id,
+        @NonNull EntityId namespace,   // Reference, not embedded object — different module even
+        @NonNull EntityId account,
         @NonNull NamespaceRole role
+        // ... email, fullName, avatar, since omitted, see com.konfigyr.membership.Member
 ) { }
 ```
 
@@ -390,7 +385,7 @@ public record NamespaceMember(
 public record Namespace(
         EntityId id,
         String slug,
-        List<NamespaceMember> members,      // ❌ Too much coupling
+        List<Member> members,               // ❌ Too much coupling (and crosses a module boundary)
         List<Vault> vaults,                  // ❌ Too many responsibilities
         List<AuditLog> auditLogs            // ❌ Should be separate aggregate
 ) { }
@@ -402,12 +397,12 @@ public record Namespace(
         String slug
 ) { }
 
-// Separate aggregate
-@AggregateRoot
-public record NamespaceMember(
+// Separate entity, separate module
+@Entity
+public record Member(
         EntityId id,
-        EntityId namespaceId,  // Reference only
-        EntityId accountId,
+        EntityId namespace,  // Reference only
+        EntityId account,
         NamespaceRole role
 ) { }
 ```
@@ -450,6 +445,10 @@ public static final class Builder {
 
 ### Domain Service Validation
 
+Note: `Namespace` itself has no `owner` field — ownership is expressed by the initial `Member` row with
+`NamespaceRole.ADMIN`, created alongside the namespace (see `DefaultNamespaceManager.create()`), not as
+namespace state. Don't invent an `owner()` accessor on an aggregate that doesn't have one.
+
 ```java
 @Component
 class NamespaceValidator {
@@ -458,26 +457,20 @@ class NamespaceValidator {
             throw new NamespaceExistsException("Slug already exists: " + slug);
         }
     }
-
-    public void validateOwnerAccess(EntityId userId, Namespace namespace) {
-        if (!namespace.owner().equals(userId)) {
-            throw new AccessDeniedException("Access denied");
-        }
-    }
 }
 
 // Usage in service
 @Override
-public Namespace create(CreateNamespaceCommand command) {
-    validator.validateUniqueSlug(command.slug(), repository);
-    
+public Namespace create(NamespaceDefinition definition) {
+    validator.validateUniqueSlug(definition.slug(), repository);
+
     Namespace namespace = Namespace.builder()
             .id(EntityId.generate())
-            .slug(command.slug().get())
-            .name(command.name())
-            .owner(command.owner())
+            .slug(definition.slug().get())
+            .name(definition.name())
+            .description(definition.description())
             .build();
-    
+
     return repository.save(namespace);
 }
 ```
