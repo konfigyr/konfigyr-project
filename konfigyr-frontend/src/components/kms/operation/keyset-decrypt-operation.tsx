@@ -13,9 +13,8 @@ import { KeysetDecryptLabel } from '../messages';
 import type { Keyset, KeysetDecryptOperationResponse, Namespace } from '@konfigyr/hooks/types';
 
 const decryptRequestSchema = z.object({
-  ciphertext: z.string()
-    .nonempty({ message: 'Text to decrypt can not be blank' })
-    .base64url({ message: 'Text to decrypt must be a valid base64url encoded string' }),
+  ciphertext: z.base64url({ error: 'Ciphertext must be a valid base64url encoded string' })
+    .nonempty({ message: 'Text to decrypt can not be blank' }),
   aad: z.string(),
 });
 

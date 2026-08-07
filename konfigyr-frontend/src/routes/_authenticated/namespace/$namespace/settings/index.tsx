@@ -16,7 +16,7 @@ import type { Namespace } from '@konfigyr/hooks/types';
 import type { DeleteNamespaceRequest } from './-handler';
 
 const deleteNamespace = createServerFn({ method: 'POST' })
-  .inputValidator(DeleteNamespaceSchema)
+  .validator(DeleteNamespaceSchema)
   .handler(deleteNamespaceHandler);
 
 const useDeleteNamespace = () => {

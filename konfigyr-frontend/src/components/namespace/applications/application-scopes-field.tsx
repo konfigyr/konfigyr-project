@@ -68,7 +68,7 @@ export function ApplicationScopesField({ namespace, value, onChange }: {
               id={scope.name}
               name={scope.name}
               checked={value.includes(scope.name)}
-              onCheckedChange={checked => onCheck(scope.name, !!checked)}
+              onCheckedChange={checked => onCheck(scope.name, checked)}
             />
             <FieldContent>
               <FieldLabel

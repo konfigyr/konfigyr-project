@@ -47,18 +47,38 @@ export const useGetAccountInvitation = (key: string) => {
   return useQuery(getAccountInvitation(key));
 };
 
-export const useAcceptInvitation = () => {
+export const useAcceptInvitation = (key: string) => {
+  const client = useQueryClient();
+
   return useMutation({
-    mutationFn: async (key: string) => {
+    mutationFn: async () => {
       await request.post(`api/account/invitations/${key}`);
+    },
+    onSuccess() {
+      client.setQueryData(membershipKeys.getAccountInvitations(DEFAULT_PAGEABLE), (invitations?: Array<Invitation>) => {
+        if (typeof invitations === 'undefined' || invitations.length === 0) {
+          return [];
+        }
+        return invitations.filter(it => it.key !== key);
+      });
     },
   });
 };
 
 export const useDeclineInvitation = (key: string) => {
+  const client = useQueryClient();
+
   return useMutation({
     mutationFn: async () => {
-      await request.delete(`api/account/invitations/${key}`).json();
+      await request.delete(`api/account/invitations/${key}`);
+    },
+    onSuccess() {
+      client.setQueryData(membershipKeys.getAccountInvitations(DEFAULT_PAGEABLE), (invitations?: Array<Invitation>) => {
+        if (typeof invitations === 'undefined' || invitations.length === 0) {
+          return [];
+        }
+        return invitations.filter(it => it.key !== key);
+      });
     },
   });
 };

@@ -14,9 +14,8 @@ import type { Keyset, KeysetVerificationOperationResponse, Namespace } from '@ko
 const verifySignatureRequestSchema = z.object({
   plaintext: z.string()
     .nonempty({ message: 'Text to sign can not be blank' }),
-  signature: z.string()
-    .nonempty({ message: 'Signature can not be blank' })
-    .base64url({ message: 'Signature must be a valid base64url encoded string' }),
+  signature: z.base64url({ error: 'Signature must be a valid base64url encoded string' })
+    .nonempty({ message: 'Signature can not be blank' }),
 });
 
 function OperationResult({ valid }: { valid?: boolean }) {

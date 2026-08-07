@@ -1,4 +1,3 @@
-import { FormattedMessage } from 'react-intl';
 import {
   LayoutContent,
   LayoutNavbar,

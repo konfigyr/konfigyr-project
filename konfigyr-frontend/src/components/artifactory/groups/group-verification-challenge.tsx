@@ -36,7 +36,7 @@ export function GroupVerificationChallenge ({ verification, challenge }: {
 }) {
   const isChallengeVisible = Boolean(challenge && verification.state !== 'REVOKED');
 
-  let instructions: React.ReactNode = null;
+  let instructions: ReactNode = null;
 
   if (challenge) {
     instructions =

@@ -25,7 +25,7 @@ type Props = {
   namespace: Namespace,
   application: NamespaceApplication,
   disabled?: boolean,
-  onConfirm: (app: NamespaceApplication) => void
+  onConfirm: (app: NamespaceApplication) => void | Promise<void>,
 };
 
 export function ConfirmNamespaceApplicationDeleteAction ({ namespace, application, onConfirm }: Props) {

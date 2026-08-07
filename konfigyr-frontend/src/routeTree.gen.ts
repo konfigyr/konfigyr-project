@@ -9,63 +9,64 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ErrorRouteImport } from './routes/error'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as ErrorRouteImport } from './routes/error'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthScopesRouteImport } from './routes/auth/scopes'
-import { Route as AuthCodeRouteImport } from './routes/auth/code'
+import { Route as AuthenticatedInvitationsRouteImport } from './routes/_authenticated/invitations'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
+import { Route as AuthCodeRouteImport } from './routes/auth/code'
+import { Route as AuthScopesRouteImport } from './routes/auth/scopes'
 import { Route as AuthenticatedAccountIndexRouteImport } from './routes/_authenticated/account/index'
-import { Route as AuthenticatedNamespaceProvisionRouteImport } from './routes/_authenticated/namespace/provision'
 import { Route as AuthenticatedJoinKeyRouteImport } from './routes/_authenticated/join/$key'
 import { Route as AuthenticatedNamespaceNamespaceRouteRouteImport } from './routes/_authenticated/namespace/$namespace/route'
+import { Route as AuthenticatedNamespaceProvisionRouteImport } from './routes/_authenticated/namespace/provision'
 import { Route as AuthenticatedNamespaceNamespaceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/index'
-import { Route as AuthenticatedNamespaceNamespaceMembersRouteImport } from './routes/_authenticated/namespace/$namespace/members'
+import { Route as AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport } from './routes/_authenticated/namespace/$namespace/applications/route'
 import { Route as AuthenticatedNamespaceNamespaceInvitationsRouteImport } from './routes/_authenticated/namespace/$namespace/invitations'
 import { Route as AuthenticatedNamespaceNamespaceKmsRouteRouteImport } from './routes/_authenticated/namespace/$namespace/kms/route'
-import { Route as AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport } from './routes/_authenticated/namespace/$namespace/applications/route'
-import { Route as AuthenticatedNamespaceNamespaceSettingsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/settings/index'
-import { Route as AuthenticatedNamespaceNamespaceKmsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/kms/index'
-import { Route as AuthenticatedNamespaceNamespaceAuditIndexRouteImport } from './routes/_authenticated/namespace/$namespace/audit/index'
+import { Route as AuthenticatedNamespaceNamespaceMembersRouteImport } from './routes/_authenticated/namespace/$namespace/members'
 import { Route as AuthenticatedNamespaceNamespaceApplicationsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/applications/index'
-import { Route as AuthenticatedNamespaceNamespaceKmsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/kms/create'
-import { Route as AuthenticatedNamespaceNamespaceKmsKeysetRouteImport } from './routes/_authenticated/namespace/$namespace/kms/$keyset'
-import { Route as AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/applications/create'
 import { Route as AuthenticatedNamespaceNamespaceApplicationsIdRouteImport } from './routes/_authenticated/namespace/$namespace/applications/$id'
+import { Route as AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/applications/create'
+import { Route as AuthenticatedNamespaceNamespaceAuditIndexRouteImport } from './routes/_authenticated/namespace/$namespace/audit/index'
+import { Route as AuthenticatedNamespaceNamespaceKmsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/kms/index'
+import { Route as AuthenticatedNamespaceNamespaceKmsKeysetRouteImport } from './routes/_authenticated/namespace/$namespace/kms/$keyset'
+import { Route as AuthenticatedNamespaceNamespaceKmsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/kms/create'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/route'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/index'
-import { Route as AuthenticatedNamespaceNamespaceArtifactoryTransfersIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/transfers/index'
-import { Route as AuthenticatedNamespaceNamespaceArtifactorySearchIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/search/index'
-import { Route as AuthenticatedNamespaceNamespaceArtifactoryRegistryIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/registry/index'
+import { Route as AuthenticatedNamespaceNamespaceSettingsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/settings/index'
 import { Route as AuthenticatedNamespaceNamespaceArtifactoryGroupsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/groups/index'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/settings'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/create-profile'
-import { Route as AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/transfers/create'
-import { Route as AuthenticatedNamespaceNamespaceArtifactoryGroupsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/groups/create'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/route'
-import { Route as AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/transfers/$transferId/route'
 import { Route as AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/groups/$groupId/route'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/requests/index'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/index'
-import { Route as AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/transfers/$transferId/index'
+import { Route as AuthenticatedNamespaceNamespaceArtifactoryGroupsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/groups/create'
+import { Route as AuthenticatedNamespaceNamespaceArtifactoryRegistryIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/registry/index'
+import { Route as AuthenticatedNamespaceNamespaceArtifactorySearchIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/search/index'
+import { Route as AuthenticatedNamespaceNamespaceArtifactoryTransfersIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/transfers/index'
+import { Route as AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/transfers/$transferId/route'
+import { Route as AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/transfers/create'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/index'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/create-profile'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/route'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/settings'
 import { Route as AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/groups/$groupId/index'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/artifacts'
 import { Route as AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdEditRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/groups/$groupId/edit'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/route'
 import { Route as AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdRouteRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId/route'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/requests/$number/index'
-import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/index'
+import { Route as AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/transfers/$transferId/index'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/index'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/manifest/artifacts'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/route'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/requests/index'
 import { Route as AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId/index'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history'
+import { Route as AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/requests/$number/index'
 import { Route as AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdVersionIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId/$version/index'
 
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ErrorRoute = ErrorRouteImport.update({
   id: '/error',
   path: '/error',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -73,9 +74,15 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthScopesRoute = AuthScopesRouteImport.update({
-  id: '/auth/scopes',
-  path: '/auth/scopes',
+const AuthenticatedInvitationsRoute =
+  AuthenticatedInvitationsRouteImport.update({
+    id: '/invitations',
+    path: '/invitations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiSplatRoute = ApiSplatRouteImport.update({
+  id: '/api/$',
+  path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCodeRoute = AuthCodeRouteImport.update({
@@ -83,21 +90,15 @@ const AuthCodeRoute = AuthCodeRouteImport.update({
   path: '/auth/code',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSplatRoute = ApiSplatRouteImport.update({
-  id: '/api/$',
-  path: '/api/$',
+const AuthScopesRoute = AuthScopesRouteImport.update({
+  id: '/auth/scopes',
+  path: '/auth/scopes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountIndexRoute =
   AuthenticatedAccountIndexRouteImport.update({
     id: '/account/',
     path: '/account/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedNamespaceProvisionRoute =
-  AuthenticatedNamespaceProvisionRouteImport.update({
-    id: '/namespace/provision',
-    path: '/namespace/provision',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedJoinKeyRoute = AuthenticatedJoinKeyRouteImport.update({
@@ -111,16 +112,22 @@ const AuthenticatedNamespaceNamespaceRouteRoute =
     path: '/namespace/$namespace',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedNamespaceProvisionRoute =
+  AuthenticatedNamespaceProvisionRouteImport.update({
+    id: '/namespace/provision',
+    path: '/namespace/provision',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedNamespaceNamespaceIndexRoute =
   AuthenticatedNamespaceNamespaceIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
-const AuthenticatedNamespaceNamespaceMembersRoute =
-  AuthenticatedNamespaceNamespaceMembersRouteImport.update({
-    id: '/members',
-    path: '/members',
+const AuthenticatedNamespaceNamespaceApplicationsRouteRoute =
+  AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport.update({
+    id: '/applications',
+    path: '/applications',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
 const AuthenticatedNamespaceNamespaceInvitationsRoute =
@@ -135,28 +142,10 @@ const AuthenticatedNamespaceNamespaceKmsRouteRoute =
     path: '/kms',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
-const AuthenticatedNamespaceNamespaceApplicationsRouteRoute =
-  AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport.update({
-    id: '/applications',
-    path: '/applications',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-  } as any)
-const AuthenticatedNamespaceNamespaceSettingsIndexRoute =
-  AuthenticatedNamespaceNamespaceSettingsIndexRouteImport.update({
-    id: '/settings/',
-    path: '/settings/',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-  } as any)
-const AuthenticatedNamespaceNamespaceKmsIndexRoute =
-  AuthenticatedNamespaceNamespaceKmsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceKmsRouteRoute,
-  } as any)
-const AuthenticatedNamespaceNamespaceAuditIndexRoute =
-  AuthenticatedNamespaceNamespaceAuditIndexRouteImport.update({
-    id: '/audit/',
-    path: '/audit/',
+const AuthenticatedNamespaceNamespaceMembersRoute =
+  AuthenticatedNamespaceNamespaceMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
 const AuthenticatedNamespaceNamespaceApplicationsIndexRoute =
@@ -165,10 +154,28 @@ const AuthenticatedNamespaceNamespaceApplicationsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedNamespaceNamespaceApplicationsRouteRoute,
   } as any)
-const AuthenticatedNamespaceNamespaceKmsCreateRoute =
-  AuthenticatedNamespaceNamespaceKmsCreateRouteImport.update({
+const AuthenticatedNamespaceNamespaceApplicationsIdRoute =
+  AuthenticatedNamespaceNamespaceApplicationsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceApplicationsRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceApplicationsCreateRoute =
+  AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport.update({
     id: '/create',
     path: '/create',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceApplicationsRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceAuditIndexRoute =
+  AuthenticatedNamespaceNamespaceAuditIndexRouteImport.update({
+    id: '/audit/',
+    path: '/audit/',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceKmsIndexRoute =
+  AuthenticatedNamespaceNamespaceKmsIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => AuthenticatedNamespaceNamespaceKmsRouteRoute,
   } as any)
 const AuthenticatedNamespaceNamespaceKmsKeysetRoute =
@@ -177,17 +184,11 @@ const AuthenticatedNamespaceNamespaceKmsKeysetRoute =
     path: '/$keyset',
     getParentRoute: () => AuthenticatedNamespaceNamespaceKmsRouteRoute,
   } as any)
-const AuthenticatedNamespaceNamespaceApplicationsCreateRoute =
-  AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport.update({
+const AuthenticatedNamespaceNamespaceKmsCreateRoute =
+  AuthenticatedNamespaceNamespaceKmsCreateRouteImport.update({
     id: '/create',
     path: '/create',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceApplicationsRouteRoute,
-  } as any)
-const AuthenticatedNamespaceNamespaceApplicationsIdRoute =
-  AuthenticatedNamespaceNamespaceApplicationsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceApplicationsRouteRoute,
+    getParentRoute: () => AuthenticatedNamespaceNamespaceKmsRouteRoute,
   } as any)
 const AuthenticatedNamespaceNamespaceServicesServiceRouteRoute =
   AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport.update({
@@ -195,29 +196,10 @@ const AuthenticatedNamespaceNamespaceServicesServiceRouteRoute =
     path: '/services/$service',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
-const AuthenticatedNamespaceNamespaceServicesServiceIndexRoute =
-  AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () =>
-      AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
-  } as any)
-const AuthenticatedNamespaceNamespaceArtifactoryTransfersIndexRoute =
-  AuthenticatedNamespaceNamespaceArtifactoryTransfersIndexRouteImport.update({
-    id: '/artifactory/transfers/',
-    path: '/artifactory/transfers/',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-  } as any)
-const AuthenticatedNamespaceNamespaceArtifactorySearchIndexRoute =
-  AuthenticatedNamespaceNamespaceArtifactorySearchIndexRouteImport.update({
-    id: '/artifactory/search/',
-    path: '/artifactory/search/',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-  } as any)
-const AuthenticatedNamespaceNamespaceArtifactoryRegistryIndexRoute =
-  AuthenticatedNamespaceNamespaceArtifactoryRegistryIndexRouteImport.update({
-    id: '/artifactory/registry/',
-    path: '/artifactory/registry/',
+const AuthenticatedNamespaceNamespaceSettingsIndexRoute =
+  AuthenticatedNamespaceNamespaceSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
 const AuthenticatedNamespaceNamespaceArtifactoryGroupsIndexRoute =
@@ -226,10 +208,56 @@ const AuthenticatedNamespaceNamespaceArtifactoryGroupsIndexRoute =
     path: '/artifactory/groups/',
     getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
-const AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute =
-  AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
+const AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRoute =
+  AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRouteImport.update(
+    {
+      id: '/artifactory/groups/$groupId',
+      path: '/artifactory/groups/$groupId',
+      getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceArtifactoryGroupsCreateRoute =
+  AuthenticatedNamespaceNamespaceArtifactoryGroupsCreateRouteImport.update({
+    id: '/artifactory/groups/create',
+    path: '/artifactory/groups/create',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceArtifactoryRegistryIndexRoute =
+  AuthenticatedNamespaceNamespaceArtifactoryRegistryIndexRouteImport.update({
+    id: '/artifactory/registry/',
+    path: '/artifactory/registry/',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceArtifactorySearchIndexRoute =
+  AuthenticatedNamespaceNamespaceArtifactorySearchIndexRouteImport.update({
+    id: '/artifactory/search/',
+    path: '/artifactory/search/',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceArtifactoryTransfersIndexRoute =
+  AuthenticatedNamespaceNamespaceArtifactoryTransfersIndexRouteImport.update({
+    id: '/artifactory/transfers/',
+    path: '/artifactory/transfers/',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRoute =
+  AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRouteImport.update(
+    {
+      id: '/artifactory/transfers/$transferId',
+      path: '/artifactory/transfers/$transferId',
+      getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRoute =
+  AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRouteImport.update({
+    id: '/artifactory/transfers/create',
+    path: '/artifactory/transfers/create',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceServicesServiceIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () =>
       AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
   } as any)
@@ -242,18 +270,6 @@ const AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRoute =
         AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
     } as any,
   )
-const AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRoute =
-  AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRouteImport.update({
-    id: '/artifactory/transfers/create',
-    path: '/artifactory/transfers/create',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-  } as any)
-const AuthenticatedNamespaceNamespaceArtifactoryGroupsCreateRoute =
-  AuthenticatedNamespaceNamespaceArtifactoryGroupsCreateRouteImport.update({
-    id: '/artifactory/groups/create',
-    path: '/artifactory/groups/create',
-    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-  } as any)
 const AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute =
   AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteImport.update(
     {
@@ -263,49 +279,13 @@ const AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute =
         AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
     } as any,
   )
-const AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRoute =
-  AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRouteImport.update(
-    {
-      id: '/artifactory/transfers/$transferId',
-      path: '/artifactory/transfers/$transferId',
-      getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-    } as any,
-  )
-const AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRoute =
-  AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRouteImport.update(
-    {
-      id: '/artifactory/groups/$groupId',
-      path: '/artifactory/groups/$groupId',
-      getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-    } as any,
-  )
-const AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute =
-  AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport.update(
-    {
-      id: '/requests/',
-      path: '/requests/',
-      getParentRoute: () =>
-        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
-    } as any,
-  )
-const AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute =
-  AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport.update(
-    {
-      id: '/',
-      path: '/',
-      getParentRoute: () =>
-        AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute,
-    } as any,
-  )
-const AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdIndexRoute =
-  AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdIndexRouteImport.update(
-    {
-      id: '/',
-      path: '/',
-      getParentRoute: () =>
-        AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRoute,
-    } as any,
-  )
+const AuthenticatedNamespaceNamespaceServicesServiceSettingsRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () =>
+      AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
+  } as any)
 const AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdIndexRoute =
   AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdIndexRouteImport.update(
     {
@@ -313,15 +293,6 @@ const AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdIndexRoute =
       path: '/',
       getParentRoute: () =>
         AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRoute,
-    } as any,
-  )
-const AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute =
-  AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport.update(
-    {
-      id: '/artifacts',
-      path: '/artifacts',
-      getParentRoute: () =>
-        AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute,
     } as any,
   )
 const AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdEditRoute =
@@ -333,6 +304,41 @@ const AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdEditRoute =
         AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRoute,
     } as any,
   )
+const AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdRouteRoute =
+  AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdRouteRouteImport.update(
+    {
+      id: '/artifactory/registry/$groupId/$artifactId',
+      path: '/artifactory/registry/$groupId/$artifactId',
+      getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdIndexRoute =
+  AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport.update(
+    {
+      id: '/artifacts',
+      path: '/artifacts',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute,
+    } as any,
+  )
 const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute =
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteImport.update(
     {
@@ -342,30 +348,13 @@ const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute =
         AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
     } as any,
   )
-const AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdRouteRoute =
-  AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdRouteRouteImport.update(
+const AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport.update(
     {
-      id: '/artifactory/registry/$groupId/$artifactId',
-      path: '/artifactory/registry/$groupId/$artifactId',
-      getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
-    } as any,
-  )
-const AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute =
-  AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport.update(
-    {
-      id: '/requests/$number/',
-      path: '/requests/$number/',
+      id: '/requests/',
+      path: '/requests/',
       getParentRoute: () =>
         AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
-    } as any,
-  )
-const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute =
-  AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport.update(
-    {
-      id: '/',
-      path: '/',
-      getParentRoute: () =>
-        AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute,
     } as any,
   )
 const AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdIndexRoute =
@@ -377,6 +366,15 @@ const AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdIndexRo
         AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdRouteRoute,
     } as any,
   )
+const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute,
+    } as any,
+  )
 const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute =
   AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRouteImport.update(
     {
@@ -384,6 +382,15 @@ const AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRoute 
       path: '/history',
       getParentRoute: () =>
         AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute,
+    } as any,
+  )
+const AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport.update(
+    {
+      id: '/requests/$number/',
+      path: '/requests/$number/',
+      getParentRoute: () =>
+        AuthenticatedNamespaceNamespaceServicesServiceRouteRoute,
     } as any,
   )
 const AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdVersionIndexRoute =
@@ -399,6 +406,7 @@ const AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdVersion
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/error': typeof ErrorRoute
+  '/invitations': typeof AuthenticatedInvitationsRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
@@ -448,6 +456,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/error': typeof ErrorRoute
+  '/invitations': typeof AuthenticatedInvitationsRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
@@ -491,6 +500,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/error': typeof ErrorRoute
+  '/_authenticated/invitations': typeof AuthenticatedInvitationsRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/code': typeof AuthCodeRoute
   '/auth/scopes': typeof AuthScopesRoute
@@ -544,6 +554,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/error'
+    | '/invitations'
     | '/api/$'
     | '/auth/code'
     | '/auth/scopes'
@@ -593,6 +604,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/error'
+    | '/invitations'
     | '/api/$'
     | '/auth/code'
     | '/auth/scopes'
@@ -635,6 +647,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/error'
+    | '/_authenticated/invitations'
     | '/api/$'
     | '/auth/code'
     | '/auth/scopes'
@@ -694,18 +707,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/error': {
-      id: '/error'
-      path: '/error'
-      fullPath: '/error'
-      preLoaderRoute: typeof ErrorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/error': {
+      id: '/error'
+      path: '/error'
+      fullPath: '/error'
+      preLoaderRoute: typeof ErrorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -715,11 +728,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/auth/scopes': {
-      id: '/auth/scopes'
-      path: '/auth/scopes'
-      fullPath: '/auth/scopes'
-      preLoaderRoute: typeof AuthScopesRouteImport
+    '/_authenticated/invitations': {
+      id: '/_authenticated/invitations'
+      path: '/invitations'
+      fullPath: '/invitations'
+      preLoaderRoute: typeof AuthenticatedInvitationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/$': {
+      id: '/api/$'
+      path: '/api/$'
+      fullPath: '/api/$'
+      preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/code': {
@@ -729,11 +749,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/$': {
-      id: '/api/$'
-      path: '/api/$'
-      fullPath: '/api/$'
-      preLoaderRoute: typeof ApiSplatRouteImport
+    '/auth/scopes': {
+      id: '/auth/scopes'
+      path: '/auth/scopes'
+      fullPath: '/auth/scopes'
+      preLoaderRoute: typeof AuthScopesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account/': {
@@ -741,13 +761,6 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account/'
       preLoaderRoute: typeof AuthenticatedAccountIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/namespace/provision': {
-      id: '/_authenticated/namespace/provision'
-      path: '/namespace/provision'
-      fullPath: '/namespace/provision'
-      preLoaderRoute: typeof AuthenticatedNamespaceProvisionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/join/$key': {
@@ -764,6 +777,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/namespace/provision': {
+      id: '/_authenticated/namespace/provision'
+      path: '/namespace/provision'
+      fullPath: '/namespace/provision'
+      preLoaderRoute: typeof AuthenticatedNamespaceProvisionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/namespace/$namespace/': {
       id: '/_authenticated/namespace/$namespace/'
       path: '/'
@@ -771,11 +791,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/members': {
-      id: '/_authenticated/namespace/$namespace/members'
-      path: '/members'
-      fullPath: '/namespace/$namespace/members'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceMembersRouteImport
+    '/_authenticated/namespace/$namespace/applications': {
+      id: '/_authenticated/namespace/$namespace/applications'
+      path: '/applications'
+      fullPath: '/namespace/$namespace/applications'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
     '/_authenticated/namespace/$namespace/invitations': {
@@ -792,32 +812,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/applications': {
-      id: '/_authenticated/namespace/$namespace/applications'
-      path: '/applications'
-      fullPath: '/namespace/$namespace/applications'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/settings/': {
-      id: '/_authenticated/namespace/$namespace/settings/'
-      path: '/settings'
-      fullPath: '/namespace/$namespace/settings/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/kms/': {
-      id: '/_authenticated/namespace/$namespace/kms/'
-      path: '/'
-      fullPath: '/namespace/$namespace/kms/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/audit/': {
-      id: '/_authenticated/namespace/$namespace/audit/'
-      path: '/audit'
-      fullPath: '/namespace/$namespace/audit/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceAuditIndexRouteImport
+    '/_authenticated/namespace/$namespace/members': {
+      id: '/_authenticated/namespace/$namespace/members'
+      path: '/members'
+      fullPath: '/namespace/$namespace/members'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceMembersRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
     '/_authenticated/namespace/$namespace/applications/': {
@@ -827,11 +826,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRoute
     }
-    '/_authenticated/namespace/$namespace/kms/create': {
-      id: '/_authenticated/namespace/$namespace/kms/create'
+    '/_authenticated/namespace/$namespace/applications/$id': {
+      id: '/_authenticated/namespace/$namespace/applications/$id'
+      path: '/$id'
+      fullPath: '/namespace/$namespace/applications/$id'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsIdRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/applications/create': {
+      id: '/_authenticated/namespace/$namespace/applications/create'
       path: '/create'
-      fullPath: '/namespace/$namespace/kms/create'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsCreateRouteImport
+      fullPath: '/namespace/$namespace/applications/create'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/audit/': {
+      id: '/_authenticated/namespace/$namespace/audit/'
+      path: '/audit'
+      fullPath: '/namespace/$namespace/audit/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceAuditIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/kms/': {
+      id: '/_authenticated/namespace/$namespace/kms/'
+      path: '/'
+      fullPath: '/namespace/$namespace/kms/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRoute
     }
     '/_authenticated/namespace/$namespace/kms/$keyset': {
@@ -841,19 +861,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsKeysetRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRoute
     }
-    '/_authenticated/namespace/$namespace/applications/create': {
-      id: '/_authenticated/namespace/$namespace/applications/create'
+    '/_authenticated/namespace/$namespace/kms/create': {
+      id: '/_authenticated/namespace/$namespace/kms/create'
       path: '/create'
-      fullPath: '/namespace/$namespace/applications/create'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsCreateRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/applications/$id': {
-      id: '/_authenticated/namespace/$namespace/applications/$id'
-      path: '/$id'
-      fullPath: '/namespace/$namespace/applications/$id'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceApplicationsIdRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceApplicationsRouteRoute
+      fullPath: '/namespace/$namespace/kms/create'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsCreateRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRoute
     }
     '/_authenticated/namespace/$namespace/services/$service': {
       id: '/_authenticated/namespace/$namespace/services/$service'
@@ -862,32 +875,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/services/$service/': {
-      id: '/_authenticated/namespace/$namespace/services/$service/'
-      path: '/'
-      fullPath: '/namespace/$namespace/services/$service/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/artifactory/transfers/': {
-      id: '/_authenticated/namespace/$namespace/artifactory/transfers/'
-      path: '/artifactory/transfers'
-      fullPath: '/namespace/$namespace/artifactory/transfers/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/artifactory/search/': {
-      id: '/_authenticated/namespace/$namespace/artifactory/search/'
-      path: '/artifactory/search'
-      fullPath: '/namespace/$namespace/artifactory/search/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactorySearchIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/artifactory/registry/': {
-      id: '/_authenticated/namespace/$namespace/artifactory/registry/'
-      path: '/artifactory/registry'
-      fullPath: '/namespace/$namespace/artifactory/registry/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryRegistryIndexRouteImport
+    '/_authenticated/namespace/$namespace/settings/': {
+      id: '/_authenticated/namespace/$namespace/settings/'
+      path: '/settings'
+      fullPath: '/namespace/$namespace/settings/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
     '/_authenticated/namespace/$namespace/artifactory/groups/': {
@@ -897,25 +889,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/services/$service/settings': {
-      id: '/_authenticated/namespace/$namespace/services/$service/settings'
-      path: '/settings'
-      fullPath: '/namespace/$namespace/services/$service/settings'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/services/$service/create-profile': {
-      id: '/_authenticated/namespace/$namespace/services/$service/create-profile'
-      path: '/create-profile'
-      fullPath: '/namespace/$namespace/services/$service/create-profile'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/artifactory/transfers/create': {
-      id: '/_authenticated/namespace/$namespace/artifactory/transfers/create'
-      path: '/artifactory/transfers/create'
-      fullPath: '/namespace/$namespace/artifactory/transfers/create'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRouteImport
+    '/_authenticated/namespace/$namespace/artifactory/groups/$groupId': {
+      id: '/_authenticated/namespace/$namespace/artifactory/groups/$groupId'
+      path: '/artifactory/groups/$groupId'
+      fullPath: '/namespace/$namespace/artifactory/groups/$groupId'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
     '/_authenticated/namespace/$namespace/artifactory/groups/create': {
@@ -925,12 +903,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsCreateRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/services/$service/manifest': {
-      id: '/_authenticated/namespace/$namespace/services/$service/manifest'
-      path: '/manifest'
-      fullPath: '/namespace/$namespace/services/$service/manifest'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    '/_authenticated/namespace/$namespace/artifactory/registry/': {
+      id: '/_authenticated/namespace/$namespace/artifactory/registry/'
+      path: '/artifactory/registry'
+      fullPath: '/namespace/$namespace/artifactory/registry/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryRegistryIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/artifactory/search/': {
+      id: '/_authenticated/namespace/$namespace/artifactory/search/'
+      path: '/artifactory/search'
+      fullPath: '/namespace/$namespace/artifactory/search/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactorySearchIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/artifactory/transfers/': {
+      id: '/_authenticated/namespace/$namespace/artifactory/transfers/'
+      path: '/artifactory/transfers'
+      fullPath: '/namespace/$namespace/artifactory/transfers/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
     '/_authenticated/namespace/$namespace/artifactory/transfers/$transferId': {
       id: '/_authenticated/namespace/$namespace/artifactory/transfers/$transferId'
@@ -939,33 +931,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/artifactory/groups/$groupId': {
-      id: '/_authenticated/namespace/$namespace/artifactory/groups/$groupId'
-      path: '/artifactory/groups/$groupId'
-      fullPath: '/namespace/$namespace/artifactory/groups/$groupId'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRouteImport
+    '/_authenticated/namespace/$namespace/artifactory/transfers/create': {
+      id: '/_authenticated/namespace/$namespace/artifactory/transfers/create'
+      path: '/artifactory/transfers/create'
+      fullPath: '/namespace/$namespace/artifactory/transfers/create'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/services/$service/requests/': {
-      id: '/_authenticated/namespace/$namespace/services/$service/requests/'
-      path: '/requests'
-      fullPath: '/namespace/$namespace/services/$service/requests/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport
+    '/_authenticated/namespace/$namespace/services/$service/': {
+      id: '/_authenticated/namespace/$namespace/services/$service/'
+      path: '/'
+      fullPath: '/namespace/$namespace/services/$service/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/services/$service/manifest/': {
-      id: '/_authenticated/namespace/$namespace/services/$service/manifest/'
-      path: '/'
-      fullPath: '/namespace/$namespace/services/$service/manifest/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute
+    '/_authenticated/namespace/$namespace/services/$service/create-profile': {
+      id: '/_authenticated/namespace/$namespace/services/$service/create-profile'
+      path: '/create-profile'
+      fullPath: '/namespace/$namespace/services/$service/create-profile'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceCreateProfileRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/artifactory/transfers/$transferId/': {
-      id: '/_authenticated/namespace/$namespace/artifactory/transfers/$transferId/'
-      path: '/'
-      fullPath: '/namespace/$namespace/artifactory/transfers/$transferId/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRoute
+    '/_authenticated/namespace/$namespace/services/$service/manifest': {
+      id: '/_authenticated/namespace/$namespace/services/$service/manifest'
+      path: '/manifest'
+      fullPath: '/namespace/$namespace/services/$service/manifest'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/settings': {
+      id: '/_authenticated/namespace/$namespace/services/$service/settings'
+      path: '/settings'
+      fullPath: '/namespace/$namespace/services/$service/settings'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceSettingsRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
     '/_authenticated/namespace/$namespace/artifactory/groups/$groupId/': {
       id: '/_authenticated/namespace/$namespace/artifactory/groups/$groupId/'
@@ -974,26 +973,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRoute
     }
-    '/_authenticated/namespace/$namespace/services/$service/manifest/artifacts': {
-      id: '/_authenticated/namespace/$namespace/services/$service/manifest/artifacts'
-      path: '/artifacts'
-      fullPath: '/namespace/$namespace/services/$service/manifest/artifacts'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute
-    }
     '/_authenticated/namespace/$namespace/artifactory/groups/$groupId/edit': {
       id: '/_authenticated/namespace/$namespace/artifactory/groups/$groupId/edit'
       path: '/edit'
       fullPath: '/namespace/$namespace/artifactory/groups/$groupId/edit'
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdEditRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRoute
-    }
-    '/_authenticated/namespace/$namespace/services/$service/profiles/$profile': {
-      id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
-      path: '/profiles/$profile'
-      fullPath: '/namespace/$namespace/services/$service/profiles/$profile'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
     '/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId': {
       id: '/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId'
@@ -1002,19 +987,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/services/$service/requests/$number/': {
-      id: '/_authenticated/namespace/$namespace/services/$service/requests/$number/'
-      path: '/requests/$number'
-      fullPath: '/namespace/$namespace/services/$service/requests/$number/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport
+    '/_authenticated/namespace/$namespace/artifactory/transfers/$transferId/': {
+      id: '/_authenticated/namespace/$namespace/artifactory/transfers/$transferId/'
+      path: '/'
+      fullPath: '/namespace/$namespace/artifactory/transfers/$transferId/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/manifest/': {
+      id: '/_authenticated/namespace/$namespace/services/$service/manifest/'
+      path: '/'
+      fullPath: '/namespace/$namespace/services/$service/manifest/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/manifest/artifacts': {
+      id: '/_authenticated/namespace/$namespace/services/$service/manifest/artifacts'
+      path: '/artifacts'
+      fullPath: '/namespace/$namespace/services/$service/manifest/artifacts'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestArtifactsRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceManifestRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/profiles/$profile': {
+      id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile'
+      path: '/profiles/$profile'
+      fullPath: '/namespace/$namespace/services/$service/profiles/$profile'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
-    '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/': {
-      id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/'
-      path: '/'
-      fullPath: '/namespace/$namespace/services/$service/profiles/$profile/'
-      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport
-      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute
+    '/_authenticated/namespace/$namespace/services/$service/requests/': {
+      id: '/_authenticated/namespace/$namespace/services/$service/requests/'
+      path: '/requests'
+      fullPath: '/namespace/$namespace/services/$service/requests/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
     '/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId/': {
       id: '/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId/'
@@ -1023,12 +1029,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdIndexRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryRegistryGroupIdArtifactIdRouteRoute
     }
+    '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/': {
+      id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/'
+      path: '/'
+      fullPath: '/namespace/$namespace/services/$service/profiles/$profile/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute
+    }
     '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history': {
       id: '/_authenticated/namespace/$namespace/services/$service/profiles/$profile/history'
       path: '/history'
       fullPath: '/namespace/$namespace/services/$service/profiles/$profile/history'
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileHistoryRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceProfilesProfileRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/$service/requests/$number/': {
+      id: '/_authenticated/namespace/$namespace/services/$service/requests/$number/'
+      path: '/requests/$number'
+      fullPath: '/namespace/$namespace/services/$service/requests/$number/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRequestsNumberIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRoute
     }
     '/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId/$version/': {
       id: '/_authenticated/namespace/$namespace/artifactory/registry/$groupId/$artifactId/$version/'
@@ -1266,6 +1286,7 @@ const AuthenticatedNamespaceNamespaceRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedInvitationsRoute: typeof AuthenticatedInvitationsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedNamespaceNamespaceRouteRoute: typeof AuthenticatedNamespaceNamespaceRouteRouteWithChildren
   AuthenticatedJoinKeyRoute: typeof AuthenticatedJoinKeyRoute
@@ -1274,6 +1295,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedInvitationsRoute: AuthenticatedInvitationsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedNamespaceNamespaceRouteRoute:
     AuthenticatedNamespaceNamespaceRouteRouteWithChildren,

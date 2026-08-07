@@ -20,7 +20,7 @@ import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
 import { FetchConfigSchema } from '@konfigyr/hooks/vault/-handler';
 import { ImportPropertiesLabel } from './messages';
 import type { FetchConfigRequest } from '@konfigyr/hooks/vault/-handler';
-import type { ConfigurationProperty, Profile, ServiceCatalog, ValidationResult } from '@konfigyr/hooks/types';
+import type { ConfigurationProperty, Profile, ServiceCatalog } from '@konfigyr/hooks/types';
 
 type ImporterType = 'file' | 'api';
 

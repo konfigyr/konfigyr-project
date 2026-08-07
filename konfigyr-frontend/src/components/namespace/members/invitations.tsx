@@ -3,7 +3,6 @@ import { Link2OffIcon } from 'lucide-react';
 import { useGetNamespaceInvitations } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { NamespaceRoleBadge } from '@konfigyr/components/namespace/role';
-import { Card, CardContent } from '@konfigyr/components/ui/card';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';

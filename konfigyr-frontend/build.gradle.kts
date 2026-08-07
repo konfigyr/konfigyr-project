@@ -24,7 +24,7 @@ tasks.register<NpmExec>("npmInstall") {
     sources.from("package.json", "package-lock.json")
     outputFile.set(layout.buildDirectory.file("npm-install.stamp"))
 
-    // node_modules is not declared as an output so the stamp alone cannot
+    // node_modules is not declared as an output, so the stamp alone cannot
     // serve as a valid cache entry — restoring it without restoring node_modules
     // would break every downstream task.
     outputs.cacheIf { false }

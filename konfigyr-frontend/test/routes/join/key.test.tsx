@@ -25,4 +25,21 @@ describe('routes | join namespace', () => {
       expect(router.state.location.pathname).toBe('/namespace/konfigyr');
     });
   });
+
+  test('should decline the join namespace invitation and redirect back through the home resolver', async () => {
+    const user = userEvent.setup();
+    const { router, getByRole, getByText } = renderWithRouter('/join/9456532868b6cdd235703d7d09eb302');
+
+    await waitFor(() => {
+      expect(getByText('You\'ve been invited')).toBeInTheDocument();
+    });
+
+    await user.click(
+      getByRole('button', { name: 'Decline invitation' }),
+    );
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/namespace/konfigyr');
+    });
+  });
 });

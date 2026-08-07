@@ -1,6 +1,8 @@
 import { cn } from '@konfigyr/components/utils';
 
-export function Kbd({ className, ...props }: React.ComponentProps<'kbd'>) {
+import type { ComponentProps } from 'react';
+
+export function Kbd({ className, ...props }: ComponentProps<'kbd'>) {
   return (
     <kbd
       data-slot="kbd"
@@ -14,7 +16,7 @@ export function Kbd({ className, ...props }: React.ComponentProps<'kbd'>) {
   );
 }
 
-export function KbdGroup({ className, ...props }: React.ComponentProps<'div'>) {
+export function KbdGroup({ className, ...props }: ComponentProps<'div'>) {
   return (
     <kbd
       data-slot="kbd-group"
