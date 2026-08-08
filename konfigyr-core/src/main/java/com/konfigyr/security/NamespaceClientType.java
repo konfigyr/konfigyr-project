@@ -1,5 +1,7 @@
 package com.konfigyr.security;
 
+import org.jmolecules.ddd.annotation.ValueObject;
+
 /**
  * Classifies the intended purpose of a namespace OAuth application.
  * <p>
@@ -16,6 +18,7 @@ package com.konfigyr.security;
  * @since 1.0.0
  * @see NamespaceClientId
  */
+@ValueObject
 public enum NamespaceClientType {
 
 	/**

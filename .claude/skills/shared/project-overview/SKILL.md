@@ -58,8 +58,8 @@ Key responsibilities:
 
 | Module | Responsibility | Key Entities |
 |--------|---|---|
-| **namespace** | Multi-tenancy | Namespace, NamespaceRole (enum: ADMIN/USER), NamespaceApplicationDefinition (OAuth2 clients) |
-| **membership** | Namespace membership | Member, Invitation |
+| **namespace** | Multi-tenancy | Namespace, NamespaceRole (enum: ADMIN/USER), Service, NamespaceApplication (OAuth2 clients, created via NamespaceApplicationDefinition), NamespaceTrustedIssuer (Workload Identity), NamespaceFeatures (see dedicated section below) |
+| **membership** | Namespace membership | Member, Invite (command), Invitation, InvitationState (see dedicated section below) |
 | **vault** | Config management | Profile, ProfilePolicy, PropertyChange(s), ChangeRequest, ChangeHistory |
 | **artifactory** | Metadata registry | ArtifactDefinition, VersionedArtifact, PropertyDefinition, ArtifactKey/ArtifactCoordinates, Owner, ArtifactVisibility (see dedicated section below) |
 | **kms** | Encryption | KeysetMetadata, KeyMetadata |
@@ -116,7 +116,8 @@ Frontend
   └── REST API (all domain operations)
 
 REST API
-  ├── namespace → artifactory, feature
+  ├── namespace → artifactory (NamespaceOwnerResolver implements OwnerResolver), feature
+  ├── membership → namespace (Member/Invitation carry NamespaceRole and a Namespace projection)
   ├── vault → namespace, crypto (konfigyr-core library, to encrypt vault data)
   ├── kms → namespace (NamespaceManager)
   ├── artifactory → (no outbound dependency on vault or kms)
@@ -126,6 +127,14 @@ REST API
 Identity Provider
   └── Account provisioning (standalone)
 ```
+
+Two deliberate exceptions to "modules communicate via events, never direct dependencies" exist today:
+
+- `DefaultNamespaceManager.create()` inserts the initial administrator directly into the `NAMESPACE_MEMBERS`
+  table (owned by `membership`) rather than calling `Memberships` — see the Data Flow example below.
+- `Dashboards` (`namespace/dashboard`) reads `VAULT_CHANGE_REQUESTS`/`VAULT_PROPERTIES` (owned by `vault`)
+  and `ARTIFACTS` (owned by `artifactory`) directly via jOOQ to build a cross-module summary, rather than
+  calling those modules' service interfaces.
 
 ## KMS Domain: Key Hierarchy and Lifecycle
 
@@ -286,16 +295,189 @@ konfigyr-api Publications.publish(Owner, ArtifactMetadata)
   6. Publish PublicationCreated / PublicationCompleted (or PublicationFailed) events
 ```
 
+## Namespace & Membership Domain: Applications, Services, Trusted Issuers & Invitations
+
+`com.konfigyr.namespace` owns far more than the `Namespace` aggregate itself. `com.konfigyr.membership`
+is a separate module that depends on it (`Member`/`Invitation` both carry a `NamespaceRole` and a
+namespace projection) — grouped here because both are covered by the "Namespaces & Accounts" area in
+CLAUDE.md's top-level domain table.
+
+### Namespace-Owned Entities
+
+| Entity | Description |
+|--------|-------------|
+| `Namespace` | Aggregate root — `id`, `slug`, `name`, `description`, `avatar`, `createdAt`, `updatedAt`. No status/lifecycle field. |
+| `Service` | Aggregate root **within** the `namespace` bounded context (per its own Javadoc) — a deployable Spring Boot app owned by a namespace: `id`, `namespace`, `slug`, `name`, `description`. Other modules may reference it but don't own it. |
+| `NamespaceApplication` | Persisted OAuth2 client — `id`, `namespace`, `type` (`NamespaceClientType`), `name`, `clientId`, `clientSecret` (nullable), `settings`, `scopes` (`OAuthScopes`), `expiresAt`. Created via the `NamespaceApplicationDefinition` command. |
+| `NamespaceTrustedIssuer` | A trusted OIDC issuer for Workload Identity token exchange — `issuerUri`, `jwksUri` (nullable, falls back to OIDC discovery), `active`, `allowedAudiences`, `customClaims` (name → expected value assertions). Created via `NamespaceTrustedIssuerDefinition`. |
+| `NamespaceFeatures` | Two `FeatureDefinition`s: `MEMBERS_COUNT` and `SERVICES_COUNT`, both `LimitedFeatureValue` (per-namespace limits). |
+
+### NamespaceClientType: Three OAuth2 Client Shapes
+
+Encoded as a single byte inside every `NamespaceClientId` (so the type is derivable from `client_id` alone,
+no DB lookup needed):
+
+| Type | Grant | Has `clientSecret`? | Used by |
+|------|-------|---------------------|---------|
+| `SERVICE_ACCOUNT` | Client Credentials (RFC 6749 §4.4) | Yes — HKDF-derived, Argon2id-hashed, shown once | Backend services/scripts that can't do an interactive/federated flow |
+| `AGENT` | Authorization Code + PKCE (RFC 7636), loopback redirect | No — public client | AI agents/coding assistants (Claude Code, MCP tools) acting on behalf of a verified member |
+| `WORKLOAD` | Token Exchange (RFC 8693) against a `NamespaceTrustedIssuer` | No — public client, the external OIDC token is the sole credential | CI/CD, cloud runtimes, Kubernetes pods, build tooling |
+
+`NamespaceClientType.requiresSecret()` is the single source of truth — only `SERVICE_ACCOUNT` returns
+`true`. (Note: `NamespaceApplication`'s own field Javadoc says `WORKLOAD` also carries a secret — that's
+stale relative to `requiresSecret()`'s actual behavior and the class's own class-level Javadoc.)
+
+### Service Catalog, Manifest & Dashboard Subsystems
+
+Three subpackages under `namespace/` back functionality that isn't a simple CRUD entity:
+
+- **`namespace/catalog`** — `ConfigurationCatalogService`/`ServiceCatalog` materialize a per-service
+  configuration-property catalog into a Postgres table partitioned per-service
+  (`service_configuration_catalog_{id}`). Rebuilt asynchronously by a database-backed debounced worker
+  queue (`ServiceCatalogWorker`/`ServiceCatalogQueueListener`) reacting to
+  `ArtifactoryEvent.PublicationCompleted` and `ServiceEvent.Released`.
+- **`namespace/manifest`** — `ServiceManifests`/`DefaultServiceManifests` implement the resolve → upload
+  artifacts → complete protocol behind the `POST /releases/{service}...` REST contract (documented below),
+  built on the SDK's `ServiceRelease` (`PENDING → RELEASED/FAILED`, see the Artifactory SDK table above).
+- **`namespace/dashboard`** — `Dashboards`/`DashboardSummary` back `GET /namespaces/{slug}/dashboard`, a
+  read-only cross-module aggregation (services count, member count/limit, open change requests, active
+  properties, owned artifacts) computed via direct jOOQ reads spanning `namespace`, `membership`, `vault`,
+  and `artifactory` tables — a documented exception to event-only cross-module communication.
+
+### NamespaceOwnerResolver
+
+`namespace` supplies the `namespace` module's implementation of the Artifactory bounded context's
+`OwnerResolver` SPI (see "Artifactory Domain" above) — `NamespaceOwnerResolver.resolve(EntityId|String)`
+looks up a `Namespace` via `NamespaceManager` and projects it into an `Owner(id, slug)`.
+
+### Membership: Invite → Invitation → Member
+
+| Type | Description |
+|------|-------------|
+| `Invite` | Value object / command — `sender` (`EntityId`), `recipient` (email), `role` (`NamespaceRole`). Triggers creation of an `Invitation`. |
+| `Invitation` | Entity, identified by a single-use `key` string (not an `EntityId`) — `organization` (a self-contained `Namespace` projection), `sender` (nullable — absent if the sender account was later deleted), `recipient`, `role`, `state` (`InvitationState`), `createdAt`, `expiryDate`. |
+| `InvitationState` | `PENDING` → `ACCEPTED` \| `EXPIRED` \| `REVOKED`. **In practice only `PENDING`/`EXPIRED` are ever observed on a live row** — `DefaultInvitations` computes `EXPIRED` dynamically from `expiryDate` at read time, and `accept()`/`decline()`/`cancel()` all `DELETE FROM INVITATIONS` rather than transitioning state, so `ACCEPTED`/`REVOKED` never actually persist. |
+| `Member` | Entity — `id`, `namespace`, `account`, `role` (`NamespaceRole`), `email`, `fullName` (nullable), `avatar`, `since`. Has real behavior methods: `displayName()` (falls back to email when no name is set), `isMemberOf(Namespace)`, `firstName()`/`lastName()`. |
+
+**Invariant:** a namespace must always retain at least one `ADMIN` member. `DefaultMemberships` checks
+`isLastRemainingAdministrator()` before demoting (`update`) or removing (`remove`) a member and throws
+`UnsupportedMembershipOperationException` (400) if the operation would leave the namespace without one.
+
+**`InvitationException`** carries 7 `ErrorCode`s: `INVITATION_NOT_FOUND` (404), `INVITATION_EXPIRED` (400),
+`RECIPIENT_NOT_FOUND` (500 — indicates a bug, not a client error), `ALREADY_INVITED` (500),
+`INSUFFICIENT_PERMISSIONS` (403), `NOT_ALLOWED` (400 — `MEMBERS_COUNT` feature disabled for the plan),
+`MEMBER_LIMIT_REACHED` (400).
+
+### Domain Events
+
+`NamespaceEvent` is a sealed hierarchy with three flat events plus three nested sealed sub-hierarchies:
+
+```
+NamespaceEvent
+├── Created, Renamed (from/to Slug), Deleted
+├── MembershipEvent      (abstract, carries the affected account's EntityId)
+│   ├── MemberAdded (+ role)       — NOT published for the initial admin created during Namespace.create()
+│   ├── MemberUpdated (+ new role)
+│   └── MemberRemoved
+├── ApplicationEvent      (abstract, carries the NamespaceApplication)
+│   ├── ApplicationCreated, ApplicationUpdated, ApplicationReset, ApplicationRemoved
+└── TrustedIssuerEvent    (abstract, carries the NamespaceTrustedIssuer)
+    ├── TrustedIssuerCreated, TrustedIssuerUpdated, TrustedIssuerRemoved
+```
+
+`ServiceEvent` is a separate sealed hierarchy (services are a distinct aggregate root, even though they
+live in the same module): `Created`, `Renamed` (from/to `Slug`), `Released` (carries the artifactory
+`Manifest`), `ReleaseFailed` (carries a list of error strings), `Deleted`.
+
+`InvitationEvent` (in `com.konfigyr.membership`) is its own sealed hierarchy, keyed by the invitation's
+`key` string rather than an `EntityId`: `Created`, `Accepted` (carries the recipient `Account`),
+`Declined` (carries the recipient `Account`), `Canceled`. Published by `Invitations` and consumed by
+`InvitationSender` for the async, `@Retryable`, `@TransactionalEventListener`-based invitation emails.
+
 ## API Contracts
 
 ### Namespace Endpoints
 
+The namespace bounded context exposes far more than basic CRUD — ~30 endpoints across 7 controllers.
+
 ```
-GET    /namespaces/{slug}          @RequiresScope(READ_NAMESPACES)
-POST   /namespaces                 @RequiresScope(WRITE_NAMESPACES)
-PUT    /namespaces/{slug}          @RequiresScope(WRITE_NAMESPACES)
-DELETE /namespaces/{slug}          @RequiresScope(DELETE_NAMESPACES)
+GET      /namespaces                                    @RequiresScope(READ_NAMESPACES)   search/list, scoped to caller (account or OAuth client)
+HEAD     /namespaces/{slug}                              @RequiresScope(READ_NAMESPACES)
+GET      /namespaces/{slug}                              isMember,  @RequiresScope(READ_NAMESPACES)
+POST     /namespaces                                     @RequiresScope(WRITE_NAMESPACES)
+PUT      /namespaces/{slug}                              isAdmin,   @RequiresScope(WRITE_NAMESPACES)
+DELETE   /namespaces/{slug}                               isAdmin,   @RequiresScope(DELETE_NAMESPACES)
 ```
+
+`ApplicationsController` — OAuth2 client applications, all `@RequiresScope(READ_NAMESPACES)` class-level,
+mutations additionally require `isAdmin` + `WRITE_NAMESPACES`; reads only require `isAdmin`:
+
+```
+GET/POST /namespaces/{slug}/applications
+GET      /namespaces/{slug}/applications/{id}
+PUT      /namespaces/{slug}/applications/{id}
+PUT      /namespaces/{slug}/applications/{id}/reset       regenerate client secret (SERVICE_ACCOUNT only)
+DELETE   /namespaces/{slug}/applications/{id}
+```
+
+`TrustedIssuersController` — same auth shape as applications (`isAdmin` for reads, `isAdmin` +
+`WRITE_NAMESPACES` for mutations):
+
+```
+GET/POST /namespaces/{slug}/trusted-issuers
+GET      /namespaces/{slug}/trusted-issuers/{id}
+PUT      /namespaces/{slug}/trusted-issuers/{id}
+DELETE   /namespaces/{slug}/trusted-issuers/{id}
+```
+
+`DashboardController`:
+
+```
+GET      /namespaces/{slug}/dashboard                    isMember, @RequiresScope(READ_NAMESPACES)
+```
+
+`ServicesController` — class-level `@RequiresScope(READ_NAMESPACES)`; note mutations (`create`/`update`/
+`delete`) do **not** require `WRITE_NAMESPACES`, only `isMember` (`isAdmin` for delete) — worth
+double-checking if this is intentional when touching this controller:
+
+```
+GET/HEAD /namespaces/{namespace}/services[/{slug}]        isMember
+POST     /namespaces/{namespace}/services                 isMember
+PUT      /namespaces/{namespace}/services/{slug}           isMember
+DELETE   /namespaces/{namespace}/services/{slug}            isAdmin
+GET      /namespaces/{namespace}/services/{slug}/manifest        isMember
+GET      /namespaces/{namespace}/services/{slug}/releases/{id}   isMember
+GET      /namespaces/{namespace}/services/{slug}/catalog          isMember
+GET      /namespaces/{namespace}/services/{slug}/catalog/search   isMember
+```
+
+### Membership / Invitations Endpoints
+
+`MembersController` — class-level `@RequiresScope(INVITE_MEMBERS)` covers reads too, not just inviting:
+
+```
+GET      /namespaces/{slug}/members            isMember, @RequiresScope(INVITE_MEMBERS)
+GET      /namespaces/{slug}/members/{member}   isMember, @RequiresScope(INVITE_MEMBERS)
+PUT      /namespaces/{slug}/members/{member}   isAdmin,  @RequiresScope(INVITE_MEMBERS)
+DELETE   /namespaces/{slug}/members/{member}   isAdmin,  @RequiresScope(INVITE_MEMBERS)
+```
+
+`InvitationsController` splits into an admin view (namespace-scoped) and a recipient view (account-scoped,
+mirroring the frontend's `/namespace/$namespace/invitations` vs `/invitations` split):
+
+```
+GET/POST /namespaces/{slug}/invitations         isAdmin, @RequiresScope(INVITE_MEMBERS)
+GET      /namespaces/{slug}/invitations/{key}   isAdmin, @RequiresScope(INVITE_MEMBERS)
+DELETE   /namespaces/{slug}/invitations/{key}   isAdmin, @RequiresScope(INVITE_MEMBERS)   (cancel)
+
+GET      /account/invitations         no @RequiresScope — session-authenticated USER_ACCOUNT principal only
+GET      /account/invitations/{key}   no @RequiresScope
+POST     /account/invitations/{key}   no @RequiresScope   (accept)
+DELETE   /account/invitations/{key}   no @RequiresScope   (decline)
+```
+
+The `/account/invitations` endpoints deliberately carry no OAuth scope — they're for the invited human,
+not a machine client, and `lookupAccount()` rejects any principal that isn't a `USER_ACCOUNT`.
 
 ### Vault Endpoints
 
@@ -389,6 +571,7 @@ pathless `_authenticated` layout; `/auth/*`, `/api/$`, and `/error` do not.
 ```
 /                                                          Dashboard
 /account                                                   User account page
+/invitations                                               Pending invitations across all namespaces
 /join/$key                                                 Invitation acceptance
 /namespace/provision                                       Namespace onboarding
 /namespace/$namespace                                      Namespace detail
@@ -417,19 +600,22 @@ Frontend
 REST API - namespace module
   3. Validate input (slug unique, format valid)
   4. Create Namespace aggregate in database
-  5. Publish NamespaceEvent.Created
+  5. Insert the owner as an ADMIN Member directly into NAMESPACE_MEMBERS (a documented direct-table
+     exception to the "events only" rule — no NamespaceEvent.MemberAdded is published for this initial
+     admin, unlike members added later through an accepted Invitation)
+  6. Publish NamespaceEvent.Created
   ↓
 REST API - audit module
-  6. @TransactionalEventListener catches event
-  7. Insert audit record
+  7. @TransactionalEventListener catches event
+  8. Insert audit record
   ↓
 REST API - KMS module
-  8. Listener creates KeysetMetadata for new namespace
+  9. Listener creates KeysetMetadata for new namespace
   ↓
 Frontend
-  9. Receive 201 Created response
-  10. Redirect to /namespace/$namespace
-  11. Load namespace data (already cached server-side from loader)
+  10. Receive 201 Created response
+  11. Redirect to /namespace/$namespace
+  12. Load namespace data (already cached server-side from loader)
 ```
 
 ## Environment-Specific Deployments
@@ -463,10 +649,12 @@ with `@RequiresScope` for OAuth-scope checks:
 | `ADMIN` | Manage members, billing, services, all configurations |
 | `USER` | Manage configurations and deployments only |
 
-OAuth2 clients registered by a namespace (`NamespaceApplicationDefinition`) authenticate as that namespace
-and carry permission scopes from the real `OAuthScope` enum — `namespaces:read/write/delete/invite/
-publish-releases`, `artifactory:read/publish`, `profiles:read/write/delete`, `openid` — rather than a
-user role.
+OAuth2 clients registered by a namespace (`NamespaceApplication`, created from a `NamespaceApplicationDefinition`
+command) authenticate as that namespace and carry permission scopes from the real `OAuthScope` enum —
+`namespaces:read/write/delete/invite/publish-releases`, `artifactory:read/publish`,
+`profiles:read/write/delete`, `openid` — rather than a user role. See "Namespace & Membership Domain"
+above for the `NamespaceClientType` (`SERVICE_ACCOUNT`/`AGENT`/`WORKLOAD`) that governs how each
+application authenticates.
 
 ## Verification Checklist
 
