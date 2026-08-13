@@ -30,10 +30,12 @@ export const buttonVariants = cva(
         xs: 'h-6 gap-1 px-3 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*="size-"])]:size-3',
         sm: 'h-7 gap-1 px-4 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*="size-"])]:size-3.5',
         lg: 'h-9 gap-1.5 px-6 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3',
+        xl: 'h-10 gap-1.5 px-7 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg:not([class*="size-"])]:size-6',
         icon: 'size-8',
         'icon-xs': 'size-6 in-data-[slot=button-group]:rounded-lg [&_svg:not([class*="size-"])]:size-3',
         'icon-sm': 'size-7 in-data-[slot=button-group]:rounded-lg',
         'icon-lg': 'size-9',
+        'icon-xl': 'size-10 [&_svg:not([class*="size-"])]:size-6',
       },
     },
     defaultVariants: {

@@ -14,6 +14,7 @@ import {
   SidebarTrigger,
 } from '@konfigyr/components/ui/sidebar';
 import { cn } from '@konfigyr/components/utils';
+import { ModuleSwitcher } from './module-switcher';
 import { SearchToggle } from './search-toggle';
 import { ThemeSwitcher } from './theme-switcher';
 
@@ -22,7 +23,7 @@ import type { VariantProps } from 'class-variance-authority';
 import type { Account, Namespace } from '@konfigyr/hooks/types';
 
 const layoutContentVariants = cva(
-  'p-4',
+  'px-4',
   {
     variants: {
       variant: {
@@ -71,14 +72,16 @@ export function LayoutNavbar({ title, children }: { title: ReactNode } & Omit<Co
   }
 
   return (
-    <div className="h-14 flex items-center gap-4 justify-between px-4 py-2 mb-6 border-b">
-      <h1 className="text-2xl font-heading font-semibold">{title}</h1>
-      {children && (
-        <div className="grow">
-          {children}
-        </div>
-      )}
-      <SearchToggle />
+    <div className="px-4 py-2 mb-6 border-b">
+      <div className="h-10 flex items-center gap-4 justify-between">
+        <h1 className="text-2xl font-heading font-semibold">{title}</h1>
+        {children && (
+          <div className="grow">
+            {children}
+          </div>
+        )}
+        <SearchToggle />
+      </div>
     </div>
   );
 }
@@ -87,7 +90,12 @@ export function LayoutSidebar({ account, namespace, children }: { account: Accou
   return (
     <Sidebar collapsible="offcanvas" className="h-screen">
       <SidebarHeader className="border-b">
-        <NamespaceDropDownMenu namespace={namespace} />
+        <ModuleSwitcher namespace={namespace} className="h-10"/>
+
+        <div className="h-16 border-t py-2">
+          <NamespaceDropDownMenu namespace={namespace} />
+        </div>
+
       </SidebarHeader>
       <SidebarContent className="overflow-y-auto h-full">
         {children}
