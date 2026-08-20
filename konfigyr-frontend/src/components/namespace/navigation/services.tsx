@@ -4,6 +4,7 @@ import { PlusIcon, ServerIcon, ServerOffIcon } from 'lucide-react';
 import { useNamespaceServicesQuery } from '@konfigyr/hooks';
 import { CreateServiceForm } from '@konfigyr/components/namespace/service/service-form';
 import { ErrorState } from '@konfigyr/components/error';
+import { ServicesLabel } from '@konfigyr/components/messages';
 import { Button } from '@konfigyr/components/ui/button';
 import { EmptyState } from '@konfigyr/components/ui/empty';
 import { Skeleton } from '@konfigyr/components/ui/skeleton';
@@ -131,10 +132,7 @@ export function NamespaceServicesNavigationMenu({ namespace }: { namespace: Name
         <SidebarGroupLabel className="flex items-center gap-2">
           <ServerIcon />
           <span className="grow">
-            <FormattedMessage
-              defaultMessage="Services"
-              description="The services navigation menu label."
-            />
+            <ServicesLabel />
           </span>
           <ServiceDialog namespace={namespace} />
         </SidebarGroupLabel>

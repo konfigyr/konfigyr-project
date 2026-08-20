@@ -32,6 +32,7 @@ import { Route as AuthenticatedNamespaceNamespaceAuditIndexRouteImport } from '.
 import { Route as AuthenticatedNamespaceNamespaceKmsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/kms/index'
 import { Route as AuthenticatedNamespaceNamespaceKmsKeysetRouteImport } from './routes/_authenticated/namespace/$namespace/kms/$keyset'
 import { Route as AuthenticatedNamespaceNamespaceKmsCreateRouteImport } from './routes/_authenticated/namespace/$namespace/kms/create'
+import { Route as AuthenticatedNamespaceNamespaceServicesIndexRouteImport } from './routes/_authenticated/namespace/$namespace/services/index'
 import { Route as AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport } from './routes/_authenticated/namespace/$namespace/services/$service/route'
 import { Route as AuthenticatedNamespaceNamespaceSettingsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/settings/index'
 import { Route as AuthenticatedNamespaceNamespaceArtifactoryGroupsIndexRouteImport } from './routes/_authenticated/namespace/$namespace/artifactory/groups/index'
@@ -189,6 +190,12 @@ const AuthenticatedNamespaceNamespaceKmsCreateRoute =
     id: '/create',
     path: '/create',
     getParentRoute: () => AuthenticatedNamespaceNamespaceKmsRouteRoute,
+  } as any)
+const AuthenticatedNamespaceNamespaceServicesIndexRoute =
+  AuthenticatedNamespaceNamespaceServicesIndexRouteImport.update({
+    id: '/services/',
+    path: '/services/',
+    getParentRoute: () => AuthenticatedNamespaceNamespaceRouteRoute,
   } as any)
 const AuthenticatedNamespaceNamespaceServicesServiceRouteRoute =
   AuthenticatedNamespaceNamespaceServicesServiceRouteRouteImport.update({
@@ -427,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/namespace/$namespace/audit/': typeof AuthenticatedNamespaceNamespaceAuditIndexRoute
   '/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
+  '/namespace/$namespace/services/': typeof AuthenticatedNamespaceNamespaceServicesIndexRoute
   '/namespace/$namespace/settings/': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
   '/namespace/$namespace/artifactory/groups/$groupId': typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRouteWithChildren
   '/namespace/$namespace/artifactory/transfers/$transferId': typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRouteWithChildren
@@ -474,6 +482,7 @@ export interface FileRoutesByTo {
   '/namespace/$namespace/applications': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/namespace/$namespace/audit': typeof AuthenticatedNamespaceNamespaceAuditIndexRoute
   '/namespace/$namespace/kms': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
+  '/namespace/$namespace/services': typeof AuthenticatedNamespaceNamespaceServicesIndexRoute
   '/namespace/$namespace/settings': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
   '/namespace/$namespace/artifactory/groups/create': typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsCreateRoute
   '/namespace/$namespace/artifactory/transfers/create': typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersCreateRoute
@@ -522,6 +531,7 @@ export interface FileRoutesById {
   '/_authenticated/namespace/$namespace/applications/': typeof AuthenticatedNamespaceNamespaceApplicationsIndexRoute
   '/_authenticated/namespace/$namespace/audit/': typeof AuthenticatedNamespaceNamespaceAuditIndexRoute
   '/_authenticated/namespace/$namespace/kms/': typeof AuthenticatedNamespaceNamespaceKmsIndexRoute
+  '/_authenticated/namespace/$namespace/services/': typeof AuthenticatedNamespaceNamespaceServicesIndexRoute
   '/_authenticated/namespace/$namespace/settings/': typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
   '/_authenticated/namespace/$namespace/artifactory/groups/$groupId': typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRouteWithChildren
   '/_authenticated/namespace/$namespace/artifactory/transfers/$transferId': typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRouteWithChildren
@@ -575,6 +585,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/applications/'
     | '/namespace/$namespace/audit/'
     | '/namespace/$namespace/kms/'
+    | '/namespace/$namespace/services/'
     | '/namespace/$namespace/settings/'
     | '/namespace/$namespace/artifactory/groups/$groupId'
     | '/namespace/$namespace/artifactory/transfers/$transferId'
@@ -622,6 +633,7 @@ export interface FileRouteTypes {
     | '/namespace/$namespace/applications'
     | '/namespace/$namespace/audit'
     | '/namespace/$namespace/kms'
+    | '/namespace/$namespace/services'
     | '/namespace/$namespace/settings'
     | '/namespace/$namespace/artifactory/groups/create'
     | '/namespace/$namespace/artifactory/transfers/create'
@@ -669,6 +681,7 @@ export interface FileRouteTypes {
     | '/_authenticated/namespace/$namespace/applications/'
     | '/_authenticated/namespace/$namespace/audit/'
     | '/_authenticated/namespace/$namespace/kms/'
+    | '/_authenticated/namespace/$namespace/services/'
     | '/_authenticated/namespace/$namespace/settings/'
     | '/_authenticated/namespace/$namespace/artifactory/groups/$groupId'
     | '/_authenticated/namespace/$namespace/artifactory/transfers/$transferId'
@@ -867,6 +880,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/namespace/$namespace/kms/create'
       preLoaderRoute: typeof AuthenticatedNamespaceNamespaceKmsCreateRouteImport
       parentRoute: typeof AuthenticatedNamespaceNamespaceKmsRouteRoute
+    }
+    '/_authenticated/namespace/$namespace/services/': {
+      id: '/_authenticated/namespace/$namespace/services/'
+      path: '/services'
+      fullPath: '/namespace/$namespace/services/'
+      preLoaderRoute: typeof AuthenticatedNamespaceNamespaceServicesIndexRouteImport
+      parentRoute: typeof AuthenticatedNamespaceNamespaceRouteRoute
     }
     '/_authenticated/namespace/$namespace/services/$service': {
       id: '/_authenticated/namespace/$namespace/services/$service'
@@ -1230,6 +1250,7 @@ interface AuthenticatedNamespaceNamespaceRouteRouteChildren {
   AuthenticatedNamespaceNamespaceIndexRoute: typeof AuthenticatedNamespaceNamespaceIndexRoute
   AuthenticatedNamespaceNamespaceServicesServiceRouteRoute: typeof AuthenticatedNamespaceNamespaceServicesServiceRouteRouteWithChildren
   AuthenticatedNamespaceNamespaceAuditIndexRoute: typeof AuthenticatedNamespaceNamespaceAuditIndexRoute
+  AuthenticatedNamespaceNamespaceServicesIndexRoute: typeof AuthenticatedNamespaceNamespaceServicesIndexRoute
   AuthenticatedNamespaceNamespaceSettingsIndexRoute: typeof AuthenticatedNamespaceNamespaceSettingsIndexRoute
   AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRouteWithChildren
   AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRoute: typeof AuthenticatedNamespaceNamespaceArtifactoryTransfersTransferIdRouteRouteWithChildren
@@ -1258,6 +1279,8 @@ const AuthenticatedNamespaceNamespaceRouteRouteChildren: AuthenticatedNamespaceN
       AuthenticatedNamespaceNamespaceServicesServiceRouteRouteWithChildren,
     AuthenticatedNamespaceNamespaceAuditIndexRoute:
       AuthenticatedNamespaceNamespaceAuditIndexRoute,
+    AuthenticatedNamespaceNamespaceServicesIndexRoute:
+      AuthenticatedNamespaceNamespaceServicesIndexRoute,
     AuthenticatedNamespaceNamespaceSettingsIndexRoute:
       AuthenticatedNamespaceNamespaceSettingsIndexRoute,
     AuthenticatedNamespaceNamespaceArtifactoryGroupsGroupIdRouteRoute:

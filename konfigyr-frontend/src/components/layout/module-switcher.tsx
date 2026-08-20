@@ -41,7 +41,7 @@ const MODULES: Array<Module> = [{
   label: <FormattedMessage defaultMessage="Home" description="Label for the home module switcher option" />,
   exact: true,
 }, {
-  id: '/_authenticated/namespace/$namespace/services/$service',
+  id: '/_authenticated/namespace/$namespace/services/',
   icon: VaultIcon,
   label: <FormattedMessage defaultMessage="Vault" description="Label for the vault module switcher option" />,
 }, {
