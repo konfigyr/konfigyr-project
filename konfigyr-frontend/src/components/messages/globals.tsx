@@ -61,6 +61,13 @@ export const NamespaceLabel = () => (
   />
 );
 
+export const ServicesLabel = () => (
+  <FormattedMessage
+    defaultMessage="Services"
+    description="The Namespace services label text."
+  />
+);
+
 export const HomeLabel = () => (
   <FormattedMessage
     defaultMessage="Home"
