@@ -1,7 +1,7 @@
 [versions]
 spring-boot          = "4.1.1"
-spring-cloud         = "2025.1.1"
-spring-modulith      = "2.0.7"
+spring-cloud         = "2025.1.2"
+spring-modulith      = "2.1.0"
 jmolecules           = "2025.0.2"
 konfigyr-crypto      = "1.0.0"
 jooq                 = "3.21.7"
