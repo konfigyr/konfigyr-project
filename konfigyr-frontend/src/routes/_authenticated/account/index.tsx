@@ -3,7 +3,7 @@ import { AccountDeleteConfirmationDialog } from '@konfigyr/components/account/de
 import { AccountEmailForm } from '@konfigyr/components/account/email-form';
 import { Goodbye } from '@konfigyr/components/account/goodbye';
 import { AccountNameForm } from '@konfigyr/components/account/name-form';
-import { LayoutContent } from '@konfigyr/components/layout';
+import { LayoutContent } from '@konfigyr/layout';
 import { useMutation } from '@tanstack/react-query';
 import { createServerFn, useServerFn } from '@tanstack/react-start';
 import { createFileRoute } from '@tanstack/react-router';

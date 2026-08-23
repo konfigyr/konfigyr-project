@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { NamespaceApplications } from '@konfigyr/components/namespace/applications/applications';
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/applications/',
+  '/_authenticated/namespace/$namespace/_overview/applications/',
 )({
   component: RouteComponent,
 });

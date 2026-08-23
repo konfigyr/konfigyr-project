@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useNamespace, useSearchArtifactProperties } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { PropertySearchLabel } from '@konfigyr/components/artifactory/search/messages';
 import { PropertyFilters } from '@konfigyr/components/artifactory/search/property-filters';
 import { PropertySkeleton } from '@konfigyr/components/artifactory/search/property-item';

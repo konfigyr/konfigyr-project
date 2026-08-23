@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useGetIncomingTransfers, useGetOutgoingTransfers, useNamespace } from '@konfigyr/hooks';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { Badge } from '@konfigyr/components/ui/badge';
 import { buttonVariants } from '@konfigyr/components/ui/button';
 import { TransferFilters } from '@konfigyr/components/artifactory/transfers/transfer-filters';

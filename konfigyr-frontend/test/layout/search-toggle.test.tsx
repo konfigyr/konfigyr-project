@@ -2,9 +2,9 @@ import { afterAll, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
-import { SearchToggle } from '@konfigyr/components/layout/search-toggle';
+import { SearchToggle } from '@konfigyr/layout/search-toggle';
 
-describe('components | layout | <SearchToggle/>', () => {
+describe('layout | <SearchToggle/>', () => {
   const user = userEvents.setup();
 
   const result = renderWithMessageProvider(

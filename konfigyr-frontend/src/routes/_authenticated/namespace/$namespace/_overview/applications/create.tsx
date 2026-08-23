@@ -24,7 +24,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/applications/create',
+  '/_authenticated/namespace/$namespace/_overview/applications/create',
 )({
   validateSearch: searchSchema,
   component: RouteComponent,

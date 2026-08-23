@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from 'vitest';
 import Authentication from '@konfigyr/lib/authentication';
-import { deleteNamespaceHandler } from '@konfigyr/routes/_authenticated/namespace/$namespace/settings/-handler';
+import { deleteNamespaceHandler } from '@konfigyr/routes/_authenticated/namespace/$namespace/_overview/settings/-handler';
 import { updateSessionAccessToken } from '@konfigyr/test/helpers/session';
 
 describe('routes | namespace | settings | handler', () => {

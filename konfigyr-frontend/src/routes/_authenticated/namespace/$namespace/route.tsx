@@ -1,13 +1,10 @@
 import {
   Layout,
   LayoutSidebar,
-} from '@konfigyr/components/layout';
+  ModuleProvider,
+} from '@konfigyr/layout';
 import { NamespaceProvider } from '@konfigyr/components/namespace/context';
-import { NamespaceArtifactoryNavigationMenu } from '@konfigyr/components/namespace/navigation/artifactory';
-import { NamespaceNavigationMenu } from '@konfigyr/components/namespace/navigation/general';
-import { NamespaceKmsNavigationMenu } from '@konfigyr/components/namespace/navigation/kms';
-import { NamespacePkiNavigationMenu } from '@konfigyr/components/namespace/navigation/pki';
-import { NamespaceServicesNavigationMenu } from '@konfigyr/components/namespace/navigation/services';
+import { ModuleNavigation } from '@konfigyr/components/namespace/navigation/module';
 import { getNamespaceQuery, useAccount } from '@konfigyr/hooks';
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 
@@ -29,16 +26,14 @@ function RouteComponent() {
 
   return (
     <NamespaceProvider namespace={namespace}>
-      <Layout>
-        <LayoutSidebar account={account} namespace={namespace}>
-          <NamespaceNavigationMenu namespace={namespace} />
-          <NamespaceServicesNavigationMenu namespace={namespace} />
-          <NamespaceArtifactoryNavigationMenu namespace={namespace} />
-          <NamespaceKmsNavigationMenu namespace={namespace} />
-          <NamespacePkiNavigationMenu />
-        </LayoutSidebar>
-        <Outlet />
-      </Layout>
+      <ModuleProvider>
+        <Layout>
+          <LayoutSidebar account={account} namespace={namespace}>
+            <ModuleNavigation namespace={namespace} />
+          </LayoutSidebar>
+          <Outlet />
+        </Layout>
+      </ModuleProvider>
     </NamespaceProvider>
   );
 }

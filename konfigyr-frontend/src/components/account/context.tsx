@@ -1,32 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { ErrorState } from '@konfigyr/components/error';
 import { FormattedMessage, KonfigyrLeadMessage, KonfigyrTitleMessage } from '@konfigyr/components/messages';
+import { ProgressLoader } from '@konfigyr/components/ui/loader';
 import { AccountContext, useGetAccount, useGetNamespaces } from '@konfigyr/hooks';
 
 import type { ReactNode } from 'react';
 
 function AccountLoader() {
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWidth((prev) => {
-        // Stop at 95% until completion
-        if (prev >= 95) return prev;
-
-        // Slower progress as we get higher (realistic loading)
-        const increment = Math.random() * (100 - prev) * 0.1;
-        const slowdown = prev > 70 ? 0.3 : prev > 50 ? 0.6 : 1;
-
-        return Math.min(prev + increment * slowdown, 95);
-      });
-    }, 600);
-
-    return () => clearInterval(interval);
-  });
-
   return (
     <div className="h-screen w-screen gap-8 flex flex-col items-center justify-center text-center">
       <div className="space-y-2">
@@ -38,12 +19,7 @@ function AccountLoader() {
         </p>
       </div>
 
-      <div className="relative bg-gray-200 h-0.5 w-[18rem] z-50 pointer-events-none rounded-full">
-        <div
-          className="h-full bg-secondary transition-all duration-300 ease-out shadow-sm"
-          style={{ width: `${width}%` }}
-        />
-      </div>
+      <ProgressLoader />
 
       <div className="space-y-1">
         <p className="font-medium">

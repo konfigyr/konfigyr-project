@@ -1,4 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   BoxIcon,
@@ -6,10 +10,9 @@ import {
   GlobeLockIcon,
   HomeIcon,
   LayoutGridIcon,
-  UserShieldIcon,
   VaultIcon,
 } from 'lucide-react';
-import { useMatches, useRouter } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 import { Badge } from '@konfigyr/components/ui/badge';
 import { Button } from '@konfigyr/components/ui/button';
 import {
@@ -21,49 +24,56 @@ import {
   DropdownMenuTrigger,
 } from '@konfigyr/components/ui/dropdown-menu';
 import { cn } from '@konfigyr/components/utils';
+import { useModule } from './module';
 
 import type { ReactNode } from 'react';
 import type { LucideComponent } from 'lucide-react';
 import type { FileRouteTypes, FileRoutesById } from '@konfigyr/routeTree.gen';
+import type { ModuleType } from '@konfigyr/types';
 import type { Namespace } from '@konfigyr/hooks/namespace/types';
 
-interface Module {
-  id: FileRouteTypes['id'] | string;
+interface ModuleOption {
+  id: string;
+  type?: ModuleType;
+  route: FileRouteTypes['id'] | string;
   icon: typeof LucideComponent;
   label: ReactNode;
-  exact?: boolean;
   disabled?: boolean;
 }
 
-const MODULES: Array<Module> = [{
-  id: '/_authenticated/namespace/$namespace/',
+const MODULE_OPTIONS: Array<ModuleOption> = [{
+  id: 'overview',
+  type: 'overview',
+  route: '/_authenticated/namespace/$namespace/_overview/',
   icon: HomeIcon,
-  label: <FormattedMessage defaultMessage="Home" description="Label for the home module switcher option" />,
-  exact: true,
+  label: <FormattedMessage defaultMessage="Namespace management" description="Label for the namespace management module switcher option" />,
 }, {
-  id: '/_authenticated/namespace/$namespace/services/',
+  id: 'services',
+  type: 'services',
+  route: '/_authenticated/namespace/$namespace/services/',
   icon: VaultIcon,
   label: <FormattedMessage defaultMessage="Vault" description="Label for the vault module switcher option" />,
 }, {
-  id: '/_authenticated/namespace/$namespace/artifactory/registry/',
+  id: 'artifactory',
+  type: 'artifactory',
+  route: '/_authenticated/namespace/$namespace/artifactory/registry/',
   icon: BoxIcon,
   label: <FormattedMessage defaultMessage="Artifactory" description="Label for the artifactory module switcher option" />,
 }, {
-  id: '/_authenticated/namespace/$namespace/kms',
+  id: 'kms',
+  type: 'kms',
+  route: '/_authenticated/namespace/$namespace/kms',
   icon: FolderKeyIcon,
   label: <FormattedMessage defaultMessage="KMS" description="Label for the KMS module switcher option" />,
 }, {
-  id: '/_authenticated/namespace/$namespace/pki',
+  id: 'pki',
+  route: '/_authenticated/namespace/$namespace/pki',
   icon: GlobeLockIcon,
   label: <FormattedMessage defaultMessage="PKI" description="Label for the PKI module switcher option" />,
   disabled: true,
-}, {
-  id: '/_authenticated/namespace/$namespace/settings/',
-  icon: UserShieldIcon,
-  label: <FormattedMessage defaultMessage="Administration" description="Label for the administration module switcher option" />,
 }];
 
-function ModuleLabel({ module, variant = 'default' }: { module: Module, variant?: 'menuitem' | 'default' }) {
+function ModuleLabel({ module, variant = 'default' }: { module: ModuleOption, variant?: 'menuitem' | 'default' }) {
   return (
     <div className="flex items-center gap-2">
       <span
@@ -74,7 +84,7 @@ function ModuleLabel({ module, variant = 'default' }: { module: Module, variant?
       >
         <module.icon className="size-4" />
       </span>
-      <span className={cn(variant === 'default' && 'font-medium text-lg grow capitalize')}>
+      <span className={cn(variant === 'default' && 'font-medium text-lg grow')}>
         {module.label}
       </span>
       {(module.disabled && variant === 'menuitem') && (
@@ -89,20 +99,17 @@ function ModuleLabel({ module, variant = 'default' }: { module: Module, variant?
 export function ModuleSwitcher({ namespace, className }: { namespace: Namespace, className?: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const matches = useMatches();
+  const module = useModule();
 
-  const matching = useMemo(() => {
-    return MODULES.find(module => matches.find(match => {
-      if (module.exact) {
-        return match.routeId === module.id;
-      }
-      return match.routeId.startsWith(module.id);
-    }));
-  }, [matches]);
+  const matching = useMemo(
+    () => module ? MODULE_OPTIONS.find(it => it.type === module) : undefined,
+    [module],
+  );
 
   const onSelect = useCallback((value: string) => {
-    const selected = router.routesById[value as keyof FileRoutesById];
-    router.navigate({ to: selected.to, params: { namespace: namespace.slug } });
+    const selected = MODULE_OPTIONS.find(it => it.id === value);
+    const route = router.routesById[selected?.route as keyof FileRoutesById];
+    router.navigate({ to: route.to, params: { namespace: namespace.slug } });
 
     setOpen(false);
   }, [namespace]);
@@ -125,18 +132,18 @@ export function ModuleSwitcher({ namespace, className }: { namespace: Namespace,
           <ModuleLabel module={matching} />
         )}
       </div>
-      <DropdownMenuContent className="p-2 min-w-64 font-medium text-xl">
+      <DropdownMenuContent className="p-2 min-w-72 font-medium text-xl">
         <DropdownMenuGroup>
           <DropdownMenuRadioGroup onValueChange={onSelect} value={matching?.id ?? ''}>
-            {MODULES.map(module => (
+            {MODULE_OPTIONS.map(item => (
               <DropdownMenuRadioItem
-                key={module.id}
-                value={module.id}
-                disabled={module.disabled}
-                aria-disabled={module.disabled}
+                key={item.id}
+                value={item.id}
+                disabled={item.disabled}
+                aria-disabled={item.disabled}
                 className="py-1"
               >
-                <ModuleLabel module={module} variant="menuitem" />
+                <ModuleLabel module={item} variant="menuitem" />
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>

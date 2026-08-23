@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import {
   LayoutContent,
   LayoutNavbar,
-} from '@konfigyr/components/layout';
+} from '@konfigyr/layout';
 import { useAccountContext, useNamespace } from '@konfigyr/hooks';
 import { NamespaceDeleteForm } from '@konfigyr/components/namespace/form/delete';
 import { NamespaceDescriptionForm } from '@konfigyr/components/namespace/form/description';
@@ -38,7 +38,7 @@ const useDeleteNamespace = () => {
   }, [account, onDeleteNamespace]);
 };
 
-export const Route = createFileRoute('/_authenticated/namespace/$namespace/settings/')({
+export const Route = createFileRoute('/_authenticated/namespace/$namespace/_overview/settings/')({
   component: RouteComponent,
 });
 

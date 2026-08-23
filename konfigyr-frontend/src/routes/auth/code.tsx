@@ -2,7 +2,7 @@ import { Headset, SquareArrowOutUpRight } from 'lucide-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { getRequestUrl } from '@tanstack/react-start/server';
 import { createServerFn } from '@tanstack/react-start';
-import { LayoutContent } from '@konfigyr/components/layout';
+import { LayoutContent } from '@konfigyr/layout';
 import {
   ContactSupport,
   GeneralErrorLink,

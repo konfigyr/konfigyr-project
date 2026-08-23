@@ -1,18 +1,15 @@
 import {
   LayoutContent,
   LayoutNavbar,
-} from '@konfigyr/components/layout';
+} from '@konfigyr/layout';
 import { ActivityCard, RECENT_ACTIVITY_QUERY } from '@konfigyr/components/reporting/activity';
 import { DashboardStats } from '@konfigyr/components/reporting/dashboard-stats';
-import { getAuditRecordsQuery, getDashboardQuery, useNamespace } from '@konfigyr/hooks';
+import { getAuditRecordsQuery, getDashboardQuery, getNamespaceQuery, useNamespace } from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
 
-import type { Namespace } from '@konfigyr/hooks/types';
-
-export const Route = createFileRoute('/_authenticated/namespace/$namespace/')({
-  loader: async ({ context, parentMatchPromise }) => {
-    const match = await parentMatchPromise;
-    const namespace = match.loaderData as Namespace;
+export const Route = createFileRoute('/_authenticated/namespace/$namespace/_overview/')({
+  loader: async ({ context, params }) => {
+    const namespace = await context.queryClient.ensureQueryData(getNamespaceQuery(params.namespace));
 
     await Promise.all([
       context.queryClient.prefetchQuery(getDashboardQuery(namespace)),

@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import {
   LayoutContent,
   LayoutNavbar,
-} from '@konfigyr/components/layout';
+} from '@konfigyr/layout';
 import { getAccountInvitations } from '@konfigyr/hooks';
 import { AccountInvitations } from '@konfigyr/components/account/invitations';
 

@@ -5,7 +5,7 @@ import { toast } from '@konfigyr/components/ui/toast';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/artifactory/groups/breadcrumbs';
 import { GroupVerificationForm } from '@konfigyr/components/artifactory/groups/group-verification-form';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { GroupClaimsLabel } from '@konfigyr/components/artifactory/groups/messages';
 import type { GroupVerificationFormValues } from '@konfigyr/components/artifactory/groups/group-verification-form';
 

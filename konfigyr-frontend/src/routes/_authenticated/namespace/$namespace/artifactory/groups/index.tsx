@@ -4,7 +4,7 @@ import { PlusIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useGetGroupVerifications, useNamespace } from '@konfigyr/hooks';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { buttonVariants } from '@konfigyr/components/ui/button';
 import { GroupVerificationFilters } from '@konfigyr/components/artifactory/groups/group-verification-filters';
 import { GroupVerificationTable } from '@konfigyr/components/artifactory/groups/group-verification-table';

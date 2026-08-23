@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { useCallback } from 'react';
 import { useNamespace } from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { AuditRecordList } from '@konfigyr/components/audit/audit-record-list';
 
 import type { AuditRecordQuery } from '@konfigyr/hooks/types';
@@ -15,7 +15,7 @@ const searchQuerySchema = z.object({
 });
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/audit/',
+  '/_authenticated/namespace/$namespace/_overview/audit/',
 )({
   validateSearch: searchQuerySchema,
   component: RouteComponent,
