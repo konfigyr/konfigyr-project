@@ -1,4 +1,4 @@
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { ServiceNavigationMenu } from '@konfigyr/components/namespace/navigation/service-menu';
 import { getNamespaceQuery, getNamespaceServiceQuery } from '@konfigyr/hooks';
 import { Outlet, createFileRoute } from '@tanstack/react-router';

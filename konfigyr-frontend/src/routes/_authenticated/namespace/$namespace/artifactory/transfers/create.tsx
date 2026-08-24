@@ -6,7 +6,7 @@ import { useNamespace, useRequestTransfer } from '@konfigyr/hooks';
 import { toast } from '@konfigyr/components/ui/toast';
 import { TransfersBreadcrumbs } from '@konfigyr/components/artifactory/transfers/breadcrumbs';
 import { TransferRequestForm } from '@konfigyr/components/artifactory/transfers/transfer-request-form';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { TransferRequestedSuccessMessage, TransfersLabel } from '@konfigyr/components/artifactory/transfers/messages';
 import type { TransferRequestFormValues } from '@konfigyr/components/artifactory/transfers/transfer-request-form';
 

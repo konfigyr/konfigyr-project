@@ -5,7 +5,7 @@ import {
   KonfigyrLeadMessage,
   KonfigyrTitleMessage,
 } from '@konfigyr/components/messages';
-import { LayoutContent } from '@konfigyr/components/layout';
+import { LayoutContent } from '@konfigyr/layout';
 import { buttonVariants } from '@konfigyr/components/ui/button';
 import {
   Card,

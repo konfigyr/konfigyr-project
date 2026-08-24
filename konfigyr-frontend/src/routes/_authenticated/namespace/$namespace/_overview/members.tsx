@@ -2,13 +2,13 @@ import { useNamespace } from '@konfigyr/hooks';
 import {
   LayoutContent,
   LayoutNavbar,
-} from '@konfigyr/components/layout';
+} from '@konfigyr/layout';
 import { InviteFormCard } from '@konfigyr/components/namespace/members/invitation-form';
 import { Members } from '@konfigyr/components/namespace/members/members';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/members',
+  '/_authenticated/namespace/$namespace/_overview/members',
 )({
   component: RouteComponent,
 });

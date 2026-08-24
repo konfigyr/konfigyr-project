@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { Layout } from '@konfigyr/components/layout';
+import { Layout } from '@konfigyr/layout';
 import { NamespaceServicesNavigationMenu } from '@konfigyr/components/namespace/navigation/services';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { namespaces } from '@konfigyr/test/helpers/mocks';

@@ -11,6 +11,7 @@ import {
 } from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
 import { ChangeHistoryAlert } from '@konfigyr/components/vault/change-history/change-history-alert';
+import { ProgressLoader } from '@konfigyr/components/ui/loader';
 import type { ChangeRequest, Namespace, Service } from '@konfigyr/hooks/types';
 
 export const Route = createFileRoute(
@@ -31,8 +32,8 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const navigate = Route.useNavigate();
   const { namespace, service, profiles, profile } = Route.useLoaderData();
-  const { data: changeset } = useChangesetState(namespace, service, profile);
-  const { data: catalog } = useServiceCatalogQuery(namespace.slug, service.slug);
+  const { data: changeset, isLoading: isChangesetLoading } = useChangesetState(namespace, service, profile);
+  const { data: catalog, isLoading: isCatalogLoading } = useServiceCatalogQuery(namespace.slug, service.slug);
 
   const onChangeRequestCreated = useCallback((changeRequest: ChangeRequest) => {
     return navigate({
@@ -77,6 +78,28 @@ function RouteComponent() {
         service={service}
         profile={profile}
       />
+
+      {(isChangesetLoading || isCatalogLoading) && (
+        <div className="md:w-1/2 mx-auto px-4 py-8">
+          <div className="text-center space-y-1">
+            <p className="font-medium">
+              <FormattedMessage
+                defaultMessage="Loading your profile from the vault..."
+                description="Message shown while the profile configuration is being retrieved from the Konfigyr Vault"
+              />
+            </p>
+
+            <ProgressLoader className="mx-auto my-4" />
+
+            <p className="text-muted-foreground text-sm">
+              <FormattedMessage
+                defaultMessage="This may take only a moment, please be patient."
+                description="Description of the vault loading process"
+              />
+            </p>
+          </div>
+        </div>
+      )}
 
       {(changeset && catalog) && (
         <ChangesetEditor

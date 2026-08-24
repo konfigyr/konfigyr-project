@@ -21,4 +21,14 @@ describe('routes | namespace | overview', () => {
       expect(getByText('Namespace with slug \'unknown-namespace\' not found.')).toBeInTheDocument();
     });
   });
+
+  test('should render not found page for an unknown module path instead of crashing', async () => {
+    const { getByRole, router } = renderWithRouter('/namespace/konfigyr/some-garbage-path');
+
+    await waitFor(() => {
+      expect(router.state.statusCode).toStrictEqual(404);
+    });
+
+    expect(getByRole('heading', { name: 'Resource Not Found', level: 3 })).toBeInTheDocument();
+  });
 });

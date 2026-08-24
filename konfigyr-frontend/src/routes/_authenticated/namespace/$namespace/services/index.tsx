@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { NamespaceServices } from '@konfigyr/components/namespace/service/services';
 import { useNamespace } from '@konfigyr/hooks/namespace/context';
 

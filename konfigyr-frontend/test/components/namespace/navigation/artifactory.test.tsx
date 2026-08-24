@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import { Layout } from '@konfigyr/components/layout';
+import { Layout } from '@konfigyr/layout';
 import { NamespaceArtifactoryNavigationMenu } from '@konfigyr/components/namespace/navigation/artifactory';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { namespaces } from '@konfigyr/test/helpers/mocks';

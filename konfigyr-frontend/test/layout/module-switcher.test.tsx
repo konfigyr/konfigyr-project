@@ -3,15 +3,15 @@ import { cleanup, waitFor, within } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { renderWithRouter } from '@konfigyr/test/helpers/router';
 
-describe('components | layout | <ModuleSwitcher/>', () => {
+describe('layout | <ModuleSwitcher/>', () => {
   afterEach(() => cleanup());
 
-  test('should show Home as the active module on the namespace overview page', async () => {
+  test('should show Namespace management as the active module on the namespace overview page', async () => {
     const { container } = renderWithRouter('/namespace/konfigyr');
 
     await waitFor(() => {
       const header = container.querySelector('[data-slot="sidebar-header"]') as HTMLElement;
-      expect(within(header).getByText('Home')).toBeInTheDocument();
+      expect(within(header).getByText('Namespace management')).toBeInTheDocument();
     });
   });
 
@@ -35,11 +35,10 @@ describe('components | layout | <ModuleSwitcher/>', () => {
     await user.click(getByRole('button', { name: 'Switch domain' }));
 
     await waitFor(() => {
-      expect(getByRole('menuitemradio', { name: 'Home' })).toBeInTheDocument();
+      expect(getByRole('menuitemradio', { name: 'Namespace management' })).toBeInTheDocument();
       expect(getByRole('menuitemradio', { name: 'Vault' })).toBeInTheDocument();
       expect(getByRole('menuitemradio', { name: 'Artifactory' })).toBeInTheDocument();
       expect(getByRole('menuitemradio', { name: 'KMS' })).toBeInTheDocument();
-      expect(getByRole('menuitemradio', { name: 'Administration' })).toBeInTheDocument();
 
       const pki = getByRole('menuitemradio', { name: /PKI/ });
       expect(pki).toHaveAttribute('aria-disabled', 'true');

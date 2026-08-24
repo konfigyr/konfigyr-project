@@ -95,7 +95,6 @@ export function LayoutSidebar({ account, namespace, children }: { account: Accou
         <div className="h-16 border-t py-2">
           <NamespaceDropDownMenu namespace={namespace} />
         </div>
-
       </SidebarHeader>
       <SidebarContent className="overflow-y-auto h-full">
         {children}

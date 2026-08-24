@@ -20,7 +20,7 @@ import { EmptyState } from '@konfigyr/components/ui/empty';
 import type { CreateNamespaceApplication } from '@konfigyr/hooks/types';
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/applications/$id',
+  '/_authenticated/namespace/$namespace/_overview/applications/$id',
 )({
   component: RouteComponent,
 });

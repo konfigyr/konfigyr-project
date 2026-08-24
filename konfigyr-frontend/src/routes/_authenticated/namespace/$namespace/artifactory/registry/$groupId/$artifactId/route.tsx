@@ -1,5 +1,5 @@
 import { Outlet, createFileRoute } from '@tanstack/react-router';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { RegistryLabel } from '@konfigyr/components/artifactory/registry/messages';
 
 export const Route = createFileRoute(

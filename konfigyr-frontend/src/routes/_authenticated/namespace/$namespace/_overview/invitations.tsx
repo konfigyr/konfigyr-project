@@ -2,7 +2,7 @@ import { z } from 'zod';
 import {
   LayoutContent,
   LayoutNavbar,
-} from '@konfigyr/components/layout';
+} from '@konfigyr/layout';
 import { useNamespace } from '@konfigyr/hooks';
 import { Invitations } from '@konfigyr/components/namespace/members/invitations';
 import { createFileRoute } from '@tanstack/react-router';
@@ -15,7 +15,7 @@ const searchQuerySchema = z.object({
 });
 
 export const Route = createFileRoute(
-  '/_authenticated/namespace/$namespace/invitations',
+  '/_authenticated/namespace/$namespace/_overview/invitations',
 )({
   validateSearch: searchQuerySchema,
   component: RouteComponent,

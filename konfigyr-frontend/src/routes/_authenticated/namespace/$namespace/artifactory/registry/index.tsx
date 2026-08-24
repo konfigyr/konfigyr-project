@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useGetArtifacts, useNamespace } from '@konfigyr/hooks';
-import { LayoutContent, LayoutNavbar } from '@konfigyr/components/layout';
+import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
 import { ArtifactFilters } from '@konfigyr/components/artifactory/registry/artifact-filters';
 import { ArtifactTable } from '@konfigyr/components/artifactory/registry/artifact-table';
 import { RegistryLabel } from '@konfigyr/components/artifactory/registry/messages';
