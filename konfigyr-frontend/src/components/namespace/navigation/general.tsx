@@ -6,9 +6,11 @@ import {
   Settings2Icon,
   UsersIcon,
 } from 'lucide-react';
+import { NamespaceOverviewModuleLabel } from '@konfigyr/components/messages/modules';
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -21,6 +23,9 @@ export function NamespaceNavigationMenu({ namespace }: { namespace: Namespace })
   return (
     <SidebarGroup>
       <SidebarGroupContent>
+        <SidebarGroupLabel>
+          <NamespaceOverviewModuleLabel />
+        </SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton render={

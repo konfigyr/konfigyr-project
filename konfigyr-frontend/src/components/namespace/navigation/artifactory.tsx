@@ -1,4 +1,9 @@
-import { PackageIcon } from 'lucide-react';
+import {
+  ArrowRightLeftIcon,
+  FolderSearchIcon,
+  PackageIcon,
+  ShieldCheckIcon,
+} from 'lucide-react';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -8,6 +13,7 @@ import {
   SidebarMenuItem,
 } from '@konfigyr/components/ui/sidebar';
 import { Link } from '@tanstack/react-router';
+import { ArtifactoryModuleLabel } from '@konfigyr/components/messages/modules';
 import { GroupClaimsLabel } from '@konfigyr/components/artifactory/groups/messages';
 import { RegistryLabel } from '@konfigyr/components/artifactory/registry/messages';
 import { PropertySearchLabel } from '@konfigyr/components/artifactory/search/messages';
@@ -19,8 +25,8 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
   return (
     <SidebarGroup>
       <SidebarGroupContent>
-        <SidebarGroupLabel className="flex items-center gap-2">
-          <PackageIcon /> Artifactory
+        <SidebarGroupLabel>
+          <ArtifactoryModuleLabel />
         </SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -31,6 +37,7 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
                 className="truncate"
                 activeProps={{ 'data-active': true }}
               >
+                <PackageIcon />
                 <RegistryLabel />
               </Link>
             } />
@@ -43,6 +50,7 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
                 className="truncate"
                 activeProps={{ 'data-active': true }}
               >
+                <FolderSearchIcon />
                 <PropertySearchLabel />
               </Link>
             } />
@@ -55,6 +63,7 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
                 className="truncate"
                 activeProps={{ 'data-active': true }}
               >
+                <ShieldCheckIcon />
                 <GroupClaimsLabel />
               </Link>
             } />
@@ -67,6 +76,7 @@ export function NamespaceArtifactoryNavigationMenu({ namespace }: { namespace: N
                 className="truncate"
                 activeProps={{ 'data-active': true }}
               >
+                <ArrowRightLeftIcon />
                 <TransfersLabel />
               </Link>
             } />

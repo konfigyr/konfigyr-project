@@ -21,6 +21,7 @@ import {
 import {
   Tooltip,
   TooltipContent,
+  TooltipTrigger,
 } from '@konfigyr/components/ui/tooltip';
 
 import type { VariantProps } from 'class-variance-authority';
@@ -68,11 +69,11 @@ export function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
-
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
+
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === 'function' ? value(open) : value;
@@ -112,7 +113,7 @@ export function SidebarProvider({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleSidebar]);
 
-  // We add a state so that we can do data-state='expanded' or 'collapsed'.
+  // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? 'expanded' : 'collapsed';
 
@@ -128,7 +129,6 @@ export function SidebarProvider({
     }),
     [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
   );
-
   return (
     <SidebarContext.Provider value={contextValue}>
       <div
@@ -171,7 +171,10 @@ export function Sidebar({
     return (
       <div
         data-slot="sidebar"
-        className={cn('flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground', className)}
+        className={cn(
+          'flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground',
+          className,
+        )}
         {...props}
       >
         {children}
@@ -230,9 +233,7 @@ export function Sidebar({
         data-slot="sidebar-container"
         data-side={side}
         className={cn(
-          'fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex',
-          'data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]',
-          'data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',
+          'fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex',
           // Adjust the padding for floating and inset variants.
           variant === 'floating' || variant === 'inset'
             ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
@@ -268,7 +269,7 @@ export function SidebarTrigger({ onClick, ...props }: React.ComponentProps<typeo
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <PanelLeftIcon className="cn-rtl-flip" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -362,7 +363,7 @@ export function SidebarContent({ className, ...props }: React.ComponentProps<'di
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
-        'no-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden',
+        'no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto group-data-[collapsible=icon]:overflow-hidden',
         className,
       )}
       {...props}
@@ -498,7 +499,7 @@ export function SidebarMenuButton({
       },
       props,
     ),
-    render,
+    render: !tooltip ? render : <TooltipTrigger render={render} />,
     state: {
       slot: 'sidebar-menu-button',
       sidebar: 'menu-button',

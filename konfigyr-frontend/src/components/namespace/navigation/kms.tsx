@@ -1,6 +1,9 @@
 import { FolderKeyIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import {
+  KeyManagementSystemModuleLabel,
+} from '@konfigyr/components/messages/modules';
+import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -16,8 +19,8 @@ export function NamespaceKmsNavigationMenu({ namespace }: { namespace: Namespace
   return (
     <SidebarGroup>
       <SidebarGroupContent>
-        <SidebarGroupLabel className="flex items-center gap-2">
-          <FolderKeyIcon /> KMS
+        <SidebarGroupLabel>
+          <KeyManagementSystemModuleLabel />
         </SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -28,9 +31,10 @@ export function NamespaceKmsNavigationMenu({ namespace }: { namespace: Namespace
                 className="truncate"
                 activeProps={{ 'data-active': true }}
               >
+                <FolderKeyIcon />
                 <FormattedMessage
-                  defaultMessage="Key management"
-                  description="Label for the KMS key management page"
+                  defaultMessage="Keysets"
+                  description="Label for the KMS keyset list page"
                 />
               </Link>
             } />
