@@ -30,7 +30,7 @@ export function AccountDropdown({ account }: { account: Account }) {
           </button>
         }
       />
-      <DropdownMenuContent className="w-68">
+      <DropdownMenuContent className="w-68" side="right">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="grid gap-0.5">
             <p>{account.fullName}</p>

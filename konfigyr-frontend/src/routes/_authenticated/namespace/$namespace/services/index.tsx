@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { LayoutContent, LayoutNavbar } from '@konfigyr/layout';
+import { VaultModuleLabel } from '@konfigyr/components/messages/modules';
 import { NamespaceServices } from '@konfigyr/components/namespace/service/services';
 import { useNamespace } from '@konfigyr/hooks/namespace/context';
 
@@ -14,7 +15,7 @@ function RouteComponent() {
 
   return (
     <LayoutContent>
-      <LayoutNavbar title="Vault" />
+      <LayoutNavbar title={( <VaultModuleLabel /> )} />
 
       <div className="lg:w-2/3 xl:w-3/5 px-4 mx-auto mb-6">
         <NamespaceServices namespace={namespace} />

@@ -3,7 +3,6 @@
 import { cva } from 'class-variance-authority';
 import { useIsMobile } from '@konfigyr/hooks/use-mobile';
 import { AccountDropdown } from '@konfigyr/components/account/dropdown';
-import { NamespaceDropDownMenu } from '@konfigyr/components/namespace/navigation/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +13,8 @@ import {
   SidebarTrigger,
 } from '@konfigyr/components/ui/sidebar';
 import { cn } from '@konfigyr/components/utils';
-import { ModuleSwitcher } from './module-switcher';
+import { ModuleSidebarMenu } from './module-menu';
+import { NamespaceSidebarMenu } from './namespace-menu';
 import { SearchToggle } from './search-toggle';
 import { ThemeSwitcher } from './theme-switcher';
 
@@ -51,6 +51,14 @@ export function Layout({ children }: ComponentProps<'div'>) {
   );
 }
 
+export function LayoutLogo({ className }: { className?: string }) {
+  return (
+    <div data-slot="layout-logo" className={cn('flex items-center justify-center', className)}>
+      <img src="/public/logo.svg" alt="Konfigyr" title="Konfigyr" className="size-8" />
+    </div>
+  );
+}
+
 export function LayoutNavbar({ title, children }: { title: ReactNode } & Omit<ComponentProps<'div'>, 'title'>) {
   const isMobile = useIsMobile();
 
@@ -73,7 +81,7 @@ export function LayoutNavbar({ title, children }: { title: ReactNode } & Omit<Co
 
   return (
     <div className="px-4 py-2 mb-6 border-b">
-      <div className="h-10 flex items-center gap-4 justify-between">
+      <div className="h-12 flex items-center gap-4 justify-between">
         <h1 className="text-2xl font-heading font-semibold">{title}</h1>
         {children && (
           <div className="grow">
@@ -88,24 +96,32 @@ export function LayoutNavbar({ title, children }: { title: ReactNode } & Omit<Co
 
 export function LayoutSidebar({ account, namespace, children }: { account: Account, namespace: Namespace } & ComponentProps<'div'>) {
   return (
-    <Sidebar collapsible="offcanvas" className="h-screen">
-      <SidebarHeader className="border-b">
-        <ModuleSwitcher namespace={namespace} className="h-10"/>
-
-        <div className="h-16 border-t py-2">
-          <NamespaceDropDownMenu namespace={namespace} />
-        </div>
-      </SidebarHeader>
-      <SidebarContent className="overflow-y-auto h-full">
-        {children}
-      </SidebarContent>
-      <SidebarFooter className="border-t">
-        <div className="flex items-center gap-2">
-          <AccountDropdown account={account} />
+    <Sidebar
+      collapsible="icon"
+      className="overflow-hidden *:data-[sidebar=sidebar]:flex-row"
+    >
+      <Sidebar collapsible="none" className="w-[calc(var(--sidebar-width-icon)+1px)]! border-r">
+        <SidebarHeader className="border-b">
+          <LayoutLogo className="h-10 my-1" />
+        </SidebarHeader>
+        <SidebarContent>
+          <ModuleSidebarMenu namespace={namespace}/>
+        </SidebarContent>
+        <SidebarFooter>
           <ThemeSwitcher />
-        </div>
-      </SidebarFooter>
-      <SidebarRail />
+          <AccountDropdown account={account} />
+        </SidebarFooter>
+      </Sidebar>
+
+      <Sidebar collapsible="none" className="hidden flex-1 md:flex h-screen">
+        <SidebarHeader className="border-b">
+          <NamespaceSidebarMenu namespace={namespace} />
+        </SidebarHeader>
+        <SidebarContent className="overflow-y-auto h-full">
+          {children}
+        </SidebarContent>
+        <SidebarRail />
+      </Sidebar>
     </Sidebar>
   );
 }
