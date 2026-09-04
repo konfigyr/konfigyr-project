@@ -3,6 +3,7 @@
 import { ErrorState } from '@konfigyr/components/error';
 import { FormattedMessage, KonfigyrLeadMessage, KonfigyrTitleMessage } from '@konfigyr/components/messages';
 import { ProgressLoader } from '@konfigyr/components/ui/loader';
+import LogoImage from '@konfigyr/public/logo.svg';
 import { AccountContext, useGetAccount, useGetNamespaces } from '@konfigyr/hooks';
 
 import type { ReactNode } from 'react';
@@ -12,7 +13,7 @@ function AccountLoader() {
     <div className="h-screen w-screen gap-8 flex flex-col items-center justify-center text-center">
       <div className="space-y-2">
         <h1 className="text-5xl font-medium leading-snug flex items-center justify-center gap-2">
-          <img src="/public/logo.svg" alt="Konfigyr" title="Konfigyr" className="size-9" />
+          <LogoImage className="size-9" />
           <KonfigyrTitleMessage />
         </h1>
         <p className="text-2xl">
