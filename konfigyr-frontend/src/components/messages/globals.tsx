@@ -75,6 +75,20 @@ export const HomeLabel = () => (
   />
 );
 
+export const OverviewLabel = () => (
+  <FormattedMessage
+    defaultMessage="Overview"
+    description="The label used to navigate to a generic overview page."
+  />
+);
+
+export const SettingsLabel = () => (
+  <FormattedMessage
+    defaultMessage="Settings"
+    description="The label used to navigate to the settings page."
+  />
+);
+
 export const ContactSupport = () => (
   <FormattedMessage
     defaultMessage="Contact our support team"

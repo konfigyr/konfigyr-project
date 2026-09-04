@@ -11,7 +11,8 @@ function AccountLoader() {
   return (
     <div className="h-screen w-screen gap-8 flex flex-col items-center justify-center text-center">
       <div className="space-y-2">
-        <h1 className="text-5xl font-medium leading-snug">
+        <h1 className="text-5xl font-medium leading-snug flex items-center justify-center gap-2">
+          <img src="/public/logo.svg" alt="Konfigyr" title="Konfigyr" className="size-9" />
           <KonfigyrTitleMessage />
         </h1>
         <p className="text-2xl">

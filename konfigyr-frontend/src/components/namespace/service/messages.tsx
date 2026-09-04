@@ -71,3 +71,21 @@ export function ServiceManifestsInstructions() {
     />
   );
 }
+
+export function ChangeRequestsLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Change requests"
+      description="The label used to name the service change requests, mainly used in the navigation."
+    />
+  );
+}
+
+export function ServiceManifestLabel() {
+  return (
+    <FormattedMessage
+      defaultMessage="Manifest"
+      description="The label used to name the service manifests, mainly used in the navigation."
+    />
+  );
+}
