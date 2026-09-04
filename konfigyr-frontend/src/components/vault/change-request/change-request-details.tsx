@@ -18,7 +18,7 @@ import {
 } from '@konfigyr/hooks/vault/types';
 import { ErrorState } from '@konfigyr/components/error';
 import { Editor } from '@konfigyr/components/editor';
-import { CancelLabel, EditLabel, RelativeDate } from '@konfigyr/components/messages';
+import { CancelLabel, EditLabel, OverviewLabel, RelativeDate } from '@konfigyr/components/messages';
 import { Button } from '@konfigyr/components/ui/button';
 import {
   Card,
@@ -105,10 +105,7 @@ function ChangeRequestDescription({
     <Card>
       <CardHeader>
         <CardTitle>
-          <FormattedMessage
-            defaultMessage="Overview"
-            description="Title of the property change description section in the change request details page."
-          />
+          <OverviewLabel />
         </CardTitle>
         <CardAction>
           <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>

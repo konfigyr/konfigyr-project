@@ -16,13 +16,13 @@ describe('components | account | <AccountProvider />', () => {
   afterEach(() => cleanup());
 
   test('render the account provider', async () => {
-    const { getByText } = renderWithQueryClient((
+    const { getByRole, getByText } = renderWithQueryClient((
       <AccountProvider>
         <AccountInformation/>
       </AccountProvider>
     ));
 
-    expect(getByText('Konfigyr')).toBeInTheDocument();
+    expect(getByRole('heading', { level: 1 })).toHaveTextContent('Konfigyr');
     expect(getByText('Configuration made easy.')).toBeInTheDocument();
     expect(getByText('Loading your account information...')).toBeInTheDocument();
 

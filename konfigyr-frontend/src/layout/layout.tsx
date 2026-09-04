@@ -13,6 +13,7 @@ import {
   SidebarTrigger,
 } from '@konfigyr/components/ui/sidebar';
 import { cn } from '@konfigyr/components/utils';
+import LogoImage from '@konfigyr/public/logo.svg';
 import { ModuleSidebarMenu } from './module-menu';
 import { NamespaceSidebarMenu } from './namespace-menu';
 import { SearchToggle } from './search-toggle';
@@ -54,7 +55,7 @@ export function Layout({ children }: ComponentProps<'div'>) {
 export function LayoutLogo({ className }: { className?: string }) {
   return (
     <div data-slot="layout-logo" className={cn('flex items-center justify-center', className)}>
-      <img src="/public/logo.svg" alt="Konfigyr" title="Konfigyr" className="size-8" />
+      <LogoImage className="size-8" />
     </div>
   );
 }

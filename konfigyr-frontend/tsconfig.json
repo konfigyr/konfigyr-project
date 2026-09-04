@@ -16,6 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@konfigyr/*": ["./src/*"],
+      "@konfigyr/public/*": ["./public/*"],
       "@konfigyr/test/*": ["./test/*"]
     },
   }

@@ -16,28 +16,35 @@ describe('components | namespace | navigation | <NamespaceServicesNavigationMenu
       </Layout>,
     );
 
+    expect(result.getByRole('link', { name: 'Overview' })).toBeInTheDocument();
     expect(result.getByText('Services')).toBeInTheDocument();
     expect(result.getByText('Loading services...')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(result.getByRole('link', { name: 'konfigyr-api' })).toBeInTheDocument();
-      expect(result.getByRole('link', { name: 'konfigyr-id' })).toBeInTheDocument();
+      expect(result.getByRole('button', { name: 'konfigyr-api' })).toBeInTheDocument();
+      expect(result.getByRole('button', { name: 'konfigyr-id' })).toBeInTheDocument();
     });
   });
 
   test('should render namespace services navigation menu with empty state', async () => {
     const result = renderComponentWithRouter(
-      <NamespaceServicesNavigationMenu namespace={namespaces.johnDoe} />,
+      <Layout>
+        <NamespaceServicesNavigationMenu namespace={namespaces.johnDoe} />
+      </Layout>,
     );
 
     await waitFor(() => {
       expect(result.getByText('No services found')).toBeInTheDocument();
     });
+
+    expect(result.getByRole('button', { name: 'Create new service' })).toBeInTheDocument();
   });
 
   test('should render namespace services navigation menu with an error state', async () => {
     const result = renderComponentWithRouter(
-      <NamespaceServicesNavigationMenu namespace={namespaces.unknown} />,
+      <Layout>
+        <NamespaceServicesNavigationMenu namespace={namespaces.unknown} />
+      </Layout>,
     );
 
     await waitFor(() => {

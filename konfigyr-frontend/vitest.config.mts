@@ -1,5 +1,6 @@
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
+import svgr from 'vite-plugin-svgr';
 import viteReact from '@vitejs/plugin-react-swc';
 
 export default defineConfig({
@@ -18,6 +19,9 @@ export default defineConfig({
                     },
                 ],
             ],
+        }),
+        svgr({
+            include: '**/*.svg',
         }),
     ],
     test: {
