@@ -36,12 +36,9 @@ tasks.register<NpmExec>("npmBuild") {
     group = "build"
 
     args.set(listOf("run", "build"))
-    sources.from(
-        "package.json", "package-lock.json", "turbo.json",
-        "apps/console/package.json", "apps/console/vite.config.ts", "apps/console/tsconfig.json",
-        fileTree("apps/console/src"), fileTree("apps/console/messages"), fileTree("apps/console/public")
-    )
-    outputDir.set(layout.projectDirectory.dir("apps/console/.output"))
+
+    // Turborepo (turbo.json) now tracks this task's inputs/outputs and caches them itself.
+    outputs.upToDateWhen { false }
 }
 
 tasks.register<NpmExec>("npmTest") {
@@ -50,12 +47,9 @@ tasks.register<NpmExec>("npmTest") {
     group = "verification"
 
     args.set(extension.ci.map { if (it) listOf("run", "test:ci") else listOf("run", "test:coverage") })
-    sources.from(
-        "package.json", "package-lock.json", "turbo.json",
-        "apps/console/package.json", "apps/console/eslint.config.mjs", "apps/console/vitest.config.mts",
-        fileTree("apps/console/src"), fileTree("apps/console/messages"), fileTree("apps/console/public"), fileTree("apps/console/test")
-    )
-    outputFile.set(layout.buildDirectory.file("npm-test.stamp"))
+
+    // Turborepo (turbo.json) now tracks this task's inputs/outputs and caches them itself.
+    outputs.upToDateWhen { false }
 }
 
 tasks.register<DockerBuildImage>("dockerBuild") {
