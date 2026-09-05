@@ -40,6 +40,14 @@ jobs:
             konfigyr-frontend/package-lock.json
             konfigyr-identity/package-lock.json
 
+      - name: Restore Turborepo cache
+        uses: actions/cache/restore@v4
+        with:
+          path: konfigyr-frontend/.turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
       - name: Build
         env:
           CI: 'true'
