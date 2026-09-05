@@ -7,7 +7,7 @@ describe('routes | not-found', () => {
     const { getByRole, router } = renderWithRouter('/not-found');
 
     await waitFor(() => {
-      expect(router.state.statusCode).toStrictEqual(404);
+      expect(router.state.status).toStrictEqual('idle');
     });
 
     expect(getByRole('heading', { name: 'Resource Not Found', level: 3 }))

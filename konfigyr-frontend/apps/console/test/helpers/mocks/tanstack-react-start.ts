@@ -1,6 +1,6 @@
 export const createServerFnMock = () => {
   const chain = {
-    inputValidator() {
+    validator() {
       return chain;
     },
     handler(handler: (...args: Array<any>) => Promise<any> | any) {

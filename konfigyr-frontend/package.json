@@ -1,0 +1,11 @@
+{
+  "name": "konfigyr-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "overrides": {
+    "chokidar": "^5.0.0"
+  }
+}
