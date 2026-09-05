@@ -21,7 +21,7 @@ tasks.register<NpmExec>("npmInstall") {
     group = "build"
 
     args.set(extension.ci.map { if (it) listOf("ci") else listOf("install") })
-    sources.from("package.json", "package-lock.json", "turbo.json", "apps/console/package.json")
+    sources.from("package.json", "package-lock.json", "turbo.json", "apps/console/package.json", "packages/config/package.json")
     outputFile.set(layout.buildDirectory.file("npm-install.stamp"))
 
     // node_modules is not declared as an output, so the stamp alone cannot
