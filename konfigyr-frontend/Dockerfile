@@ -4,7 +4,8 @@ WORKDIR /app
 RUN npm ci
 
 FROM node:26-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
+COPY package.json package-lock.json /app/
+COPY apps/console/package.json /app/apps/console/package.json
 WORKDIR /app
 RUN npm ci --omit=dev
 
@@ -20,9 +21,10 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 tanstack
 USER tanstack
 
-COPY ./package.json package-lock.json /app/
+COPY package.json package-lock.json /app/
+COPY apps/console/package.json /app/apps/console/package.json
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/.output /app/
+COPY --from=build-env /app/apps/console/.output /app/
 
 WORKDIR /app
 ENV NODE_ENV=production

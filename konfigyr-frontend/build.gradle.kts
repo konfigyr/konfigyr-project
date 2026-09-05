@@ -21,7 +21,7 @@ tasks.register<NpmExec>("npmInstall") {
     group = "build"
 
     args.set(extension.ci.map { if (it) listOf("ci") else listOf("install") })
-    sources.from("package.json", "package-lock.json")
+    sources.from("package.json", "package-lock.json", "turbo.json", "apps/console/package.json")
     outputFile.set(layout.buildDirectory.file("npm-install.stamp"))
 
     // node_modules is not declared as an output, so the stamp alone cannot
@@ -37,10 +37,11 @@ tasks.register<NpmExec>("npmBuild") {
 
     args.set(listOf("run", "build"))
     sources.from(
-        "package.json", "package-lock.json", "vite.config.ts", "tsconfig.json",
-        fileTree("src"), fileTree("messages"), fileTree("public")
+        "package.json", "package-lock.json", "turbo.json",
+        "apps/console/package.json", "apps/console/vite.config.ts", "apps/console/tsconfig.json",
+        fileTree("apps/console/src"), fileTree("apps/console/messages"), fileTree("apps/console/public")
     )
-    outputDir.set(layout.projectDirectory.dir(".output"))
+    outputDir.set(layout.projectDirectory.dir("apps/console/.output"))
 }
 
 tasks.register<NpmExec>("npmTest") {
@@ -50,8 +51,9 @@ tasks.register<NpmExec>("npmTest") {
 
     args.set(extension.ci.map { if (it) listOf("run", "test:ci") else listOf("run", "test:coverage") })
     sources.from(
-        "package.json", "package-lock.json", "eslint.config.mjs", "vitest.config.mts",
-        fileTree("src"), fileTree("messages"), fileTree("public"), fileTree("test")
+        "package.json", "package-lock.json", "turbo.json",
+        "apps/console/package.json", "apps/console/eslint.config.mjs", "apps/console/vitest.config.mts",
+        fileTree("apps/console/src"), fileTree("apps/console/messages"), fileTree("apps/console/public"), fileTree("apps/console/test")
     )
     outputFile.set(layout.buildDirectory.file("npm-test.stamp"))
 }

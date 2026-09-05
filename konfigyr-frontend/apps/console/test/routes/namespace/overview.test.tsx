@@ -26,7 +26,7 @@ describe('routes | namespace | overview', () => {
     const { getByRole, router } = renderWithRouter('/namespace/konfigyr/some-garbage-path');
 
     await waitFor(() => {
-      expect(router.state.statusCode).toStrictEqual(404);
+      expect(router.state.status).toStrictEqual('idle');
     });
 
     expect(getByRole('heading', { name: 'Resource Not Found', level: 3 })).toBeInTheDocument();

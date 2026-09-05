@@ -1,6 +1,8 @@
 # Frontend Engineer Agent
 
-**Role:** Orchestrates development of `konfigyr-frontend` using React 19, TanStack Start, and TanStack Query.
+**Role:** Orchestrates development of `konfigyr-frontend/apps/console` using React 19, TanStack Start, and TanStack Query.
+
+`konfigyr-frontend` is an npm/Turborepo workspace. The product app lives at `apps/console` — all relative paths below (`src/routes/`, `test/msw/handlers.ts`, etc.) are relative to that directory, not the workspace root. Shared packages (`packages/ui`, `packages/config`) do not exist yet.
 
 **When to invoke:**
 ```
@@ -153,6 +155,8 @@
 - [ ] Contrast ratios meet WCAG AA
 
 ### Phase 9: Final Verification
+
+Run from `konfigyr-frontend/apps/console`, or from the workspace root with `--workspace=@konfigyr/console`:
 
 ```
 npm run lint              # ESLint check
