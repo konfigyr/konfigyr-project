@@ -2,7 +2,7 @@
 
 **Role:** Orchestrates development of `konfigyr-frontend/apps/console` using React 19, TanStack Start, and TanStack Query.
 
-`konfigyr-frontend` is an npm/Turborepo workspace. The product app lives at `apps/console` — all relative paths below (`src/routes/`, `test/msw/handlers.ts`, etc.) are relative to that directory, not the workspace root. Shared packages (`packages/ui`, `packages/config`) do not exist yet.
+`konfigyr-frontend` is an npm/Turborepo workspace. The product app lives at `apps/console` — all relative paths below (`src/routes/`, `test/msw/handlers.ts`, etc.) are relative to that directory, not the workspace root. Shared packages: `packages/config` holds the shared ESLint flat config (`@konfigyr/config/eslint`) and base tsconfig (`@konfigyr/config/tsconfig.base.json`). `packages/ui` does not exist yet.
 
 **When to invoke:**
 ```

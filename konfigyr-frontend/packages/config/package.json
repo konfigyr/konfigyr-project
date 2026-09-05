@@ -1,0 +1,14 @@
+{
+  "name": "@konfigyr/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint": "./eslint.mjs",
+    "./tsconfig.base.json": "./tsconfig.base.json"
+  },
+  "dependencies": {
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@tanstack/eslint-config": "^0.4.0"
+  }
+}
