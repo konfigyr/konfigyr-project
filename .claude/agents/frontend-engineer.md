@@ -1,6 +1,8 @@
 # Frontend Engineer Agent
 
-**Role:** Orchestrates development of `konfigyr-frontend` using React 19, TanStack Start, and TanStack Query.
+**Role:** Orchestrates development of `konfigyr-frontend/apps/console` using React 19, TanStack Start, and TanStack Query.
+
+`konfigyr-frontend` is an npm/Turborepo workspace. The product app lives at `apps/console` — all relative paths below (`src/routes/`, `test/msw/handlers.ts`, etc.) are relative to that directory, not the workspace root. Shared packages (`packages/ui`, `packages/config`) do not exist yet.
 
 **When to invoke:**
 ```
@@ -132,7 +134,7 @@
 - [ ] Tests use `createWrapper()` and `createRouter()` utilities
 - [ ] Component tests assert UI state (buttons, text, forms)
 - [ ] Async data loading awaited with `waitFor`
-- [ ] `npm run test:ci` passes (lint + type-check + coverage)
+- [ ] `npm test` passes (type-check + lint + coverage, sequenced via turbo)
 
 ### Phase 8: Styling Polish
 
@@ -154,10 +156,12 @@
 
 ### Phase 9: Final Verification
 
+Run from `konfigyr-frontend/apps/console`, or from the workspace root with `--workspace=@konfigyr/console`:
+
 ```
 npm run lint              # ESLint check
-npm run test:ci          # Type-check + lint + tests
-npm run build            # Production build succeeds
+npm test                  # Type-check + lint + tests (typecheck/lint run first via turbo)
+npm run build             # Production build succeeds
 ```
 
 **Checklist:**

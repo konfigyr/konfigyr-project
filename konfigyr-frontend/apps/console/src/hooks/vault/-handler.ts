@@ -29,5 +29,5 @@ async function fetchSpringConfig({ data }: { data: FetchConfigRequest }) {
 }
 
 export const fetchSpringConfigHandler = createServerFn({ method: 'GET' })
-  .inputValidator(FetchConfigSchema)
+  .validator(FetchConfigSchema)
   .handler(fetchSpringConfig);

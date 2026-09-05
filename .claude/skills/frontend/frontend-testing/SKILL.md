@@ -240,9 +240,8 @@ test('should show error message on API failure', async () => {
 ## Run Tests
 
 ```bash
-npm run test              # Watch mode
-npm run test:coverage    # Coverage report
-npm run test:ci         # CI mode (once, with lint + type-check)
+npm test                  # Type-check + lint + tests with coverage (turbo sequences typecheck/lint first)
+npm run test:ui           # Interactive watch mode with the Vitest UI
 ```
 
 ## Verification Checklist

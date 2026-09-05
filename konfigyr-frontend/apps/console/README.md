@@ -15,10 +15,17 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Testing
 
-To run the tests, run the following command:
+`npm test` runs typecheck, lint, and the test suite with coverage — this is what Turborepo runs
+(with `typescript` and `lint` sequenced first) and what CI invokes via Gradle:
 
 ```bash
 npm test
+```
+
+For interactive, watch-mode development, use the Vitest UI instead:
+
+```bash
+npm run test:ui
 ```
 
 The tests are executed via [vitest](https://vitest.dev) with support of the following plugins:
@@ -28,18 +35,12 @@ The tests are executed via [vitest](https://vitest.dev) with support of the foll
 
 ### Linting
 
-This project uses ESLint for linting. To run the linter, run the following command:
+This project uses ESLint for linting. To run the linter on its own, run the following command:
 ```bash
 npm run lint
-`````
-
-### Coverage
-
-Coverage is collected using [v8 coverage provider](https://vitest.dev/guide/coverage.html#v8-provider).
-To run tests with coverage, run the following command:
-```bash
-npm run test:coverage
 ```
+
+Coverage is collected using the [v8 coverage provider](https://vitest.dev/guide/coverage.html#v8-provider).
 
 ## Deployment
 
