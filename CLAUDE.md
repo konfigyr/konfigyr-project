@@ -162,7 +162,7 @@ Verification:
 ### Verification Checklist (All Work)
 
 - [ ] Code compiles/builds without warnings
-- [ ] All tests pass (`./gradlew test` for backend, `npm run test:ci` for frontend)
+- [ ] All tests pass (`./gradlew test` for backend, `npm test` for frontend)
 - [ ] No unused imports or variables
 - [ ] No hardcoded values (use configuration)
 - [ ] Git history is clean (logical commits)

@@ -7,16 +7,9 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint",
-    "lint:fix": "turbo run lint:fix",
-    "start": "turbo run start",
     "test": "turbo run test",
-    "test:ui": "turbo run test:ui",
-    "test:coverage": "turbo run test:coverage",
-    "test:ci": "turbo run test:ci",
-    "typescript": "turbo run typescript"
+    "test:ui": "turbo run test:ui"
   },
   "devDependencies": {
     "turbo": "^2.10.12"

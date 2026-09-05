@@ -5,32 +5,15 @@
       "dependsOn": ["^build"],
       "outputs": [".output/**"]
     },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "start": {
-      "cache": false,
-      "persistent": true
-    },
+    "typescript": {},
     "lint": {},
-    "lint:fix": {
-      "cache": false
-    },
     "test": {
-      "cache": false,
-      "persistent": true
+      "dependsOn": ["typescript", "lint"],
+      "outputs": ["coverage/**"]
     },
     "test:ui": {
       "cache": false,
       "persistent": true
-    },
-    "test:coverage": {
-      "outputs": ["coverage/**"]
-    },
-    "test:ci": {
-      "outputs": ["coverage/**"]
-    },
-    "typescript": {}
+    }
   }
 }

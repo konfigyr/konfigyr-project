@@ -9,10 +9,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "start": "vite start",
-    "test": "vitest",
+    "test": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:coverage": "tsc --noEmit && vitest run --coverage",
-    "test:ci": "tsc --noEmit && eslint && vitest run --coverage",
     "typescript": "tsc --noEmit"
   },
   "dependencies": {

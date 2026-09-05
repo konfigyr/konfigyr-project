@@ -109,7 +109,7 @@ How was this tested? Which scenarios?
 
 ## Checklist
 - [ ] Code compiles without warnings
-- [ ] Tests pass (./gradlew test or npm run test:ci)
+- [ ] Tests pass (./gradlew test or npm test)
 - [ ] No unused imports
 - [ ] Documentation updated (if API changes)
 - [ ] Commit history is clean

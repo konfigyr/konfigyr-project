@@ -134,7 +134,7 @@
 - [ ] Tests use `createWrapper()` and `createRouter()` utilities
 - [ ] Component tests assert UI state (buttons, text, forms)
 - [ ] Async data loading awaited with `waitFor`
-- [ ] `npm run test:ci` passes (lint + type-check + coverage)
+- [ ] `npm test` passes (type-check + lint + coverage, sequenced via turbo)
 
 ### Phase 8: Styling Polish
 
@@ -160,8 +160,8 @@ Run from `konfigyr-frontend/apps/console`, or from the workspace root with `--wo
 
 ```
 npm run lint              # ESLint check
-npm run test:ci          # Type-check + lint + tests
-npm run build            # Production build succeeds
+npm test                  # Type-check + lint + tests (typecheck/lint run first via turbo)
+npm run build             # Production build succeeds
 ```
 
 **Checklist:**

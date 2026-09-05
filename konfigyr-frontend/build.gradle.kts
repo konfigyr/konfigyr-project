@@ -46,7 +46,7 @@ tasks.register<NpmExec>("npmTest") {
     description = "Runs the frontend application tests"
     group = "verification"
 
-    args.set(extension.ci.map { if (it) listOf("run", "test:ci") else listOf("run", "test:coverage") })
+    args.set(listOf("run", "test"))
 
     // Turborepo (turbo.json) now tracks this task's inputs/outputs and caches them itself.
     outputs.upToDateWhen { false }
