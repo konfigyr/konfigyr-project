@@ -2,9 +2,25 @@
   "name": "konfigyr-frontend",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.16.0",
   "workspaces": [
     "apps/*"
   ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "start": "turbo run start",
+    "test": "turbo run test",
+    "test:ui": "turbo run test:ui",
+    "test:coverage": "turbo run test:coverage",
+    "test:ci": "turbo run test:ci",
+    "typescript": "turbo run typescript"
+  },
+  "devDependencies": {
+    "turbo": "^2.10.12"
+  },
   "overrides": {
     "chokidar": "^5.0.0"
   }
