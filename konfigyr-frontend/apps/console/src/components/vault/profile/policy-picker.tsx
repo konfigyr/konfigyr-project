@@ -5,11 +5,11 @@ import {
   FieldContent,
   FieldDescription,
   FieldLabel,
-} from '@konfigyr/components/ui/field';
+} from '@konfigyr/ui/components/field';
 import {
   RadioGroup,
   RadioGroupItem,
-} from '@konfigyr/components/ui/radio-group';
+} from '@konfigyr/ui/components/radio-group';
 
 import type { Profile } from '@konfigyr/hooks/types';
 

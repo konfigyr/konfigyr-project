@@ -1,7 +1,7 @@
 import { PencilIcon, PlusIcon, TrashIcon } from 'lucide-react';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { useLabelForTransitionType } from '@konfigyr/components/vault/messages';
-import { cn } from '@konfigyr/components/utils';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { ComponentProps } from 'react';
 

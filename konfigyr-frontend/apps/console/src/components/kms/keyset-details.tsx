@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { parse as parseDuration, toDays } from 'duration-fns';
 import { DeleteLabel } from '@konfigyr/components/messages';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardContent,
   CardHeader,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import {
   KeysetAlgorithmLabel,
   KeysetDeletionGracePeriodHelpText,

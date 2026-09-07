@@ -1,14 +1,14 @@
 import { useCallback } from 'react';
 import { VaultIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
-import { toast } from '@konfigyr/components/ui/toast';
+import { toast } from '@konfigyr/ui/components/toast';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import { CreateProfileForm } from '@konfigyr/components/vault/profile/create-form';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 

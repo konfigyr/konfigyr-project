@@ -6,7 +6,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '@konfigyr/components/ui/avatar';
+} from '@konfigyr/ui/components/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,10 +14,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@konfigyr/components/ui/dropdown-menu';
-import { SidebarMenuButton } from '@konfigyr/components/ui/sidebar';
+} from '@konfigyr/ui/components/dropdown-menu';
+import { SidebarMenuButton } from '@konfigyr/ui/components/sidebar';
 import { Link } from '@tanstack/react-router';
-import { cn } from '@konfigyr/components/utils';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { Namespace } from '@konfigyr/hooks/namespace/types';
 

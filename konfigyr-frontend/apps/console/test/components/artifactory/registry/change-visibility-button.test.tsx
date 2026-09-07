@@ -8,7 +8,7 @@ import { VisibilityChangedSuccessMessage } from '@konfigyr/components/artifactor
 
 const toast = vi.hoisted(() => ({ add: vi.fn() }));
 
-vi.mock('@konfigyr/components/ui/toast', () => ({ toast }));
+vi.mock('@konfigyr/ui/components/toast', () => ({ toast }));
 
 describe('components | registry | <ChangeVisibilityButton/>', () => {
   afterEach(() => {

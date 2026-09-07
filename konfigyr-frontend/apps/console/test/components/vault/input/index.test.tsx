@@ -3,7 +3,7 @@ import { cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 import { InlineInputField, InputField } from '@konfigyr/components/vault/input';
-import { InlineEdit, InlineEditPlaceholder } from '@konfigyr/components/ui/inline-edit';
+import { InlineEdit, InlineEditPlaceholder } from '@konfigyr/components/inline-edit';
 
 import type {
   ConfigurationPropertyValue,

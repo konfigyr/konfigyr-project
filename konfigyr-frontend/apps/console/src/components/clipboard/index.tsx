@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ClipboardCheckIcon, ClipboardCopyIcon } from 'lucide-react';
 import { useClipboard } from '@konfigyr/hooks/clipboard';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
-import { cn } from '@konfigyr/components/utils';
+} from '@konfigyr/ui/components/tooltip';
+import { cn } from '@konfigyr/ui/lib/utils';
 import { CopiedLabel, CopyLabel } from '@konfigyr/components/messages';
 
 import type { ComponentProps, ReactNode } from 'react';

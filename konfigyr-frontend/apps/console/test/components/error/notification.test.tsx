@@ -10,7 +10,7 @@ const toast = vi.hoisted(() => ({
   add: vi.fn(),
 }));
 
-vi.mock('@konfigyr/components/ui/toast', () => ({ toast }));
+vi.mock('@konfigyr/ui/components/toast', () => ({ toast }));
 
 describe('components | error | notification', () => {
   afterEach(() => {

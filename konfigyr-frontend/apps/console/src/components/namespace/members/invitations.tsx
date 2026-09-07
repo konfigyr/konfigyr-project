@@ -3,9 +3,9 @@ import { Link2OffIcon } from 'lucide-react';
 import { useGetNamespaceInvitations } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { NamespaceRoleBadge } from '@konfigyr/components/namespace/role';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { PageResponsePagination } from '@konfigyr/components/pagination';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@konfigyr/components/ui/table';
+} from '@konfigyr/ui/components/table';
 
 import type { Namespace, Pageable } from '@konfigyr/hooks/types';
 

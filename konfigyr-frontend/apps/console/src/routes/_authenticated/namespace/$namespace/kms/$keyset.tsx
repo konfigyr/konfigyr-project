@@ -11,7 +11,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@konfigyr/components/ui/breadcrumb';
+} from '@konfigyr/ui/components/breadcrumb';
 import { KeysetDetails } from '@konfigyr/components/kms/keyset-details';
 import { KeyManagementServiceLabel } from '@konfigyr/components/kms/messages';
 

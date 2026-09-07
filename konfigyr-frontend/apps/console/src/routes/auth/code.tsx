@@ -9,13 +9,13 @@ import {
   OAuthErrorDetail,
   OAuthErrorTitle,
 } from '@konfigyr/components/messages/globals';
-import { buttonVariants } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import completeAuthorizationHandler from './-handler';
 
 const loader = createServerFn({ method: 'GET' })

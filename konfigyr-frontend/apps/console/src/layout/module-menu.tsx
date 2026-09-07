@@ -19,7 +19,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@konfigyr/components/ui/sidebar';
+} from '@konfigyr/ui/components/sidebar';
 import { useModule } from './module';
 
 import type { ReactNode } from 'react';

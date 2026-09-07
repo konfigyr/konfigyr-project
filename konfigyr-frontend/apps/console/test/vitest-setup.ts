@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom/vitest';
+import '@konfigyr/vitest-config/setup';
 
 import ResizeObserver from 'resize-observer-polyfill';
 

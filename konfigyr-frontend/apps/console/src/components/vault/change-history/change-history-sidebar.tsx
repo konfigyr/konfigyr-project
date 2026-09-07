@@ -6,18 +6,19 @@ import { useGetChangeHistoryDetails } from '@konfigyr/hooks';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { ErrorState } from '@konfigyr/components/error';
 import { MissingPropertyDescriptionLabel } from '@konfigyr/components/artifactory/messages';
+import { CloseLabel } from '@konfigyr/components/messages';
 import { RelativeDate } from '@konfigyr/components/messages/relative-date';
 import { ChangesCountLabel } from '@konfigyr/components/vault/messages';
-import { Badge } from '@konfigyr/components/ui/badge';
-import { HtmlContents } from '@konfigyr/components/ui/content';
+import { Badge } from '@konfigyr/ui/components/badge';
+import { HtmlContents } from '@konfigyr/markdown-editor';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '@konfigyr/components/ui/sheet';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { ScrollArea } from '@konfigyr/components/ui/scroll-area';
+} from '@konfigyr/ui/components/sheet';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { ScrollArea } from '@konfigyr/ui/components/scroll-area';
 import {
   PropertyTransitionItemGroup,
   PropertyTransitionItemSkeleton,
@@ -150,7 +151,7 @@ export function ChangeHistorySidebar({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg! h-screenflex flex-col gap-0">
+      <SheetContent side="right" className="w-full sm:max-w-lg! h-screenflex flex-col gap-0" closeLabel={<CloseLabel />}>
         <SheetHeader className="sticky top-0 border-b">
           <SheetTitle>
             {history.subject}

@@ -10,16 +10,16 @@ import {
 } from 'lucide-react';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { ChangeRequestMergeStatus } from '@konfigyr/hooks/vault/types';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { toast } from '@konfigyr/components/ui/toast';
-import { cn } from '@konfigyr/components/utils';
+} from '@konfigyr/ui/components/card';
+import { toast } from '@konfigyr/ui/components/toast';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 function ChangeRequestMergeStateIcon({ value, className }: { value: ChangeRequestMergeStatus, className?: string }) {
   switch (value) {

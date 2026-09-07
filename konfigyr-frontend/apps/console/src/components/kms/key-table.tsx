@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { FormattedDate, FormattedMessage } from 'react-intl';
 import { RelativeDate } from '@konfigyr/components/messages/relative-date';
-import { Badge } from '@konfigyr/components/ui/badge';
-import { Button } from '@konfigyr/components/ui/button';
+import { Badge } from '@konfigyr/ui/components/badge';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@konfigyr/components/ui/dropdown-menu';
+} from '@konfigyr/ui/components/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -27,7 +27,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@konfigyr/components/ui/table';
+} from '@konfigyr/ui/components/table';
 import { KeyOperationDialog } from './operation/key-operation-dialog';
 import {
   KeyCompromisedLabel,

@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import { cn } from '@konfigyr/components/utils';
-import { Badge } from '@konfigyr/components/ui/badge';
+import { cn } from '@konfigyr/ui/lib/utils';
+import { Badge } from '@konfigyr/ui/components/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
+} from '@konfigyr/ui/components/tooltip';
 
 import type { ComponentProps } from 'react';
 

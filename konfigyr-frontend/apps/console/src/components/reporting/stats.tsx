@@ -1,5 +1,5 @@
-import { Card, CardContent } from '@konfigyr/components/ui/card';
-import { cn } from '@konfigyr/components/utils';
+import { Card, CardContent } from '@konfigyr/ui/components/card';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { ComponentProps, ReactNode } from 'react';
 

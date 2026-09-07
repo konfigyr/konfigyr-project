@@ -2,7 +2,14 @@
 
 **Role:** Orchestrates development of `konfigyr-frontend/apps/console` using React 19, TanStack Start, and TanStack Query.
 
-`konfigyr-frontend` is an npm/Turborepo workspace. The product app lives at `apps/console` — all relative paths below (`src/routes/`, `test/msw/handlers.ts`, etc.) are relative to that directory, not the workspace root. Shared packages: `packages/config` holds the shared ESLint flat config (`@konfigyr/config/eslint`) and base tsconfig (`@konfigyr/config/tsconfig.base.json`). `packages/ui` does not exist yet.
+`konfigyr-frontend` is an npm/Turborepo workspace. The product app lives at `apps/console` — all relative paths below (`src/routes/`, `test/msw/handlers.ts`, etc.) are relative to that directory, not the workspace root. Shared packages:
+- `packages/config` (`@konfigyr/config`) — shared ESLint flat config (`@konfigyr/config/eslint`) and base tsconfig (`@konfigyr/config/tsconfig.base.json`).
+- `packages/ui` (`@konfigyr/ui`) — the shadcn primitives (`@konfigyr/ui/components/*`, e.g. `@konfigyr/ui/components/button`), the `cn()` helper (`@konfigyr/ui/lib/utils`), and the `use-mobile` hook (`@konfigyr/ui/hooks/use-mobile`). Reusable/generic UI primitives live here now, not in `apps/console/src/components/ui`.
+- `packages/hateoas` (`@konfigyr/hateoas`) — the REST envelope types (`PageResponse`, `CursorResponse`, `Pageable`, `CollectionResponse`, `MarkdownContents`).
+- `packages/markdown-editor` (`@konfigyr/markdown-editor`) — the `Editor` widget and the `Contents`/`HtmlContents` markdown renderer.
+- `packages/vitest-config` (`@konfigyr/vitest-config`) — the shared vitest config factory (`@konfigyr/vitest-config`) and setup file (`@konfigyr/vitest-config/setup`). It also **hoists the vitest/testing/swc toolchain** (`vitest`, `@vitest/coverage-v8`, `jsdom`, `@testing-library/*`, `@swc/core`, `@vitejs/plugin-react-swc`, `typescript`) as its own dependencies — any package that depends on it should NOT redeclare these directly (that's exactly the duplication that let two packages drift to different, ABI-incompatible `@swc/core` versions before this package existed). Only redeclare one of these directly if a package has a genuinely separate need for it outside of testing (e.g. `apps/console` still declares `@vitejs/plugin-react-swc`/`@swc/core` itself because its own `vite.config.ts` build pipeline uses them independently of `@konfigyr/vitest-config`, and `@types/react`/`typescript` because its whole `.tsx` codebase needs them, not just its tests).
+
+`apps/console/src/components/<domain>/` still holds app-specific/feature components (`inline-edit/`, `namespace/`, `vault/`, etc.) — only truly reusable primitives moved out.
 
 **When to invoke:**
 ```
@@ -166,7 +173,7 @@ npm run build             # Production build succeeds
 
 **Checklist:**
 - [ ] No TypeScript `any` types without comments
-- [ ] All imports use aliases (`@konfigyr/components`, etc.)
+- [ ] All imports use aliases (`@konfigyr/components`, `@konfigyr/ui`, `@konfigyr/hateoas`, `@konfigyr/markdown-editor`, etc.)
 - [ ] No `ky` imports outside `src/lib/http.ts`
 - [ ] No environment secrets in client code
 - [ ] Tests pass with coverage

@@ -1,4 +1,4 @@
-import type { Pageable } from '@konfigyr/hooks/hateoas/types';
+import type { Pageable } from '@konfigyr/hateoas';
 
 export interface Artifact {
   id: string;

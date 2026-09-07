@@ -2,7 +2,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import request from '@konfigyr/lib/http';
 import { ChangeRequestState } from '@konfigyr/hooks/vault/types';
 
-import type { CollectionResponse, PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { CollectionResponse, PageResponse } from '@konfigyr/hateoas';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type {
   ChangeRequest,

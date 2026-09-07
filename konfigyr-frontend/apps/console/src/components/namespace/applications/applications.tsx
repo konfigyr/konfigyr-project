@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { ChevronRightIcon, MonitorCloud, PlusIcon, ScreenShareOff } from 'lucide-react';
 import { useGetNamespaceApplications } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { buttonVariants } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardAction,
@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardIcon,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+} from '@konfigyr/ui/components/card';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import {
   Item,
   ItemActions,
@@ -21,8 +21,8 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from '@konfigyr/components/ui/item';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/ui/components/item';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import {
   CreateExpirationDateLabel,
   CreateNamespaceApplicationLabel,

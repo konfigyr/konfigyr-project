@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { SimpleAlert } from '@konfigyr/components/ui/alert';
+import { SimpleAlert } from '@konfigyr/components/alert';
 import { normalizeError } from './normalize';
 
-import type { AlertProps } from '@konfigyr/components/ui/alert';
+import type { AlertProps } from '@konfigyr/ui/components/alert';
 
 export type ErrorStateProps = { error: Error } & Omit<AlertProps, 'title' | 'description'>;
 

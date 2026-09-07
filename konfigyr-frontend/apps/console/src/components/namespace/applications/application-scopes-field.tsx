@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useNamespaceScopes } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { Checkbox } from '@konfigyr/components/ui/checkbox';
+import { Checkbox } from '@konfigyr/ui/components/checkbox';
 import {
   Field,
   FieldContent,
@@ -11,7 +11,7 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from '@konfigyr/components/ui/field';
+} from '@konfigyr/ui/components/field';
 
 import type { Namespace } from '@konfigyr/hooks/types';
 

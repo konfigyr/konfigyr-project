@@ -4,10 +4,10 @@ import { FormattedMessage } from 'react-intl';
 import { useKeysetOperation } from '@konfigyr/hooks';
 import { ClipboardButton } from '@konfigyr/components/clipboard';
 import { CancelLabel, CloseLabel } from '@konfigyr/components/messages';
-import { Button } from '@konfigyr/components/ui/button';
-import { Label } from '@konfigyr/components/ui/label';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
-import { Textarea } from '@konfigyr/components/ui/textarea';
+import { Button } from '@konfigyr/ui/components/button';
+import { Label } from '@konfigyr/ui/components/label';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
+import { Textarea } from '@konfigyr/ui/components/textarea';
 import { KeysetEncryptLabel } from '../messages';
 
 import type { Keyset, KeysetEncryptOperationResponse, Namespace } from '@konfigyr/hooks/types';

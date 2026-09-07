@@ -14,8 +14,8 @@
   "rtl": false,
   "aliases": {
     "components": "@konfigyr/components",
-    "utils": "@konfigyr/components/utils",
-    "ui": "@konfigyr/components/ui",
+    "utils": "@konfigyr/ui/lib/utils",
+    "ui": "@konfigyr/ui/components",
     "lib": "@konfigyr/lib",
     "hooks": "@konfigyr/hooks"
   },

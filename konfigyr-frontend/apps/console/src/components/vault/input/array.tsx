@@ -12,7 +12,7 @@ import {
   ComboboxList,
   ComboboxValue,
   useComboboxAnchor,
-} from '@konfigyr/components/ui/combobox';
+} from '@konfigyr/ui/components/combobox';
 
 import type { ComponentProps, KeyboardEvent, ReactNode } from 'react';
 import type { InputFieldProps, SchemaHint } from './types';

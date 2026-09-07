@@ -3,8 +3,8 @@ import { FormattedMessage } from 'react-intl';
 import { useReactivateKey } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { CancelLabel } from '@konfigyr/components/messages';
-import { Alert, AlertTitle } from '@konfigyr/components/ui/alert';
-import { Button } from '@konfigyr/components/ui/button';
+import { Alert, AlertTitle } from '@konfigyr/ui/components/alert';
+import { Button } from '@konfigyr/ui/components/button';
 
 import type { Key, Keyset, Namespace } from '@konfigyr/hooks/types';
 

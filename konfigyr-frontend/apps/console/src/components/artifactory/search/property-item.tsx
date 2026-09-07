@@ -1,6 +1,6 @@
 import { BoxIcon, BuildingIcon } from 'lucide-react';
-import { Item, ItemContent, ItemFooter, ItemTitle } from '@konfigyr/components/ui/item';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+import { Item, ItemContent, ItemFooter, ItemTitle } from '@konfigyr/ui/components/item';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import { PropertyName } from '@konfigyr/components/artifactory/property-name';
 import { PropertyTypeName } from '@konfigyr/components/artifactory/property-type-name';
 import { PropertyDeprecation } from '@konfigyr/components/artifactory/property-deprecation';

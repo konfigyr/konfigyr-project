@@ -9,8 +9,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+} from '@konfigyr/ui/components/card';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import { ApplicationTypeSelector } from './application-type-selector';
 
 import type { NamespaceApplicationType } from '@konfigyr/hooks/types';

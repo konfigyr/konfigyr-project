@@ -6,7 +6,7 @@ import {
   XIcon,
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
-import { Button, buttonVariants } from '@konfigyr/components/ui/button';
+import { Button, buttonVariants } from '@konfigyr/ui/components/button';
 import { RequestTransferLabel } from '@konfigyr/components/artifactory/transfers/messages';
 import {
   ConflictingOwnersAlert,

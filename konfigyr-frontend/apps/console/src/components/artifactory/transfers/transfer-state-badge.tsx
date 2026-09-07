@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { Badge } from '@konfigyr/components/ui/badge';
+import { Badge } from '@konfigyr/ui/components/badge';
 
 import type { ComponentProps } from 'react';
 import type { TransferState } from '@konfigyr/hooks/types';

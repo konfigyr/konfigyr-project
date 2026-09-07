@@ -3,7 +3,7 @@ import { ChevronRightIcon } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { useGetDashboard } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import { CounterStat, StatsCard } from './stats';
 
 import type { Namespace } from '@konfigyr/hooks/types';

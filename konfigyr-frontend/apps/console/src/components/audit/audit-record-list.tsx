@@ -2,11 +2,11 @@ import { useCallback } from 'react';
 import { FormattedDate, FormattedMessage } from 'react-intl';
 import { useGetAuditRecords } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import {
   Card,
   CardContent,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import {
   Item,
   ItemContent,
@@ -14,9 +14,9 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from '@konfigyr/components/ui/item';
-import { CursorPagination } from '@konfigyr/components/ui/pagination';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/ui/components/item';
+import { CursorPagination } from '@konfigyr/components/pagination';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 
 import { AuditEntityTypeIcon } from './audit-entity-type';
 import { AuditRecordFilters } from './audit-record-filters';

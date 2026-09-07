@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useIntl } from 'react-intl';
 import { SearchIcon } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@konfigyr/components/ui/input-group';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@konfigyr/ui/components/input-group';
 
 import type { ChangeEvent } from 'react';
 import type { ArtifactQuery } from '@konfigyr/hooks/artifactory/types';

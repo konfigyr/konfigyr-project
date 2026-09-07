@@ -2,7 +2,7 @@
 
 import { ErrorState } from '@konfigyr/components/error';
 import { FormattedMessage, KonfigyrLeadMessage, KonfigyrTitleMessage } from '@konfigyr/components/messages';
-import { ProgressLoader } from '@konfigyr/components/ui/loader';
+import { ProgressLoader } from '@konfigyr/ui/components/loader';
 import LogoImage from '@konfigyr/public/logo.svg';
 import { AccountContext, useGetAccount, useGetNamespaces } from '@konfigyr/hooks';
 

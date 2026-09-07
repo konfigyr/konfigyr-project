@@ -1,8 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { DatabaseBackup, FileCog, ImportIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from '@konfigyr/components/ui/button';
-import { SimpleAlert } from '@konfigyr/components/ui/alert';
+import { CloseLabel } from '@konfigyr/components/messages';
+import { Button } from '@konfigyr/ui/components/button';
+import { SimpleAlert } from '@konfigyr/components/alert';
 import {
   Dialog,
   DialogContent,
@@ -10,13 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@konfigyr/components/ui/dialog';
-import { Field, FieldDescription, FieldLabel } from '@konfigyr/components/ui/field';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
-import { Input } from '@konfigyr/components/ui/input';
+} from '@konfigyr/ui/components/dialog';
+import { Field, FieldDescription, FieldLabel } from '@konfigyr/ui/components/field';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
+import { Input } from '@konfigyr/ui/components/input';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 import { isPropertyValueValid } from '@konfigyr/hooks/vault/property-validation';
-import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
+import { TabItem, Tabs } from '@konfigyr/ui/components/tab';
 import { FetchConfigSchema } from '@konfigyr/hooks/vault/-handler';
 import { ImportPropertiesLabel } from './messages';
 import type { FetchConfigRequest } from '@konfigyr/hooks/vault/-handler';
@@ -255,7 +256,7 @@ export function PropertiesImportDialog ({ catalog, profile, onImport }: {
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-140">
+      <DialogContent className="sm:max-w-140" closeLabel={<CloseLabel />}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <FileCog size="1rem"/>
@@ -313,7 +314,7 @@ export function PropertiesImportDialog ({ catalog, profile, onImport }: {
           error={error}
         />
 
-        <DialogFooter showCloseButton={true}>
+        <DialogFooter showCloseButton={true} closeLabel={<CloseLabel />}>
           {needsImportModeSelection ? (
             <>
               <Button

@@ -4,7 +4,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useGetTransfer, useNamespace } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { TransfersBreadcrumbs } from '@konfigyr/components/artifactory/transfers/breadcrumbs';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import { TransferDetails } from '@konfigyr/components/artifactory/transfers/transfer-details';
 
 export const Route = createFileRoute(

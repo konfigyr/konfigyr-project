@@ -4,13 +4,13 @@ import { FormattedMessage } from 'react-intl';
 import { useRotateKeyset } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { CancelLabel } from '@konfigyr/components/messages';
-import { Alert, AlertTitle } from '@konfigyr/components/ui/alert';
-import { Button } from '@konfigyr/components/ui/button';
+import { Alert, AlertTitle } from '@konfigyr/ui/components/alert';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Field,
   FieldDescription,
   FieldLabel,
-} from '@konfigyr/components/ui/field';
+} from '@konfigyr/ui/components/field';
 import { KeysetAlgorithmSelect } from '../keyset-algorithm';
 import { SupportedAlgorithm } from '../supported-algorithms';
 

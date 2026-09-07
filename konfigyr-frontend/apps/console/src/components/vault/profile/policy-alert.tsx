@@ -3,7 +3,7 @@ import {
   ShieldCheckIcon,
   ShieldOffIcon,
 } from 'lucide-react';
-import { SimpleAlert } from '@konfigyr/components/ui/alert';
+import { SimpleAlert } from '@konfigyr/components/alert';
 import {
   ProfilePolicyDescription,
   ProfilePolicyLabel,

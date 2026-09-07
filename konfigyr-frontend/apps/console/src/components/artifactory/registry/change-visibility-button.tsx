@@ -14,9 +14,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@konfigyr/components/ui/alert-dialog';
-import { Button } from '@konfigyr/components/ui/button';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/alert-dialog';
+import { Button } from '@konfigyr/ui/components/button';
+import { toast } from '@konfigyr/ui/components/toast';
 import { CancelLabel } from '@konfigyr/components/messages';
 import {
   ChangeVisibilityTitle,

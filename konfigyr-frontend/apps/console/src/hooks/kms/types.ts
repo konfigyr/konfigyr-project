@@ -1,4 +1,4 @@
-import type { Pageable } from '../hateoas/types';
+import type { Pageable } from '@konfigyr/hateoas';
 
 export type KeyType = 'EC' | 'RSA' | 'OCTET';
 export type KeyStatus =

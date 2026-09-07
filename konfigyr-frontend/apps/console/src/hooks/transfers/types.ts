@@ -1,4 +1,4 @@
-import type { Pageable } from '@konfigyr/hooks/hateoas/types';
+import type { Pageable } from '@konfigyr/hateoas';
 
 export type TransferState = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
 

@@ -4,7 +4,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import {
   GitPullRequestClosedIcon,
 } from 'lucide-react';
-import { Editor } from '@konfigyr/components/editor';
+import { Editor } from '@konfigyr/markdown-editor';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { ChangeRequestReviewType } from '@konfigyr/hooks/vault/types';
 import {
@@ -13,20 +13,20 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@konfigyr/components/ui/radio-group';
+} from '@konfigyr/ui/components/card';
+import { RadioGroup, RadioGroupItem } from '@konfigyr/ui/components/radio-group';
 import {
   Field,
   FieldContent,
   FieldDescription,
   FieldLabel,
-} from '@konfigyr/components/ui/field';
+} from '@konfigyr/ui/components/field';
 import {
   useForm,
   useFormSubmit,
-} from '@konfigyr/components/ui/form';
-import { Button } from '@konfigyr/components/ui/button';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/form';
+import { Button } from '@konfigyr/ui/components/button';
+import { toast } from '@konfigyr/ui/components/toast';
 import {
   ChangeRequestReviewTypeDescription,
   ChangeRequestReviewTypeLabel,

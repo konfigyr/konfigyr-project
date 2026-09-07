@@ -6,17 +6,17 @@ import { FileStackIcon, GitCommitIcon, UserIcon } from 'lucide-react';
 import { useGetPropertyHistory } from '@konfigyr/hooks';
 import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
 import { PropertyName } from '@konfigyr/components/artifactory/property-name';
-import { RelativeDate } from '@konfigyr/components/messages';
+import { CloseLabel, RelativeDate } from '@konfigyr/components/messages';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@konfigyr/components/ui/sheet';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import { ScrollArea } from '@konfigyr/components/ui/scroll-area';
+} from '@konfigyr/ui/components/sheet';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
+import { ScrollArea } from '@konfigyr/ui/components/scroll-area';
 import { ErrorState } from '@konfigyr/components/error';
 import { useLabelForTransitionType } from '@konfigyr/components/vault/messages';
 import { PropertyTransitionValue } from '@konfigyr/components/vault/change-history/property-transition';
@@ -166,7 +166,7 @@ export function PropertyHistorySidebar<T>({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto p-0 gap-0">
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto p-0 gap-0" closeLabel={<CloseLabel />}>
         <SheetHeader className="sticky top-0 gap-1 border-b">
           <SheetTitle className="text-base font-semibold">
             <FormattedMessage

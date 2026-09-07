@@ -5,16 +5,16 @@ import { Link } from '@tanstack/react-router';
 import { useAcceptInvitation, useAccountContext, useDeclineInvitation, useLastUsedNamespace } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { NamespaceRoleBadge } from '@konfigyr/components/namespace/role';
-import { Button, buttonVariants } from '@konfigyr/components/ui/button';
-import { Card, CardContent } from '@konfigyr/components/ui/card';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+import { Button, buttonVariants } from '@konfigyr/ui/components/button';
+import { Card, CardContent } from '@konfigyr/ui/components/card';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@konfigyr/components/ui/select';
+} from '@konfigyr/ui/components/select';
 import {
   Table,
   TableBody,
@@ -22,8 +22,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@konfigyr/components/ui/table';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/table';
+import { toast } from '@konfigyr/ui/components/toast';
 
 import type { Invitation } from '@konfigyr/hooks/types';
 

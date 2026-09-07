@@ -1,6 +1,6 @@
 'use client';
 
-import { toast } from '@konfigyr/components/ui/toast';
+import { toast } from '@konfigyr/ui/components/toast';
 import { useCallback } from 'react';
 import { CheckCircle2Icon, TriangleAlert } from 'lucide-react';
 import { useAcceptTransfer, useCancelTransfer, useRejectTransfer } from '@konfigyr/hooks';
@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@konfigyr/components/ui/alert-dialog';
+} from '@konfigyr/ui/components/alert-dialog';
 import { CancelLabel } from '@konfigyr/components/messages';
 import {
   AcceptTransferDescription,

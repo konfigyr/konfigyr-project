@@ -3,22 +3,22 @@ import { EllipsisVerticalIcon, UserXIcon, UsersIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { useGetNamespaceMembers } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { Avatar, AvatarFallback, AvatarImage } from '@konfigyr/components/ui/avatar';
-import { Button } from '@konfigyr/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@konfigyr/ui/components/avatar';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardIcon,
   CardTitle,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@konfigyr/components/ui/dropdown-menu';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+} from '@konfigyr/ui/components/dropdown-menu';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import {
   Item,
   ItemActions,
@@ -27,8 +27,8 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from '@konfigyr/components/ui/item';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/ui/components/item';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import { NamespaceRoleBadge } from '../role';
 import { RemoveMemberForm } from './remove-member';
 import { UpdateMemberForm } from './update-member';

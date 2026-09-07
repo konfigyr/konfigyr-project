@@ -5,13 +5,13 @@ import {
   XIcon,
 } from 'lucide-react';
 import { FormattedDate } from 'react-intl';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import { TransferStateBadge } from '@konfigyr/components/artifactory/transfers/transfer-state-badge';
 import { NamespaceLabel } from '@konfigyr/components/messages';
 import {

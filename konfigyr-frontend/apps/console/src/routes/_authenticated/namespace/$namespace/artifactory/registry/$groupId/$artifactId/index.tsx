@@ -3,7 +3,7 @@ import { PackageIcon } from 'lucide-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useGetArtifact, useGetArtifactVersions, useNamespace } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import { RegistryBreadcrumbs } from '@konfigyr/components/artifactory/registry/breadcrumbs';
 import { ArtifactOverview } from '@konfigyr/components/artifactory/registry/artifact-overview';
 import { VersionTable } from '@konfigyr/components/artifactory/registry/version-table';

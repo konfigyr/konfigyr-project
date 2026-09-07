@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,8 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@konfigyr/components/ui/alert-dialog';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/alert-dialog';
+import { toast } from '@konfigyr/ui/components/toast';
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
 import { useRemoveNamespaceApplication, useResetNamespaceApplication } from '@konfigyr/hooks';
 import { DeleteNamespaceApplicationLabel } from '@konfigyr/components/namespace/applications/messages';

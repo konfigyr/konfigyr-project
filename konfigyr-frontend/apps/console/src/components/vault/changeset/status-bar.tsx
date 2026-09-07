@@ -17,18 +17,18 @@ import {
 } from '@konfigyr/hooks';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   InlineEdit,
   InlineEditInput,
   InlineEditPlaceholder,
-} from '@konfigyr/components/ui/inline-edit';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/components/inline-edit';
+import { toast } from '@konfigyr/ui/components/toast';
 import {
   ChangesCountLabel,
   useLabelForTransitionType,
 } from '@konfigyr/components/vault/messages';
-import { cn } from '@konfigyr/components/utils';
+import { cn } from '@konfigyr/ui/lib/utils';
 import { ChangesetSubmitDialog } from './dialog';
 
 import type { RefObject } from 'react';

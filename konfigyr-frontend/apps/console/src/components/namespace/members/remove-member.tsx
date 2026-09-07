@@ -4,7 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useRemoveNamespaceMember } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -12,8 +12,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@konfigyr/components/ui/alert-dialog';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/alert-dialog';
+import { toast } from '@konfigyr/ui/components/toast';
 
 import { CancelLabel } from '@konfigyr/components/messages';
 import type { Member, Namespace } from '@konfigyr/hooks/types';

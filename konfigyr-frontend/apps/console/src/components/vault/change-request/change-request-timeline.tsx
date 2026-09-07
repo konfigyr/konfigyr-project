@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { ChangeRequestHistoryType } from '@konfigyr/hooks/vault/types';
 import { RelativeDate } from '@konfigyr/components/messages';
-import { HtmlContents } from '@konfigyr/components/ui/content';
+import { HtmlContents } from '@konfigyr/markdown-editor';
 
 import type { ChangeRequestHistory } from '@konfigyr/hooks/vault/types';
 

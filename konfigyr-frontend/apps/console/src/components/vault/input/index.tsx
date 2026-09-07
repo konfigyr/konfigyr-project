@@ -6,7 +6,7 @@ import {
   useFocusEffect,
   useInlineEdit,
   useKeyboardEvents,
-} from '@konfigyr/components/ui/inline-edit';
+} from '@konfigyr/components/inline-edit';
 
 import { ArrayField } from './array';
 import { BooleanField } from './boolean';

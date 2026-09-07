@@ -1,5 +1,5 @@
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
-import type { MarkdownContents, Pageable } from '@konfigyr/hooks/hateoas/types';
+import type { MarkdownContents, Pageable } from '@konfigyr/hateoas';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 
 export type ProfilePolicy = 'UNPROTECTED' | 'PROTECTED' | 'IMMUTABLE';

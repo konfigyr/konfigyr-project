@@ -4,7 +4,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
-import type { CursorResponse } from '@konfigyr/hooks/hateoas/types';
+import type { CursorResponse } from '@konfigyr/hateoas';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { ChangeHistoryRecord, Profile } from '@konfigyr/hooks/vault/types';
 

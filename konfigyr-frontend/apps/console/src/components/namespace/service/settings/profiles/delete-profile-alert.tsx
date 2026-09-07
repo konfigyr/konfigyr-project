@@ -9,10 +9,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@konfigyr/components/ui/alert-dialog';
+} from '@konfigyr/ui/components/alert-dialog';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { useRemoveProfile } from '@konfigyr/hooks';
-import { toast } from '@konfigyr/components/ui/toast';
+import { toast } from '@konfigyr/ui/components/toast';
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { Profile } from '@konfigyr/hooks/vault/types';

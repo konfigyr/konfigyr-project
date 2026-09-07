@@ -4,8 +4,8 @@ import { useGetChangeRequests } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { RelativeDate } from '@konfigyr/components/messages';
 import { ChangesCountLabel } from '@konfigyr/components/vault/messages';
-import { Badge } from '@konfigyr/components/ui/badge';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+import { Badge } from '@konfigyr/ui/components/badge';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import {
   Item,
   ItemActions,
@@ -14,12 +14,12 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from '@konfigyr/components/ui/item';
-import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
+} from '@konfigyr/ui/components/item';
+import { PageResponsePagination } from '@konfigyr/components/pagination';
 import { ChangeRequestFilters } from './change-request-filters';
 import { ChangeRequestStateIcon } from './change-request-state';
 
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { ChangeRequest, ChangeRequestQuery } from '@konfigyr/hooks/vault/types';
 

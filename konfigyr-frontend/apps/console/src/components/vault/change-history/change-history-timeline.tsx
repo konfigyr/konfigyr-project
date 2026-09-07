@@ -7,9 +7,9 @@ import { ClipboardIconButton } from '@konfigyr/components/clipboard';
 import { RelativeDate } from '@konfigyr/components/messages';
 import { ErrorState } from '@konfigyr/components/error';
 import { ChangesCountLabel } from '@konfigyr/components/vault/messages';
-import { Button } from '@konfigyr/components/ui/button';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+import { Button } from '@konfigyr/ui/components/button';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import {
   Item,
   ItemActions,
@@ -17,8 +17,8 @@ import {
   ItemDescription,
   ItemGroup,
   ItemTitle,
-} from '@konfigyr/components/ui/item';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@konfigyr/components/ui/tooltip';
+} from '@konfigyr/ui/components/item';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@konfigyr/ui/components/tooltip';
 
 import type { ChangeHistory } from '@konfigyr/hooks/vault/types';
 

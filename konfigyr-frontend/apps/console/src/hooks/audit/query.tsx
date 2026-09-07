@@ -2,7 +2,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
 import type { AuditRecord, AuditRecordQuery } from './types';
-import type { CursorResponse } from '../hateoas/types';
+import type { CursorResponse } from '@konfigyr/hateoas';
 import type { Namespace } from '../namespace/types';
 
 /**

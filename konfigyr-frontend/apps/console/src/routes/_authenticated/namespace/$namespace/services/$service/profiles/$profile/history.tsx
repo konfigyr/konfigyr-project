@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { getProfileQuery, useGetChangeHistory } from '@konfigyr/hooks';
 import { ChangeHistorySidebar } from '@konfigyr/components/vault/change-history/change-history-sidebar';
 import { ChangeHistoryTimeline } from '@konfigyr/components/vault/change-history/change-history-timeline';
-import { CursorPagination } from '@konfigyr/components/ui/pagination';
+import { CursorPagination } from '@konfigyr/components/pagination';
 
 import type { ChangeHistory, ChangeHistoryQuery, Namespace, Service } from '@konfigyr/hooks/types';
 

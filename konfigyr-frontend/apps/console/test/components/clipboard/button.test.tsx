@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
-import { TooltipProvider } from '@konfigyr/components/ui/tooltip';
+import { TooltipProvider } from '@konfigyr/ui/components/tooltip';
 import { ClipboardButton, ClipboardIconButton } from '@konfigyr/components/clipboard';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
 

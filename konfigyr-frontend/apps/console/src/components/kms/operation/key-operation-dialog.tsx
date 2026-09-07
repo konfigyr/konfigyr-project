@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@konfigyr/components/ui/dialog';
+} from '@konfigyr/ui/components/dialog';
 import { KeyCompromisedOperation } from './key-compromised-operation';
 import { KeyDestroyOperation } from './key-destroy-operation';
 import { KeyDisableOperation } from './key-disable-operation';

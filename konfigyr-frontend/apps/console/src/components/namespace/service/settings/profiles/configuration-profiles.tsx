@@ -1,12 +1,12 @@
-import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@konfigyr/components/ui/item';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@konfigyr/ui/components/item';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from '@konfigyr/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
+import { Button } from '@konfigyr/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/ui/components/card';
 import { ErrorState, useErrorNotification } from '@konfigyr/components/error';
 import { useGetProfiles, useUpdateProfile } from '@konfigyr/hooks';
 import React, { useCallback, useState } from 'react';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import { Link } from '@tanstack/react-router';
 import { PolicyAlertIcon } from '@konfigyr/components/vault/profile/policy-alert';
 import {
@@ -16,13 +16,13 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from '@konfigyr/components/ui/dropdown-menu';
+} from '@konfigyr/ui/components/dropdown-menu';
 import { ChevronDownIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import {
   DeleteConfigurationProfileAlert,
 } from '@konfigyr/components/namespace/service/settings/profiles/delete-profile-alert';
-import { InlineEdit, InlineEditInput, InlineEditPlaceholder } from '@konfigyr/components/ui/inline-edit';
-import { toast } from '@konfigyr/components/ui/toast';
+import { InlineEdit, InlineEditInput, InlineEditPlaceholder } from '@konfigyr/components/inline-edit';
+import { toast } from '@konfigyr/ui/components/toast';
 import { usePolicyDescription, usePolicyLabel } from '@konfigyr/components/vault/profile/policy-picker';
 import { ProfilePolicyLabel } from '@konfigyr/components/vault/profile/messages';
 

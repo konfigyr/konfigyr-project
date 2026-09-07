@@ -2,7 +2,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import request from '@konfigyr/lib/http';
 
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 import type { CreateProfile, Profile } from '@konfigyr/hooks/vault/types';
 
 /**

@@ -6,7 +6,7 @@ import { useJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
 import { ConfigurationPropertyState, Operation } from '@konfigyr/hooks/vault/types';
 
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
-import type { CollectionResponse, CursorResponse } from '@konfigyr/hooks/hateoas/types';
+import type { CollectionResponse, CursorResponse } from '@konfigyr/hateoas';
 import type { Namespace, Service, ServiceCatalog } from '@konfigyr/hooks/namespace/types';
 import type {
   ApplyRequest,

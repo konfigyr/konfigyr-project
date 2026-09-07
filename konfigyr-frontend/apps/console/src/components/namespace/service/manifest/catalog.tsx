@@ -12,15 +12,15 @@ import { SearchInputGroup } from '@konfigyr/components/vault/properties/search-i
 import {
   Card,
   CardContent,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import {
   Item,
   ItemContent,
   ItemDescription,
   ItemGroup,
   ItemTitle,
-} from '@konfigyr/components/ui/item';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+} from '@konfigyr/ui/components/item';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import {
   Pagination,
   PaginationContent,
@@ -29,8 +29,8 @@ import {
   PaginationNext,
   PaginationPrevious,
   PaginationRange,
-} from '@konfigyr/components/ui/pagination';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/ui/components/pagination';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import {
   ArtifactLabel,
   MissingManifestsDescription,

@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { FormattedMessage } from 'react-intl';
 import { useCreateNamespaceService } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
-import { Separator } from '@konfigyr/components/ui/separator';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
+import { Separator } from '@konfigyr/ui/components/separator';
 import {
   ServiceDescriptionHelpText,
   ServiceDescriptionLabel,

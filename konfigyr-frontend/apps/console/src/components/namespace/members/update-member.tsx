@@ -3,10 +3,11 @@ import { FormattedMessage } from 'react-intl';
 import { useUpdateNamespaceMember } from '@konfigyr/hooks';
 import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
 import { useErrorNotification } from '@konfigyr/components/error';
+import { CloseLabel } from '@konfigyr/components/messages';
 import { NamespaceRoleDescription, NamespaceRoleLabel } from '@konfigyr/components/namespace/role';
-import { Button } from '@konfigyr/components/ui/button';
-import { Label } from '@konfigyr/components/ui/label';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { Button } from '@konfigyr/ui/components/button';
+import { Label } from '@konfigyr/ui/components/label';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import {
   Dialog,
   DialogContent,
@@ -14,9 +15,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@konfigyr/components/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@konfigyr/components/ui/radio-group';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/dialog';
+import { RadioGroup, RadioGroupItem } from '@konfigyr/ui/components/radio-group';
+import { toast } from '@konfigyr/ui/components/toast';
 
 import type { Member, Namespace } from '@konfigyr/hooks/types';
 
@@ -63,7 +64,7 @@ export function UpdateMemberForm({ namespace, member, onClose }: { namespace: Na
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent closeLabel={<CloseLabel />}>
         <form.AppForm>
           <form onSubmit={onSubmit}>
             <DialogHeader>

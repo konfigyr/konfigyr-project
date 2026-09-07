@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { Switch } from '@konfigyr/components/ui/switch';
+import { Switch } from '@konfigyr/ui/components/switch';
 
 import type { ComponentProps } from 'react';
 import type { InputFieldProps } from './types';

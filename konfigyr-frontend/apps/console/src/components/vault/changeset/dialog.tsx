@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { useIntl } from 'react-intl';
 import { CheckIcon } from 'lucide-react';
-import { CancelLabel } from '@konfigyr/components/messages';
+import { CancelLabel, CloseLabel } from '@konfigyr/components/messages';
 import { PolicyTooltip } from '@konfigyr/components/vault/profile/policy-tooltip';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Dialog,
   DialogClose,
@@ -12,17 +12,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@konfigyr/components/ui/dialog';
+} from '@konfigyr/ui/components/dialog';
 import {
   Field,
   FieldContent,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-} from '@konfigyr/components/ui/field';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@konfigyr/components/ui/radio-group';
-import { ScrollArea } from '@konfigyr/components/ui/scroll-area';
+} from '@konfigyr/ui/components/field';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
+import { RadioGroup, RadioGroupItem } from '@konfigyr/ui/components/radio-group';
+import { ScrollArea } from '@konfigyr/ui/components/scroll-area';
 
 import type { ChangesetState, Profile } from '@konfigyr/hooks/types';
 
@@ -267,7 +267,7 @@ export function ChangesetSubmitDialog({
         }
       />
 
-      <DialogContent className="sm:min-w-lg">
+      <DialogContent className="sm:min-w-lg" closeLabel={<CloseLabel />}>
         <ChangesetSubmitDialogForm
           changeset={changeset}
           {...props}

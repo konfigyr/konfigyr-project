@@ -6,12 +6,12 @@ import {
   useGetVerificationChallenges,
   useNamespace,
 } from '@konfigyr/hooks';
-import { toast } from '@konfigyr/components/ui/toast';
+import { toast } from '@konfigyr/ui/components/toast';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/artifactory/groups/breadcrumbs';
 import { GroupVerificationForm } from '@konfigyr/components/artifactory/groups/group-verification-form';
 import { ClaimAgainLabel } from '@konfigyr/components/artifactory/groups/messages';
-import { BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@konfigyr/components/ui/breadcrumb';
+import { BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@konfigyr/ui/components/breadcrumb';
 import { GroupVerificationDetailsLink } from '@konfigyr/components/artifactory/groups/group-verification-table';
 import { useMemo } from 'react';
 import type { GroupVerificationFormValues } from '@konfigyr/components/artifactory/groups/group-verification-form';

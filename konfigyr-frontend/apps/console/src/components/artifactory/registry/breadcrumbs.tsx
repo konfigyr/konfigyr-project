@@ -5,7 +5,7 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator,
-} from '@konfigyr/components/ui/breadcrumb';
+} from '@konfigyr/ui/components/breadcrumb';
 
 import { RegistryLabel } from '@konfigyr/components/artifactory/registry/messages';
 import type { ReactNode } from 'react';

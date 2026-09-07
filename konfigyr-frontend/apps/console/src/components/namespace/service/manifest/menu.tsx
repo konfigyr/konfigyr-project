@@ -1,6 +1,6 @@
 import { BoxesIcon, ListTreeIcon } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
-import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
+import { TabItem, Tabs } from '@konfigyr/ui/components/tab';
 import { ArtifactsLabel, ConfigurationPropertiesLabel } from '../messages';
 
 import type { Namespace, Service } from '@konfigyr/hooks/types';

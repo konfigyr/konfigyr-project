@@ -1,13 +1,13 @@
 import { FormattedMessage } from 'react-intl';
 import { ShieldCheckIcon } from 'lucide-react';
-import { Button } from '@konfigyr/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
-import { Field, FieldDescription } from '@konfigyr/components/ui/field';
-import { Input } from '@konfigyr/components/ui/input';
+import { Button } from '@konfigyr/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@konfigyr/ui/components/card';
+import { Field, FieldDescription } from '@konfigyr/ui/components/field';
+import { Input } from '@konfigyr/ui/components/input';
 import { CancelLabel, SaveLabel } from '@konfigyr/components/messages';
 import { GroupVerificationMethodSelector } from '@konfigyr/components/artifactory/groups/group-verification-method';
 import { z } from 'zod';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import { GroupIdLabel } from '@konfigyr/components/artifactory/groups/messages';
 
 function isValidGroupId (groupId: string) {

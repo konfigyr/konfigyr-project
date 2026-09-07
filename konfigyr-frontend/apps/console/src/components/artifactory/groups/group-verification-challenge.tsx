@@ -1,7 +1,7 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 import { GroupVerificationState } from '@konfigyr/components/artifactory/groups/group-verification-state';
 import { VerificationMethodName } from '@konfigyr/components/artifactory/groups/group-verification-method';
-import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@konfigyr/ui/components/card';
 import {
   ChallengeStateLabel,
   GroupIdLabel,
