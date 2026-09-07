@@ -2,8 +2,6 @@ FROM node:26-alpine AS development-dependencies-env
 COPY . /app
 WORKDIR /app
 RUN npm ci
-# TEMP DIAGNOSTIC: remove after diagnosing the missing @vitejs/plugin-react-swc issue.
-RUN npm config get min-release-age; npm ls @vitejs/plugin-react-swc --all || true; ls -la node_modules/@vitejs || true
 
 FROM node:26-alpine AS production-dependencies-env
 COPY package.json package-lock.json /app/
