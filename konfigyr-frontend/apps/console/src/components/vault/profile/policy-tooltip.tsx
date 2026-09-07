@@ -2,7 +2,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
+} from '@konfigyr/ui/components/tooltip';
 import {
   ProfilePolicyDescription,
   ProfilePolicyLabel,

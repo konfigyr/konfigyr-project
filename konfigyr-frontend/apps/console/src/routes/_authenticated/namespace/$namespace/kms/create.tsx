@@ -8,14 +8,14 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@konfigyr/components/ui/breadcrumb';
+} from '@konfigyr/ui/components/breadcrumb';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import { useNamespace } from '@konfigyr/hooks';
 import { CreateKeysetLabel, KeyManagementServiceLabel } from '@konfigyr/components/kms/messages';
 import { CreateKeysetForm } from '@konfigyr/components/kms/keyset-create';

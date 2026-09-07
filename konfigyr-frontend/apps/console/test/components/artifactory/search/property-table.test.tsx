@@ -4,7 +4,7 @@ import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { PropertyTable } from '@konfigyr/components/artifactory/search/property-table';
 
 import type { PropertyDefinition } from '@konfigyr/hooks/artifactory/types';
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 
 function page(data: Array<PropertyDefinition>, overrides: Partial<PageResponse<PropertyDefinition>['metadata']> = {}): PageResponse<PropertyDefinition> {
   return { data, metadata: { number: 1, size: 20, total: data.length, pages: 1, ...overrides } };

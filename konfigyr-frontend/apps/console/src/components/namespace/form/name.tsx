@@ -12,9 +12,9 @@ import {
   CardHeader,
   CardIcon,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/card';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
+import { toast } from '@konfigyr/ui/components/toast';
 import {
   NamespaceNameDescription,
   NamespaceNameLabel,

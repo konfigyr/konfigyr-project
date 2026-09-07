@@ -11,17 +11,17 @@ import {
   CardHeader,
   CardIcon,
   CardTitle,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import {
   Field,
   FieldDescription,
   FieldLabel,
-} from '@konfigyr/components/ui/field';
+} from '@konfigyr/ui/components/field';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from '@konfigyr/components/ui/input-group';
+} from '@konfigyr/ui/components/input-group';
 import {
   ConfirmNamespaceApplicationDeleteAction,
   ConfirmNamespaceApplicationResetAction,

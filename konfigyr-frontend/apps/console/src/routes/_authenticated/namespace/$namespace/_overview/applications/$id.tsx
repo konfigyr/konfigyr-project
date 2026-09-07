@@ -4,18 +4,18 @@ import { createFileRoute, useLocation } from '@tanstack/react-router';
 import {
   Card,
   CardContent,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import {
   useEditNamespaceApplication,
   useGetNamespaceApplication,
   useNamespace,
 } from '@konfigyr/hooks';
-import { toast } from '@konfigyr/components/ui/toast';
+import { toast } from '@konfigyr/ui/components/toast';
 import { NamespaceApplicationForm } from '@konfigyr/components/namespace/applications/application-form';
 import { ApplicationsBreadcrumbs } from '@konfigyr/components/namespace/applications/breadcrumbs';
 import { ApplicationDetails } from '@konfigyr/components/namespace/applications/application-details';
 import { ErrorState } from '@konfigyr/components/error';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 
 import type { CreateNamespaceApplication } from '@konfigyr/hooks/types';
 

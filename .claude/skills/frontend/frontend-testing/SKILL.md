@@ -34,12 +34,14 @@ Exception: it's fine to leave a hook unmocked-but-unexercised rather than mock i
 
 ## Test Structure
 
-Tests mirror `src/` structure under `test/`:
+Tests mirror `src/` structure under `test/`, within each package:
 
 ```
-src/hooks/namespace/query.ts → test/hooks/namespace/query.test.ts
-src/components/ui/button.tsx → test/components/ui/button.test.tsx
+apps/console/src/hooks/namespace/query.ts → apps/console/test/hooks/namespace/query.test.ts
+packages/ui/src/components/button.tsx → packages/ui/test/components/button.test.tsx
 ```
+
+Shared UI primitives (`packages/ui`), REST envelope types (`packages/hateoas`), and the markdown editor (`packages/markdown-editor`) each have their own `test/` mirroring their own `src/` — they're no longer under `apps/console`.
 
 ## MSW (Mock Service Worker)
 
@@ -122,9 +124,9 @@ test('should handle error', async () => {
 ## Testing Components
 
 ```typescript
-// test/components/ui/button.test.tsx
+// packages/ui/test/components/button.test.tsx
 import { render, screen } from '@testing-library/react'
-import { Button } from '@konfigyr/ui/button'
+import { Button } from '@konfigyr/ui/components/button'
 
 test('should render button with text', () => {
   render(<Button>Click me</Button>)

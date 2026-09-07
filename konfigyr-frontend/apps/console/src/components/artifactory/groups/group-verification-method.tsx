@@ -1,8 +1,8 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 import { CodeIcon, GlobeIcon } from 'lucide-react';
-import { Label } from '@konfigyr/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@konfigyr/components/ui/radio-group';
-import { cn } from '@konfigyr/components/utils';
+import { Label } from '@konfigyr/ui/components/label';
+import { RadioGroup, RadioGroupItem } from '@konfigyr/ui/components/radio-group';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { ReactNode } from 'react';
 import type { VerificationMethod } from '@konfigyr/hooks/types';

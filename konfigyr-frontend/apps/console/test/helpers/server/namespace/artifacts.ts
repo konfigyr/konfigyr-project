@@ -11,7 +11,7 @@ import {
   singleVersionArtifact,
 } from '../../mocks/artifacts';
 
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 import type { ArtifactDefinition, PropertyDefinition, VersionedArtifact } from '@konfigyr/hooks/artifactory/types';
 
 const artifacts = new Map<string, ArtifactDefinition>([

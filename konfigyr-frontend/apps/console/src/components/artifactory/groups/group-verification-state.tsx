@@ -1,7 +1,7 @@
 import { FormattedMessage } from 'react-intl';
-import { Badge } from '@konfigyr/components/ui/badge';
+import { Badge } from '@konfigyr/ui/components/badge';
 
-import { SimpleAlert } from '@konfigyr/components/ui/alert';
+import { SimpleAlert } from '@konfigyr/components/alert';
 import { AlertCircleIcon, CheckCircle2Icon, CircleAlertIcon, Trash2Icon, TriangleAlertIcon } from 'lucide-react';
 import { sourceCodeHostLabel } from '@konfigyr/components/artifactory/groups/group-verification-method';
 import type { ComponentProps, ReactNode } from 'react';

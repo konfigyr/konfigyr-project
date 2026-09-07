@@ -9,14 +9,14 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '@konfigyr/components/ui/avatar';
+} from '@konfigyr/ui/components/avatar';
 import {
   Card,
   CardContent,
   CardHeader,
   CardIcon,
   CardTitle,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import {
   Item,
   ItemActions,
@@ -25,9 +25,9 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from '@konfigyr/components/ui/item';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/ui/components/item';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 
 import type { Namespace, Service } from '@konfigyr/hooks/types';
 

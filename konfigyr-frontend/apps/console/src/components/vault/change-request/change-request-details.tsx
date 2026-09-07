@@ -17,9 +17,9 @@ import {
   PropertyTransitionType,
 } from '@konfigyr/hooks/vault/types';
 import { ErrorState } from '@konfigyr/components/error';
-import { Editor } from '@konfigyr/components/editor';
+import { Editor, HtmlContents } from '@konfigyr/markdown-editor';
 import { CancelLabel, EditLabel, OverviewLabel, RelativeDate } from '@konfigyr/components/messages';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardAction,
@@ -27,14 +27,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { HtmlContents } from '@konfigyr/components/ui/content';
+} from '@konfigyr/ui/components/card';
 import {
   InlineEdit,
   InlineEditInput,
   InlineEditPlaceholder,
-} from '@konfigyr/components/ui/inline-edit';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/components/inline-edit';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import {
   PropertyTransitionItemGroup,
   PropertyTransitionItemSkeleton,

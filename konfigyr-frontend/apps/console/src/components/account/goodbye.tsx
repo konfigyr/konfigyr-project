@@ -1,7 +1,7 @@
 import { HandIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
-import { Card, CardContent, CardHeader, CardIcon, CardTitle } from '@konfigyr/components/ui/card';
-import { Separator } from '@konfigyr/components/ui/separator';
+import { Card, CardContent, CardHeader, CardIcon, CardTitle } from '@konfigyr/ui/components/card';
+import { Separator } from '@konfigyr/ui/components/separator';
 
 export function Goodbye() {
   return (

@@ -10,18 +10,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@konfigyr/components/ui/alert-dialog';
-import { Button } from '@konfigyr/components/ui/button';
+} from '@konfigyr/ui/components/alert-dialog';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardAction,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { Field } from '@konfigyr/components/ui/field';
-import { Input } from '@konfigyr/components/ui/input';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/card';
+import { Field } from '@konfigyr/ui/components/field';
+import { Input } from '@konfigyr/ui/components/input';
+import { toast } from '@konfigyr/ui/components/toast';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { useRemoveNamespaceService } from '@konfigyr/hooks';
 import { CancelLabel, YesLabel } from '@konfigyr/components/messages';

@@ -1,7 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useClaimGroupVerification, useNamespace } from '@konfigyr/hooks';
-import { toast } from '@konfigyr/components/ui/toast';
+import { toast } from '@konfigyr/ui/components/toast';
 import { useErrorNotification } from '@konfigyr/components/error';
 import { GroupsBreadcrumbs } from '@konfigyr/components/artifactory/groups/breadcrumbs';
 import { GroupVerificationForm } from '@konfigyr/components/artifactory/groups/group-verification-form';

@@ -2,13 +2,13 @@ import { useCallback, useState } from 'react';
 import { ChevronDownIcon } from 'lucide-react';
 import { DataUnit } from '@konfigyr/hooks/transforms';
 import { DataSizeUnitLabel, SelectDataSizeUnitLabel } from '@konfigyr/components/messages/data-size';
-import { Kbd } from '@konfigyr/components/ui/kbd';
+import { Kbd } from '@konfigyr/ui/components/kbd';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@konfigyr/components/ui/input-group';
+} from '@konfigyr/ui/components/input-group';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +17,8 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from '@konfigyr/components/ui/dropdown-menu';
-import { cn } from '@konfigyr/components/utils';
+} from '@konfigyr/ui/components/dropdown-menu';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { ComponentProps } from 'react';
 import type { DataSize } from '@konfigyr/hooks/transforms';

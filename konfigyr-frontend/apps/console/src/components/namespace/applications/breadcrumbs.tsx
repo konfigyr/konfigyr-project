@@ -6,7 +6,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@konfigyr/components/ui/breadcrumb';
+} from '@konfigyr/ui/components/breadcrumb';
 import { NamespaceApplicationTitle } from './messages';
 
 import type { ReactNode } from 'react';

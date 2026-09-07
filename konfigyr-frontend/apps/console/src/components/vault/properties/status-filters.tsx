@@ -3,8 +3,8 @@
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { labelForTransitionType } from '@konfigyr/components/vault/messages';
-import { Button } from '@konfigyr/components/ui/button';
-import { cn } from '@konfigyr/components/utils';
+import { Button } from '@konfigyr/ui/components/button';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import type { ChangesetState } from '@konfigyr/hooks/types';

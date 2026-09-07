@@ -1,12 +1,12 @@
 import { PlusIcon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { Link } from '@tanstack/react-router';
-import { TabItem, Tabs } from '@konfigyr/components/ui/tab';
+import { TabItem, Tabs } from '@konfigyr/ui/components/tab';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
+} from '@konfigyr/ui/components/tooltip';
 
 import type { Namespace, Profile, Service } from '@konfigyr/hooks/types';
 

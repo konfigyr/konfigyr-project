@@ -1,10 +1,10 @@
 import { cva } from 'class-variance-authority';
-import { cn } from '@konfigyr/components/utils';
+import { cn } from '@konfigyr/ui/lib/utils';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
+} from '@konfigyr/ui/components/tooltip';
 
 import type { VariantProps } from 'class-variance-authority';
 import type { PropertyJsonSchema } from '@konfigyr/hooks/artifactory/types';

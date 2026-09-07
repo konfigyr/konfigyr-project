@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import request from '@konfigyr/lib/http';
 
-import type { CollectionResponse, PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { CollectionResponse, PageResponse } from '@konfigyr/hateoas';
 import type {
   CreateKeyset,
   Key,

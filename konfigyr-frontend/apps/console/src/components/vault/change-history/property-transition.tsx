@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { MinusIcon, PlusIcon } from 'lucide-react';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { PropertyName } from '@konfigyr/components/artifactory/property-name';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import { cn } from '@konfigyr/components/utils';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
+import { cn } from '@konfigyr/ui/lib/utils';
 import { PropertyTransitionTypeLabel } from './property-transition-type';
 
 import type { ComponentProps, ReactNode } from 'react';

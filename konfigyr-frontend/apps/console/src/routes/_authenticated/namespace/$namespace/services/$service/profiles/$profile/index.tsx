@@ -11,7 +11,7 @@ import {
 } from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
 import { ChangeHistoryAlert } from '@konfigyr/components/vault/change-history/change-history-alert';
-import { ProgressLoader } from '@konfigyr/components/ui/loader';
+import { ProgressLoader } from '@konfigyr/ui/components/loader';
 import type { ChangeRequest, Namespace, Service } from '@konfigyr/hooks/types';
 
 export const Route = createFileRoute(

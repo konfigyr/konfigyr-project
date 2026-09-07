@@ -1,6 +1,6 @@
-import { Label } from '@konfigyr/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@konfigyr/components/ui/radio-group';
-import { cn } from '@konfigyr/components/utils';
+import { Label } from '@konfigyr/ui/components/label';
+import { RadioGroup, RadioGroupItem } from '@konfigyr/ui/components/radio-group';
+import { cn } from '@konfigyr/ui/lib/utils';
 import { ApplicationTypeInfo } from './application-type';
 
 import type { NamespaceApplicationType } from '@konfigyr/hooks/types';

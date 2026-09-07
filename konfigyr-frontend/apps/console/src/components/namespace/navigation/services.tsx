@@ -16,6 +16,7 @@ import { CreateServiceForm } from '@konfigyr/components/namespace/service/servic
 import { ChangeRequestsLabel, ServiceManifestLabel } from '@konfigyr/components/namespace/service/messages';
 import { ErrorState } from '@konfigyr/components/error';
 import {
+  CloseLabel,
   OverviewLabel,
   ServicesLabel,
   SettingsLabel,
@@ -25,9 +26,9 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@konfigyr/components/ui/collapsible';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/ui/components/collapsible';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -39,15 +40,15 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarSeparator,
-} from '@konfigyr/components/ui/sidebar';
+} from '@konfigyr/ui/components/sidebar';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
   DialogTrigger,
-} from '@konfigyr/components/ui/dialog';
-import { cn } from '@konfigyr/components/utils';
+} from '@konfigyr/ui/components/dialog';
+import { cn } from '@konfigyr/ui/lib/utils';
 import { Link, useMatches, useNavigate } from '@tanstack/react-router';
 
 import type { Namespace, Service } from '@konfigyr/hooks/types';
@@ -257,7 +258,7 @@ function ServiceDialog({ namespace }: { namespace: Namespace }) {
           </SidebarMenuButton>
         }
       />
-      <DialogContent>
+      <DialogContent closeLabel={<CloseLabel />}>
         <DialogTitle>
           {createServiceLabel}
         </DialogTitle>

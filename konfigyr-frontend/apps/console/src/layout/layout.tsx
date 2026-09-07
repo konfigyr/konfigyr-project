@@ -1,7 +1,7 @@
 'use client';
 
 import { cva } from 'class-variance-authority';
-import { useIsMobile } from '@konfigyr/hooks/use-mobile';
+import { useIsMobile } from '@konfigyr/ui/hooks/use-mobile';
 import { AccountDropdown } from '@konfigyr/components/account/dropdown';
 import {
   Sidebar,
@@ -11,8 +11,8 @@ import {
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
-} from '@konfigyr/components/ui/sidebar';
-import { cn } from '@konfigyr/components/utils';
+} from '@konfigyr/ui/components/sidebar';
+import { cn } from '@konfigyr/ui/lib/utils';
 import LogoImage from '@konfigyr/public/logo.svg';
 import { ModuleSidebarMenu } from './module-menu';
 import { NamespaceSidebarMenu } from './namespace-menu';

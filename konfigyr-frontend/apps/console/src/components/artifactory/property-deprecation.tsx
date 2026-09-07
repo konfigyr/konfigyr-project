@@ -1,13 +1,13 @@
 import { FormattedMessage } from 'react-intl';
 import { MessageCircleWarningIcon } from 'lucide-react';
-import { cn } from '@konfigyr/components/utils';
-import { SimpleAlert } from '@konfigyr/components/ui/alert';
-import { Badge } from '@konfigyr/components/ui/badge';
+import { cn } from '@konfigyr/ui/lib/utils';
+import { SimpleAlert } from '@konfigyr/components/alert';
+import { Badge } from '@konfigyr/ui/components/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
+} from '@konfigyr/ui/components/tooltip';
 
 import type { ComponentProps, ReactNode } from 'react';
 import type { PropertyDeprecation } from '@konfigyr/hooks/artifactory/types';

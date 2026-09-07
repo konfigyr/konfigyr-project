@@ -13,8 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@konfigyr/components/ui/alert-dialog';
-import { Button } from '@konfigyr/components/ui/button';
+} from '@konfigyr/ui/components/alert-dialog';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardAction,
@@ -23,8 +23,8 @@ import {
   CardHeader,
   CardIcon,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+} from '@konfigyr/ui/components/card';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 
 import type { Namespace } from '@konfigyr/hooks/types';
 

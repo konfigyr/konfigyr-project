@@ -8,8 +8,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { toast } from '@konfigyr/components/ui/toast';
+} from '@konfigyr/ui/components/card';
+import { toast } from '@konfigyr/ui/components/toast';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import type { Namespace } from '@konfigyr/hooks/types';

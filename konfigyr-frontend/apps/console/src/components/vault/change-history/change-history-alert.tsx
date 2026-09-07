@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl';
 import { Link } from '@tanstack/react-router';
 import { useGetChangeHistory } from '@konfigyr/hooks';
 import { RelativeDate } from '@konfigyr/components/messages';
-import { buttonVariants } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/ui/components/button';
 
 import type { Namespace, Service } from '@konfigyr/hooks/namespace/types';
 import type { ChangeHistory, Profile } from '@konfigyr/hooks/vault/types';

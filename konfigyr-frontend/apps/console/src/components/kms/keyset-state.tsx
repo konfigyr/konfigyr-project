@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { Badge } from '@konfigyr/components/ui/badge';
+import { Badge } from '@konfigyr/ui/components/badge';
 import {
   Select,
   SelectContent,
@@ -8,7 +8,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@konfigyr/components/ui/select';
+} from '@konfigyr/ui/components/select';
 
 import type { ComponentProps, ReactNode } from 'react';
 import type { KeysetState } from '@konfigyr/hooks/types';

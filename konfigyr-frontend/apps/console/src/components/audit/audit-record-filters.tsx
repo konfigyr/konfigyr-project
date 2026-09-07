@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   DatePicker,
   DatePickerCalendar,
   DatePickerTrigger,
-} from '@konfigyr/components/ui/calendar';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+} from '@konfigyr/ui/components/calendar';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import {
   Select,
   SelectContent,
@@ -15,13 +15,13 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@konfigyr/components/ui/select';
+} from '@konfigyr/ui/components/select';
 
 import { useAuditEntityTypeLabel } from './audit-entity-type';
 
 import type { ReactNode } from 'react';
 import type { AuditRecordQuery } from '@konfigyr/hooks/types';
-import type { DateRange } from '@konfigyr/components/ui/calendar';
+import type { DateRange } from '@konfigyr/ui/components/calendar';
 
 const ENTITY_TYPES = [
   'namespace',

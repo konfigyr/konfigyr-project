@@ -9,18 +9,18 @@ import {
   Trash2Icon,
   XCircleIcon,
 } from 'lucide-react';
-import { SimpleAlert } from '@konfigyr/components/ui/alert';
-import { Badge } from '@konfigyr/components/ui/badge';
+import { SimpleAlert } from '@konfigyr/components/alert';
+import { Badge } from '@konfigyr/ui/components/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
+} from '@konfigyr/ui/components/tooltip';
 
 import type { ReactNode } from 'react';
 import type { LucideComponent } from 'lucide-react';
-import type { AlertProps } from '@konfigyr/components/ui/alert';
-import type { BadgeProps } from '@konfigyr/components/ui/badge';
+import type { AlertProps } from '@konfigyr/ui/components/alert';
+import type { BadgeProps } from '@konfigyr/ui/components/badge';
 import type { KeyStatus } from '@konfigyr/hooks/kms/types';
 
 interface KeyStatusAlertConfig {

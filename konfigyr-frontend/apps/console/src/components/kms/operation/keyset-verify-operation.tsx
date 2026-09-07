@@ -4,9 +4,9 @@ import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { useKeysetOperation } from '@konfigyr/hooks';
 import { CancelLabel } from '@konfigyr/components/messages';
-import { Button } from '@konfigyr/components/ui/button';
-import { Alert, AlertTitle } from '@konfigyr/components/ui/alert';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { Button } from '@konfigyr/ui/components/button';
+import { Alert, AlertTitle } from '@konfigyr/ui/components/alert';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import { KeysetVerifySignatureLabel } from '../messages';
 
 import type { Keyset, KeysetVerificationOperationResponse, Namespace } from '@konfigyr/hooks/types';

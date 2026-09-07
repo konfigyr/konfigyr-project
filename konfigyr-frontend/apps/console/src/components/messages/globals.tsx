@@ -204,3 +204,24 @@ export const SearchLabel = () => (
     description="The search label used for search inputs or buttons."
   />
 );
+
+export const PreviousLabel = () => (
+  <FormattedMessage
+    defaultMessage="Previous"
+    description="The label used for the previous page pagination button."
+  />
+);
+
+export const NextLabel = () => (
+  <FormattedMessage
+    defaultMessage="Next"
+    description="The label used for the next page pagination button."
+  />
+);
+
+export const MorePagesLabel = () => (
+  <FormattedMessage
+    defaultMessage="More pages"
+    description="The label used for screen readers to describe the pagination ellipsis."
+  />
+);

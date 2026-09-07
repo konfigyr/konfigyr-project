@@ -3,7 +3,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { useGetAccount } from '@konfigyr/hooks/account/query';
 import request from '@konfigyr/lib/http';
 
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 import type {
   CreateNamespace,
   CreateNamespaceApplication,

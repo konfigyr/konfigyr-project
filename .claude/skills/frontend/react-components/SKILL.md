@@ -8,7 +8,8 @@ description: Component conventions including named exports, TypeScript interface
 ## Component Convention
 
 ```typescript
-// components/ui/button.tsx
+// packages/ui/src/components/button.tsx (shared primitive) or
+// apps/console/src/components/<domain>/ (feature-specific)
 
 // 1. Props interface
 interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
@@ -45,7 +46,7 @@ export function Button({
 
 ```typescript
 import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from './utils'
+import { cn } from '@konfigyr/ui/lib/utils'
 
 const cardVariants = cva('rounded-lg border', {
   variants: {
@@ -131,21 +132,29 @@ export function Component() {
 
 ## Component Organization
 
+Reusable primitives live in a separate workspace package, not inside the app:
+
 ```
-components/
-├── ui/                    # Reusable primitives
+packages/ui/src/
+├── components/            # Reusable primitives (@konfigyr/ui/components/*)
 │   ├── button.tsx
 │   ├── card.tsx
-│   ├── dialog.tsx
-│   └── utils.ts          # cn(), styling helpers
-├── namespace/            # Feature-specific
+│   └── dialog.tsx
+├── lib/utils.ts            # cn() (@konfigyr/ui/lib/utils)
+└── hooks/use-mobile.ts
+
+apps/console/src/components/
+├── namespace/              # Feature-specific
 │   ├── NamespaceCard.tsx
 │   ├── NamespaceForm.tsx
 │   └── NamespaceList.tsx
 ├── vault/
 ├── layout/
-└── error/
+├── error/
+└── inline-edit/            # Stays app-local (i18n-coupled), not a UI primitive
 ```
+
+Markdown rendering/editing (`Editor`, `Contents`/`HtmlContents`) lives in `packages/markdown-editor` (`@konfigyr/markdown-editor`), and shared REST envelope types (`PageResponse`, `CursorResponse`, etc.) live in `packages/hateoas` (`@konfigyr/hateoas`).
 
 ## TypeScript Props
 

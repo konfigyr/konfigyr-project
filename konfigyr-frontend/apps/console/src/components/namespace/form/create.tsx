@@ -4,8 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { FormattedMessage } from 'react-intl';
 import { useCreateNamespace } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
-import { Separator } from '@konfigyr/components/ui/separator';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
+import { Separator } from '@konfigyr/ui/components/separator';
 import { SlugDescription } from './slug';
 import { useValidateSlug } from './validations';
 import {

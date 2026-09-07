@@ -4,7 +4,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '@konfigyr/components/ui/avatar';
+} from '@konfigyr/ui/components/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@konfigyr/components/ui/dropdown-menu';
+} from '@konfigyr/ui/components/dropdown-menu';
 
 import type { Account } from '@konfigyr/hooks/types';
 

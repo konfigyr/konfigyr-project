@@ -21,13 +21,13 @@ import {
   UndoLabel,
 } from '@konfigyr/components/messages';
 import { InlineInputField } from '@konfigyr/components/vault/input';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import { ClipboardIconButton } from '@konfigyr/components/clipboard';
 import {
   InlineEdit,
   InlineEditPlaceholder,
-} from '@konfigyr//components/ui/inline-edit';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+} from '@konfigyr/components/inline-edit';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import {
   Table,
   TableBody,
@@ -35,13 +35,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@konfigyr/components/ui/table';
+} from '@konfigyr/ui/components/table';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@konfigyr/components/ui/tooltip';
-import { cn } from '@konfigyr/components/utils';
+} from '@konfigyr/ui/components/tooltip';
+import { cn } from '@konfigyr/ui/lib/utils';
 import { StateBadge } from './state-badge';
 import {
   PropertyNameLabel,

@@ -5,7 +5,7 @@ import { useGetKeysets, useNamespace } from '@konfigyr/hooks';
 import { CreateKeysetLabel } from '@konfigyr/components/kms/messages';
 import { KeysetFilters } from '@konfigyr/components/kms/keyset-filters';
 import { KeysetTable } from '@konfigyr/components/kms/keyset-table';
-import { buttonVariants } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/ui/components/button';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import type { KeysetSearchQuery } from '@konfigyr/hooks/types';

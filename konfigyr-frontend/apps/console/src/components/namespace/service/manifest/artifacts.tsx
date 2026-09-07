@@ -2,19 +2,19 @@ import { FormattedMessage } from 'react-intl';
 import { GroupIcon } from 'lucide-react';
 import { useServiceManifestQuery } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { Badge } from '@konfigyr/components/ui/badge';
+import { Badge } from '@konfigyr/ui/components/badge';
 import {
   Card,
   CardContent,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 import {
   Item,
   ItemContent,
   ItemGroup,
   ItemTitle,
-} from '@konfigyr/components/ui/item';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/ui/components/item';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import {
   MissingManifestsDescription,
   ServiceManifestsInstructions,

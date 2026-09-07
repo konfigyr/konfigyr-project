@@ -1,7 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
-import { Badge } from '@konfigyr/components/ui/badge';
-import type { BadgeProps } from '@konfigyr/components/ui/badge';
+import { Badge } from '@konfigyr/ui/components/badge';
+import type { BadgeProps } from '@konfigyr/ui/components/badge';
 
 export function NamespaceRoleLabel({ role }: { role: NamespaceRole }) {
   switch (role) {

@@ -12,8 +12,8 @@ import {
   UpdatedAtLabel,
   ViewLabel,
 } from '@konfigyr/components/messages';
-import { Badge } from '@konfigyr/components/ui/badge';
-import { Button } from '@konfigyr/components/ui/button';
+import { Badge } from '@konfigyr/ui/components/badge';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,9 +21,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@konfigyr/components/ui/dropdown-menu';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+} from '@konfigyr/ui/components/dropdown-menu';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import {
   Table,
   TableBody,
@@ -31,7 +31,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@konfigyr/components/ui/table';
+} from '@konfigyr/ui/components/table';
 import { KeysetAlgorithmName } from './keyset-algorithm';
 import { KeysetStateBadge } from './keyset-state';
 import {

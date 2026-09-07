@@ -7,8 +7,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@konfigyr/components/ui/select';
-import { cn } from '@konfigyr/components/utils';
+} from '@konfigyr/ui/components/select';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { InputFieldProps } from './types';
 

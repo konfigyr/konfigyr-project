@@ -1,0 +1,18 @@
+{
+  "name": "@konfigyr/hateoas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typescript": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@konfigyr/config": "*",
+    "eslint": "^10.8.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { AccountNameForm } from '@konfigyr/components/account/name-form';
-import { Toaster } from '@konfigyr/components/ui/toast';
+import { Toaster } from '@konfigyr/ui/components/toast';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { accounts } from '@konfigyr/test/helpers/mocks';
 import { cleanup, waitFor } from '@testing-library/react';

@@ -22,7 +22,7 @@ const rejectTransfer = vi.hoisted(() => vi.fn());
 const cancelTransfer = vi.hoisted(() => vi.fn());
 const errorNotification = vi.hoisted(() => vi.fn());
 
-vi.mock('@konfigyr/components/ui/toast', () => ({ toast }));
+vi.mock('@konfigyr/ui/components/toast', () => ({ toast }));
 vi.mock('@konfigyr/hooks', () => ({
   useAcceptTransfer: () => ({ isPending: false, mutateAsync: acceptTransfer }),
   useRejectTransfer: () => ({ isPending: false, mutateAsync: rejectTransfer }),

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useErrorNotification } from '@konfigyr/components/error';
+import { CloseLabel } from '@konfigyr/components/messages';
 import {
   KeysetDecryptLabel,
   KeysetEncryptLabel,
@@ -13,7 +14,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@konfigyr/components/ui/dialog';
+} from '@konfigyr/ui/components/dialog';
 import { KeysetDecryptOperation } from './keyset-decrypt-operation';
 import { KeysetDestroyOperation } from './keyset-destroy-operation';
 import { KeysetEncryptOperation } from './keyset-encrypt-operation';
@@ -117,7 +118,7 @@ export function KeysetOperationDialog({ namespace, keyset, operation, onClose }:
 
   return (
     <Dialog open={open} onOpenChange={onCloseDialog}>
-      <DialogContent>
+      <DialogContent closeLabel={<CloseLabel />}>
         <DialogHeader>
           <DialogTitle>
             <OperationDialogTitle operation={operation} />

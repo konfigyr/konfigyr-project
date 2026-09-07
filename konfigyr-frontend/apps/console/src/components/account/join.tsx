@@ -1,7 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 import { ArrowRightIcon } from 'lucide-react';
 import { RelativeDate } from '@konfigyr/components/messages';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 
 import type { Invitation } from '@konfigyr/hooks/types';
 

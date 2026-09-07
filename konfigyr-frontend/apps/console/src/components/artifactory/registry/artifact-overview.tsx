@@ -1,7 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 import { PackageIcon } from 'lucide-react';
 import { useIsNamespaceAdmin } from '@konfigyr/hooks';
-import { Card, CardContent, CardFooter, CardHeader } from '@konfigyr/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@konfigyr/ui/components/card';
 import { ArtifactVisibilityBadge } from '@konfigyr/components/artifactory/registry/visibility-badge';
 import { ChangeVisibilityButton } from '@konfigyr/components/artifactory/registry/change-visibility-button';
 import { RepositoryLabel, WebsiteLabel } from '@konfigyr/components/artifactory/registry/messages';

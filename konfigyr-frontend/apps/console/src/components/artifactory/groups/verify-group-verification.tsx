@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@konfigyr/components/ui/alert-dialog';
+} from '@konfigyr/ui/components/alert-dialog';
 import { CancelLabel } from '@konfigyr/components/messages';
 import { TriangleAlert } from 'lucide-react';
 import {
@@ -22,7 +22,7 @@ import {
   ClaimVerifiedWarningMessage,
   VerifyClaimLabel,
 } from '@konfigyr/components/artifactory/groups/messages';
-import { toast } from '@konfigyr/components/ui/toast';
+import { toast } from '@konfigyr/ui/components/toast';
 
 import type { ReactElement } from 'react';
 import type { GroupVerification } from '@konfigyr/hooks/types';

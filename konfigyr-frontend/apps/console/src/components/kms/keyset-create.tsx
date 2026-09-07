@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { FormattedMessage } from 'react-intl';
 import { useCreateKeyset } from '@konfigyr/hooks';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import { KeysetAlgorithmSelect } from './keyset-algorithm';
 import { CreateKeysetLabel } from './messages';
 

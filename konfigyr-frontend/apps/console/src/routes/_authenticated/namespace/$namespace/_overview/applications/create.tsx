@@ -15,7 +15,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 
 import type { CreateNamespaceApplication, NamespaceApplicationType } from '@konfigyr/hooks/types';
 

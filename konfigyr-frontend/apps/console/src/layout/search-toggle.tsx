@@ -4,9 +4,9 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { Search } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
-import { Input } from '@konfigyr/components/ui/input';
-import { Kbd, KbdGroup } from '@konfigyr/components/ui/kbd';
-import { cn } from '@konfigyr/components/utils';
+import { Input } from '@konfigyr/ui/components/input';
+import { Kbd, KbdGroup } from '@konfigyr/ui/components/kbd';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { ComponentProps } from 'react';
 

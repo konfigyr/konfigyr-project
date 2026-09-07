@@ -1,4 +1,4 @@
-import { cn } from '@konfigyr/components/utils';
+import { cn } from '@konfigyr/ui/lib/utils';
 import { MissingPropertyDescriptionLabel } from './messages';
 
 import type { ComponentProps } from 'react';

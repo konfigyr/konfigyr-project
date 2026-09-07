@@ -7,7 +7,7 @@ import {
   resolvedTransfer,
 } from '../../mocks/transfers';
 
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 import type { ArtifactOwnershipTransfer } from '@konfigyr/hooks/transfers/types';
 
 const transfersById = new Map<string, ArtifactOwnershipTransfer>([

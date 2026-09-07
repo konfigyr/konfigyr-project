@@ -2,7 +2,7 @@ import { FormattedDate, FormattedMessage, useIntl } from 'react-intl';
 import { TagIcon } from 'lucide-react';
 import { useSearchArtifactProperties } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
 import { ArtifactVisibilityBadge } from '@konfigyr/components/artifactory/registry/visibility-badge';
 import { PropertyTable } from '@konfigyr/components/artifactory/search/property-table';
 import { PropertySearchField } from '@konfigyr/components/artifactory/search/property-search-field';

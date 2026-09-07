@@ -4,7 +4,7 @@ import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { artifacts } from '@konfigyr/test/helpers/mocks';
 import { VersionTable } from '@konfigyr/components/artifactory/registry/version-table';
 
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 import type { VersionedArtifact } from '@konfigyr/hooks/artifactory/types';
 
 function page(data: Array<VersionedArtifact>): PageResponse<VersionedArtifact> {

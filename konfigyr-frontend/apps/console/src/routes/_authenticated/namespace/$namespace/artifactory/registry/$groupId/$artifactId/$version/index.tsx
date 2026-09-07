@@ -4,8 +4,8 @@ import { FormattedMessage } from 'react-intl';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { useGetArtifactVersion, useNamespace } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
-import { BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@konfigyr/components/ui/breadcrumb';
-import { EmptyState } from '@konfigyr/components/ui/empty';
+import { BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@konfigyr/ui/components/breadcrumb';
+import { EmptyState } from '@konfigyr/ui/components/empty';
 import { RegistryBreadcrumbs } from '@konfigyr/components/artifactory/registry/breadcrumbs';
 import { VersionDetail } from '@konfigyr/components/artifactory/registry/version-detail';
 

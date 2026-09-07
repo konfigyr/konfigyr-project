@@ -15,8 +15,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@konfigyr/components/ui/select';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+} from '@konfigyr/ui/components/select';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import { ChangeRequestStateLabel } from './messages';
 
 import type { ChangeRequestQuery, Namespace, Service } from '@konfigyr/hooks/types';

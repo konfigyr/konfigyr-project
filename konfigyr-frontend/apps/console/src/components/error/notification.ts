@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback } from 'react';
-import { toast } from '@konfigyr/components/ui/toast';
+import { toast } from '@konfigyr/ui/components/toast';
 import { createLogger } from '@konfigyr/logger';
 import { normalizeError } from './normalize';
 
-import type { ToastManagerAddOptions } from '@konfigyr/components/ui/toast';
+import type { ToastManagerAddOptions } from '@konfigyr/ui/components/toast';
 
 const logger = createLogger('components/error/notification');
 

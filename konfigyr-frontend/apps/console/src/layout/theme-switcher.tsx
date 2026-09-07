@@ -5,7 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import { useTheme } from 'next-themes';
 import { MoonIcon, SunIcon } from 'lucide-react';
 
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 
 export function ThemeSwitcher() {
   const { setTheme, resolvedTheme } = useTheme();

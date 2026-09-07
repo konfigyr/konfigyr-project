@@ -1,7 +1,7 @@
 import { Bot, KeyRound, Workflow } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
-import { Badge } from '@konfigyr/components/ui/badge';
-import { cn } from '@konfigyr/components/utils';
+import { Badge } from '@konfigyr/ui/components/badge';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { ComponentProps, ReactNode } from 'react';
 import type { LucideComponent } from 'lucide-react';

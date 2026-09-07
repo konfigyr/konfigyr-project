@@ -9,7 +9,7 @@ import {
   verificationChallenge,
 } from '../../mocks/group-verifications';
 
-import type { CollectionResponse, PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { CollectionResponse, PageResponse } from '@konfigyr/hateoas';
 import type { GroupVerification, VerificationChallenge, VerificationMethod } from '@konfigyr/hooks/groups/types';
 
 const list = http.get('http://localhost/api/namespaces/:slug/group-verifications', ({ params, request }) => {

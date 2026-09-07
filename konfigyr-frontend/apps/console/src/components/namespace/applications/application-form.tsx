@@ -4,7 +4,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import { createFormHook, createFormHookContexts } from '@tanstack/react-form';
 import { useErrorNotification } from '@konfigyr/components/error';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Field,
   FieldDescription,
@@ -12,9 +12,9 @@ import {
   FieldGroup,
   FieldLegend,
   FieldSet,
-} from '@konfigyr/components/ui/field';
-import { Input } from '@konfigyr/components/ui/input';
-import { Label } from '@konfigyr/components/ui/label';
+} from '@konfigyr/ui/components/field';
+import { Input } from '@konfigyr/ui/components/input';
+import { Label } from '@konfigyr/ui/components/label';
 import {
   FormControl,
   FormInput,
@@ -23,7 +23,7 @@ import {
   FormTextarea,
   SubmitButton,
   useFormSubmit,
-} from '@konfigyr/components/ui/form';
+} from '@konfigyr/ui/components/form';
 import {
   CreateNamespaceApplicationLabel,
   UpdateNamespaceApplicationLabel,

@@ -5,7 +5,7 @@ import { useAccount } from '@konfigyr/hooks/account/context';
 import { namespaceKeys } from '@konfigyr/hooks/namespace/query';
 import { NamespaceRole } from './types';
 
-import type { PageResponse, Pageable } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse, Pageable } from '@konfigyr/hateoas';
 import type { Namespace } from '@konfigyr/hooks/namespace/types';
 import type { Invitation, Member } from './types';
 

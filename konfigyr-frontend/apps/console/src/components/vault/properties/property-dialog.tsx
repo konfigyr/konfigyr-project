@@ -25,16 +25,17 @@ import { PropertyDefaultValue } from '@konfigyr/components/artifactory/property-
 import { PropertyDeprecation, PropertyDeprecationAlert } from '@konfigyr/components/artifactory/property-deprecation';
 import { PropertyDescription } from '@konfigyr/components/artifactory/property-description';
 import { PropertySchema } from '@konfigyr/components/artifactory/property-schema';
+import { CloseLabel } from '@konfigyr/components/messages';
 import { InputField } from '@konfigyr/components/vault/input';
 import { usePropertyValidation } from '@konfigyr/hooks/vault/property-validation';
-import { Button } from '@konfigyr/components/ui/button';
+import { Button } from '@konfigyr/ui/components/button';
 import {
   Combobox,
   ComboboxContent,
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-} from '@konfigyr/components/ui/combobox';
+} from '@konfigyr/ui/components/combobox';
 import {
   Dialog,
   DialogContent,
@@ -43,16 +44,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@konfigyr/components/ui/dialog';
+} from '@konfigyr/ui/components/dialog';
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@konfigyr/components/ui/field';
-import { Kbd, KbdGroup } from '@konfigyr/components/ui/kbd';
-import { Label } from '@konfigyr/components/ui/label';
+} from '@konfigyr/ui/components/field';
+import { Kbd, KbdGroup } from '@konfigyr/ui/components/kbd';
+import { Label } from '@konfigyr/ui/components/label';
 import {
   AddPropertyLabel,
   PropertyNameLabel,
@@ -465,7 +466,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd, debounceMs = 200 
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-140">
+      <DialogContent className="sm:max-w-140" closeLabel={<CloseLabel />}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <ListPlusIcon size="1rem" data-icon="icon-start" />
@@ -531,7 +532,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd, debounceMs = 200 
           )}
         </FieldGroup>
 
-        <DialogFooter showCloseButton={true}>
+        <DialogFooter showCloseButton={true} closeLabel={<CloseLabel />}>
           <Button
             disabled={!canAdd || !isValid}
             onClick={handleSubmit}

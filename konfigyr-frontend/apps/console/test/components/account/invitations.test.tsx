@@ -4,7 +4,7 @@ import { cleanup, waitFor, within } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { AccountContext } from '@konfigyr/hooks';
 import { AccountInvitations } from '@konfigyr/components/account/invitations';
-import { Toaster } from '@konfigyr/components/ui/toast';
+import { Toaster } from '@konfigyr/ui/components/toast';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
 import { renderComponentWithRouter } from '@konfigyr/test/helpers/router';
 import { accounts, invitations, namespaces } from '@konfigyr/test/helpers/mocks';

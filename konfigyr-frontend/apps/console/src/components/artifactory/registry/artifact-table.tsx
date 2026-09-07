@@ -3,11 +3,11 @@ import { FormattedDate } from 'react-intl';
 import { Link } from '@tanstack/react-router';
 import { ActionsLabel, UpdatedAtLabel, ViewLabel } from '@konfigyr/components/messages';
 import { ErrorState } from '@konfigyr/components/error';
-import { buttonVariants } from '@konfigyr/components/ui/button';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@konfigyr/components/ui/table';
+import { buttonVariants } from '@konfigyr/ui/components/button';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { PageResponsePagination } from '@konfigyr/components/pagination';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@konfigyr/ui/components/table';
 import { ArtifactVisibilityBadge } from '@konfigyr/components/artifactory/registry/visibility-badge';
 import {
   NoArtifactsFoundDescription,
@@ -16,7 +16,7 @@ import {
 } from '@konfigyr/components/artifactory/registry/messages';
 
 import type { ArtifactDefinition } from '@konfigyr/hooks/artifactory/types';
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 
 function ArtifactRow({ namespace, artifact }: { namespace: string; artifact: ArtifactDefinition }) {
   return (

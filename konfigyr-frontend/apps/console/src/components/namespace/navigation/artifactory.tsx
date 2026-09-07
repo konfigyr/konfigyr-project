@@ -11,7 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@konfigyr/components/ui/sidebar';
+} from '@konfigyr/ui/components/sidebar';
 import { Link } from '@tanstack/react-router';
 import { ArtifactoryModuleLabel } from '@konfigyr/components/messages/modules';
 import { GroupClaimsLabel } from '@konfigyr/components/artifactory/groups/messages';

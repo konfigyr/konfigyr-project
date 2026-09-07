@@ -13,10 +13,10 @@ import {
   CardHeader,
   CardIcon,
   CardTitle,
-} from '@konfigyr/components/ui/card';
-import { useFieldContext, useForm, useFormSubmit } from '@konfigyr/components/ui/form';
-import { toast } from '@konfigyr/components/ui/toast';
-import { cn } from '@konfigyr/components/utils';
+} from '@konfigyr/ui/components/card';
+import { useFieldContext, useForm, useFormSubmit } from '@konfigyr/ui/components/form';
+import { toast } from '@konfigyr/ui/components/toast';
+import { cn } from '@konfigyr/ui/lib/utils';
 import { NamespaceSlugDescription } from './messages';
 import { useValidateSlug } from './validations';
 

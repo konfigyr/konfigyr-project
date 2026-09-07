@@ -3,11 +3,11 @@ import { ActivityIcon, TrendingDownIcon } from 'lucide-react';
 import { useGetAuditRecords } from '@konfigyr/hooks';
 import { ErrorState } from '@konfigyr/components/error';
 import { RelativeDate } from '@konfigyr/components/messages';
-import { Card, CardHeader, CardIcon, CardTitle } from '@konfigyr/components/ui/card';
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@konfigyr/components/ui/item';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { cn } from '@konfigyr/components/utils';
+import { Card, CardHeader, CardIcon, CardTitle } from '@konfigyr/ui/components/card';
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@konfigyr/ui/components/item';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { ComponentProps } from 'react';
 import type { AuditRecord, AuditRecordQuery, Namespace } from '@konfigyr/hooks/types';

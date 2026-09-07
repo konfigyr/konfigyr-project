@@ -1,4 +1,4 @@
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import { PropertySearchField } from './property-search-field';
 
 import type { PropertySearchQuery } from '@konfigyr/hooks/types';

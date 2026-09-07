@@ -6,13 +6,13 @@ import {
   KonfigyrTitleMessage,
 } from '@konfigyr/components/messages';
 import { LayoutContent } from '@konfigyr/layout';
-import { buttonVariants } from '@konfigyr/components/ui/button';
+import { buttonVariants } from '@konfigyr/ui/components/button';
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
-} from '@konfigyr/components/ui/card';
+} from '@konfigyr/ui/components/card';
 
 import type { ComponentProps, EventHandler, MouseEvent } from 'react';
 

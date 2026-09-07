@@ -9,8 +9,8 @@ import {
   FieldLegend,
   FieldSeparator,
   FieldSet,
-} from '@konfigyr/components/ui/field';
-import { useForm, useFormSubmit } from '@konfigyr/components/ui/form';
+} from '@konfigyr/ui/components/field';
+import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import { PolicyPicker } from './policy-picker';
 import {
   ProfileDescriptionHelpText,

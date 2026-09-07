@@ -8,12 +8,12 @@ import {
   ViewLabel,
 } from '@konfigyr/components/messages';
 import { ErrorState } from '@konfigyr/components/error';
-import { buttonVariants } from '@konfigyr/components/ui/button';
-import { Card, CardContent } from '@konfigyr/components/ui/card';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
-import { Skeleton } from '@konfigyr/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@konfigyr/components/ui/table';
+import { buttonVariants } from '@konfigyr/ui/components/button';
+import { Card, CardContent } from '@konfigyr/ui/components/card';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { PageResponsePagination } from '@konfigyr/components/pagination';
+import { Skeleton } from '@konfigyr/ui/components/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@konfigyr/ui/components/table';
 import { GroupIdLabel, StateLabel } from '@konfigyr/components/artifactory/transfers/messages';
 import { TransferStateBadge } from '@konfigyr/components/artifactory/transfers/transfer-state-badge';
 

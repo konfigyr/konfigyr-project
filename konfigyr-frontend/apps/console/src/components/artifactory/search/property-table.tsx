@@ -1,12 +1,12 @@
 import { SearchIcon } from 'lucide-react';
-import { EmptyState } from '@konfigyr/components/ui/empty';
-import { Card, CardContent } from '@konfigyr/components/ui/card';
-import { ItemGroup } from '@konfigyr/components/ui/item';
-import { PageResponsePagination } from '@konfigyr/components/ui/pagination';
+import { EmptyState } from '@konfigyr/ui/components/empty';
+import { Card, CardContent } from '@konfigyr/ui/components/card';
+import { ItemGroup } from '@konfigyr/ui/components/item';
+import { PageResponsePagination } from '@konfigyr/components/pagination';
 import { NoMatchingPropertiesTitle } from './messages';
 import { PropertyItem } from './property-item';
 
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 import type { PropertyDefinition } from '@konfigyr/hooks/artifactory/types';
 import type { PropertyVariant } from './property-item';
 

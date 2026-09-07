@@ -5,7 +5,7 @@ import { artifacts } from '@konfigyr/test/helpers/mocks';
 import { ArtifactTable } from '@konfigyr/components/artifactory/registry/artifact-table';
 
 import type { ArtifactDefinition } from '@konfigyr/hooks/artifactory/types';
-import type { PageResponse } from '@konfigyr/hooks/hateoas/types';
+import type { PageResponse } from '@konfigyr/hateoas';
 
 function page(data: Array<ArtifactDefinition>): PageResponse<ArtifactDefinition> {
   return { data, metadata: { number: 1, size: 20, total: data.length, pages: 1 } };

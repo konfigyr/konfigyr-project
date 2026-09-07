@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { cn } from '@konfigyr/components/utils';
+import { cn } from '@konfigyr/ui/lib/utils';
 
 import type { ComponentProps } from 'react';
 
