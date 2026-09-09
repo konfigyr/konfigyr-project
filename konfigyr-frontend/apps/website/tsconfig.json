@@ -1,0 +1,11 @@
+{
+  "extends": "@konfigyr/config/tsconfig.base.json",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "paths": {
+      "@konfigyr/*": ["./src/*"],
+      "@konfigyr/public/*": ["./public/*"],
+      "@konfigyr/test/*": ["./test/*"]
+    }
+  }
+}
