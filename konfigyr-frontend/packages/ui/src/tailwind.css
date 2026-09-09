@@ -1,0 +1,8 @@
+/*
+  Tailwind source scanning for @konfigyr/ui.
+
+  `@source` paths are resolved relative to the file they're declared in, so
+  this lives here instead of being repeated as a `../../../packages/ui/src/**`
+  glob in every consuming app's stylesheet.
+*/
+@source "./**/*.{ts,tsx}";

@@ -6,7 +6,9 @@
   "exports": {
     "./lib/utils": "./src/lib/utils.ts",
     "./hooks/*": "./src/hooks/*.ts",
-    "./components/*": "./src/components/*.tsx"
+    "./components/*": "./src/components/*.tsx",
+    "./theme.css": "./src/theme.css",
+    "./tailwind.css": "./src/tailwind.css"
   },
   "scripts": {
     "lint": "eslint .",

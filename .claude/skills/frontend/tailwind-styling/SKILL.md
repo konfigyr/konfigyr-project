@@ -1,120 +1,158 @@
 ---
 name: tailwind-styling
-description: Tailwind CSS conventions, design tokens via CSS custom properties, dark mode support, responsive design, and styling best practices. Use when styling components, updating design tokens, or implementing dark mode.
+description: Tailwind CSS v4 conventions - CSS-first theme config via @theme, design tokens as CSS custom properties, @source for monorepo package scanning, dark mode, and styling best practices. Use when styling components, updating design tokens, or implementing dark mode.
 ---
 
 # Tailwind Styling
 
-## Design Tokens (CSS Variables)
+This project is on **Tailwind CSS v4** — CSS-first config, no `tailwind.config.ts`. Each app (`apps/console`, `apps/website`) has a single `src/styles.css` entry point; the shared design system lives in `packages/ui`.
 
-Define all colors and spacing in `src/styles.css`:
+## Entry Stylesheet
 
 ```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* apps/console/src/styles.css */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/rubik";
+
+@import "@konfigyr/ui/tailwind.css";
+@import "@konfigyr/ui/theme.css";
+
+/* app-specific tokens/overrides go after the shared imports */
+```
+
+`@import "tailwindcss"` replaces the old `@tailwind base/components/utilities` directives. There is no `tailwind.config.ts` — theme values are registered directly in CSS via `@theme`.
+
+## Design Tokens
+
+Semantic tokens are raw HSL triplets in `:root`/`.dark`, then mapped into Tailwind's color namespace with `@theme inline` so they become real utilities (`bg-primary`, `text-muted-foreground`, ...):
+
+```css
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-border: hsl(var(--border));
+  --radius-md: calc(var(--radius) - 4px);
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 212 30% 12%;
+  --primary: 208 83% 42%;
+  --primary-foreground: 0 0% 100%;
+  --border: 210 4% 89%;
+  --radius: 12px;
+}
+
+.dark {
+  --background: 0 0% 0%;
+  --foreground: 212 4% 95%;
+  --border: 212 7% 39%;
+}
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3%;
-    --primary: 0 84% 60%;
-    --primary-foreground: 0 85% 97%;
-    --secondary: 217 33% 17%;
-    --accent: 142 71% 45%;
-    --destructive: 0 84% 60%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --border: 0 0% 89%;
-    --input: 0 0% 89%;
-    --ring: 0 84% 60%;
-    --radius-sm: 0.25rem;
-    --radius-md: 0.375rem;
-    --radius-lg: 0.5rem;
-  }
-
-  .dark {
-    --background: 0 0% 3%;
-    --foreground: 0 0% 98%;
-    --primary: 0 84% 60%;
-    --secondary: 217 100% 87%;
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 63%;
-    --border: 0 0% 14%;
-    --input: 0 0% 20%;
-  }
-
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply font-sans antialiased bg-background text-foreground;
   }
 }
 ```
 
+Multiple `@theme` blocks across imported files merge into one global theme — this is how the shared `packages/ui/src/theme.css` and an app's own `styles.css` can each contribute `@theme inline` entries (e.g. console adds `--color-sidebar`, `--color-chart-1` on top of the shared theme).
+
 ## Using Design Tokens
 
 ```typescript
-// ✓ Correct: Use token name
+// ✓ Correct: use the token utility
 <div className="bg-primary text-primary-foreground" />
 
-// ✗ Wrong: Hardcoded color
+// ✗ Wrong: hardcoded color
 <div className="bg-blue-500 text-white" />
 
-// ✓ Correct: Dark mode
+// ✓ Reference a raw CSS variable directly when there's no registered utility
+// (e.g. interaction-state tokens like --btn-primary-hover-bg)
+<button className="bg-primary hover:bg-(--btn-primary-hover-bg)" />
+
+// ✓ Dark mode via the custom variant
 <div className="bg-primary dark:bg-secondary" />
 ```
 
-## Tailwind Config
+## Monorepo: Sharing Theme & Sources Across Packages
 
-```javascript
-// tailwind.config.ts
-import type { Config } from 'tailwindcss'
+`@source` paths are resolved **relative to the file that declares them**, not the importing file. So instead of an app reaching across the workspace with a relative glob (`@source "../../../packages/ui/src/**/*.{ts,tsx}";`), each package that ships Tailwind-class-bearing components owns its own `@source` declaration and exports it:
 
-export default {
-  content: ['./src/**/*.{ts,tsx}'],
-  theme: {
-    extend: {
-      colors: {
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: 'hsl(var(--primary))',
-        'primary-foreground': 'hsl(var(--primary-foreground))',
-        secondary: 'hsl(var(--secondary))',
-        accent: 'hsl(var(--accent))',
-        muted: 'hsl(var(--muted))',
-        'muted-foreground': 'hsl(var(--muted-foreground))',
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        destructive: 'hsl(var(--destructive))',
+```css
+/* packages/ui/src/tailwind.css */
+@source "./**/*.{ts,tsx}";
+```
+
+```json
+// packages/ui/package.json
+"exports": {
+  "./tailwind.css": "./src/tailwind.css",
+  "./theme.css": "./src/theme.css"
+}
+```
+
+Consuming apps just import it:
+
+```css
+@import "@konfigyr/ui/tailwind.css";
+```
+
+Do this for **every** workspace package whose components are consumed outside their own package and carry Tailwind classes (e.g. `packages/markdown-editor/src/tailwind.css`, exported and imported by `console` the same way). A package that ships components but never exports its `@source` file will silently lose generated classes for anyone consuming it outside its own directory tree.
+
+The shared design tokens follow the same pattern: `packages/ui/src/theme.css` holds the `@custom-variant`, `@theme inline` mapping, `:root`/`.dark` palette, and base layer shared by every app. Apps `@import` it and then layer only their own additions (fonts, extra chart/sidebar tokens, etc.) after it — see `apps/console/src/styles.css` vs `apps/website/src/styles.css` for a worked example of shared-theme + app-specific-extension.
+
+## Component Composition
+
+```typescript
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@konfigyr/ui/lib/utils';
+
+export const buttonVariants = cva(
+  'inline-flex items-center justify-center rounded-full text-sm font-bold',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary text-primary-foreground hover:bg-(--btn-primary-hover-bg)',
+        outline: 'border-primary bg-transparent text-primary',
       },
-      borderRadius: {
-        sm: 'var(--radius-sm)',
-        md: 'var(--radius-md)',
-        lg: 'var(--radius-lg)',
+      size: {
+        default: 'h-9 px-6',
+        sm: 'h-7 px-4 text-xs',
       },
     },
+    defaultVariants: { variant: 'default', size: 'default' },
   },
-} satisfies Config
+);
+
+export function Button({ className, variant, size, ...props }: ButtonProps) {
+  return (
+    <button
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  );
+}
 ```
+
+`cn()` (from `@konfigyr/ui/lib/utils`) wraps `clsx` + `tailwind-merge` — always run classes through it when a `className` prop can be overridden by a caller.
 
 ## Responsive Design
 
 ```typescript
-// Mobile-first approach
-<div className={cn(
-  // Mobile: small padding
-  'p-3',
-  // Tablet and up
-  'sm:p-4',
-  // Desktop and up
-  'md:p-6',
-  'lg:p-8',
-)}>
-  Content
-</div>
+// Mobile-first
+<div className="p-3 sm:p-4 md:p-6 lg:p-8">Content</div>
 
 // Responsive grid
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -122,104 +160,44 @@ export default {
 </div>
 ```
 
-## Dark Mode
-
-```typescript
-// ✓ Correct: Explicit dark variants
-<div className={cn(
-  'bg-white text-black',
-  'dark:bg-slate-900 dark:text-white',
-)} />
-
-// Component with dark support
-export function Button() {
-  return (
-    <button className={cn(
-      'bg-primary text-primary-foreground',
-      'dark:bg-primary dark:text-primary-foreground',  // Can be same
-      'hover:opacity-90',
-      'dark:hover:opacity-80',
-    )} />
-  )
-}
-```
-
 ## Typography
 
-Font stack in CSS:
+Font tokens are plain CSS variables set in `:root`, referenced from `@theme` / base-layer rules — no `fontFamily` config block:
 
 ```css
+:root {
+  --font-heading: "Rubik", sans-serif;
+  --font-sans: "Inter Variable", sans-serif;
+  --font-mono: "JetBrains Mono", monospace; /* console only */
+}
+
 @layer base {
   body {
-    @apply font-sans;
+    @apply font-sans antialiased;
   }
 
-  h1, h2, h3 {
-    @apply font-heading;
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading), sans-serif;
   }
-
-  code {
-    @apply font-mono;
-  }
-}
-```
-
-Config:
-
-```javascript
-theme: {
-  extend: {
-    fontFamily: {
-      sans: ['Geist', 'system-ui', 'sans-serif'],
-      heading: ['Rubik', 'sans-serif'],
-      mono: ['JetBrains Mono', 'monospace'],
-    },
-  },
 }
 ```
 
 ## Focus & Keyboard Navigation
 
 ```typescript
-// ✓ Good: Visible focus
-<button className={cn(
-  'px-3 py-2 rounded',
-  'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-  'dark:focus:ring-offset-slate-950',
-)} />
+// ✓ Good: visible focus
+<button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
 
-// ✗ Bad: No focus styling
+// ✗ Bad: no focus styling
 <button className="px-3 py-2 rounded" />
-```
-
-## Component Composition
-
-```typescript
-// Compose with cn()
-export function Card({ className, ...props }) {
-  return (
-    <div
-      className={cn(
-        'rounded-lg border bg-card p-6 text-card-foreground',
-        'shadow-sm hover:shadow-md transition-shadow',
-        'dark:border-slate-700',
-        className,  // Allows overrides
-      )}
-      {...props}
-    />
-  )
-}
 ```
 
 ## Verification Checklist
 
-- [ ] All colors use design tokens (CSS variables)
-- [ ] Dark mode variants present
-- [ ] Responsive design tested (sm, md, lg breakpoints)
+- [ ] All colors use design tokens (`bg-primary`, not `bg-blue-500`)
+- [ ] Dark mode variants present where the app supports dark mode
+- [ ] New workspace package with Tailwind-class components exports its own `@source` file
+- [ ] Responsive design tested (`sm`, `md`, `lg` breakpoints)
 - [ ] Focus states visible for keyboard navigation
-- [ ] No hardcoded colors in component code
-- [ ] Font stack defined
-- [ ] Spacing consistent (use Tailwind scale)
+- [ ] `cn()` used wherever a component accepts `className`
 - [ ] Contrast ratios meet WCAG AA
-- [ ] Print styles considered if needed
-
