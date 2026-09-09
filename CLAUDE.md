@@ -104,6 +104,9 @@ Verification:
 **You need project architecture context?**
 → Load skill: `/skill project-overview`
 
+**You need marketing/website content (positioning, copy, site structure)?**
+→ Load skills under `.claude/skills/marketing/` (see section 8)
+
 ---
 
 ## 4. Backend Modules & Agents
@@ -207,10 +210,24 @@ When making changes that affect documented architecture, update the relevant ski
 | Domain entity design, value objects, aggregates                  | `entity-modeling` |
 | Namespace roles, membership model                                | `project-overview` |
 | New/changed MCP tool, resource, or annotation                    | `project-overview`, `mcp-server` |
+| Product positioning, messaging, or target audience               | `product-marketing` |
 
 ---
 
-## 8. Getting Started
+## 8. Marketing Skills
+
+| Skill | When to Use |
+|-------|-----------|
+| `product-marketing` | Establishing or updating `.claude/product-marketing.md` — the shared context doc (audience, positioning, messaging, voice) every other marketing skill reads first |
+| `copywriting` | Writing or rewriting page copy (homepage, landing, pricing, feature, about) |
+| `site-architecture` | Planning page hierarchy, navigation, URL structure |
+| `customer-research` | Synthesizing ICP/persona research from interviews, reviews, community sources |
+
+Run `product-marketing` first on a new marketing task; the others check for `.claude/product-marketing.md` automatically.
+
+---
+
+## 9. Getting Started
 
 **First time here?**
 
