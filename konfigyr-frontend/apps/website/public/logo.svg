@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-label="Konfigyr">
+    <title>Konfigyr</title>
+    <g style="isolation:isolate">
+        <path fill="#71aadc" stroke="#71aadc" stroke-linejoin="round" stroke-width="9" d="M14 6h68L14 94z" opacity=".9" style="mix-blend-mode:multiply"/>
+        <path fill="#1271c5" stroke="#1271c5" stroke-linejoin="round" stroke-width="9" d="M14 94h68L14 6z" opacity=".85" style="mix-blend-mode:multiply"/>
+    </g>
+</svg>
