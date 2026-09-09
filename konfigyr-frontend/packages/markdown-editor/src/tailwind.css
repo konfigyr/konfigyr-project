@@ -1,0 +1,8 @@
+/*
+  Tailwind source scanning for @konfigyr/markdown-editor.
+
+  `@source` paths are resolved relative to the file they're declared in, so
+  this lives here instead of being repeated in every consuming app's
+  stylesheet.
+*/
+@source "./**/*.{ts,tsx}";
