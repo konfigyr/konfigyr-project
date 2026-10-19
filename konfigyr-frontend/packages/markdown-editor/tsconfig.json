@@ -2,6 +2,6 @@
   "extends": "@konfigyr/config/tsconfig.base.json",
   "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx"],
   "compilerOptions": {
-    "types": ["@testing-library/jest-dom"]
+    "types": ["@konfigyr/vitest-config/jest-dom"]
   }
 }
