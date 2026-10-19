@@ -28,6 +28,7 @@ describe('routes | account | handler', () => {
     expect(response.status).toBe(204);
     expect(response.text()).resolves.toBe('');
 
-    expect(authentication.authenticated).toBe(false);
+    const reloaded = await Authentication.get();
+    expect(reloaded.authenticated).toBe(false);
   });
 });

@@ -1,8 +1,10 @@
+// @vitest-environment node
+
 import { HttpResponse, http } from 'msw';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { proxy } from '@konfigyr/lib/api-proxy';
 import { server } from '@konfigyr/test/helpers/server';
-import { authenticationSession, updateSessionAccessToken } from '@konfigyr/test/helpers/session';
+import { readSessionData, updateSessionAccessToken } from '@konfigyr/test/helpers/session';
 
 describe('services | api-proxy', () => {
   afterEach(() => {
@@ -25,7 +27,7 @@ describe('services | api-proxy', () => {
 
     expect(response.status).toStrictEqual(200);
     expect(await response.json()).toMatchObject({ id: 'refresh-resource-id' });
-    expect(authenticationSession.data.token?.accessToken).toStrictEqual('access-token-jwt');
+    expect((await readSessionData()).token?.accessToken).toStrictEqual('access-token-jwt');
   });
 
   test('should respond with 401 when access token is expired and the token refresh fails', async () => {
@@ -45,7 +47,7 @@ describe('services | api-proxy', () => {
       title: 'Session expired',
       detail: 'Your session has expired. Please log in again.',
     });
-    expect(authenticationSession.data.token).toBeUndefined();
+    expect((await readSessionData()).token).toBeUndefined();
   });
 
   test('should respond with 401 status code when no access token is present in the session', async () => {
