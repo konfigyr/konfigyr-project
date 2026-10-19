@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest';
+import { renderToString } from 'react-dom/server';
 import { useLocalStorage } from '@konfigyr/hooks/local-storage';
 import { act, renderHook } from '@testing-library/react';
 
@@ -83,5 +84,40 @@ describe('hooks | local-storage', () => {
 
     act(() => externalValueUpdate(null));
     expect(state.current[0]).toBe('default-value');
+  });
+
+  test('should apply consecutive updates on top of each other', () => {
+    const { result: state } = renderHook(() => useLocalStorage(
+      'test-key', 'default-value',
+    ));
+
+    const [_, setValue] = state.current;
+
+    act(() => {
+      setValue(previous => `${previous}-first`);
+      setValue(previous => `${previous}-second`);
+    });
+
+    expect(state.current[0]).toBe('default-value-first-second');
+  });
+
+  test('should keep the same dispatch function when state changes', () => {
+    const { result: state } = renderHook(() => useLocalStorage(
+      'test-key', 'default-value',
+    ));
+
+    const [_, setValue] = state.current;
+
+    act(() => setValue('new-value'));
+    expect(state.current[1]).toBe(setValue);
+  });
+
+  test('should render the initial value on the server', () => {
+    const Component = () => {
+      const [value] = useLocalStorage('test-key', 'default-value');
+      return <span>{value}</span>;
+    };
+
+    expect(renderToString(<Component />)).toBe('<span>default-value</span>');
   });
 });
