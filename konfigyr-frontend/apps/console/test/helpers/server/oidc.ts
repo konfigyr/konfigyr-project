@@ -1,5 +1,5 @@
 import * as jose from 'jose';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 
 // generate the signing key for the JWT tokens
 const key = await jose.generateKeyPair('RS256');

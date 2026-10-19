@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { janeDoe, johnDoe } from '../mocks/account';
 
 const retrieve = http.get('http://localhost/api/account', () => {

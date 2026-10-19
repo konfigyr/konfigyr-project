@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { accounts, namespaces } from '../mocks';
 
 const list = http.get('http://localhost/api/namespaces', () => {

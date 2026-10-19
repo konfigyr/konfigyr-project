@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { applications, namespaces } from '../../mocks';
 
 const create = http.post('http://localhost/api/namespaces/:slug/applications', async ({ request }) => {

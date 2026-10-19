@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 
 const assertBearerToken = (request: Request) => {
   const authorizationHeader = request.headers.get('authorization');

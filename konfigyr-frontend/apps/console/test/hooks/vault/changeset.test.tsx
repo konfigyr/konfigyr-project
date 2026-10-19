@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { createTestQueryClient } from '@konfigyr/test/helpers/query-client';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
 import { server } from '@konfigyr/test/helpers/server';

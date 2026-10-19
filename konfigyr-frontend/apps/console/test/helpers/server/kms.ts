@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { destroyedKeyset, encryptingKeyset, signingKeyset } from '../mocks/kms';
 import { johnDoe, konfigyr } from '../mocks/namespace';
 
