@@ -1,11 +1,14 @@
+import { useMemo } from 'react';
 import { keepPreviousData, queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getServiceCatalogQuery } from '@konfigyr/hooks/namespace/query';
+import { useServiceCatalogQuery } from '@konfigyr/hooks/namespace/query';
+import { useChangesetStorage } from '@konfigyr/hooks/vault/changeset-storage';
 
 import request from '@konfigyr/lib/http';
 import { resolveJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
 import { ConfigurationPropertyState, Operation } from '@konfigyr/hooks/vault/types';
 
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
+import type { ChangesetStorageState } from '@konfigyr/hooks/vault/changeset-storage';
 import type { CollectionResponse, CursorResponse } from '@konfigyr/hateoas';
 import type { Namespace, Service, ServiceCatalog } from '@konfigyr/hooks/namespace/types';
 import type {
@@ -35,6 +38,16 @@ export const vaultKeys = {
   getChangeHistory: (profile: Profile, query?: ChangeHistoryQuery) => ['vault', profile.id, 'history-query', query],
   getChangeHistoryDetails: (profile: Profile, history: ChangeHistory) => ['vault', profile.id, 'history', history.id],
 };
+
+const countChanges = (properties: Array<ConfigurationProperty<any>>) => ({
+  added: properties.filter(it => it.state === ConfigurationPropertyState.ADDED).length,
+  modified: properties.filter(it => it.state === ConfigurationPropertyState.UPDATED).length,
+  deleted: properties.filter(it => it.state === ConfigurationPropertyState.REMOVED).length,
+});
+
+const toChangesetStorageState = ({ name, description, properties }: ChangesetState): ChangesetStorageState => ({
+  name, description, properties,
+});
 
 const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyRequest => {
   const changes = payload.properties.reduce((acc, property) => {
@@ -91,32 +104,79 @@ const generateStubChangesetState = (
     name: 'Changeset draft',
     state: 'DRAFT',
     properties,
-    added: properties.filter(it => it.state === ConfigurationPropertyState.ADDED).length,
-    modified: properties.filter(it => it.state === ConfigurationPropertyState.UPDATED).length,
-    deleted: properties.filter(it => it.state === ConfigurationPropertyState.REMOVED).length,
+    ...countChanges(properties),
   };
 };
 
 /**
- * Attempts to resolve existing or create a new changeset state for the given profile and current user account.
+ * Applies the changes from the changeset storage state on top of the changeset state created from the server values.
+ *
+ * Properties without changes keep their server value. Removed properties that no longer exist on the server
+ * are dropped. Added or updated properties are marked as updated when the property exists on the server,
+ * otherwise they are marked as added. Changed properties whose value matches the server value are unchanged.
+ *
+ * @param base changeset state created from the current server values
+ * @param draft changeset storage state with the changes made by the user
+ * @returns changeset state with the changes applied
+ */
+export const rebaseChangeset = (base: ChangesetState, draft: ChangesetStorageState | null): ChangesetState => {
+  if (!draft) {
+    return base;
+  }
+
+  const changes = new Map(draft.properties
+    .filter(property => property.state !== ConfigurationPropertyState.UNCHANGED)
+    .map(property => [property.name, property] as const));
+
+  const properties = base.properties.map(property => {
+    const change = changes.get(property.name);
+
+    if (!change) {
+      return property;
+    }
+
+    changes.delete(property.name);
+
+    if (change.state === ConfigurationPropertyState.REMOVED) {
+      return { ...property, state: ConfigurationPropertyState.REMOVED };
+    }
+
+    if (change.value?.encoded === property.value?.encoded) {
+      return property;
+    }
+
+    return { ...property, value: change.value, state: ConfigurationPropertyState.UPDATED };
+  });
+
+  changes.forEach(change => {
+    if (change.state !== ConfigurationPropertyState.REMOVED) {
+      properties.push({ ...change, state: ConfigurationPropertyState.ADDED });
+    }
+  });
+
+  return {
+    ...base,
+    name: draft.name,
+    description: draft.description,
+    properties,
+    ...countChanges(properties),
+  };
+};
+
+/**
+ * Retrieves the current configuration property values of the given profile as key/value pairs.
  *
  * @param namespace namespace that owns this service
- * @param service single Spring Boot application or microservice that belongs to a given namesasce
- * @param profile profile for which the changeset state is being resolved
- * @returns TansStack query options to retrieve the keysets
+ * @param service single Spring Boot application or microservice that belongs to a given namespace
+ * @param profile profile for which the property values are being retrieved
+ * @returns TanStack query options to retrieve the profile property values
  */
-export const getChangesetStateQuery = (namespace: Namespace, service: Service, profile: Profile) => {
-  const queryClient = useQueryClient();
-
+export const getProfilePropertiesQuery = (namespace: Namespace, service: Service, profile: Profile) => {
   return queryOptions({
     queryKey: vaultKeys.getChangeset(profile),
-    queryFn: async (): Promise<ChangesetState> => {
-      const catalog = await queryClient.ensureQueryData(getServiceCatalogQuery(namespace.slug, service.slug));
-
-      const response = await request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/properties`)
+    queryFn: ({ signal }): Promise<Record<string, string>> => {
+      return request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/properties`, { signal })
         .json<Record<string, string>>();
-
-      return generateStubChangesetState(namespace, service, profile, catalog, response);
     },
   });
 };
@@ -124,42 +184,61 @@ export const getChangesetStateQuery = (namespace: Namespace, service: Service, p
 /**
  * Hook that retrieves the current changeset state for the given profile and current user account.
  *
+ * The changeset state is created from the current server values with the changes from the changeset
+ * storage applied on top of them. Refetching the server values keeps the changes made by the user.
+ *
  * @param namespace namespace that owns this service
  * @param service single Spring Boot application or microservice that belongs to a given namespace
  * @param profile profile for which the changeset state is being resolved
  */
 export const useChangesetState = (namespace: Namespace, service: Service, profile: Profile) => {
-  return useQuery(getChangesetStateQuery(namespace, service, profile));
+  const [draft] = useChangesetStorage(profile.id);
+  const catalog = useServiceCatalogQuery(namespace.slug, service.slug);
+  const values = useQuery(getProfilePropertiesQuery(namespace, service, profile));
+
+  const data = useMemo(() => {
+    if (!catalog.data || !values.data) {
+      return undefined;
+    }
+
+    const base = generateStubChangesetState(namespace, service, profile, catalog.data, values.data);
+    return rebaseChangeset(base, draft);
+  }, [namespace, service, profile, catalog.data, values.data, draft]);
+
+  return {
+    ...values,
+    data,
+    isLoading: values.isLoading || catalog.isLoading,
+  };
 };
 
 export const useRenameChangeset = (state: ChangesetState) => {
-  const client = useQueryClient();
+  const [, setDraft] = useChangesetStorage(state.profile.id);
 
   return useMutation({
     mutationFn: (name?: string): Promise<ChangesetState> => {
       return Promise.resolve({ ...state, name: name || 'Changeset draft' });
     },
     onSuccess(result: ChangesetState) {
-      client.setQueryData(vaultKeys.getChangeset(state.profile), result);
+      setDraft(toChangesetStorageState(result));
     },
   });
 };
 
-export const useDiscardChangeset = () => {
-  const client = useQueryClient();
+export const useDiscardChangeset = (changeset: ChangesetState) => {
+  const [, setDraft] = useChangesetStorage(changeset.profile.id);
 
   return useMutation({
     mutationFn: (state: ChangesetState): Promise<ChangesetState> => Promise.resolve(state),
-    onSuccess: async (state: ChangesetState)=> {
-      await client.invalidateQueries({
-        queryKey: vaultKeys.getChangeset(state.profile),
-      });
+    onSuccess() {
+      setDraft(null);
     },
   });
 };
 
-export const useApplyChangeset = () => {
+export const useApplyChangeset = (state: ChangesetState) => {
   const client = useQueryClient();
+  const [, setDraft] = useChangesetStorage(state.profile.id);
 
   return useMutation({
     mutationFn: async (changeset: ChangesetState): Promise<ChangesetState> => {
@@ -181,12 +260,15 @@ export const useApplyChangeset = () => {
           return false;
         },
       });
+
+      setDraft(null);
     },
   });
 };
 
-export const useSubmitChangeset = () => {
+export const useSubmitChangeset = (state: ChangesetState) => {
   const client = useQueryClient();
+  const [, setDraft] = useChangesetStorage(state.profile.id);
 
   return useMutation({
     mutationFn: async (changeset: ChangesetState): Promise<ChangeRequest> => {
@@ -206,6 +288,8 @@ export const useSubmitChangeset = () => {
           return false;
         },
       });
+
+      setDraft(null);
     },
   });
 };
@@ -213,20 +297,16 @@ export const useSubmitChangeset = () => {
 const generatePropertyOperationMutation = (
   mutation: (state: ChangesetState, property: PropertyDescriptor, value?: ConfigurationPropertyValue<any>) => Array<ConfigurationProperty<any>>,
 ) => (state: ChangesetState) => {
-  const client = useQueryClient();
+  const [, setDraft] = useChangesetStorage(state.profile.id);
 
   return useMutation({
     mutationFn: async ({ property, value }: { property: PropertyDescriptor, value?: ConfigurationPropertyValue<any> }): Promise<ChangesetState> => {
       const properties = mutation(state, property, value);
 
-      const deleted = properties.filter(p => p.state === ConfigurationPropertyState.REMOVED).length;
-      const modified = properties.filter(p => p.state === ConfigurationPropertyState.UPDATED).length;
-      const added = properties.filter(p => p.state === ConfigurationPropertyState.ADDED).length;
-
-      return Promise.resolve({ ...state, properties, deleted, modified, added });
+      return Promise.resolve({ ...state, properties, ...countChanges(properties) });
     },
     onSuccess(result: ChangesetState) {
-      client.setQueryData(vaultKeys.getChangeset(state.profile), result);
+      setDraft(toChangesetStorageState(result));
     },
   });
 };
@@ -241,7 +321,7 @@ export const useAddProperty = generatePropertyOperationMutation(
 );
 
 export const useImportProperties = (changeset: ChangesetState) => {
-  const client = useQueryClient();
+  const [, setDraft] = useChangesetStorage(changeset.profile.id);
 
   return useMutation({
     mutationFn: async (properties: Array<ConfigurationProperty<any>>): Promise<ChangesetState>=> {
@@ -275,13 +355,11 @@ export const useImportProperties = (changeset: ChangesetState) => {
       return Promise.resolve({
         ...changeset,
         properties: result,
-        deleted: result.filter(p => p.state === ConfigurationPropertyState.REMOVED).length,
-        modified: result.filter(p => p.state === ConfigurationPropertyState.UPDATED).length,
-        added: result.filter(p => p.state === ConfigurationPropertyState.ADDED).length,
+        ...countChanges(result),
       });
     },
     onSuccess(result: ChangesetState) {
-      client.setQueryData(vaultKeys.getChangeset(result.profile), result);
+      setDraft(toChangesetStorageState(result));
     },
   });
 };

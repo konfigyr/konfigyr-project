@@ -3,6 +3,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { renderWithQueryClient } from '@konfigyr/test/helpers/query-client';
+import { clearChangesetStorage } from '@konfigyr/hooks/vault/changeset-storage';
 import { ConfigurationPropertyState, PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { Toaster } from '@konfigyr/ui/components/toast';
 import { ChangesetStatusBar } from '@konfigyr/components/vault/changeset/status-bar';
@@ -61,7 +62,10 @@ function TestChangesetStatusBar({ profile, modified = false, invalid = false, ..
 }
 
 describe('components | vault | changeset | <ChangesetStatusBar/>', () => {
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    clearChangesetStorage();
+  });
 
   test('should render changeset status bar for unprotected profile', async () => {
     const { getByRole } = renderWithQueryClient(
