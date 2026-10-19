@@ -37,4 +37,13 @@ describe('components | routing | <ErrorBoundary />', () => {
     expect(getByText('Test error')).toBeInTheDocument();
     expect(getByText('Test detail')).toBeInTheDocument();
   });
+
+  test('render the error boundary component without stack trace for a non error value', () => {
+    const { container, getByText } = renderComponentWithRouter(
+      <ErrorBoundary error={{ reason: 'thrown value' }} reset={reset} />,
+    );
+
+    expect(getByText('Unexpected server error occurred')).toBeInTheDocument();
+    expect(container.querySelector('code')).toBeNull();
+  });
 });

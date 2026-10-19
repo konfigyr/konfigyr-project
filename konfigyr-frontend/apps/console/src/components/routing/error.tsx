@@ -30,7 +30,7 @@ export function ErrorBoundary({ error, reset }: ErrorComponentProps) {
         description={normalized.detail}
       />
       <ErrorPageContent>
-        {process.env.NODE_ENV !== 'production' && (
+        {process.env.NODE_ENV !== 'production' && error instanceof Error && (
           <ErrorPageStackTrace error={error} />
         )}
       </ErrorPageContent>
