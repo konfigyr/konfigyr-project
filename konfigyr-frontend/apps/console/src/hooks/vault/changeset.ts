@@ -34,16 +34,23 @@ const DEFAULT_PROPERTY_DESCRIPTOR: Omit<PropertyDescriptor, 'name'> = {
  * Keys used to store the Changeset states in the query client.
  */
 export const vaultKeys = {
-  getChangeset: (profile: Profile) => ['vault', profile.id, 'changeset'],
+  getProperties: (profile: Profile) => ['vault', profile.id, 'properties'],
   getChangeHistory: (profile: Profile, query?: ChangeHistoryQuery) => ['vault', profile.id, 'history-query', query],
   getChangeHistoryDetails: (profile: Profile, history: ChangeHistory) => ['vault', profile.id, 'history', history.id],
 };
 
-const countChanges = (properties: Array<ConfigurationProperty<any>>) => ({
-  added: properties.filter(it => it.state === ConfigurationPropertyState.ADDED).length,
-  modified: properties.filter(it => it.state === ConfigurationPropertyState.UPDATED).length,
-  deleted: properties.filter(it => it.state === ConfigurationPropertyState.REMOVED).length,
-});
+const countChanges = (properties: Array<ConfigurationProperty<any>>) => properties.reduce((counts, property) => {
+  switch (property.state) {
+    case ConfigurationPropertyState.ADDED:
+      return { ...counts, added: counts.added + 1 };
+    case ConfigurationPropertyState.UPDATED:
+      return { ...counts, modified: counts.modified + 1 };
+    case ConfigurationPropertyState.REMOVED:
+      return { ...counts, deleted: counts.deleted + 1 };
+    default:
+      return counts;
+  }
+}, { added: 0, modified: 0, deleted: 0 });
 
 const EMPTY_CHANGESET_STORAGE_STATE: ChangesetStorageState = {
   name: 'Changeset draft',
@@ -186,7 +193,7 @@ export const rebaseChangeset = (base: ChangesetState, draft: ChangesetStorageSta
  */
 export const getProfilePropertiesQuery = (namespace: Namespace, service: Service, profile: Profile) => {
   return queryOptions({
-    queryKey: vaultKeys.getChangeset(profile),
+    queryKey: vaultKeys.getProperties(profile),
     queryFn: ({ signal }): Promise<Record<string, string>> => {
       return request.get(`api/namespaces/${namespace.slug}/services/${service.slug}/profiles/${profile.slug}/properties`, { signal })
         .json<Record<string, string>>();
@@ -200,6 +207,8 @@ export const getProfilePropertiesQuery = (namespace: Namespace, service: Service
  * The changeset state is created from the current server values with the changes from the changeset
  * storage applied on top of them. Refetching the server values keeps the changes made by the user.
  *
+ * The service catalog used to resolve the property descriptors is returned along with the changeset state.
+ *
  * @param namespace namespace that owns this service
  * @param service single Spring Boot application or microservice that belongs to a given namespace
  * @param profile profile for which the changeset state is being resolved
@@ -209,19 +218,23 @@ export const useChangesetState = (namespace: Namespace, service: Service, profil
   const catalog = useServiceCatalogQuery(namespace.slug, service.slug);
   const values = useQuery(getProfilePropertiesQuery(namespace, service, profile));
 
-  const data = useMemo(() => {
+  const base = useMemo(() => {
     if (!catalog.data || !values.data) {
       return undefined;
     }
 
-    const base = generateStubChangesetState(namespace, service, profile, catalog.data, values.data);
-    return rebaseChangeset(base, draft);
-  }, [namespace, service, profile, catalog.data, values.data, draft]);
+    return generateStubChangesetState(namespace, service, profile, catalog.data, values.data);
+  }, [namespace, service, profile, catalog.data, values.data]);
+
+  const changeset = useMemo(() => base && rebaseChangeset(base, draft), [base, draft]);
 
   return {
-    ...values,
-    data,
+    changeset,
+    catalog: catalog.data,
+    error: values.error ?? catalog.error,
+    isError: values.isError || catalog.isError,
     isLoading: values.isLoading || catalog.isLoading,
+    refetch: () => Promise.all([catalog.refetch(), values.refetch()]),
   };
 };
 
@@ -239,12 +252,17 @@ export const useRenameChangeset = (state: ChangesetState) => {
 };
 
 export const useDiscardChangeset = (changeset: ChangesetState) => {
+  const client = useQueryClient();
   const [, setDraft] = useChangesetStorage(changeset.profile.id);
 
   return useMutation({
     mutationFn: (state: ChangesetState): Promise<ChangesetState> => Promise.resolve(state),
-    onSuccess() {
+    onSuccess: async (state: ChangesetState) => {
       setDraft(null);
+
+      await client.invalidateQueries({
+        queryKey: vaultKeys.getProperties(state.profile),
+      });
     },
   });
 };

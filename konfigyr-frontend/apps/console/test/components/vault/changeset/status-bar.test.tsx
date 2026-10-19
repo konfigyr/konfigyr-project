@@ -18,7 +18,7 @@ function TestChangesetStatusBar({ profile, modified = false, invalid = false, ..
   modified?: boolean;
   invalid?: boolean;
 } & Omit<ChangesetStatusBarProps, 'changeset' | 'invalidPropertyNames' | 'isChangesetValid'>) {
-  const { data } = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profile);
+  const { changeset: data } = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profile);
 
   const changeset = useMemo(() => {
     if (data && modified) {

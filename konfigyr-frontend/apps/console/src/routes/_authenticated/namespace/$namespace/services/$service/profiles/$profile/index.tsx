@@ -7,11 +7,11 @@ import {
   getProfileQuery,
   getProfilesQuery,
   useChangesetState,
-  useServiceCatalogQuery,
 } from '@konfigyr/hooks';
 import { createFileRoute } from '@tanstack/react-router';
 import { ChangeHistoryAlert } from '@konfigyr/components/vault/change-history/change-history-alert';
 import { ProgressLoader } from '@konfigyr/ui/components/loader';
+import { ErrorState } from '@konfigyr/components/error';
 import type { ChangeRequest, Namespace, Service } from '@konfigyr/hooks/types';
 
 export const Route = createFileRoute(
@@ -32,8 +32,7 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const navigate = Route.useNavigate();
   const { namespace, service, profiles, profile } = Route.useLoaderData();
-  const { data: changeset, isLoading: isChangesetLoading } = useChangesetState(namespace, service, profile);
-  const { data: catalog, isLoading: isCatalogLoading } = useServiceCatalogQuery(namespace.slug, service.slug);
+  const { changeset, catalog, error, isError, isLoading } = useChangesetState(namespace, service, profile);
 
   const onChangeRequestCreated = useCallback((changeRequest: ChangeRequest) => {
     return navigate({
@@ -79,7 +78,7 @@ function RouteComponent() {
         profile={profile}
       />
 
-      {(isChangesetLoading || isCatalogLoading) && (
+      {isLoading && (
         <div className="md:w-1/2 mx-auto px-4 py-8">
           <div className="text-center space-y-1">
             <p className="font-medium">
@@ -99,6 +98,10 @@ function RouteComponent() {
             </p>
           </div>
         </div>
+      )}
+
+      {isError && (
+        <ErrorState error={error!} />
       )}
 
       {(changeset && catalog) && (

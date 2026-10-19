@@ -9,6 +9,7 @@ import {
   rebaseChangeset,
   useAddProperty,
   useChangesetState,
+  useDiscardChangeset,
   useModifyProperty,
   useRemoveProperty,
   useRestoreProperty,
@@ -20,6 +21,7 @@ import type { ReactNode } from 'react';
 import type { ChangesetState, ConfigurationProperty } from '@konfigyr/hooks/vault/types';
 
 const PROPERTIES_URL = 'http://localhost/api/namespaces/:namespace/services/:service/profiles/:profile/properties';
+const CATALOG_URL = 'http://localhost/api/namespaces/:namespace/services/:service/catalog';
 
 const property = (
   name: string,
@@ -153,11 +155,11 @@ describe('hooks | vault | changeset', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.data).toBeDefined();
+      expect(result.current.changeset).toBeDefined();
     });
 
     expect(result.current.isLoading).toBe(false);
-    expect(stateOf(result.current.data!)).toStrictEqual({
+    expect(stateOf(result.current.changeset!)).toStrictEqual({
       'application.name': [ConfigurationPropertyState.UNCHANGED, 'konfigyr-frontend'],
       'application.profile': [ConfigurationPropertyState.UNCHANGED, 'staging'],
     });
@@ -171,7 +173,7 @@ describe('hooks | vault | changeset', () => {
     }, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(result.current.state.data).toBeDefined();
+      expect(result.current.state.changeset).toBeDefined();
     });
 
     act(() => result.current.setDraft({
@@ -193,7 +195,7 @@ describe('hooks | vault | changeset', () => {
     await act(() => result.current.state.refetch());
 
     await waitFor(() => {
-      expect(stateOf(result.current.state.data!)).toStrictEqual({
+      expect(stateOf(result.current.state.changeset!)).toStrictEqual({
         'application.name': [ConfigurationPropertyState.UPDATED, 'konfigyr-backend'],
         'application.profile': [ConfigurationPropertyState.UNCHANGED, 'production'],
         'server.port': [ConfigurationPropertyState.UPDATED, '8080'],
@@ -208,18 +210,18 @@ describe('hooks | vault | changeset', () => {
     }, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(result.current.state.data).toBeDefined();
+      expect(result.current.state.changeset).toBeDefined();
     });
 
-    const { result: mutation } = renderHook(() => useModifyProperty(result.current.state.data!), { wrapper: createWrapper() });
+    const { result: mutation } = renderHook(() => useModifyProperty(result.current.state.changeset!), { wrapper: createWrapper() });
 
     await act(() => mutation.current.mutateAsync({
-      property: result.current.state.data!.properties[0],
+      property: result.current.state.changeset!.properties[0],
       value: { encoded: 'konfigyr-backend', decoded: 'konfigyr-backend' },
     }));
 
     await waitFor(() => {
-      expect(stateOf(result.current.state.data!)).toStrictEqual({
+      expect(stateOf(result.current.state.changeset!)).toStrictEqual({
         'application.name': [ConfigurationPropertyState.UPDATED, 'konfigyr-backend'],
         'application.profile': [ConfigurationPropertyState.UNCHANGED, 'staging'],
       });
@@ -233,10 +235,10 @@ describe('hooks | vault | changeset', () => {
     }, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(result.current.state.data).toBeDefined();
+      expect(result.current.state.changeset).toBeDefined();
     });
 
-    const current = result.current.state.data!;
+    const current = result.current.state.changeset!;
     const { result: mutations } = renderHook(() => ({
       add: useAddProperty(current),
       modify: useModifyProperty(current),
@@ -258,7 +260,7 @@ describe('hooks | vault | changeset', () => {
     });
 
     await waitFor(() => {
-      expect(stateOf(result.current.state.data!)).toStrictEqual({
+      expect(stateOf(result.current.state.changeset!)).toStrictEqual({
         'application.name': [ConfigurationPropertyState.UPDATED, 'konfigyr-backend'],
         'application.profile': [ConfigurationPropertyState.REMOVED, 'staging'],
         'server.port': [ConfigurationPropertyState.ADDED, '8080'],
@@ -273,10 +275,10 @@ describe('hooks | vault | changeset', () => {
     }, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(result.current.state.data).toBeDefined();
+      expect(result.current.state.changeset).toBeDefined();
     });
 
-    const current = result.current.state.data!;
+    const current = result.current.state.changeset!;
     const { result: mutations } = renderHook(() => ({
       add: useAddProperty(current),
       remove: useRemoveProperty(current),
@@ -296,9 +298,88 @@ describe('hooks | vault | changeset', () => {
     });
 
     await waitFor(() => {
-      expect(stateOf(result.current.state.data!)).toStrictEqual({
+      expect(stateOf(result.current.state.changeset!)).toStrictEqual({
         'application.name': [ConfigurationPropertyState.UNCHANGED, 'konfigyr-frontend'],
         'application.profile': [ConfigurationPropertyState.UNCHANGED, 'staging'],
+      });
+    });
+  });
+
+  test('should report an error when the service catalog cannot be retrieved', async () => {
+    server.use(
+      http.get(CATALOG_URL, () => HttpResponse.json({ status: 500, title: 'Internal error' }, { status: 500 })),
+    );
+
+    const { result } = renderHook(
+      () => useChangesetState(namespaces.konfigyr, services.konfigyrApi, profiles.development),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error).toBeDefined();
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.changeset).toBeUndefined();
+    expect(result.current.catalog).toBeUndefined();
+  });
+
+  test('should not recreate unchanged properties when the draft changes', async () => {
+    const { result } = renderHook(() => {
+      const state = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profiles.development);
+      const [, setDraft] = useChangesetStorage(profiles.development.id);
+      return { state, setDraft };
+    }, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.state.changeset).toBeDefined();
+    });
+
+    const unchanged = result.current.state.changeset!.properties[1];
+
+    act(() => result.current.setDraft({
+      name: 'Changeset draft',
+      properties: [property('application.name', 'konfigyr-backend', ConfigurationPropertyState.UPDATED)],
+    }));
+
+    expect(result.current.state.changeset!.properties[0].value?.encoded).toBe('konfigyr-backend');
+    expect(result.current.state.changeset!.properties[1]).toBe(unchanged);
+  });
+
+  test('should clear the draft and refetch the server values when changeset is discarded', async () => {
+    const { result } = renderHook(() => {
+      const state = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profiles.development);
+      const [, setDraft] = useChangesetStorage(profiles.development.id);
+      const discard = useDiscardChangeset(state.changeset ?? ({ profile: profiles.development } as ChangesetState));
+      return { state, setDraft, discard };
+    }, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.state.changeset).toBeDefined();
+    });
+
+    const current = result.current.state.changeset!;
+
+    act(() => result.current.setDraft({
+      name: 'Changeset draft',
+      properties: [property('application.name', 'konfigyr-backend', ConfigurationPropertyState.UPDATED)],
+    }));
+
+    server.use(
+      http.get(PROPERTIES_URL, () => HttpResponse.json({
+        'application.name': 'konfigyr-frontend',
+        'application.profile': 'production',
+      })),
+    );
+
+    await act(() => result.current.discard.mutateAsync(current));
+
+    expect(result.current.state.changeset!.name).toBe('Changeset draft');
+    await waitFor(() => {
+      expect(stateOf(result.current.state.changeset!)).toStrictEqual({
+        'application.name': [ConfigurationPropertyState.UNCHANGED, 'konfigyr-frontend'],
+        'application.profile': [ConfigurationPropertyState.UNCHANGED, 'production'],
       });
     });
   });
