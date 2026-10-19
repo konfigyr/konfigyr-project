@@ -72,7 +72,7 @@ function ProfilesMenu({ namespace, service }: { namespace: Namespace, service: S
         <ErrorState error={error} />
       )}
       {data?.map(profile => (
-        <SidebarMenuSubItem>
+        <SidebarMenuSubItem key={profile.id}>
           <SidebarMenuSubButton size="sm" render={(
             <Link
               to="/namespace/$namespace/services/$service/profiles/$profile"
