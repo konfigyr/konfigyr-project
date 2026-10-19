@@ -91,7 +91,7 @@ describe('services | authentication', () => {
   test('should not be able to complete authorization without state', async () => {
     const authentication = await Authentication.get();
 
-    expect(authentication.completeAuthorization(new URL('http://localhost/auth/code')))
+    await expect(authentication.completeAuthorization(new URL('http://localhost/auth/code')))
       .rejects.toThrow('Authorization state is not present in the session');
   });
 

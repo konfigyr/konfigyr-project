@@ -10,7 +10,7 @@ describe('routes | account | handler', () => {
     const response = await onDeleteAccount();
 
     expect(response.status).toBe(401);
-    expect(response.json()).resolves.toMatchObject({
+    await expect(response.json()).resolves.toMatchObject({
       status: 401,
       title: 'Session expired',
       detail: 'Please login again to delete your account.',
@@ -26,7 +26,7 @@ describe('routes | account | handler', () => {
     const response = await onDeleteAccount();
 
     expect(response.status).toBe(204);
-    expect(response.text()).resolves.toBe('');
+    await expect(response.text()).resolves.toBe('');
 
     const reloaded = await Authentication.get();
     expect(reloaded.authenticated).toBe(false);

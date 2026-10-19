@@ -36,7 +36,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.3.1",
-    "@vitest/ui": "^4.1.10",
+    "@vitest/ui": "^5.0.4",
     "eslint": "^10.8.0",
     "eslint-plugin-formatjs": "^6.4.19",
     "msw": "^2.15.0",
@@ -44,6 +44,6 @@
     "resize-observer-polyfill": "^1.5.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
-    "vite": "^8.0.16"
+    "vite": "^8.3.4"
   }
 }
