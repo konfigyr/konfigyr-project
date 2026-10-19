@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 
 export default [
   http.post('https://api.hsforms.com/submissions/v3/integration/secure/submit/:portalId/:formGuid', () => {

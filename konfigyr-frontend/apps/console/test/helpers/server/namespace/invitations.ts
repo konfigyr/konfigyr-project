@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { parseISO } from 'date-fns';
 import { NamespaceRole } from '@konfigyr/hooks/memberships/types';
 import { accounts, namespaces } from '../../mocks';

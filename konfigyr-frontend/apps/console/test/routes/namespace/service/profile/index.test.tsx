@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, waitFor } from '@testing-library/react';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { renderWithRouter } from '@konfigyr/test/helpers/router';
 import { server } from '@konfigyr/test/helpers/server';
 import { clearChangesetStorage } from '@konfigyr/hooks/vault/changeset-storage';

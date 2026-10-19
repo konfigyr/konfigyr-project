@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { cleanup, waitFor } from '@testing-library/react';
 import { renderWithRouter } from '@konfigyr/test/helpers/router';
 import { server } from '@konfigyr/test/helpers/server';

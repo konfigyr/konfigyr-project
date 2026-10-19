@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { proxy } from '@konfigyr/lib/api-proxy';
 import { server } from '@konfigyr/test/helpers/server';

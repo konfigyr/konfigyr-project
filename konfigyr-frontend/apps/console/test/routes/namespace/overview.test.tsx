@@ -23,12 +23,12 @@ describe('routes | namespace | overview', () => {
   });
 
   test('should render not found page for an unknown module path instead of crashing', async () => {
-    const { getByRole, router } = renderWithRouter('/namespace/konfigyr/some-garbage-path');
+    const { findByRole, router } = renderWithRouter('/namespace/konfigyr/some-garbage-path');
 
     await waitFor(() => {
       expect(router.state.status).toStrictEqual('idle');
     });
 
-    expect(getByRole('heading', { name: 'Resource Not Found', level: 3 })).toBeInTheDocument();
+    expect(await findByRole('heading', { name: 'Resource Not Found', level: 3 })).toBeInTheDocument();
   });
 });

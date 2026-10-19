@@ -4,13 +4,13 @@ import { renderWithRouter } from '@konfigyr/test/helpers/router';
 
 describe('routes | not-found', () => {
   test('renders the default not found page', async () => {
-    const { getByRole, router } = renderWithRouter('/not-found');
+    const { findByRole, getByRole, router } = renderWithRouter('/not-found');
 
     await waitFor(() => {
       expect(router.state.status).toStrictEqual('idle');
     });
 
-    expect(getByRole('heading', { name: 'Resource Not Found', level: 3 }))
+    expect(await findByRole('heading', { name: 'Resource Not Found', level: 3 }))
       .toBeInTheDocument();
 
     expect(getByRole('button', { name: 'Go back' })).toBeInTheDocument();

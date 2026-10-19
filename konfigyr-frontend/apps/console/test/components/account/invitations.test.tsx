@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { cleanup, waitFor, within } from '@testing-library/react';
 import userEvents from '@testing-library/user-event';
 import { AccountContext } from '@konfigyr/hooks';

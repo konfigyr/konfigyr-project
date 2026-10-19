@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http } from 'msw/http';
 import { invitations } from '../mocks';
 
 import type { Invitation, PageResponse } from '@konfigyr/hooks/types';
