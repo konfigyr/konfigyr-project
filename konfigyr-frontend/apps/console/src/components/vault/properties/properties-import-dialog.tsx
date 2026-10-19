@@ -15,6 +15,7 @@ import {
 import { Field, FieldDescription, FieldLabel } from '@konfigyr/ui/components/field';
 import { useForm, useFormSubmit } from '@konfigyr/ui/components/form';
 import { Input } from '@konfigyr/ui/components/input';
+import { resolveJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
 import { useConfigFileParser } from '@konfigyr/hooks/vault/config-file-parser';
 import { isPropertyValueValid } from '@konfigyr/hooks/vault/property-validation';
 import { TabItem, Tabs } from '@konfigyr/ui/components/tab';
@@ -63,20 +64,22 @@ export function categorizePropertiesByValidation (
       continue;
     }
 
-    const isValid = isPropertyValueValid(descriptor.schema, property.value?.encoded);
+    const transform = resolveJsonSchemeTransform(descriptor.schema);
+    const encoded = property.value?.encoded ?? '';
+    const decoded = transform.decode(encoded);
 
-    const { artifact: _artifact, ...descriptorData } = descriptor;
+    const { artifact: ignore, ...propertyDescriptor } = descriptor;
     const importedProperty: ConfigurationProperty<any> = {
-      ...property,
-      ...descriptorData,
+      ...propertyDescriptor,
+      state: property.state,
+      value: { decoded, encoded },
     };
 
-    if (isValid) {
+    if (isPropertyValueValid(descriptor.schema, importedProperty.value)) {
       valid.push(importedProperty);
-      continue;
+    } else {
+      invalid.push(importedProperty);
     }
-
-    invalid.push(importedProperty);
   }
 
   return { valid, invalid };
@@ -341,7 +344,7 @@ export function PropertiesImportDialog ({ catalog, profile, onImport }: {
               </Button>
             </>
           ) : (
-            <Button disabled={isImportDisabled} onClick={() => handleImport(properties)}>
+            <Button disabled={isImportDisabled} onClick={() => handleImport(categorizedProperties.valid)}>
               <ImportIcon/>
               <ImportPropertiesLabel/>
             </Button>

@@ -114,11 +114,9 @@ export function InlineInputField<T>({ property }: { property: PropertyDescriptor
 
   useEffect(() => {
     const validator = (value: ConfigurationPropertyValue<T>) => {
-      const result = validate(value.decoded);
+      const { isValid, errors } = validate(value);
 
-      return result.isValid
-        ? undefined
-        : result.errors.map(e => e.message).filter(Boolean);
+      return isValid ? undefined : errors.map(e => e.message).filter(Boolean);
     };
 
     context.setValidate(validator);
