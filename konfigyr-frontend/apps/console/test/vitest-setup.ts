@@ -4,14 +4,14 @@ import ResizeObserver from 'resize-observer-polyfill';
 
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { server } from './helpers/server';
-import { authenticationSession } from './helpers/session';
+import { clearSession } from './helpers/session';
 
 vi.stubGlobal('ResizeObserver', ResizeObserver);
 
 beforeAll(() => server.listen());
-afterEach(async () => {
+afterEach(() => {
   server.resetHandlers();
-  await authenticationSession.clear();
+  clearSession();
 });
 afterAll(() => server.close());
 

@@ -18,6 +18,10 @@ description: OIDC authentication flow, session management via encrypted cookies,
 
 Handled entirely in `src/middleware/authentication.ts` and `src/lib/authentication.ts`.
 
+The session is stored in the `konfigyr.sid` cookie, sealed with `iron-session` using `KONFIGYR_SESSION_KEY`.
+`createSession()` in `src/lib/session.ts` reads and writes it through the TanStack Start cookie helpers.
+It only reads the configured fields (`token`, `state`). A missing, expired or unreadable cookie gives an empty session.
+
 **Do not add auth logic in components.** Access user via `useAccount()` hook only.
 
 ```typescript
@@ -73,8 +77,10 @@ KONFIGYR_ID_URL=http://localhost:8081
 KONFIGYR_OAUTH_CLIENT_ID=konfigyr-frontend
 KONFIGYR_OAUTH_CLIENT_SECRET=...
 
-# Session encryption
-KONFIGYR_SESSION_KEY=... (32-byte base64)
+# Session encryption (at least 32 characters)
+KONFIGYR_SESSION_KEY=...
+# Optional: force the Secure cookie flag (defaults to true in production)
+KONFIGYR_SESSION_SECURE=true
 
 # Backend API (server-side proxy)
 KONFIGYR_API_URL=http://localhost:8080

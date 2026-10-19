@@ -1,8 +1,12 @@
 // @vitest-environment node
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { setCookie } from '@tanstack/react-start/server';
 import Authentication, { AuthenticationError } from '@konfigyr/lib/authentication';
 import {
+  SESSION_COOKIE_NAME,
+  cookies,
+  readSessionData,
   updateAuthorizationState,
   updateSessionAccessToken,
 } from '@konfigyr/test/helpers/session';
@@ -65,9 +69,9 @@ describe('services | authentication', () => {
   });
 
   test('should obtain new access token using the refresh token', async () => {
-    const authentication = await Authentication.get();
-
     await updateSessionAccessToken({ refreshToken: 'refresh-token-to-be-consumed' });
+
+    const authentication = await Authentication.get();
 
     await authentication.refresh();
     expect(authentication.accessToken).toMatchObject({
@@ -92,10 +96,10 @@ describe('services | authentication', () => {
   });
 
   test('should authorize request when authenticated', async () => {
+    await updateSessionAccessToken();
+
     const authentication = await Authentication.get();
     const request = new Request('http://localhost/some-uri');
-
-    await updateSessionAccessToken();
 
     expect(authentication.authorizeRequest(request)).toBe(request);
 
@@ -113,10 +117,10 @@ describe('services | authentication', () => {
   });
 
   test('should reset authentication state by clearing the access token', async () => {
-    const authentication = await Authentication.get();
-
     await updateAuthorizationState({ id: 'state-id' });
     await updateSessionAccessToken({ accessToken: 'access-token' });
+
+    const authentication = await Authentication.get();
 
     expect(authentication.accessToken).toMatchObject({ accessToken: 'access-token' });
     expect(authentication.authorizationState).toMatchObject({ id: 'state-id' });
@@ -128,10 +132,10 @@ describe('services | authentication', () => {
   });
 
   test('should logout the current user', async () => {
-    const authentication = await Authentication.get();
-
     await updateAuthorizationState({ id: 'state-id' });
     await updateSessionAccessToken({ accessToken: 'access-token' });
+
+    const authentication = await Authentication.get();
 
     expect(authentication.accessToken).toMatchObject({ accessToken: 'access-token' });
     expect(authentication.authorizationState).toMatchObject({ id: 'state-id' });
@@ -140,5 +144,36 @@ describe('services | authentication', () => {
 
     expect(authentication.accessToken).toEqual(null);
     expect(authentication.authorizationState).toEqual(null);
+  });
+
+  test('should persist session changes in the sealed session cookie', async () => {
+    await updateAuthorizationState({ id: 'state-id' });
+    await updateSessionAccessToken({ accessToken: 'access-token' });
+
+    const authentication = await Authentication.get();
+    await authentication.reset();
+
+    expect(cookies.get(SESSION_COOKIE_NAME)).toMatch(/^Fe26\.2\*/);
+    await expect(readSessionData()).resolves.toStrictEqual({
+      state: expect.objectContaining({ id: 'state-id' }),
+    });
+
+    expect(setCookie).toHaveBeenCalledWith(SESSION_COOKIE_NAME, expect.any(String), {
+      path: '/',
+      secure: false,
+      sameSite: 'lax',
+      httpOnly: true,
+    });
+  });
+
+  test('should use secure session cookie when configured', async () => {
+    vi.stubEnv('KONFIGYR_SESSION_SECURE', 'true');
+
+    const authentication = await Authentication.get();
+    await authentication.logout();
+
+    expect(setCookie).toHaveBeenCalledWith(SESSION_COOKIE_NAME, expect.any(String), expect.objectContaining({
+      secure: true,
+    }));
   });
 });

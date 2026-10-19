@@ -9,18 +9,21 @@ import {
   randomState,
   refreshTokenGrant,
 } from 'openid-client';
-import { useSession } from '@tanstack/react-start/server';
 import { createLogger } from '@konfigyr/logger';
+import { createSession } from '@konfigyr/lib/session';
 
 import type {
   Configuration,
   TokenEndpointResponse,
   TokenEndpointResponseHelpers,
 } from 'openid-client';
+import type { Session } from '@konfigyr/lib/session';
 
 const logger = createLogger('services/authentication');
 
 const DEFAULT_SCOPES = 'openid namespaces profiles artifactory:publish';
+
+const SESSION_COOKIE_NAME = 'konfigyr.sid';
 
 export class AuthenticationError extends Error {
 
@@ -43,35 +46,41 @@ export interface SessionData {
   state?: AuthorizationState;
 }
 
-export interface AuthenticationSession {
-  readonly id: string | undefined;
-  readonly data: SessionData;
-  update: (update: SessionData) => Promise<AuthenticationSession>;
-  clear: () => Promise<AuthenticationSession>;
-}
+export type AuthenticationSession = Session<SessionData>;
 
-const useAuthenticationSession = () => {
-  const sessionKey = process.env.KONFIGYR_SESSION_KEY;
+/**
+ * Creates the authentication session from the sealed session cookie.
+ *
+ * The session data is sealed with the `KONFIGYR_SESSION_KEY` secret. The cookie is marked as secure
+ * in production, or when the `KONFIGYR_SESSION_SECURE` environment variable is enabled.
+ *
+ * @returns the authentication session for the current request
+ * @throws {Error} if the `KONFIGYR_SESSION_KEY` environment variable is not set
+ */
+const createAuthenticationSession = (): Promise<AuthenticationSession> => {
+  const password = process.env.KONFIGYR_SESSION_KEY;
 
-  if (typeof sessionKey !== 'string') {
+  if (typeof password !== 'string') {
     throw new Error('KONFIGYR_SESSION_KEY environment variable is not set');
   }
 
-  let secureCookie: boolean = process.env.NODE_ENV === 'production';
+  let secure: boolean = process.env.NODE_ENV === 'production';
 
   if (process.env.KONFIGYR_SESSION_SECURE) {
-    secureCookie = /^(true|t|1)$/i.test(process.env.KONFIGYR_SESSION_SECURE);
+    secure = /^(true|t|1)$/i.test(process.env.KONFIGYR_SESSION_SECURE);
   }
 
-  return useSession<SessionData>({
-    name: 'konfigyr.sid',
-    password: sessionKey,
+  return createSession<SessionData>({
+    name: SESSION_COOKIE_NAME,
+    password,
+    fields: ['token', 'state'],
     cookie: {
-      secure: secureCookie,
+      path: '/',
+      secure,
       sameSite: 'lax',
       httpOnly: true,
     },
-  }) as Promise<AuthenticationSession>;
+  });
 };
 
 const discover = () => {
@@ -117,7 +126,7 @@ export default class Authentication {
   readonly #metadata: Configuration;
 
   static async get(): Promise<Authentication> {
-    const session = await useAuthenticationSession();
+    const session = await createAuthenticationSession();
 
     if (Authentication.#configuration == null) {
       Authentication.#configuration = await discover();
@@ -257,13 +266,13 @@ export default class Authentication {
   }
 
   async reset() {
-    logger.debug(`Resetting Authentication OAuth Access Token session with identifier: ${this.#session.id}`);
+    logger.debug('Resetting Authentication OAuth Access Token session');
 
     await this.#session.update({ token: undefined });
   }
 
   async logout() {
-    logger.debug(`Attempting to destroy Authentication session with identifier: ${this.#session.id}`);
+    logger.debug('Attempting to destroy Authentication session');
 
     await this.#session.update({ state: undefined, token: undefined });
   }
