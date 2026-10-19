@@ -18,7 +18,7 @@ import {
   filterPropertyDescriptors,
   splitSearchTerm,
 } from '@konfigyr/hooks';
-import { useJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
+import { resolveJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
 import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 import { PropertyName } from '@konfigyr/components/artifactory/property-name';
 import { PropertyDefaultValue } from '@konfigyr/components/artifactory/property-default-value';
@@ -358,7 +358,7 @@ export function PropertyValueInput<T>({ property, value, onChange, onSubmit, onV
 
   const handleChange = useCallback((newValue: ConfigurationPropertyValue<T>) => {
     setHasInteracted(true);
-    const validationResult = validate(newValue.decoded);
+    const validationResult = validate(newValue);
     onValidationChange?.(validationResult.isValid);
     onChange(newValue);
   }, [validate, onChange, onValidationChange]);
@@ -379,7 +379,7 @@ export function PropertyValueInput<T>({ property, value, onChange, onSubmit, onV
   // key={property.name} on the parent ensures this component remounts with fresh
   // props whenever the descriptor changes, so the captured values are always current.
   useEffect(() => {
-    const validationResult = validate(value?.decoded);
+    const validationResult = validate(value);
     onValidationChange?.(validationResult.isValid);
   }, []);
 
@@ -426,7 +426,7 @@ export function PropertyDialog<T>({ changeset, catalog, onAdd, debounceMs = 200 
 
     startTransition(() => {
       const encoded = resolveDefaultPropertyValue(selected);
-      const decoded = useJsonSchemeTransform(selected.schema).decode(encoded);
+      const decoded = resolveJsonSchemeTransform(selected.schema).decode(encoded);
 
       onDescriptorChange(selected);
       onValueChange({ encoded, decoded });

@@ -7,20 +7,26 @@ import { profiles, services } from '@konfigyr/test/helpers/mocks';
 import React from 'react';
 import type { ServiceCatalog } from '@konfigyr/hooks/types';
 
-const PROPERTIES_FILE = 'server.port=8080';
-const PARTIAL_PROPERTIES_FILE = `${PROPERTIES_FILE}\nserver.name=konfigyr`;
-
 const YAML_FILE = `
   server:
     port: 8080
 `;
 
-const catalog: ServiceCatalog = {
-  service: services.konfigyrApi,
-  properties: [],
-};
+const FORMATTED_PROPERTIES_FILE = [
+  'server.shutdown.timeout=30s',
+  'server.max-http-request-header-size=8KB',
+  'server.started-at=2026-01-01T10:00:00.000Z',
+].join('\n');
 
-const validationCatalog: ServiceCatalog = {
+const INVALID_PROPERTIES_FILE = [
+  'server.port=not-a-number',
+  'server.shutdown.timeout=30seconds',
+  'server.max-http-request-header-size=8KiB',
+  'server.started-at=not-a-date',
+  'server.name=konfigyr',
+].join('\n');
+
+const catalog: ServiceCatalog = {
   service: services.konfigyrApi,
   properties: [
     {
@@ -36,6 +42,24 @@ const validationCatalog: ServiceCatalog = {
       typeName: 'java.lang.String',
       schema: { type: 'string' },
       description: 'Server name',
+    },
+    {
+      artifact: 'org.springframework.boot:spring-boot:4.0.3',
+      name: 'server.shutdown.timeout',
+      typeName: 'java.time.Duration',
+      schema: { type: 'string', format: 'duration' },
+    },
+    {
+      artifact: 'org.springframework.boot:spring-boot:4.0.3',
+      name: 'server.max-http-request-header-size',
+      typeName: 'org.springframework.util.unit.DataSize',
+      schema: { type: 'string', format: 'data-size' },
+    },
+    {
+      artifact: 'org.springframework.boot:spring-boot:4.0.3',
+      name: 'server.started-at',
+      typeName: 'java.time.OffsetDateTime',
+      schema: { type: 'string', format: 'date-time' },
     },
   ],
 };
@@ -87,7 +111,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
 
     const input = result.getByLabelText('Select existing configuration file');
-    const file = new File([PROPERTIES_FILE], 'application.properties', { type: 'text/plain' });
+    const file = new File(['server.port=8080'], 'application.properties', { type: 'text/plain' });
     await user.upload(input, file);
 
     await waitFor(() => {
@@ -104,17 +128,17 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
         [
           {
             name: 'server.port',
+            description: 'Server port',
             schema: {
-              type: 'string',
+              type: 'integer',
             },
             state: 'ADDED',
-            typeName: 'string',
+            typeName: 'java.lang.Integer',
             value: {
-              decoded: '8080',
+              decoded: 8080,
               encoded: '8080',
             },
           },
-
         ]);
     });
     await waitFor(() => expect(result.queryByRole('dialog')).toBeNull());
@@ -147,13 +171,14 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
       expect(onImport).toHaveBeenCalledExactlyOnceWith([
         {
           name: 'server.port',
+          description: 'Server port',
           schema: {
-            type: 'string',
+            type: 'integer',
           },
           state: 'ADDED',
-          typeName: 'string',
+          typeName: 'java.lang.Integer',
           value: {
-            decoded: '8080',
+            decoded: 8080,
             encoded: '8080',
           },
         },
@@ -296,19 +321,19 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
     const result = renderWithMessageProvider(
-      <PropertiesImportDialog onImport={onImport} profile={profiles.development} catalog={validationCatalog}/>,
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} catalog={catalog}/>,
     );
 
     await user.click(result.getByRole('button', { name: 'Import' }));
     await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
 
     const input = result.getByLabelText('Select existing configuration file');
-    const file = new File([PARTIAL_PROPERTIES_FILE], 'application.properties', { type: 'text/plain' });
+    const file = new File([INVALID_PROPERTIES_FILE], 'application.properties', { type: 'text/plain' });
     await user.upload(input, file);
 
     await waitFor(() => {
       expect(result.getByText('Review imported properties')).toBeInTheDocument();
-      expect(result.getByText('Found 1 invalid properties. Continue with valid properties only, or import all and resolve issues afterward.')).toBeInTheDocument();
+      expect(result.getByText('Found 4 invalid properties. Continue with valid properties only, or import all and resolve issues afterward.')).toBeInTheDocument();
       expect(result.getByText('Ready for import')).toBeInTheDocument();
       expect(result.getByText('The configuration was parsed, and 1 new configuration properties are available for import.')).toBeInTheDocument();
       expect(result.getByRole('button', { name: 'Import valid only' })).toBeEnabled();
@@ -331,6 +356,54 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
             decoded: 'konfigyr',
             encoded: 'konfigyr',
           },
+        },
+      ]);
+    });
+  });
+
+  test('should import valid duration, data-size and date-time properties', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} catalog={catalog}/>,
+    );
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+
+    const input = result.getByLabelText('Select existing configuration file');
+    const file = new File([FORMATTED_PROPERTIES_FILE], 'application.properties', { type: 'text/plain' });
+    await user.upload(input, file);
+
+    await waitFor(() => {
+      expect(result.getByText('The configuration was parsed, and 3 new configuration properties are available for import.')).toBeInTheDocument();
+      expect(result.queryByText('Review imported properties')).not.toBeInTheDocument();
+    });
+
+    await user.click(within(result.getByRole('dialog')).getByRole('button', { name: 'Import' }));
+
+    await waitFor(() => {
+      expect(onImport).toHaveBeenCalledExactlyOnceWith([
+        {
+          name: 'server.shutdown.timeout',
+          typeName: 'java.time.Duration',
+          schema: { type: 'string', format: 'duration' },
+          state: 'ADDED',
+          value: { encoded: '30s', decoded: { value: 30, unit: 's' } },
+        },
+        {
+          name: 'server.max-http-request-header-size',
+          typeName: 'org.springframework.util.unit.DataSize',
+          schema: { type: 'string', format: 'data-size' },
+          state: 'ADDED',
+          value: { encoded: '8KB', decoded: { value: 8, unit: 'KB' } },
+        },
+        {
+          name: 'server.started-at',
+          typeName: 'java.time.OffsetDateTime',
+          schema: { type: 'string', format: 'date-time' },
+          state: 'ADDED',
+          value: { encoded: '2026-01-01T10:00:00.000Z', decoded: new Date('2026-01-01T10:00:00.000Z') },
         },
       ]);
     });

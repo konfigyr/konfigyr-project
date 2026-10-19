@@ -2,7 +2,7 @@ import { keepPreviousData, queryOptions, useMutation, useQuery, useQueryClient }
 import { getServiceCatalogQuery } from '@konfigyr/hooks/namespace/query';
 
 import request from '@konfigyr/lib/http';
-import { useJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
+import { resolveJsonSchemeTransform } from '@konfigyr/hooks/artifactory/hooks';
 import { ConfigurationPropertyState, Operation } from '@konfigyr/hooks/vault/types';
 
 import type { PropertyDescriptor } from '@konfigyr/hooks/artifactory/types';
@@ -70,7 +70,7 @@ const generateStubChangesetState = (
     const descriptor = catalog.properties.find(it => it.name === name);
 
     // resolve the transform function for the property descriptor and construct the property value
-    const transform = useJsonSchemeTransform<any>(descriptor?.schema ?? DEFAULT_PROPERTY_DESCRIPTOR.schema);
+    const transform = resolveJsonSchemeTransform<any>(descriptor?.schema ?? DEFAULT_PROPERTY_DESCRIPTOR.schema);
     const encoded = values[name];
     const decoded = transform.decode(encoded);
 

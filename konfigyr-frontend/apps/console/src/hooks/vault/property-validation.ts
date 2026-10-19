@@ -3,60 +3,19 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { useIntl } from 'react-intl';
 import { VALIDATION_MESSAGES } from '@konfigyr/hooks/vault/messages';
-import { DATA_SIZE_ENCODED_PATTERN, DURATION_ENCODED_PATTERN, DataUnit, DurationUnit } from '@konfigyr/hooks/transforms';
+import { DATA_SIZE_ENCODED_PATTERN, DURATION_ENCODED_PATTERN } from '@konfigyr/hooks/transforms';
 import type { ErrorObject, ValidateFunction } from 'ajv';
 import type { IntlShape } from 'react-intl';
 
 import type { PropertyJsonSchema } from '@konfigyr/hooks/artifactory/types';
-import type { ValidationError, ValidationResult } from '@konfigyr/hooks/vault/types';
+import type { ConfigurationPropertyValue, ValidationError, ValidationResult } from '@konfigyr/hooks/vault/types';
+
+type ValidatedValue = ConfigurationPropertyValue<unknown> | undefined | null;
 
 const ajv = new Ajv({ allErrors: true, coerceTypes: false });
 addFormats(ajv);
-
-const [ DURATION_FORMAT, DATA_SIZE_FORMAT ] = ['duration', 'data-size'];
-
-ajv.addFormat(DURATION_FORMAT, DURATION_ENCODED_PATTERN);
-ajv.addFormat(DATA_SIZE_FORMAT, DATA_SIZE_ENCODED_PATTERN);
-
-/**
- * Builds a JSON Schema for unit-based scalar objects.
- *
- * The schema validates a shape with:
- * - `value`: numeric amount
- * - `unit`: one of the supplied unit values
- */
-const buildUnitSchema = (units: Array<string>): object => ({
-  type: 'object',
-  properties: {
-    value: {
-      type: 'number',
-    },
-    unit: {
-      type: 'string',
-      enum: units,
-    },
-  },
-  required: ['value', 'unit'],
-  additionalProperties: false,
-});
-
-/**
- * JSON Schema that validates a duration object consisting of:
- * - `value`: the duration amount
- * - `unit`: one of the supported {@link DurationUnit} values
- *
- * @see Duration
- */
-const DURATION_SCHEMA = buildUnitSchema(Object.values(DurationUnit));
-
-/**
- * JSON Schema that validates a data size object consisting of:
- * - `value`: the data size amount
- * - `unit`: one of the supported {@link DataUnit} values
- *
- * @see DataSize
- */
-const DATA_SIZE_SCHEMA = buildUnitSchema(Object.values(DataUnit));
+ajv.addFormat('duration', DURATION_ENCODED_PATTERN);
+ajv.addFormat('data-size', DATA_SIZE_ENCODED_PATTERN);
 
 // Normalizes enum values to support Spring Boot relaxed binding.
 // Converts to uppercase and removes separators (-, _, whitespace) so values
@@ -162,35 +121,60 @@ const mapAjvErrors = (errors: Array<ErrorObject>, intl: IntlShape): Array<Valida
 
 const buildValidationResult = (isValid: boolean, errors: Array<ValidationError>) => ({ isValid, errors });
 
-function createPropertyValidator (schema: PropertyJsonSchema): ValidateFunction {
-  if (schema.type === 'string' && (schema.format === DURATION_FORMAT || schema.format === DATA_SIZE_FORMAT)) {
-    return ajv.compile(schema);
-  }
-
-  if (schema.type === 'object' && schema.format === DURATION_FORMAT) {
-    return ajv.compile(DURATION_SCHEMA);
-  }
-
-  if (schema.type === 'object' && schema.format === DATA_SIZE_FORMAT) {
-    return ajv.compile(DATA_SIZE_SCHEMA);
-  }
-
+function createPropertyValidator(schema: PropertyJsonSchema): ValidateFunction {
   return ajv.compile(schema);
 }
 
-function validatePropertyValue(validator: ValidateFunction, schema: PropertyJsonSchema, value: unknown): boolean {
+function validatePropertyValue(
+  validator: ValidateFunction,
+  schema: PropertyJsonSchema,
+  value?: ValidatedValue,
+): boolean {
+  let subject: unknown = value?.decoded;
+
+  // when value type is string, use the encoded string representation for
+  // validation, AJV uses different patterns to validate custom schema formats
+  if (schema.type === 'string') {
+    subject = value?.encoded;
+  }
+
   return schema.enum?.length
-    ? validator(resolveRelaxedEnumValue(schema.enum, value))
-    : validator(value);
+    ? validator(resolveRelaxedEnumValue(schema.enum, subject))
+    : validator(subject);
 }
 
-export function isPropertyValueValid(schema: PropertyJsonSchema, value: unknown): boolean {
+/**
+ * Checks if the configuration property value satisfies the given JSON schema.
+ *
+ * Values of `string` schemas are validated using their encoded representation. This allows
+ * custom string formats, like `duration` or `data-size`, to be checked against their encoded
+ * patterns. Values of all other schema types are validated using their decoded representation.
+ *
+ * String values of `enum` schemas are matched using Spring Boot relaxed binding rules.
+ *
+ * @param schema the JSON schema of the configuration property
+ * @param value the configuration property value to validate, can be `undefined`
+ * @returns `true` when the value is valid, `false` otherwise
+ */
+export function isPropertyValueValid(schema: PropertyJsonSchema, value: ValidatedValue): boolean {
   const validator = createPropertyValidator(schema);
   return validatePropertyValue(validator, schema, value);
 }
 
-export function usePropertyValidation (schema: PropertyJsonSchema): {
-  validate: (value: unknown) => ValidationResult;
+/**
+ * Hook that validates configuration property values against the given JSON schema.
+ *
+ * Values are validated using the same rules as {@link isPropertyValueValid}. Failed
+ * validations contain localized error messages for each violated schema keyword.
+ *
+ * The result of the latest validation is kept in state. It is valid until the first
+ * `validate` call.
+ *
+ * @param schema the JSON schema of the configuration property
+ * @returns the `validate` function and the result of the latest validation
+ */
+export function usePropertyValidation(schema: PropertyJsonSchema): {
+  validate: (value: ValidatedValue) => ValidationResult;
   result: ValidationResult;
 } {
   const intl: IntlShape = useIntl();
@@ -198,7 +182,7 @@ export function usePropertyValidation (schema: PropertyJsonSchema): {
 
   const [result, setResult] = useState<ValidationResult>(() => buildValidationResult(true, []));
 
-  const validate = useCallback((value: unknown): ValidationResult => {
+  const validate = useCallback((value: ValidatedValue): ValidationResult => {
     const isValid = validatePropertyValue(validator, schema, value);
 
     const nextResult: ValidationResult = isValid
@@ -207,10 +191,7 @@ export function usePropertyValidation (schema: PropertyJsonSchema): {
 
     setResult(nextResult);
     return nextResult;
-  }, [validator]);
+  }, [intl, validator]);
 
-  return {
-    validate,
-    result,
-  };
+  return { validate, result };
 }

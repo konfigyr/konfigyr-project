@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   booleanTransform,
   dataSizeTransform,
@@ -14,7 +15,10 @@ class ArrayTransform<T> implements Transform<Array<T>> {
   constructor(private readonly delegate: Transform<T>) {}
 
   decode(value: string): Array<T> | null {
-    return value.split(',').map(this.delegate.decode).filter(Boolean) as Array<T>;
+    return value.split(',')
+      .filter(item => item !== '')
+      .map(this.delegate.decode)
+      .filter(item => item !== null);
   }
 
   encode(value: Array<T>): string {
@@ -22,11 +26,11 @@ class ArrayTransform<T> implements Transform<Array<T>> {
   }
 }
 
-export function useJsonSchemeTransform<T>(schema: PropertyJsonSchema): Transform<T> {
+export function resolveJsonSchemeTransform<T>(schema: PropertyJsonSchema): Transform<T> {
   switch (schema.type) {
     case 'array':
       return new ArrayTransform(
-        useJsonSchemeTransform<any>(schema.items || { type: 'string' }),
+        resolveJsonSchemeTransform<any>(schema.items || { type: 'string' }),
       ) as unknown as Transform<T>;
     case 'boolean':
       return booleanTransform as unknown as Transform<T>;
@@ -48,4 +52,8 @@ export function useJsonSchemeTransform<T>(schema: PropertyJsonSchema): Transform
     default:
       return stringTransform as unknown as Transform<T>;
   }
+}
+
+export function useJsonSchemeTransform<T>(schema: PropertyJsonSchema): Transform<T> {
+  return useMemo(() => resolveJsonSchemeTransform(schema), [schema]);
 }
