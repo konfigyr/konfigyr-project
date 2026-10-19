@@ -5,7 +5,14 @@ import { HttpResponse, http } from 'msw';
 import { createTestQueryClient } from '@konfigyr/test/helpers/query-client';
 import { namespaces, profiles, services } from '@konfigyr/test/helpers/mocks';
 import { server } from '@konfigyr/test/helpers/server';
-import { rebaseChangeset, useChangesetState, useModifyProperty } from '@konfigyr/hooks/vault/changeset';
+import {
+  rebaseChangeset,
+  useAddProperty,
+  useChangesetState,
+  useModifyProperty,
+  useRemoveProperty,
+  useRestoreProperty,
+} from '@konfigyr/hooks/vault/changeset';
 import { clearChangesetStorage, useChangesetStorage } from '@konfigyr/hooks/vault/changeset-storage';
 import { ConfigurationPropertyState } from '@konfigyr/hooks/vault/types';
 
@@ -214,6 +221,83 @@ describe('hooks | vault | changeset', () => {
     await waitFor(() => {
       expect(stateOf(result.current.state.data!)).toStrictEqual({
         'application.name': [ConfigurationPropertyState.UPDATED, 'konfigyr-backend'],
+        'application.profile': [ConfigurationPropertyState.UNCHANGED, 'staging'],
+      });
+    });
+  });
+
+  test('should apply consecutive property mutations started from the same render', async () => {
+    const { result } = renderHook(() => {
+      const state = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profiles.development);
+      return { state };
+    }, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.state.data).toBeDefined();
+    });
+
+    const current = result.current.state.data!;
+    const { result: mutations } = renderHook(() => ({
+      add: useAddProperty(current),
+      modify: useModifyProperty(current),
+      remove: useRemoveProperty(current),
+    }), { wrapper: createWrapper() });
+
+    const { add, modify, remove } = mutations.current;
+
+    await act(async () => {
+      await add.mutateAsync({
+        property: property('server.port', '8080'),
+        value: { encoded: '8080', decoded: '8080' },
+      });
+      await modify.mutateAsync({
+        property: current.properties[0],
+        value: { encoded: 'konfigyr-backend', decoded: 'konfigyr-backend' },
+      });
+      await remove.mutateAsync({ property: current.properties[1] });
+    });
+
+    await waitFor(() => {
+      expect(stateOf(result.current.state.data!)).toStrictEqual({
+        'application.name': [ConfigurationPropertyState.UPDATED, 'konfigyr-backend'],
+        'application.profile': [ConfigurationPropertyState.REMOVED, 'staging'],
+        'server.port': [ConfigurationPropertyState.ADDED, '8080'],
+      });
+    });
+  });
+
+  test('should discard added property when it is removed and restore removed property', async () => {
+    const { result } = renderHook(() => {
+      const state = useChangesetState(namespaces.konfigyr, services.konfigyrApi, profiles.development);
+      return { state };
+    }, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.state.data).toBeDefined();
+    });
+
+    const current = result.current.state.data!;
+    const { result: mutations } = renderHook(() => ({
+      add: useAddProperty(current),
+      remove: useRemoveProperty(current),
+      restore: useRestoreProperty(current),
+    }), { wrapper: createWrapper() });
+
+    const { add, remove, restore } = mutations.current;
+
+    await act(async () => {
+      await add.mutateAsync({
+        property: property('server.port', '8080'),
+        value: { encoded: '8080', decoded: '8080' },
+      });
+      await remove.mutateAsync({ property: property('server.port', '8080') });
+      await remove.mutateAsync({ property: current.properties[0] });
+      await restore.mutateAsync({ property: current.properties[0] });
+    });
+
+    await waitFor(() => {
+      expect(stateOf(result.current.state.data!)).toStrictEqual({
+        'application.name': [ConfigurationPropertyState.UNCHANGED, 'konfigyr-frontend'],
         'application.profile': [ConfigurationPropertyState.UNCHANGED, 'staging'],
       });
     });

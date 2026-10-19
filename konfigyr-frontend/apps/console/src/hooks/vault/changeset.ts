@@ -45,9 +45,22 @@ const countChanges = (properties: Array<ConfigurationProperty<any>>) => ({
   deleted: properties.filter(it => it.state === ConfigurationPropertyState.REMOVED).length,
 });
 
-const toChangesetStorageState = ({ name, description, properties }: ChangesetState): ChangesetStorageState => ({
-  name, description, properties,
-});
+const EMPTY_CHANGESET_STORAGE_STATE: ChangesetStorageState = {
+  name: 'Changeset draft',
+  properties: [],
+};
+
+const upsertChangesetProperty = (
+  draft: ChangesetStorageState | null | undefined,
+  property: ConfigurationProperty<any>,
+): ChangesetStorageState => {
+  const state = draft ?? EMPTY_CHANGESET_STORAGE_STATE;
+
+  return {
+    ...state,
+    properties: [...state.properties.filter(it => it.name !== property.name), property],
+  };
+};
 
 const generateApplyRequestFromChangeset = (payload: ChangesetState): ApplyRequest => {
   const changes = payload.properties.reduce((acc, property) => {
@@ -220,7 +233,7 @@ export const useRenameChangeset = (state: ChangesetState) => {
       return Promise.resolve({ ...state, name: name || 'Changeset draft' });
     },
     onSuccess(result: ChangesetState) {
-      setDraft(toChangesetStorageState(result));
+      setDraft(draft => ({ ...(draft ?? EMPTY_CHANGESET_STORAGE_STATE), name: result.name }));
     },
   });
 };
@@ -295,122 +308,61 @@ export const useSubmitChangeset = (state: ChangesetState) => {
 };
 
 const generatePropertyOperationMutation = (
-  mutation: (state: ChangesetState, property: PropertyDescriptor, value?: ConfigurationPropertyValue<any>) => Array<ConfigurationProperty<any>>,
+  mutation: (draft: ChangesetStorageState | null | undefined, property: PropertyDescriptor, value?: ConfigurationPropertyValue<any>) => ChangesetStorageState | null | undefined,
 ) => (state: ChangesetState) => {
   const [, setDraft] = useChangesetStorage(state.profile.id);
 
   return useMutation({
-    mutationFn: async ({ property, value }: { property: PropertyDescriptor, value?: ConfigurationPropertyValue<any> }): Promise<ChangesetState> => {
-      const properties = mutation(state, property, value);
-
-      return Promise.resolve({ ...state, properties, ...countChanges(properties) });
-    },
-    onSuccess(result: ChangesetState) {
-      setDraft(toChangesetStorageState(result));
+    mutationFn: ({ property, value }: { property: PropertyDescriptor, value?: ConfigurationPropertyValue<any> }): Promise<void> => {
+      setDraft(draft => mutation(draft, property, value));
+      return Promise.resolve();
     },
   });
 };
 
 export const useAddProperty = generatePropertyOperationMutation(
-  (state, property, value) => {
-    return [
-      ...state.properties,
-      { ...property, value, state: ConfigurationPropertyState.ADDED },
-    ];
-  },
+  (draft, property, value) => upsertChangesetProperty(draft, {
+    ...property, value, state: ConfigurationPropertyState.ADDED,
+  }),
 );
 
 export const useImportProperties = (changeset: ChangesetState) => {
   const [, setDraft] = useChangesetStorage(changeset.profile.id);
 
   return useMutation({
-    mutationFn: async (properties: Array<ConfigurationProperty<any>>): Promise<ChangesetState>=> {
-      const importedByName = new Map(
-        properties.map(property => [property.name, property] as const),
-      );
-
-      const result: Array<ConfigurationProperty<any>> = changeset.properties.map(existing => {
-        const imported = importedByName.get(existing.name);
-        if (!imported) {
-          return existing;
-        }
-
-        importedByName.delete(existing.name);
-        return {
-          ...existing,
-          value: imported.value,
-          state: existing.state === ConfigurationPropertyState.ADDED
-            ? ConfigurationPropertyState.ADDED
-            : ConfigurationPropertyState.UPDATED,
-        };
-      });
-
-      importedByName.forEach((property) => {
-        result.push({
-          ...property,
-          state: ConfigurationPropertyState.ADDED,
-        });
-      });
-
-      return Promise.resolve({
-        ...changeset,
-        properties: result,
-        ...countChanges(result),
-      });
-    },
-    onSuccess(result: ChangesetState) {
-      setDraft(toChangesetStorageState(result));
+    mutationFn: (properties: Array<ConfigurationProperty<any>>): Promise<void> => {
+      setDraft(draft => properties.reduce((state, property) => upsertChangesetProperty(state, {
+        ...property, state: ConfigurationPropertyState.UPDATED,
+      }), draft ?? EMPTY_CHANGESET_STORAGE_STATE));
+      return Promise.resolve();
     },
   });
 };
 
 export const useRestoreProperty = generatePropertyOperationMutation(
-  (state, property) => {
-    const properties: Array<ConfigurationProperty<any>> = state.properties.map(it => {
-      if (property.name === it.name && it.state === ConfigurationPropertyState.REMOVED) {
-        return { ...it, state: ConfigurationPropertyState.UNCHANGED };
-      }
-      return it;
-    });
+  (draft, property) => {
+    // only removed properties can be restored, restoring them discards the change
+    const change = draft?.properties.find(it => it.name === property.name);
 
-    return properties;
+    if (!draft || change?.state !== ConfigurationPropertyState.REMOVED) {
+      return draft;
+    }
+
+    return { ...draft, properties: draft.properties.filter(it => it.name !== property.name) };
   },
 );
 
 export const useModifyProperty = generatePropertyOperationMutation(
-  (state, property, value) => {
-    const properties: Array<ConfigurationProperty<any>> = state.properties.map(it => {
-      if (property.name === it.name) {
-        return {
-          ...it,
-          value,
-          state: it.state === ConfigurationPropertyState.ADDED
-            ? ConfigurationPropertyState.ADDED : ConfigurationPropertyState.UPDATED,
-        };
-      }
-      return it;
-    });
-
-    return properties;
-  },
+  (draft, property, value) => upsertChangesetProperty(draft, {
+    ...property, value, state: ConfigurationPropertyState.UPDATED,
+  }),
 );
 
 export const useRemoveProperty = generatePropertyOperationMutation(
-  (changeset, property) => {
-    const properties: Array<ConfigurationProperty<any>> = changeset.properties.reduce((state, it) => {
-      if (property.name === it.name) {
-        // if the property was added, it should be removed from the changeset as well
-        if (it.state === ConfigurationPropertyState.ADDED) {
-          return state;
-        }
-        // modified properties should be marked as deleted
-        return [ ...state, { ...it, state: ConfigurationPropertyState.REMOVED } ];
-      }
-      return [ ...state, it];
-    }, [] as Array<ConfigurationProperty<any>>);
-
-    return properties;
-  },
+  // properties that do not exist on the server are dropped when the changeset is rebased
+  (draft, property) => upsertChangesetProperty(draft, {
+    ...property, state: ConfigurationPropertyState.REMOVED,
+  }),
 );
 
 export const getChangeHistoryQuery = (namespace: Namespace, service: Service, profile: Profile, query?: ChangeHistoryQuery) => {
