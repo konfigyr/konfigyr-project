@@ -192,7 +192,7 @@ function DiscardButton({ changeset, onDiscarded, onError }: {
   onError: (error: unknown) => void;
   onDiscarded?: ChangesetStatusBarProps['onChangesetDiscarded'];
 }) {
-  const { mutateAsync: onDiscardChangeset, isPending } = useDiscardChangeset();
+  const { mutateAsync: onDiscardChangeset, isPending } = useDiscardChangeset(changeset);
 
   const onDiscard = useCallback(async () => {
     try {
@@ -244,8 +244,8 @@ function ChangesetStatusBarContents({
   const [opened, setOpened] = useState(false);
   const errorNotification = useErrorNotification();
 
-  const { mutateAsync: onApplyChangeset } = useApplyChangeset();
-  const { mutateAsync: onSubmitChangeset } = useSubmitChangeset();
+  const { mutateAsync: onApplyChangeset } = useApplyChangeset(changeset);
+  const { mutateAsync: onSubmitChangeset } = useSubmitChangeset(changeset);
 
   const onApply = useCallback(async (payload: ChangesetState) => {
     try {

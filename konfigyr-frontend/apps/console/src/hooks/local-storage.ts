@@ -25,39 +25,36 @@ const getLocalStorageItem = (key: string) => {
   return window.localStorage.getItem(key);
 };
 
-const useLocalStorageSubscribe = (callback: (event: StorageEvent) => void) => {
+const localStorageSubscribe = (callback: (event: StorageEvent) => void) => {
   window.addEventListener(STORAGE_EVENT_TYPE, callback);
   return () => window.removeEventListener(STORAGE_EVENT_TYPE, callback);
 };
 
 export type LocalStorageState<T> = [T | null, Dispatch<SetStateAction<T | undefined | null>>];
 
+const parseLocalStorageItem = <T>(item: string | null, initialValue?: T): T | null => {
+  let parsed;
+
+  try {
+    parsed = item ? JSON.parse(item) : initialValue;
+  } catch (error) {
+    logger.error(error, `Failed to process local storage value of '${item}', falling back to: ${initialValue}`);
+    parsed = initialValue;
+  }
+
+  return parsed ?? null;
+};
+
 export function useLocalStorage<T>(key: string, initialValue?: T): LocalStorageState<T> {
-  const store = useSyncExternalStore(useLocalStorageSubscribe, () => getLocalStorageItem(key));
+  const store = useSyncExternalStore(localStorageSubscribe, () => getLocalStorageItem(key), () => null);
 
-  const value = useMemo(() => {
-    let parsed;
-
-    try {
-      parsed = store ? JSON.parse(store) : initialValue;
-    } catch (error) {
-      logger.error(error, `Failed to process local storage value of '${store}', falling back to: ${initialValue}`);
-      parsed = initialValue;
-    }
-
-    return parsed ?? null;
-  }, [store, initialValue]);
+  const value = useMemo(() => parseLocalStorageItem(store, initialValue), [store, initialValue]);
 
   const setState = useCallback((action: SetStateAction<T | undefined | null>): void => {
-    let nextState;
+    const current = parseLocalStorageItem(getLocalStorageItem(key), initialValue);
+    const nextState = action instanceof Function ? action(current) : action;
 
-    if (action instanceof Function) {
-      nextState = action(value);
-    } else {
-      nextState = action;
-    }
-
-    if (nextState === value) {
+    if (nextState === current) {
       return;
     }
 
@@ -66,7 +63,7 @@ export function useLocalStorage<T>(key: string, initialValue?: T): LocalStorageS
     } else {
       setLocalStorageItem(key, nextState);
     }
-  }, [key, value]);
+  }, [key, initialValue]);
 
   useEffect(() => {
     if (getLocalStorageItem(key) === null && typeof initialValue !== 'undefined') {

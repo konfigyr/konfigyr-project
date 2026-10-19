@@ -163,29 +163,8 @@ const getProperties = http.get('http://localhost/api/namespaces/:namespace/servi
   }
 
   return HttpResponse.json({
-    data: [{
-      name: 'application.name',
-      description: 'Application name property',
-      type: 'java.lang.String',
-      state: 'modified',
-      value: 'konfigyr-frontend',
-      schema: {
-        type: 'string',
-      },
-    }, {
-      name: 'application.profile',
-      description: 'Application profile property',
-      type: 'java.lang.String',
-      state: 'unchanged',
-      value: 'staging',
-      deprecation: {
-        reason: 'This property is deprecated',
-      },
-      schema: {
-        type: 'string',
-        enum: ['staging', 'production'],
-      },
-    }],
+    'application.name': 'konfigyr-frontend',
+    'application.profile': 'staging',
   });
 });
 
