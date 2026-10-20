@@ -113,7 +113,7 @@ describe('components | audit | <AuditEntityTypeIcon/>', () => {
 
     expect(getByTestId('icon')).toBeInTheDocument();
     expect(getByTestId('icon')).toHaveAccessibleName('unknown');
-    expect(getByTestId('icon')).toHaveClass('lucide-grid2x2-x');
+    expect(getByTestId('icon')).toHaveClass('lucide-grid-2x2-x');
   });
 
 });
