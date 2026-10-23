@@ -31,5 +31,6 @@ abstract class KonfigyrBuildExtension @Inject constructor(
         .map { "konfigyr/$projectName:$it" }
 
 	/** Explicitly specify the docker image platform target to AMD64 */
-	val dockerImagePlatform: Provider<String> = providers.provider { "linux/amd64" }
+	val dockerImagePlatform: Provider<String> = providers.environmentVariable("DOCKER_DEFAULT_PLATFORM")
+		.orElse("linux/amd64")
 }

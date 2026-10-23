@@ -98,4 +98,5 @@ jobs:
           CI: 'true'
           NIGHTLY: 'true'
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+          DOCKER_DEFAULT_PLATFORM: 'linux/amd64'
         run: ./gradlew bootBuildImage --publishImage
