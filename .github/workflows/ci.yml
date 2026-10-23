@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build:
     name: 'CI'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -70,7 +70,18 @@ jobs:
     name: Build and publish Docker images
     runs-on: ubuntu-24.04
     needs: build
+    env:
+      CI: 'true'
+      NIGHTLY: 'true'
+      DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+      DOCKER_DEFAULT_PLATFORM: 'linux/amd64'
     steps:
+      - name: Check architecture
+        run: |
+          echo "uname: $(uname -m)"
+          docker version --format '{{.Server.Os}}/{{.Server.Arch}}'
+          echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-unset}"
+
       - name: Checkout code
         uses: actions/checkout@v7
 
@@ -94,9 +105,4 @@ jobs:
             konfigyr-identity/package-lock.json
 
       - name: Publish
-        env:
-          CI: 'true'
-          NIGHTLY: 'true'
-          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-          DOCKER_DEFAULT_PLATFORM: 'linux/amd64'
         run: ./gradlew bootBuildImage --publishImage
