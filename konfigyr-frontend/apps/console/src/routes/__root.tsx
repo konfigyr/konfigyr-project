@@ -6,6 +6,7 @@ import {
   Outlet,
   Scripts,
   createRootRouteWithContext,
+  useRouter,
 } from '@tanstack/react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
@@ -47,12 +48,16 @@ export const Route = createRootRouteWithContext<RouteContext>()({
 });
 
 function RootComponent() {
+  const router = useRouter();
+  const nonce = router.options.ssr?.nonce;
+
   return (
     <RootDocument>
       <IntlProvider locale="en" messages={defaultMessages}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
+          nonce={nonce}
           enableSystem
           disableTransitionOnChange
         >

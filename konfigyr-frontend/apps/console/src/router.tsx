@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { createRouter } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
+import { getNonce } from '@konfigyr/lib/nonces';
 import { ErrorBoundary } from '@konfigyr/components/routing/error';
 import { NotFound } from '@konfigyr/components/routing/not-found';
 import { routeTree } from './routeTree.gen';
@@ -16,6 +17,7 @@ export function getRouter() {
     defaultPreload: 'intent',
     defaultPendingMs: 100,
     defaultViewTransition: true,
+    ssr: { nonce: getNonce() },
   });
 
   setupRouterSsrQueryIntegration({

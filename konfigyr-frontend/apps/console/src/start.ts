@@ -1,10 +1,11 @@
 import { createStart } from '@tanstack/react-start';
-import { authenticationMiddleware, securityPoliciesMiddleware } from '@konfigyr/middleware';
+import { authenticationMiddleware, csrfMiddleware, securityPoliciesMiddleware } from '@konfigyr/middleware';
 
 export const startInstance = createStart(() => ({
   defaultSsr: false,
   requestMiddleware: [
-    authenticationMiddleware(),
+    csrfMiddleware(),
     securityPoliciesMiddleware(),
+    authenticationMiddleware(),
   ],
 }));

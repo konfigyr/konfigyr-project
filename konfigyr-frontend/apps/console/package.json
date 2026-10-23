@@ -8,7 +8,7 @@
     "build": "vite build && tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "start": "vite start",
+    "start": "vite preview",
     "test": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "typescript": "tsc --noEmit"

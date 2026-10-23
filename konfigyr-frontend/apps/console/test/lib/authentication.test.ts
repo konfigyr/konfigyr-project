@@ -167,7 +167,7 @@ describe('services | authentication', () => {
   });
 
   test('should use secure session cookie when configured', async () => {
-    vi.stubEnv('KONFIGYR_SESSION_SECURE', 'true');
+    vi.stubEnv('KONFIGYR_SSL_ENABLED', 'true');
 
     const authentication = await Authentication.get();
     await authentication.logout();

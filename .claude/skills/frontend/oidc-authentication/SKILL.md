@@ -80,7 +80,7 @@ KONFIGYR_OAUTH_CLIENT_SECRET=...
 # Session encryption (at least 32 characters)
 KONFIGYR_SESSION_KEY=...
 # Optional: force the Secure cookie flag (defaults to true in production)
-KONFIGYR_SESSION_SECURE=true
+KONFIGYR_SSL_ENABLED=true
 
 # Backend API (server-side proxy)
 KONFIGYR_API_URL=http://localhost:8080
