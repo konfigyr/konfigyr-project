@@ -29,4 +29,7 @@ abstract class KonfigyrBuildExtension @Inject constructor(
     val dockerImageTag: Provider<String> = nightly
         .map { if (it) "latest" else projectVersion }
         .map { "konfigyr/$projectName:$it" }
+
+	/** Explicitly specify the docker image platform target to AMD64 */
+	val dockerImagePlatform: Provider<String> = providers.provider { "linux/amd64" }
 }

@@ -85,6 +85,7 @@ tasks.named("processResources") { dependsOn("rollup") }
 
 tasks.named<BootBuildImage>("bootBuildImage") {
     imageName.set(extension.dockerImageTag)
+    imagePlatform.set(extension.dockerImagePlatform)
 
     docker {
         publishRegistry {
