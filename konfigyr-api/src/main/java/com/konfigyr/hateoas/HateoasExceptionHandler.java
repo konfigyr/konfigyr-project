@@ -231,8 +231,9 @@ class HateoasExceptionHandler extends ResponseEntityExceptionHandler implements 
 			@NonNull HandlerMethodValidationException ex, @NonNull HttpHeaders headers,
 			@NonNull HttpStatusCode status, @NonNull WebRequest request
 	) {
-		return handleMethodValidationResult(ex.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale()),
-				ex.getParameterValidationResults(), headers, request);
+		final ProblemDetail body = createProblemDetail(ex, HttpStatus.BAD_REQUEST, "Validation failed",
+				ex.getDetailMessageCode(), ex.getDetailMessageArguments(), request);
+		return handleMethodValidationResult(body, ex.getParameterValidationResults(), headers, request);
 	}
 
 	@Override

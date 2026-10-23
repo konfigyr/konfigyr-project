@@ -10,7 +10,6 @@ import com.konfigyr.vault.changes.ChangeRequestCreateCommand;
 import com.konfigyr.vault.changes.ChangeRequestManager;
 import com.konfigyr.vault.changes.ChangeRequestRevision;
 import com.konfigyr.vault.changes.ChangeRequestUpdateCommand;
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.util.Assert;
@@ -22,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j
-@Builder
+@lombok.Builder
 final class RepositoryVault implements Vault {
 
 	private final Service service;
