@@ -201,7 +201,6 @@ export interface ChangeHistoryQuery extends Record<string, string | number | boo
 export interface ValidationError {
   keyword: string;
   message: string;
-  params: Record<string, unknown>;
 }
 
 export interface ValidationResult {

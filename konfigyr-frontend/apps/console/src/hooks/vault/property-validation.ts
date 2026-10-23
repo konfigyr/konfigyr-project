@@ -1,21 +1,31 @@
 import { useCallback, useMemo, useState } from 'react';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
+import Schema from 'z-schema';
 import { useIntl } from 'react-intl';
 import { VALIDATION_MESSAGES } from '@konfigyr/hooks/vault/messages';
 import { DATA_SIZE_ENCODED_PATTERN, DURATION_ENCODED_PATTERN } from '@konfigyr/hooks/transforms';
-import type { ErrorObject, ValidateFunction } from 'ajv';
+
 import type { IntlShape } from 'react-intl';
+import type { FormatValidatorFn, SchemaErrorDetail, ValidateOptions, ValidateResponse } from 'z-schema';
 
 import type { PropertyJsonSchema } from '@konfigyr/hooks/artifactory/types';
 import type { ConfigurationPropertyValue, ValidationError, ValidationResult } from '@konfigyr/hooks/vault/types';
 
 type ValidatedValue = ConfigurationPropertyValue<unknown> | undefined | null;
+type ValidateFunction = (json: unknown, options?: ValidateOptions) => ValidateResponse;
 
-const ajv = new Ajv({ allErrors: true, coerceTypes: false });
-addFormats(ajv);
-ajv.addFormat('duration', DURATION_ENCODED_PATTERN);
-ajv.addFormat('data-size', DATA_SIZE_ENCODED_PATTERN);
+const schemaValidator = Schema.create({ safe: true });
+
+function patternFormatFactory(pattern: RegExp): FormatValidatorFn {
+  return (input) => {
+    if (typeof input === 'string') {
+      return pattern.test(input);
+    }
+    return false;
+  };
+}
+
+Schema.registerFormat('duration', patternFormatFactory(DURATION_ENCODED_PATTERN));
+Schema.registerFormat('data-size', patternFormatFactory(DATA_SIZE_ENCODED_PATTERN));
 
 // Normalizes enum values to support Spring Boot relaxed binding.
 // Converts to uppercase and removes separators (-, _, whitespace) so values
@@ -32,44 +42,37 @@ const resolveRelaxedEnumValue = (enumValues: Array<string>, value: unknown): unk
   return enumValues.find(it => normalizeEnumValue(it) === normalized) ?? value;
 };
 
-const toValueList = (params: Record<string, any>): string => {
-  const values = params.allowedValues ?? [];
-
+const toValueList = (values?: unknown): string => {
   if (!Array.isArray(values)) {
     return '';
   }
   return values.map(value => String(value)).join(', ');
 };
 
-const toMissingProperty = (params: Record<string, any>): string => String((params as { missingProperty?: string }).missingProperty);
-
-const toLimit = (params: Record<string, any>): string => String((params as { limit?: number }).limit);
-
-const toFormat = (params: Record<string, any>): string => String((params as { format?: number }).format);
-
-const toMultipleOf = (params: Record<string, any>): string => String((params as { multipleOf?: number }).multipleOf);
-
-const mapAjvError = (error: ErrorObject, intl: IntlShape): ValidationError => {
-  const { keyword, params } = error;
+const mapAjvError = (error: SchemaErrorDetail, schema: PropertyJsonSchema, intl: IntlShape): ValidationError => {
+  const { keyword } = error;
 
   switch (keyword) {
     case 'type':
       return {
         keyword,
-        params,
-        message: intl.formatMessage(VALIDATION_MESSAGES.type, { type: String(params.type) }),
+        message: intl.formatMessage(VALIDATION_MESSAGES.type, {
+          type: String(error.params[0]),
+          value: String(error.params[1]),
+        }),
       };
     case 'enum':
       return {
         keyword,
-        params,
-        message: intl.formatMessage(VALIDATION_MESSAGES.enum, { values: toValueList(params) }),
+        message: intl.formatMessage(VALIDATION_MESSAGES.enum, {
+          value: String(error.params[0]),
+          values: toValueList(schema.enum),
+        }),
       };
     case 'required':
       return {
         keyword,
-        params,
-        message: intl.formatMessage(VALIDATION_MESSAGES.required, { property: toMissingProperty(params) }),
+        message: intl.formatMessage(VALIDATION_MESSAGES.required, { property: toValueList(error.params) }),
       };
     case 'minimum':
     case 'exclusiveMinimum':
@@ -79,57 +82,50 @@ const mapAjvError = (error: ErrorObject, intl: IntlShape): ValidationError => {
     case 'maxLength':
     case 'minItems':
     case 'maxItems':
-      return {
-        keyword,
-        params,
-        message: intl.formatMessage(VALIDATION_MESSAGES[keyword], { limit: toLimit(params) }),
-      };
     case 'multipleOf':
       return {
         keyword,
-        params,
-        message: intl.formatMessage(VALIDATION_MESSAGES.multipleOf, { value: toMultipleOf(params) }),
+        message: intl.formatMessage(VALIDATION_MESSAGES[keyword], {
+          value: String(error.params[0]),
+          limit: String(error.params[1]),
+        }),
       };
     case 'pattern':
-      return {
-        keyword,
-        params,
-        message: intl.formatMessage(VALIDATION_MESSAGES.pattern),
-      };
+      return { keyword, message: intl.formatMessage(VALIDATION_MESSAGES.pattern) };
     case 'format':
       return {
         keyword,
-        params,
-        message: intl.formatMessage(VALIDATION_MESSAGES.format, { format: toFormat(params) }),
+        message: intl.formatMessage(VALIDATION_MESSAGES.format, {
+          format: String(error.params[0]),
+          value: String(error.params[1]),
+        }),
       };
     case 'uniqueItems':
       return {
         keyword,
-        params,
         message: intl.formatMessage(VALIDATION_MESSAGES.uniqueItems),
       };
     default:
       return {
-        keyword,
-        params,
+        keyword: String(keyword),
         message: intl.formatMessage(VALIDATION_MESSAGES.invalid),
       };
   }
 };
 
-const mapAjvErrors = (errors: Array<ErrorObject>, intl: IntlShape): Array<ValidationError> => errors.map(error => mapAjvError(error, intl));
+const mapAjvErrors = (errors: Array<SchemaErrorDetail>, schema: PropertyJsonSchema, intl: IntlShape): Array<ValidationError> => errors.map(error => mapAjvError(error, schema, intl));
 
 const buildValidationResult = (isValid: boolean, errors: Array<ValidationError>) => ({ isValid, errors });
 
 function createPropertyValidator(schema: PropertyJsonSchema): ValidateFunction {
-  return ajv.compile(schema);
+  return schemaValidator.compile(schema);
 }
 
 function validatePropertyValue(
   validator: ValidateFunction,
   schema: PropertyJsonSchema,
   value?: ValidatedValue,
-): boolean {
+): ValidateResponse {
   let subject: unknown = value?.decoded;
 
   // when value type is string, use the encoded string representation for
@@ -158,7 +154,7 @@ function validatePropertyValue(
  */
 export function isPropertyValueValid(schema: PropertyJsonSchema, value: ValidatedValue): boolean {
   const validator = createPropertyValidator(schema);
-  return validatePropertyValue(validator, schema, value);
+  return validatePropertyValue(validator, schema, value).valid;
 }
 
 /**
@@ -183,11 +179,11 @@ export function usePropertyValidation(schema: PropertyJsonSchema): {
   const [result, setResult] = useState<ValidationResult>(() => buildValidationResult(true, []));
 
   const validate = useCallback((value: ValidatedValue): ValidationResult => {
-    const isValid = validatePropertyValue(validator, schema, value);
+    const response = validatePropertyValue(validator, schema, value);
 
-    const nextResult: ValidationResult = isValid
+    const nextResult: ValidationResult = response.valid
       ? buildValidationResult(true, [])
-      : buildValidationResult(false, mapAjvErrors(validator.errors ?? [], intl));
+      : buildValidationResult(false, mapAjvErrors(response.err?.details ?? [], schema, intl));
 
     setResult(nextResult);
     return nextResult;
