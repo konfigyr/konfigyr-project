@@ -13,9 +13,7 @@ interface ValidationCase {
   schema: PropertyJsonSchema;
   value: ConfigurationPropertyValue<unknown> | null;
   keyword?: string;
-  format?: string;
   message?: string;
-  params?: object;
 }
 
 const propertyValue = (decoded: unknown, encoded = String(decoded)): ConfigurationPropertyValue<unknown> => ({
@@ -135,28 +133,24 @@ const VALIDATION_FAIL_CASES: Array<ValidationCase> = [
     schema: { type: 'string', format: 'date' },
     value: propertyValue('not-a-date'),
     keyword: 'format',
-    format: 'date',
     message: 'Must be a valid date',
   }, {
     label: 'format: time',
     schema: { type: 'string', format: 'time' },
     value: propertyValue('25:61:61'),
     keyword: 'format',
-    format: 'time',
     message: 'Must be a valid time',
   }, {
     label: 'format: date-time',
     schema: { type: 'string', format: 'date-time' },
     value: propertyValue(null, 'not-a-datetime'),
     keyword: 'format',
-    format: 'date-time',
     message: 'Must be a valid date-time',
   },
   {
     label: 'format: duration string',
     schema: { type: 'string', format: 'duration' },
     value: propertyValue(null, '1hour'),
-    format: 'duration',
     keyword: 'format',
     message: 'Must be a valid duration',
   },
@@ -164,7 +158,6 @@ const VALIDATION_FAIL_CASES: Array<ValidationCase> = [
     label: 'format: data-size string',
     schema: { type: 'string', format: 'data-size' },
     value: propertyValue(null, '10MiB'),
-    format: 'data-size',
     keyword: 'format',
     message: 'Must be a valid data-size',
   },
@@ -241,7 +234,7 @@ describe('hooks | vault | usePropertyValidation', () => {
     <MessagesProvider>{children}</MessagesProvider>
   );
 
-  test.each(VALIDATION_FAIL_CASES)('should fail validation for $label', ({ schema, value, keyword, format, message, params }) => {
+  test.each(VALIDATION_FAIL_CASES)('should fail validation for $label', ({ schema, value, keyword, message }) => {
     const { result } = renderHook(() => usePropertyValidation(schema), { wrapper });
 
     let validation!: ValidationResult;
@@ -252,11 +245,11 @@ describe('hooks | vault | usePropertyValidation', () => {
 
     expect(validation.isValid).toBe(false);
     expect(validation.errors.length).toBe(1);
-    expect(validation.errors[0]).toMatchObject({
-      keyword,
-      message,
-      ...(format ? { params: { ...params } } : {}),
-    });
+
+    const [error] = validation.errors;
+
+    expect(error.keyword).toEqual(keyword);
+    expect(error.message).toEqual(message);
     expect(result.current.result).toEqual(validation);
   });
 

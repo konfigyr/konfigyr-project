@@ -30,7 +30,7 @@ export const VALIDATION_MESSAGES = defineMessages({
     description: 'Validation error shown when a numeric configuration property value meets or exceeds the exclusive maximum defined in its JSON Schema.',
   },
   multipleOf: {
-    defaultMessage: 'Must be a multiple of {value}',
+    defaultMessage: 'Must be a multiple of {limit}',
     description: 'Validation error shown when a numeric configuration property value is not a multiple of the required divisor defined in its JSON Schema.',
   },
   minLength: {
