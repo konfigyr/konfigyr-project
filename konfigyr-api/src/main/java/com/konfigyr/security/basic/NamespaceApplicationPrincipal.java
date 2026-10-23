@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.konfigyr.namespace.Namespace;
 import com.konfigyr.security.AuthenticatedPrincipal;
 import com.konfigyr.security.PrincipalType;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Value;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
@@ -33,8 +35,8 @@ import static lombok.Builder.Default;
  * @since 1.0.0
  */
 @Value
-@Builder
 @NullMarked
+@lombok.Builder
 @EqualsAndHashCode(of = { "clientId" })
 @ToString(of = { "clientId", "namespace", "expiresAt", "authorities" })
 public class NamespaceApplicationPrincipal implements UserDetails, AuthenticatedPrincipal {
