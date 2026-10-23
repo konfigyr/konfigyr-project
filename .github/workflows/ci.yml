@@ -75,11 +75,6 @@ jobs:
       NIGHTLY: 'true'
       DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
     steps:
-      - name: Check architecture
-        run: |
-          echo "uname: $(uname -m)"
-          docker version --format 'Engine Version: {{.Server.Engine.Version}} | Platform: {{.Server.Os}}/{{.Server.Arch}}'
-
       - name: Checkout code
         uses: actions/checkout@v7
 
