@@ -105,4 +105,4 @@ jobs:
             konfigyr-identity/package-lock.json
 
       - name: Publish
-        run: ./gradlew bootBuildImage --publishImage
+        run: ./gradlew bootBuildImage --publishImage --stacktrace --info --no-daemon
