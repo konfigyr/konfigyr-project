@@ -52,7 +52,7 @@ export type AuthenticationSession = Session<SessionData>;
  * Creates the authentication session from the sealed session cookie.
  *
  * The session data is sealed with the `KONFIGYR_SESSION_KEY` secret. The cookie is marked as secure
- * in production, or when the `KONFIGYR_SESSION_SECURE` environment variable is enabled.
+ * in production, or when the `KONFIGYR_SSL_ENABLED` environment variable is enabled.
  *
  * @returns the authentication session for the current request
  * @throws {Error} if the `KONFIGYR_SESSION_KEY` environment variable is not set
@@ -66,8 +66,8 @@ const createAuthenticationSession = (): Promise<AuthenticationSession> => {
 
   let secure: boolean = process.env.NODE_ENV === 'production';
 
-  if (process.env.KONFIGYR_SESSION_SECURE) {
-    secure = /^(true|t|1)$/i.test(process.env.KONFIGYR_SESSION_SECURE);
+  if (process.env.KONFIGYR_SSL_ENABLED) {
+    secure = /^(true|t|1)$/i.test(process.env.KONFIGYR_SSL_ENABLED);
   }
 
   return createSession<SessionData>({

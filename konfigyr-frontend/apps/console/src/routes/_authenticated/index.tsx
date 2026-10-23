@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { getAccountInvitations, getAccountQuery, getLastUsedNamespace, getNamespacesQuery } from '@konfigyr/hooks';
 
 /**
@@ -12,7 +12,7 @@ import { getAccountInvitations, getAccountQuery, getLastUsedNamespace, getNamesp
  * provisioning page.
  */
 export const Route = createFileRoute('/_authenticated/')({
-  loader: async ({ context }) => {
+  beforeLoad: async ({ context }) => {
     const account = await context.queryClient.ensureQueryData(getAccountQuery());
     const namespaces = await context.queryClient.ensureQueryData(getNamespacesQuery());
 
@@ -21,14 +21,14 @@ export const Route = createFileRoute('/_authenticated/')({
       const pending = invitations.filter(invitation => !invitation.expired);
 
       if (pending.length === 1) {
-        throw redirect({ to: '/join/$key', params: { key: pending[0].key } });
+        throw Route.redirect({ to: '/join/$key', params: { key: pending[0].key } });
       }
 
       if (pending.length > 1) {
-        throw redirect({ to: '/invitations' });
+        throw Route.redirect({ to: '/invitations' });
       }
 
-      throw redirect({ to: '/namespace/provision' });
+      throw Route.redirect({ to: '/namespace/provision' });
     }
 
     let namespace = getLastUsedNamespace(account, namespaces);
@@ -37,7 +37,7 @@ export const Route = createFileRoute('/_authenticated/')({
       namespace = namespaces[0].slug;
     }
 
-    throw redirect({ to: '/namespace/$namespace', params: { namespace } });
+    throw Route.redirect({ to: '/namespace/$namespace', params: { namespace } });
   },
   preload: false,
 });
