@@ -82,6 +82,11 @@ jobs:
           docker version --format '{{.Server.Os}}/{{.Server.Arch}}'
           echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-unset}"
 
+      - name: Pull amd64 Paketo buildpack
+        run: |
+          docker rmi -f docker.io/paketobuildpacks/builder-noble-java-tiny:latest || true
+          docker pull --platform linux/amd64 docker.io/paketobuildpacks/builder-noble-java-tiny:latest
+
       - name: Checkout code
         uses: actions/checkout@v7
 
