@@ -33,4 +33,8 @@ abstract class KonfigyrBuildExtension @Inject constructor(
 	/** Explicitly specify the docker image platform target to AMD64 */
 	val dockerImagePlatform: Provider<String> = providers.environmentVariable("DOCKER_DEFAULT_PLATFORM")
 		.orElse("linux/amd64")
+
+	/** Explicitly specify the Buildpack builder image  */
+	val dockerImageBuilder: Provider<String> = providers.environmentVariable("DOCKER_IMAGE_BUILDER")
+		.orElse("docker.io/paketobuildpacks/builder-noble-java-tiny:0.0.200")
 }

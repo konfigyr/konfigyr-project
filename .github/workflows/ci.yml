@@ -74,18 +74,11 @@ jobs:
       CI: 'true'
       NIGHTLY: 'true'
       DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-      DOCKER_DEFAULT_PLATFORM: 'linux/amd64'
     steps:
       - name: Check architecture
         run: |
           echo "uname: $(uname -m)"
-          docker version --format '{{.Server.Os}}/{{.Server.Arch}}'
-          echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-unset}"
-
-      - name: Pull amd64 Paketo buildpack
-        run: |
-          docker rmi -f docker.io/paketobuildpacks/builder-noble-java-tiny:latest || true
-          docker pull --platform linux/amd64 docker.io/paketobuildpacks/builder-noble-java-tiny:latest
+          docker version --format 'Engine Version: {{.Server.Engine.Version}} | Platform: {{.Server.Os}}/{{.Server.Arch}}'
 
       - name: Checkout code
         uses: actions/checkout@v7
