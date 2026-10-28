@@ -129,6 +129,30 @@ const VALIDATION_FAIL_CASES: Array<ValidationCase> = [
     keyword: 'uniqueItems',
     message: 'All items must be unique',
   }, {
+    label: 'array of formatted strings: duration',
+    schema: { type: 'array', items: { type: 'string', format: 'duration' } },
+    value: propertyValue([], '1s,5minutes'),
+    keyword: 'format',
+    message: 'Must be a valid duration',
+  }, {
+    label: 'array of formatted strings: data-size',
+    schema: { type: 'array', items: { type: 'string', format: 'data-size' } },
+    value: propertyValue([], '10MB,10MiB'),
+    keyword: 'format',
+    message: 'Must be a valid data-size',
+  }, {
+    label: 'array of formatted strings: date-time',
+    schema: { type: 'array', items: { type: 'string', format: 'date-time' } },
+    value: propertyValue([], 'not-a-datetime'),
+    keyword: 'format',
+    message: 'Must be a valid date-time',
+  }, {
+    label: 'array of integers: undecodable item',
+    schema: { type: 'array', items: { type: 'integer' } },
+    value: propertyValue(null, '1,abc,3'),
+    keyword: 'type',
+    message: 'Must be a valid array',
+  }, {
     label: 'format: date',
     schema: { type: 'string', format: 'date' },
     value: propertyValue('not-a-date'),
@@ -173,6 +197,31 @@ const VALIDATION_PASS_CASES: Array<ValidationCase> = [
   { label: 'enum relaxed: kebab-case', schema: { type: 'string', enum: ['IN_PROGRESS', 'DONE'] }, value: propertyValue('in-progress') },
   { label: 'enum relaxed: camelCase', schema: { type: 'string', enum: ['IN_PROGRESS', 'DONE'] }, value: propertyValue('inProgress') },
   { label: 'minimum', schema: { type: 'number', minimum: 3 }, value: propertyValue(5) },
+  {
+    label: 'array of formatted strings: duration',
+    schema: { type: 'array', items: { type: 'string', format: 'duration' } },
+    value: propertyValue([], '1s,5m'),
+  },
+  {
+    label: 'array of formatted strings: data-size',
+    schema: { type: 'array', items: { type: 'string', format: 'data-size' } },
+    value: propertyValue([], '10MB,2GB'),
+  },
+  {
+    label: 'array of formatted strings: date-time',
+    schema: { type: 'array', items: { type: 'string', format: 'date-time' } },
+    value: propertyValue([], '2024-01-01T00:00:00Z,2025-06-30T12:30:00+02:00'),
+  },
+  {
+    label: 'array of formatted strings: ignores empty segments',
+    schema: { type: 'array', items: { type: 'string', format: 'duration' } },
+    value: propertyValue([], '1s,,5m,'),
+  },
+  {
+    label: 'array of integers',
+    schema: { type: 'array', items: { type: 'integer' } },
+    value: propertyValue([0, 8080], '0,8080'),
+  },
   {
     label: 'exclusiveMinimum',
     schema: { type: 'number', exclusiveMinimum: 5 },
