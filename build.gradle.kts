@@ -40,7 +40,7 @@ subprojects {
     version = "1.0.0"
 
     configure<CheckstyleExtension> {
-        toolVersion = "13.4.0"
+        toolVersion = "14.3.0"
     }
 
     configure<LombokExtension> {
