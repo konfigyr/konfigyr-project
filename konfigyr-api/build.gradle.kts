@@ -63,6 +63,11 @@ tasks.named<BootBuildImage>("bootBuildImage") {
     imageName.set(extension.dockerImageTag)
     imagePlatform.set(extension.dockerImagePlatform)
     builder.set(extension.dockerImageBuilder)
+    buildpacks.set(listOf(
+        "urn:cnb:builder:paketo-buildpacks/java",
+        "docker.io/paketobuildpacks/health-checker"
+    ))
+    environment.put("BP_HEALTH_CHECKER_ENABLED", "true")
 
     docker {
         publishRegistry {
