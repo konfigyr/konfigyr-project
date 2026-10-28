@@ -167,7 +167,7 @@ public final class GitStateRepository implements StateRepository {
 
 	/**
 	 * Initializes the source control repository for the given {@link Service} under the supplied
-	 * root Git directory location
+	 * root Git directory location.
 	 * <p>
 	 * This method is responsible for creating the Bare Git {@link Repository} and any required default
 	 * state. It is expected to be called exactly once during the service lifecycle.

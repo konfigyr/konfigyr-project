@@ -107,7 +107,7 @@ public interface Services {
 
 	/**
 	 * Returns the complete configuration catalog of the specified {@link Service}
-	 * slug that is managed by the given {@link Namespace}
+	 * slug that is managed by the given {@link Namespace}.
 	 * <p>
 	 * The returned {@link ServiceCatalog} represents the materialized set of configuration
 	 * property descriptors available to the service. The catalog is derived from the

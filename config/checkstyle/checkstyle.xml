@@ -88,9 +88,7 @@
         <module name="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocVariableCheck">
             <property name="accessModifiers" value="public"/>
         </module>
-        <module name="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocStyleCheck">
-            <property name="checkEmptyJavadoc" value="true"/>
-        </module>
+        <module name="com.puppycrawl.tools.checkstyle.checks.javadoc.SummaryJavadocCheck" />
         <module name="com.puppycrawl.tools.checkstyle.checks.javadoc.NonEmptyAtclauseDescriptionCheck" />
         <module name="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTagContinuationIndentationCheck">
             <property name="offset" value="0"/>
