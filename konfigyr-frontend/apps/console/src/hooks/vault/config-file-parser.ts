@@ -1,8 +1,5 @@
-import { useRef, useState } from 'react';
 import { PropertyTransitionType } from '@konfigyr/hooks/vault/types';
 import { parse } from 'yaml';
-import { fetchSpringConfigHandler } from '@konfigyr/hooks/vault/-handler';
-import type { FetchConfigRequest } from '@konfigyr/hooks/vault/-handler';
 import type { ConfigurationProperty } from '@konfigyr/hooks/vault/types';
 
 /**
@@ -11,7 +8,7 @@ import type { ConfigurationProperty } from '@konfigyr/hooks/vault/types';
  * @param name - property key.
  * @param value - property value
  */
-const buildConfigurationProperty = (name: string, value: string): ConfigurationProperty<string> => {
+export const buildConfigurationProperty = (name: string, value: string): ConfigurationProperty<string> => {
   return {
     name: name,
     state: PropertyTransitionType.ADDED,
@@ -136,7 +133,7 @@ const isScalar = (value: unknown) => {
  *
  * @param obj - The input object to convert. Can contain nested objects and arrays.
  */
-function jsonToProperties (obj: unknown): Array<ConfigurationProperty<string>> {
+export function jsonToProperties (obj: unknown): Array<ConfigurationProperty<string>> {
   const properties: Array<ConfigurationProperty<string>> = [];
 
   const append = (value: unknown, prefix: string) => {
@@ -207,36 +204,7 @@ const parseJsonFile = (text?: string): Array<ConfigurationProperty<string>> => {
 };
 
 /**
- * Parses Spring Cloud Config server response and converts effective `propertySources[*].source` entries into flat configuration properties.
- *
- * @param payload - Raw JSON payload returned by Spring Cloud Config server
- */
-const parseSpringCloudConfigResponse = (payload: unknown): Array<ConfigurationProperty<string>> => {
-  if (!payload || typeof payload !== 'object') {
-    throw new Error('Invalid configuration response');
-  }
-
-  const propertySources = (payload as { propertySources?: unknown }).propertySources;
-  if (!Array.isArray(propertySources)) {
-    throw new Error('Invalid configuration response: missing propertySources');
-  }
-
-  const mergedSource: Record<string, unknown> = {};
-
-  // Spring Cloud returns sources in precedence order (highest first).
-  // Merge from last to first so higher-precedence sources override lower ones.
-  for (let i = propertySources.length - 1; i >= 0; i--) {
-    const source = (propertySources[i] as { source?: unknown }).source;
-    if (source && typeof source === 'object' && !Array.isArray(source)) {
-      Object.assign(mergedSource, source);
-    }
-  }
-
-  return jsonToProperties(mergedSource);
-};
-
-/**
- * React hook for parsing configuration files into structured properties.
+ * Parses the given configuration file into an array of `ConfigurationProperty` objects.
  *
  * Supports the following file formats:
  * - `.json`
@@ -244,89 +212,22 @@ const parseSpringCloudConfigResponse = (payload: unknown): Array<ConfigurationPr
  * - `.yaml`
  * - `.yml`
  *
- * @returns An object containing:
- * - `properties` - The parsed configuration properties.
- * - `error` - An error message if parsing fails.
- * - `parseFile` - Async function to parse a given `File`.
- * - `fetchConfig` - Async function to fetch JSON configuration from the config server API and parse it.
- * - `reset` - Function to clear parsed data and errors.
- * - `isParsing` - Indicates whether a parse operation is currently in progress.
- * - `isError` - Indicates whether the latest parse operation failed.
- * - `isReady` - Indicates parser idle state (not parsing and no error).
+ * @param file - The configuration file to parse.
+ * @throws Error when the file extension is not supported or the file content is invalid.
  */
-export function useConfigFileParser () {
-  const [properties, setProperties] = useState<Array<ConfigurationProperty<any>>>([]);
-  const [error, setError] = useState<Error>();
-  const [isParsing, setIsParsing] = useState(false);
-  const parseSequenceRef = useRef(0);
+export const parseConfigFile = async (file: File): Promise<Array<ConfigurationProperty<string>>> => {
+  const text = await file.text();
+  const name = file.name.toLowerCase();
 
-  const runParseTask = async (task: () => Promise<Array<ConfigurationProperty<string>>>) => {
-    const currentSequence = ++parseSequenceRef.current;
-    setIsParsing(true);
-    setError(undefined);
+  if (name.endsWith('.json')) {
+    return parseJsonFile(text);
+  }
+  if (name.endsWith('.properties')) {
+    return parsePropertiesFile(text);
+  }
+  if (name.endsWith('.yaml') || name.endsWith('.yml')) {
+    return parseYamlFile(text);
+  }
 
-    try {
-      const parsedProperties = await task();
-
-      if (parseSequenceRef.current !== currentSequence) {
-        return;
-      }
-      setProperties(parsedProperties);
-      setIsParsing(false);
-      setError(undefined);
-    } catch (e) {
-      if (parseSequenceRef.current !== currentSequence) {
-        return;
-      }
-      setProperties([]);
-      setIsParsing(false);
-      setError(e instanceof Error ? e : new Error('Parse error'));
-    }
-  };
-
-  const parseFile = async (file: File)=> {
-    await runParseTask(async () => {
-      const text = await file.text();
-      const name = file.name.toLowerCase();
-
-      if (name.endsWith('.json')) {
-        return parseJsonFile(text);
-      }
-      if (name.endsWith('.properties')) {
-        return parsePropertiesFile(text);
-      }
-      if (name.endsWith('.yaml') || name.endsWith('.yml')) {
-        return parseYamlFile(text);
-      }
-
-      throw new Error('Unsupported file type');
-    });
-  };
-
-  const fetchConfig = async (payload: FetchConfigRequest) => {
-    await runParseTask(async () => {
-      const response = await fetchSpringConfigHandler({
-        data: payload,
-      });
-      return parseSpringCloudConfigResponse(response);
-    });
-  };
-
-  const reset = () => {
-    parseSequenceRef.current++;
-    setProperties([]);
-    setError(undefined);
-    setIsParsing(false);
-  };
-
-  return {
-    properties,
-    error,
-    parseFile,
-    fetchConfig,
-    reset,
-    isParsing,
-    isError: !!error,
-    isReady: !isParsing && !error,
-  };
-}
+  throw new Error('Unsupported file type');
+};
