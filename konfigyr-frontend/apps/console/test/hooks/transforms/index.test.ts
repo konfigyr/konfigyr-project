@@ -24,17 +24,26 @@ describe('hooks | transforms', () => {
     expect(numberTransform.decode('0.63050')).toBe(0.6305);
     expect(numberTransform.decode('.125')).toBe(0.125);
     expect(numberTransform.decode('invalid')).toBeNull();
+    expect(numberTransform.decode('')).toBeNull();
+    expect(numberTransform.decode('   ')).toBeNull();
+    expect(numberTransform.decode('0')).toBe(0);
   });
 
   test('should transform boolean type', () => {
     expect(booleanTransform.encode(true)).toBe('true');
     expect(booleanTransform.encode(false)).toBe('false');
 
-    expect(booleanTransform.decode('1')).toBe(true);
-    expect(booleanTransform.decode('t')).toBe(true);
-    expect(booleanTransform.decode('true')).toBe(true);
-    expect(booleanTransform.decode('false')).toBe(false);
-    expect(booleanTransform.decode('something else')).toBe(false);
+    for (const value of ['true', 'TRUE', '1', 'on', 'On', ' true ']) {
+      expect(booleanTransform.decode(value)).toBe(true);
+    }
+
+    for (const value of ['false', 'False', '0', 'off', 'OFF', ' false ']) {
+      expect(booleanTransform.decode(value)).toBe(false);
+    }
+
+    for (const value of ['maybe', 't', 'f', 'yes', 'no', '2', '']) {
+      expect(booleanTransform.decode(value)).toBeNull();
+    }
   });
 
   test('should transform date type', () => {

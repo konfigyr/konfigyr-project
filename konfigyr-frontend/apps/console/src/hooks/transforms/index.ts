@@ -31,12 +31,24 @@ export const stringTransform: Transform<string> = {
   decode: (value) => value,
 };
 
+const BOOLEAN_TRUE_PATTERN = /^(true|1|on)$/i;
+const BOOLEAN_FALSE_PATTERN = /^(false|0|off)$/i;
+
 /**
- * Transform that would be used for boolean values.
+ * Transform that would be used for boolean values. Besides `true` and `false`, the `1`/`0`
+ * and `on`/`off` pairs are also supported as they are valid boolean values in YAML. Values
+ * are matched case-insensitive, anything else can not be decoded.
  */
 export const booleanTransform: Transform<boolean> = {
   encode: (value) => value ? 'true' : 'false',
-  decode: (value) => /^(true|t|1)$/i.test(value),
+  decode: (value) => {
+    const input = value.trim();
+
+    if (BOOLEAN_TRUE_PATTERN.test(input)) {
+      return true;
+    }
+    return BOOLEAN_FALSE_PATTERN.test(input) ? false : null;
+  },
 };
 
 /**
@@ -45,6 +57,11 @@ export const booleanTransform: Transform<boolean> = {
 export const numberTransform: Transform<number> = {
   encode: (value) => String(value),
   decode: (value) => {
+    // blank strings are converted to zero by the Number constructor
+    if (value.trim() === '') {
+      return null;
+    }
+
     const decoded = Number(value);
     return isNaN(decoded) ? null : decoded;
   },
