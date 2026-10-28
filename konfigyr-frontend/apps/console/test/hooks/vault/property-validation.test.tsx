@@ -153,6 +153,12 @@ const VALIDATION_FAIL_CASES: Array<ValidationCase> = [
     keyword: 'type',
     message: 'Must be a valid array',
   }, {
+    label: 'unknown format: still validates the type',
+    schema: { type: 'integer', format: 'int8' },
+    value: propertyValue('abc'),
+    keyword: 'type',
+    message: 'Must be a valid integer',
+  }, {
     label: 'format: date',
     schema: { type: 'string', format: 'date' },
     value: propertyValue('not-a-date'),
@@ -196,6 +202,13 @@ const VALIDATION_PASS_CASES: Array<ValidationCase> = [
   { label: 'enum relaxed: snake_case', schema: { type: 'string', enum: ['IN_PROGRESS', 'DONE'] }, value: propertyValue('in_progress') },
   { label: 'enum relaxed: kebab-case', schema: { type: 'string', enum: ['IN_PROGRESS', 'DONE'] }, value: propertyValue('in-progress') },
   { label: 'enum relaxed: camelCase', schema: { type: 'string', enum: ['IN_PROGRESS', 'DONE'] }, value: propertyValue('inProgress') },
+  { label: 'format: int8', schema: { type: 'integer', format: 'int8' }, value: propertyValue(100) },
+  { label: 'format: int16', schema: { type: 'integer', format: 'int16' }, value: propertyValue(30000) },
+  { label: 'format: int32', schema: { type: 'integer', format: 'int32' }, value: propertyValue(2000000000) },
+  { label: 'format: int64', schema: { type: 'integer', format: 'int64' }, value: propertyValue(9000000000) },
+  { label: 'format: float', schema: { type: 'number', format: 'float' }, value: propertyValue(1.5) },
+  { label: 'format: double', schema: { type: 'number', format: 'double' }, value: propertyValue(1.5) },
+  { label: 'format: unknown string format', schema: { type: 'string', format: 'unknown' }, value: propertyValue('value') },
   { label: 'minimum', schema: { type: 'number', minimum: 3 }, value: propertyValue(5) },
   {
     label: 'array of formatted strings: duration',
