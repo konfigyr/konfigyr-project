@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, waitFor, within } from '@testing-library/react';
 import { renderWithMessageProvider } from '@konfigyr/test/helpers/messages';
-import { PropertiesImportDialog } from '@konfigyr/components/vault/properties/properties-import-dialog';
+import { PropertiesImportDialog } from '@konfigyr/components/vault/properties/import/dialog';
 import userEvent from '@testing-library/user-event';
 import { profiles, services } from '@konfigyr/test/helpers/mocks';
 import React from 'react';
@@ -144,6 +144,72 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     await waitFor(() => expect(result.queryByRole('dialog')).toBeNull());
   });
 
+  test('should clear imported properties when the dialog is reopened after a successful import', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} catalog={catalog}/>,
+    );
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+
+    await user.upload(
+      result.getByLabelText('Select existing configuration file'),
+      new File(['server.port=8080'], 'application.properties', { type: 'text/plain' }),
+    );
+    await waitFor(() => expect(result.getByText('Ready for import')).toBeInTheDocument());
+
+    await user.click(within(result.getByRole('dialog')).getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.queryByRole('dialog')).toBeNull());
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+
+    expect(result.getByText('No configuration properties for import')).toBeInTheDocument();
+    expect(result.queryByText('Ready for import')).not.toBeInTheDocument();
+    expect(within(result.getByRole('dialog')).getByRole('button', { name: 'Import' })).toBeDisabled();
+  });
+
+  test('should clear the file input after the selected file is read', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} catalog={catalog}/>,
+    );
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+
+    const input = result.getByLabelText('Select existing configuration file');
+    await user.upload(input, new File(['server.port=8080'], 'application.properties', { type: 'text/plain' }));
+
+    await waitFor(() => expect(result.getByText('Ready for import')).toBeInTheDocument());
+    expect(input).toHaveValue('');
+  });
+
+  test('should not show the empty state while the config server request is in progress', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(globalThis, 'fetch').mockReturnValue(new Promise(() => {}));
+
+    const result = renderWithMessageProvider(
+      <PropertiesImportDialog onImport={onImport} profile={profiles.development} catalog={catalog}/>,
+    );
+
+    await user.click(result.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(result.getByRole('dialog')).toBeInTheDocument());
+    await user.click(within(result.getByRole('dialog')).getByRole('tab', { name: 'From config server' }));
+
+    await user.type(result.getByLabelText('User name'), 'test-user');
+    await user.type(result.getByLabelText('Password'), 'test-pwd');
+    await user.type(result.getByLabelText('Config server URL'), 'http://config.com/api/configs/test-app/dev/master');
+    await user.click(result.getByRole('button', { name: 'Fetch config' }));
+
+    await waitFor(() => expect(result.getByText('Reading configuration')).toBeInTheDocument());
+    expect(result.queryByText('No configuration properties for import')).not.toBeInTheDocument();
+  });
+
   test('should import yaml and close dialog on successful submit', async () => {
     const user = userEvent.setup();
     const onImport = vi.fn().mockResolvedValue(undefined);
@@ -202,7 +268,7 @@ describe('components | vault | properties | <PropertiesImportDialog/>', () => {
     await user.upload(input, file);
 
     await waitFor(() => {
-      expect(result.getByText('Could not read your configuration')).toBeInTheDocument();
+      expect(result.getByText('Could not import your configuration')).toBeInTheDocument();
       expect(result.getByText('Error: Expected property name or \'}\' in JSON at position 1 (line 1 column 2)')).toBeInTheDocument();
     });
     expect(

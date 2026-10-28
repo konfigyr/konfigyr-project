@@ -15,7 +15,7 @@ import { SearchInputGroup } from '@konfigyr/components/vault/properties/search-i
 import { PropertyHistorySidebar } from '@konfigyr/components/vault/properties/history-sidebar';
 import { PropertyStatusFilters, StatusFilter } from '@konfigyr/components/vault/properties/status-filters';
 import { PropertiesTable } from '@konfigyr/components/vault/properties/table';
-import { PropertiesImportDialog } from '@konfigyr/components/vault/properties/properties-import-dialog';
+import { PropertiesImportDialog } from '@konfigyr/components/vault/properties/import/dialog';
 import type {
   ChangesetState,
   ConfigurationProperty,
@@ -68,7 +68,7 @@ export function ChangesetEditor({ catalog, changeset, debounceMs = 200, ...props
   const { mutateAsync: onUpdateProperty } = useModifyProperty(changeset);
   const { mutateAsync: onDeleteProperty } = useRemoveProperty(changeset);
   const { mutateAsync: onRestoreProperty } = useRestoreProperty(changeset);
-  const { mutateAsync: onImportProperties } = useImportProperties(changeset);
+  const { mutateAsync: onImportProperties, isPending: isImportPending } = useImportProperties(changeset);
   const { invalidPropertyNames, isChangesetValid } = useChangesetValidation(changeset.properties);
 
   const properties = useFilteredProperties(
@@ -140,7 +140,12 @@ export function ChangesetEditor({ catalog, changeset, debounceMs = 200, ...props
             debounceMs={debounceMs}
           />
 
-          <PropertiesImportDialog catalog={catalog} onImport={onImport} profile={changeset.profile} />
+          <PropertiesImportDialog
+            catalog={catalog}
+            onImport={onImport}
+            profile={changeset.profile}
+            isPending={isImportPending}
+          />
         </div>
 
         {!readOnly && (
