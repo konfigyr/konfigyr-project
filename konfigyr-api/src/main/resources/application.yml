@@ -91,6 +91,11 @@ management:
       exposure:
         include: health, info, metrics
 
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
   observations:
     annotations:
       enabled: true
