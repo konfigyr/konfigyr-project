@@ -58,6 +58,9 @@ management:
     metrics:
       export:
         enabled: off
+  health:
+    mail:
+      enabled: false
 
 logging:
   level:

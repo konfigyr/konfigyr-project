@@ -66,31 +66,6 @@ public class SecurityConfiguration {
 		return new HttpSessionRequestCache();
 	}
 
-	/**
-	 * Creates a {@link SecurityFilterChain} that permits unauthenticated access to the Spring Boot Actuator
-	 * {@link HealthEndpoint}, including its liveness and readiness probe groups.
-	 * <p>
-	 * This chain is only matched for health endpoint requests. All other Actuator endpoints are
-	 * handled by the default security filter chain and require authentication.
-	 *
-	 * @param http the HTTP security builder, can't be {@literal null}
-	 * @return the health endpoint security filter chain, never {@literal null}
-	 */
-	@Bean
-	@Order(0)
-	SecurityFilterChain healthSecurityFilterChain(HttpSecurity http) {
-		return http
-				.securityMatcher(EndpointRequest.to(HealthEndpoint.class))
-				.authorizeHttpRequests((authorize) -> authorize
-						.anyRequest().permitAll()
-				)
-				.csrf(AbstractHttpConfigurer::disable)
-				.sessionManagement(session -> session
-						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-				)
-				.build();
-	}
-
 	@Bean
 	@Order(1)
 	SecurityFilterChain authorizationServerSecurityFilterChain(
@@ -169,6 +144,7 @@ public class SecurityConfiguration {
 						.requestMatchers(KonfigyrIdentityRequestMatchers.LOGIN_PAGE).permitAll()
 						.requestMatchers(KonfigyrIdentityRequestMatchers.LOGIN_REDIRECT_PAGE).permitAll()
 						.requestMatchers(KonfigyrIdentityRequestMatchers.SCOPES_METADATA_PAGE).permitAll()
+						.requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
 						.anyRequest().authenticated()
 				)
 				.anonymous(AbstractHttpConfigurer::disable)
