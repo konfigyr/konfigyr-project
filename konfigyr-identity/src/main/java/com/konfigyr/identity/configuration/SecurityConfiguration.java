@@ -8,6 +8,8 @@ import com.konfigyr.identity.authorization.NamespaceMembershipValidator;
 import com.konfigyr.identity.authorization.workload.WorkloadTokenExchangeAuthenticationConfigurer;
 import com.konfigyr.security.PasswordEncoders;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -142,6 +144,7 @@ public class SecurityConfiguration {
 						.requestMatchers(KonfigyrIdentityRequestMatchers.LOGIN_PAGE).permitAll()
 						.requestMatchers(KonfigyrIdentityRequestMatchers.LOGIN_REDIRECT_PAGE).permitAll()
 						.requestMatchers(KonfigyrIdentityRequestMatchers.SCOPES_METADATA_PAGE).permitAll()
+						.requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
 						.anyRequest().authenticated()
 				)
 				.anonymous(AbstractHttpConfigurer::disable)

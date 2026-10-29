@@ -9,6 +9,8 @@ import com.konfigyr.web.WebExceptionHandler;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.OAuth2ResourceServerProperties;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.annotation.Bean;
@@ -100,6 +102,7 @@ public class WebSecurityConfiguration {
 
 		return http
 				.authorizeHttpRequests(requests -> requests
+						.requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
 						.anyRequest()
 						.authenticated()
 				)

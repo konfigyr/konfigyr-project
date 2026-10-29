@@ -84,6 +84,8 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
+        // Keeps the JVM and the database session in the same zone so that DST changes don't affect date assertions.
+        systemProperty("user.timezone", "UTC")
     }
 
     tasks.withType<JavaCompile>().configureEach {
