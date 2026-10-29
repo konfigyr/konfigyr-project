@@ -121,18 +121,27 @@ function createPropertyValidator(schema: PropertyJsonSchema): ValidateFunction {
   return schemaValidator.compile(schema);
 }
 
+// Resolves the value that should be validated against the schema. The encoded string
+// representation is used for `string` schemas and for arrays of strings, where it is
+// split into the encoded items. All other schemas use the decoded value.
+function resolveValidationSubject(schema: PropertyJsonSchema, value?: ValidatedValue): unknown {
+  if (schema.type === 'string') {
+    return value?.encoded;
+  }
+
+  if (schema.type === 'array' && schema.items?.type === 'string') {
+    return value?.encoded.split(',').filter(item => item !== '');
+  }
+
+  return value?.decoded;
+}
+
 function validatePropertyValue(
   validator: ValidateFunction,
   schema: PropertyJsonSchema,
   value?: ValidatedValue,
 ): ValidateResponse {
-  let subject: unknown = value?.decoded;
-
-  // when value type is string, use the encoded string representation for
-  // validation, AJV uses different patterns to validate custom schema formats
-  if (schema.type === 'string') {
-    subject = value?.encoded;
-  }
+  const subject = resolveValidationSubject(schema, value);
 
   return schema.enum?.length
     ? validator(resolveRelaxedEnumValue(schema.enum, subject))
@@ -144,7 +153,9 @@ function validatePropertyValue(
  *
  * Values of `string` schemas are validated using their encoded representation. This allows
  * custom string formats, like `duration` or `data-size`, to be checked against their encoded
- * patterns. Values of all other schema types are validated using their decoded representation.
+ * patterns. The same applies to the items of `array` schemas with `string` items, which are
+ * validated using the encoded items. Values of all other schema types are validated using
+ * their decoded representation.
  *
  * String values of `enum` schemas are matched using Spring Boot relaxed binding rules.
  *

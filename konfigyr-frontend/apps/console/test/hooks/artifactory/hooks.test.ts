@@ -15,13 +15,22 @@ describe('hooks | artifactory | resolveJsonSchemeTransform', () => {
     const transform = resolveJsonSchemeTransform<Array<number>>({ type: 'array', items: { type: 'integer' } });
 
     expect(transform.decode('0,8080')).toStrictEqual([0, 8080]);
-    expect(transform.decode('0,invalid,8080')).toStrictEqual([0, 8080]);
     expect(transform.decode('8080,')).toStrictEqual([8080]);
+  });
+
+  test('should not decode array when any of its items can not be decoded', () => {
+    const integers = resolveJsonSchemeTransform<Array<number>>({ type: 'array', items: { type: 'integer' } });
+    const booleans = resolveJsonSchemeTransform<Array<boolean>>({ type: 'array', items: { type: 'boolean' } });
+
+    expect(integers.decode('1,abc,3')).toBeNull();
+    expect(integers.decode('1, ,3')).toBeNull();
+    expect(booleans.decode('true,maybe')).toBeNull();
   });
 
   test('should keep falsy boolean values when transforming array of booleans', () => {
     const transform = resolveJsonSchemeTransform<Array<boolean>>({ type: 'array', items: { type: 'boolean' } });
 
     expect(transform.decode('true,false')).toStrictEqual([true, false]);
+    expect(transform.decode('on,off,1,0')).toStrictEqual([true, false, true, false]);
   });
 });

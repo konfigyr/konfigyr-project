@@ -15,10 +15,12 @@ class ArrayTransform<T> implements Transform<Array<T>> {
   constructor(private readonly delegate: Transform<T>) {}
 
   decode(value: string): Array<T> | null {
-    return value.split(',')
+    const items = value.split(',')
       .filter(item => item !== '')
-      .map(this.delegate.decode)
-      .filter(item => item !== null);
+      .map(this.delegate.decode);
+
+    // a single item that can not be decoded makes the entire array invalid
+    return items.includes(null) ? null : items as Array<T>;
   }
 
   encode(value: Array<T>): string {
